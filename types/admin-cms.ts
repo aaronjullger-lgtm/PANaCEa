@@ -18,7 +18,14 @@ export type AdminRole = 'admin' | 'superadmin';
 /**
  * Content change type for audit log
  */
-export type ChangeType = 'create' | 'update' | 'delete' | 'publish' | 'unpublish' | 'approve' | 'reject';
+export type ChangeType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'publish'
+  | 'unpublish'
+  | 'approve'
+  | 'reject';
 
 /**
  * Represents a single piece of medical content (condition, drug, etc.)
@@ -29,7 +36,7 @@ export interface MedicalContent {
   system: SystemCode;
   subcategory: string;
   condition: string;
-  
+
   // Content sections (matches structure in conditionContent.json)
   overview?: string;
   etiologyPathophysiology?: string;
@@ -51,10 +58,10 @@ export interface MedicalContent {
     title: string;
     conceptId: string;
   }>;
-  
+
   // Media assets
   mediaIds?: string[];
-  
+
   // Metadata
   status: ContentStatus;
   version: number;

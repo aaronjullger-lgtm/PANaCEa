@@ -5,6 +5,7 @@
 The Intelligent DDx (Differential Diagnosis) System leverages the rich relational data in the PostgreSQL database to provide personalized, context-aware differential diagnosis features. This replaces the simple side-by-side comparison with a deeply integrated, database-linked system.
 
 **Key Features:**
+
 - 🎯 **Smart Suggestions** based on FSRS mastery data
 - 🔴 **Confusion Pattern Detection** from user mistakes
 - 📊 **Deep Matrix Comparison** (3-5 conditions)
@@ -18,7 +19,7 @@ The Intelligent DDx (Differential Diagnosis) System leverages the rich relationa
 ```
 functions/api/ddx/
 ├── related.ts         # GET - Find related differentials for a condition
-├── compare.ts         # GET - Deep comparison of 2-5 conditions  
+├── compare.ts         # GET - Deep comparison of 2-5 conditions
 ├── confusion-pairs.ts # GET - User's personal confusion patterns (auth required)
 ├── workup.ts          # GET - Diagnostic workup algorithm (NEW)
 └── smart-suggest.ts   # GET - AI-powered DDx suggestions (NEW)
@@ -28,7 +29,11 @@ functions/api/ddx/
 
 ```typescript
 // services/ddxService.ts
-import { fetchRelatedConditions, fetchConditionComparison, fetchConfusionPairs } from '@/services/ddxService';
+import {
+  fetchRelatedConditions,
+  fetchConditionComparison,
+  fetchConfusionPairs,
+} from '@/services/ddxService';
 ```
 
 ### Components
@@ -44,18 +49,18 @@ components/library/
 
 ## Database Tables Leveraged
 
-| Table | Purpose |
-|-------|---------|
-| `ConditionRelation` | Links conditions as differentials, complications, associated |
-| `DifferentialDiagnosis` | Presenting complaints with must-not-miss lists |
-| `DifferentialConditionLink` | Junction table for DDx → Condition with ranking |
-| `ConfusionPair` | User-specific confusion tracking |
-| `MedicalContent` | Core condition data (40+ fields) |
-| `LabConditionLink` | Labs associated with conditions |
-| `ImagingConditionLink` | Imaging studies for conditions |
-| `FindingConditionLink` | Physical exam findings |
-| `DrugConditionLink` | Medications for conditions |
-| `ScoringSystemConditionLink` | Clinical scoring systems |
+| Table                        | Purpose                                                      |
+| ---------------------------- | ------------------------------------------------------------ |
+| `ConditionRelation`          | Links conditions as differentials, complications, associated |
+| `DifferentialDiagnosis`      | Presenting complaints with must-not-miss lists               |
+| `DifferentialConditionLink`  | Junction table for DDx → Condition with ranking              |
+| `ConfusionPair`              | User-specific confusion tracking                             |
+| `MedicalContent`             | Core condition data (40+ fields)                             |
+| `LabConditionLink`           | Labs associated with conditions                              |
+| `ImagingConditionLink`       | Imaging studies for conditions                               |
+| `FindingConditionLink`       | Physical exam findings                                       |
+| `DrugConditionLink`          | Medications for conditions                                   |
+| `ScoringSystemConditionLink` | Clinical scoring systems                                     |
 
 ---
 
@@ -66,11 +71,13 @@ components/library/
 **Purpose:** Get related differential diagnoses for a condition
 
 **Query Parameters:**
+
 - `conditionId` (string): Condition ID
 - `conditionName` (string): Condition name (alternative to ID)
 - `limit` (number): Max results (default: 10)
 
 **Response:**
+
 ```json
 {
   "condition": {
@@ -102,9 +109,11 @@ components/library/
 **Purpose:** Deep comparison of multiple conditions with linked entity data
 
 **Query Parameters:**
+
 - `ids` (string): Comma-separated condition IDs (2-5 required)
 
 **Response:**
+
 ```json
 {
   "conditions": [
@@ -115,15 +124,11 @@ components/library/
       "classic_patient": "Middle-aged woman with symmetric joint pain",
       "gold_standard_dx": "Anti-CCP antibodies",
       "first_line_rx": "Methotrexate",
-      "linkedLabs": [
-        { "name": "RF", "significance": "70% sensitivity", "isHighYield": true }
-      ],
+      "linkedLabs": [{ "name": "RF", "significance": "70% sensitivity", "isHighYield": true }],
       "linkedImaging": [
         { "name": "Hand X-ray", "classicFindings": "Erosions, periarticular osteopenia" }
       ],
-      "linkedDrugs": [
-        { "genericName": "Methotrexate", "isFirstLine": true }
-      ]
+      "linkedDrugs": [{ "genericName": "Methotrexate", "isFirstLine": true }]
     }
   ],
   "discriminatingFeatures": ["classic_patient", "gold_standard_dx"],
@@ -146,11 +151,13 @@ components/library/
 **Purpose:** Get user's personal confusion patterns
 
 **Query Parameters:**
+
 - `limit` (number): Max pairs (default: 10)
 - `minCount` (number): Minimum confusion count (default: 2)
 - `conditionId` (string): Filter by specific condition
 
 **Response:**
+
 ```json
 {
   "userId": "clerk_user_id",
@@ -220,7 +227,7 @@ import { DDxCompareModal } from '@/components/library';
   conditions={allConditions}
   initialCondition={selectedCondition}
   onStartDDxQuiz={(ids) => startQuiz(ids)}
-/>
+/>;
 ```
 
 ---
@@ -256,19 +263,18 @@ const isDiff = ddxService.valuesAreDifferent(val1, val2);
 ### 1. Condition Detail Panel
 
 Add confusion alert:
+
 ```tsx
 // In ConditionDetailPanel.tsx
 import { ConfusionPairAlert } from './ConfusionPairAlert';
 
-<ConfusionPairAlert
-  conditionId={condition.id}
-  onCompare={handleOpenDDx}
-/>
+<ConfusionPairAlert conditionId={condition.id} onCompare={handleOpenDDx} />;
 ```
 
 ### 2. Library Cards
 
 Add related DDx count:
+
 ```tsx
 // Show "3 related differentials" on cards
 const { relatedConditions } = await fetchRelatedConditions(conditionId);
@@ -277,10 +283,11 @@ const { relatedConditions } = await fetchRelatedConditions(conditionId);
 ### 3. Quiz Integration
 
 Use confusion pairs for targeted practice:
+
 ```tsx
 const { confusionPairs } = await fetchConfusionPairs(token);
 // Generate quiz focusing on confused conditions
-const quizConditions = confusionPairs.flatMap(p => [p.realCondition, p.mistakenFor]);
+const quizConditions = confusionPairs.flatMap((p) => [p.realCondition, p.mistakenFor]);
 ```
 
 ---
@@ -301,10 +308,12 @@ const quizConditions = confusionPairs.flatMap(p => [p.realCondition, p.mistakenF
 **Purpose:** Get diagnostic workup algorithm for a presenting complaint
 
 **Query Parameters:**
+
 - `complaint` (string): Presenting complaint (e.g., "chest pain")
 - `conditionId` (string): Condition ID (alternative to complaint)
 
 **Response:**
+
 ```json
 {
   "complaint": "Chest Pain",
@@ -321,10 +330,7 @@ const quizConditions = confusionPairs.flatMap(p => [p.realCondition, p.mistakenF
       "order": 1,
       "action": "history",
       "name": "Focused History",
-      "branches": [
-        { "result": "Radiation to jaw/arm?" },
-        { "result": "Tearing pain to back?" }
-      ]
+      "branches": [{ "result": "Radiation to jaw/arm?" }, { "result": "Tearing pain to back?" }]
     },
     {
       "order": 2,
@@ -339,9 +345,7 @@ const quizConditions = confusionPairs.flatMap(p => [p.realCondition, p.mistakenF
   ],
   "redFlags": ["Radiation to jaw", "Diaphoresis", "Hypotension"],
   "keyQuestions": ["Onset?", "Character?", "Radiation?"],
-  "scoringSystems": [
-    { "name": "HEART Score", "whenToUse": "Risk stratify chest pain" }
-  ],
+  "scoringSystems": [{ "name": "HEART Score", "whenToUse": "Risk stratify chest pain" }],
   "clinicalPearls": ["Always consider ACS in diabetics with atypical symptoms"]
 }
 ```
@@ -351,12 +355,14 @@ const quizConditions = confusionPairs.flatMap(p => [p.realCondition, p.mistakenF
 **Purpose:** AI-powered DDx suggestions based on user's mastery and confusion patterns
 
 **Query Parameters:**
+
 - `conditionId` (string): Target condition
 - `limit` (number): Max suggestions (default: 10)
 
 **Authentication:** Optional but enriches suggestions
 
 **Response:**
+
 ```json
 {
   "targetCondition": {
@@ -433,10 +439,11 @@ import { DDxMatrixView } from '@/components/library';
   onClose={() => setShowMatrix(false)}
   onStartQuiz={(ids) => startDDxQuiz(ids)}
   maxConditions={5}
-/>
+/>;
 ```
 
 **Features:**
+
 - Collapsible category sections (Presentation, Diagnosis, Treatment)
 - Difference highlighting with star indicators
 - Linked entity toggle (Labs, Imaging, Drugs)
@@ -468,19 +475,17 @@ const {
 });
 
 // Use in component
-{hasCriticalConfusions && (
-  <Alert variant="destructive">
-    You frequently confuse this condition with others!
-  </Alert>
-)}
+{
+  hasCriticalConfusions && (
+    <Alert variant="destructive">You frequently confuse this condition with others!</Alert>
+  );
+}
 
-{suggestions.map(s => (
-  <SuggestionCard 
-    key={s.conditionId}
-    className={getPriorityColor(s.priority)}
-    {...s}
-  />
-))}
+{
+  suggestions.map((s) => (
+    <SuggestionCard key={s.conditionId} className={getPriorityColor(s.priority)} {...s} />
+  ));
+}
 ```
 
 ---
@@ -491,18 +496,19 @@ const {
 
 Suggestions are prioritized based on:
 
-| Factor | Weight | Description |
-|--------|--------|-------------|
-| Confusion count ≥5 | `critical` | User has confused conditions 5+ times |
-| Confusion count ≥2 | `high` | Recent confusion patterns |
-| Direct DDx relation | `high` | Database-linked differential |
-| Shared buzzwords ≥3 | `high` | Similar presentations |
-| Complication relation | `medium` | Clinically related |
-| Same system + low mastery | `medium-low` | Knowledge gaps |
+| Factor                    | Weight       | Description                           |
+| ------------------------- | ------------ | ------------------------------------- |
+| Confusion count ≥5        | `critical`   | User has confused conditions 5+ times |
+| Confusion count ≥2        | `high`       | Recent confusion patterns             |
+| Direct DDx relation       | `high`       | Database-linked differential          |
+| Shared buzzwords ≥3       | `high`       | Similar presentations                 |
+| Complication relation     | `medium`     | Clinically related                    |
+| Same system + low mastery | `medium-low` | Knowledge gaps                        |
 
 ### Mastery Level Calculation
 
 Based on FSRS card state:
+
 ```typescript
 function getMasteryLevel(mastery) {
   if (mastery.state === 0) return 'new';
@@ -516,6 +522,7 @@ function getMasteryLevel(mastery) {
 ### Study Recommendation Generation
 
 Priority order:
+
 1. Critical confusion patterns → Direct comparison focus
 2. Any confusion patterns → Create comparison table
 3. High-yield differentials → Study together

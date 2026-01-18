@@ -1,13 +1,31 @@
 /**
  * SystemDrillSession - Organ system-based drill
- * 
+ *
  * Allows users to select a PANCE system and practice questions from that system.
  * Uses /api/questions/system-drill endpoint for database-driven content.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, X, Heart, Brain, Activity, Droplets, Bone, Eye, Ear, Scissors, Baby, Users, Stethoscope, Shield, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import {
+  Layers,
+  X,
+  Heart,
+  Brain,
+  Activity,
+  Droplets,
+  Bone,
+  Eye,
+  Ear,
+  Scissors,
+  Baby,
+  Users,
+  Stethoscope,
+  Shield,
+  ArrowRight,
+  BarChart3,
+  Loader2,
+} from 'lucide-react';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
@@ -31,22 +49,100 @@ interface SystemDrillSessionProps {
 }
 
 const SYSTEM_OPTIONS = [
-  { id: 'CV', name: 'Cardiovascular', icon: Heart, color: 'red', description: 'Heart, vessels, hypertension' },
-  { id: 'NEURO', name: 'Neurology', icon: Brain, color: 'purple', description: 'CNS, PNS, stroke, seizures' },
-  { id: 'PULM', name: 'Pulmonary', icon: Activity, color: 'blue', description: 'Lungs, asthma, COPD, pneumonia' },
-  { id: 'GI', name: 'Gastroenterology', icon: Droplets, color: 'amber', description: 'GI tract, liver, pancreas' },
-  { id: 'MSK', name: 'Musculoskeletal', icon: Bone, color: 'slate', description: 'Bones, joints, ligaments' },
-  { id: 'DERM', name: 'Dermatology', icon: Scissors, color: 'pink', description: 'Skin lesions, rashes' },
-  { id: 'HEENT', name: 'HEENT', icon: Eye, color: 'teal', description: 'Head, eyes, ears, nose, throat' },
-  { id: 'ENDO', name: 'Endocrine', icon: Stethoscope, color: 'indigo', description: 'Diabetes, thyroid, hormones' },
-  { id: 'RENAL', name: 'Renal/Urology', icon: Droplets, color: 'cyan', description: 'Kidneys, UTI, stones' },
-  { id: 'REPRO', name: 'Reproductive', icon: Baby, color: 'rose', description: 'OB/GYN, pregnancy, STIs' },
-  { id: 'HEME', name: 'Hematology', icon: Droplets, color: 'red', description: 'Anemia, coagulation, blood' },
-  { id: 'ID', name: 'Infectious Disease', icon: Shield, color: 'green', description: 'Bacteria, viruses, parasites' },
-  { id: 'PSYCH', name: 'Psychiatry', icon: Brain, color: 'violet', description: 'Mental health, mood, psychosis' },
+  {
+    id: 'CV',
+    name: 'Cardiovascular',
+    icon: Heart,
+    color: 'red',
+    description: 'Heart, vessels, hypertension',
+  },
+  {
+    id: 'NEURO',
+    name: 'Neurology',
+    icon: Brain,
+    color: 'purple',
+    description: 'CNS, PNS, stroke, seizures',
+  },
+  {
+    id: 'PULM',
+    name: 'Pulmonary',
+    icon: Activity,
+    color: 'blue',
+    description: 'Lungs, asthma, COPD, pneumonia',
+  },
+  {
+    id: 'GI',
+    name: 'Gastroenterology',
+    icon: Droplets,
+    color: 'amber',
+    description: 'GI tract, liver, pancreas',
+  },
+  {
+    id: 'MSK',
+    name: 'Musculoskeletal',
+    icon: Bone,
+    color: 'slate',
+    description: 'Bones, joints, ligaments',
+  },
+  {
+    id: 'DERM',
+    name: 'Dermatology',
+    icon: Scissors,
+    color: 'pink',
+    description: 'Skin lesions, rashes',
+  },
+  {
+    id: 'HEENT',
+    name: 'HEENT',
+    icon: Eye,
+    color: 'teal',
+    description: 'Head, eyes, ears, nose, throat',
+  },
+  {
+    id: 'ENDO',
+    name: 'Endocrine',
+    icon: Stethoscope,
+    color: 'indigo',
+    description: 'Diabetes, thyroid, hormones',
+  },
+  {
+    id: 'RENAL',
+    name: 'Renal/Urology',
+    icon: Droplets,
+    color: 'cyan',
+    description: 'Kidneys, UTI, stones',
+  },
+  {
+    id: 'REPRO',
+    name: 'Reproductive',
+    icon: Baby,
+    color: 'rose',
+    description: 'OB/GYN, pregnancy, STIs',
+  },
+  {
+    id: 'HEME',
+    name: 'Hematology',
+    icon: Droplets,
+    color: 'red',
+    description: 'Anemia, coagulation, blood',
+  },
+  {
+    id: 'ID',
+    name: 'Infectious Disease',
+    icon: Shield,
+    color: 'green',
+    description: 'Bacteria, viruses, parasites',
+  },
+  {
+    id: 'PSYCH',
+    name: 'Psychiatry',
+    icon: Brain,
+    color: 'violet',
+    description: 'Mental health, mood, psychosis',
+  },
 ];
 
-const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({ 
+const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   onExit,
   addPerformanceRecord,
   addMissedQuestion,
@@ -71,29 +167,32 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   const categoryBreakdown = getCategoryBreakdown('system_drill');
 
   // Fetch question from API
-  const fetchSystemQuestion = useCallback(async (system: string, difficulty?: string): Promise<Question> => {
-    const token = await getToken();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  const fetchSystemQuestion = useCallback(
+    async (system: string, difficulty?: string): Promise<Question> => {
+      const token = await getToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-    const response = await fetch('/api/questions/system-drill', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ system, difficulty }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Please sign in to access questions');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      throw new Error(`Failed to fetch question: ${response.status}`);
-    }
 
-    return response.json();
-  }, [getToken]);
+      const response = await fetch('/api/questions/system-drill', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ system, difficulty }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to access questions');
+        }
+        throw new Error(`Failed to fetch question: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    [getToken]
+  );
 
   // Load initial questions when system is selected
   useEffect(() => {
@@ -182,30 +281,42 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       >
         {onExit && (
           <div className="absolute top-4 right-4 z-10">
-            <button onClick={onExit} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors" aria-label="Exit">
+            <button
+              onClick={onExit}
+              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
+              aria-label="Exit"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
-        
+
         {/* Category Progress */}
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">System Progress</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                System Progress
+              </h3>
             </div>
             <div className="space-y-2">
               {categoryBreakdown.slice(0, 5).map((cat) => (
                 <div key={cat.category} className="flex items-center justify-between text-sm">
                   <span className="text-[var(--color-text-secondary)]">{cat.category}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-[var(--color-text-muted)]">{cat.attempts} attempts</span>
-                    <span className={`font-semibold ${
-                      cat.accuracy >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                      cat.accuracy >= 70 ? 'text-amber-600 dark:text-amber-400' :
-                      'text-red-600 dark:text-red-400'
-                    }`}>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {cat.attempts} attempts
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        cat.accuracy >= 80
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : cat.accuracy >= 70
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
                       {cat.accuracy}%
                     </span>
                   </div>
@@ -235,7 +346,9 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
             <div className="text-red-500 mb-4">⚠️</div>
-            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">Error Loading Questions</h2>
+            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
+              Error Loading Questions
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
             <div className="flex gap-2 justify-center">
               <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
@@ -254,9 +367,11 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">No Questions Available</h2>
+            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
+              No Questions Available
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-4">
-              No questions found for {SYSTEM_OPTIONS.find(s => s.id === selectedSystem)?.name}
+              No questions found for {SYSTEM_OPTIONS.find((s) => s.id === selectedSystem)?.name}
             </p>
             <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
               Back to Systems
@@ -306,7 +421,10 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-        <button onClick={onExit} className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+        <button
+          onClick={onExit}
+          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium">Exit</span>
         </button>
@@ -316,9 +434,15 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-10"
+        >
           <h2 className="text-4xl font-bold mb-3">Select Organ System</h2>
-          <p className="text-lg text-[var(--color-text-secondary)]">Master conditions from a single system</p>
+          <p className="text-lg text-[var(--color-text-secondary)]">
+            Master conditions from a single system
+          </p>
         </motion.div>
 
         {/* System grid - Responsive 3-column layout */}
@@ -339,12 +463,8 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                     <Icon className="w-7 h-7 text-slate-300 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2">
-                      {system.name}
-                    </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {system.description}
-                    </p>
+                    <h3 className="text-xl font-bold text-white mb-2">{system.name}</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">{system.description}</p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all" />
                 </div>

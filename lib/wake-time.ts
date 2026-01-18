@@ -1,14 +1,14 @@
 /**
  * Wake-Time Calibration System
- * 
+ *
  * Personalizes circadian adjustments based on user's natural sleep-wake cycle.
- * 
+ *
  * Research basis:
  * - Preckel et al. (2011): "Chronotype and academic achievement"
  * - Tonetti et al. (2015): "Sleep timing and academic performance"
  * - Study showing 8:30 AM wake-time associated with 73.1% high scorers
  * - 7:30 AM wake-time associated with higher failure rates
- * 
+ *
  * Key concepts:
  * - Chronotype: Individual's natural tendency for sleep-wake timing
  * - Optimal study windows: Relative to wake time, not clock time
@@ -18,12 +18,12 @@
 /**
  * Chronotype classification
  */
-export type Chronotype = 
-  | 'early_bird'     // Wake 5-6:30 AM
+export type Chronotype =
+  | 'early_bird' // Wake 5-6:30 AM
   | 'moderate_early' // Wake 6:30-7:30 AM
-  | 'intermediate'   // Wake 7:30-8:30 AM (optimal)
-  | 'moderate_late'  // Wake 8:30-10 AM
-  | 'night_owl';     // Wake after 10 AM
+  | 'intermediate' // Wake 7:30-8:30 AM (optimal)
+  | 'moderate_late' // Wake 8:30-10 AM
+  | 'night_owl'; // Wake after 10 AM
 
 /**
  * User's wake-time preferences
@@ -104,17 +104,17 @@ export function formatMinutesToTime(minutes: number): string {
  */
 export function determineChronotype(wakeTime: string): Chronotype {
   const minutes = parseTimeToMinutes(wakeTime);
-  
-  if (minutes < 390) return 'early_bird';       // Before 6:30 AM
-  if (minutes < 450) return 'moderate_early';   // 6:30-7:30 AM
-  if (minutes < 510) return 'intermediate';     // 7:30-8:30 AM (optimal)
-  if (minutes < 600) return 'moderate_late';    // 8:30-10:00 AM
-  return 'night_owl';                            // After 10:00 AM
+
+  if (minutes < 390) return 'early_bird'; // Before 6:30 AM
+  if (minutes < 450) return 'moderate_early'; // 6:30-7:30 AM
+  if (minutes < 510) return 'intermediate'; // 7:30-8:30 AM (optimal)
+  if (minutes < 600) return 'moderate_late'; // 8:30-10:00 AM
+  return 'night_owl'; // After 10:00 AM
 }
 
 /**
  * Calculate cognitive windows based on wake time
- * 
+ *
  * Windows are relative to wake time:
  * - Peak: 2-4 hours after waking
  * - Trough: 6-8 hours after waking (post-lunch dip)
@@ -122,22 +122,22 @@ export function determineChronotype(wakeTime: string): Chronotype {
  */
 export function calculateCognitiveWindows(wakeTime: string): CognitiveWindow {
   const wakeMinutes = parseTimeToMinutes(wakeTime);
-  
+
   // Peak: 2-4 hours after waking
   const peakStart = wakeMinutes + 120; // +2 hours
-  const peakEnd = wakeMinutes + 240;   // +4 hours
-  
+  const peakEnd = wakeMinutes + 240; // +4 hours
+
   // Trough: 6-8 hours after waking
   const troughStart = wakeMinutes + 360; // +6 hours
-  const troughEnd = wakeMinutes + 480;   // +8 hours
-  
+  const troughEnd = wakeMinutes + 480; // +8 hours
+
   // Evening recovery: 10-12 hours after waking
   const eveningStart = wakeMinutes + 600; // +10 hours
-  const eveningEnd = wakeMinutes + 720;   // +12 hours
-  
+  const eveningEnd = wakeMinutes + 720; // +12 hours
+
   // Late night: 14+ hours after waking (for night owls)
   const lateNightStart = wakeMinutes + 840; // +14 hours
-  
+
   return {
     peakStart: formatMinutesToTime(peakStart),
     peakEnd: formatMinutesToTime(peakEnd),
@@ -158,7 +158,7 @@ export function getCognitiveState(
 ): StudyRecommendation {
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
   const wakeMinutes = parseTimeToMinutes(wakeTime);
-  
+
   // Calculate hours since waking
   let minutesSinceWaking = currentMinutes - wakeMinutes;
   if (minutesSinceWaking < -360) {
@@ -175,9 +175,9 @@ export function getCognitiveState(
       confidence: 0.9,
     };
   }
-  
+
   const hoursSinceWaking = minutesSinceWaking / 60;
-  
+
   // Determine cognitive state
   if (hoursSinceWaking < 1) {
     // Just woke up
@@ -190,7 +190,7 @@ export function getCognitiveState(
       confidence: 0.8,
     };
   }
-  
+
   if (hoursSinceWaking < 4) {
     // Peak cognitive window
     return {
@@ -201,7 +201,7 @@ export function getCognitiveState(
       confidence: 0.9,
     };
   }
-  
+
   if (hoursSinceWaking < 6) {
     // Good but declining
     return {
@@ -212,7 +212,7 @@ export function getCognitiveState(
       confidence: 0.85,
     };
   }
-  
+
   if (hoursSinceWaking < 8) {
     // Post-lunch trough
     return {
@@ -224,7 +224,7 @@ export function getCognitiveState(
       confidence: 0.85,
     };
   }
-  
+
   if (hoursSinceWaking < 10) {
     // Transition period
     return {
@@ -236,7 +236,7 @@ export function getCognitiveState(
       confidence: 0.75,
     };
   }
-  
+
   if (hoursSinceWaking < 12) {
     // Evening recovery
     return {
@@ -247,7 +247,7 @@ export function getCognitiveState(
       confidence: 0.8,
     };
   }
-  
+
   if (hoursSinceWaking < 14) {
     // Declining evening
     return {
@@ -259,13 +259,13 @@ export function getCognitiveState(
       confidence: 0.7,
     };
   }
-  
+
   // Late night (14+ hours awake)
   return {
     isOptimal: false,
     cognitiveState: 'late_night',
     recommendation: 'Late night study. Focus on familiar material only. Sleep debt accumulating.',
-    stabilityModifier: 1.20, // +20% bonus for late night warriors
+    stabilityModifier: 1.2, // +20% bonus for late night warriors
     confidence: 0.6,
   };
 }
@@ -280,7 +280,7 @@ export function getDailyStudySchedule(wakeTime: string): Array<{
   priority: 'high' | 'medium' | 'low';
 }> {
   const windows = calculateCognitiveWindows(wakeTime);
-  
+
   return [
     {
       timeRange: `${formatMinutesToTime(parseTimeToMinutes(wakeTime))} - ${windows.peakStart}`,
@@ -320,11 +320,11 @@ export function getDailyStudySchedule(wakeTime: string): Array<{
  */
 export function getOptimalExamTime(chronotype: Chronotype): string {
   const optimalTimes: Record<Chronotype, string> = {
-    'early_bird': '08:00-10:00',
-    'moderate_early': '09:00-11:00',
-    'intermediate': '10:00-12:00',
-    'moderate_late': '11:00-13:00',
-    'night_owl': '12:00-14:00',
+    early_bird: '08:00-10:00',
+    moderate_early: '09:00-11:00',
+    intermediate: '10:00-12:00',
+    moderate_late: '11:00-13:00',
+    night_owl: '12:00-14:00',
   };
   return optimalTimes[chronotype];
 }
@@ -350,14 +350,14 @@ export function updatePreferences(
   updates: Partial<WakeTimePreferences>
 ): WakeTimePreferences {
   const newPrefs = { ...current, ...updates };
-  
+
   // Recalculate chronotype if wake time changed
   if (updates.weekdayWakeTime) {
     newPrefs.chronotype = determineChronotype(updates.weekdayWakeTime);
   }
-  
+
   newPrefs.updatedAt = new Date().toISOString();
-  
+
   return newPrefs;
 }
 

@@ -1,6 +1,6 @@
 /**
  * Organ Character System Configuration
- * 
+ *
  * Defines the organ-themed character collection for the PANaCEa gamification system.
  * Each body system has a base organ character with unlockable variants and accessories.
  */
@@ -17,7 +17,13 @@ export interface OrganVariant {
   system: SystemCode | 'SPECIAL'; // Special for easter egg characters
   isBase: boolean; // True for default unlocked versions
   unlockCondition: {
-    type: 'default' | 'questions_answered' | 'accuracy_threshold' | 'specific_condition' | 'achievement' | 'easter_egg';
+    type:
+      | 'default'
+      | 'questions_answered'
+      | 'accuracy_threshold'
+      | 'specific_condition'
+      | 'achievement'
+      | 'easter_egg';
     value?: number;
     condition?: string; // Specific condition name or achievement ID
   };
@@ -183,10 +189,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Classic sign of right ventricular hypertrophy',
     system: 'CV',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Tetralogy of Fallot'
+      condition: 'Tetralogy of Fallot',
     },
     rarity: 'uncommon',
     icon: '♥↗',
@@ -198,9 +204,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Enlarged heart from years of endurance training',
     system: 'CV',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 100
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 100,
     },
     rarity: 'uncommon',
     icon: '♥+',
@@ -212,10 +218,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Broken heart syndrome - stress cardiomyopathy',
     system: 'CV',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 3,
-      condition: 'Takotsubo'
+      condition: 'Takotsubo',
     },
     rarity: 'rare',
     icon: '♡',
@@ -227,9 +233,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Master of cardiovascular medicine',
     system: 'CV',
     isBase: false,
-    unlockCondition: { 
-      type: 'accuracy_threshold', 
-      value: 90
+    unlockCondition: {
+      type: 'accuracy_threshold',
+      value: 90,
     },
     rarity: 'epic',
     icon: '♥*',
@@ -254,10 +260,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'One lung collapsed, the other still fighting',
     system: 'PULM',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Pneumothorax'
+      condition: 'Pneumothorax',
     },
     rarity: 'uncommon',
     icon: '◉○',
@@ -269,10 +275,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Barrel chest and hyperinflated',
     system: 'PULM',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'COPD'
+      condition: 'COPD',
     },
     rarity: 'uncommon',
     icon: '◉◎',
@@ -284,9 +290,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Hyperresponsive bronchial tree',
     system: 'PULM',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 75
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 75,
     },
     rarity: 'uncommon',
     icon: '◉~',
@@ -298,9 +304,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Perfect pulmonary mastery',
     system: 'PULM',
     isBase: false,
-    unlockCondition: { 
-      type: 'accuracy_threshold', 
-      value: 90
+    unlockCondition: {
+      type: 'accuracy_threshold',
+      value: 90,
     },
     rarity: 'epic',
     icon: '◉*',
@@ -325,10 +331,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'H. pylori has entered the chat',
     system: 'GI',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Peptic Ulcer'
+      condition: 'Peptic Ulcer',
     },
     rarity: 'uncommon',
     icon: '◐×',
@@ -340,10 +346,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Transmural inflammation pattern',
     system: 'GI',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: "Crohn's Disease"
+      condition: "Crohn's Disease",
     },
     rarity: 'rare',
     icon: '◐▪',
@@ -355,10 +361,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Right lower quadrant tenderness',
     system: 'GI',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 3,
-      condition: 'Appendicitis'
+      condition: 'Appendicitis',
     },
     rarity: 'uncommon',
     icon: '◐!',
@@ -383,10 +389,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Time is brain - knowing the signs saves lives',
     system: 'NEURO',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Stroke'
+      condition: 'Stroke',
     },
     rarity: 'uncommon',
     icon: '⚡!',
@@ -398,9 +404,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Throbbing, photophobic, and miserable',
     system: 'NEURO',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '⚡~',
@@ -412,9 +418,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Exceptional neurologic expertise',
     system: 'NEURO',
     isBase: false,
-    unlockCondition: { 
-      type: 'accuracy_threshold', 
-      value: 95
+    unlockCondition: {
+      type: 'accuracy_threshold',
+      value: 95,
     },
     rarity: 'legendary',
     icon: '⚡★',
@@ -439,9 +445,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Callus formation in progress',
     system: 'MSK',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '∥×',
@@ -453,10 +459,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Swiss cheese appearance on X-ray',
     system: 'MSK',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Osteoporosis'
+      condition: 'Osteoporosis',
     },
     rarity: 'uncommon',
     icon: '∥○',
@@ -481,10 +487,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Worst pain known to medicine',
     system: 'RENAL',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Nephrolithiasis'
+      condition: 'Nephrolithiasis',
     },
     rarity: 'uncommon',
     icon: '◈◆',
@@ -496,10 +502,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Multiple cysts throughout',
     system: 'RENAL',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 3,
-      condition: 'Polycystic Kidney Disease'
+      condition: 'Polycystic Kidney Disease',
     },
     rarity: 'rare',
     icon: '◈○',
@@ -524,10 +530,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Revved up and ready to go',
     system: 'ENDO',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Hyperthyroidism'
+      condition: 'Hyperthyroidism',
     },
     rarity: 'uncommon',
     icon: '⚬↑',
@@ -539,10 +545,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Slowed down and sluggish',
     system: 'ENDO',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Hypothyroidism'
+      condition: 'Hypothyroidism',
     },
     rarity: 'uncommon',
     icon: '⚬↓',
@@ -567,9 +573,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Low hemoglobin, feeling tired',
     system: 'HEME',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '○',
@@ -581,10 +587,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Crescent-shaped RBCs',
     system: 'HEME',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Sickle Cell Disease'
+      condition: 'Sickle Cell Disease',
     },
     rarity: 'rare',
     icon: '◐',
@@ -609,9 +615,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Classic viral exanthem',
     system: 'DERM',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '▢▪',
@@ -623,10 +629,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'ABCDE criteria master',
     system: 'DERM',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Melanoma'
+      condition: 'Melanoma',
     },
     rarity: 'rare',
     icon: '▢●',
@@ -651,9 +657,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Conjunctivitis or something worse?',
     system: 'HEENT',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '◉×',
@@ -665,10 +671,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Increased intraocular pressure',
     system: 'HEENT',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Glaucoma'
+      condition: 'Glaucoma',
     },
     rarity: 'rare',
     icon: '◉↑',
@@ -693,10 +699,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Dysuria, frequency, and urgency',
     system: 'GU',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'UTI'
+      condition: 'UTI',
     },
     rarity: 'uncommon',
     icon: '◎×',
@@ -721,9 +727,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'OB principles mastered',
     system: 'REPRO',
     isBase: false,
-    unlockCondition: { 
-      type: 'questions_answered', 
-      value: 50
+    unlockCondition: {
+      type: 'questions_answered',
+      value: 50,
     },
     rarity: 'uncommon',
     icon: '✧+',
@@ -748,10 +754,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Survived the pandemic studies',
     system: 'ID',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'COVID-19'
+      condition: 'COVID-19',
     },
     rarity: 'uncommon',
     icon: '◆+',
@@ -763,10 +769,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'SIRS criteria expert',
     system: 'ID',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Sepsis'
+      condition: 'Sepsis',
     },
     rarity: 'rare',
     icon: '◆×',
@@ -791,10 +797,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Understanding depression mechanisms',
     system: 'PSYCH',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'Depression'
+      condition: 'Depression',
     },
     rarity: 'uncommon',
     icon: '◈↓',
@@ -806,10 +812,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'ADHD pathophysiology mastered',
     system: 'PSYCH',
     isBase: false,
-    unlockCondition: { 
-      type: 'specific_condition', 
+    unlockCondition: {
+      type: 'specific_condition',
       value: 5,
-      condition: 'ADHD'
+      condition: 'ADHD',
     },
     rarity: 'uncommon',
     icon: '◈~',
@@ -834,9 +840,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Symbol of clinical excellence',
     system: 'PRO',
     isBase: false,
-    unlockCondition: { 
-      type: 'accuracy_threshold', 
-      value: 95
+    unlockCondition: {
+      type: 'accuracy_threshold',
+      value: 95,
     },
     rarity: 'legendary',
     icon: '⊕★',
@@ -850,10 +856,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Normal sinus rhythm',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'easter_egg',
       value: 10,
-      condition: 'ecg_drill'
+      condition: 'ecg_drill',
     },
     rarity: 'rare',
     icon: '~▬~',
@@ -865,10 +871,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Shockable rhythm - get the paddles!',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'easter_egg',
       value: 50,
-      condition: 'ecg_drill'
+      condition: 'ecg_drill',
     },
     rarity: 'epic',
     icon: '~⚡~',
@@ -880,10 +886,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Flatline - start compressions',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'easter_egg',
       value: 75,
-      condition: 'ecg_drill'
+      condition: 'ecg_drill',
     },
     rarity: 'epic',
     icon: '▬▬▬',
@@ -895,9 +901,9 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Collect all major bones to bring him to life',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'achievement',
-      condition: 'bone_collector'
+      condition: 'bone_collector',
     },
     rarity: 'legendary',
     icon: '☠',
@@ -909,10 +915,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Master of interpreting results',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'easter_egg',
       value: 100,
-      condition: 'mini_lab'
+      condition: 'mini_lab',
     },
     rarity: 'legendary',
     icon: '⊙',
@@ -924,10 +930,10 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     description: 'Pharmacology expert extraordinaire',
     system: 'SPECIAL',
     isBase: false,
-    unlockCondition: { 
+    unlockCondition: {
       type: 'easter_egg',
       value: 100,
-      condition: 'pharmacology'
+      condition: 'pharmacology',
     },
     rarity: 'legendary',
     icon: '◉',
@@ -943,11 +949,11 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
   {
     id: 'basic_stethoscope',
     name: 'Basic Stethoscope',
-    description: 'Every clinician\'s first tool',
+    description: "Every clinician's first tool",
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'total_questions', 
-      value: 50 
+    unlockCondition: {
+      type: 'total_questions',
+      value: 50,
     },
     rarity: 'common',
     icon: '⊕',
@@ -958,9 +964,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Medical Cap',
     description: 'Scrubs fashion statement',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'total_questions', 
-      value: 100 
+    unlockCondition: {
+      type: 'total_questions',
+      value: 100,
     },
     rarity: 'common',
     icon: '^',
@@ -971,9 +977,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Face Mask',
     description: 'PPE is important',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'total_questions', 
-      value: 150 
+    unlockCondition: {
+      type: 'total_questions',
+      value: 150,
     },
     rarity: 'common',
     icon: '▢',
@@ -984,11 +990,11 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
   {
     id: 'flame_badge',
     name: 'Flame Badge',
-    description: 'You\'re on fire!',
+    description: "You're on fire!",
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'streak', 
-      value: 7 
+    unlockCondition: {
+      type: 'streak',
+      value: 7,
     },
     rarity: 'uncommon',
     icon: '▲',
@@ -999,9 +1005,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Lightning Bolt',
     description: 'Supercharged studying',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'streak', 
-      value: 14 
+    unlockCondition: {
+      type: 'streak',
+      value: 14,
     },
     rarity: 'rare',
     icon: '⚡',
@@ -1012,9 +1018,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Study Crown',
     description: 'Royalty of consistency',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'streak', 
-      value: 30 
+    unlockCondition: {
+      type: 'streak',
+      value: 30,
     },
     rarity: 'epic',
     icon: '♔',
@@ -1027,9 +1033,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Golden Stethoscope',
     description: 'Symbol of clinical mastery',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
+    unlockCondition: {
       type: 'achievement',
-      achievementId: 'clinical_excellence'
+      achievementId: 'clinical_excellence',
     },
     rarity: 'legendary',
     icon: '⊕★',
@@ -1040,9 +1046,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Graduation Cap',
     description: 'Ready for boards',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'total_questions', 
-      value: 1000 
+    unlockCondition: {
+      type: 'total_questions',
+      value: 1000,
     },
     rarity: 'epic',
     icon: '▭',
@@ -1053,9 +1059,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Trophy Badge',
     description: 'Champion of learning',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
+    unlockCondition: {
       type: 'achievement',
-      achievementId: 'perfect_100'
+      achievementId: 'perfect_100',
     },
     rarity: 'legendary',
     icon: '◊',
@@ -1068,7 +1074,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Clinical Wizard Hat',
     description: 'Master of all systems',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
+    unlockCondition: {
       type: 'special_event',
     },
     rarity: 'legendary',
@@ -1080,9 +1086,9 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
     name: 'Superhero Cape',
     description: 'Healthcare hero',
     compatibleSystems: ['ALL'],
-    unlockCondition: { 
-      type: 'streak', 
-      value: 100 
+    unlockCondition: {
+      type: 'streak',
+      value: 100,
     },
     rarity: 'legendary',
     icon: '▽',
@@ -1094,28 +1100,28 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
  * Get all variants for a specific system
  */
 export function getVariantsForSystem(system: SystemCode | 'SPECIAL'): OrganVariant[] {
-  return ORGAN_VARIANTS.filter(v => v.system === system);
+  return ORGAN_VARIANTS.filter((v) => v.system === system);
 }
 
 /**
  * Get character by system
  */
 export function getCharacterBySystem(system: SystemCode | 'SPECIAL'): OrganCharacter | undefined {
-  return ORGAN_CHARACTERS.find(c => c.system === system);
+  return ORGAN_CHARACTERS.find((c) => c.system === system);
 }
 
 /**
  * Get variant by ID
  */
 export function getVariantById(variantId: OrganVariantId): OrganVariant | undefined {
-  return ORGAN_VARIANTS.find(v => v.id === variantId);
+  return ORGAN_VARIANTS.find((v) => v.id === variantId);
 }
 
 /**
  * Get accessory by ID
  */
 export function getAccessoryById(accessoryId: OrganAccessoryId): OrganAccessory | undefined {
-  return ORGAN_ACCESSORIES.find(a => a.id === accessoryId);
+  return ORGAN_ACCESSORIES.find((a) => a.id === accessoryId);
 }
 
 /**
@@ -1127,6 +1133,7 @@ export function isAccessoryCompatible(
 ): boolean {
   const accessory = getAccessoryById(accessoryId);
   if (!accessory) return false;
-  return accessory.compatibleSystems.includes('ALL') || 
-         accessory.compatibleSystems.includes(system);
+  return (
+    accessory.compatibleSystems.includes('ALL') || accessory.compatibleSystems.includes(system)
+  );
 }

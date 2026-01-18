@@ -1,11 +1,18 @@
 /**
  * KeyboardShortcutsContext
- * 
+ *
  * Centralized keyboard shortcut management for the application.
  * Extracted from App.tsx to reduce component complexity.
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 interface KeyboardShortcutsContextValue {
   isCommandPaletteOpen: boolean;
@@ -27,11 +34,11 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 
   const toggleCommandPalette = useCallback(() => {
-    setIsCommandPaletteOpen(prev => !prev);
+    setIsCommandPaletteOpen((prev) => !prev);
   }, []);
 
   const toggleShortcutsModal = useCallback(() => {
-    setIsShortcutsModalOpen(prev => !prev);
+    setIsShortcutsModalOpen((prev) => !prev);
   }, []);
 
   // Global keyboard shortcuts
@@ -48,7 +55,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
         e.preventDefault();
         toggleCommandPalette();
       }
-      
+
       // Cmd/Ctrl + / to open keyboard shortcuts modal
       if ((e.metaKey || e.ctrlKey) && e.key === '/') {
         e.preventDefault();
@@ -70,9 +77,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   };
 
   return (
-    <KeyboardShortcutsContext.Provider value={value}>
-      {children}
-    </KeyboardShortcutsContext.Provider>
+    <KeyboardShortcutsContext.Provider value={value}>{children}</KeyboardShortcutsContext.Provider>
   );
 }
 

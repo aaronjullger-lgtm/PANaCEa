@@ -15,6 +15,7 @@ export GEMINI_API_KEY="your-api-key-here"
 ```
 
 Or alternatively:
+
 ```bash
 export GOOGLE_API_KEY="your-api-key-here"
 ```
@@ -41,6 +42,7 @@ npm run generate:basic-science-links    # Generate for all 500 cases
 ### Lab Cases (`src/data/labCases.json`)
 
 250 unique cases focused on laboratory interpretation:
+
 - **High-yield conditions**: DKA, SIADH, AKI, Liver Failure, Electrolyte disorders
 - **Complete lab panels**: BMP, CBC, and LFT for each case
 - **Clinical context**: Brief vignettes with patient demographics and presentation
@@ -51,6 +53,7 @@ npm run generate:basic-science-links    # Generate for all 500 cases
 ### Clinical Cases (`src/data/clinicalCases.json`)
 
 250 unique cases focused on clinical presentation and pattern recognition:
+
 - **High-yield systems**: Neurology, Musculoskeletal, Complex Cardiac
 - **Detailed vignettes**: 3-4 sentence patient presentations
 - **Presentation clues**: 4-6 clues per case including:
@@ -115,15 +118,11 @@ import type { LabCase } from '@/src/types/content';
 import labCases from '@/src/data/labCases.json';
 
 // Get all DKA cases
-const dkaCases = labCases.filter(c => 
-  c.correctDiagnosis.includes('Diabetic Ketoacidosis')
-);
+const dkaCases = labCases.filter((c) => c.correctDiagnosis.includes('Diabetic Ketoacidosis'));
 
 // Find cases with hyperkalemia
-const hyperkalemicCases = labCases.filter(c =>
-  c.labs.BMP.some(lab => 
-    lab.name === 'Potassium' && lab.flag === 'H'
-  )
+const hyperkalemicCases = labCases.filter((c) =>
+  c.labs.BMP.some((lab) => lab.name === 'Potassium' && lab.flag === 'H')
 );
 
 // Quiz mode example
@@ -143,22 +142,18 @@ import type { ClinicalCase } from '@/src/types/content';
 import clinicalCases from '@/src/data/clinicalCases.json';
 
 // Get all stroke cases
-const strokeCases = clinicalCases.filter(c =>
-  c.correctDiagnosis.includes('Stroke')
-);
+const strokeCases = clinicalCases.filter((c) => c.correctDiagnosis.includes('Stroke'));
 
 // Get all buzzwords across cases
-const allBuzzwords = clinicalCases.flatMap(c =>
-  c.presentationClues
-    .filter(clue => clue.type === 'buzzword')
-    .map(clue => clue.description)
+const allBuzzwords = clinicalCases.flatMap((c) =>
+  c.presentationClues.filter((clue) => clue.type === 'buzzword').map((clue) => clue.description)
 );
 
 // Quiz mode example
 function presentClinicalCase(clinicalCase: ClinicalCase) {
   console.log(clinicalCase.vignette);
   console.log('\nPresentation Clues:');
-  clinicalCase.presentationClues.forEach(clue => {
+  clinicalCase.presentationClues.forEach((clue) => {
     console.log(`[${clue.type}] ${clue.description}`);
   });
   // Ask user for diagnosis...
@@ -174,10 +169,10 @@ Edit the constants at the top of each script:
 ```typescript
 // scripts/generateLabContent.ts or generateClinicalContent.ts
 
-const MODEL_NAME = "gemini-2.0-flash-exp";  // Change model
-const TARGET_CASES = 250;                    // Change quantity
-const BATCH_SIZE = 25;                       // Cases per batch
-const DELAY_BETWEEN_BATCHES = 2000;          // Rate limit delay (ms)
+const MODEL_NAME = 'gemini-2.0-flash-exp'; // Change model
+const TARGET_CASES = 250; // Change quantity
+const BATCH_SIZE = 25; // Cases per batch
+const DELAY_BETWEEN_BATCHES = 2000; // Rate limit delay (ms)
 ```
 
 ### Add More High-Yield Conditions
@@ -187,8 +182,8 @@ Edit the condition arrays in the scripts:
 ```typescript
 // scripts/generateLabContent.ts
 const HIGH_YIELD_CONDITIONS = [
-  "Diabetic Ketoacidosis (DKA)",
-  "SIADH",
+  'Diabetic Ketoacidosis (DKA)',
+  'SIADH',
   // Add your conditions here...
 ];
 ```
@@ -208,6 +203,7 @@ echo $GEMINI_API_KEY
 ### Rate Limit Errors
 
 If you hit rate limits:
+
 1. Increase `DELAY_BETWEEN_BATCHES` (e.g., to 5000ms)
 2. Decrease `BATCH_SIZE` (e.g., to 10)
 3. Run the script again - it will append to existing data
@@ -215,6 +211,7 @@ If you hit rate limits:
 ### JSON Parse Errors
 
 The scripts automatically clean up markdown code blocks from Gemini's response. If you still get errors:
+
 1. Check the console output for the problematic response
 2. Try running again - occasional API hiccups happen
 3. Consider switching to `gemini-2.5-pro` for more consistent formatting
@@ -222,6 +219,7 @@ The scripts automatically clean up markdown code blocks from Gemini's response. 
 ## Quality Assurance
 
 Both scripts implement:
+
 - ✅ JSON structure validation
 - ✅ Required field checking
 - ✅ Medical accuracy (conditions match lab/presentation patterns)
@@ -243,17 +241,18 @@ The system can automatically generate foundational basic science concept links f
 ### What are Basic Science Links?
 
 Each case can have up to 3 links to foundational concepts:
+
 ```typescript
 basicScienceLinks: [
   {
-    title: "Review: The RAAS",
-    conceptId: "raas-system"
+    title: 'Review: The RAAS',
+    conceptId: 'raas-system',
   },
   {
-    title: "Review: Sodium Homeostasis", 
-    conceptId: "sodium-homeostasis"
-  }
-]
+    title: 'Review: Sodium Homeostasis',
+    conceptId: 'sodium-homeostasis',
+  },
+];
 ```
 
 ### How to Generate
@@ -271,6 +270,7 @@ npm run generate:basic-science-links
 ### What Concepts are Generated?
 
 The AI focuses on:
+
 - Fundamental physiological processes (e.g., RAAS, insulin signaling)
 - Key biochemical pathways (e.g., glycolysis, ketone metabolism)
 - Important anatomical structures (e.g., circle of Willis)
@@ -281,6 +281,7 @@ For detailed information, see `scripts/README_BASIC_SCIENCE_LINKS.md`
 ## Support
 
 For detailed documentation:
+
 - **Script details**: `scripts/README_CONTENT_GENERATION.md`
 - **Basic science links**: `scripts/README_BASIC_SCIENCE_LINKS.md`
 - **Usage examples**: `src/data/README.md`

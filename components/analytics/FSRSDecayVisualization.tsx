@@ -1,25 +1,31 @@
 /**
  * FSRS Memory Decay Visualization
- * 
+ *
  * Shows memory decay curves to users, visualizing:
  * - Stability/Difficulty metrics
  * - "You will forget this" predictive alerts
  * - Optimal review time recommendations
- * 
+ *
  * @see docs/CRITICAL_FIXES_SPRINT_TRACKER.md - Sprint E
  */
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Brain, Clock, TrendingDown, AlertTriangle, CheckCircle,
-  Calendar, Info, ChevronRight
+import {
+  Brain,
+  Clock,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+  Info,
+  ChevronRight,
 } from 'lucide-react';
 
 interface FSRSCardData {
   id: string;
   conditionName: string;
-  stability: number;  // Days until 90% retention
+  stability: number; // Days until 90% retention
   difficulty: number; // 1-10 scale
   lastReview: Date;
   nextReview: Date;
@@ -58,8 +64,8 @@ const formatTimeUntilForgotten = (days: number): string => {
 };
 
 // Memory Decay Curve SVG
-const DecayCurve: React.FC<{ 
-  stability: number; 
+const DecayCurve: React.FC<{
+  stability: number;
   daysSinceReview: number;
   width?: number;
   height?: number;
@@ -67,12 +73,12 @@ const DecayCurve: React.FC<{
   const points = useMemo(() => {
     const pts: string[] = [];
     const maxDays = stability * 3; // Show 3x stability
-    
+
     for (let i = 0; i <= 50; i++) {
       const day = (i / 50) * maxDays;
       const r = calculateRetrievability(stability, day);
       const x = (i / 50) * width;
-      const y = height - (r * height);
+      const y = height - r * height;
       pts.push(`${x},${y}`);
     }
     return pts.join(' ');
@@ -82,17 +88,24 @@ const DecayCurve: React.FC<{
   const maxDays = stability * 3;
   const currentX = Math.min(1, daysSinceReview / maxDays) * width;
   const currentR = calculateRetrievability(stability, daysSinceReview);
-  const currentY = height - (currentR * height);
+  const currentY = height - currentR * height;
 
   // Threshold line at 70%
-  const thresholdY = height - (0.7 * height);
+  const thresholdY = height - 0.7 * height;
 
   return (
     <svg width={width} height={height} className="overflow-visible">
       {/* Background grid */}
-      <line x1="0" y1={thresholdY} x2={width} y2={thresholdY} 
-        stroke="var(--color-border)" strokeWidth="1" strokeDasharray="4,4" />
-      
+      <line
+        x1="0"
+        y1={thresholdY}
+        x2={width}
+        y2={thresholdY}
+        stroke="var(--color-border)"
+        strokeWidth="1"
+        strokeDasharray="4,4"
+      />
+
       {/* Decay curve */}
       <polyline
         points={points}
@@ -101,7 +114,7 @@ const DecayCurve: React.FC<{
         strokeWidth="2"
         strokeLinecap="round"
       />
-      
+
       {/* Gradient definition */}
       <defs>
         <linearGradient id="decay-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -110,7 +123,7 @@ const DecayCurve: React.FC<{
           <stop offset="100%" stopColor="#ef4444" />
         </linearGradient>
       </defs>
-      
+
       {/* Current position marker */}
       <circle
         cx={currentX}
@@ -120,13 +133,17 @@ const DecayCurve: React.FC<{
         stroke="white"
         strokeWidth="2"
       />
-      
+
       {/* Labels */}
-      <text x="0" y={height + 12} fontSize="8" fill="var(--color-text-muted)">Now</text>
+      <text x="0" y={height + 12} fontSize="8" fill="var(--color-text-muted)">
+        Now
+      </text>
       <text x={width - 20} y={height + 12} fontSize="8" fill="var(--color-text-muted)">
         {Math.round(maxDays)}d
       </text>
-      <text x={width + 4} y={thresholdY + 3} fontSize="8" fill="var(--color-text-muted)">70%</text>
+      <text x={width + 4} y={thresholdY + 3} fontSize="8" fill="var(--color-text-muted)">
+        70%
+      </text>
     </svg>
   );
 };
@@ -136,13 +153,14 @@ const CardDecayCard: React.FC<{
   card: FSRSCardData;
   onReviewNow?: () => void;
 }> = ({ card, onReviewNow }) => {
-  const daysSinceReview = (Date.now() - new Date(card.lastReview).getTime()) / (1000 * 60 * 60 * 24);
+  const daysSinceReview =
+    (Date.now() - new Date(card.lastReview).getTime()) / (1000 * 60 * 60 * 24);
   const currentRetrievability = calculateRetrievability(card.stability, daysSinceReview);
   const urgency = getUrgencyLevel(currentRetrievability);
-  
+
   // Days until 70% retention
   const daysUntilForgotten = card.stability * (Math.pow(0.7, -1) - 1) - daysSinceReview;
-  
+
   const urgencyColors = {
     safe: 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20',
     warning: 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20',
@@ -150,9 +168,17 @@ const CardDecayCard: React.FC<{
   };
 
   const urgencyText = {
-    safe: { icon: CheckCircle, color: 'text-green-600 dark:text-green-400', label: 'Memory Stable' },
+    safe: {
+      icon: CheckCircle,
+      color: 'text-green-600 dark:text-green-400',
+      label: 'Memory Stable',
+    },
     warning: { icon: Clock, color: 'text-yellow-600 dark:text-yellow-400', label: 'Review Soon' },
-    critical: { icon: AlertTriangle, color: 'text-red-600 dark:text-red-400', label: 'Forgetting!' },
+    critical: {
+      icon: AlertTriangle,
+      color: 'text-red-600 dark:text-red-400',
+      label: 'Forgetting!',
+    },
   };
 
   const UrgencyIcon = urgencyText[urgency].icon;
@@ -175,7 +201,7 @@ const CardDecayCard: React.FC<{
             </span>
           </div>
         </div>
-        
+
         <div className="text-right">
           <div className="text-2xl font-bold text-[var(--color-text-primary)]">
             {Math.round(currentRetrievability * 100)}%
@@ -183,12 +209,12 @@ const CardDecayCard: React.FC<{
           <div className="text-xs text-[var(--color-text-muted)]">retention</div>
         </div>
       </div>
-      
+
       {/* Decay Curve */}
       <div className="mb-3">
         <DecayCurve stability={card.stability} daysSinceReview={daysSinceReview} />
       </div>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 text-center mb-3">
         <div className="p-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
@@ -204,16 +230,21 @@ const CardDecayCard: React.FC<{
           <div className="text-[10px] text-[var(--color-text-muted)]">Difficulty</div>
         </div>
         <div className="p-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
-          <div className={`text-sm font-bold ${
-            daysUntilForgotten > 3 ? 'text-green-600' :
-            daysUntilForgotten > 1 ? 'text-yellow-600' : 'text-red-600'
-          }`}>
+          <div
+            className={`text-sm font-bold ${
+              daysUntilForgotten > 3
+                ? 'text-green-600'
+                : daysUntilForgotten > 1
+                  ? 'text-yellow-600'
+                  : 'text-red-600'
+            }`}
+          >
             {daysUntilForgotten > 0 ? formatTimeUntilForgotten(daysUntilForgotten) : 'Now!'}
           </div>
           <div className="text-[10px] text-[var(--color-text-muted)]">Until Forgotten</div>
         </div>
       </div>
-      
+
       {/* Review Button */}
       {urgency !== 'safe' && onReviewNow && (
         <button
@@ -244,9 +275,12 @@ const PredictiveAlert: React.FC<{
         <div className="flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
           <div>
-            <h3 className="font-semibold text-green-900 dark:text-green-100">Memory Looking Good! 🎉</h3>
+            <h3 className="font-semibold text-green-900 dark:text-green-100">
+              Memory Looking Good! 🎉
+            </h3>
             <p className="text-sm text-green-700 dark:text-green-300">
-              All your cards are stable. {nextCriticalIn && `Next review needed in ${nextCriticalIn}.`}
+              All your cards are stable.{' '}
+              {nextCriticalIn && `Next review needed in ${nextCriticalIn}.`}
             </p>
           </div>
         </div>
@@ -294,8 +328,9 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
     const warning: FSRSCardData[] = [];
     const safe: FSRSCardData[] = [];
 
-    cards.forEach(card => {
-      const daysSinceReview = (Date.now() - new Date(card.lastReview).getTime()) / (1000 * 60 * 60 * 24);
+    cards.forEach((card) => {
+      const daysSinceReview =
+        (Date.now() - new Date(card.lastReview).getTime()) / (1000 * 60 * 60 * 24);
       const r = calculateRetrievability(card.stability, daysSinceReview);
       const urgency = getUrgencyLevel(r);
 
@@ -306,8 +341,14 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
 
     // Sort by urgency within each category
     const sortByRetrievability = (a: FSRSCardData, b: FSRSCardData) => {
-      const aR = calculateRetrievability(a.stability, (Date.now() - new Date(a.lastReview).getTime()) / (1000 * 60 * 60 * 24));
-      const bR = calculateRetrievability(b.stability, (Date.now() - new Date(b.lastReview).getTime()) / (1000 * 60 * 60 * 24));
+      const aR = calculateRetrievability(
+        a.stability,
+        (Date.now() - new Date(a.lastReview).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const bR = calculateRetrievability(
+        b.stability,
+        (Date.now() - new Date(b.lastReview).getTime()) / (1000 * 60 * 60 * 24)
+      );
       return aR - bR;
     };
 
@@ -318,7 +359,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
     };
   }, [cards]);
 
-  const displayCards = showAll 
+  const displayCards = showAll
     ? [...criticalCards, ...warningCards, ...safeCards]
     : [...criticalCards, ...warningCards].slice(0, 6);
 
@@ -327,7 +368,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       <div className="space-y-4 animate-pulse">
         <div className="h-16 bg-[var(--color-bg-secondary)] rounded-xl" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-48 bg-[var(--color-bg-secondary)] rounded-xl" />
           ))}
         </div>
@@ -361,19 +402,23 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       </div>
 
       {/* Predictive Alert */}
-      <PredictiveAlert 
+      <PredictiveAlert
         criticalCount={criticalCards.length}
         warningCount={warningCards.length}
-        nextCriticalIn={safeCards.length > 0 ? formatTimeUntilForgotten(
-          safeCards[0].stability * (Math.pow(0.7, -1) - 1) - 
-          (Date.now() - new Date(safeCards[0].lastReview).getTime()) / (1000 * 60 * 60 * 24)
-        ) : undefined}
+        nextCriticalIn={
+          safeCards.length > 0
+            ? formatTimeUntilForgotten(
+                safeCards[0].stability * (Math.pow(0.7, -1) - 1) -
+                  (Date.now() - new Date(safeCards[0].lastReview).getTime()) / (1000 * 60 * 60 * 24)
+              )
+            : undefined
+        }
       />
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
-          {displayCards.map(card => (
+          {displayCards.map((card) => (
             <CardDecayCard
               key={card.id}
               card={card}
@@ -397,8 +442,8 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs text-[var(--color-text-muted)]">
         <strong>Understanding Memory Decay:</strong>
         <p className="mt-1">
-          The curve shows how your memory fades over time. Review before dropping below 70% 
-          to maintain strong recall. Higher stability = slower forgetting.
+          The curve shows how your memory fades over time. Review before dropping below 70% to
+          maintain strong recall. Higher stability = slower forgetting.
         </p>
       </div>
     </div>

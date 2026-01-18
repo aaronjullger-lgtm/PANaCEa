@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 async function migrateLabTests() {
   console.log('Migrating Lab Tests...');
   let count = 0;
-  
+
   for (const test of LAB_TEST_DATABASE) {
     try {
       await prisma.labTest.upsert({
@@ -16,14 +16,14 @@ async function migrateLabTests() {
         update: {
           category: test.category,
           commonAbnormalities: test.commonAbnormalities || [],
-          typicalUse: test.typicalUse
+          typicalUse: test.typicalUse,
         },
         create: {
           name: test.name,
           category: test.category,
           commonAbnormalities: test.commonAbnormalities || [],
-          typicalUse: test.typicalUse
-        }
+          typicalUse: test.typicalUse,
+        },
       });
       count++;
     } catch (error) {
@@ -36,7 +36,7 @@ async function migrateLabTests() {
 async function migrateLabCases() {
   console.log('Migrating Lab Cases...');
   const labCasesPath = path.resolve(process.cwd(), 'src/data/labCases.json');
-  
+
   if (!fs.existsSync(labCasesPath)) {
     console.warn('Lab cases file not found at:', labCasesPath);
     return;
@@ -50,28 +50,28 @@ async function migrateLabCases() {
       // We don't have a unique constraint on correctDiagnosis + vignette, so we'll just create
       // Or we could try to find existing one to avoid duplicates if run multiple times
       // For now, let's check if one exists with same diagnosis and vignette start
-      
+
       const existing = await prisma.labCase.findFirst({
         where: {
           correctDiagnosis: caseItem.correctDiagnosis,
-          clinicalVignette: caseItem.clinicalVignette
-        }
+          clinicalVignette: caseItem.clinicalVignette,
+        },
       });
 
       if (existing) {
         await prisma.labCase.update({
           where: { id: existing.id },
           data: {
-            labs: caseItem.labs
-          }
+            labs: caseItem.labs,
+          },
         });
       } else {
         await prisma.labCase.create({
           data: {
             correctDiagnosis: caseItem.correctDiagnosis,
             clinicalVignette: caseItem.clinicalVignette,
-            labs: caseItem.labs
-          }
+            labs: caseItem.labs,
+          },
         });
       }
       count++;

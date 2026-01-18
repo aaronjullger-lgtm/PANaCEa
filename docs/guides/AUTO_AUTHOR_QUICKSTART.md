@@ -15,14 +15,14 @@ tsx scripts/generateMissingContent.ts --dry-run
 
 ## 📋 Common Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run generate:missing-content` | Generate content for all conditions missing data |
-| `npm run test:auto-author` | Test AI generation without database |
-| `tsx scripts/generateMissingContent.ts --dry-run` | Preview conditions that need content |
-| `tsx scripts/generateMissingContent.ts --max-conditions=25` | Process only 25 conditions |
-| `tsx scripts/generateMissingContent.ts --extended` | Include extended fields (epidemiology, etc.) |
-| `tsx scripts/generateMissingContent.ts --delay=3000` | Increase delay to 3 seconds |
+| Command                                                     | Description                                      |
+| ----------------------------------------------------------- | ------------------------------------------------ |
+| `npm run generate:missing-content`                          | Generate content for all conditions missing data |
+| `npm run test:auto-author`                                  | Test AI generation without database              |
+| `tsx scripts/generateMissingContent.ts --dry-run`           | Preview conditions that need content             |
+| `tsx scripts/generateMissingContent.ts --max-conditions=25` | Process only 25 conditions                       |
+| `tsx scripts/generateMissingContent.ts --extended`          | Include extended fields (epidemiology, etc.)     |
+| `tsx scripts/generateMissingContent.ts --delay=3000`        | Increase delay to 3 seconds                      |
 
 ## 🎯 Typical Workflow
 
@@ -46,6 +46,7 @@ npm run generate:missing-content
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```bash
 # Required
 export GEMINI_API_KEY=your_key_here
@@ -56,6 +57,7 @@ export DIRECT_DATABASE_URL=postgresql://...
 ```
 
 ### Command-Line Flags
+
 - `--max-conditions=N` - Process at most N conditions (default: 100)
 - `--delay=MS` - Delay between API calls in ms (default: 2000)
 - `--dry-run` - Preview only, no database changes
@@ -90,12 +92,12 @@ differentialDiagnosis?: string[]
 
 ## 🐛 Troubleshooting
 
-| Error | Solution |
-|-------|----------|
-| Missing API key | Set `GEMINI_API_KEY` env var |
-| Database connection | Check `DATABASE_URL` in `.env` |
-| Rate limit exceeded | Increase `--delay` or reduce `--max-conditions` |
-| Invalid JSON | Script retries automatically |
+| Error               | Solution                                            |
+| ------------------- | --------------------------------------------------- |
+| Missing API key     | Set `GEMINI_API_KEY` env var                        |
+| Database connection | Check `DATABASE_URL` in `.env`                      |
+| Rate limit exceeded | Increase `--delay` or reduce `--max-conditions`     |
+| Invalid JSON        | Script retries automatically                        |
 | No conditions found | All content already exists (check with `--dry-run`) |
 
 ## 📁 File Locations
@@ -119,11 +121,13 @@ docs/
 ## 🔗 Integration Examples
 
 ### With Registry Sync
+
 ```bash
 npm run sync:all-registries && npm run generate:missing-content
 ```
 
 ### Scheduled Automation
+
 ```typescript
 import { autoAuthorMissingContent } from '../lib/services/autoAuthor';
 
@@ -140,7 +144,7 @@ await autoAuthorMissingContent(apiKey, {
 npm run db:studio
 
 # View content completion
-SELECT 
+SELECT
   system,
   COUNT(*) as total,
   COUNT(CASE WHEN content->>'overview' IS NOT NULL THEN 1 END) as complete

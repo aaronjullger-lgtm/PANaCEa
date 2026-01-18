@@ -45,7 +45,7 @@ interface GrandRoundsHeroProps {
 
 /**
  * Grand Rounds Hero Banner
- * 
+ *
  * A prominent, full-width hero section at the top of the dashboard that highlights
  * today's daily challenge. Auto-adjusts based on user's completion status.
  */
@@ -73,7 +73,9 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
       expert: 'bg-red-500/20 text-red-300 border-red-500/30',
     };
     return (
-      <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${colors[difficulty]} capitalize`}>
+      <span
+        className={`px-2 py-0.5 text-xs font-medium rounded-full border ${colors[difficulty]} capitalize`}
+      >
         {difficulty}
       </span>
     );
@@ -141,13 +143,16 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
       className="relative w-full mb-6"
     >
       {/* Main Hero Card */}
-      <div className={`
+      <div
+        className={`
         relative overflow-hidden rounded-2xl border
-        ${userStatus === 'completed' 
-          ? 'bg-gradient-to-br from-emerald-900/40 via-emerald-800/30 to-teal-900/40 border-emerald-700/40'
-          : 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700'
+        ${
+          userStatus === 'completed'
+            ? 'bg-gradient-to-br from-emerald-900/40 via-emerald-800/30 to-teal-900/40 border-emerald-700/40'
+            : 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700'
         }
-      `}>
+      `}
+      >
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-radial from-slate-600/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-radial from-slate-700/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -168,8 +173,12 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
             {/* Left: Content */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <div className={`p-3 rounded-xl ${userStatus === 'completed' ? 'bg-emerald-500/20' : 'bg-slate-700/40'}`}>
-                  <Trophy className={`w-6 h-6 ${userStatus === 'completed' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <div
+                  className={`p-3 rounded-xl ${userStatus === 'completed' ? 'bg-emerald-500/20' : 'bg-slate-700/40'}`}
+                >
+                  <Trophy
+                    className={`w-6 h-6 ${userStatus === 'completed' ? 'text-emerald-400' : 'text-slate-400'}`}
+                  />
                 </div>
                 {getDifficultyBadge()}
                 {userStatus === 'completed' && (
@@ -180,12 +189,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                 )}
               </div>
 
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                {content.headline}
-              </h2>
-              <p className="text-lg text-white/70 mb-4">
-                {content.subtext}
-              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{content.headline}</h2>
+              <p className="text-lg text-white/70 mb-4">{content.subtext}</p>
 
               {/* Quick stats row */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-white/60 mb-6">
@@ -195,7 +200,9 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  <span>{estimatedTimeMinutes} min • {questionCount} questions</span>
+                  <span>
+                    {estimatedTimeMinutes} min • {questionCount} questions
+                  </span>
                 </div>
               </div>
 
@@ -204,9 +211,10 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                 onClick={onStart}
                 className={`
                   inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all
-                  ${userStatus === 'completed'
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                    : 'bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white text-white shadow-lg transition-all'
+                  ${
+                    userStatus === 'completed'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
+                      : 'bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white text-white shadow-lg transition-all'
                   }
                 `}
               >
@@ -221,7 +229,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                 <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-4">
                   Your Performance
                 </h3>
-                
+
                 <div className="space-y-4">
                   {/* Score comparison */}
                   <div className="flex items-center justify-between">
@@ -250,13 +258,16 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {/* Percentile */}
                   {userPercentile !== undefined && (
                     <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
-                      <TrendingUp className={`w-5 h-5 ${userPercentile >= 50 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                      <TrendingUp
+                        className={`w-5 h-5 ${userPercentile >= 50 ? 'text-emerald-400' : 'text-amber-400'}`}
+                      />
                       <div>
                         <div className="text-sm font-medium text-white">
                           Top {100 - userPercentile}% of participants
                         </div>
                         <div className="text-xs text-white/50">
-                          Ranked #{Math.ceil(participantCount * (1 - userPercentile / 100))} of {participantCount}
+                          Ranked #{Math.ceil(participantCount * (1 - userPercentile / 100))} of{' '}
+                          {participantCount}
                         </div>
                       </div>
                     </div>

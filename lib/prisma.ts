@@ -1,11 +1,11 @@
 /**
  * Prisma Client Singleton with Accelerate Extension
- * 
+ *
  * Ensures only one instance of PrismaClient exists throughout the application lifecycle.
  * This prevents connection pool exhaustion and improves performance.
- * 
+ *
  * Uses Prisma Accelerate extension for Edge runtime compatibility and caching.
- * 
+ *
  * @see https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
  * @see https://www.prisma.io/docs/accelerate
  */

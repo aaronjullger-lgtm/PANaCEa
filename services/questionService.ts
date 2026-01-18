@@ -1,6 +1,6 @@
 /**
  * Question Service
- * 
+ *
  * Handles fetching questions from the pool/database first,
  * falling back to Gemini API generation only when necessary.
  * Triggers background generation when pool runs low.
@@ -38,13 +38,13 @@ interface PoolQuestion {
  */
 function convertPoolQuestion(poolQ: PoolQuestion): Question {
   // Convert correctAnswer letter (A, B, C, D) to index
-  const letterToIndex: Record<string, number> = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
   let correctIndex = letterToIndex[poolQ.correctAnswer.charAt(0).toUpperCase()] ?? 0;
-  
+
   // If correctAnswer is not a letter, try to find it in options
   if (correctIndex === undefined) {
-    correctIndex = poolQ.options.findIndex(opt => 
-      opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
+    correctIndex = poolQ.options.findIndex(
+      (opt) => opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
     );
     if (correctIndex === -1) correctIndex = 0;
   }
@@ -56,10 +56,8 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question {
 
   return {
     id: poolQ.id,
-    question: poolQ.vignette 
-      ? `${poolQ.vignette}\n\n${poolQ.question}` 
-      : poolQ.question,
-    options: poolQ.options.map(opt => 
+    question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
+    options: poolQ.options.map((opt) =>
       // Remove letter prefix if present (e.g., "A. Option" -> "Option")
       opt.replace(/^[A-D]\.\s*/, '')
     ),
@@ -79,9 +77,10 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question {
  */
 function extractPearlsFromRationale(rationale: string): string[] {
   const pearls: string[] = [];
-  
+
   // Pattern 1: "Key Takeaway:" or "Clinical Pearl:" followed by content
-  const keyTakeawayPattern = /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
+  const keyTakeawayPattern =
+    /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
   let match;
   while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
     const pearl = match[1].trim();
@@ -89,7 +88,7 @@ function extractPearlsFromRationale(rationale: string): string[] {
       pearls.push(pearl);
     }
   }
-  
+
   // Pattern 2: Bullet points that look like pearls (start with • or - and are concise)
   const bulletPattern = /^[•\-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
@@ -99,20 +98,26 @@ function extractPearlsFromRationale(rationale: string): string[] {
       pearls.push(pearl);
     }
   }
-  
+
   // Pattern 3: Sentences with clinical keywords that indicate high-yield info
-  const clinicalKeywords = ['classic presentation', 'gold standard', 'first-line', 'diagnostic criteria', 'pathognomonic'];
+  const clinicalKeywords = [
+    'classic presentation',
+    'gold standard',
+    'first-line',
+    'diagnostic criteria',
+    'pathognomonic',
+  ];
   const sentences = rationale.split(/[.!?]\s+/);
   for (const sentence of sentences) {
     const normalized = sentence.toLowerCase();
-    if (clinicalKeywords.some(kw => normalized.includes(kw))) {
+    if (clinicalKeywords.some((kw) => normalized.includes(kw))) {
       const pearl = sentence.trim();
       if (pearl.length > 20 && pearl.length < 300) {
         pearls.push(pearl);
       }
     }
   }
-  
+
   // Deduplicate and limit to top 5 pearls
   return Array.from(new Set(pearls)).slice(0, 5);
 }
@@ -126,15 +131,15 @@ async function savePearlsToDatabase(
   token: string | null
 ): Promise<void> {
   if (!token || pearls.length === 0) return;
-  
+
   try {
     await fetch('/api/conditions/pearls', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ conditionId, pearls })
+      body: JSON.stringify({ conditionId, pearls }),
     });
     console.log(`[Pearl Harvester] Saved ${pearls.length} pearls for ${conditionId}`);
   } catch (error) {
@@ -146,7 +151,10 @@ async function savePearlsToDatabase(
  * Fetch clinical pearls from medical content by conditionId
  * This is a client-side fetch that can be called when displaying a question
  */
-export async function fetchPearlsForQuestion(conditionId: string, token?: string | null): Promise<string[]> {
+export async function fetchPearlsForQuestion(
+  conditionId: string,
+  token?: string | null
+): Promise<string[]> {
   try {
     if (!token) {
       console.warn('[QuestionService] No auth token for fetching pearls');
@@ -154,15 +162,17 @@ export async function fetchPearlsForQuestion(conditionId: string, token?: string
     }
 
     const response = await fetch(`/api/conditions/${conditionId}/pearls`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
-      console.warn(`[QuestionService] Failed to fetch pearls for ${conditionId}: ${response.status}`);
+      console.warn(
+        `[QuestionService] Failed to fetch pearls for ${conditionId}: ${response.status}`
+      );
       return [];
     }
 
-    const data = await response.json() as { pearls: string[] };
+    const data = (await response.json()) as { pearls: string[] };
     return data.pearls || [];
   } catch (error) {
     console.error('[QuestionService] Error fetching pearls:', error);
@@ -186,7 +196,7 @@ async function fetchFromPool(
     // Return empty result instead of throwing - allows graceful fallback to Gemini
     return {
       questions: [],
-      poolStatus: { available: 0, needsGeneration: false, threshold: 50 }
+      poolStatus: { available: 0, needsGeneration: false, threshold: 50 },
     };
   }
 
@@ -197,16 +207,16 @@ async function fetchFromPool(
   if (difficulty) params.set('difficulty', difficulty);
 
   const headers: HeadersInit = {
-    'Authorization': `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 
   const response = await fetch(`/api/questions/pool?${params}`, { headers });
-  
+
   if (!response.ok) {
     throw new Error(`Pool API error: ${response.status}`);
   }
 
-  const data = await response.json() as {
+  const data = (await response.json()) as {
     questions: PoolQuestion[];
     poolStatus: PoolStatus;
   };
@@ -248,7 +258,7 @@ async function checkAndReplenishPool(
   token?: string | null
 ): Promise<void> {
   const now = Date.now();
-  
+
   // Don't check too frequently
   if (now - lastPoolCheck < POOL_CHECK_INTERVAL && cachedPoolStatus) {
     if (cachedPoolStatus.needsGeneration) {
@@ -268,11 +278,14 @@ async function checkAndReplenishPool(
 
   try {
     const headers: HeadersInit = {
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     };
     const response = await fetch('/api/questions/pool-status', { headers });
     if (response.ok) {
-      const data = await response.json() as { health: { needsGeneration: boolean; threshold: number }; pool: { available: number } };
+      const data = (await response.json()) as {
+        health: { needsGeneration: boolean; threshold: number };
+        pool: { available: number };
+      };
       cachedPoolStatus = {
         available: data.pool.available,
         needsGeneration: data.health.needsGeneration,
@@ -301,19 +314,19 @@ export async function getQuestion(
 
   // Map focus to system code for pool query
   const systemMap: Record<string, string> = {
-    'cardiology': 'CV',
-    'pulmonology': 'PULM',
-    'gastroenterology': 'GI',
-    'neurology': 'NEURO',
-    'musculoskeletal': 'MSK',
-    'dermatology': 'DERM',
-    'hematology': 'HEME',
-    'endocrinology': 'ENDO',
-    'heent': 'HEENT',
-    'renal': 'RENAL',
-    'reproductive': 'REPRO',
-    'psychiatry': 'PSYCH',
-    'infectious': 'ID',
+    cardiology: 'CV',
+    pulmonology: 'PULM',
+    gastroenterology: 'GI',
+    neurology: 'NEURO',
+    musculoskeletal: 'MSK',
+    dermatology: 'DERM',
+    hematology: 'HEME',
+    endocrinology: 'ENDO',
+    heent: 'HEENT',
+    renal: 'RENAL',
+    reproductive: 'REPRO',
+    psychiatry: 'PSYCH',
+    infectious: 'ID',
   };
 
   const system = focus !== 'all' ? systemMap[focus.toLowerCase()] : undefined;
@@ -391,19 +404,19 @@ export async function getQuestionBatch(
   const { focus, difficulty } = settings;
 
   const systemMap: Record<string, string> = {
-    'cardiology': 'CV',
-    'pulmonology': 'PULM',
-    'gastroenterology': 'GI',
-    'neurology': 'NEURO',
-    'musculoskeletal': 'MSK',
-    'dermatology': 'DERM',
-    'hematology': 'HEME',
-    'endocrinology': 'ENDO',
-    'heent': 'HEENT',
-    'renal': 'RENAL',
-    'reproductive': 'REPRO',
-    'psychiatry': 'PSYCH',
-    'infectious': 'ID',
+    cardiology: 'CV',
+    pulmonology: 'PULM',
+    gastroenterology: 'GI',
+    neurology: 'NEURO',
+    musculoskeletal: 'MSK',
+    dermatology: 'DERM',
+    hematology: 'HEME',
+    endocrinology: 'ENDO',
+    heent: 'HEENT',
+    renal: 'RENAL',
+    reproductive: 'REPRO',
+    psychiatry: 'PSYCH',
+    infectious: 'ID',
   };
 
   const system = focus !== 'all' ? systemMap[focus.toLowerCase()] : undefined;
@@ -413,7 +426,7 @@ export async function getQuestionBatch(
   try {
     // Get auth token if available
     const token = getToken ? await getToken() : null;
-    
+
     const { questions, poolStatus } = await fetchFromPool(
       count,
       system,
@@ -436,15 +449,15 @@ export async function getQuestionBatch(
     // If we got some but not all, supplement with generated ones
     const needed = count - questions.length;
     console.log(`[QuestionService] Pool had ${questions.length}, generating ${needed} more`);
-    
+
     const { fetchNewQuestion } = await import('./geminiService');
     const generatedQuestions: Question[] = [];
-    
+
     for (let i = 0; i < needed; i++) {
       try {
         const q = await fetchNewQuestion(settings, growthAreas);
         generatedQuestions.push(q);
-        
+
         // Pearl Harvester: Extract and save clinical pearls
         if (q.rationale && q.conditionId) {
           const extractedPearls = extractPearlsFromRationale(q.rationale);
@@ -452,7 +465,7 @@ export async function getQuestionBatch(
             savePearlsToDatabase(q.conditionId, extractedPearls, token);
           }
         }
-        
+
         seedGeneratedQuestion(q, token, system, poolDifficulty);
       } catch (error) {
         console.error('[QuestionService] Failed to generate question:', error);
@@ -463,12 +476,12 @@ export async function getQuestionBatch(
     return [...questions, ...generatedQuestions];
   } catch (error) {
     console.warn('[QuestionService] Pool fetch failed, falling back to Gemini generation:', error);
-    
+
     // Pool failed (possibly 401) - fall back to generating questions via Gemini
     try {
       const { fetchNewQuestion } = await import('./geminiService');
       const generatedQuestions: Question[] = [];
-      
+
       for (let i = 0; i < count; i++) {
         try {
           const q = await fetchNewQuestion(settings, growthAreas);
@@ -478,15 +491,17 @@ export async function getQuestionBatch(
           break;
         }
       }
-      
+
       if (generatedQuestions.length > 0) {
-        console.log(`[QuestionService] Generated ${generatedQuestions.length} questions via Gemini fallback`);
+        console.log(
+          `[QuestionService] Generated ${generatedQuestions.length} questions via Gemini fallback`
+        );
         return generatedQuestions;
       }
     } catch (geminiError) {
       console.error('[QuestionService] Gemini fallback also failed:', geminiError);
     }
-    
+
     // If everything fails, throw so the UI can show an error
     throw new Error('Unable to load questions. Please check your connection and try again.');
   }
@@ -510,8 +525,8 @@ async function seedGeneratedQuestion(
     try {
       await fetch('/api/questions/pool', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ question })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ question }),
       });
     } catch (error) {
       console.error('[QuestionService] Failed to seed question:', error);
@@ -531,12 +546,12 @@ export async function getEnhancedQuestion(
   try {
     const { generateEnhancedQuestion } = await import('./enhancedQuestionService');
     const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems);
-    
+
     if (question) {
       console.log('[QuestionService] Served enhanced question');
       return question;
     }
-    
+
     // Fall back to regular question if enhanced generation fails
     console.warn('[QuestionService] Enhanced generation failed, falling back to regular');
     return getQuestion(settings, growthAreas);
@@ -556,7 +571,9 @@ export function getPoolStatus(): PoolStatus | null {
 /**
  * Force refresh pool status
  */
-export async function refreshPoolStatus(getToken?: () => Promise<string | null>): Promise<PoolStatus | null> {
+export async function refreshPoolStatus(
+  getToken?: () => Promise<string | null>
+): Promise<PoolStatus | null> {
   lastPoolCheck = 0;
   const token = getToken ? await getToken() : null;
   await checkAndReplenishPool(undefined, undefined, undefined, token);

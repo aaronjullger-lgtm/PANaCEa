@@ -1,108 +1,78 @@
 /**
- * API Endpoint: /api/questions/generate-batch
- * 
+ * POST /api/questions/generate-batch
  * Background generation of questions to seed the pre-generated pool
  * Uses Gemini API to generate questions and stores them in PreGeneratedQuestion table
- * 
- * PUBLIC endpoint - generates questions for a shared pool, no user data involved
  */
 
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import type { CloudflareContext } from '../_shared/types';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  GEMINI_API_KEY: string;
-  CLERK_SECRET_KEY: string;
-  CRON_SECRET?: string; // Optional: for cron job access
-}
+const GenerateBatchSchema = z.object({
+  body: z.object({
+    system: z.string().optional(),
+    category: z.string().optional(),
+    difficulty: z.string().optional(),
+    count: z.number().int().min(1).max(50).optional(),
+  }),
+});
 
 const DEFAULT_BATCH_SIZE = 10;
 const MAX_BATCH_SIZE = 50;
 
-// Systems for question generation
-const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
+const SYSTEMS = [
+  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU',
+];
 
-// Handle CORS preflight
-export function onRequestOptions() {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: CloudflareContext<Env>) => {
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/generate-batch');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
-  const corsHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
 
-  // Allow cron jobs with CRON_SECRET or authenticated users
-  const authHeader = request.headers.get('Authorization');
-  const isCronJob = authHeader === `Bearer ${env.CRON_SECRET}` && env.CRON_SECRET;
-  
-  if (!isCronJob) {
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: corsHeaders,
-      });
-    }
-  }
-  
   try {
+    const { system, category, difficulty, count } = validated.body;
 
-    // Parse request body
-    const body = await context.request.json() as {
-      system?: string;
-      category?: string;
-      difficulty?: string;
-      count?: number;
-    };
-
-    const system = body.system || SYSTEMS[Math.floor(Math.random() * SYSTEMS.length)];
-    const category = body.category || 'general';
-    const difficulty = body.difficulty || 'medium';
-    const count = Math.min(body.count || DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE);
+    const selectedSystem = system || SYSTEMS[Math.floor(Math.random() * SYSTEMS.length)];
+    const selectedCategory = category || 'general';
+    const selectedDifficulty = difficulty || 'medium';
+    const requestedCount = Math.min(count || DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE);
 
     // Check API key
-    if (!context.env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
-        status: 500,
-        headers: corsHeaders,
-      });
+    if (!env.GEMINI_API_KEY) {
+      logger.error('Gemini API key not configured');
+      throw new Error('Gemini API key not configured');
     }
 
     // Generate questions using Gemini
     const generatedQuestions = await generateQuestionsWithGemini(
-      context.env.GEMINI_API_KEY,
-      system,
-      category,
-      difficulty,
-      count
+      env.GEMINI_API_KEY,
+      selectedSystem,
+      selectedCategory,
+      selectedDifficulty,
+      requestedCount,
+      logger
     );
 
     if (generatedQuestions.length === 0) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'No questions generated',
-        generated: 0 
-      }), {
-        status: 200,
-        headers: corsHeaders,
-      });
+      logger.info('No questions generated', { userId: auth.userId, system: selectedSystem });
+      return {
+        data: {
+          success: false,
+          message: 'No questions generated',
+          generated: 0,
+        },
+      };
     }
 
     // Seed questions into PreGeneratedQuestion table
     const records = generatedQuestions.map((q, idx) => ({
       id: `pregen-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`,
-      questionType: category,
-      system: system,
-      difficulty: difficulty,
+      questionType: selectedCategory,
+      system: selectedSystem,
+      difficulty: selectedDifficulty,
       questionData: q,
       generatedAt: new Date(),
     }));
@@ -112,50 +82,51 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       skipDuplicates: true,
     });
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    logger.info('Questions generated', {
+      userId: auth.userId,
       generated: result.count,
-      system,
-      category,
-      difficulty,
-    }), {
-      status: 200,
-      headers: corsHeaders,
+      system: selectedSystem,
+      category: selectedCategory,
+      difficulty: selectedDifficulty,
     });
-  } catch (error) {
-    console.error('Error generating batch questions:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: corsHeaders,
-      }
-    );
-  } finally {
-    await prisma.$disconnect();
-  }
-};
 
-/**
- * Generate questions using Gemini API
- */
+    return {
+      data: {
+        success: true,
+        generated: result.count,
+        system: selectedSystem,
+        category: selectedCategory,
+        difficulty: selectedDifficulty,
+      },
+    };
+  } catch (error) {
+    logger.error('Error generating batch questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to generate batch questions');
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+});
+
 async function generateQuestionsWithGemini(
   apiKey: string,
   system: string,
   category: string,
   difficulty: string,
-  count: number
-): Promise<Array<{
-  question: string;
-  vignette?: string;
-  options: string[];
-  correctAnswer: string;
-  explanation: string;
-  tags?: string[];
-}>> {
+  count: number,
+  logger: any
+): Promise<
+  Array<{
+    question: string;
+    vignette?: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+    tags?: string[];
+  }>
+> {
   const systemDescriptions: Record<string, string> = {
     CV: 'Cardiovascular system - heart, blood vessels, circulation',
     PULM: 'Pulmonary/Respiratory system - lungs, airways, breathing',
@@ -221,11 +192,12 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status, await response.text());
+      const errorText = await response.text();
+      logger.error('Gemini API error', { status: response.status, error: errorText });
       return [];
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       candidates?: Array<{
         content?: {
           parts?: Array<{ text?: string }>;
@@ -235,7 +207,7 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      console.error('No text in Gemini response');
+      logger.error('No text in Gemini response');
       return [];
     }
 
@@ -252,22 +224,25 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
     jsonText = jsonText.trim();
 
     const questions = JSON.parse(jsonText);
-    
+
     if (!Array.isArray(questions)) {
-      console.error('Invalid questions format - not an array');
+      logger.error('Invalid questions format - not an array');
       return [];
     }
 
     // Validate structure
-    return questions.filter(q => 
-      q.question && 
-      Array.isArray(q.options) && 
-      q.options.length === 4 &&
-      q.correctAnswer &&
-      q.explanation
+    return questions.filter(
+      (q) =>
+        q.question &&
+        Array.isArray(q.options) &&
+        q.options.length === 4 &&
+        q.correctAnswer &&
+        q.explanation
     );
   } catch (error) {
-    console.error('Error generating questions with Gemini:', error);
+    logger.error('Error generating questions with Gemini', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }

@@ -1,6 +1,6 @@
 /**
  * ECGDrillSession - Dedicated ECG interpretation drill
- * 
+ *
  * Focuses exclusively on ECG rhythm strips and 12-lead interpretation.
  * Uses PhotoDrill infrastructure with ECG-only filtering.
  * Enhanced with database-linked reference material in feedback.
@@ -22,13 +22,10 @@ interface ECGDrillSessionProps {
 
 /**
  * ECGDrillSession Component
- * 
+ *
  * Dedicated ECG interpretation training with rhythm recognition and 12-lead analysis
  */
-const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ 
-  onExit,
-  onNavigateToReference,
-}) => {
+const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToReference }) => {
   const {
     currentCase,
     score,
@@ -43,15 +40,18 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({
     exitToMenu,
     validDiagnoses,
   } = usePhotoDrill();
-  
+
   const [useEnhancedFeedback, setUseEnhancedFeedback] = useState(true);
-  
+
   // Handler for deep dive into reference material
-  const handleDeepDive = useCallback((type: string, id: string) => {
-    if (onNavigateToReference) {
-      onNavigateToReference(type, id);
-    }
-  }, [onNavigateToReference]);
+  const handleDeepDive = useCallback(
+    (type: string, id: string) => {
+      if (onNavigateToReference) {
+        onNavigateToReference(type, id);
+      }
+    },
+    [onNavigateToReference]
+  );
 
   // Auto-start ECG-only mode
   useEffect(() => {
@@ -137,11 +137,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({
               <p className="text-sm text-[var(--color-text-secondary)] mb-2 text-center">
                 What is your ECG diagnosis?
               </p>
-              <DiagnosisInput
-                onSubmit={handleSubmitAnswer}
-                autoFocus
-                options={validDiagnoses}
-              />
+              <DiagnosisInput onSubmit={handleSubmitAnswer} autoFocus options={validDiagnoses} />
             </div>
           </motion.div>
         )}
@@ -199,8 +195,8 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({
                   Clinical Context
                 </h3>
                 <p className="text-[var(--color-text-primary)]">
-                  {typeof currentCase.clinicalContext === 'string' 
-                    ? currentCase.clinicalContext 
+                  {typeof currentCase.clinicalContext === 'string'
+                    ? currentCase.clinicalContext
                     : `${currentCase.clinicalContext.age}yo ${currentCase.clinicalContext.sex === 'M' ? 'Male' : 'Female'} - ${currentCase.clinicalContext.chiefComplaint}. ${currentCase.clinicalContext.history}`}
                 </p>
               </div>
@@ -233,15 +229,11 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">
-                {score}
-              </div>
+              <div className="text-4xl font-bold text-emerald-400">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-rose-400">
-                {streak}
-              </div>
+              <div className="text-4xl font-bold text-rose-400">{streak}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Best Streak</div>
             </div>
           </div>
@@ -271,10 +263,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
       <div className="text-center">
         <p className="text-[var(--color-text-secondary)] mb-4">Loading ECG drill...</p>
-        <button
-          onClick={handleExit}
-          className="text-sky-400 hover:text-sky-300"
-        >
+        <button onClick={handleExit} className="text-sky-400 hover:text-sky-300">
           Exit
         </button>
       </div>

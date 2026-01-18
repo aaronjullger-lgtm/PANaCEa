@@ -19,7 +19,7 @@ interface MiniModeLayoutProps {
 
 /**
  * MiniModeLayout - Standardized layout wrapper for all Mini Modes
- * 
+ *
  * Uses theme-aware CSS variables for consistent theming:
  * - var(--color-bg-primary) for backgrounds
  * - var(--color-text-primary) for text
@@ -34,17 +34,17 @@ export const MiniModeLayout: React.FC<MiniModeLayoutProps> = ({
   forceInvertedTheme = false,
 }) => {
   const [theme] = useTheme();
-  
+
   // Use CSS variables for theme-aware styling (consistent with CodeBlueSpeedMode)
   const containerBg = 'bg-[var(--color-bg-primary)]';
   const containerText = 'text-[var(--color-text-primary)]';
   const cardBg = 'bg-[var(--color-bg-secondary)]';
   const cardBorder = 'border-[var(--color-border)]';
   const subtleText = 'text-[var(--color-text-muted)]';
-  
+
   // Get the accent color from CSS variables or use provided color
   const iconColor = accentColor || 'var(--color-accent)';
-  
+
   return (
     <div className={`min-h-screen ${containerBg} ${containerText} transition-colors duration-300`}>
       {children}
@@ -75,14 +75,14 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
   accentColor,
 }) => {
   const [theme] = useTheme();
-  
+
   // Use CSS variables for theme-aware styling
   const cardBg = 'bg-[var(--color-bg-secondary)]';
   const cardBorder = 'border-[var(--color-border)]';
   const containerText = 'text-[var(--color-text-primary)]';
   const subtleText = 'text-[var(--color-text-muted)]';
   const iconColor = accentColor || 'var(--color-accent)';
-  
+
   return (
     <div className={`border-b ${cardBorder} ${cardBg} backdrop-blur-sm sticky top-0 z-10`}>
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -114,7 +114,12 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
               title="Reset"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
             </button>
           )}
@@ -124,7 +129,12 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
               className={`p-2 rounded-lg ${cardBg} hover:opacity-80 transition-colors border ${cardBorder}`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -144,11 +154,11 @@ interface MiniModeCardProps {
  */
 export const MiniModeCard: React.FC<MiniModeCardProps> = ({ children, className = '' }) => {
   const [theme] = useTheme();
-  
+
   // Use CSS variables for theme-aware styling
   const cardBg = 'bg-[var(--color-bg-secondary)]';
   const cardBorder = 'border-[var(--color-border)]';
-  
+
   return (
     <div className={`${cardBg} backdrop-blur rounded-xl p-6 border ${cardBorder} ${className}`}>
       {children}

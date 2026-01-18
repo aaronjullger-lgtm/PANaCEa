@@ -1,6 +1,6 @@
 /**
  * Todoist Export Panel Component
- * 
+ *
  * Allows users to export their study plan and missed questions to Todoist.
  */
 
@@ -31,9 +31,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
   const { showToast } = useToast();
   const [exportMode, setExportMode] = useState<ExportMode>('study-plan');
   const [showInstructions, setShowInstructions] = useState(false);
-  const [examDate, setExamDate] = useState<string>(
-    userExamDate?.toISOString().split('T')[0] || ''
-  );
+  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString().split('T')[0] || '');
 
   // Generate tasks based on export mode
   const tasks = useMemo<TodoistTask[]>(() => {
@@ -46,7 +44,10 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       allTasks.push(...studyExport.tasks);
     }
 
-    if ((exportMode === 'missed-questions' || exportMode === 'both') && missedQuestions.length > 0) {
+    if (
+      (exportMode === 'missed-questions' || exportMode === 'both') &&
+      missedQuestions.length > 0
+    ) {
       const missedTasks = generateMissedQuestionTasks(missedQuestions);
       allTasks.push(...missedTasks);
     }
@@ -56,7 +57,10 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
 
   const handleDownloadCSV = () => {
     if (tasks.length === 0) {
-      showToast({ type: 'warning', message: 'No tasks to export. Please set an exam date or complete some questions.' });
+      showToast({
+        type: 'warning',
+        message: 'No tasks to export. Please set an exam date or complete some questions.',
+      });
       return;
     }
 
@@ -76,14 +80,12 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-4">
         <CheckSquare className="w-6 h-6 text-red-600 dark:text-red-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Todoist Export
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Todoist Export</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Export your study plan and question reviews to Todoist. Stay organized with
-        your favorite task management app.
+        Export your study plan and question reviews to Todoist. Stay organized with your favorite
+        task management app.
       </p>
 
       {/* Export Mode Selection */}
@@ -101,9 +103,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             }`}
           >
             <div className="font-semibold">Study Plan Only</div>
-            <div className="text-xs opacity-80">
-              Weekly study schedule based on your exam date
-            </div>
+            <div className="text-xs opacity-80">Weekly study schedule based on your exam date</div>
           </button>
           <button
             onClick={() => setExportMode('missed-questions')}
@@ -127,9 +127,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             }`}
           >
             <div className="font-semibold">Complete Package</div>
-            <div className="text-xs opacity-80">
-              Both study plan and missed question reviews
-            </div>
+            <div className="text-xs opacity-80">Both study plan and missed question reviews</div>
           </button>
         </div>
       </div>
@@ -211,9 +209,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       {showInstructions && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-xs">
-              {TODOIST_IMPORT_INSTRUCTIONS}
-            </pre>
+            <pre className="whitespace-pre-wrap text-xs">{TODOIST_IMPORT_INSTRUCTIONS}</pre>
           </div>
         </div>
       )}

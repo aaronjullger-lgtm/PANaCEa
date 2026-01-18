@@ -7,9 +7,11 @@ This guide documents the complete workflow for standardizing and enhancing medic
 ## Scripts
 
 ### 1. **standardize-formatting.ts** - Text Formatting & Structure
+
 **Purpose**: Enforce consistent markdown formatting and structural standards across all conditions.
 
 **Features**:
+
 - ✅ Text formatting (bold, italic, lists, line breaks)
 - ✅ Structural validation (minimum word counts, item counts)
 - ✅ AI-powered regeneration with Gemini 2.5 Pro
@@ -17,6 +19,7 @@ This guide documents the complete workflow for standardizing and enhancing medic
 - ✅ Dry-run mode for preview
 
 **Structural Standards**:
+
 ```typescript
 {
   overview: { minWords: 50 },
@@ -30,8 +33,9 @@ This guide documents the complete workflow for standardizing and enhancing medic
 ```
 
 **Formatting Rules**:
+
 - **Bold**: Medical abbreviations (PANCE, MI, CHF, HTN), key terms (pathognomonic, first-line, gold standard)
-- *Italic*: Generic drug names (-olol, -pril, -sartan), Latin terms (in situ, in vivo), organisms (Genus species)
+- _Italic_: Generic drug names (-olol, -pril, -sartan), Latin terms (in situ, in vivo), organisms (Genus species)
 - Lists: Consistent bullets (- item), proper nesting (2-4 spaces)
 - Line breaks: Remove excessive breaks, consistent spacing
 
@@ -40,9 +44,11 @@ This guide documents the complete workflow for standardizing and enhancing medic
 ---
 
 ### 2. **assess-content-adequacy.ts** - Quality Assessment
+
 **Purpose**: Evaluate content quality using metrics derived from top-performing conditions.
 
 **Metrics**:
+
 - Word counts: overview, etiology, pathophysiology, diagnostics
 - Item counts: treatment, symptoms, complications, buzzwords, pearls
 - Completeness score: 0-100% (required fields present)
@@ -50,6 +56,7 @@ This guide documents the complete workflow for standardizing and enhancing medic
 - Overall score: weighted average (60% completeness + 40% depth)
 
 **Quality Standards** (75th percentile):
+
 - Overview: ≥143 words
 - Etiology: ≥211 words
 - Pathophysiology: ≥265 words
@@ -63,9 +70,11 @@ This guide documents the complete workflow for standardizing and enhancing medic
 ---
 
 ### 3. **content-doctor.ts** - Field-Specific Generation
+
 **Purpose**: Generate or regenerate specific fields using AI.
 
 **Modes**:
+
 - `--phase1`: Gap analysis across all fields
 - `--phase2`: Generate missing content
 - `--buzzwords`: Regenerate buzzwords only
@@ -79,6 +88,7 @@ This guide documents the complete workflow for standardizing and enhancing medic
 ## Recommended Workflow
 
 ### Phase 1: Initial Assessment
+
 ```bash
 # Assess current content quality
 npm run assess:adequacy
@@ -88,6 +98,7 @@ npm run assess:adequacy -- --system=CV
 ```
 
 ### Phase 2: Standardization (Dry Run)
+
 ```bash
 # Preview formatting changes
 npm run standardize:formatting:dry-run
@@ -97,6 +108,7 @@ npm run standardize:formatting:dry-run -- --system=HEENT
 ```
 
 ### Phase 3: Apply Standardization with AI Enhancement
+
 ```bash
 # CRITICAL: Unset API key first to avoid conflicts
 unset GEMINI_API_KEY
@@ -112,6 +124,7 @@ npm run standardize:formatting:regenerate
 ```
 
 ### Phase 4: Quality Verification
+
 ```bash
 # Re-assess after standardization
 npm run assess:adequacy
@@ -121,6 +134,7 @@ npm run assess:adequacy -- --system=CV
 ```
 
 ### Phase 5: Targeted Field Enhancement (if needed)
+
 ```bash
 # If specific fields need improvement
 npm run content-doctor:mnemonics -- --system=NEURO
@@ -179,15 +193,18 @@ Target specific PANCE systems for focused improvements:
 ## Expected Results
 
 ### HEENT System Test (109 conditions)
+
 **Run**: `npm run standardize:formatting:regenerate -- --system=HEENT`
 
 **Results**:
+
 - Total conditions: 109
 - Updated: 108 (99%)
 - Unchanged: 1 (1%)
 - AI regenerated: 6 fields (2 conditions with 3+ issues)
 
 **Regenerated Conditions**:
+
 1. Giant Cell Arteritis (Temporal Arteritis)
    - Overview: 43w → 101w ✅
    - Etiology: 33w → 181w ✅
@@ -199,6 +216,7 @@ Target specific PANCE systems for focused improvements:
    - Pathophysiology: 41w → enhanced ✅
 
 **Quality Improvements**:
+
 - Consistent markdown formatting across all conditions
 - Minimum structural standards met for critical fields
 - Enhanced clinical detail where previously inadequate
@@ -209,18 +227,23 @@ Target specific PANCE systems for focused improvements:
 ## Troubleshooting
 
 ### Issue: "GEMINI_API_KEY not set"
+
 **Solution**: Ensure `.env` file has `GEMINI_API_KEY=your_key`. If error persists, check `.env` syntax.
 
 ### Issue: AI generation fails with rate limit
+
 **Solution**: Script includes 1-second delay between API calls. If still failing, check Gemini API quota.
 
 ### Issue: Formatting changes seem too aggressive
+
 **Solution**: Use `--dry-run` flag first to preview changes. Adjust `FORMATTING_RULES` in script if needed.
 
 ### Issue: Structural validation too strict
+
 **Solution**: Adjust `STANDARD_STRUCTURE` constants in `standardize-formatting.ts`. Current thresholds are conservative.
 
 ### Issue: "Response size exceeded 5MB" error
+
 **Solution**: Script now uses batch processing (50 conditions per batch). This error should no longer occur. If it does, reduce `BATCH_SIZE` constant in script.
 
 ---
@@ -228,12 +251,14 @@ Target specific PANCE systems for focused improvements:
 ## Performance Notes
 
 ### Batch Processing
+
 - **Batch size**: 50 conditions per batch
 - **Memory-safe**: Avoids loading all 1,180 conditions at once
 - **Supabase limit**: Each batch stays well under 5MB response limit
 - **Progress tracking**: Shows batch X/Y progress during execution
 
 ### Timing Estimates
+
 - **Formatting only** (no regeneration): ~1-2 seconds per condition
 - **With AI regeneration**: ~1-2 seconds per field that needs regeneration (rate limited)
 - **Full database** (1,180 conditions):
@@ -241,6 +266,7 @@ Target specific PANCE systems for focused improvements:
   - With regeneration (estimated 50-100 conditions): ~2-3 hours
 
 ### Rate Limiting
+
 - Gemini API calls: 1-second delay between requests
 - Batch processing: Sequential to avoid overwhelming API
 - Graceful error handling: Continues on failure, reports errors

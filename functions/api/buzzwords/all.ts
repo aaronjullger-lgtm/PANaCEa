@@ -1,16 +1,21 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { z } from 'zod';
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export const onRequestOptions = handleCorsOptions;
+const BuzzwordsAllSchema = z.object({
+  query: z.object({}).optional(), // No query params expected
+});
 
-export async function onRequestGet(context: any) {
+export const onRequestOptions = withCors();
+
+export const onRequestGet = publicEndpoint(BuzzwordsAllSchema, async (context) => {
   const { env } = context;
-  
+  const logger = createEndpointLogger('/api/buzzwords/all');
+
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    logger.error('Database not configured');
+    throw new Error('Database not configured');
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -18,22 +23,22 @@ export async function onRequestGet(context: any) {
   try {
     // Fetch all buzzwords
     const buzzwords = await prisma.buzzword.findMany({
-      orderBy: { condition: 'asc' }
+      orderBy: { condition: 'asc' },
     });
-    
-    return new Response(JSON.stringify(buzzwords), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
-      }
-    });
+
+    logger.info(`Fetched ${buzzwords.length} buzzwords`);
+    return {
+      data: buzzwords,
+      headers: {
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      },
+    };
   } catch (error) {
-    console.error('Error fetching buzzwords:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch buzzwords' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    logger.error('Error fetching buzzwords', {
+      error: error instanceof Error ? error.message : String(error),
     });
+    throw new Error('Failed to fetch buzzwords');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

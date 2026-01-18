@@ -1,6 +1,6 @@
 /**
  * Performance Prediction Service
- * 
+ *
  * Predicts likely PANCE score based on session performance patterns.
  * Uses multiple factors:
  * - Overall accuracy
@@ -39,42 +39,42 @@ export function predictPANCEScore(
   const strengths: string[] = [];
   const riskFactors: string[] = [];
   const recommendations: string[] = [];
-  
+
   // Base score calculation (accuracy is primary factor)
   // PANCE passing is typically ~60-65% accuracy
   // Scale: 200-800, passing ~450
   let baseScore = 200 + (overallAccuracy / 100) * 600;
-  
+
   // Confidence based on sample size
   let confidence: 'low' | 'medium' | 'high' = 'low';
   if (totalQuestions >= 50) confidence = 'high';
   else if (totalQuestions >= 20) confidence = 'medium';
-  
+
   // Adjustments based on various factors
   let adjustments = 0;
-  
+
   // 1. System consistency bonus/penalty
   if (systemPerformance.length >= 3) {
-    const accuracies = systemPerformance.map(s => s.accuracy);
+    const accuracies = systemPerformance.map((s) => s.accuracy);
     const variance = calculateVariance(accuracies);
-    
+
     if (variance < 100) {
       adjustments += 15;
       strengths.push('Consistent performance across systems');
     } else if (variance > 400) {
       adjustments -= 20;
       riskFactors.push('Inconsistent performance - some systems much weaker');
-      
+
       // Find weakest systems
       const weakSystems = systemPerformance
-        .filter(s => s.accuracy < 60 && s.totalQuestions >= 3)
-        .map(s => s.system);
+        .filter((s) => s.accuracy < 60 && s.totalQuestions >= 3)
+        .map((s) => s.system);
       if (weakSystems.length > 0) {
         recommendations.push(`Focus review on: ${weakSystems.slice(0, 3).join(', ')}`);
       }
     }
   }
-  
+
   // 2. Time management
   const idealTimeMs = 72000; // 72 seconds per question (PANCE timing)
   if (avgTimePerQuestion < idealTimeMs * 0.8) {
@@ -92,7 +92,7 @@ export function predictPANCEScore(
     riskFactors.push('Time management concern - may run out of time on real exam');
     recommendations.push('Practice answering within 60-90 seconds');
   }
-  
+
   // 3. Streak patterns (consistency)
   if (streakData.maxStreak >= 10) {
     adjustments += 10;
@@ -102,11 +102,11 @@ export function predictPANCEScore(
     adjustments -= 10;
     riskFactors.push('Frequent errors break concentration');
   }
-  
+
   // 4. Improvement trends
-  const improvingSystems = systemPerformance.filter(s => s.trend === 'improving').length;
-  const decliningSystems = systemPerformance.filter(s => s.trend === 'declining').length;
-  
+  const improvingSystems = systemPerformance.filter((s) => s.trend === 'improving').length;
+  const decliningSystems = systemPerformance.filter((s) => s.trend === 'declining').length;
+
   if (improvingSystems > decliningSystems) {
     adjustments += 5;
     strengths.push('Showing improvement over the session');
@@ -115,13 +115,13 @@ export function predictPANCEScore(
     riskFactors.push('Performance declining - possible fatigue');
     recommendations.push('Consider shorter, more frequent study sessions');
   }
-  
+
   // 5. High-yield system performance (Cardio, Pulm, GI are heavily weighted)
   const highYieldSystems = ['CARD', 'PULM', 'GI', 'NEURO'];
-  const highYieldPerf = systemPerformance.filter(s => 
-    highYieldSystems.some(hy => s.system.toUpperCase().includes(hy))
+  const highYieldPerf = systemPerformance.filter((s) =>
+    highYieldSystems.some((hy) => s.system.toUpperCase().includes(hy))
   );
-  
+
   if (highYieldPerf.length > 0) {
     const highYieldAvg = highYieldPerf.reduce((s, p) => s + p.accuracy, 0) / highYieldPerf.length;
     if (highYieldAvg >= 75) {
@@ -133,15 +133,15 @@ export function predictPANCEScore(
       recommendations.push('Prioritize Cardiology, Pulmonology, GI, and Neurology');
     }
   }
-  
+
   // Apply adjustments
   const finalScore = Math.max(200, Math.min(800, Math.round(baseScore + adjustments)));
-  
+
   // Calculate pass likelihood
   // PANCE passing score is typically around 450 (scaled)
   const passingThreshold = 450;
   let passLikelihood: number;
-  
+
   if (finalScore >= passingThreshold + 100) {
     passLikelihood = 95;
   } else if (finalScore >= passingThreshold + 50) {
@@ -155,7 +155,7 @@ export function predictPANCEScore(
   } else {
     passLikelihood = 15;
   }
-  
+
   // Add general recommendations based on score
   if (finalScore < 400 && recommendations.length < 3) {
     recommendations.push('Focus on foundational concepts before moving to advanced topics');
@@ -163,7 +163,7 @@ export function predictPANCEScore(
   if (passLikelihood < 70 && recommendations.length < 3) {
     recommendations.push('Consider more practice questions and content review');
   }
-  
+
   return {
     predictedScore: finalScore,
     confidence,
@@ -186,19 +186,17 @@ function calculateVariance(numbers: number[]): number {
 /**
  * Get performance trend from recent data
  */
-export function calculateTrend(
-  recentAccuracies: number[]
-): 'improving' | 'stable' | 'declining' {
+export function calculateTrend(recentAccuracies: number[]): 'improving' | 'stable' | 'declining' {
   if (recentAccuracies.length < 3) return 'stable';
-  
+
   const firstHalf = recentAccuracies.slice(0, Math.floor(recentAccuracies.length / 2));
   const secondHalf = recentAccuracies.slice(Math.floor(recentAccuracies.length / 2));
-  
+
   const firstAvg = firstHalf.reduce((s, n) => s + n, 0) / firstHalf.length;
   const secondAvg = secondHalf.reduce((s, n) => s + n, 0) / secondHalf.length;
-  
+
   const diff = secondAvg - firstAvg;
-  
+
   if (diff > 10) return 'improving';
   if (diff < -10) return 'declining';
   return 'stable';
@@ -261,9 +259,10 @@ export function updatePerformancePrediction(result: {
 export function getPrediction(): PredictionResult | null {
   const data = getSessionData();
   if (data.results.length < 5) return null;
-  
-  const overallAccuracy = data.results.filter(r => r.correct).length / data.results.length * 100;
-  
+
+  const overallAccuracy =
+    (data.results.filter((r) => r.correct).length / data.results.length) * 100;
+
   // Build system performance data
   const systemStats: Record<string, { correct: number; total: number; times: number[] }> = {};
   for (const r of data.results) {
@@ -275,21 +274,23 @@ export function getPrediction(): PredictionResult | null {
     if (r.correct) systemStats[sys].correct++;
     systemStats[sys].times.push(r.timeSpentMs);
   }
-  
-  const systemPerformance: PerformanceSnapshot[] = Object.entries(systemStats).map(([system, stats]) => ({
-    system,
-    accuracy: (stats.correct / stats.total) * 100,
-    totalQuestions: stats.total,
-    avgTimeMs: stats.times.reduce((s, t) => s + t, 0) / stats.times.length,
-    trend: 'stable' as const,
-  }));
-  
+
+  const systemPerformance: PerformanceSnapshot[] = Object.entries(systemStats).map(
+    ([system, stats]) => ({
+      system,
+      accuracy: (stats.correct / stats.total) * 100,
+      totalQuestions: stats.total,
+      avgTimeMs: stats.times.reduce((s, t) => s + t, 0) / stats.times.length,
+      trend: 'stable' as const,
+    })
+  );
+
   // Calculate streaks
   let maxStreak = 0;
   let currentStreak = 0;
   let totalStreaks = 0;
   let streakCount = 0;
-  
+
   for (const r of data.results) {
     if (r.correct) {
       currentStreak++;
@@ -306,17 +307,14 @@ export function getPrediction(): PredictionResult | null {
     totalStreaks += currentStreak;
     streakCount++;
   }
-  
+
   const avgStreak = streakCount > 0 ? totalStreaks / streakCount : 0;
   const avgTime = data.results.reduce((s, r) => s + r.timeSpentMs, 0) / data.results.length;
-  
-  return predictPANCEScore(
-    overallAccuracy,
-    data.results.length,
-    systemPerformance,
-    avgTime,
-    { maxStreak, avgStreak }
-  );
+
+  return predictPANCEScore(overallAccuracy, data.results.length, systemPerformance, avgTime, {
+    maxStreak,
+    avgStreak,
+  });
 }
 
 /**
@@ -325,11 +323,11 @@ export function getPrediction(): PredictionResult | null {
 export function getConfidenceInterval(): { lower: number; upper: number } | null {
   const prediction = getPrediction();
   if (!prediction) return null;
-  
+
   // Wider interval for lower confidence
-  const margin = prediction.confidence === 'high' ? 30 :
-                 prediction.confidence === 'medium' ? 50 : 80;
-  
+  const margin =
+    prediction.confidence === 'high' ? 30 : prediction.confidence === 'medium' ? 50 : 80;
+
   return {
     lower: Math.max(200, prediction.predictedScore - margin),
     upper: Math.min(800, prediction.predictedScore + margin),

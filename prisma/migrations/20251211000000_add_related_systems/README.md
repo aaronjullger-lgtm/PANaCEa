@@ -24,6 +24,7 @@ Sarcoidosis:
 ```
 
 When a user takes a Dermatology quiz, the query searches:
+
 ```sql
 WHERE system = 'DERM' OR 'DERM' = ANY(relatedSystems)
 ```
@@ -46,13 +47,13 @@ psql $DATABASE_URL -f prisma/migrations/20251211000000_add_related_systems/migra
 
 ```sql
 -- Check column exists
-SELECT column_name, data_type 
-FROM information_schema.columns 
+SELECT column_name, data_type
+FROM information_schema.columns
 WHERE table_name = 'MedicalContent' AND column_name = 'relatedSystems';
 
 -- Check index exists
-SELECT indexname, indexdef 
-FROM pg_indexes 
+SELECT indexname, indexdef
+FROM pg_indexes
 WHERE tablename = 'MedicalContent' AND indexname = 'MedicalContent_relatedSystems_idx';
 ```
 
@@ -70,14 +71,20 @@ WHERE tablename = 'MedicalContent' AND indexname = 'MedicalContent_relatedSystem
 ```typescript
 import { createDraft } from './lib/services/cms/contentService';
 
-await createDraft(prisma, {
-  conditionId: 'PULM__interstitial__sarcoidosis',
-  system: 'PULM',
-  subcategory: 'Interstitial',
-  condition: 'Sarcoidosis',
-  relatedSystems: ['DERM', 'HEENT', 'CV'],
-  content: { /* ... */ }
-}, options);
+await createDraft(
+  prisma,
+  {
+    conditionId: 'PULM__interstitial__sarcoidosis',
+    system: 'PULM',
+    subcategory: 'Interstitial',
+    condition: 'Sarcoidosis',
+    relatedSystems: ['DERM', 'HEENT', 'CV'],
+    content: {
+      /* ... */
+    },
+  },
+  options
+);
 ```
 
 ### Querying Multi-System Conditions

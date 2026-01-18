@@ -1,10 +1,10 @@
 /**
  * Main Session Question Selector v2.0 - Interleaved Assembler
- * 
+ *
  * Implements a scientifically rigorous question selection algorithm that
  * strictly enforces Interleaving (never same system twice in a row) and
  * Desirable Difficulty (prioritizing hardest "safe" cards).
- * 
+ *
  * Key Changes from Priority Waterfall v1:
  * - MAX_SINGLE_SYSTEM_CAP: Caps any system at 8 questions (40%) to ensure
  *   interleaving is mathematically possible
@@ -12,17 +12,17 @@
  *   with lowest retrievability (closest to forgetting threshold)
  * - Constraint-Satisfaction Assembler: Largest-first greedy algorithm that
  *   guarantees no two adjacent questions share the same system
- * 
+ *
  * @module mainSessionQuestionSelector
  * @version 2.0.0
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
-import { 
-  Rolling360Service, 
+import {
+  Rolling360Service,
   Rolling360Stats,
   normalizeSystemName,
-  BlueprintWeights 
+  BlueprintWeights,
 } from './rolling360Service';
 
 // =============================================================================
@@ -32,7 +32,7 @@ import {
 /** Default session size */
 export const DEFAULT_SESSION_SIZE = 20;
 
-/** 
+/**
  * Maximum questions from a single system (40% of session)
  * Mathematical rationale: For strict interleaving (no adjacent same-system),
  * max per system must be ≤ ceil(n/2). Using 40% provides safety buffer.
@@ -108,7 +108,7 @@ export class MainSessionQuestionSelector {
 
   /**
    * Main entry point - generates a session of questions using the Interleaved Assembler
-   * 
+   *
    * Algorithm:
    * 1. GATHERING PHASE: Select questions per system based on deficits, capped at 8/system
    * 2. ORDERING PHASE: Assemble using largest-first greedy to ensure strict interleaving
@@ -120,23 +120,23 @@ export class MainSessionQuestionSelector {
     // Step 1: Get user's Rolling 360 stats and blueprint
     const stats = await this.rolling360Service.getRolling360Stats(userId);
     const blueprint = await this.getActiveBlueprint();
-    
+
     // Step 2: Calculate system deficits (with cap applied)
     const deficits = this.calculateSystemDeficits(stats, blueprint, sessionSize);
-    
+
     // Step 3: GATHERING PHASE - Build pools per system
     const systemPools = new Map<string, SelectedQuestion[]>();
     const deficitsAddressed: SystemDeficit[] = [];
     let priorityBreakdown = { A: 0, B: 0, C: 0 };
-    
+
     // Track all selected question IDs to avoid duplicates
     const selectedIds = new Set<string>();
-    
+
     // Priority A: Fill deficits with overdue FSRS cards OR stable lowest-R cards
     for (const deficit of deficits) {
       const quota = deficit.deficitQuestions;
       if (quota <= 0) continue;
-      
+
       // Try overdue cards first
       const overdueQuestions = await this.selectOverdueCards(
         userId,
@@ -144,9 +144,9 @@ export class MainSessionQuestionSelector {
         quota,
         selectedIds
       );
-      
+
       let collected = overdueQuestions.length;
-      
+
       // Add to pool
       const pool = systemPools.get(deficit.system) || [];
       for (const q of overdueQuestions) {
@@ -154,7 +154,7 @@ export class MainSessionQuestionSelector {
         selectedIds.add(q.questionId);
         priorityBreakdown.A++;
       }
-      
+
       // If quota not met, fallback to stable cards with lowest retrievability
       if (collected < quota) {
         const stableQuestions = await this.selectStableCardsByLowestRetrievability(
@@ -163,7 +163,7 @@ export class MainSessionQuestionSelector {
           quota - collected,
           selectedIds
         );
-        
+
         for (const q of stableQuestions) {
           pool.push(q);
           selectedIds.add(q.questionId);
@@ -171,26 +171,24 @@ export class MainSessionQuestionSelector {
           collected++;
         }
       }
-      
+
       if (pool.length > 0) {
         systemPools.set(deficit.system, pool);
         deficitsAddressed.push(deficit);
       }
     }
-    
+
     // Calculate remaining slots after Priority A
-    const priorityATotal = Array.from(systemPools.values())
-      .reduce((sum, arr) => sum + arr.length, 0);
+    const priorityATotal = Array.from(systemPools.values()).reduce(
+      (sum, arr) => sum + arr.length,
+      0
+    );
     const remainingSlots = sessionSize - priorityATotal;
-    
+
     // Priority B: Most urgent FSRS cards with interleaving consideration
     if (remainingSlots > 0) {
-      const priorityBQuestions = await this.selectPriorityB(
-        userId,
-        selectedIds,
-        remainingSlots
-      );
-      
+      const priorityBQuestions = await this.selectPriorityB(userId, selectedIds, remainingSlots);
+
       for (const q of priorityBQuestions) {
         const pool = systemPools.get(q.system) || [];
         // Enforce per-system cap
@@ -202,12 +200,11 @@ export class MainSessionQuestionSelector {
         }
       }
     }
-    
+
     // Priority C: New/unseen questions to fill remaining slots
-    const currentTotal = Array.from(systemPools.values())
-      .reduce((sum, arr) => sum + arr.length, 0);
+    const currentTotal = Array.from(systemPools.values()).reduce((sum, arr) => sum + arr.length, 0);
     const exploreSlotsNeeded = sessionSize - currentTotal;
-    
+
     if (exploreSlotsNeeded > 0) {
       const priorityCQuestions = await this.selectPriorityC(
         userId,
@@ -215,7 +212,7 @@ export class MainSessionQuestionSelector {
         selectedIds,
         exploreSlotsNeeded
       );
-      
+
       for (const q of priorityCQuestions) {
         const pool = systemPools.get(q.system) || [];
         // Enforce per-system cap
@@ -227,18 +224,18 @@ export class MainSessionQuestionSelector {
         }
       }
     }
-    
+
     // Step 4: ORDERING PHASE - Assemble with strict interleaving
     const { questions: assembled, violations } = this.assembleInterleavedSession(systemPools);
-    
+
     // Calculate system distribution for telemetry
     const systemDistribution: Record<string, number> = {};
     for (const q of assembled) {
       systemDistribution[q.system] = (systemDistribution[q.system] || 0) + 1;
     }
-    
+
     return {
-      questionIds: assembled.map(q => q.questionId),
+      questionIds: assembled.map((q) => q.questionId),
       questions: assembled,
       deficitsAddressed,
       priorityBreakdown,
@@ -259,7 +256,7 @@ export class MainSessionQuestionSelector {
         WHERE "isActive" = true 
         LIMIT 1
       `;
-      
+
       if (results.length > 0 && results[0].weights) {
         return results[0].weights as BlueprintWeights;
       }
@@ -267,23 +264,23 @@ export class MainSessionQuestionSelector {
       // Table may not exist yet or other error - use defaults
       console.warn('[MainSessionSelector] Blueprint query failed, using defaults:', error);
     }
-    
+
     // Fallback to default 2024 PANCE weights (Official NCCPA)
     return {
-      'Cardiovascular': 0.13,
-      'Pulmonary': 0.10,
-      'Gastrointestinal': 0.10,
-      'Musculoskeletal': 0.10,
-      'HEENT': 0.09,
-      'Reproductive': 0.08,
-      'Neurological': 0.07,
-      'Psychiatry': 0.06,
-      'Endocrine': 0.06,
-      'Dermatology': 0.05,
-      'Genitourinary': 0.05,
-      'Hematology': 0.03,
+      Cardiovascular: 0.13,
+      Pulmonary: 0.1,
+      Gastrointestinal: 0.1,
+      Musculoskeletal: 0.1,
+      HEENT: 0.09,
+      Reproductive: 0.08,
+      Neurological: 0.07,
+      Psychiatry: 0.06,
+      Endocrine: 0.06,
+      Dermatology: 0.05,
+      Genitourinary: 0.05,
+      Hematology: 0.03,
       'Infectious Disease': 0.03,
-      'Renal': 0.05,
+      Renal: 0.05,
     };
   }
 
@@ -297,7 +294,7 @@ export class MainSessionQuestionSelector {
     sessionSize: number
   ): SystemDeficit[] {
     const deficits: SystemDeficit[] = [];
-    
+
     if (!stats || stats.totalInWindow < COLD_START_THRESHOLD) {
       // Cold start - return all systems weighted by blueprint, capped
       for (const [system, weight] of Object.entries(blueprint)) {
@@ -313,17 +310,17 @@ export class MainSessionQuestionSelector {
       }
       return deficits.sort((a, b) => b.deficitPercent - a.deficitPercent);
     }
-    
+
     // Calculate actual distribution from Rolling 360
     const total = stats.totalInWindow;
-    
+
     for (const [system, targetWeight] of Object.entries(blueprint)) {
       const systemStats = stats.systemStats[system];
       const actualCount = systemStats?.total || 0;
       const actualPercent = (actualCount / total) * 100;
       const targetPercent = targetWeight * 100;
       const deficitPercent = targetPercent - actualPercent;
-      
+
       if (deficitPercent > DEFICIT_THRESHOLD) {
         const idealQuestions = Math.ceil((deficitPercent / 100) * sessionSize);
         deficits.push({
@@ -336,7 +333,7 @@ export class MainSessionQuestionSelector {
         });
       }
     }
-    
+
     // Sort by deficit (most deficit first)
     return deficits.sort((a, b) => b.deficitPercent - a.deficitPercent);
   }
@@ -351,7 +348,7 @@ export class MainSessionQuestionSelector {
     excludeIds: Set<string>
   ): Promise<SelectedQuestion[]> {
     const now = new Date();
-    
+
     const overdueCards = await this.prisma.userProgress.findMany({
       where: {
         userId,
@@ -372,12 +369,12 @@ export class MainSessionQuestionSelector {
       orderBy: { nextReviewAt: 'asc' },
       take: limit * 2, // Fetch extra for filtering
     });
-    
+
     const questions: SelectedQuestion[] = [];
-    
+
     for (const card of overdueCards) {
       if (questions.length >= limit) break;
-      
+
       const question = await this.prisma.preGeneratedQuestion.findFirst({
         where: {
           conditionId: card.conditionId,
@@ -385,8 +382,12 @@ export class MainSessionQuestionSelector {
         },
         select: { id: true, system: true, conditionId: true },
       });
-      
-      if (question && !excludeIds.has(question.id) && !questions.some(q => q.questionId === question.id)) {
+
+      if (
+        question &&
+        !excludeIds.has(question.id) &&
+        !questions.some((q) => q.questionId === question.id)
+      ) {
         const retrievability = this.calculateRetrievability(card.fsrsCard as any);
         questions.push({
           questionId: question.id,
@@ -398,14 +399,14 @@ export class MainSessionQuestionSelector {
         });
       }
     }
-    
+
     return questions;
   }
 
   /**
    * CONSTRAINT 2: Select stable (non-overdue) cards sorted by lowest retrievability
    * Uses raw SQL for performance - computes R in database, not TypeScript
-   * 
+   *
    * FSRS v5 formula: R = (1 + elapsed_days / stability)^-1
    */
   private async selectStableCardsByLowestRetrievability(
@@ -415,17 +416,19 @@ export class MainSessionQuestionSelector {
     excludeIds: Set<string>
   ): Promise<SelectedQuestion[]> {
     if (limit <= 0) return [];
-    
+
     const excludeArray = Array.from(excludeIds);
-    
+
     try {
       // Raw SQL query with FSRS retrievability calculation in database
-      const results = await this.prisma.$queryRaw<Array<{
-        id: string;
-        conditionId: string;
-        system: string;
-        current_r: number;
-      }>>`
+      const results = await this.prisma.$queryRaw<
+        Array<{
+          id: string;
+          conditionId: string;
+          system: string;
+          current_r: number;
+        }>
+      >`
         SELECT 
           up.id,
           up."conditionId",
@@ -443,21 +446,23 @@ export class MainSessionQuestionSelector {
         WHERE up."userId" = ${userId}
           AND mc.system = ${system}
           AND up."nextReviewAt" > NOW()
-          ${excludeArray.length > 0 
-            ? Prisma.sql`AND up.id NOT IN (${Prisma.join(excludeArray)})` 
-            : Prisma.empty}
+          ${
+            excludeArray.length > 0
+              ? Prisma.sql`AND up.id NOT IN (${Prisma.join(excludeArray)})`
+              : Prisma.empty
+          }
           AND up."fsrsCard" IS NOT NULL
           AND (up."fsrsCard"->>'last_review') IS NOT NULL
         ORDER BY current_r ASC
         LIMIT ${limit * 2}
       `;
-      
+
       // Map to questions
       const questions: SelectedQuestion[] = [];
-      
+
       for (const r of results) {
         if (questions.length >= limit) break;
-        
+
         const question = await this.prisma.preGeneratedQuestion.findFirst({
           where: {
             conditionId: r.conditionId,
@@ -465,8 +470,12 @@ export class MainSessionQuestionSelector {
           },
           select: { id: true, system: true, conditionId: true },
         });
-        
-        if (question && !excludeIds.has(question.id) && !questions.some(q => q.questionId === question.id)) {
+
+        if (
+          question &&
+          !excludeIds.has(question.id) &&
+          !questions.some((q) => q.questionId === question.id)
+        ) {
           questions.push({
             questionId: question.id,
             conditionId: question.conditionId,
@@ -477,7 +486,7 @@ export class MainSessionQuestionSelector {
           });
         }
       }
-      
+
       return questions;
     } catch (error) {
       // Fallback if raw query fails (e.g., missing fsrsCard data)
@@ -487,7 +496,7 @@ export class MainSessionQuestionSelector {
   }
 
   /**
-   * Priority B: The Maintainer  
+   * Priority B: The Maintainer
    * Select most urgent FSRS cards (due within 24 hours)
    */
   private async selectPriorityB(
@@ -496,10 +505,10 @@ export class MainSessionQuestionSelector {
     maxQuestions: number
   ): Promise<SelectedQuestion[]> {
     if (maxQuestions <= 0) return [];
-    
+
     const now = new Date();
     const futureWindow = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
-    
+
     const dueCards = await this.prisma.userProgress.findMany({
       where: {
         userId,
@@ -517,13 +526,13 @@ export class MainSessionQuestionSelector {
       orderBy: { nextReviewAt: 'asc' },
       take: maxQuestions * 3,
     });
-    
+
     const questions: SelectedQuestion[] = [];
     const excludeArray = Array.from(excludeIds);
-    
+
     for (const card of dueCards) {
       if (questions.length >= maxQuestions) break;
-      
+
       const question = await this.prisma.preGeneratedQuestion.findFirst({
         where: {
           conditionId: card.conditionId,
@@ -532,8 +541,12 @@ export class MainSessionQuestionSelector {
         },
         select: { id: true, system: true, conditionId: true },
       });
-      
-      if (question && !excludeIds.has(question.id) && !questions.some(q => q.questionId === question.id)) {
+
+      if (
+        question &&
+        !excludeIds.has(question.id) &&
+        !questions.some((q) => q.questionId === question.id)
+      ) {
         const retrievability = this.calculateRetrievability(card.fsrsCard as any);
         questions.push({
           questionId: question.id,
@@ -545,7 +558,7 @@ export class MainSessionQuestionSelector {
         });
       }
     }
-    
+
     return questions;
   }
 
@@ -560,31 +573,31 @@ export class MainSessionQuestionSelector {
     maxQuestions: number
   ): Promise<SelectedQuestion[]> {
     if (maxQuestions <= 0) return [];
-    
+
     const seenQuestionIds = await this.prisma.userQuestionSeen.findMany({
       where: { userId },
       select: { questionId: true },
     });
-    const seenIds = new Set(seenQuestionIds.map(s => s.questionId));
-    
+    const seenIds = new Set(seenQuestionIds.map((s) => s.questionId));
+
     const blueprint = await this.getActiveBlueprint();
     const systemPriority: { system: string; dataPoints: number }[] = [];
-    
+
     for (const system of Object.keys(blueprint)) {
       const dataPoints = stats?.systemStats[system]?.total || 0;
       systemPriority.push({ system, dataPoints });
     }
-    
+
     // Sort by least data first
     systemPriority.sort((a, b) => a.dataPoints - b.dataPoints);
-    
+
     const questions: SelectedQuestion[] = [];
     const excludeArray = Array.from(excludeIds);
     const allExcluded = [...excludeArray, ...seenIds];
-    
+
     for (const { system } of systemPriority) {
       if (questions.length >= maxQuestions) break;
-      
+
       const newQuestions = await this.prisma.preGeneratedQuestion.findMany({
         where: {
           system,
@@ -594,10 +607,10 @@ export class MainSessionQuestionSelector {
         select: { id: true, system: true, conditionId: true },
         take: Math.ceil(maxQuestions / systemPriority.length) + 1,
       });
-      
+
       for (const q of newQuestions) {
         if (questions.length >= maxQuestions) break;
-        if (!excludeIds.has(q.id) && !questions.some(existing => existing.questionId === q.id)) {
+        if (!excludeIds.has(q.id) && !questions.some((existing) => existing.questionId === q.id)) {
           questions.push({
             questionId: q.id,
             conditionId: q.conditionId,
@@ -608,37 +621,38 @@ export class MainSessionQuestionSelector {
         }
       }
     }
-    
+
     return questions;
   }
 
   /**
    * ORDERING PHASE: Assemble questions ensuring no two adjacent have the same system
    * Uses "Largest-First Greedy" algorithm to handle hardest constraints first
-   * 
+   *
    * @param pools - Map of system name to array of questions
    * @returns Assembled questions and any forced violations
    */
-  private assembleInterleavedSession(
-    pools: Map<string, SelectedQuestion[]>
-  ): { questions: SelectedQuestion[]; violations: InterleavingViolation[] } {
+  private assembleInterleavedSession(pools: Map<string, SelectedQuestion[]>): {
+    questions: SelectedQuestion[];
+    violations: InterleavingViolation[];
+  } {
     const result: SelectedQuestion[] = [];
     const violations: InterleavingViolation[] = [];
-    
+
     // Create working copy to avoid mutating input
     const workingPools = new Map<string, SelectedQuestion[]>();
     for (const [system, questions] of pools) {
       workingPools.set(system, [...questions]);
     }
-    
+
     // Track which system was placed last
     let lastPlacedSystem: string | null = null;
-    
+
     // Helper to check if any questions remain
     const hasQuestionsRemaining = (): boolean => {
-      return Array.from(workingPools.values()).some(arr => arr.length > 0);
+      return Array.from(workingPools.values()).some((arr) => arr.length > 0);
     };
-    
+
     // Iteratively pick questions
     while (hasQuestionsRemaining()) {
       // Sort systems by remaining pool size (LARGEST FIRST)
@@ -647,9 +661,9 @@ export class MainSessionQuestionSelector {
         .filter(([_, questions]) => questions.length > 0)
         .sort((a, b) => b[1].length - a[1].length)
         .map(([system]) => system);
-      
+
       let placed = false;
-      
+
       for (const system of currentOrder) {
         // STRICT RULE: Cannot pick same system as last placed
         if (system !== lastPlacedSystem) {
@@ -661,7 +675,7 @@ export class MainSessionQuestionSelector {
           break;
         }
       }
-      
+
       // CORNER CASE: Forced to repeat (only one system has questions left)
       if (!placed && currentOrder.length > 0) {
         const forcedSystem = currentOrder[0];
@@ -669,7 +683,7 @@ export class MainSessionQuestionSelector {
         const question = pool.shift()!;
         result.push(question);
         lastPlacedSystem = forcedSystem;
-        
+
         // LOG WARNING (Permissive Mode - don't crash)
         const violation: InterleavingViolation = {
           position: result.length - 1,
@@ -677,14 +691,14 @@ export class MainSessionQuestionSelector {
           reason: 'only_system_remaining',
         };
         violations.push(violation);
-        
+
         console.warn(
           `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
           `- this indicates a selection phase issue or cold start scenario`
         );
       }
     }
-    
+
     return { questions: result, violations };
   }
 
@@ -696,14 +710,14 @@ export class MainSessionQuestionSelector {
     if (!fsrsCard || !fsrsCard.stability || !fsrsCard.last_review) {
       return 0.9; // Default for new cards
     }
-    
+
     const now = Date.now();
     const lastReview = new Date(fsrsCard.last_review).getTime();
     const elapsedDays = (now - lastReview) / (1000 * 60 * 60 * 24);
-    
+
     const stability = Math.max(fsrsCard.stability || 1, 0.1);
     const retrievability = Math.pow(1 + elapsedDays / stability, -1);
-    
+
     return Math.max(0, Math.min(1, retrievability));
   }
 }

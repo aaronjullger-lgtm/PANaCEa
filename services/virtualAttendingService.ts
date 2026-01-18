@@ -25,7 +25,7 @@ export const ATTENDING_PERSONAS: Record<AttendingPersona, PersonaProfile> = {
     description: 'Supportive and encouraging, focuses on growth and learning',
     icon: '🤗',
     correctFeedbackStyle: 'encouraging',
-    incorrectFeedbackStyle: 'supportive'
+    incorrectFeedbackStyle: 'supportive',
   },
   surgeon: {
     id: 'surgeon',
@@ -33,7 +33,7 @@ export const ATTENDING_PERSONAS: Record<AttendingPersona, PersonaProfile> = {
     description: 'Direct and intense, emphasizes high stakes and consequences',
     icon: '🔪',
     correctFeedbackStyle: 'brief',
-    incorrectFeedbackStyle: 'harsh'
+    incorrectFeedbackStyle: 'harsh',
   },
   professor: {
     id: 'professor',
@@ -41,7 +41,7 @@ export const ATTENDING_PERSONAS: Record<AttendingPersona, PersonaProfile> = {
     description: 'Educational and thorough, provides detailed explanations',
     icon: '👨‍🏫',
     correctFeedbackStyle: 'educational',
-    incorrectFeedbackStyle: 'teaching'
+    incorrectFeedbackStyle: 'teaching',
   },
   comedian: {
     id: 'comedian',
@@ -49,7 +49,7 @@ export const ATTENDING_PERSONAS: Record<AttendingPersona, PersonaProfile> = {
     description: 'Light-hearted and funny, makes learning enjoyable',
     icon: '😄',
     correctFeedbackStyle: 'humorous',
-    incorrectFeedbackStyle: 'playful'
+    incorrectFeedbackStyle: 'playful',
   },
   'drill-sergeant': {
     id: 'drill-sergeant',
@@ -57,8 +57,8 @@ export const ATTENDING_PERSONAS: Record<AttendingPersona, PersonaProfile> = {
     description: 'Tough and motivating, pushes you to excellence',
     icon: '🎖️',
     correctFeedbackStyle: 'military',
-    incorrectFeedbackStyle: 'demanding'
-  }
+    incorrectFeedbackStyle: 'demanding',
+  },
 };
 
 interface FeedbackParams {
@@ -79,7 +79,7 @@ export async function generatePersonalizedFeedback(
   const personaProfile = ATTENDING_PERSONAS[persona];
 
   // Fallback to static templates if API fails or for immediate response
-  const fallback = isCorrect 
+  const fallback = isCorrect
     ? generateCorrectFeedback(persona, topic, condition)
     : generateIncorrectFeedback(persona, topic, condition, keyLearning);
 
@@ -94,10 +94,10 @@ export async function generatePersonalizedFeedback(
       Task: Generate a short (1-2 sentences) feedback message for a medical student.
       
       Context:
-      - The student answered ${isCorrect ? "CORRECTLY" : "INCORRECTLY"}.
+      - The student answered ${isCorrect ? 'CORRECTLY' : 'INCORRECTLY'}.
       - Topic: ${topic}
-      - Specific Condition: ${condition || "N/A"}
-      - Key Learning Point: ${keyLearning || "N/A"}
+      - Specific Condition: ${condition || 'N/A'}
+      - Key Learning Point: ${keyLearning || 'N/A'}
       
       Requirements:
       - Stay strictly in character.
@@ -110,7 +110,7 @@ export async function generatePersonalizedFeedback(
     const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
     return response.trim();
   } catch (error) {
-    console.error("Error generating persona feedback:", error);
+    console.error('Error generating persona feedback:', error);
     return fallback;
   }
 }
@@ -128,32 +128,32 @@ function generateCorrectFeedback(
       `Excellent work! 🌟 You're really mastering ${topic}.`,
       `That's right! I'm so proud of your progress with ${condition || topic}.`,
       `Perfect! You've got this down. Keep up the amazing work!`,
-      `Yes! Your understanding of ${topic} is growing beautifully.`
+      `Yes! Your understanding of ${topic} is growing beautifully.`,
     ],
     surgeon: [
       `Correct. Patient lives.`,
       `Right. You didn't kill anyone this time.`,
       `Good. That's the standard. Don't celebrate mediocrity.`,
-      `Acceptable. Move to the next case.`
+      `Acceptable. Move to the next case.`,
     ],
     professor: [
       `Correct! This demonstrates your understanding of the pathophysiology of ${condition || topic}.`,
       `Excellent! Let me expand on why this is the right answer...`,
       `Precisely! Note how this fits into the broader clinical picture of ${topic}.`,
-      `Well done! This shows mastery of the key concepts in ${topic}.`
+      `Well done! This shows mastery of the key concepts in ${topic}.`,
     ],
     comedian: [
       `Ding ding ding! 🎉 Someone's been studying!`,
       `Look at you, Dr. Smartypants! That's correct!`,
       `Nailed it! Your brain is on fire today (in a good way, not meningitis).`,
-      `Boom! Correct! High five! 🖐️ (Don't leave me hanging)`
+      `Boom! Correct! High five! 🖐️ (Don't leave me hanging)`,
     ],
     'drill-sergeant': [
       `CORRECT! But don't get cocky, soldier!`,
       `AFFIRMATIVE! That's what I expect from my unit!`,
       `ROGER THAT! Now lock it in and move forward!`,
-      `HOORAH! You're battle-ready on ${topic}!`
-    ]
+      `HOORAH! You're battle-ready on ${topic}!`,
+    ],
   };
 
   const options = templates[persona];
@@ -174,32 +174,32 @@ function generateIncorrectFeedback(
       `Good try! ${keyLearning || `Remember to think about ${topic} next time.`} You're learning and that's what matters.`,
       `Not quite, but you're on the right track. ${keyLearning || `Let's review ${condition || topic} together.`}`,
       `It's okay to make mistakes - that's how we learn! ${keyLearning || `Focus on understanding ${topic}.`}`,
-      `Close! ${keyLearning || `Think about the key features of ${condition || topic}.`} You'll get it next time!`
+      `Close! ${keyLearning || `Think about the key features of ${condition || topic}.`} You'll get it next time!`,
     ],
     surgeon: [
       `WRONG. Patient died. ${keyLearning || `You missed the diagnosis.`} Never forget this.`,
       `Incorrect. That decision cost a life. ${keyLearning || `Always check the H&H in ${topic}.`}`,
       `NO. ${keyLearning || `You failed to recognize ${condition}.`} This is unacceptable.`,
-      `Negative. Patient coded. ${keyLearning || `Review ${topic} immediately.`} Lives depend on you.`
+      `Negative. Patient coded. ${keyLearning || `Review ${topic} immediately.`} Lives depend on you.`,
     ],
     professor: [
       `Not quite. Let's break this down systematically. ${keyLearning || `The key to ${topic} is understanding the underlying mechanism.`}`,
       `Incorrect. Here's what you need to know: ${keyLearning || `In ${condition || topic}, we must consider...`}`,
       `That's not right. Consider the differential diagnosis: ${keyLearning || `${topic} presents with...`}`,
-      `Let me clarify. ${keyLearning || `The pathophysiology of ${condition || topic} explains why...`}`
+      `Let me clarify. ${keyLearning || `The pathophysiology of ${condition || topic} explains why...`}`,
     ],
     comedian: [
       `Oopsie daisy! 😅 ${keyLearning || `Remember: ${topic} is like... well, not that!`}`,
       `Nope! But hey, we all have off days. ${keyLearning || `Just remember ${topic} for next time.`}`,
       `Wrong answer, right spirit! 💪 ${keyLearning || `${condition || topic} is tricky, but you'll nail it.`}`,
-      `Swing and a miss! ⚾ ${keyLearning || `Think of ${topic} like... the opposite of what you picked.`}`
+      `Swing and a miss! ⚾ ${keyLearning || `Think of ${topic} like... the opposite of what you picked.`}`,
     ],
     'drill-sergeant': [
       `NEGATIVE! ${keyLearning || `You failed to secure ${topic}!`} Drop and give me 10 more questions!`,
       `UNSAT! ${keyLearning || `Review ${condition || topic} ASAP!`} We don't quit in my unit!`,
       `INCORRECT! ${keyLearning || `Master ${topic} or fall behind!`} Excellence is the only option!`,
-      `NO GO! ${keyLearning || `Lock in ${condition || topic} before advancing!`} Failure is not an option!`
-    ]
+      `NO GO! ${keyLearning || `Lock in ${condition || topic} before advancing!`} Failure is not an option!`,
+    ],
   };
 
   const options = templates[persona];
@@ -251,12 +251,14 @@ export function loadPreferredPersona(): AttendingPersona {
  */
 export function getMotivationalMessage(persona: AttendingPersona): string {
   const messages = {
-    nurturer: "Remember, you're doing great! Every question is a step forward in your journey. I believe in you! 💙",
-    surgeon: "Stay sharp. Stay focused. Lives are on the line. No room for error.",
-    professor: "Education is a marathon, not a sprint. Take time to understand the 'why' behind each answer.",
+    nurturer:
+      "Remember, you're doing great! Every question is a step forward in your journey. I believe in you! 💙",
+    surgeon: 'Stay sharp. Stay focused. Lives are on the line. No room for error.',
+    professor:
+      "Education is a marathon, not a sprint. Take time to understand the 'why' behind each answer.",
     comedian: "Keep that smile on! Medicine is serious, but learning doesn't have to be boring! 😄",
-    'drill-sergeant': "STAY FOCUSED! DISCIPLINE EQUALS FREEDOM! YOU'VE GOT THIS, SOLDIER!"
+    'drill-sergeant': "STAY FOCUSED! DISCIPLINE EQUALS FREEDOM! YOU'VE GOT THIS, SOLDIER!",
   };
-  
+
   return messages[persona];
 }

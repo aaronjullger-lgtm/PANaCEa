@@ -7,26 +7,26 @@ const dataCache = new Map<string, any>();
  * Lazily load drug data when needed.
  * Database-First: PostgreSQL is the ONLY source of truth.
  * No static fallbacks - errors propagate to UI for proper handling.
- * 
+ *
  * @returns Promise resolving to the drug data
  * @throws Error if database is unavailable
  */
 export async function loadDrugData(): Promise<any> {
   const cacheKey = 'drugData';
-  
+
   // Return from cache if already loaded
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey);
   }
-  
+
   const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
   const response = await fetch(apiUrl);
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Failed to load drugs from database: ${response.status}`);
   }
-  
+
   const data = await response.json();
   dataCache.set(cacheKey, data);
   return data;
@@ -35,35 +35,37 @@ export async function loadDrugData(): Promise<any> {
 /**
  * Lazily load condition content when needed.
  * Uses database API endpoint exclusively - no static fallback.
- * 
+ *
  * @returns Promise resolving to the condition content, or empty object if database is unavailable
  * @note Returns empty object on error to prevent app crashes. Logs errors to console.
  */
 export async function loadConditionContent(): Promise<any> {
   const cacheKey = 'conditionContent';
-  
+
   // Return from cache if already loaded
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey);
   }
-  
+
   // Use the database API endpoint (same approach as lib/loadConditions.ts)
   const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
-  
+
   try {
     const response = await fetch(apiUrl);
-    
+
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = await response.json();
       dataCache.set(cacheKey, data);
-      console.log(`✓ Loaded condition content from database (${Object.keys(data).length} conditions)`);
+      console.log(
+        `✓ Loaded condition content from database (${Object.keys(data).length} conditions)`
+      );
       return data;
     }
-    
+
     // Database API returned non-OK response
     const contentType = response.headers.get('content-type');
-    
+
     if (!contentType?.includes('application/json')) {
       console.warn(`⚠ Database API returned ${contentType || 'unknown'} instead of JSON`);
       console.warn('This usually means the backend server is not running.');
@@ -82,7 +84,7 @@ export async function loadConditionContent(): Promise<any> {
       console.error('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
     }
   }
-  
+
   // Return empty object to prevent app crashes - no static fallback
   // Application requires database to be properly configured for full functionality
   console.warn('⚠ Returning empty dataset - condition content will not be available');
@@ -92,21 +94,21 @@ export async function loadConditionContent(): Promise<any> {
 /**
  * Lazily load lab cases data when needed.
  * Uses database API endpoint with graceful fallback.
- * 
+ *
  * @returns Promise resolving to the lab cases data
  */
 export async function loadLabCases(): Promise<any> {
   const cacheKey = 'labCases';
-  
+
   // Return from cache if already loaded
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey);
   }
-  
+
   try {
     const apiUrl = getApiEndpoint(API_ENDPOINTS.LABS_CASES);
     const response = await fetch(apiUrl);
-    
+
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = await response.json();
@@ -114,7 +116,7 @@ export async function loadLabCases(): Promise<any> {
       console.log(`✓ Loaded ${Array.isArray(data) ? data.length : 0} lab cases from database`);
       return data;
     }
-    
+
     // Log warning for non-JSON responses
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
@@ -123,7 +125,7 @@ export async function loadLabCases(): Promise<any> {
   } catch (error) {
     console.warn('Failed to load lab cases from API - this is optional content:', error);
   }
-  
+
   // Return empty array as graceful fallback
   // Lab cases are optional and generated content, not critical for core functionality
   console.info('ℹ Lab cases not available (backend may not be running)');
@@ -143,14 +145,14 @@ export function preloadData(): void {
     loadConditionContent().catch(() => {
       // Silently fail - will retry when actually needed
     });
-    
+
     // Delay drug data slightly to prioritize condition content
     setTimeout(() => {
       loadDrugData().catch(() => {
         // Silently fail - will retry when actually needed
       });
     }, 500);
-    
+
     // Lab cases are least commonly used, load last
     setTimeout(() => {
       loadLabCases().catch(() => {

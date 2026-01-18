@@ -1,6 +1,6 @@
 /**
  * Scenario Service - Database-First Multi-Step Branching Scenarios
- * 
+ *
  * Fetches clinical scenarios from MedicalContent table for Virtual Encounter Mode.
  * Supports branching decision trees based on user actions.
  */
@@ -83,7 +83,10 @@ export async function fetchClinicalScenario(
       conditionName: content.condition,
       patientAge: data.demographics?.ageRange || Math.floor(Math.random() * 60) + 20,
       patientSex: data.demographics?.commonSex || (Math.random() > 0.5 ? 'M' : 'F'),
-      chiefComplaint: data.presentation?.chiefComplaint || data.clinical_pearls?.[0] || 'Patient presents for evaluation',
+      chiefComplaint:
+        data.presentation?.chiefComplaint ||
+        data.clinical_pearls?.[0] ||
+        'Patient presents for evaluation',
       correctDiagnosis: content.gold_standard_dx || content.condition,
       system: content.system,
       vitalSigns: {
@@ -96,7 +99,9 @@ export async function fetchClinicalScenario(
       },
       initialStep: {
         id: 'history-1',
-        text: data.presentation?.openingStatement || 'Patient presents with chief complaint. Begin your history.',
+        text:
+          data.presentation?.openingStatement ||
+          'Patient presents with chief complaint. Begin your history.',
         type: 'question',
         options: [
           { text: 'When did symptoms start?', nextStepId: 'history-2' },
@@ -106,12 +111,16 @@ export async function fetchClinicalScenario(
         ],
       },
       allSteps: new Map(),
-      teachingPoints: Array.isArray(data.teachingPoints) ? data.teachingPoints : (content.clinical_pearls || []),
-      idealWorkup: Array.isArray(data.workup) ? data.workup : [
-        content.gold_standard_dx || 'Clinical diagnosis',
-        'Targeted history and physical',
-        'Appropriate diagnostic tests',
-      ],
+      teachingPoints: Array.isArray(data.teachingPoints)
+        ? data.teachingPoints
+        : content.clinical_pearls || [],
+      idealWorkup: Array.isArray(data.workup)
+        ? data.workup
+        : [
+            content.gold_standard_dx || 'Clinical diagnosis',
+            'Targeted history and physical',
+            'Appropriate diagnostic tests',
+          ],
     };
 
     // Build step map (in real implementation, this would come from DB structure)
@@ -142,11 +151,11 @@ export async function fetchScenarioBatch(
   databaseUrl?: string
 ): Promise<ClinicalScenario[]> {
   const scenarios: ClinicalScenario[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     const scenario = await fetchClinicalScenario(system, databaseUrl);
     if (scenario) scenarios.push(scenario);
   }
-  
+
   return scenarios;
 }

@@ -63,7 +63,7 @@ describe('OfflineSyncService', () => {
 
       const stored = mockLocalStorage.getItem('offline-sync-queue');
       expect(stored).toBeTruthy();
-      
+
       const parsed = JSON.parse(stored!);
       expect(parsed.length).toBe(1);
     });

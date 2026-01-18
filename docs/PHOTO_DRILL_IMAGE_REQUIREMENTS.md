@@ -11,13 +11,13 @@ Photo Drill mode is designed to test a student's ability to **visually diagnose*
 
 ### For Quiz Mode (isAnnotated: false, usageType: 'quiz')
 
-| Requirement | Description |
-|-------------|-------------|
-| **No annotations** | No arrows, labels, circles, or text overlays |
-| **Diagnostic quality** | High enough resolution to actually make a diagnosis |
-| **Single finding focus** | Ideally showcases ONE key finding |
-| **No watermarks** | No identifying marks that distract |
-| **Appropriate license** | Must be usable for educational purposes |
+| Requirement              | Description                                         |
+| ------------------------ | --------------------------------------------------- |
+| **No annotations**       | No arrows, labels, circles, or text overlays        |
+| **Diagnostic quality**   | High enough resolution to actually make a diagnosis |
+| **Single finding focus** | Ideally showcases ONE key finding                   |
+| **No watermarks**        | No identifying marks that distract                  |
+| **Appropriate license**  | Must be usable for educational purposes             |
 
 ### Images That Should NOT Be Used for Quiz
 
@@ -26,11 +26,12 @@ Photo Drill mode is designed to test a student's ability to **visually diagnose*
 ❌ Images with circles/boxes highlighting areas  
 ❌ Google thumbnail images (low resolution)  
 ❌ Annotated textbook figures  
-❌ Images with visible watermarks/credits  
+❌ Images with visible watermarks/credits
 
 ### For Reference Mode (isAnnotated: true, usageType: 'reference')
 
 These images CAN have annotations and are shown AFTER the student answers:
+
 - ✅ Teaching diagrams with labels
 - ✅ Annotated versions of clinical images
 - ✅ Side-by-side comparisons
@@ -49,7 +50,7 @@ usageType     TEXT DEFAULT 'quiz'    -- 'quiz', 'reference', or 'both'
 The `/api/drills/media` endpoint now filters:
 
 ```typescript
-WHERE 
+WHERE
   status = 'approved'
   AND isClinical = true
   AND correctDiagnosis IS NOT NULL
@@ -60,40 +61,46 @@ WHERE
 ## Quality Sources by Modality
 
 ### ECG (Clean)
-| Source | Quality | Notes |
-|--------|---------|-------|
-| PhysioNet | Excellent | Raw recordings, no annotations |
-| ECG Wave-Maven (Harvard) | Good | Most strips are clean |
-| Dr. Smith's ECG Blog | Mixed | Check each individually |
+
+| Source                   | Quality   | Notes                          |
+| ------------------------ | --------- | ------------------------------ |
+| PhysioNet                | Excellent | Raw recordings, no annotations |
+| ECG Wave-Maven (Harvard) | Good      | Most strips are clean          |
+| Dr. Smith's ECG Blog     | Mixed     | Check each individually        |
 
 ### ECG (Reference/Annotated)
-| Source | Quality | Notes |
-|--------|---------|-------|
+
+| Source            | Quality   | Notes                                          |
+| ----------------- | --------- | ---------------------------------------------- |
 | LITFL ECG Library | Excellent | Most have annotations - USE FOR REFERENCE ONLY |
-| ECGpedia | Good | Teaching annotations |
+| ECGpedia          | Good      | Teaching annotations                           |
 
 ### Radiology (Clean)
-| Source | Quality | Notes |
-|--------|---------|-------|
+
+| Source                 | Quality   | Notes                              |
+| ---------------------- | --------- | ---------------------------------- |
 | Radiopaedia (original) | Excellent | Look for non-annotated case images |
-| MedPix (NIH) | Excellent | Government images, public domain |
-| Wikimedia Commons | Variable | Verify no annotations |
+| MedPix (NIH)           | Excellent | Government images, public domain   |
+| Wikimedia Commons      | Variable  | Verify no annotations              |
 
 ### Dermatology (Clean)
-| Source | Quality | Notes |
-|--------|---------|-------|
+
+| Source     | Quality   | Notes                               |
+| ---------- | --------- | ----------------------------------- |
 | DermNet NZ | Excellent | Clinical photos without annotations |
-| DermIS | Good | Clean clinical photos |
+| DermIS     | Good      | Clean clinical photos               |
 
 ## Workflow for Image Acquisition
 
 ### Step 1: Find Clean Image
+
 1. Search source database for condition
 2. Verify image has NO annotations
 3. Verify resolution is diagnostic quality
 4. Verify appropriate license
 
 ### Step 2: Add to Database
+
 ```typescript
 {
   conditionId: "CV__ecg__atrial_fibrillation",
@@ -110,11 +117,13 @@ WHERE
 ```
 
 ### Step 3: (Optional) Add Reference Image
+
 If an annotated teaching version exists:
+
 ```typescript
 {
   conditionId: "CV__ecg__atrial_fibrillation",
-  type: "ECG", 
+  type: "ECG",
   originalUrl: "https://..._annotated.jpg",
   isAnnotated: true,       // Has annotations
   usageType: "reference",  // Only for learning mode
@@ -145,6 +154,7 @@ Before approving any image for quiz mode:
 Returns quiz-suitable images only (clean, un-annotated).
 
 **Parameters:**
+
 - `modality`: 'ecg' | 'derm' | 'radiology' (optional)
 - `count`: number of images (default 20, max 100)
 
@@ -153,6 +163,7 @@ Returns quiz-suitable images only (clean, un-annotated).
 ### Future Enhancement: Reference Images API
 
 Not yet implemented - would return annotated images for post-answer learning:
+
 ```
 GET /api/drills/media/reference?conditionId=CV__ecg__atrial_fibrillation
 ```

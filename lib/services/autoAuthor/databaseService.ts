@@ -1,14 +1,14 @@
 /**
  * Auto-Author Database Service
- * 
+ *
  * Handles database operations for auto-generated content:
  * - Detecting conditions missing content
  * - Saving generated content to Condition table
  * - Updating existing conditions
  */
 
-import { PrismaClient } from "@prisma/client";
-import type { GeneratedConditionContent, AutoAuthorStats } from "./types";
+import { PrismaClient } from '@prisma/client';
+import type { GeneratedConditionContent, AutoAuthorStats } from './types';
 
 const prisma = new PrismaClient();
 
@@ -39,22 +39,22 @@ export async function findConditionsMissingContent(
   // Filter conditions that are missing essential fields
   const missing = allConditions.filter((condition) => {
     const content = condition.content as any;
-    
+
     // No content at all
-    if (!content || typeof content !== "object") {
+    if (!content || typeof content !== 'object') {
       return true;
     }
-    
+
     // Missing overview, symptoms, or diagnosis
     if (!content.overview || !content.symptoms || !content.diagnosis) {
       return true;
     }
-    
+
     // Symptoms is empty array
     if (Array.isArray(content.symptoms) && content.symptoms.length === 0) {
       return true;
     }
-    
+
     return false;
   });
 
@@ -98,18 +98,21 @@ export async function saveGeneratedContent(
       ...(generatedContent.epidemiology && {
         epidemiology: generatedContent.epidemiology,
       }),
-      ...(generatedContent.examFindings && generatedContent.examFindings.length > 0 && {
-        examFindings: generatedContent.examFindings,
-      }),
-      ...(generatedContent.complications && generatedContent.complications.length > 0 && {
-        complications: generatedContent.complications,
-      }),
+      ...(generatedContent.examFindings &&
+        generatedContent.examFindings.length > 0 && {
+          examFindings: generatedContent.examFindings,
+        }),
+      ...(generatedContent.complications &&
+        generatedContent.complications.length > 0 && {
+          complications: generatedContent.complications,
+        }),
       ...(generatedContent.prognosis && {
         prognosis: generatedContent.prognosis,
       }),
-      ...(generatedContent.differentialDiagnosis && generatedContent.differentialDiagnosis.length > 0 && {
-        differentialDiagnosis: generatedContent.differentialDiagnosis,
-      }),
+      ...(generatedContent.differentialDiagnosis &&
+        generatedContent.differentialDiagnosis.length > 0 && {
+          differentialDiagnosis: generatedContent.differentialDiagnosis,
+        }),
     };
 
     await client.condition.update({
@@ -127,9 +130,7 @@ export async function saveGeneratedContent(
 /**
  * Get count of conditions by content status
  */
-export async function getContentStats(
-  client: PrismaClient = prisma
-): Promise<{
+export async function getContentStats(client: PrismaClient = prisma): Promise<{
   total: number;
   withContent: number;
   missingContent: number;
@@ -162,9 +163,7 @@ export async function closeAutoAuthorDb(): Promise<void> {
  * Format summary for auto-author run
  */
 export function formatAutoAuthorSummary(stats: AutoAuthorStats): string {
-  const successRate = stats.total > 0 
-    ? ((stats.generated / stats.total) * 100).toFixed(1)
-    : "0.0";
-    
+  const successRate = stats.total > 0 ? ((stats.generated / stats.total) * 100).toFixed(1) : '0.0';
+
   return `Generated ${stats.generated}/${stats.total} conditions (${successRate}% success, ${stats.failed} failed, ${stats.skipped} skipped)`;
 }

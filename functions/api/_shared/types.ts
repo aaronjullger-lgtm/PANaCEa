@@ -1,6 +1,6 @@
 /**
  * Cloudflare Workers/Functions Type Definitions
- * 
+ *
  * Provides comprehensive type safety for Cloudflare edge functions.
  * Import these types instead of using `any` for context and env.
  */
@@ -18,26 +18,26 @@ import type { KVNamespace as WorkersKVNamespace } from '@cloudflare/workers-type
 export interface CloudflareEnv {
   // Database
   DATABASE_URL?: string;
-  
+
   // Authentication
   CLERK_SECRET_KEY?: string;
   CLERK_PUBLISHABLE_KEY?: string;
-  
+
   // AI/ML APIs
   GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
-  
+
   // Optional feature flags
   ENABLE_LOGGING?: string;
   LOG_LEVEL?: string;
-  
+
   // Optional KV bindings (use official types from @cloudflare/workers-types)
   CACHE?: WorkersKVNamespace;
   RATE_LIMIT?: WorkersKVNamespace;
-  
+
   // Optional D1 binding (for future use)
   DB?: D1Database;
-  
+
   // Optional R2 bucket (for media storage)
   MEDIA_BUCKET?: R2Bucket;
 }
@@ -70,8 +70,9 @@ export interface CloudflareContext<E extends CloudflareEnv = CloudflareEnv> {
  * Authenticated context with user information
  * Extends base context after auth middleware runs
  */
-export interface AuthenticatedContext<E extends CloudflareEnv = CloudflareEnv> 
-  extends CloudflareContext<E> {
+export interface AuthenticatedContext<
+  E extends CloudflareEnv = CloudflareEnv,
+> extends CloudflareContext<E> {
   data: {
     userId: string;
     clerkId: string;
@@ -232,7 +233,7 @@ export function errorResponse(
  */
 export async function parseJsonBody<T>(request: Request): Promise<T | null> {
   try {
-    return await request.json() as T;
+    return (await request.json()) as T;
   } catch {
     return null;
   }
@@ -248,10 +249,21 @@ export async function parseJsonBody<T>(request: Request): Promise<T | null> {
  * @deprecated Use import { KVNamespace } from '@cloudflare/workers-types' instead
  */
 export interface KVNamespace {
-  get(key: string, options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }): Promise<string | null>;
-  put(key: string, value: string | ReadableStream | ArrayBuffer, options?: { expirationTtl?: number }): Promise<void>;
+  get(
+    key: string,
+    options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }
+  ): Promise<string | null>;
+  put(
+    key: string,
+    value: string | ReadableStream | ArrayBuffer,
+    options?: { expirationTtl?: number }
+  ): Promise<void>;
   delete(key: string): Promise<void>;
-  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{ keys: { name: string }[]; cursor?: string }>;
+  list(options?: {
+    prefix?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<{ keys: { name: string }[]; cursor?: string }>;
 }
 
 /**
@@ -289,7 +301,11 @@ interface D1ExecResult {
  */
 export interface R2Bucket {
   get(key: string): Promise<R2Object | null>;
-  put(key: string, value: ReadableStream | ArrayBuffer | string, options?: R2PutOptions): Promise<R2Object>;
+  put(
+    key: string,
+    value: ReadableStream | ArrayBuffer | string,
+    options?: R2PutOptions
+  ): Promise<R2Object>;
   delete(keys: string | string[]): Promise<void>;
   list(options?: R2ListOptions): Promise<R2Objects>;
 }

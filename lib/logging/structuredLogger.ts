@@ -1,6 +1,6 @@
 /**
  * Structured Logging System for PANaCEa
- * 
+ *
  * Replaces console.log statements with structured, filterable logging
  * Supports different log levels and production monitoring integration
  */
@@ -37,7 +37,7 @@ class StructuredLogger {
 
   constructor(config: LoggerConfig) {
     this.config = config;
-    
+
     // Flush buffer periodically in production
     if (config.enableRemote && typeof window !== 'undefined') {
       setInterval(() => this.flushBuffer(), 30000); // Flush every 30 seconds
@@ -52,7 +52,7 @@ class StructuredLogger {
       error: 3,
       critical: 4,
     };
-    
+
     return levels[level] >= levels[this.config.level];
   }
 
@@ -85,17 +85,18 @@ class StructuredLogger {
   private async writeLog(entry: LogEntry): Promise<void> {
     // Console output for development
     if (this.config.enableConsole) {
-      const consoleMethod = entry.level === 'error' || entry.level === 'critical' 
-        ? console.error 
-        : entry.level === 'warn' 
-        ? console.warn 
-        : console.log;
+      const consoleMethod =
+        entry.level === 'error' || entry.level === 'critical'
+          ? console.error
+          : entry.level === 'warn'
+            ? console.warn
+            : console.log;
 
       const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}]`;
       const contextStr = entry.context ? ` [${entry.context}]` : '';
-      
+
       consoleMethod(`${prefix}${contextStr} ${entry.message}`, entry.metadata || '');
-      
+
       if (entry.error) {
         consoleMethod('Error details:', entry.error);
       }
@@ -104,7 +105,7 @@ class StructuredLogger {
     // Buffer for remote logging
     if (this.config.enableRemote) {
       this.logBuffer.push(entry);
-      
+
       if (this.logBuffer.length >= this.maxBufferSize) {
         await this.flushBuffer();
       }
@@ -124,7 +125,7 @@ class StructuredLogger {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({ logs: entries }),
       });
@@ -164,7 +165,7 @@ class StructuredLogger {
     if (!this.shouldLog('critical')) return;
     const entry = this.createLogEntry('critical', message, context, metadata, error);
     this.writeLog(entry);
-    
+
     // Immediately flush critical errors
     if (this.config.enableRemote) {
       this.flushBuffer();
@@ -197,9 +198,15 @@ class StructuredLogger {
   apiResponse(method: string, path: string, statusCode: number, duration: number): void {
     const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
     if (level === 'error') {
-      this.error(`${method} ${path} - ${statusCode}`, undefined, 'API', { statusCode, duration: `${duration}ms` });
+      this.error(`${method} ${path} - ${statusCode}`, undefined, 'API', {
+        statusCode,
+        duration: `${duration}ms`,
+      });
     } else {
-      this[level](`${method} ${path} - ${statusCode}`, 'API', { statusCode, duration: `${duration}ms` });
+      this[level](`${method} ${path} - ${statusCode}`, 'API', {
+        statusCode,
+        duration: `${duration}ms`,
+      });
     }
   }
 
@@ -216,8 +223,9 @@ class StructuredLogger {
 // Create logger instances for different environments
 const createLogger = (): StructuredLogger => {
   // Safe access to process.env for different runtimes (Node.js vs Cloudflare Workers)
-  const env = typeof process !== 'undefined' ? process.env : {} as Record<string, string | undefined>;
-  
+  const env =
+    typeof process !== 'undefined' ? process.env : ({} as Record<string, string | undefined>);
+
   const isProduction = env.NODE_ENV === 'production';
   const isDevelopment = env.NODE_ENV === 'development';
 
@@ -242,16 +250,16 @@ export const authLogger = {
 };
 
 export const apiLogger = {
-  request: (method: string, path: string, userId?: string, requestId?: string) => 
+  request: (method: string, path: string, userId?: string, requestId?: string) =>
     logger.apiRequest(method, path, userId, requestId),
-  response: (method: string, path: string, statusCode: number, duration: number) => 
+  response: (method: string, path: string, statusCode: number, duration: number) =>
     logger.apiResponse(method, path, statusCode, duration),
 };
 
 export const dbLogger = {
-  query: (operation: string, table: string, duration?: number) => 
+  query: (operation: string, table: string, duration?: number) =>
     logger.dbQuery(operation, table, duration),
-  error: (operation: string, table: string, error: Error) => 
+  error: (operation: string, table: string, error: Error) =>
     logger.dbError(operation, table, error),
 };
 
@@ -260,19 +268,19 @@ export const createRequestLogger = () => {
   return (req: any, res: any, next: any) => {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).substring(7);
-    
+
     // Add request ID to request object
     req.requestId = requestId;
-    
+
     // Log incoming request
     apiLogger.request(req.method, req.path, req.auth?.userId, requestId);
-    
+
     // Log response when finished
     res.on('finish', () => {
       const duration = Date.now() - startTime;
       apiLogger.response(req.method, req.path, res.statusCode, duration);
     });
-    
+
     next();
   };
 };

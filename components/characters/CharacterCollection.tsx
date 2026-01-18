@@ -1,15 +1,15 @@
 /**
  * Character Collection Component
- * 
+ *
  * Displays the organ-themed character collection with unlockable variants and accessories
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles, 
-  Lock, 
-  Trophy, 
+import {
+  Sparkles,
+  Lock,
+  Trophy,
   Star,
   ChevronDown,
   ChevronUp,
@@ -87,7 +87,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
       setProgress(unlockedProgress);
       saveOrganProgress(unlockedProgress);
       setNewUnlocks({ variants: newVariants, accessories: newAccessories });
-      
+
       // Clear notification after 5 seconds
       setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
     } else {
@@ -99,7 +99,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
   // Calculate stats
   const stats = useMemo(() => {
     const completion = getOverallCompletion(progress);
-    const systemCompletions = ORGAN_CHARACTERS.map(char => ({
+    const systemCompletions = ORGAN_CHARACTERS.map((char) => ({
       system: char.system,
       name: char.name,
       completion: getSystemCompletion(progress, char.system as SystemCode),
@@ -117,22 +117,22 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
 
     switch (filterMode) {
       case 'unlocked':
-        characters = characters.filter(char => {
+        characters = characters.filter((char) => {
           const variants = getVariantsForSystem(char.system);
-          return variants.some(v => progress.unlockedVariants.has(v.id) && !v.isBase);
+          return variants.some((v) => progress.unlockedVariants.has(v.id) && !v.isBase);
         });
         break;
       case 'locked':
-        characters = characters.filter(char => {
+        characters = characters.filter((char) => {
           const variants = getVariantsForSystem(char.system);
-          return variants.some(v => !progress.unlockedVariants.has(v.id));
+          return variants.some((v) => !progress.unlockedVariants.has(v.id));
         });
         break;
       case 'base':
-        characters = characters.filter(char => char.system !== 'SPECIAL');
+        characters = characters.filter((char) => char.system !== 'SPECIAL');
         break;
       case 'special':
-        characters = characters.filter(char => char.system === 'SPECIAL');
+        characters = characters.filter((char) => char.system === 'SPECIAL');
         break;
     }
 
@@ -185,7 +185,12 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                   className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors p-2 rounded-lg hover:bg-[var(--color-bg-primary)]"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
@@ -202,7 +207,8 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                   {stats.percentage}%
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                  {stats.variantsUnlocked + stats.accessoriesUnlocked} / {stats.totalVariants + stats.totalAccessories} items
+                  {stats.variantsUnlocked + stats.accessoriesUnlocked} /{' '}
+                  {stats.totalVariants + stats.totalAccessories} items
                 </div>
               </div>
 
@@ -238,11 +244,12 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                   <div className="text-xs text-[var(--color-text-muted)]">Locked</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
-                  {stats.totalVariants + stats.totalAccessories - stats.variantsUnlocked - stats.accessoriesUnlocked}
+                  {stats.totalVariants +
+                    stats.totalAccessories -
+                    stats.variantsUnlocked -
+                    stats.accessoriesUnlocked}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                  Keep studying!
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">Keep studying!</div>
               </div>
             </div>
           </div>
@@ -283,7 +290,11 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
               >
                 <Filter className="w-4 h-4" />
                 <span className="text-sm font-medium">Filters</span>
-                {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showFilters ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -297,19 +308,21 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                   className="mt-4 overflow-hidden"
                 >
                   <div className="flex flex-wrap gap-2">
-                    {(['all', 'unlocked', 'locked', 'base', 'special'] as FilterMode[]).map(filter => (
-                      <button
-                        key={filter}
-                        onClick={() => setFilterMode(filter)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          filterMode === filter
-                            ? 'bg-[var(--color-accent)] text-white'
-                            : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
-                        }`}
-                      >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </button>
-                    ))}
+                    {(['all', 'unlocked', 'locked', 'base', 'special'] as FilterMode[]).map(
+                      (filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setFilterMode(filter)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            filterMode === filter
+                              ? 'bg-[var(--color-accent)] text-white'
+                              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                          }`}
+                        >
+                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </button>
+                      )
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -320,12 +333,15 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
           <div className="flex-1 overflow-y-auto p-6">
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {filteredCharacters.map(character => {
+                {filteredCharacters.map((character) => {
                   const variants = getVariantsForSystem(character.system);
-                  const unlockedVariants = variants.filter(v => progress.unlockedVariants.has(v.id));
-                  const completion = variants.length > 0 
-                    ? Math.round((unlockedVariants.length / variants.length) * 100)
-                    : 0;
+                  const unlockedVariants = variants.filter((v) =>
+                    progress.unlockedVariants.has(v.id)
+                  );
+                  const completion =
+                    variants.length > 0
+                      ? Math.round((unlockedVariants.length / variants.length) * 100)
+                      : 0;
 
                   return (
                     <CharacterCard
@@ -341,12 +357,15 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredCharacters.map(character => {
+                {filteredCharacters.map((character) => {
                   const variants = getVariantsForSystem(character.system);
-                  const unlockedVariants = variants.filter(v => progress.unlockedVariants.has(v.id));
-                  const completion = variants.length > 0 
-                    ? Math.round((unlockedVariants.length / variants.length) * 100)
-                    : 0;
+                  const unlockedVariants = variants.filter((v) =>
+                    progress.unlockedVariants.has(v.id)
+                  );
+                  const completion =
+                    variants.length > 0
+                      ? Math.round((unlockedVariants.length / variants.length) * 100)
+                      : 0;
 
                   return (
                     <button
@@ -384,9 +403,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
             {filteredCharacters.length === 0 && (
               <div className="text-center py-12">
                 <Lock className="w-16 h-16 text-[var(--color-text-muted)] mx-auto mb-4 opacity-50" />
-                <p className="text-[var(--color-text-muted)]">
-                  No characters match your filters
-                </p>
+                <p className="text-[var(--color-text-muted)]">No characters match your filters</p>
               </div>
             )}
           </div>

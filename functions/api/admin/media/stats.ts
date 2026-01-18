@@ -1,12 +1,16 @@
 /**
  * Media Stats API Endpoint
- * 
+ *
  * GET /api/admin/media/stats
  * Returns statistics about media approval workflow.
  */
 
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../_shared/auth';
 
 interface Env {
   DATABASE_URL: string;
@@ -85,6 +89,6 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     console.error('Media stats error:', error);
     return createErrorResponse('Failed to fetch media stats', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };

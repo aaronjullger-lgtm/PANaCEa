@@ -1,96 +1,64 @@
 /**
  * User Behavior Metrics API
- * 
+ *
  * Stores implicit behavioral data collected during question interactions.
  * This enables:
  * - Behavioral FSRS rating derivation
  * - Learning pattern analysis
  * - Personalized difficulty adjustment
  * - Time-of-day performance tracking
- * 
+ *
  * POST /api/user/behavior-metrics
+ * GET /api/user/behavior-metrics
  */
 
-import type { EventContext } from '@cloudflare/workers-types';
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
-import { authenticateRequest } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface BehaviorMetricsPayload {
-  questionId: string;
-  questionType?: string;
-  timeToFirstClick: number;
-  dwellTime: number;
-  totalResponseTime: number;
-  answerChanges?: number;
-  optionHovers?: number;
-  scrollDepth?: number;
-  hesitationEvents?: number;
-  backtrackCount?: number;
-  wasCorrect: boolean;
-  confidenceLevel?: number;
-  derivedRating?: number;
-  ratingConfidence?: number;
-  trajectoryData?: any;
-  typingRhythm?: any;
-}
+const BehaviorMetricsPostSchema = z.object({
+  body: z.object({
+    questionId: z.string().min(1),
+    questionType: z.string().optional(),
+    timeToFirstClick: z.number().min(0),
+    dwellTime: z.number().min(0),
+    totalResponseTime: z.number().min(0),
+    answerChanges: z.number().int().min(0).optional(),
+    optionHovers: z.number().int().min(0).optional(),
+    scrollDepth: z.number().min(0).max(100).optional(),
+    hesitationEvents: z.number().int().min(0).optional(),
+    backtrackCount: z.number().int().min(0).optional(),
+    wasCorrect: z.boolean(),
+    confidenceLevel: z.number().min(0).max(1).optional(),
+    derivedRating: z.number().min(1).max(4).optional(),
+    ratingConfidence: z.number().min(0).max(1).optional(),
+    trajectoryData: z.any().optional(),
+    typingRhythm: z.any().optional(),
+  }),
+});
+
+const BehaviorMetricsGetSchema = z.object({
+  query: z.object({
+    limit: z.string().optional(),
+    offset: z.string().optional(),
+    questionId: z.string().optional(),
+  }),
+});
+
+export const onRequestOptions = withCors();
 
 /**
  * Store behavior metrics for a question attempt
  */
-export async function onRequestPost(context: EventContext<Env, any, Record<string, unknown>>) {
+export const onRequestPost = authenticatedEndpoint(BehaviorMetricsPostSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/behavior-metrics');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const userId = authResult.userId;
-
-    // Parse request body
-    let payload: BehaviorMetricsPayload;
-    try {
-      payload = await context.request.json();
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Validate required fields
-    if (!payload.questionId || typeof payload.timeToFirstClick !== 'number' ||
-        typeof payload.dwellTime !== 'number' || typeof payload.totalResponseTime !== 'number' ||
-        typeof payload.wasCorrect !== 'boolean') {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing required fields',
-          required: ['questionId', 'timeToFirstClick', 'dwellTime', 'totalResponseTime', 'wasCorrect']
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const payload = validated.body;
 
     // Get current hour for timeOfDay
     const now = new Date();
@@ -108,7 +76,7 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
     // Store behavior metrics
     const metrics = await prisma.userBehaviorMetrics.create({
       data: {
-        userId,
+        userId: auth.userId,
         questionId: payload.questionId,
         questionType: payload.questionType,
         timeToFirstClick: payload.timeToFirstClick,
@@ -130,67 +98,48 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
       },
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
+    logger.info('Stored behavior metrics', {
+      userId: auth.userId,
+      questionId: payload.questionId,
+      metricsId: metrics.id,
+    });
+
+    return {
+      data: {
         id: metrics.id,
         message: 'Behavior metrics stored successfully',
-      }),
-      {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+      status: 201,
+    };
   } catch (error) {
-    console.error('Error storing behavior metrics:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to store behavior metrics',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error storing behavior metrics', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to store behavior metrics');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
  * Get behavior metrics for a user
- * GET /api/user/behavior-metrics?limit=100&offset=0
  */
-export async function onRequestGet(context: EventContext<Env, any, Record<string, unknown>>) {
+export const onRequestGet = authenticatedEndpoint(BehaviorMetricsGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/behavior-metrics');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const userId = authResult.userId;
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Parse query parameters
-    const url = new URL(context.request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 500);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-    const questionId = url.searchParams.get('questionId');
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    const limit = Math.min(parseInt(validated.query?.limit || '100'), 500);
+    const offset = parseInt(validated.query?.offset || '0');
+    const questionId = validated.query?.questionId;
 
     // Build query
-    const where: any = { userId };
+    const where: any = { userId: auth.userId };
     if (questionId) {
       where.questionId = questionId;
     }
@@ -206,9 +155,14 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
     // Get total count
     const total = await prisma.userBehaviorMetrics.count({ where });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
+    logger.info('Fetched behavior metrics', {
+      userId: auth.userId,
+      count: metrics.length,
+      total,
+    });
+
+    return {
+      data: {
         metrics,
         pagination: {
           total,
@@ -216,25 +170,15 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
           offset,
           hasMore: offset + limit < total,
         },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error fetching behavior metrics:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch behavior metrics',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error fetching behavior metrics', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch behavior metrics');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});

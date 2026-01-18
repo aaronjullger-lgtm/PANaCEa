@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
-import { 
-  Search, 
-  RefreshCw, 
-  X, 
+import {
+  Search,
+  RefreshCw,
+  X,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
@@ -109,9 +109,7 @@ const DrugCard: React.FC<{
               1st
             </span>
           )}
-          {drug.isHighYield && (
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-          )}
+          {drug.isHighYield && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
         </div>
       </div>
 
@@ -200,7 +198,7 @@ const DrugClassSidebar: React.FC<{
               High Yield Only
             </span>
           </label>
-          
+
           <label className="flex items-center gap-2 cursor-pointer group">
             <input
               type="checkbox"
@@ -234,7 +232,10 @@ const DrugClassSidebar: React.FC<{
           ) : classesLoading ? (
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-10 rounded-lg bg-[var(--color-bg-primary)]/50 animate-pulse" />
+                <div
+                  key={i}
+                  className="h-10 rounded-lg bg-[var(--color-bg-primary)]/50 animate-pulse"
+                />
               ))}
             </div>
           ) : (
@@ -392,19 +393,20 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
     let result = drugs;
 
     if (highYieldOnly) {
-      result = result.filter(d => d.isHighYield);
+      result = result.filter((d) => d.isHighYield);
     }
 
     if (firstLineOnly) {
-      result = result.filter(d => d.isFirstLine);
+      result = result.filter((d) => d.isFirstLine);
     }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(d =>
-        d.genericName?.toLowerCase().includes(query) ||
-        d.brandName?.toLowerCase().includes(query) ||
-        d.indications?.some(ind => ind.toLowerCase().includes(query))
+      result = result.filter(
+        (d) =>
+          d.genericName?.toLowerCase().includes(query) ||
+          d.brandName?.toLowerCase().includes(query) ||
+          d.indications?.some((ind) => ind.toLowerCase().includes(query))
       );
     }
 
@@ -414,7 +416,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
   // Group drugs by class for display
   const groupedDrugs = useMemo(() => {
     const map = new Map<string, Drug[]>();
-    
+
     for (const drug of filteredDrugs) {
       // A drug can belong to multiple classes
       if (drug.drugClass && drug.drugClass.length > 0) {
@@ -572,11 +574,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
           ) : classesLoading && drugClasses.length === 0 ? (
             <LoadingOverlay message="Loading drug classes..." />
           ) : error ? (
-            <ErrorState
-              title="Failed to load drugs"
-              message={error}
-              onRetry={fetchDrugs}
-            />
+            <ErrorState title="Failed to load drugs" message={error} onRetry={fetchDrugs} />
           ) : loading ? (
             <LoadingOverlay message="Loading medications..." />
           ) : activeDrugClass === 'all' && !searchQuery ? (
@@ -589,7 +587,8 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
                 Select a Drug Class
               </h3>
               <p className="text-sm text-[var(--color-text-muted)] max-w-md mb-6">
-                Choose a drug class from the sidebar to explore medications. This helps you focus your study and prevents information overload.
+                Choose a drug class from the sidebar to explore medications. This helps you focus
+                your study and prevents information overload.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-md">
                 {drugClasses.slice(0, 6).map((cls) => (
@@ -618,7 +617,10 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
           ) : (
             <div className="space-y-8">
               {groupedDrugs.map((group) => (
-                <div key={group.drugClass} className="bg-gradient-to-br from-[var(--color-bg-secondary)]/30 to-transparent rounded-2xl p-6 border border-[var(--color-border)]/40 shadow-sm">
+                <div
+                  key={group.drugClass}
+                  className="bg-gradient-to-br from-[var(--color-bg-secondary)]/30 to-transparent rounded-2xl p-6 border border-[var(--color-border)]/40 shadow-sm"
+                >
                   {/* Class Header */}
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">

@@ -1,37 +1,38 @@
 /**
  * API: GET /api/anatomy/:id
- * 
+ *
  * Fetch a single anatomy 3D model by ID.
  * Includes related conditions and clinical pearls.
+ *
+ * PUBLIC endpoint - anatomy models are educational curriculum content
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { publicEndpoint } from '../_shared/middleware';
+import { withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-interface CloudflareEnv {
-  DATABASE_URL: string;
-}
+const AnatomyByIdSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, 'Model ID is required'),
+  }),
+});
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
-export async function onRequestGet(context: { request: Request; env: CloudflareEnv; params: { id: string } }): Promise<Response> {
-  const { env, params } = context;
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = publicEndpoint(AnatomyByIdSchema, async ({ env, validated }) => {
+  const log = createEndpointLogger('/api/anatomy/[id]');
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const modelId = params.id;
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const modelId = validated.params.id;
 
-    if (!modelId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Model ID is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-      );
-    }
+    log.info('Fetching anatomy model', { modelId });
 
     // Fetch the model
-    const model = await prisma.$queryRaw`
+    const model = (await prisma.$queryRaw`
       SELECT 
         id,
         name,
@@ -65,17 +66,15 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
       FROM "Anatomy3DModel"
       WHERE id = ${modelId}
       LIMIT 1
-    ` as any[];
+    `) as any[];
 
     if (!model || model.length === 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Model not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-      );
+      log.warn('Anatomy model not found', { modelId });
+      return { status: 404, error: 'Model not found' };
     }
 
     // Fetch related conditions via junction table
-    const relatedConditions = await prisma.$queryRaw`
+    const relatedConditions = (await prisma.$queryRaw`
       SELECT 
         c.id,
         c.name,
@@ -88,7 +87,7 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
       JOIN "Condition" c ON c.id = link."conditionId"
       WHERE link."modelId" = ${modelId}
       ORDER BY c.name ASC
-    ` as any[];
+    `) as any[];
 
     // Generate citation data
     const modelData = model[0];
@@ -103,43 +102,28 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
       dateAccessed: new Date().toISOString().split('T')[0],
     };
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          model: {
-            ...modelData,
-            citation,
-          },
-          relatedConditions,
+    log.info('Anatomy model fetched successfully', { 
+      modelId, 
+      relatedConditionsCount: relatedConditions.length 
+    });
+
+    return {
+      success: true,
+      data: {
+        model: {
+          ...modelData,
+          citation,
         },
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-        },
-      }
-    );
+        relatedConditions,
+      },
+    };
   } catch (error) {
-    console.error('Error fetching anatomy model:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Failed to fetch anatomy model',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    log.error('Error fetching anatomy model', error);
+    return {
+      status: 500,
+      error: 'Failed to fetch anatomy model',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

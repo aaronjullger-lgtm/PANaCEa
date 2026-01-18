@@ -93,12 +93,42 @@ interface CommandCenterHubProps {
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
-  Brain, Zap, Target, Stethoscope, BookOpen, Pill, Activity, Clock,
-  Trophy, Flame, AlertCircle, CheckCircle, Timer, GraduationCap,
-  Beaker, FileImage, Shield, Layers, Droplets, GitCompare, FileCheck,
-  Siren, Hash, Heart, Wind, Eye, MessageSquare, Image, Scan,
-  FlaskConical, Headphones, FolderTree, Calculator, BarChart3,
-  TrendingUp, Sparkles,
+  Brain,
+  Zap,
+  Target,
+  Stethoscope,
+  BookOpen,
+  Pill,
+  Activity,
+  Clock,
+  Trophy,
+  Flame,
+  AlertCircle,
+  CheckCircle,
+  Timer,
+  GraduationCap,
+  Beaker,
+  FileImage,
+  Shield,
+  Layers,
+  Droplets,
+  GitCompare,
+  FileCheck,
+  Siren,
+  Hash,
+  Heart,
+  Wind,
+  Eye,
+  MessageSquare,
+  Image,
+  Scan,
+  FlaskConical,
+  Headphones,
+  FolderTree,
+  Calculator,
+  BarChart3,
+  TrendingUp,
+  Sparkles,
 };
 
 // ============================================================================
@@ -108,7 +138,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
 // Grand Rounds Banner (Standalone Daily Challenge)
 const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const dateStr = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
 
   return (
     <GlassCard variant="warning" hoverable className="mb-6">
@@ -121,17 +155,13 @@ const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             subtitle="Same questions for everyone. Compare your score!"
             badge={{
               text: `Daily Challenge • ${dateStr}`,
-              color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+              color:
+                'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
             }}
           />
         </div>
 
-        <PrimaryButton
-          variant="warning"
-          size="md"
-          icon={Play}
-          onClick={onStart}
-        >
+        <PrimaryButton variant="warning" size="md" icon={Play} onClick={onStart}>
           Start
         </PrimaryButton>
       </div>
@@ -157,7 +187,7 @@ const CoreAdaptiveHero: React.FC<{
             subtitle="AI-powered adaptive questions that target your knowledge gaps"
             badge={{
               text: `${examLabel} Prep`,
-              color: 'bg-blue-500/10 text-blue-400 border border-blue-400/20'
+              color: 'bg-blue-500/10 text-blue-400 border border-blue-400/20',
             }}
           />
 
@@ -167,14 +197,14 @@ const CoreAdaptiveHero: React.FC<{
                 icon: Target,
                 label: 'accuracy',
                 value: `${accuracy}%`,
-                color: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-400'
+                color: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-400',
               },
               {
                 icon: CheckCircle,
                 label: 'today',
                 value: questionsToday,
-                color: 'bg-blue-500/10 border-blue-400/20 text-blue-400'
-              }
+                color: 'bg-blue-500/10 border-blue-400/20 text-blue-400',
+              },
             ]}
           />
         </div>
@@ -207,8 +237,8 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             title="Virtual OSCE"
             subtitle="Full interactive patient encounters with AI-powered evaluation and real-time feedback"
             badge={{
-              text: "Interactive",
-              color: "text-teal-400"
+              text: 'Interactive',
+              color: 'text-teal-400',
             }}
           />
           <div className="flex items-center gap-4 mt-3">
@@ -248,7 +278,12 @@ const QuickStatsBar: React.FC<{
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       {[
         { label: 'Day Streak', value: streak, icon: Flame, color: 'text-orange-500' },
-        { label: 'Due for Review', value: dueCount, icon: AlertCircle, color: dueCount > 0 ? 'text-amber-500' : 'text-slate-400' },
+        {
+          label: 'Due for Review',
+          value: dueCount,
+          icon: AlertCircle,
+          color: dueCount > 0 ? 'text-amber-500' : 'text-slate-400',
+        },
         { label: 'Accuracy', value: `${accuracy}%`, icon: Target, color: 'text-emerald-500' },
         { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-blue-500' },
       ].map((stat, i) => (
@@ -285,9 +320,10 @@ const ModeCard: React.FC<{
       disabled={mode.isComingSoon}
       className={`
         w-full text-left p-4 rounded-xl border transition-all duration-200 group
-        ${mode.isComingSoon
-          ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-[var(--color-border)]'
-          : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg'
+        ${
+          mode.isComingSoon
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-[var(--color-border)]'
+            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg'
         }
       `}
     >
@@ -341,22 +377,14 @@ const CategorySection: React.FC<{
           <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-            {info.label}
-          </h3>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            {info.description}
-          </p>
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{info.label}</h3>
+          <p className="text-sm text-[var(--color-text-muted)]">{info.description}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {modes.map((mode) => (
-          <ModeCard
-            key={mode.id}
-            mode={mode}
-            onSelect={() => onSelectMode(mode)}
-          />
+          <ModeCard key={mode.id} mode={mode} onSelect={() => onSelectMode(mode)} />
         ))}
       </div>
     </section>
@@ -391,22 +419,24 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   // Calculate stats for the dashboard
   const stats = useMemo(() => {
     const recent = performanceData.slice(-100);
-    const correct = recent.filter(r => r.isCorrect).length;
+    const correct = recent.filter((r) => r.isCorrect).length;
     const accuracy = recent.length > 0 ? Math.round((correct / recent.length) * 100) : 0;
 
-    const todayRecords = (performanceData || []).filter(r => {
+    const todayRecords = (performanceData || []).filter((r) => {
       if (!r?.timestamp) return false;
       const date = new Date(r.timestamp);
       const today = new Date();
-      return date.getDate() === today.getDate() &&
+      return (
+        date.getDate() === today.getDate() &&
         date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear();
+        date.getFullYear() === today.getFullYear()
+      );
     });
 
     // Calculate streak from performance data
     let streak = 0;
-    const sortedData = [...(performanceData || [])].sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    const sortedData = [...(performanceData || [])].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
     const today = new Date();
@@ -432,7 +462,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       }
     }
 
-    const dueCount = propDueCount !== undefined ? propDueCount : ((flaggedQuestions?.length || 0) + (missedQuestions?.length || 0));
+    const dueCount =
+      propDueCount !== undefined
+        ? propDueCount
+        : (flaggedQuestions?.length || 0) + (missedQuestions?.length || 0);
 
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
@@ -440,7 +473,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   // Filter modes based on user context (PANCE vs PANRE)
   const filteredModes = useMemo(() => {
     const filterForContext = (modes: TrainingModeConfig[]) =>
-      modes.filter(m => !m.panreOnly || showPANREContent);
+      modes.filter((m) => !m.panreOnly || showPANREContent);
 
     return {
       visual: filterForContext(VISUAL_DIAGNOSTICS_MODES),
@@ -450,18 +483,21 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     };
   }, [showPANREContent]);
 
-  const handleModeSelect = useCallback((mode: TrainingModeConfig) => {
-    if (mode.id === 'core_adaptive') {
-      // Navigate to dedicated simulation page instead of opening modal
-      if (onNavigateToSimulation) {
-        onNavigateToSimulation();
+  const handleModeSelect = useCallback(
+    (mode: TrainingModeConfig) => {
+      if (mode.id === 'core_adaptive') {
+        // Navigate to dedicated simulation page instead of opening modal
+        if (onNavigateToSimulation) {
+          onNavigateToSimulation();
+        } else {
+          onStartSession({ focus: 'all', difficulty: 'same' });
+        }
       } else {
-        onStartSession({ focus: 'all', difficulty: 'same' });
+        onNavigateToDrillMode(mode.id);
       }
-    } else {
-      onNavigateToDrillMode(mode.id);
-    }
-  }, [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]);
+    },
+    [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]
+  );
 
   const handleNavigateToDrillModeWithSettings = (modeId: string, settings?: any) => {
     if (modeId === 'core_adaptive' || modeId === 'custom_practice') {
@@ -481,11 +517,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
           {greeting}, {user?.firstName || 'Student'}
         </h1>
@@ -510,7 +542,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
       {/* Core Adaptive - THE MAIN EVENT */}
       <CoreAdaptiveHero
-        onStart={() => onNavigateToSimulation ? onNavigateToSimulation() : onStartSession()}
+        onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
         accuracy={stats.accuracy}
         questionsToday={stats.questionsToday}
         examLabel={examLabel}
@@ -522,7 +554,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.005 }}
-          onClick={() => onNavigateToSimulation ? onNavigateToSimulation() : onStartSession({ focus: 'review', difficulty: 'same' })}
+          onClick={() =>
+            onNavigateToSimulation
+              ? onNavigateToSimulation()
+              : onStartSession({ focus: 'review', difficulty: 'same' })
+          }
           className="w-full mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
@@ -558,7 +594,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <GraduationCap className="w-6 h-6 text-indigo-500" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">PANRE-LA Simulator</h3>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                  PANRE-LA Simulator
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Longitudinal assessment format for recertification
                 </p>
@@ -588,10 +626,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-              ? 'bg-blue-600 text-white dark:bg-blue-500 dark:text-white shadow-lg'
-              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-              }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'bg-blue-600 text-white dark:bg-blue-500 dark:text-white shadow-lg'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+            }`}
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -654,7 +693,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Target className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Calculators</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Clinical Calculators
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Wells, CURB-65, PERC, CHA₂DS₂-VASc, and more
                       </p>
@@ -671,7 +712,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Beaker className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Lab Calculators</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Lab Calculators
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         GFR, Anion Gap, Corrected Na+, A-a Gradient
                       </p>
@@ -698,7 +741,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Reference Library</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Clinical Reference Library
+                      </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
                       </p>
@@ -751,10 +796,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${showAdvancedAnalytics
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-                    }`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                    showAdvancedAnalytics
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                  }`}
                 >
                   {showAdvancedAnalytics ? '✦ Advanced View' : 'Switch to Advanced'}
                 </button>
@@ -777,7 +823,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
               {/* Session-based analytics (local data) */}
               <div className="mt-6">
-                <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">Session Performance</h4>
+                <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">
+                  Session Performance
+                </h4>
                 <AnalyticsDashboard performanceData={performanceData} />
               </div>
 
@@ -792,7 +840,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Layers className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Competency Heatmap</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Competency Heatmap
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Visual mastery grid across organ systems
                       </p>
@@ -809,7 +859,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Target className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Gap Analysis</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Gap Analysis
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Identify high-yield focus areas
                       </p>
@@ -826,7 +878,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <BarChart3 className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Profile</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">
+                        Clinical Profile
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Strengths, timing patterns, and diagnosis bias
                       </p>
@@ -848,7 +902,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   {growthAreas.map((area) => (
                     <button
                       key={area}
-                      onClick={() => onStartSession({ focus: 'topic', difficulty: 'same', topic: area })}
+                      onClick={() =>
+                        onStartSession({ focus: 'topic', difficulty: 'same', topic: area })
+                      }
                       className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
                     >
                       {area}

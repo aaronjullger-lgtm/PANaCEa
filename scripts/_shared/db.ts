@@ -1,14 +1,14 @@
 /**
  * Shared Prisma Client for Scripts (Prisma 7 Compatible)
- * 
+ *
  * All scripts should import from this module to ensure consistent
  * database connection handling with the datasourceUrl parameter.
- * 
+ *
  * Usage:
  *   import { prisma } from './_shared/db';
  *   // or from nested directories:
  *   import { prisma } from '../_shared/db';
- * 
+ *
  * @see prisma.config.ts for CLI configuration
  */
 
@@ -25,16 +25,16 @@ config();
  */
 function createPrismaClient() {
   const databaseUrl = process.env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     throw new Error(
       'DATABASE_URL environment variable is required.\n' +
-      'Ensure .env file exists or the variable is set.'
+        'Ensure .env file exists or the variable is set.'
     );
   }
 
   const isAccelerateUrl = databaseUrl.startsWith('prisma://');
-  
+
   // Use PrismaClient with proper constructor options for Prisma 7
   const PrismaClientAny = PrismaClient as any;
   const client = new PrismaClientAny({
@@ -42,7 +42,7 @@ function createPrismaClient() {
     // For direct PostgreSQL URLs, use datasourceUrl
     ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
   });
-  
+
   return client.$extends(withAccelerate());
 }
 
@@ -52,7 +52,7 @@ export const prisma = createPrismaClient();
 /**
  * Graceful disconnect helper for scripts
  * Call this at the end of your script to properly close connections
- * 
+ *
  * @example
  * async function main() {
  *   try {
@@ -68,7 +68,7 @@ export async function disconnect(): Promise<void> {
 
 /**
  * Helper to run a script with automatic connection cleanup
- * 
+ *
  * @example
  * runScript(async () => {
  *   const users = await prisma.user.findMany();

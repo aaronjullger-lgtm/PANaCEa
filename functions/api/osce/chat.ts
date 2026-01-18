@@ -1,56 +1,59 @@
 /**
  * API: Save OSCE chat message
  * POST /api/osce/chat
- * 
- * Body: {
- *   sessionId: string,
- *   userId: string,
- *   role: 'user' | 'patient',
- *   message: string,
- *   phase?: string,
- *   isRelevant?: boolean
- * }
+ *
+ * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, OSCEChatSchema } from '../_shared/schemas';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { IDSchema } from '../_shared/schemas';
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+// Schema for OSCE chat messages
+const OSCEChatBodySchema = z.object({
+  body: z.object({
+    sessionId: IDSchema,
+    messages: z
+      .array(
+        z.object({
+          role: z.enum(['user', 'assistant', 'system']),
+          content: z.string().max(10000),
+        })
+      )
+      .min(1)
+      .max(100),
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestPost = authenticatedEndpoint(
+  OSCEChatBodySchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/osce/chat', auth.userId);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const { sessionId, messages } = validated.body;
+      log.info('Saving OSCE chat', { sessionId, messageCount: messages.length });
 
-  try {
-    // Validate input with Zod schema
-    const validation = await validateRequest(request.clone(), OSCEChatSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
+      await prisma.patientEncounterSession.update({
+        where: { id: sessionId },
+        data: {
+          messages: messages,
+          updatedAt: new Date(),
+        },
+      });
+
+      log.info('Chat saved successfully');
+      return { data: { success: true } };
+    } catch (error: any) {
+      log.error('Error saving chat message', error);
+      return { status: 500, error: 'Failed to save chat message' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    const { sessionId, messages } = (validation as { success: true; data: any }).data;
-
-    await prisma.patientEncounterSession.update({
-      where: { id: sessionId },
-      data: {
-        messages: messages,
-        updatedAt: new Date()
-      }
-    });
-
-    return createSuccessResponse({ success: true });
-  } catch (error: any) {
-    console.error('Error saving chat message:', error);
-    return createErrorResponse('Failed to save chat message', 500);
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

@@ -14,39 +14,32 @@
  * Run with: npx tsx scripts/infographicMatcher.ts
  */
 
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 import {
   normalize,
   similarityScore,
   parseBracketTags,
   extractBaseName,
   normalizeForMatch,
-} from "../lib/infographicMatcherUtils.js";
-import { extractTags } from "../lib/mediaMatcherUtils.js";
+} from '../lib/infographicMatcherUtils.js';
+import { extractTags } from '../lib/mediaMatcherUtils.js';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-const INFOGRAPHICS_DIR = "assets/infographics";
-const CONDITION_DATASET_PATH = "output/conditionContent.transformed.json";
-const OUTPUT_LINKS_PATH = "output/infographic_links.json";
-const OUTPUT_AUDIT_PATH = "output/infographic_audit.json";
+const INFOGRAPHICS_DIR = 'assets/infographics';
+const CONDITION_DATASET_PATH = 'output/conditionContent.transformed.json';
+const OUTPUT_LINKS_PATH = 'output/infographic_links.json';
+const OUTPUT_AUDIT_PATH = 'output/infographic_audit.json';
 
 // Matching thresholds
 const CONFIDENCE_THRESHOLD = 0.65;
 const AMBIGUITY_MARGIN = 0.1; // If second best is within 10% of best, flag as ambiguous
 
 // Supported image extensions
-const SUPPORTED_EXTENSIONS = new Set([
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".pdf",
-  ".svg",
-  ".webp",
-]);
+const SUPPORTED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.pdf', '.svg', '.webp']);
 
 // ============================================================================
 // Types
@@ -87,7 +80,7 @@ interface MatchCandidate {
  */
 export interface AuditEntry {
   file: string;
-  reason: "unmatched" | "ambiguous";
+  reason: 'unmatched' | 'ambiguous';
   topCandidates?: Array<{ conditionId: string; conditionName: string; score: number }>;
 }
 
@@ -129,7 +122,7 @@ function scanInfographics(basePath: string): string[] {
 
   if (!fs.existsSync(fullPath)) {
     console.log(`Infographics directory does not exist: ${fullPath}`);
-    console.log("Creating empty directory...");
+    console.log('Creating empty directory...');
     fs.mkdirSync(fullPath, { recursive: true });
     return files;
   }
@@ -156,12 +149,12 @@ function loadConditions(basePath: string): Condition[] {
 
   if (!fs.existsSync(fullPath)) {
     console.error(`Condition dataset not found: ${fullPath}`);
-    console.log("Returning empty condition list.");
+    console.log('Returning empty condition list.');
     return [];
   }
 
   try {
-    const data = JSON.parse(fs.readFileSync(fullPath, "utf8"));
+    const data = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
 
     // Define the expected shape of a condition value
     interface ConditionValue {
@@ -175,9 +168,9 @@ function loadConditions(basePath: string): Condition[] {
       let name = id;
       let keywords: string[] = [];
 
-      if (typeof value === "object" && value !== null) {
+      if (typeof value === 'object' && value !== null) {
         const condValue = value as ConditionValue;
-        if (typeof condValue.condition === "string") {
+        if (typeof condValue.condition === 'string') {
           name = condValue.condition;
         }
         if (Array.isArray(condValue.keywords)) {
@@ -186,7 +179,7 @@ function loadConditions(basePath: string): Condition[] {
       }
 
       // Generate slug from name
-      const slug = normalize(name).replace(/\s+/g, "-");
+      const slug = normalize(name).replace(/\s+/g, '-');
 
       return { id, name, slug, keywords };
     });
@@ -258,7 +251,10 @@ function computeMatchScoreForCondition(
   }
 
   // Check if filename keywords exist within condition name/id
-  const filenameWords = baseName.toLowerCase().split(/[_\-\s]+/).filter(w => w.length > 2);
+  const filenameWords = baseName
+    .toLowerCase()
+    .split(/[_\-\s]+/)
+    .filter((w) => w.length > 2);
   let keywordMatchCount = 0;
   for (const word of filenameWords) {
     if (normalizedName.includes(word) || normalizedId.includes(word)) {
@@ -292,7 +288,7 @@ function findBestMatch(
       link: null,
       audit: {
         file: filename,
-        reason: "unmatched",
+        reason: 'unmatched',
         topCandidates: [],
       },
     };
@@ -326,7 +322,7 @@ function findBestMatch(
       link: null,
       audit: {
         file: filename,
-        reason: "unmatched",
+        reason: 'unmatched',
         topCandidates,
       },
     };
@@ -342,7 +338,7 @@ function findBestMatch(
         link: null,
         audit: {
           file: filename,
-          reason: "ambiguous",
+          reason: 'ambiguous',
           topCandidates,
         },
       };
@@ -392,20 +388,20 @@ export function runInfographicMatcher(): {
 } {
   const basePath = process.cwd();
 
-  console.log("Infographic Matcher - Starting...\n");
+  console.log('Infographic Matcher - Starting...\n');
 
   // Step 1: Scan infographics directory
-  console.log("Step 1: Scanning infographics directory...");
+  console.log('Step 1: Scanning infographics directory...');
   const infographicFiles = scanInfographics(basePath);
   console.log(`  Found ${infographicFiles.length} infographic files\n`);
 
   // Step 2: Load conditions
-  console.log("Step 2: Loading condition dataset...");
+  console.log('Step 2: Loading condition dataset...');
   const conditions = loadConditions(basePath);
   console.log(`  Loaded ${conditions.length} conditions\n`);
 
   // Step 3: Match infographics to conditions
-  console.log("Step 3: Matching infographics to conditions...");
+  console.log('Step 3: Matching infographics to conditions...');
   const links: InfographicLink[] = [];
   const unmatchedFiles: AuditEntry[] = [];
   const ambiguousFiles: AuditEntry[] = [];
@@ -418,7 +414,7 @@ export function runInfographicMatcher(): {
     }
 
     if (result.audit) {
-      if (result.audit.reason === "ambiguous") {
+      if (result.audit.reason === 'ambiguous') {
         ambiguousFiles.push(result.audit);
       } else {
         unmatchedFiles.push(result.audit);
@@ -431,11 +427,8 @@ export function runInfographicMatcher(): {
   console.log(`  Ambiguous files: ${ambiguousFiles.length}\n`);
 
   // Step 4: Find conditions without infographics
-  console.log("Step 4: Identifying conditions without infographics...");
-  const conditionsMissingInfographics = findConditionsWithoutInfographics(
-    conditions,
-    links
-  );
+  console.log('Step 4: Identifying conditions without infographics...');
+  const conditionsMissingInfographics = findConditionsWithoutInfographics(conditions, links);
   console.log(`  Conditions without infographics: ${conditionsMissingInfographics.length}\n`);
 
   // Build audit report
@@ -454,10 +447,10 @@ export function runInfographicMatcher(): {
   };
 
   // Step 5: Write output files
-  console.log("Step 5: Writing output files...");
+  console.log('Step 5: Writing output files...');
 
   // Ensure output directory exists
-  const outputDir = path.resolve(basePath, "output");
+  const outputDir = path.resolve(basePath, 'output');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
     console.log(`  Created output directory: ${outputDir}`);
@@ -473,13 +466,14 @@ export function runInfographicMatcher(): {
   fs.writeFileSync(auditPath, JSON.stringify(auditReport, null, 2));
   console.log(`  Written: ${auditPath}`);
 
-  console.log("\nInfographic Matcher - Complete!");
+  console.log('\nInfographic Matcher - Complete!');
 
   return { links, auditReport };
 }
 
 // Run if executed directly
-const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() || '');
+const isMainModule =
+  process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() || '');
 if (isMainModule) {
   runInfographicMatcher();
 }

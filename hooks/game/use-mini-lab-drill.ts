@@ -67,7 +67,7 @@ export interface LabCase {
 /**
  * Lab case categories
  */
-export type LabCategory = 
+export type LabCategory =
   | 'hematology'
   | 'metabolic'
   | 'endocrine'
@@ -142,29 +142,106 @@ export const MINI_LAB_DIAGNOSES: string[] = [
 const LAB_CASES: LabCase[] = [
   {
     id: 'lab-dka-001',
-    clinicalContext: 'A 28-year-old with Type 1 diabetes presents with nausea, vomiting, and abdominal pain. Patient reports missing insulin doses.',
+    clinicalContext:
+      'A 28-year-old with Type 1 diabetes presents with nausea, vomiting, and abdominal pain. Patient reports missing insulin doses.',
     patientAge: 28,
     patientSex: 'F',
     panels: [
       {
         name: 'Basic Metabolic Panel',
         values: [
-          { name: 'Glucose', value: '485', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Sodium', value: '128', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'Potassium', value: '5.8', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Chloride', value: '92', unit: 'mEq/L', referenceRange: '98-106', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'CO2', value: '12', unit: 'mEq/L', referenceRange: '22-28', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'BUN', value: '32', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Creatinine', value: '1.4', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Glucose',
+            value: '485',
+            unit: 'mg/dL',
+            referenceRange: '70-100',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Sodium',
+            value: '128',
+            unit: 'mEq/L',
+            referenceRange: '136-145',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Potassium',
+            value: '5.8',
+            unit: 'mEq/L',
+            referenceRange: '3.5-5.0',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Chloride',
+            value: '92',
+            unit: 'mEq/L',
+            referenceRange: '98-106',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'CO2',
+            value: '12',
+            unit: 'mEq/L',
+            referenceRange: '22-28',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'BUN',
+            value: '32',
+            unit: 'mg/dL',
+            referenceRange: '7-20',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Creatinine',
+            value: '1.4',
+            unit: 'mg/dL',
+            referenceRange: '0.7-1.3',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Complete Blood Count',
         values: [
-          { name: 'WBC', value: '14.2', unit: 'k/μL', referenceRange: '4.5-11.0', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Hemoglobin', value: '15.1', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: false },
-          { name: 'Hematocrit', value: '45.3', unit: '%', referenceRange: '36-46', isAbnormal: false },
-          { name: 'Platelets', value: '285', unit: 'k/μL', referenceRange: '150-400', isAbnormal: false },
+          {
+            name: 'WBC',
+            value: '14.2',
+            unit: 'k/μL',
+            referenceRange: '4.5-11.0',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Hemoglobin',
+            value: '15.1',
+            unit: 'g/dL',
+            referenceRange: '12.0-16.0',
+            isAbnormal: false,
+          },
+          {
+            name: 'Hematocrit',
+            value: '45.3',
+            unit: '%',
+            referenceRange: '36-46',
+            isAbnormal: false,
+          },
+          {
+            name: 'Platelets',
+            value: '285',
+            unit: 'k/μL',
+            referenceRange: '150-400',
+            isAbnormal: false,
+          },
         ],
       },
       {
@@ -172,9 +249,27 @@ const LAB_CASES: LabCase[] = [
         values: [
           { name: 'AST', value: '28', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
           { name: 'ALT', value: '32', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
-          { name: 'Alkaline Phosphatase', value: '78', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
-          { name: 'Total Bilirubin', value: '0.8', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
-          { name: 'Albumin', value: '4.2', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+          {
+            name: 'Alkaline Phosphatase',
+            value: '78',
+            unit: 'U/L',
+            referenceRange: '44-147',
+            isAbnormal: false,
+          },
+          {
+            name: 'Total Bilirubin',
+            value: '0.8',
+            unit: 'mg/dL',
+            referenceRange: '0.1-1.2',
+            isAbnormal: false,
+          },
+          {
+            name: 'Albumin',
+            value: '4.2',
+            unit: 'g/dL',
+            referenceRange: '3.5-5.0',
+            isAbnormal: false,
+          },
         ],
       },
     ],
@@ -182,23 +277,75 @@ const LAB_CASES: LabCase[] = [
       {
         name: 'Arterial Blood Gas',
         values: [
-          { name: 'pH', value: '7.18', unit: '', referenceRange: '7.35-7.45', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'pCO2', value: '22', unit: 'mmHg', referenceRange: '35-45', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'HCO3', value: '8', unit: 'mEq/L', referenceRange: '22-26', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+          {
+            name: 'pH',
+            value: '7.18',
+            unit: '',
+            referenceRange: '7.35-7.45',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'pCO2',
+            value: '22',
+            unit: 'mmHg',
+            referenceRange: '35-45',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'HCO3',
+            value: '8',
+            unit: 'mEq/L',
+            referenceRange: '22-26',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Ketones',
         values: [
-          { name: 'Beta-hydroxybutyrate', value: '5.2', unit: 'mmol/L', referenceRange: '<0.6', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Anion Gap', value: '24', unit: 'mEq/L', referenceRange: '8-12', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+          {
+            name: 'Beta-hydroxybutyrate',
+            value: '5.2',
+            unit: 'mmol/L',
+            referenceRange: '<0.6',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Anion Gap',
+            value: '24',
+            unit: 'mEq/L',
+            referenceRange: '8-12',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Urinalysis',
         values: [
-          { name: 'Ketones in Urine', value: 'Large', unit: '', referenceRange: 'Negative', isAbnormal: true },
-          { name: 'Glucose in Urine', value: '1000', unit: 'mg/dL', referenceRange: 'Negative', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Ketones in Urine',
+            value: 'Large',
+            unit: '',
+            referenceRange: 'Negative',
+            isAbnormal: true,
+          },
+          {
+            name: 'Glucose in Urine',
+            value: '1000',
+            unit: 'mg/dL',
+            referenceRange: 'Negative',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
     ],
@@ -209,37 +356,125 @@ const LAB_CASES: LabCase[] = [
       'Elevated ketones (beta-hydroxybutyrate)',
       'pH <7.3 with low bicarbonate',
     ],
-    explanation: 'This patient presents with classic DKA triad: hyperglycemia, ketosis, and metabolic acidosis. The elevated anion gap (24) reflects ketoacid accumulation. Initial hyperkalemia is common despite total body potassium depletion due to transcellular shift from acidosis.',
+    explanation:
+      'This patient presents with classic DKA triad: hyperglycemia, ketosis, and metabolic acidosis. The elevated anion gap (24) reflects ketoacid accumulation. Initial hyperkalemia is common despite total body potassium depletion due to transcellular shift from acidosis.',
     category: 'metabolic',
   },
   {
     id: 'lab-ida-001',
-    clinicalContext: 'A 35-year-old woman presents with fatigue, pallor, and shortness of breath on exertion. She reports heavy menstrual bleeding.',
+    clinicalContext:
+      'A 35-year-old woman presents with fatigue, pallor, and shortness of breath on exertion. She reports heavy menstrual bleeding.',
     patientAge: 35,
     patientSex: 'F',
     panels: [
       {
         name: 'Complete Blood Count',
         values: [
-          { name: 'Hemoglobin', value: '8.2', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'Hematocrit', value: '26', unit: '%', referenceRange: '36-46', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'MCV', value: '68', unit: 'fL', referenceRange: '80-100', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'MCH', value: '24', unit: 'pg', referenceRange: '27-33', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'MCHC', value: '30', unit: 'g/dL', referenceRange: '32-36', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'RDW', value: '18.5', unit: '%', referenceRange: '11.5-14.5', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Platelets', value: '420', unit: 'K/uL', referenceRange: '150-400', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Hemoglobin',
+            value: '8.2',
+            unit: 'g/dL',
+            referenceRange: '12.0-16.0',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Hematocrit',
+            value: '26',
+            unit: '%',
+            referenceRange: '36-46',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'MCV',
+            value: '68',
+            unit: 'fL',
+            referenceRange: '80-100',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'MCH',
+            value: '24',
+            unit: 'pg',
+            referenceRange: '27-33',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'MCHC',
+            value: '30',
+            unit: 'g/dL',
+            referenceRange: '32-36',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'RDW',
+            value: '18.5',
+            unit: '%',
+            referenceRange: '11.5-14.5',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Platelets',
+            value: '420',
+            unit: 'K/uL',
+            referenceRange: '150-400',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Basic Metabolic Panel',
         values: [
-          { name: 'Sodium', value: '140', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: false },
-          { name: 'Potassium', value: '4.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: false },
-          { name: 'Chloride', value: '102', unit: 'mEq/L', referenceRange: '98-106', isAbnormal: false },
-          { name: 'Bicarbonate', value: '24', unit: 'mEq/L', referenceRange: '22-28', isAbnormal: false },
+          {
+            name: 'Sodium',
+            value: '140',
+            unit: 'mEq/L',
+            referenceRange: '136-145',
+            isAbnormal: false,
+          },
+          {
+            name: 'Potassium',
+            value: '4.2',
+            unit: 'mEq/L',
+            referenceRange: '3.5-5.0',
+            isAbnormal: false,
+          },
+          {
+            name: 'Chloride',
+            value: '102',
+            unit: 'mEq/L',
+            referenceRange: '98-106',
+            isAbnormal: false,
+          },
+          {
+            name: 'Bicarbonate',
+            value: '24',
+            unit: 'mEq/L',
+            referenceRange: '22-28',
+            isAbnormal: false,
+          },
           { name: 'BUN', value: '15', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: false },
-          { name: 'Creatinine', value: '0.9', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: false },
-          { name: 'Glucose', value: '92', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: false },
+          {
+            name: 'Creatinine',
+            value: '0.9',
+            unit: 'mg/dL',
+            referenceRange: '0.7-1.3',
+            isAbnormal: false,
+          },
+          {
+            name: 'Glucose',
+            value: '92',
+            unit: 'mg/dL',
+            referenceRange: '70-100',
+            isAbnormal: false,
+          },
         ],
       },
       {
@@ -247,9 +482,27 @@ const LAB_CASES: LabCase[] = [
         values: [
           { name: 'AST', value: '22', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
           { name: 'ALT', value: '18', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
-          { name: 'Alkaline Phosphatase', value: '65', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
-          { name: 'Total Bilirubin', value: '0.6', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
-          { name: 'Albumin', value: '4.0', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+          {
+            name: 'Alkaline Phosphatase',
+            value: '65',
+            unit: 'U/L',
+            referenceRange: '44-147',
+            isAbnormal: false,
+          },
+          {
+            name: 'Total Bilirubin',
+            value: '0.6',
+            unit: 'mg/dL',
+            referenceRange: '0.1-1.2',
+            isAbnormal: false,
+          },
+          {
+            name: 'Albumin',
+            value: '4.0',
+            unit: 'g/dL',
+            referenceRange: '3.5-5.0',
+            isAbnormal: false,
+          },
         ],
       },
     ],
@@ -257,16 +510,51 @@ const LAB_CASES: LabCase[] = [
       {
         name: 'Iron Studies',
         values: [
-          { name: 'Serum Iron', value: '28', unit: 'µg/dL', referenceRange: '60-170', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'TIBC', value: '450', unit: 'µg/dL', referenceRange: '250-370', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Ferritin', value: '8', unit: 'ng/mL', referenceRange: '20-200', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'Transferrin Sat', value: '6', unit: '%', referenceRange: '20-50', isAbnormal: true, abnormalDirection: 'low' },
+          {
+            name: 'Serum Iron',
+            value: '28',
+            unit: 'µg/dL',
+            referenceRange: '60-170',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'TIBC',
+            value: '450',
+            unit: 'µg/dL',
+            referenceRange: '250-370',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Ferritin',
+            value: '8',
+            unit: 'ng/mL',
+            referenceRange: '20-200',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Transferrin Sat',
+            value: '6',
+            unit: '%',
+            referenceRange: '20-50',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Reticulocyte Count',
         values: [
-          { name: 'Reticulocyte Count', value: '0.5', unit: '%', referenceRange: '0.5-1.5', isAbnormal: false },
+          {
+            name: 'Reticulocyte Count',
+            value: '0.5',
+            unit: '%',
+            referenceRange: '0.5-1.5',
+            isAbnormal: false,
+          },
         ],
       },
     ],
@@ -278,36 +566,95 @@ const LAB_CASES: LabCase[] = [
       'Low serum iron with high TIBC',
       'Reactive thrombocytosis',
     ],
-    explanation: 'Classic iron deficiency anemia pattern: microcytic, hypochromic RBCs with elevated RDW. Iron studies show the characteristic low iron, high TIBC, and depleted ferritin. Reactive thrombocytosis is common in chronic blood loss.',
+    explanation:
+      'Classic iron deficiency anemia pattern: microcytic, hypochromic RBCs with elevated RDW. Iron studies show the characteristic low iron, high TIBC, and depleted ferritin. Reactive thrombocytosis is common in chronic blood loss.',
     category: 'hematology',
   },
   {
     id: 'lab-hypo-001',
-    clinicalContext: 'A 55-year-old woman presents with fatigue, weight gain, constipation, and cold intolerance. Physical exam reveals dry skin and delayed reflexes.',
+    clinicalContext:
+      'A 55-year-old woman presents with fatigue, weight gain, constipation, and cold intolerance. Physical exam reveals dry skin and delayed reflexes.',
     patientAge: 55,
     patientSex: 'F',
     panels: [
       {
         name: 'Thyroid Function Tests',
         values: [
-          { name: 'TSH', value: '45.2', unit: 'mIU/L', referenceRange: '0.4-4.0', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Free T4', value: '0.4', unit: 'ng/dL', referenceRange: '0.8-1.8', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'Free T3', value: '1.8', unit: 'pg/mL', referenceRange: '2.3-4.2', isAbnormal: true, abnormalDirection: 'low' },
+          {
+            name: 'TSH',
+            value: '45.2',
+            unit: 'mIU/L',
+            referenceRange: '0.4-4.0',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Free T4',
+            value: '0.4',
+            unit: 'ng/dL',
+            referenceRange: '0.8-1.8',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Free T3',
+            value: '1.8',
+            unit: 'pg/mL',
+            referenceRange: '2.3-4.2',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Metabolic Panel',
         values: [
-          { name: 'Sodium', value: '132', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'Total Cholesterol', value: '285', unit: 'mg/dL', referenceRange: '<200', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'LDL', value: '175', unit: 'mg/dL', referenceRange: '<100', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Sodium',
+            value: '132',
+            unit: 'mEq/L',
+            referenceRange: '136-145',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Total Cholesterol',
+            value: '285',
+            unit: 'mg/dL',
+            referenceRange: '<200',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'LDL',
+            value: '175',
+            unit: 'mg/dL',
+            referenceRange: '<100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Complete Blood Count',
         values: [
-          { name: 'Hemoglobin', value: '10.8', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'MCV', value: '102', unit: 'fL', referenceRange: '80-100', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Hemoglobin',
+            value: '10.8',
+            unit: 'g/dL',
+            referenceRange: '12.0-16.0',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'MCV',
+            value: '102',
+            unit: 'fL',
+            referenceRange: '80-100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
     ],
@@ -319,38 +666,112 @@ const LAB_CASES: LabCase[] = [
       'Hyperlipidemia',
       'Macrocytic anemia',
     ],
-    explanation: 'Primary hypothyroidism shows elevated TSH with low T4/T3. Associated findings include dilutional hyponatremia, hyperlipidemia (decreased LDL receptor expression), and macrocytic anemia (impaired erythropoiesis).',
+    explanation:
+      'Primary hypothyroidism shows elevated TSH with low T4/T3. Associated findings include dilutional hyponatremia, hyperlipidemia (decreased LDL receptor expression), and macrocytic anemia (impaired erythropoiesis).',
     category: 'endocrine',
   },
   {
     id: 'lab-aki-001',
-    clinicalContext: 'A 68-year-old man with diabetes and hypertension presents with decreased urine output after recently starting an NSAID for knee pain.',
+    clinicalContext:
+      'A 68-year-old man with diabetes and hypertension presents with decreased urine output after recently starting an NSAID for knee pain.',
     patientAge: 68,
     patientSex: 'M',
     panels: [
       {
         name: 'Renal Function Panel',
         values: [
-          { name: 'BUN', value: '68', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Creatinine', value: '4.8', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'BUN/Cr Ratio', value: '14', unit: '', referenceRange: '10-20', isAbnormal: false },
-          { name: 'eGFR', value: '12', unit: 'mL/min/1.73m²', referenceRange: '>60', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+          {
+            name: 'BUN',
+            value: '68',
+            unit: 'mg/dL',
+            referenceRange: '7-20',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Creatinine',
+            value: '4.8',
+            unit: 'mg/dL',
+            referenceRange: '0.7-1.3',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'BUN/Cr Ratio',
+            value: '14',
+            unit: '',
+            referenceRange: '10-20',
+            isAbnormal: false,
+          },
+          {
+            name: 'eGFR',
+            value: '12',
+            unit: 'mL/min/1.73m²',
+            referenceRange: '>60',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Electrolytes',
         values: [
-          { name: 'Potassium', value: '6.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Phosphorus', value: '6.8', unit: 'mg/dL', referenceRange: '2.5-4.5', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Calcium', value: '7.8', unit: 'mg/dL', referenceRange: '8.5-10.5', isAbnormal: true, abnormalDirection: 'low' },
+          {
+            name: 'Potassium',
+            value: '6.2',
+            unit: 'mEq/L',
+            referenceRange: '3.5-5.0',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Phosphorus',
+            value: '6.8',
+            unit: 'mg/dL',
+            referenceRange: '2.5-4.5',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Calcium',
+            value: '7.8',
+            unit: 'mg/dL',
+            referenceRange: '8.5-10.5',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Urinalysis',
         values: [
-          { name: 'Specific Gravity', value: '1.012', unit: '', referenceRange: '1.005-1.030', isAbnormal: false },
-          { name: 'FENa', value: '2.8', unit: '%', referenceRange: '<1', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Urine Sodium', value: '45', unit: 'mEq/L', referenceRange: '<20', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Specific Gravity',
+            value: '1.012',
+            unit: '',
+            referenceRange: '1.005-1.030',
+            isAbnormal: false,
+          },
+          {
+            name: 'FENa',
+            value: '2.8',
+            unit: '%',
+            referenceRange: '<1',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Urine Sodium',
+            value: '45',
+            unit: 'mEq/L',
+            referenceRange: '<20',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
     ],
@@ -362,46 +783,143 @@ const LAB_CASES: LabCase[] = [
       'Hyperphosphatemia with hypocalcemia',
       'NSAID-induced likely etiology',
     ],
-    explanation: 'This patient has intrinsic AKI (FENa >2%) likely from NSAID-induced acute tubular necrosis. NSAIDs inhibit prostaglandin-mediated afferent arteriole dilation, reducing renal blood flow. The hyperkalemia requires urgent management.',
+    explanation:
+      'This patient has intrinsic AKI (FENa >2%) likely from NSAID-induced acute tubular necrosis. NSAIDs inhibit prostaglandin-mediated afferent arteriole dilation, reducing renal blood flow. The hyperkalemia requires urgent management.',
     category: 'renal',
   },
   {
     id: 'lab-cirrhosis-001',
-    clinicalContext: 'A 52-year-old man with history of alcohol use disorder presents with confusion, jaundice, and abdominal distension.',
+    clinicalContext:
+      'A 52-year-old man with history of alcohol use disorder presents with confusion, jaundice, and abdominal distension.',
     patientAge: 52,
     patientSex: 'M',
     panels: [
       {
         name: 'Liver Function Tests',
         values: [
-          { name: 'AST', value: '156', unit: 'U/L', referenceRange: '10-40', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'ALT', value: '72', unit: 'U/L', referenceRange: '7-56', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'AST/ALT Ratio', value: '2.2', unit: '', referenceRange: '<1', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Alkaline Phosphatase', value: '185', unit: 'U/L', referenceRange: '44-147', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Total Bilirubin', value: '8.5', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Direct Bilirubin', value: '5.2', unit: 'mg/dL', referenceRange: '0-0.3', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Albumin', value: '2.4', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: true, abnormalDirection: 'low' },
+          {
+            name: 'AST',
+            value: '156',
+            unit: 'U/L',
+            referenceRange: '10-40',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'ALT',
+            value: '72',
+            unit: 'U/L',
+            referenceRange: '7-56',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'AST/ALT Ratio',
+            value: '2.2',
+            unit: '',
+            referenceRange: '<1',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Alkaline Phosphatase',
+            value: '185',
+            unit: 'U/L',
+            referenceRange: '44-147',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Total Bilirubin',
+            value: '8.5',
+            unit: 'mg/dL',
+            referenceRange: '0.1-1.2',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Direct Bilirubin',
+            value: '5.2',
+            unit: 'mg/dL',
+            referenceRange: '0-0.3',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Albumin',
+            value: '2.4',
+            unit: 'g/dL',
+            referenceRange: '3.5-5.0',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Coagulation',
         values: [
-          { name: 'PT', value: '22', unit: 'seconds', referenceRange: '11-13.5', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'INR', value: '2.1', unit: '', referenceRange: '0.8-1.1', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+          {
+            name: 'PT',
+            value: '22',
+            unit: 'seconds',
+            referenceRange: '11-13.5',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'INR',
+            value: '2.1',
+            unit: '',
+            referenceRange: '0.8-1.1',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Complete Blood Count',
         values: [
-          { name: 'Platelets', value: '68', unit: 'K/uL', referenceRange: '150-400', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'Hemoglobin', value: '9.8', unit: 'g/dL', referenceRange: '14.0-18.0', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'MCV', value: '108', unit: 'fL', referenceRange: '80-100', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Platelets',
+            value: '68',
+            unit: 'K/uL',
+            referenceRange: '150-400',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'Hemoglobin',
+            value: '9.8',
+            unit: 'g/dL',
+            referenceRange: '14.0-18.0',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
+          {
+            name: 'MCV',
+            value: '108',
+            unit: 'fL',
+            referenceRange: '80-100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Additional Labs',
         values: [
-          { name: 'Ammonia', value: '125', unit: 'µmol/L', referenceRange: '15-45', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+          {
+            name: 'Ammonia',
+            value: '125',
+            unit: 'µmol/L',
+            referenceRange: '15-45',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
     ],
@@ -413,43 +931,114 @@ const LAB_CASES: LabCase[] = [
       'Thrombocytopenia from portal hypertension',
       'Elevated ammonia with encephalopathy',
     ],
-    explanation: 'Decompensated alcoholic cirrhosis with hepatic encephalopathy. Key features: AST:ALT >2 (alcohol), synthetic failure (low albumin, high INR), portal hypertension (thrombocytopenia), and hyperammonemia causing confusion.',
+    explanation:
+      'Decompensated alcoholic cirrhosis with hepatic encephalopathy. Key features: AST:ALT >2 (alcohol), synthetic failure (low albumin, high INR), portal hypertension (thrombocytopenia), and hyperammonemia causing confusion.',
     category: 'hepatic',
   },
   {
     id: 'lab-mi-001',
-    clinicalContext: 'A 62-year-old man with hypertension presents with crushing chest pain radiating to his left arm for the past 2 hours. ECG shows ST elevation in leads V1-V4.',
+    clinicalContext:
+      'A 62-year-old man with hypertension presents with crushing chest pain radiating to his left arm for the past 2 hours. ECG shows ST elevation in leads V1-V4.',
     patientAge: 62,
     patientSex: 'M',
     panels: [
       {
         name: 'Cardiac Biomarkers',
         values: [
-          { name: 'Troponin I', value: '12.8', unit: 'ng/mL', referenceRange: '<0.04', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'CK-MB', value: '85', unit: 'ng/mL', referenceRange: '0-5', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'BNP', value: '520', unit: 'pg/mL', referenceRange: '<100', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'Troponin I',
+            value: '12.8',
+            unit: 'ng/mL',
+            referenceRange: '<0.04',
+            isAbnormal: true,
+            isCritical: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'CK-MB',
+            value: '85',
+            unit: 'ng/mL',
+            referenceRange: '0-5',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'BNP',
+            value: '520',
+            unit: 'pg/mL',
+            referenceRange: '<100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
       {
         name: 'Basic Metabolic Panel',
         values: [
-          { name: 'Glucose', value: '185', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Potassium', value: '4.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: false },
-          { name: 'Creatinine', value: '1.1', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: false },
+          {
+            name: 'Glucose',
+            value: '185',
+            unit: 'mg/dL',
+            referenceRange: '70-100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'Potassium',
+            value: '4.2',
+            unit: 'mEq/L',
+            referenceRange: '3.5-5.0',
+            isAbnormal: false,
+          },
+          {
+            name: 'Creatinine',
+            value: '1.1',
+            unit: 'mg/dL',
+            referenceRange: '0.7-1.3',
+            isAbnormal: false,
+          },
         ],
       },
       {
         name: 'Lipid Panel',
         values: [
-          { name: 'Total Cholesterol', value: '268', unit: 'mg/dL', referenceRange: '<200', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'LDL', value: '165', unit: 'mg/dL', referenceRange: '<100', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'HDL', value: '32', unit: 'mg/dL', referenceRange: '>40', isAbnormal: true, abnormalDirection: 'low' },
+          {
+            name: 'Total Cholesterol',
+            value: '268',
+            unit: 'mg/dL',
+            referenceRange: '<200',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'LDL',
+            value: '165',
+            unit: 'mg/dL',
+            referenceRange: '<100',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
+          {
+            name: 'HDL',
+            value: '32',
+            unit: 'mg/dL',
+            referenceRange: '>40',
+            isAbnormal: true,
+            abnormalDirection: 'low',
+          },
         ],
       },
       {
         name: 'Complete Blood Count',
         values: [
-          { name: 'WBC', value: '14.2', unit: 'K/uL', referenceRange: '4.5-11.0', isAbnormal: true, abnormalDirection: 'high' },
+          {
+            name: 'WBC',
+            value: '14.2',
+            unit: 'K/uL',
+            referenceRange: '4.5-11.0',
+            isAbnormal: true,
+            abnormalDirection: 'high',
+          },
         ],
       },
     ],
@@ -462,7 +1051,8 @@ const LAB_CASES: LabCase[] = [
       'Leukocytosis (inflammatory response)',
       'Dyslipidemia (risk factor)',
     ],
-    explanation: 'Acute STEMI with significantly elevated cardiac biomarkers. Troponin I is highly specific for myocardial injury. The elevated BNP suggests ventricular wall stress. Stress hyperglycemia and leukocytosis are common in acute MI.',
+    explanation:
+      'Acute STEMI with significantly elevated cardiac biomarkers. Troponin I is highly specific for myocardial injury. The elevated BNP suggests ventricular wall stress. Stress hyperglycemia and leukocytosis are common in acute MI.',
     category: 'cardiac',
   },
 ];
@@ -474,7 +1064,7 @@ const LAB_CASES: LabCase[] = [
 // Helper to map DB case to UI case
 function mapDbCaseToUiCase(dbCase: any): LabCase {
   const panels: LabPanel[] = [];
-  
+
   // Iterate over keys in dbCase.labs (BMP, CBC, etc.)
   if (dbCase.labs && typeof dbCase.labs === 'object') {
     for (const [panelName, tests] of Object.entries(dbCase.labs)) {
@@ -485,11 +1075,11 @@ function mapDbCaseToUiCase(dbCase: any): LabCase {
             name: t.name,
             value: t.value,
             unit: t.unit,
-            referenceRange: "See Normal", // Missing in DB
+            referenceRange: 'See Normal', // Missing in DB
             isAbnormal: t.flag === 'H' || t.flag === 'L',
             abnormalDirection: t.flag === 'H' ? 'high' : t.flag === 'L' ? 'low' : undefined,
-            isCritical: false
-          }))
+            isCritical: false,
+          })),
         });
       }
     }
@@ -506,7 +1096,7 @@ function mapDbCaseToUiCase(dbCase: any): LabCase {
     explanation: `Diagnosis: ${dbCase.correctDiagnosis}`,
     category: 'random', // Default, could infer from diagnosis or panels
     orderableTests: [],
-    orderedTests: []
+    orderedTests: [],
   };
 }
 
@@ -523,14 +1113,14 @@ function applyVariation(value: string, direction: 'high' | 'low' | undefined): s
   // Try to parse the value as a number
   const numMatch = value.match(/^([\d.]+)/);
   if (!numMatch) return value;
-  
+
   const num = parseFloat(numMatch[1]);
   if (isNaN(num)) return value;
-  
+
   // Apply a small random variation (±10%)
   const variation = 0.9 + Math.random() * 0.2;
   const newNum = Math.round(num * variation * 10) / 10;
-  
+
   // Replace the number in the original string
   return value.replace(numMatch[1], newNum.toString());
 }
@@ -538,57 +1128,63 @@ function applyVariation(value: string, direction: 'high' | 'low' | undefined): s
 /**
  * Randomize patient demographics
  */
-function randomizePatient(originalAge: number, originalSex: 'M' | 'F'): { age: number; sex: 'M' | 'F' } {
+function randomizePatient(
+  originalAge: number,
+  originalSex: 'M' | 'F'
+): { age: number; sex: 'M' | 'F' } {
   // Add some age variation
   const ageVariation = Math.floor(Math.random() * 10) - 5;
   const newAge = Math.max(18, Math.min(90, originalAge + ageVariation));
-  
+
   return {
     age: newAge,
     sex: originalSex,
   };
 }
 
-function generateRandomLabCase(sourceCases: LabCase[], category: LabCategory, recentDiagnoses?: Set<string>): LabCase {
+function generateRandomLabCase(
+  sourceCases: LabCase[],
+  category: LabCategory,
+  recentDiagnoses?: Set<string>
+): LabCase {
   // Filter by category if not random
-  let availableCases = category === 'random' 
-    ? sourceCases 
-    : sourceCases.filter(c => c.category === category);
-  
+  let availableCases =
+    category === 'random' ? sourceCases : sourceCases.filter((c) => c.category === category);
+
   // If no cases match the category, use all available cases
   if (availableCases.length === 0) {
     availableCases = sourceCases;
   }
-  
+
   // Must have at least one case
   if (availableCases.length === 0) {
     throw new Error('No lab cases available');
   }
-  
+
   // Try to find a case with a diagnosis we haven't seen recently
   let attempts = 0;
   let randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
-  
+
   if (recentDiagnoses && recentDiagnoses.size > 0) {
     while (recentDiagnoses.has(randomCase.correctDiagnosis) && attempts < 10) {
       randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
       attempts++;
     }
   }
-  
+
   labCaseCounter++;
-  
+
   // Apply variations to lab values to make each case feel different
-  const variedPanels = randomCase.panels.map(panel => ({
+  const variedPanels = randomCase.panels.map((panel) => ({
     ...panel,
-    values: panel.values.map(val => ({
+    values: panel.values.map((val) => ({
       ...val,
       value: val.isAbnormal ? applyVariation(val.value, val.abnormalDirection) : val.value,
     })),
   }));
-  
+
   const { age, sex } = randomizePatient(randomCase.patientAge, randomCase.patientSex);
-  
+
   return {
     ...randomCase,
     id: `lab-${Date.now()}-${labCaseCounter}`,
@@ -649,7 +1245,10 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   try {
     ({ getToken } = useAuth());
   } catch (err) {
-    console.warn('[MiniLab] Clerk context missing; using stub auth in tests.', err instanceof Error ? err.message : err);
+    console.warn(
+      '[MiniLab] Clerk context missing; using stub auth in tests.',
+      err instanceof Error ? err.message : err
+    );
   }
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
   const [queue, setQueue] = useState<LabCase[]>([]);
@@ -663,7 +1262,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<MiniLabGameStatus>('landing');
-  
+
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
@@ -675,25 +1274,25 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       let cases: LabCase[] = [];
       try {
         const token = await getToken();
-        
+
         // Fetch cases from the database API
         cases = await fetchLabCases('random', 50, token);
         if (cases.length > 0) {
           setDbCases(cases);
         }
-        
+
         // Fetch diagnoses for autocomplete
         const diagnoses = await getCachedDiagnoses(token);
         if (diagnoses.length > 0) {
           setDbDiagnoses(diagnoses);
         }
       } catch (error) {
-        console.error("Failed to fetch lab cases from database", error);
+        console.error('Failed to fetch lab cases from database', error);
         setLoadError(error instanceof Error ? error.message : 'Failed to load lab cases');
       } finally {
         if (cases.length === 0) {
           setDbCases(LAB_CASES);
-          setDbDiagnoses([...new Set(LAB_CASES.map(c => c.correctDiagnosis))]);
+          setDbDiagnoses([...new Set(LAB_CASES.map((c) => c.correctDiagnosis))]);
         }
         setIsLoading(false);
       }
@@ -702,14 +1301,14 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [getToken]);
 
   const currentCase = queue[currentIndex] ?? null;
-  
+
   // Get available orderable tests for the current case
   const availableTests = useMemo(() => {
     if (!currentCase || !currentCase.orderableTests) return [];
     const alreadyOrdered = new Set(currentCase.orderedTests || []);
     return currentCase.orderableTests
-      .map(panel => panel.name)
-      .filter(name => !alreadyOrdered.has(name));
+      .map((panel) => panel.name)
+      .filter((name) => !alreadyOrdered.has(name));
   }, [currentCase]);
 
   const validDiagnoses = useMemo(() => {
@@ -718,59 +1317,65 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       return dbDiagnoses;
     }
     const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
-    return [...new Set(sourceCases.map(c => c.correctDiagnosis))].sort();
+    return [...new Set(sourceCases.map((c) => c.correctDiagnosis))].sort();
   }, [dbDiagnoses, dbCases]);
 
-  const generateNewCase = useCallback((category: LabCategory): LabCase | null => {
-    const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
-    if (sourceCases.length === 0) {
-      console.warn('No lab cases available');
-      return null;
-    }
-    
-    const labCase = generateRandomLabCase(sourceCases, category, recentDiagnosesRef.current);
-    
-    // Add to recent diagnoses and maintain max size
-    recentDiagnosesRef.current.add(labCase.correctDiagnosis);
-    if (recentDiagnosesRef.current.size > MAX_RECENT_DIAGNOSES) {
-      const firstItem = recentDiagnosesRef.current.values().next().value;
-      if (firstItem) recentDiagnosesRef.current.delete(firstItem);
-    }
-    
-    return labCase;
-  }, [dbCases]);
-
-  const startSession = useCallback((category: LabCategory) => {
-    const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
-    if (sourceCases.length === 0) {
-      setLoadError('Cannot start session: No lab cases available');
-      return;
-    }
-    
-    setSelectedCategory(category);
-    recentDiagnosesRef.current.clear(); // Clear history on new session
-    
-    const initialQueue: LabCase[] = [];
-    for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      const newCase = generateNewCase(category);
-      if (newCase) {
-        initialQueue.push(newCase);
+  const generateNewCase = useCallback(
+    (category: LabCategory): LabCase | null => {
+      const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
+      if (sourceCases.length === 0) {
+        console.warn('No lab cases available');
+        return null;
       }
-    }
-    
-    if (initialQueue.length === 0) {
-      setLoadError('Failed to generate lab cases');
-      return;
-    }
-    
-    setQueue(initialQueue);
-    setCurrentIndex(0);
-    setScore(0);
-    setStreak(0);
-    setUserAnswer(null);
-    setIsCorrect(null);
-    setStatus('playing');
-  }, [generateNewCase, dbCases.length]);
+
+      const labCase = generateRandomLabCase(sourceCases, category, recentDiagnosesRef.current);
+
+      // Add to recent diagnoses and maintain max size
+      recentDiagnosesRef.current.add(labCase.correctDiagnosis);
+      if (recentDiagnosesRef.current.size > MAX_RECENT_DIAGNOSES) {
+        const firstItem = recentDiagnosesRef.current.values().next().value;
+        if (firstItem) recentDiagnosesRef.current.delete(firstItem);
+      }
+
+      return labCase;
+    },
+    [dbCases]
+  );
+
+  const startSession = useCallback(
+    (category: LabCategory) => {
+      const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
+      if (sourceCases.length === 0) {
+        setLoadError('Cannot start session: No lab cases available');
+        return;
+      }
+
+      setSelectedCategory(category);
+      recentDiagnosesRef.current.clear(); // Clear history on new session
+
+      const initialQueue: LabCase[] = [];
+      for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
+        const newCase = generateNewCase(category);
+        if (newCase) {
+          initialQueue.push(newCase);
+        }
+      }
+
+      if (initialQueue.length === 0) {
+        setLoadError('Failed to generate lab cases');
+        return;
+      }
+
+      setQueue(initialQueue);
+      setCurrentIndex(0);
+      setScore(0);
+      setStreak(0);
+      setUserAnswer(null);
+      setIsCorrect(null);
+      setStatus('playing');
+    },
+    [generateNewCase, dbCases.length]
+  );
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -786,30 +1391,34 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setIsCorrect(null);
   }, []);
 
-  const submitAnswer = useCallback((answer: string) => {
-    if (!currentCase || status !== 'playing') return;
+  const submitAnswer = useCallback(
+    (answer: string) => {
+      if (!currentCase || status !== 'playing') return;
 
-    setUserAnswer(answer);
-    
-    const correct = answer.toLowerCase().trim() === currentCase.correctDiagnosis.toLowerCase().trim();
-    setIsCorrect(correct);
+      setUserAnswer(answer);
 
-    if (correct) {
-      setScore(prev => prev + 1);
-      setStreak(prev => prev + 1);
-    } else {
-      setStreak(0);
-    }
+      const correct =
+        answer.toLowerCase().trim() === currentCase.correctDiagnosis.toLowerCase().trim();
+      setIsCorrect(correct);
 
-    setStatus('feedback');
-  }, [currentCase, status]);
+      if (correct) {
+        setScore((prev) => prev + 1);
+        setStreak((prev) => prev + 1);
+      } else {
+        setStreak(0);
+      }
+
+      setStatus('feedback');
+    },
+    [currentCase, status]
+  );
 
   const nextCase = useCallback(() => {
     const newCase = generateNewCase(selectedCategory);
     if (newCase) {
-      setQueue(prev => [...prev, newCase]);
+      setQueue((prev) => [...prev, newCase]);
     }
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex((prev) => prev + 1);
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
@@ -821,7 +1430,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
       newQueue.push(generateNewCase(selectedCategory));
     }
-    
+
     setQueue(newQueue);
     setCurrentIndex(0);
     setScore(0);
@@ -830,37 +1439,40 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setIsCorrect(null);
     setStatus('playing');
   }, [selectedCategory, generateNewCase]);
-  
-  const orderTest = useCallback((testName: string): boolean => {
-    if (!currentCase || !currentCase.orderableTests) {
-      console.warn('Cannot order test: no current case or orderable tests available');
-      return false;
-    }
-    
-    // Find the test panel
-    const testPanel = currentCase.orderableTests.find(panel => panel.name === testName);
-    if (!testPanel) {
-      console.warn(`Cannot order test: test "${testName}" not found in orderable tests`);
-      return false;
-    }
-    
-    // Update the queue with the ordered test
-    setQueue(prev => {
-      const newQueue = [...prev];
-      const updatedCase = { ...newQueue[currentIndex] };
-      
-      // Add to panels
-      updatedCase.panels = [...updatedCase.panels, testPanel];
-      
-      // Track ordered tests
-      updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
-      
-      newQueue[currentIndex] = updatedCase;
-      return newQueue;
-    });
-    
-    return true;
-  }, [currentCase, currentIndex]);
+
+  const orderTest = useCallback(
+    (testName: string): boolean => {
+      if (!currentCase || !currentCase.orderableTests) {
+        console.warn('Cannot order test: no current case or orderable tests available');
+        return false;
+      }
+
+      // Find the test panel
+      const testPanel = currentCase.orderableTests.find((panel) => panel.name === testName);
+      if (!testPanel) {
+        console.warn(`Cannot order test: test "${testName}" not found in orderable tests`);
+        return false;
+      }
+
+      // Update the queue with the ordered test
+      setQueue((prev) => {
+        const newQueue = [...prev];
+        const updatedCase = { ...newQueue[currentIndex] };
+
+        // Add to panels
+        updatedCase.panels = [...updatedCase.panels, testPanel];
+
+        // Track ordered tests
+        updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
+
+        newQueue[currentIndex] = updatedCase;
+        return newQueue;
+      });
+
+      return true;
+    },
+    [currentCase, currentIndex]
+  );
 
   return {
     currentCase,

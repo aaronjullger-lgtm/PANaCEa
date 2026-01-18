@@ -36,14 +36,14 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ 
+const model = genAI.getGenerativeModel({
   model: 'gemini-2.0-flash-exp',
   generationConfig: {
     temperature: 0.3,
     topP: 0.95,
     topK: 40,
     maxOutputTokens: 8192,
-  }
+  },
 });
 
 interface GenerationTask {
@@ -160,7 +160,7 @@ async function generateContent(task: GenerationTask, field: string): Promise<any
 
   // Add context from existing data
   let contextPrompt = `Generate the following content for the medical condition: ${task.condition} (${task.system} system)\n\n`;
-  
+
   if (task.existingData.overview) {
     contextPrompt += `Overview: ${task.existingData.overview.substring(0, 300)}...\n\n`;
   }
@@ -176,8 +176,14 @@ async function generateContent(task: GenerationTask, field: string): Promise<any
     let text = response.text();
 
     // Parse JSON arrays if needed
-    if (field === 'symptoms' || field === 'physicalExam' || field === 'differentialDiagnosis' || 
-        field === 'complications' || field === 'riskFactors' || field === 'buzzwords') {
+    if (
+      field === 'symptoms' ||
+      field === 'physicalExam' ||
+      field === 'differentialDiagnosis' ||
+      field === 'complications' ||
+      field === 'riskFactors' ||
+      field === 'buzzwords'
+    ) {
       // Extract JSON array from response
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -194,8 +200,11 @@ async function generateContent(task: GenerationTask, field: string): Promise<any
     }
 
     // Clean up markdown artifacts
-    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    
+    text = text
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
     return text;
   } catch (error: any) {
     console.error(`Error generating ${field} for ${task.condition}:`, error.message);
@@ -209,10 +218,10 @@ async function findRecordsNeedingContent(limit: number = 10): Promise<Generation
   const records = await prisma.medicalContent.findMany({
     where: {
       status: {
-        in: ['draft', 'pending_review']
-      }
+        in: ['draft', 'pending_review'],
+      },
     },
-    take: limit * 2 // Get more than needed to filter
+    take: limit * 2, // Get more than needed to filter
   });
 
   const tasks: GenerationTask[] = [];
@@ -223,10 +232,12 @@ async function findRecordsNeedingContent(limit: number = 10): Promise<Generation
     // Check each required field
     for (const field of Object.keys(SECTION_PROMPTS)) {
       const value = record[field as keyof typeof record];
-      
-      if (!value || 
-          (typeof value === 'string' && value.trim().length < 50) ||
-          (Array.isArray(value) && value.length === 0)) {
+
+      if (
+        !value ||
+        (typeof value === 'string' && value.trim().length < 50) ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         missingFields.push(field);
       }
     }
@@ -238,7 +249,7 @@ async function findRecordsNeedingContent(limit: number = 10): Promise<Generation
         condition: record.condition,
         system: record.system,
         missingFields,
-        existingData: record
+        existingData: record,
       });
     }
 
@@ -274,13 +285,13 @@ async function generateMissingContent(dryRun: boolean = false, limit: number = 1
       try {
         console.log(`   Generating ${field}...`);
         const content = await generateContent(task, field);
-        
+
         if (content) {
           updates[field] = content;
           fieldSuccessCount++;
-          
+
           // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (error: any) {
         console.error(`   ❌ Failed to generate ${field}:`, error.message);
@@ -296,8 +307,8 @@ async function generateMissingContent(dryRun: boolean = false, limit: number = 1
             data: {
               ...updates,
               updatedAt: new Date(),
-              updatedBy: 'ai_generator'
-            }
+              updatedBy: 'ai_generator',
+            },
           });
           console.log(`   ✅ Updated ${fieldSuccessCount} fields`);
           successCount++;
@@ -321,7 +332,7 @@ async function generateMissingContent(dryRun: boolean = false, limit: number = 1
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 10;
 
   console.log('🤖 Starting Automated Content Generator...\n');

@@ -42,12 +42,14 @@ npx prisma migrate dev --name add_media_approval_system
 2. Create two buckets:
 
 #### Bucket 1: `medical-images`
+
 - **Name**: `medical-images`
 - **Public**: ✅ Yes (for public access to approved images)
 - **File size limit**: 10MB
 - **Allowed MIME types**: `image/jpeg, image/png, image/webp`
 
 #### Bucket 2: `educational-resources`
+
 - **Name**: `educational-resources`
 - **Public**: ✅ Yes
 - **File size limit**: 50MB
@@ -67,7 +69,7 @@ USING ( bucket_id = 'medical-images' );
 CREATE POLICY "Authenticated users can upload"
 ON storage.objects FOR INSERT
 WITH CHECK (
-  bucket_id = 'medical-images' 
+  bucket_id = 'medical-images'
   AND auth.role() = 'authenticated'
 );
 
@@ -92,7 +94,7 @@ USING ( bucket_id = 'educational-resources' );
 CREATE POLICY "Authenticated users can upload"
 ON storage.objects FOR INSERT
 WITH CHECK (
-  bucket_id = 'educational-resources' 
+  bucket_id = 'educational-resources'
   AND auth.role() = 'authenticated'
 );
 ```
@@ -100,6 +102,7 @@ WITH CHECK (
 ## Step 4: Create Folders in Storage
 
 Create folder structure in `medical-images` bucket:
+
 - `ecg/`
 - `ecg/thumbnails/`
 - `derm/`
@@ -146,6 +149,7 @@ curl -X POST http://localhost:3001/api/media/upload \
 ```
 
 Expected response:
+
 ```json
 {
   "success": true,
@@ -172,6 +176,7 @@ curl http://localhost:3001/api/media/stats
 ## Step 7: Access Admin Dashboard
 
 1. Start the development servers:
+
 ```bash
 npm run dev:all
 ```
@@ -194,12 +199,13 @@ npx tsx scripts/migrateExistingMedia.ts
 ```
 
 Script content (`scripts/migrateExistingMedia.ts`):
+
 ```typescript
 import { prisma } from '../lib/prisma';
 
 async function migrateExistingMedia() {
   console.log('Migrating existing media...');
-  
+
   // Update all media without approval status
   const result = await prisma.mediaAsset.updateMany({
     where: {
@@ -210,7 +216,7 @@ async function migrateExistingMedia() {
       isClinical: false,
     },
   });
-  
+
   console.log(`Updated ${result.count} media assets to pending status`);
 }
 
@@ -267,6 +273,7 @@ Update your admin menu to include a link to the media approval dashboard:
 ### Issue: "Sharp module not found"
 
 **Solution**:
+
 ```bash
 npm install sharp
 npm rebuild sharp
@@ -275,6 +282,7 @@ npm rebuild sharp
 ### Issue: "Storage bucket not found"
 
 **Solution**:
+
 - Verify bucket names in Supabase dashboard
 - Check bucket is set to public
 - Verify storage policies are created
@@ -282,6 +290,7 @@ npm rebuild sharp
 ### Issue: "Database connection failed"
 
 **Solution**:
+
 - Check DATABASE_URL is correct
 - Verify database is accessible
 - Try: `npx prisma db push` to sync schema
@@ -289,6 +298,7 @@ npm rebuild sharp
 ### Issue: "Auto-approval not working"
 
 **Solution**:
+
 - Check GEMINI_API_KEY is set
 - Verify AI analysis is returning valid data
 - Check quality score calculation
@@ -297,6 +307,7 @@ npm rebuild sharp
 ### Issue: "Images not appearing in photo drill"
 
 **Solution**:
+
 - Verify images are approved (`approvalStatus = 'approved'`)
 - Check `isClinical` flag is true
 - Ensure images are linked to conditions
@@ -318,10 +329,10 @@ Edit `services/imageQualityService.ts`:
 
 ```typescript
 const QUALITY_THRESHOLDS = {
-  MIN_WIDTH: 800,        // Adjust minimum width
-  MIN_HEIGHT: 600,       // Adjust minimum height
+  MIN_WIDTH: 800, // Adjust minimum width
+  MIN_HEIGHT: 600, // Adjust minimum height
   MIN_QUALITY_SCORE: 70, // Adjust auto-approval threshold
-  MAX_FILE_SIZE_MB: 10,  // Adjust max file size
+  MAX_FILE_SIZE_MB: 10, // Adjust max file size
 };
 ```
 
@@ -344,6 +355,7 @@ await fetch('/api/media/approve', {
 ## Support
 
 For additional help:
+
 1. Review [MEDIA_APPROVAL_SYSTEM.md](./MEDIA_APPROVAL_SYSTEM.md)
 2. Check [DATABASE_IMPLEMENTATION.md](./DATABASE_IMPLEMENTATION.md)
 3. See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)

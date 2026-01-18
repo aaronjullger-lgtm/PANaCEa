@@ -1,6 +1,6 @@
 /**
  * SRSFeedbackBadge
- * 
+ *
  * Visual feedback component showing SRS scheduling results after answering a question.
  * Displays next review interval, applied modifiers, and FSRS v5 quality indicators.
  * Quality scoring accounts for question complexity (word count, media, labs).
@@ -25,7 +25,9 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
     return `in ${Math.round(interval / 365)} years`;
   };
 
-  const getQualityLabel = (quality: number): { text: string; color: string; icon: React.ReactNode } => {
+  const getQualityLabel = (
+    quality: number
+  ): { text: string; color: string; icon: React.ReactNode } => {
     switch (quality) {
       case 5:
         return { text: 'Mastery', color: 'emerald', icon: <Award className="w-3.5 h-3.5" /> };
@@ -34,7 +36,11 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       case 3:
         return { text: 'Thoughtful', color: 'indigo', icon: <Brain className="w-3.5 h-3.5" /> };
       case 2:
-        return { text: 'Needs Review', color: 'amber', icon: <TrendingUp className="w-3.5 h-3.5" /> };
+        return {
+          text: 'Needs Review',
+          color: 'amber',
+          icon: <TrendingUp className="w-3.5 h-3.5" />,
+        };
       case 1:
       default:
         return { text: 'Rushed', color: 'red', icon: <Zap className="w-3.5 h-3.5" /> };
@@ -59,17 +65,21 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       className="flex flex-wrap items-center gap-2"
     >
       {/* Main review schedule badge */}
-      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
-        isCorrect 
-          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-          : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-      }`}>
-        <Calendar className={`w-4 h-4 ${isCorrect ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'}`} />
-        <span className={`text-sm font-medium ${
-          isCorrect 
-            ? 'text-blue-700 dark:text-blue-300'
-            : 'text-amber-700 dark:text-amber-300'
-        }`}>
+      <div
+        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+          isCorrect
+            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+            : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+        }`}
+      >
+        <Calendar
+          className={`w-4 h-4 ${isCorrect ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'}`}
+        />
+        <span
+          className={`text-sm font-medium ${
+            isCorrect ? 'text-blue-700 dark:text-blue-300' : 'text-amber-700 dark:text-amber-300'
+          }`}
+        >
           Review {getIntervalText(result.interval)}
         </span>
       </div>
@@ -84,7 +94,9 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
         <span className={`text-${qualityInfo.color}-600 dark:text-${qualityInfo.color}-400`}>
           {qualityInfo.icon}
         </span>
-        <span className={`text-xs font-semibold text-${qualityInfo.color}-700 dark:text-${qualityInfo.color}-300`}>
+        <span
+          className={`text-xs font-semibold text-${qualityInfo.color}-700 dark:text-${qualityInfo.color}-300`}
+        >
           {qualityInfo.text}
         </span>
       </motion.div>
@@ -98,9 +110,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
         >
           <Zap className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
-          <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">
-            Streak
-          </span>
+          <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">Streak</span>
         </motion.div>
       )}
 
@@ -113,9 +123,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
         >
           <Award className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />
-          <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
-            Gold
-          </span>
+          <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">Gold</span>
         </motion.div>
       )}
 
@@ -127,9 +135,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
           transition={{ delay: 0.25 }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         >
-          <span className="text-xs font-medium text-red-700 dark:text-red-300">
-            Focus Area
-          </span>
+          <span className="text-xs font-medium text-red-700 dark:text-red-300">Focus Area</span>
         </motion.div>
       )}
 

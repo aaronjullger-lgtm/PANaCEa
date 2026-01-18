@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../physiologyRegistry';
+import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../src/registries/physiologyRegistry';
 
 config();
 const prisma = new PrismaClient();

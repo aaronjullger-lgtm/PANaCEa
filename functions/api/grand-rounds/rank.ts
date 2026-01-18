@@ -1,33 +1,30 @@
 /**
  * API: Get user's rank for today
- * GET /api/grandrounds/rank?userId={userId}&date={date}
+ * GET /api/grand-rounds/rank?userId={userId}&date={date}
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const RankSchema = z.object({
+  query: z.object({
+    userId: z.string().min(1, 'userId is required'),
+    date: z.string().optional(),
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(RankSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/grand-rounds/rank', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-    const dateParam = url.searchParams.get('date');
+    const { userId, date: dateParam } = validated.query;
 
-    if (!userId) {
-      return createErrorResponse('Missing userId parameter', 400);
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const today = dateParam ? new Date(dateParam) : new Date();
     today.setHours(0, 0, 0, 0);
@@ -37,20 +34,32 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       where: {
         userId_date: {
           userId,
-          date: today
-        }
-      }
+          date: today,
+        },
+      },
     });
 
     if (!userHistory) {
-      return createSuccessResponse({ rank: null });
+      log.info('No rank found for user', { userId, date: today.toISOString() });
+      return new Response(JSON.stringify({ rank: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return createSuccessResponse({ rank: userHistory.rank });
+    log.info('Fetched Grand Rounds rank', { userId, rank: userHistory.rank });
+
+    return new Response(JSON.stringify({ rank: userHistory.rank }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error: any) {
-    console.error('Error fetching Grand Rounds rank:', error);
-    return createErrorResponse('Failed to fetch rank', 500);
+    log.error('Error fetching Grand Rounds rank', { error: error.message });
+    return new Response(JSON.stringify({ error: 'Failed to fetch rank' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

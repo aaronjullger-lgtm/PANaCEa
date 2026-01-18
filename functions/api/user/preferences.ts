@@ -1,186 +1,179 @@
 /**
  * User Preferences API
- * 
+ *
  * Syncs user preferences to database (previously localStorage only).
  * Enables:
  * - Cross-device preference sync
  * - Personalized experience
  * - Study habit analysis
  * - Better recommendation algorithms
- * 
+ *
  * GET /api/user/preferences - Fetch preferences
  * POST /api/user/preferences - Create/update preferences
  * PATCH /api/user/preferences - Partial update
+ * DELETE /api/user/preferences - Reset to defaults
  */
 
-import type { EventContext } from '@cloudflare/workers-types';
-import { authenticateRequest } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+// Validation schemas
+const UserPreferencesSchema = z.object({
+  body: z.object({
+    // Study preferences
+    dailyGoal: z.number().int().min(1).max(1000).optional(),
+    preferredSystems: z.array(z.string()).optional(),
+    sessionLength: z.number().int().min(5).max(180).optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'adaptive']).optional(),
 
-interface UserPreferencesPayload {
-  // Study preferences
-  dailyGoal?: number;
-  preferredSystems?: string[];
-  sessionLength?: number;
-  difficulty?: string;
-  
-  // Timing preferences
-  wakeTime?: string;
-  studyReminders?: boolean;
-  reminderTime?: string;
-  reminderDays?: number[];
-  
-  // UI preferences
-  theme?: string;
-  soundEnabled?: boolean;
-  hapticFeedback?: boolean;
-  animationsEnabled?: boolean;
-  fontSize?: string;
-  
-  // Learning preferences
-  showHints?: boolean;
-  autoAdvance?: boolean;
-  explanationDepth?: string;
-  showPearls?: boolean;
-  showRelatedConcepts?: boolean;
-  
-  // Review preferences
-  fsrsEnabled?: boolean;
-  reviewBeforeExam?: boolean;
-  mixNewAndReview?: boolean;
-  
-  // Advanced settings
-  keyboardShortcuts?: boolean;
-  developerMode?: boolean;
-  betaFeatures?: boolean;
-  
-  // Notification preferences
-  emailDigest?: boolean;
-  emailFrequency?: string;
-  pushNotifications?: boolean;
-  
-  // Privacy preferences
-  shareAnonymousData?: boolean;
-  showOnLeaderboard?: boolean;
-  
-  // Custom settings
-  customSettings?: any;
-}
+    // Timing preferences
+    wakeTime: z.string().regex(/^\d{2}:\d{2}$/).optional(), // HH:MM format
+    studyReminders: z.boolean().optional(),
+    reminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    reminderDays: z.array(z.number().int().min(0).max(6)).optional(),
+
+    // UI preferences
+    theme: z.enum(['light', 'dark', 'auto']).optional(),
+    soundEnabled: z.boolean().optional(),
+    hapticFeedback: z.boolean().optional(),
+    animationsEnabled: z.boolean().optional(),
+    fontSize: z.enum(['small', 'medium', 'large']).optional(),
+
+    // Learning preferences
+    showHints: z.boolean().optional(),
+    autoAdvance: z.boolean().optional(),
+    explanationDepth: z.enum(['brief', 'detailed', 'comprehensive']).optional(),
+    showPearls: z.boolean().optional(),
+    showRelatedConcepts: z.boolean().optional(),
+
+    // Review preferences
+    fsrsEnabled: z.boolean().optional(),
+    reviewBeforeExam: z.boolean().optional(),
+    mixNewAndReview: z.boolean().optional(),
+
+    // Advanced settings
+    keyboardShortcuts: z.boolean().optional(),
+    developerMode: z.boolean().optional(),
+    betaFeatures: z.boolean().optional(),
+
+    // Notification preferences
+    emailDigest: z.boolean().optional(),
+    emailFrequency: z.enum(['daily', 'weekly', 'monthly', 'never']).optional(),
+    pushNotifications: z.boolean().optional(),
+
+    // Privacy preferences
+    shareAnonymousData: z.boolean().optional(),
+    showOnLeaderboard: z.boolean().optional(),
+
+    // Custom settings (flexible JSON)
+    customSettings: z.record(z.unknown()).optional(),
+  }),
+});
+
+const PartialPreferencesSchema = z.object({
+  body: z.object({
+    // All fields optional for partial update
+    dailyGoal: z.number().int().min(1).max(1000).optional(),
+    preferredSystems: z.array(z.string()).optional(),
+    sessionLength: z.number().int().min(5).max(180).optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'adaptive']).optional(),
+    wakeTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    studyReminders: z.boolean().optional(),
+    reminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    reminderDays: z.array(z.number().int().min(0).max(6)).optional(),
+    theme: z.enum(['light', 'dark', 'auto']).optional(),
+    soundEnabled: z.boolean().optional(),
+    hapticFeedback: z.boolean().optional(),
+    animationsEnabled: z.boolean().optional(),
+    fontSize: z.enum(['small', 'medium', 'large']).optional(),
+    showHints: z.boolean().optional(),
+    autoAdvance: z.boolean().optional(),
+    explanationDepth: z.enum(['brief', 'detailed', 'comprehensive']).optional(),
+    showPearls: z.boolean().optional(),
+    showRelatedConcepts: z.boolean().optional(),
+    fsrsEnabled: z.boolean().optional(),
+    reviewBeforeExam: z.boolean().optional(),
+    mixNewAndReview: z.boolean().optional(),
+    keyboardShortcuts: z.boolean().optional(),
+    developerMode: z.boolean().optional(),
+    betaFeatures: z.boolean().optional(),
+    emailDigest: z.boolean().optional(),
+    emailFrequency: z.enum(['daily', 'weekly', 'monthly', 'never']).optional(),
+    pushNotifications: z.boolean().optional(),
+    shareAnonymousData: z.boolean().optional(),
+    showOnLeaderboard: z.boolean().optional(),
+    customSettings: z.record(z.unknown()).optional(),
+  }),
+});
+
+// Empty schema for GET and DELETE
+const EmptySchema = z.object({});
+
+export const onRequestOptions = withCors();
 
 /**
- * Get user preferences
+ * GET - Fetch user preferences
  */
-export async function onRequestGet(context: EventContext<Env, any, Record<string, unknown>>) {
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/user/preferences');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const userId = authResult.userId;
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    logger.addContext({ userId: auth.userId });
 
     // Fetch preferences
     let preferences = await prisma.userPreferences.findUnique({
-      where: { userId },
+      where: { userId: auth.userId },
     });
 
     // If no preferences exist, create default ones
     if (!preferences) {
       preferences = await prisma.userPreferences.create({
         data: {
-          userId,
+          userId: auth.userId,
           // All other fields will use their default values from schema
         },
       });
+      logger.info('Created default preferences for new user');
     }
 
-    return new Response(
-      JSON.stringify({
+    return {
+      data: {
         success: true,
         preferences,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error fetching preferences:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to fetch preferences',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error fetching preferences', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to fetch preferences');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * Create or fully update user preferences
+ * POST - Create or fully update user preferences
  */
-export async function onRequestPost(context: EventContext<Env, any, Record<string, unknown>>) {
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestPost = authenticatedEndpoint(UserPreferencesSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/preferences');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    logger.addContext({ userId: auth.userId });
 
-    const userId = authResult.userId;
-
-    // Parse request body
-    let payload: UserPreferencesPayload;
-    try {
-      payload = await context.request.json();
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    const payload = validated.body;
 
     // Upsert preferences
     const preferences = await prisma.userPreferences.upsert({
-      where: { userId },
+      where: { userId: auth.userId },
       create: {
-        userId,
+        userId: auth.userId,
         ...payload,
       },
       update: {
@@ -189,188 +182,128 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
       },
     });
 
-    return new Response(
-      JSON.stringify({
+    logger.info('Preferences saved successfully', {
+      fieldsUpdated: Object.keys(payload).length,
+    });
+
+    return {
+      data: {
         success: true,
         preferences,
         message: 'Preferences saved successfully',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error saving preferences:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to save preferences',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error saving preferences', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to save preferences');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * Partially update user preferences
+ * PATCH - Partially update user preferences
  */
-export async function onRequestPatch(context: EventContext<Env, any, Record<string, unknown>>) {
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestPatch = authenticatedEndpoint(PartialPreferencesSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/preferences');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    logger.addContext({ userId: auth.userId });
 
-    const userId = authResult.userId;
-
-    // Parse request body
-    let payload: Partial<UserPreferencesPayload>;
-    try {
-      payload = await context.request.json();
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    const payload = validated.body;
 
     // Check if preferences exist
     const existing = await prisma.userPreferences.findUnique({
-      where: { userId },
+      where: { userId: auth.userId },
     });
 
     if (!existing) {
       // Create with partial data
       const preferences = await prisma.userPreferences.create({
         data: {
-          userId,
+          userId: auth.userId,
           ...payload,
         },
       });
 
-      return new Response(
-        JSON.stringify({
+      logger.info('Preferences created (partial)', {
+        fieldsSet: Object.keys(payload).length,
+      });
+
+      return {
+        data: {
           success: true,
           preferences,
           message: 'Preferences created successfully',
-        }),
-        {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+        },
+        status: 201,
+      };
     }
 
     // Update existing preferences
     const preferences = await prisma.userPreferences.update({
-      where: { userId },
+      where: { userId: auth.userId },
       data: {
         ...payload,
         updatedAt: new Date(),
       },
     });
 
-    return new Response(
-      JSON.stringify({
+    logger.info('Preferences updated (partial)', {
+      fieldsUpdated: Object.keys(payload).length,
+    });
+
+    return {
+      data: {
         success: true,
         preferences,
         message: 'Preferences updated successfully',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error updating preferences:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to update preferences',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error updating preferences', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to update preferences');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * Delete user preferences (reset to defaults)
+ * DELETE - Reset user preferences to defaults
  */
-export async function onRequestDelete(context: EventContext<Env, any, Record<string, unknown>>) {
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/user/preferences');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env as any);
-    if (!authResult?.userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const userId = authResult.userId;
-
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    logger.addContext({ userId: auth.userId });
 
     // Delete preferences
     await prisma.userPreferences.delete({
-      where: { userId },
+      where: { userId: auth.userId },
     });
 
-    return new Response(
-      JSON.stringify({
+    logger.info('Preferences deleted successfully');
+
+    return {
+      data: {
         success: true,
         message: 'Preferences deleted successfully',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error deleting preferences:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to delete preferences',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error deleting preferences', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to delete preferences');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-}
+});

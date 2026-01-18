@@ -1,73 +1,67 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
- * GET /api/reference/labs/:id
- * Fetch a single lab test by ID
+ * Single Lab Test Reference API
+ * 
+ * GET /api/reference/labs/:id - Fetch a single lab test by ID
+ * 
+ * Security: Sprint 3 - Authenticated endpoint with secure middleware
  */
-export async function onRequestGet(context: any) {
-  const { request, env, params } = context;
-  const { id } = params;
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+// ============================================================================
+// VALIDATION SCHEMAS
+// ============================================================================
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+const LabByIdSchema = z.object({
+  query: z.object({}).optional(),
+  body: z.object({}).optional(),
+  params: z.object({
+    id: z.string().uuid('Invalid lab test ID format'),
+  }),
+});
+
+// ============================================================================
+// HANDLERS
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(LabByIdSchema, async ({ env, auth, params }) => {
+  const log = createEndpointLogger('/api/reference/labs/[id]', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
+    const { id } = params;
+
+    log.info('Fetching lab test by ID', { labId: id });
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     const result = await prisma.labTest.findUnique({
-      where: { id }
+      where: { id },
     });
-    
+
     if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'Lab test not found' }), { 
+      log.warn('Lab test not found', { labId: id });
+      return {
         status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
+        error: 'Lab test not found',
+      };
     }
-    
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+
+    log.info('Successfully fetched lab test', { labId: id });
+
+    return { data: { success: true, data: result } };
   } catch (error: any) {
-    console.error('Error fetching lab:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch lab', details: error.message }), { 
+    log.error('Error fetching lab', error);
+    return {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: 'Failed to fetch lab',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

@@ -18,17 +18,17 @@ import { verifyToken as mockVerifyToken } from '@clerk/backend';
  */
 function createMockJWT(payload: any): string {
   const header = { alg: 'RS256', typ: 'JWT' };
-  
+
   // Encode to base64url (not standard base64)
   const encodeBase64Url = (obj: any): string => {
     const base64 = Buffer.from(JSON.stringify(obj)).toString('base64');
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   };
-  
+
   const headerEncoded = encodeBase64Url(header);
   const payloadEncoded = encodeBase64Url(payload);
   const signature = 'mock_signature';
-  
+
   return `${headerEncoded}.${payloadEncoded}.${signature}`;
 }
 
@@ -52,16 +52,14 @@ describe('Authentication Diagnostics', () => {
 
     it('should log error when Authorization header is missing', async () => {
       const result = await verifyAuthToken(null, validSecretKey);
-      
+
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[AUTH] Authorization header is missing'
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[AUTH] Authorization header is missing');
     });
 
     it('should log error when Authorization header format is invalid', async () => {
       const result = await verifyAuthToken('InvalidFormat token123', validSecretKey);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] Authorization header format is invalid'),
@@ -71,7 +69,7 @@ describe('Authentication Diagnostics', () => {
 
     it('should log error when Bearer prefix is lowercase', async () => {
       const result = await verifyAuthToken('bearer token123', validSecretKey);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] Authorization header format is invalid'),
@@ -95,7 +93,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockResolvedValue({ sub: 'user_123' });
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBe('user_123');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[AUTH] Token payload claims:',
@@ -127,15 +125,13 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockRejectedValue(new Error('Token expired'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] Token is expired'),
         expect.any(String)
       );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[AUTH] Root Cause: Token Expiration'
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[AUTH] Root Cause: Token Expiration');
       // Verify that both secretKey and clockSkewInMs options are passed even for expired tokens
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
@@ -157,7 +153,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockResolvedValue({ sub: 'user_456' });
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBe('user_456');
       // Verify that verifyToken is called with both secretKey and clockSkewInMs options
       expect(mockVerifyToken).toHaveBeenCalledWith(
@@ -181,7 +177,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockRejectedValue(new Error('Signature verification failed'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Token verification failed with detailed error:',
@@ -206,11 +202,9 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockRejectedValue(new Error('Invalid issuer'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[AUTH] Root Cause: Invalid Issuer'
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[AUTH] Root Cause: Invalid Issuer');
     });
 
     it('should log detailed error for unknown errors', async () => {
@@ -224,7 +218,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockRejectedValue(new Error('Some unexpected error'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Root Cause: Unknown - See error details above'
@@ -240,7 +234,7 @@ describe('Authentication Diagnostics', () => {
       });
 
       const result = await authenticateRequest(request, env);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] CLERK_SECRET_KEY is not configured in environment'
@@ -256,7 +250,7 @@ describe('Authentication Diagnostics', () => {
       });
 
       const result = await authenticateRequest(request, env);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] CLERK_SECRET_KEY has invalid format'),
@@ -276,7 +270,7 @@ describe('Authentication Diagnostics', () => {
       });
 
       const result = await authenticateRequest(request, env);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] CLERK_SECRET_KEY has invalid format'),
@@ -296,15 +290,12 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockResolvedValue({ sub: null });
 
       await authenticateRequest(request, env);
-      
+
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[AUTH] Secret key verified (masked):',
         'sk_te...vwxyz'
       );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[AUTH] Secret key environment:',
-        'test'
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('[AUTH] Secret key environment:', 'test');
     });
 
     it('should log masked secret key for live environment', async () => {
@@ -319,15 +310,12 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockResolvedValue({ sub: null });
 
       await authenticateRequest(request, env);
-      
+
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[AUTH] Secret key verified (masked):',
         'sk_li...67890'
       );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[AUTH] Secret key environment:',
-        'live'
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('[AUTH] Secret key environment:', 'live');
     });
 
     it('should log success message when authentication succeeds', async () => {
@@ -348,7 +336,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockResolvedValue({ sub: 'user_123' });
 
       const result = await authenticateRequest(request, env);
-      
+
       expect(result).toEqual({
         userId: 'user_123',
         clerkId: 'user_123',
@@ -370,7 +358,7 @@ describe('Authentication Diagnostics', () => {
       (mockVerifyToken as any).mockRejectedValue(new Error('Invalid token'));
 
       const result = await authenticateRequest(request, env);
-      
+
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Authentication failed - no valid user ID extracted'

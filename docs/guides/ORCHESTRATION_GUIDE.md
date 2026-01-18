@@ -3,6 +3,7 @@
 ## Overview
 
 The Master Orchestrator provides **bi-directional synchronization** between your local TypeScript registry files and the PostgreSQL database, ensuring that:
+
 - Changes made to local code get synced to the database
 - AI-generated or admin panel-created records get saved back to your codebase
 - Data integrity is maintained through automated validation and repair
@@ -45,53 +46,64 @@ The orchestrator runs four sequential phases:
 ## The Scripts
 
 ### 1. Registry Sync (Local → DB)
+
 **Script**: `scripts/syncAllRegistries.ts`  
 **Command**: `npm run sync:all-registries`
 
 **What it does**:
+
 - Reads `conditionRegistry.ts` and `drugRegistry.ts`
 - Upserts all entries into Prisma database
 - Uses name+system match for conditions, genericName for drugs
 - Preserves existing content fields in database
 
 **When to run**:
+
 - After adding new conditions or drugs to TypeScript files
 - After deployment (ensures DB has latest local data)
 - As part of orchestrator (automatic)
 
 ### 2. Database Validation
+
 **Script**: `scripts/validate_database.ts`  
 **Command**: `npm run db:validate`
 
 **What it does**:
+
 - Checks for missing required fields (nulls)
 - Validates data formats (IDs, arrays, strings)
 - Verifies enum values (status, PANCE systems)
 - Generates JSON report in `reports/`
 
 **Tables checked**:
+
 - MedicalContent, Condition, Drug, LabTest, User
 
 ### 3. Auto-Repair (Optional)
+
 **Script**: `scripts/maintenance/autoRepair.ts`  
 **Command**: Create this file as needed
 
 **What it does**:
+
 - Fixes data issues found by validation
 - Updates database records with corrections
 - Logs all changes made
 
 **Example fixes**:
+
 - Set default values for nulls
 - Normalize ID formats
 - Fix enum casing
 - Merge duplicate entries
 
 ### 4. Back-Sync (DB → Local)
+
 **Script**: `scripts/sync_db_to_registry.ts`  
 **Command**: `npm run db:sync-to-registry`
 
 **What it does**:
+
 - Loads all conditions and drugs from database
 - Compares with local TypeScript files
 - Finds "ghost" records (in DB but not in code)
@@ -99,10 +111,11 @@ The orchestrator runs four sequential phases:
 - Creates .bak backup before writing
 
 **How it works**:
+
 ```typescript
 // New entries are added to a separate array:
 export const CONDITION_REGISTRY_DB_SYNCED: ConditionMeta[] = [
-  { system: "CV", subcategory: "AI Generated", condition: "New AI Condition" },
+  { system: 'CV', subcategory: 'AI Generated', condition: 'New AI Condition' },
   // ...
 ];
 
@@ -118,11 +131,13 @@ export const CONDITION_REGISTRY = [
 ## Usage Examples
 
 ### Run Full Orchestration
+
 ```bash
 npm run db:orchestrate
 ```
 
 **Output**:
+
 ```
 🤖 MASTER DATABASE ORCHESTRATOR
 ================================================================================
@@ -206,12 +221,14 @@ git commit -m "Add AI-generated conditions from orchestration"
 ### Customizing Phases
 
 Edit `scripts/maintenance/orchestrator.ts` to:
+
 - Skip phases
 - Add new phases
 - Change execution order
 - Add conditional logic
 
 Example - skip Auto-Mechanic if no errors:
+
 ```typescript
 // After validation phase
 if (validate.success && !hasErrors(validate.output)) {
@@ -233,18 +250,20 @@ if (validate.success && !hasErrors(validate.output)) {
 
 The orchestrator complements the existing automation suite:
 
-| Script | Purpose | Orchestrator Phase |
-|--------|---------|-------------------|
-| `orchestrate.ts` | Content validation & generation | Separate (runs AI tasks) |
-| `syncAllRegistries.ts` | Local → DB | Phase 1 (Handshake) |
-| `validate_database.ts` | Data validation | Phase 2 (Diagnostic) |
-| `sync_db_to_registry.ts` | DB → Local | Phase 4 (Write-Back) |
+| Script                   | Purpose                         | Orchestrator Phase       |
+| ------------------------ | ------------------------------- | ------------------------ |
+| `orchestrate.ts`         | Content validation & generation | Separate (runs AI tasks) |
+| `syncAllRegistries.ts`   | Local → DB                      | Phase 1 (Handshake)      |
+| `validate_database.ts`   | Data validation                 | Phase 2 (Diagnostic)     |
+| `sync_db_to_registry.ts` | DB → Local                      | Phase 4 (Write-Back)     |
 
 **When to use which**:
+
 - **`npm run db:automate`**: Content quality, AI generation, deduplication
 - **`npm run db:orchestrate`**: Bi-directional sync, database health
 
 **Combined workflow**:
+
 ```bash
 # 1. Full automation (content quality + AI generation)
 npm run db:automate
@@ -263,6 +282,7 @@ git commit -m "Automated content generation and sync"
 ### Check Phase Results
 
 All phases generate reports:
+
 - Validation: `reports/validation-report-*.json`
 - Quality: `reports/quality-report-*.json`
 - Deduplication: `reports/duplicates-*.json`
@@ -284,22 +304,26 @@ npx tsx scripts/sync_db_to_registry.ts
 ## Troubleshooting
 
 ### "Cannot find closing bracket"
+
 - Registry file structure changed
 - Manual intervention needed
 - Check `.bak` file and restore if needed
 
 ### "Condition already exists"
+
 - Duplicate detection based on normalized names
 - Case-insensitive, special char removal
 - May need manual review for similar names
 
 ### "Phase failed"
+
 - Check error output in console
 - Review individual phase script
 - Run phase independently for debugging
 - Check `reports/` directory for details
 
 ### Restore from Backup
+
 ```bash
 # If back-sync went wrong
 cp conditionRegistry.ts.bak conditionRegistry.ts
@@ -347,16 +371,16 @@ Create custom orchestrators for specific workflows:
 async function main() {
   // 1. Generate content
   await runPhase('AI Content Generation', '🤖', 'generate_content.ts');
-  
+
   // 2. Back-sync to local
   await runPhase('Capture to Local', '💾', 'sync_db_to_registry.ts');
-  
+
   // 3. Sync back to DB (after manual review)
   // User manually reviews and edits registry files
   console.log('⏸️  Review generated entries in registry files');
   console.log('   Press Enter when ready to sync back to DB...');
   await waitForInput();
-  
+
   await runPhase('Re-sync to DB', '🔄', 'syncAllRegistries.ts');
 }
 ```
@@ -380,12 +404,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - run: npm install
       - run: npm run db:orchestrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      
+
       - name: Create PR if changes
         uses: peter-evans/create-pull-request@v5
         with:
@@ -399,6 +423,7 @@ jobs:
 ### From Manual Sync to Orchestrator
 
 **Before**:
+
 ```bash
 # Manual process
 npm run sync:conditions
@@ -409,6 +434,7 @@ npm run db:validate
 ```
 
 **After**:
+
 ```bash
 # One command
 npm run db:orchestrate
@@ -417,6 +443,7 @@ npm run db:orchestrate
 ### From Individual Scripts
 
 All individual scripts still work:
+
 - `npm run sync:all-registries`
 - `npm run db:validate`
 - `npm run db:sync-to-registry`
@@ -426,6 +453,7 @@ The orchestrator just runs them in the right order with proper error handling.
 ## Support
 
 For issues or questions:
+
 1. Check logs in `logs/automation-*.json`
 2. Review reports in `reports/`
 3. Check script source code in `scripts/`

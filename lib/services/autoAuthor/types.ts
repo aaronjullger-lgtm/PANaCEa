@@ -1,6 +1,6 @@
 /**
  * Auto-Author Types
- * 
+ *
  * Defines interfaces for AI-generated medical content.
  */
 

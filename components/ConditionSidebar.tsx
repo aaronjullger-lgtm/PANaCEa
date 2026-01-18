@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface ConditionSidebarProps {
   sections: { key: string; title: string }[];
@@ -21,7 +21,7 @@ const ConditionSidebar: React.FC<ConditionSidebarProps> = ({
             <button
               key={section.key}
               onClick={() => onSelect(section.key)}
-              className={`section-nav-button ${isActive ? "active" : ""}`}
+              className={`section-nav-button ${isActive ? 'active' : ''}`}
               type="button"
             >
               {section.title}

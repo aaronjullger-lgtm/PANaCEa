@@ -1,11 +1,11 @@
 /**
  * SessionContext
- * 
+ *
  * Manages quiz session state including:
  * - Session settings (focus, difficulty)
  * - Question queue
  * - Session lifecycle (start, end, pause)
- * 
+ *
  * Extracted from App.tsx to reduce component complexity.
  */
 
@@ -29,8 +29,8 @@ interface SessionContextValue {
   hasActiveSession: boolean;
   /** Start a new session */
   startSession: (
-    settings: SessionSettings, 
-    missedQuestions: Question[], 
+    settings: SessionSettings,
+    missedQuestions: Question[],
     flaggedQuestions: Question[],
     growthAreas: string[]
   ) => Promise<void>;
@@ -50,7 +50,7 @@ interface SessionProviderProps {
 
 export function SessionProvider({ children }: SessionProviderProps) {
   const { getToken } = useAuth();
-  
+
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,50 +60,49 @@ export function SessionProvider({ children }: SessionProviderProps) {
     return !!sessionSettings && questionQueue.length > 0;
   }, [sessionSettings, questionQueue.length]);
 
-  const startSession = useCallback(async (
-    settings: SessionSettings,
-    missedQuestions: Question[],
-    flaggedQuestions: Question[],
-    growthAreas: string[]
-  ) => {
-    setSessionSettings(settings);
-    setError(null);
+  const startSession = useCallback(
+    async (
+      settings: SessionSettings,
+      missedQuestions: Question[],
+      flaggedQuestions: Question[],
+      growthAreas: string[]
+    ) => {
+      setSessionSettings(settings);
+      setError(null);
 
-    try {
-      setIsLoading(true);
+      try {
+        setIsLoading(true);
 
-      if (settings.focus === 'review') {
-        // Due questions - filter missed questions by date
-        const today = new Date().toISOString().split('T')[0];
-        const due = missedQuestions.filter(
-          (q) => q.nextReviewDate && q.nextReviewDate <= today
-        );
-        setQuestionQueue(due as Question[]);
-      } else if (settings.focus === 'reviewFlagged') {
-        // Flagged questions
-        setQuestionQueue(flaggedQuestions);
-      } else {
-        // Normal session - fetch from question pool
-        const initialQuestions = await getQuestionBatch(
-          settings,
-          growthAreas,
-          INITIAL_QUEUE_SIZE,
-          getToken
-        );
-        setQuestionQueue(initialQuestions);
+        if (settings.focus === 'review') {
+          // Due questions - filter missed questions by date
+          const today = new Date().toISOString().split('T')[0];
+          const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
+          setQuestionQueue(due as Question[]);
+        } else if (settings.focus === 'reviewFlagged') {
+          // Flagged questions
+          setQuestionQueue(flaggedQuestions);
+        } else {
+          // Normal session - fetch from question pool
+          const initialQuestions = await getQuestionBatch(
+            settings,
+            growthAreas,
+            INITIAL_QUEUE_SIZE,
+            getToken
+          );
+          setQuestionQueue(initialQuestions);
+        }
+      } catch (err: any) {
+        console.error('Error starting session:', err);
+        setError(err?.message || 'Failed to start session. Please try again in a moment.');
+        // Reset session on error
+        setSessionSettings(null);
+        setQuestionQueue([]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error('Error starting session:', err);
-      setError(
-        err?.message || 'Failed to start session. Please try again in a moment.'
-      );
-      // Reset session on error
-      setSessionSettings(null);
-      setQuestionQueue([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getToken]);
+    },
+    [getToken]
+  );
 
   const endSession = useCallback(() => {
     setSessionSettings(null);
@@ -126,11 +125,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     clearError,
   };
 
-  return (
-    <SessionContext.Provider value={value}>
-      {children}
-    </SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
 export function useSession(): SessionContextValue {

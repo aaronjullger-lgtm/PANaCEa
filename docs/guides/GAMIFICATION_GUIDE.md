@@ -14,29 +14,30 @@ Every body system in PANaCEa has a unique organ character that users can collect
 
 Each body system has a base organ character that's unlocked by default:
 
-| System | Character | Emoji | Description |
-|--------|-----------|-------|-------------|
-| CV | Heart | ❤️ | Cardiovascular system |
-| PULM | Lungs | 🫁 | Pulmonary system |
-| GI | Stomach | 🫃 | Gastrointestinal system |
-| NEURO | Brain | 🧠 | Neurologic system |
-| MSK | Bone | 🦴 | Musculoskeletal system |
-| RENAL | Kidney | 🫘 | Renal system |
-| ENDO | Thyroid | 🦋 | Endocrine system |
-| HEME | Blood Cell | 🩸 | Hematologic system |
-| DERM | Skin Cell | 🧴 | Dermatologic system |
-| HEENT | Eye | 👁️ | Eyes, Ears, Nose, Throat |
-| GU | Bladder | 💧 | Genitourinary system |
-| REPRO | Cell | 🧬 | Reproductive system |
-| ID | Antibody | 🛡️ | Infectious diseases |
-| PSYCH | Neurotransmitter | 🧘 | Psychiatry |
-| PRO | Stethoscope | 🩺 | Professional practice |
+| System | Character        | Emoji | Description              |
+| ------ | ---------------- | ----- | ------------------------ |
+| CV     | Heart            | ❤️    | Cardiovascular system    |
+| PULM   | Lungs            | 🫁    | Pulmonary system         |
+| GI     | Stomach          | 🫃    | Gastrointestinal system  |
+| NEURO  | Brain            | 🧠    | Neurologic system        |
+| MSK    | Bone             | 🦴    | Musculoskeletal system   |
+| RENAL  | Kidney           | 🫘    | Renal system             |
+| ENDO   | Thyroid          | 🦋    | Endocrine system         |
+| HEME   | Blood Cell       | 🩸    | Hematologic system       |
+| DERM   | Skin Cell        | 🧴    | Dermatologic system      |
+| HEENT  | Eye              | 👁️    | Eyes, Ears, Nose, Throat |
+| GU     | Bladder          | 💧    | Genitourinary system     |
+| REPRO  | Cell             | 🧬    | Reproductive system      |
+| ID     | Antibody         | 🛡️    | Infectious diseases      |
+| PSYCH  | Neurotransmitter | 🧘    | Psychiatry               |
+| PRO    | Stethoscope      | 🩺    | Professional practice    |
 
 ### Character Variants (50+ Total)
 
 Each character has multiple unlockable variants representing different conditions, states, or achievements:
 
 #### Example: Cardiovascular Variants
+
 - **Healthy Heart** (Base) - Default unlocked
 - **Boot-Shaped Heart** - Unlock by studying Tetralogy of Fallot
 - **Athletic Heart** - Unlock by answering 100 CV questions
@@ -44,6 +45,7 @@ Each character has multiple unlockable variants representing different condition
 - **Golden Heart** - Unlock by achieving 90%+ accuracy in CV
 
 #### Example: Pulmonary Variants
+
 - **Healthy Lungs** (Base) - Default unlocked
 - **Pneumothorax Lungs** - One lung collapsed
 - **Emphysematous Lungs** - Barrel chest appearance
@@ -65,16 +67,19 @@ Variants unlock through different mechanisms:
 Accessories are cosmetic items that can be equipped to any character:
 
 #### Common Accessories
+
 - **Basic Stethoscope** - 50 total questions
 - **Medical Cap** - 100 total questions
 - **Face Mask** - 150 total questions
 
 #### Streak-Based Accessories
+
 - **Flame Badge** - 7-day streak
 - **Lightning Bolt** - 14-day streak
 - **Crown** - 30-day streak
 
 #### Achievement Accessories
+
 - **Golden Stethoscope** - Clinical excellence
 - **Graduation Cap** - 1000 questions
 - **Trophy Badge** - Perfect 100 streak
@@ -84,11 +89,13 @@ Accessories are cosmetic items that can be equipped to any character:
 Special characters that unlock through specific activities:
 
 ### ECG Collection
+
 - **Normal Sinus Rhythm** - 10 ECG drills
 - **V-Fib** - 50 ECG drills (shockable!)
 - **Asystole** - 75 ECG drills (flatline)
 
 ### Special Mascots
+
 - **Skeleton Friend** - Collect all MSK variants (comes alive!)
 - **Lab Values Mascot** - 100 Mini Lab drills
 - **Pharma Pill** - 100 Pharmacology drills
@@ -110,6 +117,7 @@ Items are categorized by rarity:
 Access through: **Settings → Characters Tab**
 
 Features:
+
 - **Grid View**: See all characters at a glance
 - **List View**: Detailed progress for each system
 - **Filters**: Show all, unlocked, locked, base, or special characters
@@ -118,6 +126,7 @@ Features:
 ### Character Detail Modal
 
 Click any character to see:
+
 - All variants (unlocked and locked)
 - Compatible accessories
 - Unlock conditions
@@ -126,6 +135,7 @@ Click any character to see:
 ### Unlock Notifications
 
 When you unlock something new:
+
 - Celebratory animation
 - Item preview
 - Rarity indicator
@@ -136,6 +146,7 @@ When you unlock something new:
 ### System-Based Progress
 
 Each body system tracks:
+
 - **Questions Answered**: Total count for that system
 - **Correct Answers**: Accuracy calculation
 - **Accuracy Percentage**: Overall performance
@@ -144,6 +155,7 @@ Each body system tracks:
 ### Customization
 
 Users can:
+
 1. **Select Active Variant**: Choose which version of each character to display
 2. **Equip Accessories**: Add up to multiple accessories per character
 3. **Mix and Match**: Create unique combinations
@@ -151,6 +163,7 @@ Users can:
 ### LocalStorage Persistence
 
 All progress is saved locally:
+
 - `panceai_organ_characters_v1`: Collection progress
 - `panceai_character_customization_v1`: Active variants and accessories
 
@@ -233,7 +246,7 @@ model UserOrganProgress {
   customization     Json
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   user              User     @relation(fields: [userId], references: [id])
   @@unique([userId])
 }
@@ -282,6 +295,7 @@ model UserOrganProgress {
 ## Support
 
 For issues or suggestions:
+
 - GitHub: [Repository Issues](https://github.com/aaronjullger-lgtm/PANaCEa/issues)
 - Feature requests: Use the "gamification" label
 

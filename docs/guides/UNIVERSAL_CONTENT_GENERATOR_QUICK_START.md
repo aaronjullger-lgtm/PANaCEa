@@ -7,11 +7,13 @@ Automatically generates complete medical content for **all registry types** usin
 ## ⚡ Quick Commands
 
 ### Generate All Missing Content
+
 ```bash
 npm run generate:missing-content
 ```
 
 ### Process Single Registry Type
+
 ```bash
 # Labs only (stage 2)
 tsx scripts/generateMissingContent.ts --stage=2
@@ -24,11 +26,13 @@ tsx scripts/generateMissingContent.ts --stage=5
 ```
 
 ### Preview What Would Be Generated
+
 ```bash
 npm run generate:missing-content -- --dry-run
 ```
 
 ### Customize Processing
+
 ```bash
 # Process 100 items per stage with 3 second delays
 tsx scripts/generateMissingContent.ts --max-per-stage=100 --delay=3000
@@ -36,13 +40,13 @@ tsx scripts/generateMissingContent.ts --max-per-stage=100 --delay=3000
 
 ## 📋 Stage Numbers
 
-| Stage | Registry Type | Generates |
-|-------|--------------|-----------|
-| 1 | Conditions | Overview, symptoms, diagnosis, treatment |
-| 2 | Lab Tests | Description, normal range, abnormalities |
-| 3 | Imaging Studies | Description, indications, limitations |
-| 4 | Treatments | Description, mechanism, side effects |
-| 5 | Physiology | Description, mechanism, clinical significance |
+| Stage | Registry Type   | Generates                                     |
+| ----- | --------------- | --------------------------------------------- |
+| 1     | Conditions      | Overview, symptoms, diagnosis, treatment      |
+| 2     | Lab Tests       | Description, normal range, abnormalities      |
+| 3     | Imaging Studies | Description, indications, limitations         |
+| 4     | Treatments      | Description, mechanism, side effects          |
+| 5     | Physiology      | Description, mechanism, clinical significance |
 
 ## 🔄 The Complete Workflow
 
@@ -64,13 +68,13 @@ npm run generate:missing-content
 
 ## ⚙️ Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--stage=N` | Process only stage N (1-5) | All stages |
-| `--max-per-stage=N` | Max items per stage | 50 |
-| `--delay=MS` | Delay between API calls | 2000ms |
-| `--dry-run` | Preview without saving | false |
-| `--extended` | Include extended fields (conditions only) | false |
+| Flag                | Description                               | Default    |
+| ------------------- | ----------------------------------------- | ---------- |
+| `--stage=N`         | Process only stage N (1-5)                | All stages |
+| `--max-per-stage=N` | Max items per stage                       | 50         |
+| `--delay=MS`        | Delay between API calls                   | 2000ms     |
+| `--dry-run`         | Preview without saving                    | false      |
+| `--extended`        | Include extended fields (conditions only) | false      |
 
 ## 📊 Output Example
 
@@ -106,6 +110,7 @@ Lab Tests:
 ## 🔐 Environment Setup
 
 Required environment variable:
+
 ```bash
 export GEMINI_API_KEY=your_api_key_here
 # or
@@ -115,6 +120,7 @@ export GOOGLE_API_KEY=your_api_key_here
 ## 🚦 Quality Safeguards
 
 Every piece of generated content:
+
 - ✅ Passes minimum length requirements
 - ✅ Has all required fields
 - ✅ Contains no AI refusal language
@@ -126,24 +132,28 @@ Failed content is **automatically rejected** and logged.
 ## 🐛 Troubleshooting
 
 ### No content generated
+
 ```bash
 # Check what would be processed
 tsx scripts/generateMissingContent.ts --dry-run
 ```
 
 ### API rate limits
+
 ```bash
 # Increase delay between requests
 tsx scripts/generateMissingContent.ts --delay=5000
 ```
 
 ### Process smaller batches
+
 ```bash
 # Process only 10 items per stage
 tsx scripts/generateMissingContent.ts --max-per-stage=10
 ```
 
 ### Check API key
+
 ```bash
 echo $GEMINI_API_KEY
 # Should output your key
@@ -177,29 +187,34 @@ npm run generate:missing-content
 ## 🎓 What Gets Generated
 
 ### Lab Tests
+
 - Description of what the test measures
 - Normal reference ranges
 - Common abnormalities and their clinical meaning
 - When to order the test
 
 ### Imaging Studies
+
 - What the modality visualizes
 - Best clinical indications
 - Limitations and contraindications
 - Radiation risk (yes/no)
 
 ### Treatments
+
 - Description of the treatment
 - Mechanism of action
 - Common clinical indications
 - Serious side effects to monitor
 
 ### Physiology
+
 - Definition of the concept
 - Underlying mechanism/pathway
 - Clinical significance for diagnosis/treatment
 
 ### Conditions (existing)
+
 - Overview and pathophysiology
 - Symptoms and risk factors
 - Diagnosis and treatment

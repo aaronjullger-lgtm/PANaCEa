@@ -19,7 +19,7 @@ interface SectorGridProps {
 
 /**
  * SectorGrid - Universal navigation component for PANaCEa
- * 
+ *
  * Design: Clean, modern, data-focused aesthetic for lifelong learning
  * - Professional card layout with subtle hover effects
  * - Clear hierarchy: Icon → Title → Description
@@ -38,7 +38,7 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item, index) => {
         const Icon = item.icon;
-        
+
         return (
           <motion.button
             key={item.id}
@@ -55,9 +55,7 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
 
             {/* Content */}
             <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {item.title}
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{item.title}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 {item.description}
               </p>
@@ -65,9 +63,7 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
 
             {/* Arrow Indicator */}
             <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                Go
-              </span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">Go</span>
               <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
             </div>
 

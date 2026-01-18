@@ -1,6 +1,6 @@
 /**
  * 3D Anatomy Model Types
- * 
+ *
  * Type definitions for the NIH 3D Print Exchange and other model sources
  * for the anatomy model viewer feature.
  */
@@ -9,7 +9,7 @@
 export type ModelFormat = 'glb' | 'gltf' | 'obj' | 'stl' | 'fbx';
 
 // Body systems for anatomy models
-export type AnatomySystem = 
+export type AnatomySystem =
   | 'cardiovascular'
   | 'respiratory'
   | 'digestive'
@@ -41,25 +41,25 @@ export interface AnatomyModel {
   description: string;
   system: AnatomySystem;
   structures: string[]; // List of anatomical structures in the model
-  
+
   // Model files
   modelUrl: string;
   format: ModelFormat;
   thumbnailUrl?: string;
-  
+
   // Citation
   citation: NIHCitation;
-  
+
   // Educational content
   clinicalRelevance?: string[];
   relatedConditions?: string[];
   annotations?: ModelAnnotation[];
-  
+
   // Model properties
   scale: number;
   defaultRotation: [number, number, number];
   highlightableStructures: string[];
-  
+
   // Metadata
   createdAt: string;
   updatedAt: string;
@@ -80,17 +80,17 @@ export interface ModelViewerState {
   modelId: string | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Camera/view state
   cameraPosition: [number, number, number];
   cameraTarget: [number, number, number];
   zoom: number;
-  
+
   // Interaction state
   selectedStructure: string | null;
   highlightedStructures: string[];
   visibleAnnotations: string[];
-  
+
   // Display settings
   wireframe: boolean;
   showAnnotations: boolean;

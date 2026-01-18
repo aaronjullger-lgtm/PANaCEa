@@ -1,124 +1,63 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
  * GET /api/srs/stats
  * Fetch SRS statistics for dashboard widget
  */
-export const onRequestGet = async (context) => {
 
-  const { request, env } = context;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-  const clerkId = await verifyAuthToken(request, env);
-  if (!clerkId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+const SRSStatsSchema = z.object({});
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+export const onRequestOptions = withCors();
 
+export const onRequestGet = authenticatedEndpoint(SRSStatsSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/srs/stats');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
-      where: { clerkId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet.',
-      }), {
+      return {
+        data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
         status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      };
     }
 
     const userId = user.id;
     const now = new Date();
 
-    // Count due items
-    const dueCount = await prisma.sRSItem.count({
-      where: { userId, dueDate: { lte: now } },
-    });
-
-    // Total cards in system
-    const totalCards = await prisma.sRSItem.count({
-      where: { userId },
-    });
-
-    // Mature cards (interval > 21 days)
-    const matureCards = await prisma.sRSItem.count({
-      where: { userId, interval: { gt: 21 } },
-    });
-
-    // Calculate retention rate from recent ranked attempts
-    const recentAttempts = await prisma.questionAttempt.findMany({
-      where: {
-        userId,
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-        },
-      },
-      select: { isCorrect: true },
-    });
+    const [dueCount, totalCards, matureCards, recentAttempts] = await Promise.all([
+      prisma.sRSItem.count({ where: { userId, dueDate: { lte: now } } }),
+      prisma.sRSItem.count({ where: { userId } }),
+      prisma.sRSItem.count({ where: { userId, interval: { gt: 21 } } }),
+      prisma.questionAttempt.findMany({
+        where: { userId, createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+        select: { isCorrect: true },
+      }),
+    ]);
 
     const retentionRate =
       recentAttempts.length > 0
-        ? Math.round(
-            (recentAttempts.filter((a) => a.isCorrect).length /
-              recentAttempts.length) *
-              100
-          )
+        ? Math.round((recentAttempts.filter((a) => a.isCorrect).length / recentAttempts.length) * 100)
         : 0;
 
-    return new Response(
-      JSON.stringify({
-        dueCount,
-        totalCards,
-        retentionRate,
-        matureCards,
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error('SRS stats error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch SRS stats', details: error?.message }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    logger.info('Fetched SRS stats', { userId: auth.userId, dueCount, totalCards });
+
+    return { data: { dueCount, totalCards, retentionRate, matureCards } };
+  } catch (error) {
+    logger.error('SRS stats error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch SRS stats');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

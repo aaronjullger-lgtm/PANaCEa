@@ -10,8 +10,8 @@ Added the `basicScienceLinks` field to both `ClinicalCase` and `LabCase` interfa
 
 ```typescript
 export interface BasicScienceLink {
-  title: string;      // e.g., "Review: Insulin Signaling"
-  conceptId: string;  // Internal ID for the foundational page
+  title: string; // e.g., "Review: Insulin Signaling"
+  conceptId: string; // Internal ID for the foundational page
 }
 
 export interface ClinicalCase {
@@ -71,6 +71,7 @@ npm run generate:basic-science-links:incremental   # Recommended
 ### 6. Partial Data Generation ✅
 
 Successfully generated basic science links for **38 out of 500 cases**:
+
 - **16 clinical cases** have links
 - **22 lab cases** have links
 - Remaining **462 cases** ready for generation
@@ -78,6 +79,7 @@ Successfully generated basic science links for **38 out of 500 cases**:
 #### Example Generated Links:
 
 **For "Subarachnoid Hemorrhage":**
+
 ```json
 {
   "basicScienceLinks": [
@@ -98,6 +100,7 @@ Successfully generated basic science links for **38 out of 500 cases**:
 ```
 
 **For "Diabetic Ketoacidosis (DKA)":**
+
 ```json
 {
   "basicScienceLinks": [
@@ -136,12 +139,14 @@ npm run generate:basic-science-links:incremental
 ```
 
 **What to expect:**
+
 - Processing time: ~60 minutes for remaining 462 cases
 - Shows progress for each case
 - Saves automatically every 10 cases
 - Can be stopped with Ctrl+C and resumed later
 
 **Progress indicators:**
+
 ```
 [1/234] Diabetic Ketoacidosis (DKA)
    ✓ Generated 3 link(s)
@@ -183,6 +188,7 @@ npm run generate:basic-science-links:incremental
 ```
 
 You'll see:
+
 ```
 📊 Total cases: 250
    ✓ Already have links: 250
@@ -195,12 +201,12 @@ You'll see:
 
 ## 📊 Current Status
 
-| Category | Status | Count |
-|----------|--------|-------|
-| Clinical Cases with Links | 🟡 Partial | 16/250 (6.4%) |
-| Lab Cases with Links | 🟡 Partial | 22/250 (8.8%) |
-| Total Cases with Links | 🟡 Partial | 38/500 (7.6%) |
-| Remaining to Process | ⏳ Pending | 462/500 (92.4%) |
+| Category                  | Status     | Count           |
+| ------------------------- | ---------- | --------------- |
+| Clinical Cases with Links | 🟡 Partial | 16/250 (6.4%)   |
+| Lab Cases with Links      | 🟡 Partial | 22/250 (8.8%)   |
+| Total Cases with Links    | 🟡 Partial | 38/500 (7.6%)   |
+| Remaining to Process      | ⏳ Pending | 462/500 (92.4%) |
 
 ---
 
@@ -219,6 +225,7 @@ You'll see:
 The script modifies the original JSON files to add the `basicScienceLinks` array:
 
 **Before:**
+
 ```json
 {
   "id": "clinical_case_1",
@@ -229,6 +236,7 @@ The script modifies the original JSON files to add the `basicScienceLinks` array
 ```
 
 **After:**
+
 ```json
 {
   "id": "clinical_case_1",
@@ -260,6 +268,7 @@ The AI analyzes each diagnosis and selects 1-3 foundational concepts focusing on
 ### Rate Limit Errors
 
 If you see "429 Too Many Requests":
+
 - The incremental script already handles this automatically
 - Just wait a minute and it will continue
 - The script has a 20% buffer to prevent this

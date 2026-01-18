@@ -131,6 +131,7 @@ PANaCEa runs on **Cloudflare Pages with Functions** - a serverless-first approac
 ```
 
 **Key Patterns:**
+
 - Request handler: `onRequestPost(context: PagesContext)` or `onRequestGet`
 - Environment: Access via `context.env` (e.g., `env.DATABASE_URL`)
 - Prisma: Use `createEdgePrismaClient(env.DATABASE_URL)`
@@ -141,11 +142,12 @@ PANaCEa runs on **Cloudflare Pages with Functions** - a serverless-first approac
 **ALL content comes from PostgreSQL** - no static JSON in production:
 
 ```
-User Action → Service Call → Cloudflare Function → 
+User Action → Service Call → Cloudflare Function →
 Prisma Query → PostgreSQL → Response → Component State
 ```
 
 **Key Tables:**
+
 - `Condition` - Registry of 1,180 medical conditions
 - `MedicalContent` - Full content (JSONB fields)
 - `User` - Synced from Clerk via webhook
@@ -208,6 +210,7 @@ GU     - Genitourinary
 ### Running Locally
 
 **Option 1: Frontend + Express Backend**
+
 ```bash
 npm run dev:all
 # Frontend: http://localhost:3000
@@ -215,6 +218,7 @@ npm run dev:all
 ```
 
 **Option 2: Frontend Only (uses deployed Cloudflare Functions)**
+
 ```bash
 npm run dev
 # Frontend: http://localhost:3000
@@ -262,16 +266,19 @@ npm run health-check         # Validate database content
 ### Design System
 
 **Colors:**
+
 - Text: `slate-900` (primary), `slate-500` (secondary), `slate-400` (muted)
 - Accents: `blue-600`, `blue-500`, `blue-300`
 - Backgrounds: `white`, `slate-50` (cards), `slate-100` (subtle)
 - Borders: `slate-200`, `slate-100`
 
 **Typography:**
+
 - Font: Inter/sans-serif
 - Weights: `font-medium` (labels), `font-bold` (headings)
 
 **Components:**
+
 - Rounded: `rounded-xl` corners
 - Padding: `p-4`, `p-6` (generous spacing)
 - Hover: `hover:translate-x-1`, `hover:border-blue-300`, `hover:shadow-sm`
@@ -285,16 +292,21 @@ npm run health-check         # Validate database content
 ### Content Generation Pipeline
 
 **Phase 1: Gap Analysis**
+
 ```bash
 npm run content-doctor:phase1
 ```
+
 Uses Gemini to identify missing high-yield PANCE conditions by comparing database against NCCPA blueprint.
 
 **Phase 2: Content Generation**
+
 ```bash
 npm run content-doctor:phase2
 ```
+
 Generates full medical content (33 fields) for conditions missing content:
+
 - Overview, etiology, epidemiology, pathophysiology
 - Risk factors, symptoms, physical exam, diagnostics
 - Treatment, complications, prognosis
@@ -302,6 +314,7 @@ Generates full medical content (33 fields) for conditions missing content:
 - Guidelines, PANCE yield, related systems
 
 **Content Doctor Features:**
+
 - Concurrent batch processing (10 conditions at once)
 - Partial updates (regenerate only missing fields)
 - Retry logic with exponential backoff
@@ -324,7 +337,9 @@ npm run db:sample-ai-content     # Quality review sample
 ```bash
 npm run sync:all
 ```
+
 Syncs all registries to database:
+
 - Conditions (1,180 entries)
 - Drugs (medication database)
 - Anatomy structures
@@ -335,14 +350,14 @@ Syncs all registries to database:
 
 ### Content Statistics
 
-| Metric | Count | Percentage |
-|--------|-------|------------|
-| **Total Conditions** | 1,180 | - |
-| **With Full Content** | 1,119 | 95% |
-| **Mnemonics** | 573 | 51% |
-| **Guidelines** | 744 | 66% |
-| **Classic Triads** | 1,119 | 100% |
-| **Multi-System** | ~150 | 13% |
+| Metric                | Count | Percentage |
+| --------------------- | ----- | ---------- |
+| **Total Conditions**  | 1,180 | -          |
+| **With Full Content** | 1,119 | 95%        |
+| **Mnemonics**         | 573   | 51%        |
+| **Guidelines**        | 744   | 66%        |
+| **Classic Triads**    | 1,119 | 100%       |
+| **Multi-System**      | ~150  | 13%        |
 
 ---
 
@@ -355,8 +370,8 @@ All API endpoints require Clerk authentication:
 ```typescript
 const authResult = await authenticateRequest(context.request, env);
 if (!authResult) {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-    status: 401 
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401,
   });
 }
 ```
@@ -364,27 +379,33 @@ if (!authResult) {
 ### Key Endpoints
 
 **Questions**
+
 - `GET /api/questions?system=CV&count=10&difficulty=2`
 - `GET /api/questions/polypharmacy-drill?count=1&difficulty=medium`
 
 **Content**
+
 - `GET /api/content/condition/:id`
 - `GET /api/content/conditions?system=CV`
 
 **SRS**
+
 - `POST /api/srs/review` - Submit review outcome
 - `GET /api/srs/due` - Get due cards
 - `POST /api/srs/reset` - Reset user SRS data
 
 **Performance**
+
 - `POST /api/performance/record` - Log attempt
 - `GET /api/performance/stats` - Get user statistics
 
 **Achievements**
+
 - `GET /api/achievements` - List user achievements
 - `POST /api/achievements/:id/claim` - Claim achievement
 
 **Admin/CMS**
+
 - `GET /api/admin/content` - List content (RBAC required)
 - `POST /api/admin/content` - Create content (APPROVER+)
 - `PATCH /api/admin/content/:id` - Update content (EDITOR+)
@@ -393,6 +414,7 @@ if (!authResult) {
 ### Webhooks
 
 **Clerk User Lifecycle**
+
 - `POST /api/webhooks/clerk`
 - Events: `user.created`, `user.updated`, `user.deleted`
 - Verification: Svix signature
@@ -405,11 +427,13 @@ if (!authResult) {
 ### Cloudflare Pages
 
 **Automatic Deployment:**
+
 1. Push to `main` branch
 2. Cloudflare Pages builds frontend
 3. Functions deployed automatically
 
 **Environment Variables (Cloudflare Dashboard):**
+
 ```
 CLERK_WEBHOOK_SECRET
 GEMINI_API_KEY
@@ -426,6 +450,7 @@ SENTRY_AUTH_TOKEN (optional)
 ```
 
 **Build Settings:**
+
 - Build command: `npm run build`
 - Output directory: `dist`
 - Node version: 18
@@ -433,11 +458,13 @@ SENTRY_AUTH_TOKEN (optional)
 ### Database Migrations
 
 **Development:**
+
 ```bash
 npm run db:migrate:dev
 ```
 
 **Production:**
+
 ```bash
 npm run db:migrate:deploy
 # OR
@@ -449,7 +476,7 @@ npm run migrate:production  # Interactive
 Configured in `public/_headers`:
 
 ```
-Content-Security-Policy: default-src 'self'; 
+Content-Security-Policy: default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com;
   connect-src 'self' https://*.clerk.com https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
   frame-src https://*.clerk.accounts.dev https://challenges.cloudflare.com;
@@ -472,15 +499,18 @@ npm run db:verify-formatting # Database integrity
 ### Code Quality
 
 **TypeScript:**
+
 - Strict mode enabled
 - No implicit any
 - Path aliases: `@/` for `src/`
 
 **Linting:**
+
 - ESLint configured
 - IDE integration recommended
 
 **Build Verification:**
+
 ```bash
 npm run build
 # ✓ built in ~5-6s
@@ -490,12 +520,14 @@ npm run build
 ### Performance Monitoring
 
 **Error Tracking (Sentry):**
+
 - Client-side errors: React error boundaries + Sentry SDK
 - Server-side errors: CloudFlare Functions error handler
 - Session replay: 10% of sessions, 100% on errors
 - Performance tracing: 10% sample rate in production
 
 **Health Check Endpoint:**
+
 ```bash
 # Quick ping (uptime monitors)
 curl https://your-domain.com/api/health?ping=true
@@ -505,6 +537,7 @@ curl https://your-domain.com/api/health
 ```
 
 **Response Format:**
+
 ```json
 {
   "status": "healthy" | "degraded" | "unhealthy",
@@ -518,10 +551,12 @@ curl https://your-domain.com/api/health
 ```
 
 **Bundle Size:**
+
 - Current: vendor-common ~608KB (optimized with chunking)
 - Target: <500KB per chunk (achieved for most chunks)
 
 **Manual Chunks (vite.config.ts):**
+
 - `vendor-clerk` - Clerk auth library
 - `vendor-animation` - Framer Motion
 - `data-drugs`, `data-conditions`, `data-labs`
@@ -535,37 +570,44 @@ curl https://your-domain.com/api/health
 ### Common Issues
 
 **Gemini API Errors**
+
 - Check `GEMINI_API_KEY` in environment (NOT `VITE_` prefixed)
 - Verify key not expired (renew at Google AI Studio)
 - Check rate limits (429 errors trigger exponential backoff)
 
 **Database Connection**
+
 - Verify `DATABASE_URL` format: `postgresql://user:password@host:port/database`
 - Supabase: Use "Transaction" connection pooling mode
 - Test: `npm run db:studio`
 
 **Build Errors**
+
 - Clear cache: `rm -rf dist node_modules/.vite`
 - Regenerate Prisma: `npm run db:generate`
 - Check for missing dependencies: `npm install`
 
 **Clerk Authentication**
+
 - Verify `VITE_CLERK_PUBLISHABLE_KEY` in frontend
 - Check `CLERK_SECRET_KEY` in backend
 - Test webhook: Clerk dashboard → "Testing" tab
 - CSP: Ensure `https://*.clerk.com` allowed
 
 **Content Not Loading**
+
 - Run `npm run sync:all` to sync registries
 - Check database: `npm run db:studio`
 - Verify Prisma client: `npm run db:generate`
 
 **JSON Parsing Errors (Content Doctor)**
+
 - Enhanced parser handles malformed JSON from Gemini
 - Check response in logs (first 500 chars shown)
 - Retry with exponential backoff (max 3 attempts)
 
 **Cloudflare Functions 405 Errors**
+
 - Ensure using `/functions/` directory (NOT `/app/api/`)
 - Use `onRequestPost` export (NOT Next.js App Router pattern)
 - Verify `wrangler.toml` configuration
@@ -586,16 +628,19 @@ curl https://your-domain.com/api/health
 ### Important Scripts
 
 **Content:**
+
 - `scripts/content-doctor.ts` - AI content generation (Phase 1 & 2)
 - `scripts/syncAllRegistries.ts` - Sync registries to database
 - `scripts/orchestrate-content-generation.ts` - Automated pipeline
 
 **Database:**
+
 - `scripts/db/fix-optional-nulls.ts` - NULL normalization
 - `scripts/db/normalize-formatting.ts` - Fix CSV imports
 - `scripts/db/sample-ai-content.ts` - Quality review
 
 **Development:**
+
 - `server.ts` - Express backend (legacy)
 - `App.tsx` - React router
 - `main.tsx` - React entry point
@@ -613,6 +658,7 @@ curl https://your-domain.com/api/health
 ## Version History
 
 ### v1.1.0 (January 2026) - Performance & Monitoring
+
 - ✅ **Sprint 1**: TypeScript error fixes (10/11 resolved)
 - ✅ **Sprint 2**: 27 database indexes for query optimization
 - ✅ **Sprint 3**: CloudFlare KV cache integration (60-80% hit rate)
@@ -627,6 +673,7 @@ curl https://your-domain.com/api/health
 - ✅ Prisma Accelerate for edge-compatible database access
 
 ### v1.0.0 (December 2025)
+
 - ✅ Database-first architecture migration complete
 - ✅ 1,180 medical conditions (up from 1,119)
 - ✅ Polypharmacy drill mode implemented
@@ -638,6 +685,7 @@ curl https://your-domain.com/api/health
 - ✅ PWA support with offline capabilities
 
 ### Upcoming Features
+
 - 📋 Content quality peer review workflow
 - 📋 Advanced analytics dashboard
 - 📋 Social learning (study groups)
@@ -654,6 +702,7 @@ MIT License - See LICENSE file for details
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: [PANaCEa Issues](https://github.com/aaronjullger-lgtm/PANaCEa/issues)
 - Developer: Aaron Ullger
 

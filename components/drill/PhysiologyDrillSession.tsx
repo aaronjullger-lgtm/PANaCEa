@@ -1,6 +1,6 @@
 /**
  * PhysiologyDrillSession - Organ system physiology review drill
- * 
+ *
  * Multiple-choice questions covering physiology concepts across organ systems.
  * Enhanced with database-linked reference material in feedback panels.
  */
@@ -18,22 +18,25 @@ interface PhysiologyDrillSessionProps {
   onNavigateToReference?: (type: string, id: string) => void;
 }
 
-const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({ 
+const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
   onExit,
   onNavigateToReference,
 }) => {
   const drill = usePhysiologyDrill();
   const stats = getDrillLandingStats('physiology_drill');
-  
+
   // Handler for deep dive into reference material
-  const handleDeepDive = useCallback((type: string, id: string) => {
-    if (onNavigateToReference) {
-      onNavigateToReference(type, id);
-    } else {
-      // Fallback: log for debugging
-      console.log('Deep dive requested:', type, id);
-    }
-  }, [onNavigateToReference]);
+  const handleDeepDive = useCallback(
+    (type: string, id: string) => {
+      if (onNavigateToReference) {
+        onNavigateToReference(type, id);
+      } else {
+        // Fallback: log for debugging
+        console.log('Deep dive requested:', type, id);
+      }
+    },
+    [onNavigateToReference]
+  );
 
   // Landing page
   if (drill.status === 'landing') {
@@ -81,7 +84,11 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
             isCorrect={drill.isCorrect!}
             correctAnswer={drill.currentQuestion.options[drill.currentQuestion.correctIndex]}
             explanation={drill.currentQuestion.explanation}
-            userAnswer={drill.userAnswerIndex !== null ? drill.currentQuestion.options[drill.userAnswerIndex] : null}
+            userAnswer={
+              drill.userAnswerIndex !== null
+                ? drill.currentQuestion.options[drill.userAnswerIndex]
+                : null
+            }
             onNext={drill.nextQuestion}
             category="physiology"
             tags={drill.currentQuestion.tags || []}

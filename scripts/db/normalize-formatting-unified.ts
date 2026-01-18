@@ -2,13 +2,13 @@
 /**
  * UNIFIED DATABASE NORMALIZATION
  * Fixes CSV/import formatting issues across MedicalContent and Drug tables
- * 
+ *
  * Fixes:
  * • Postgres arrays {""A"", ""B""} → JSON arrays ["A", "B"]
  * • Literal \n → actual newlines
  * • CSV quote artifacts ("""text""" → "text")
  * • Whitespace trimming
- * 
+ *
  * Usage:
  *   npx tsx scripts/db/normalize-formatting-unified.ts [options]
  *   --medical-content    Process MedicalContent only
@@ -32,7 +32,7 @@ const MC_JSON_ARRAY_FIELDS = [
   'treatment',
   'clinical_pearls',
   'relatedSystems',
-  'buzzwords'
+  'buzzwords',
 ] as const;
 
 const MC_STRING_FIELDS = [
@@ -53,7 +53,7 @@ const MC_STRING_FIELDS = [
   'disposition',
   'mnemonic',
   'guidelines',
-  'first_line_rx'
+  'first_line_rx',
 ] as const;
 
 // ==================== Drug Field Definitions ====================
@@ -76,7 +76,7 @@ const DRUG_JSON_ARRAY_FIELDS = [
   'testQuestionTips',
   'foodInteractions',
   'routesOfAdmin',
-  'formulations'
+  'formulations',
 ] as const;
 
 const DRUG_STRING_FIELDS = [
@@ -111,7 +111,7 @@ const DRUG_STRING_FIELDS = [
   'maxDailyDose',
   'administrationTips',
   'storageRequirements',
-  'typicalCost'
+  'typicalCost',
 ] as const;
 
 // ==================== Parsing Functions ====================
@@ -124,7 +124,7 @@ function parsePostgresArray(raw: any): any[] | null {
   if (typeof raw !== 'string') return raw;
 
   const trimmed = raw.trim();
-  
+
   // If it's already a JSON array string, parse it
   if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
     try {
@@ -142,10 +142,10 @@ function parsePostgresArray(raw: any): any[] | null {
 
     // Split by comma, but respect quoted strings
     const matches = content.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-    
+
     if (!matches) return [];
 
-    return matches.map(m => {
+    return matches.map((m) => {
       // Remove wrapping double quotes if present and unescape inner quotes
       if (m.startsWith('"') && m.endsWith('"')) {
         return m.slice(1, -1).replace(/""/g, '"');
@@ -165,8 +165,8 @@ function cleanText(text: any): string | null {
   if (!text) return null;
 
   let cleaned = text
-    .replace(/\\n/g, '\n')     // Fix literal escaped newlines
-    .replace(/\r\n/g, '\n')    // Fix Windows line endings
+    .replace(/\\n/g, '\n') // Fix literal escaped newlines
+    .replace(/\r\n/g, '\n') // Fix Windows line endings
     .trim();
 
   // Fix common CSV import artifact: Double quotes around headers
@@ -182,7 +182,11 @@ function cleanText(text: any): string | null {
 /**
  * Process a single MedicalContent record
  */
-function normalizeMedicalContent(record: any): { data: any; needsUpdate: boolean; fixes: string[] } {
+function normalizeMedicalContent(record: any): {
+  data: any;
+  needsUpdate: boolean;
+  fixes: string[];
+} {
   const data: any = {};
   let needsUpdate = false;
   const fixes: string[] = [];
@@ -213,7 +217,7 @@ function normalizeMedicalContent(record: any): { data: any; needsUpdate: boolean
     if (!original) continue;
 
     const cleaned = cleanText(original);
-    
+
     if (cleaned !== original) {
       data[field] = cleaned;
       fixes.push(`Text: ${field}`);
@@ -258,7 +262,7 @@ function normalizeDrug(record: any): { data: any; needsUpdate: boolean; fixes: s
     if (!original) continue;
 
     const cleaned = cleanText(original);
-    
+
     if (cleaned !== original) {
       data[field] = cleaned;
       fixes.push(`Text: ${field}`);
@@ -308,11 +312,11 @@ async function processMedicalContent(dryRun: boolean) {
             })
           );
         }
-        
+
         totalUpdated++;
-        if (fixes.some(f => f.includes('Array'))) arraysFix++;
-        if (fixes.some(f => f.includes('Text'))) textFix++;
-        
+        if (fixes.some((f) => f.includes('Array'))) arraysFix++;
+        if (fixes.some((f) => f.includes('Text'))) textFix++;
+
         const icon = dryRun ? '🔍' : '✅';
         console.log(`   ${icon} ${record.conditionId}: ${fixes.join(', ')}`);
       }
@@ -373,11 +377,11 @@ async function processDrugs(dryRun: boolean) {
             })
           );
         }
-        
+
         totalUpdated++;
-        if (fixes.some(f => f.includes('Array'))) arraysFix++;
-        if (fixes.some(f => f.includes('Text'))) textFix++;
-        
+        if (fixes.some((f) => f.includes('Array'))) arraysFix++;
+        if (fixes.some((f) => f.includes('Text'))) textFix++;
+
         const icon = dryRun ? '🔍' : '✅';
         console.log(`   ${icon} ${record.genericName}: ${fixes.join(', ')}`);
       }
@@ -413,12 +417,14 @@ async function main() {
   console.log('║   UNIFIED DATABASE NORMALIZATION                          ║');
   console.log('╚═══════════════════════════════════════════════════════════╝');
   console.log(`\n   Mode: ${dryRun ? '🔍 DRY RUN (preview only)' : '💾 LIVE'}`);
-  console.log(`   Tables: ${medicalContentOnly ? 'MedicalContent' : drugsOnly ? 'Drug' : 'Both'}\n`);
+  console.log(
+    `   Tables: ${medicalContentOnly ? 'MedicalContent' : drugsOnly ? 'Drug' : 'Both'}\n`
+  );
 
   const startTime = Date.now();
   const results = {
     medicalContent: { totalProcessed: 0, totalUpdated: 0, arraysFix: 0, textFix: 0, errors: 0 },
-    drugs: { totalProcessed: 0, totalUpdated: 0, arraysFix: 0, textFix: 0, errors: 0 }
+    drugs: { totalProcessed: 0, totalUpdated: 0, arraysFix: 0, textFix: 0, errors: 0 },
   };
 
   try {
@@ -472,7 +478,6 @@ async function main() {
     if (totalErrors > 0) {
       console.warn(`⚠️  ${totalErrors} errors encountered. Check logs above.\n`);
     }
-
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     throw error;

@@ -1,6 +1,6 @@
 /**
  * Example: ConditionDrillSession with Database-Driven Registry
- * 
+ *
  * This component demonstrates how to use the new DrillSetup component
  * with the database-driven condition registry.
  */
@@ -37,10 +37,10 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   const handleDrillStart = (drillConfig: DrillConfiguration) => {
     console.log('Starting drill with config:', drillConfig);
     console.log('Available conditions:', drillConfig.availableConditions.length);
-    
+
     setConfig(drillConfig);
     setPhase('active');
-    
+
     // In a real implementation, you would:
     // 1. Use drillConfig.availableConditions to pick random conditions
     // 2. Call geminiService to generate questions for those conditions
@@ -61,9 +61,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     }
 
     // Pick a random condition from the filtered pool
-    const randomCondition = config.availableConditions[
-      Math.floor(Math.random() * config.availableConditions.length)
-    ];
+    const randomCondition =
+      config.availableConditions[Math.floor(Math.random() * config.availableConditions.length)];
 
     return {
       condition: randomCondition.name,
@@ -84,10 +83,10 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // Handle answer selection
   const handleAnswerSelect = (index: number) => {
     if (showResult) return;
-    
+
     setSelectedAnswer(index);
     setShowResult(true);
-    
+
     if (currentQuestion && index === currentQuestion.correctIndex) {
       setScore(score + 1);
     }
@@ -96,7 +95,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // Handle next question
   const handleNext = () => {
     if (!config) return;
-    
+
     if (currentQuestionIndex + 1 >= config.questionCount) {
       setPhase('complete');
     } else {
@@ -136,7 +135,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
               </h1>
             </div>
             <div className="flex items-center gap-4 text-sm text-[var(--color-text-secondary)]">
-              <span>Question {currentQuestionIndex + 1} / {config.questionCount}</span>
+              <span>
+                Question {currentQuestionIndex + 1} / {config.questionCount}
+              </span>
               <span className="font-medium">Score: {score}</span>
             </div>
           </div>
@@ -165,11 +166,11 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
               {currentQuestion.options.map((option, index) => {
                 const isSelected = selectedAnswer === index;
                 const isCorrect = index === currentQuestion.correctIndex;
-                
+
                 let bgColor = 'bg-[var(--color-bg-tertiary)]';
                 let borderColor = 'border-[var(--color-border)]';
                 let textColor = 'text-[var(--color-text-primary)]';
-                
+
                 if (showResult) {
                   if (isCorrect) {
                     bgColor = 'bg-green-500/10';
@@ -193,12 +194,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                     className={`w-full p-4 ${bgColor} border-2 ${borderColor} ${textColor} rounded-lg text-left transition-all hover:scale-[1.01] disabled:cursor-default flex items-center justify-between`}
                   >
                     <span>{option}</span>
-                    {showResult && isCorrect && (
-                      <CheckCircle className="w-5 h-5" />
-                    )}
-                    {showResult && isSelected && !isCorrect && (
-                      <XCircle className="w-5 h-5" />
-                    )}
+                    {showResult && isCorrect && <CheckCircle className="w-5 h-5" />}
+                    {showResult && isSelected && !isCorrect && <XCircle className="w-5 h-5" />}
                   </button>
                 );
               })}
@@ -212,7 +209,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                 onClick={handleNext}
                 className="w-full mt-6 bg-[var(--color-accent)] text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
-                {currentQuestionIndex + 1 >= config.questionCount ? 'Complete Drill' : 'Next Question'}
+                {currentQuestionIndex + 1 >= config.questionCount
+                  ? 'Complete Drill'
+                  : 'Next Question'}
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
             )}
@@ -220,7 +219,14 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
 
           {/* Metadata */}
           <div className="text-center text-sm text-[var(--color-text-muted)]">
-            <p>Difficulty: {config.difficulty === 'easier' ? 'Easier' : config.difficulty === 'same' ? 'PANCE-Level' : 'Harder'}</p>
+            <p>
+              Difficulty:{' '}
+              {config.difficulty === 'easier'
+                ? 'Easier'
+                : config.difficulty === 'same'
+                  ? 'PANCE-Level'
+                  : 'Harder'}
+            </p>
             <p>Condition Pool: {config.availableConditions.length} conditions</p>
           </div>
         </div>
@@ -231,7 +237,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // Render completion phase
   if (phase === 'complete' && config) {
     const percentage = Math.round((score / config.questionCount) * 100);
-    
+
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
         <motion.div
@@ -240,15 +246,13 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
           className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-8 text-center"
         >
           <Brain className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
-          
+
           <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
             Drill Complete!
           </h2>
-          
+
           <div className="my-6">
-            <div className="text-6xl font-bold text-[var(--color-accent)] mb-2">
-              {percentage}%
-            </div>
+            <div className="text-6xl font-bold text-[var(--color-accent)] mb-2">{percentage}%</div>
             <p className="text-[var(--color-text-secondary)]">
               {score} / {config.questionCount} correct
             </p>
@@ -267,7 +271,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             >
               Start New Drill
             </button>
-            
+
             <button
               onClick={onExit}
               className="w-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium py-3 px-6 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors"

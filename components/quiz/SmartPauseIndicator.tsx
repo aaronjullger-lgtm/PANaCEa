@@ -1,6 +1,6 @@
 /**
  * Smart Pause Indicator
- * 
+ *
  * Subtle, non-intrusive component that shows when a break might help.
  * Displays encouragement messages and break suggestions based on
  * automatically detected fatigue/struggle patterns.
@@ -9,20 +9,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coffee, Sparkles, Heart, X } from 'lucide-react';
-import { 
-  analyzePauseNeed, 
+import {
+  analyzePauseNeed,
   recordPauseTaken,
   getQuickEncouragement,
-  type PauseRecommendation 
+  type PauseRecommendation,
 } from '@/services/session';
 
 interface SmartPauseIndicatorProps {
   refreshKey?: number;
 }
 
-export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ 
-  refreshKey 
-}) => {
+export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refreshKey }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [pauseAnalysis, setPauseAnalysis] = useState<{
     recommendation: PauseRecommendation;
@@ -30,10 +28,10 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({
     encouragement: string;
   } | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  
+
   useEffect(() => {
     const analysis = analyzePauseNeed();
-    
+
     if (analysis.recommendation !== 'none' && !dismissed) {
       setPauseAnalysis(analysis);
       setShowBanner(true);
@@ -41,15 +39,15 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({
       setShowBanner(false);
     }
   }, [refreshKey, dismissed]);
-  
+
   const handleDismiss = () => {
     setDismissed(true);
     setShowBanner(false);
     recordPauseTaken();
   };
-  
+
   if (!showBanner || !pauseAnalysis) return null;
-  
+
   const getBannerStyle = () => {
     switch (pauseAnalysis.recommendation) {
       case 'recommended':
@@ -62,7 +60,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({
         return '';
     }
   };
-  
+
   const getIcon = () => {
     switch (pauseAnalysis.recommendation) {
       case 'recommended':
@@ -75,7 +73,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({
         return null;
     }
   };
-  
+
   return (
     <AnimatePresence>
       <motion.div
@@ -85,9 +83,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({
         className={`rounded-xl border p-3 mb-4 ${getBannerStyle()}`}
       >
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            {getIcon()}
-          </div>
+          <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
               {pauseAnalysis.message}
@@ -117,27 +113,25 @@ interface EncouragementToastProps {
   refreshKey?: number;
 }
 
-export const EncouragementToast: React.FC<EncouragementToastProps> = ({
-  refreshKey
-}) => {
+export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshKey }) => {
   const [message, setMessage] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
-  
+
   useEffect(() => {
     const encouragement = getQuickEncouragement();
     if (encouragement) {
       setMessage(encouragement);
       setShowToast(true);
-      
+
       // Auto-hide after 2 seconds
       const timer = setTimeout(() => {
         setShowToast(false);
       }, 2000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [refreshKey]);
-  
+
   return (
     <AnimatePresence>
       {showToast && message && (

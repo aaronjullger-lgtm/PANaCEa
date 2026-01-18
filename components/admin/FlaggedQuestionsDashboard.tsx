@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Flag, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  Flag,
+  CheckCircle2,
+  XCircle,
+  Clock,
   AlertTriangle,
   Filter,
   RefreshCw,
@@ -14,7 +14,7 @@ import {
   Calendar,
   Tag,
   BookOpen,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,27 +51,27 @@ interface FlagStats {
 }
 
 const FLAG_TYPE_LABELS: Record<string, string> = {
-  'incorrect_answer': 'Incorrect Answer',
-  'wrong_explanation': 'Wrong Explanation',
-  'typo': 'Typo/Grammar',
-  'outdated_content': 'Outdated Content',
-  'unclear_question': 'Unclear Question',
-  'duplicate': 'Duplicate Question',
-  'other': 'Other Issue'
+  incorrect_answer: 'Incorrect Answer',
+  wrong_explanation: 'Wrong Explanation',
+  typo: 'Typo/Grammar',
+  outdated_content: 'Outdated Content',
+  unclear_question: 'Unclear Question',
+  duplicate: 'Duplicate Question',
+  other: 'Other Issue',
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
-  'critical': { label: 'Critical', color: 'text-red-600', bgColor: 'bg-red-100' },
-  'high': { label: 'High', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-  'medium': { label: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-  'low': { label: 'Low', color: 'text-green-600', bgColor: 'bg-green-100' }
+  critical: { label: 'Critical', color: 'text-red-600', bgColor: 'bg-red-100' },
+  high: { label: 'High', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  medium: { label: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
+  low: { label: 'Low', color: 'text-green-600', bgColor: 'bg-green-100' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  'pending': { label: 'Pending', color: 'text-yellow-600', icon: Clock },
-  'in_review': { label: 'In Review', color: 'text-blue-600', icon: RefreshCw },
-  'fixed': { label: 'Fixed', color: 'text-green-600', icon: CheckCircle2 },
-  'dismissed': { label: 'Dismissed', color: 'text-slate-500', icon: XCircle }
+  pending: { label: 'Pending', color: 'text-yellow-600', icon: Clock },
+  in_review: { label: 'In Review', color: 'text-blue-600', icon: RefreshCw },
+  fixed: { label: 'Fixed', color: 'text-green-600', icon: CheckCircle2 },
+  dismissed: { label: 'Dismissed', color: 'text-slate-500', icon: XCircle },
 };
 
 export const FlaggedQuestionsDashboard: React.FC = () => {
@@ -99,9 +99,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
       const response = await fetch(`/api/questions/flags?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -110,7 +110,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
       const data = await response.json();
       setFlags(data.flags || []);
-      
+
       // Calculate stats from flags
       calculateStats(data.flags || []);
     } catch (err) {
@@ -129,10 +129,10 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       fixed: 0,
       dismissed: 0,
       byType: {},
-      byPriority: {}
+      byPriority: {},
     };
 
-    flagData.forEach(flag => {
+    flagData.forEach((flag) => {
       // Status counts
       if (flag.status === 'pending') newStats.pending++;
       else if (flag.status === 'in_review') newStats.inReview++;
@@ -162,14 +162,14 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       const response = await fetch(`/api/questions/flag/${flagId}/resolve`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           reviewedBy: 'admin', // TODO: Get actual admin user ID
           resolutionNote: resolutionNote,
-          status: resolveAction
-        })
+          status: resolveAction,
+        }),
       });
 
       if (!response.ok) {
@@ -179,7 +179,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       // Refresh flags after resolution
       await fetchFlags();
       setResolutionNote('');
-      setExpandedFlags(prev => {
+      setExpandedFlags((prev) => {
         const next = new Set(prev);
         next.delete(flagId);
         return next;
@@ -193,7 +193,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
   };
 
   const toggleExpanded = (flagId: string) => {
-    setExpandedFlags(prev => {
+    setExpandedFlags((prev) => {
       const next = new Set(prev);
       if (next.has(flagId)) {
         next.delete(flagId);
@@ -214,7 +214,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -227,9 +227,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
             <Flag className="w-6 h-6 text-red-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-              Flagged Questions
-            </h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">Flagged Questions</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Review and resolve user-reported issues
             </p>
@@ -251,7 +249,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-yellow-600" />
-              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Pending</span>
+              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                Pending
+              </span>
             </div>
             <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-300 mt-1">
               {stats.pending}
@@ -260,7 +260,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-400">In Review</span>
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                In Review
+              </span>
             </div>
             <p className="text-2xl font-bold text-blue-800 dark:text-blue-300 mt-1">
               {stats.inReview}
@@ -278,7 +280,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           <div className="bg-slate-50 dark:bg-slate-900/20 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-slate-500" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Dismissed</span>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Dismissed
+              </span>
             </div>
             <p className="text-2xl font-bold text-slate-700 dark:text-slate-300 mt-1">
               {stats.dismissed}
@@ -371,7 +375,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityConfig.bgColor} ${priorityConfig.color}`}>
+                          <span
+                            className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityConfig.bgColor} ${priorityConfig.color}`}
+                          >
                             {priorityConfig.label}
                           </span>
                           <span className={`flex items-center gap-1 text-xs ${statusConfig.color}`}>
@@ -419,8 +425,12 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                               </p>
                               {flag.correctAnswer && (
                                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                                  <span className="text-xs font-medium text-green-600">Correct Answer: </span>
-                                  <span className="text-sm text-slate-600 dark:text-slate-400">{flag.correctAnswer}</span>
+                                  <span className="text-xs font-medium text-green-600">
+                                    Correct Answer:{' '}
+                                  </span>
+                                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                                    {flag.correctAnswer}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -472,7 +482,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                 <div className="flex items-center gap-3">
                                   <select
                                     value={resolveAction}
-                                    onChange={(e) => setResolveAction(e.target.value as 'fixed' | 'dismissed')}
+                                    onChange={(e) =>
+                                      setResolveAction(e.target.value as 'fixed' | 'dismissed')
+                                    }
                                     className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
                                   >
                                     <option value="fixed">Mark as Fixed</option>

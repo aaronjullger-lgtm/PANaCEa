@@ -3,18 +3,14 @@
 // Run this as a CloudFlare Cron Trigger (e.g., every 30 minutes)
 
 import { createEdgePrismaClient } from './api/_shared/prisma-edge';
-import { 
-  setInCache, 
-  getConditionCacheKey, 
+import {
+  setInCache,
+  getConditionCacheKey,
   getQuestionPoolCacheKey,
   CACHE_CONFIG,
-  isKVAvailable 
+  isKVAvailable,
 } from './api/_shared/cache';
-import type { 
-  KVNamespace, 
-  ScheduledEvent, 
-  ExecutionContext 
-} from '@cloudflare/workers-types';
+import type { KVNamespace, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types';
 
 interface Env {
   DATABASE_URL: string;
@@ -28,13 +24,9 @@ interface Env {
  * 3. High-yield conditions
  */
 export default {
-  async scheduled(
-    event: ScheduledEvent,
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<void> {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
+
     try {
       console.log('[Cache Warmer] Starting cache warming at', new Date().toISOString());
 
@@ -60,12 +52,7 @@ export default {
       for (const condition of topConditions) {
         if (condition.conditionId) {
           const cacheKey = getConditionCacheKey(condition.conditionId);
-          await setInCache(
-            env.CACHE,
-            cacheKey,
-            condition,
-            CACHE_CONFIG.TTL.CONDITION_DETAIL
-          );
+          await setInCache(env.CACHE, cacheKey, condition, CACHE_CONFIG.TTL.CONDITION_DETAIL);
         }
       }
 
@@ -85,23 +72,33 @@ export default {
       for (const condition of highYieldConditions) {
         if (condition.conditionId) {
           const cacheKey = getConditionCacheKey(condition.conditionId);
-          await setInCache(
-            env.CACHE,
-            cacheKey,
-            condition,
-            CACHE_CONFIG.TTL.CONDITION_DETAIL
-          );
+          await setInCache(env.CACHE, cacheKey, condition, CACHE_CONFIG.TTL.CONDITION_DETAIL);
         }
       }
 
       // 3. Warm question pools for each system
-      const systems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
+      const systems = [
+        'CV',
+        'PULM',
+        'GI',
+        'NEURO',
+        'MSK',
+        'DERM',
+        'HEME',
+        'ENDO',
+        'HEENT',
+        'RENAL',
+        'REPRO',
+        'PSYCH',
+        'ID',
+        'GU',
+      ];
 
       console.log(`[Cache Warmer] Warming question pools for ${systems.length} systems`);
 
       for (const system of systems) {
         const cacheKey = getQuestionPoolCacheKey({ system });
-        
+
         // Fetch questions for this system
         const questions = await prisma.preGeneratedQuestion.findMany({
           where: { system },
@@ -109,16 +106,10 @@ export default {
           orderBy: { generatedAt: 'asc' },
         });
 
-        await setInCache(
-          env.CACHE,
-          cacheKey,
-          questions,
-          CACHE_CONFIG.TTL.QUESTION_POOL
-        );
+        await setInCache(env.CACHE, cacheKey, questions, CACHE_CONFIG.TTL.QUESTION_POOL);
       }
 
       console.log('[Cache Warmer] Cache warming completed successfully');
-
     } catch (error) {
       console.error('[Cache Warmer] Error during cache warming:', error);
     } finally {

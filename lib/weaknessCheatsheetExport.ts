@@ -1,6 +1,6 @@
 /**
  * Weakness Cheatsheet Export
- * 
+ *
  * Generates printable PDF study guides based on missed questions
  * in the last 30 days, including questions, pearls, and rationales.
  */
@@ -38,16 +38,11 @@ function identifyWeaknesses(
   allQuestions: Question[],
   options: CheatsheetOptions = {}
 ): CategoryWeakness[] {
-  const {
-    days = 30,
-    minErrors = 1,
-  } = options;
+  const { days = 30, minErrors = 1 } = options;
 
   // Filter to last N days
   const cutoffDate = Date.now() - days * 24 * 60 * 60 * 1000;
-  const recentData = performanceData.filter(
-    (record) => record.timestamp >= cutoffDate
-  );
+  const recentData = performanceData.filter((record) => record.timestamp >= cutoffDate);
 
   // Group by system, track errors
   const systemErrorMap = new Map<
@@ -78,7 +73,7 @@ function identifyWeaknesses(
 
   systemErrorMap.forEach((records, system) => {
     const errors = records.filter((r) => !r.isCorrect);
-    
+
     if (errors.length < minErrors) return;
 
     // Find relevant questions from allQuestions
@@ -113,10 +108,7 @@ function identifyWeaknesses(
 /**
  * Generate HTML for printable cheatsheet
  */
-function generateCheatsheetHTML(
-  weaknesses: CategoryWeakness[],
-  days: number
-): string {
+function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): string {
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -424,7 +416,7 @@ export function exportWeaknessCheatsheet(
   if (printWindow) {
     printWindow.document.write(html);
     printWindow.document.close();
-    
+
     // Auto-trigger print dialog after load
     printWindow.onload = () => {
       setTimeout(() => {
@@ -451,19 +443,14 @@ export function getWeaknessSummary(
   const { days = 30, minErrors = 1 } = options;
 
   const cutoffDate = Date.now() - days * 24 * 60 * 60 * 1000;
-  const recentData = performanceData.filter(
-    (record) => record.timestamp >= cutoffDate
-  );
+  const recentData = performanceData.filter((record) => record.timestamp >= cutoffDate);
 
   const systemErrorMap = new Map<SystemCode, number>();
 
   recentData.forEach((record) => {
     if (!record.system || record.system === 'OTHER') return;
     if (!record.isCorrect) {
-      systemErrorMap.set(
-        record.system,
-        (systemErrorMap.get(record.system) || 0) + 1
-      );
+      systemErrorMap.set(record.system, (systemErrorMap.get(record.system) || 0) + 1);
     }
   });
 

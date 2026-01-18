@@ -1,26 +1,26 @@
 /**
  * Database Analytics Dashboard
- * 
+ *
  * Displays comprehensive user statistics from the database.
  * Shows overall performance, system breakdowns, trends, and study recommendations.
  */
 
 import React, { useState } from 'react';
-import { 
-  Activity, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Activity,
+  TrendingUp,
+  TrendingDown,
   Minus,
-  Target, 
-  Clock, 
-  Flame, 
+  Target,
+  Clock,
+  Flame,
   BookOpen,
   AlertCircle,
   Award,
   RefreshCw,
   Calendar,
   Stethoscope,
-  BarChart2
+  BarChart2,
 } from 'lucide-react';
 import { useDatabaseStats, DatabaseStats } from '../../hooks/useDatabaseStats';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -38,7 +38,11 @@ function formatTime(ms: number | null): string {
 }
 
 // Helper to get trend icon
-function TrendIcon({ trend }: { trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data' }) {
+function TrendIcon({
+  trend,
+}: {
+  trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data';
+}) {
   switch (trend) {
     case 'improving':
       return <TrendingUp className="w-4 h-4 text-emerald-500" />;
@@ -50,7 +54,9 @@ function TrendIcon({ trend }: { trend: 'improving' | 'declining' | 'neutral' | '
 }
 
 // Helper to get trend color
-function getTrendColor(trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data'): string {
+function getTrendColor(
+  trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data'
+): string {
   switch (trend) {
     case 'improving':
       return 'text-emerald-500';
@@ -76,16 +82,16 @@ function StatsSkeleton() {
 }
 
 // Stats card component
-function StatCard({ 
-  icon: Icon, 
-  label, 
-  value, 
-  subValue, 
-  trend 
-}: { 
-  icon: React.ElementType; 
-  label: string; 
-  value: string | number; 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  trend,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
   subValue?: string;
   trend?: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data';
 }) {
@@ -97,27 +103,27 @@ function StatCard({
       </div>
       <div className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</div>
       <div className="text-sm text-[var(--color-text-muted)]">{label}</div>
-      {subValue && (
-        <div className="text-xs text-[var(--color-text-muted)] mt-1">{subValue}</div>
-      )}
+      {subValue && <div className="text-xs text-[var(--color-text-muted)] mt-1">{subValue}</div>}
     </div>
   );
 }
 
 // System row component
-function SystemRow({ 
-  system, 
-  stats 
-}: { 
-  system: string; 
+function SystemRow({
+  system,
+  stats,
+}: {
+  system: string;
   stats: DatabaseStats['bySystems'][string];
 }) {
-  const fullName = ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
-  const accuracyColor = stats.accuracy >= 80 
-    ? 'text-emerald-500' 
-    : stats.accuracy >= 60 
-      ? 'text-amber-500' 
-      : 'text-red-500';
+  const fullName =
+    ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
+  const accuracyColor =
+    stats.accuracy >= 80
+      ? 'text-emerald-500'
+      : stats.accuracy >= 60
+        ? 'text-amber-500'
+        : 'text-red-500';
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0">
@@ -159,7 +165,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           <span className="font-medium">Unable to load analytics</span>
         </div>
         <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>
-        <button 
+        <button
           onClick={() => refetch()}
           className="mt-3 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
         >
@@ -270,9 +276,11 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
               icon={Clock}
               label="Avg Time/Question"
               value={formatTime(stats.overall.avgTimeMs)}
-              subValue={stats.overall.avgAnswerChanges 
-                ? `${stats.overall.avgAnswerChanges} avg answer changes` 
-                : undefined}
+              subValue={
+                stats.overall.avgAnswerChanges
+                  ? `${stats.overall.avgAnswerChanges} avg answer changes`
+                  : undefined
+              }
             />
           </div>
 
@@ -286,8 +294,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
               <div>
                 <div className="text-sm text-[var(--color-text-muted)] mb-1">Last 7 Days</div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
-                  {stats.recentPerformance.last7Days.accuracy !== null 
-                    ? `${stats.recentPerformance.last7Days.accuracy}%` 
+                  {stats.recentPerformance.last7Days.accuracy !== null
+                    ? `${stats.recentPerformance.last7Days.accuracy}%`
                     : '--'}
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -297,8 +305,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
               <div>
                 <div className="text-sm text-[var(--color-text-muted)] mb-1">Previous 7 Days</div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
-                  {stats.recentPerformance.previous7Days.accuracy !== null 
-                    ? `${stats.recentPerformance.previous7Days.accuracy}%` 
+                  {stats.recentPerformance.previous7Days.accuracy !== null
+                    ? `${stats.recentPerformance.previous7Days.accuracy}%`
                     : '--'}
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -306,7 +314,9 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className={`mt-4 flex items-center gap-2 ${getTrendColor(stats.recentPerformance.trend)}`}>
+            <div
+              className={`mt-4 flex items-center gap-2 ${getTrendColor(stats.recentPerformance.trend)}`}
+            >
               <TrendIcon trend={stats.recentPerformance.trend} />
               <span className="text-sm font-medium capitalize">
                 {stats.recentPerformance.trend.replace('_', ' ')}
@@ -323,7 +333,10 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
               </div>
               <ul className="space-y-2">
                 {stats.recommendations.map((rec, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                  >
                     <span className="text-blue-500">•</span>
                     {rec}
                   </li>
@@ -363,7 +376,9 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                 {stats.weakAreas.map((area) => (
                   <div key={area.system} className="flex items-center justify-between">
                     <span className="font-medium text-[var(--color-text-primary)]">
-                      {ABBREVIATION_TO_TOPIC_MAP[area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || area.system}
+                      {ABBREVIATION_TO_TOPIC_MAP[
+                        area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP
+                      ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-red-500 font-bold">{area.accuracy}%</span>
@@ -388,7 +403,9 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                 {stats.strongAreas.slice(0, 5).map((area) => (
                   <div key={area.system} className="flex items-center justify-between">
                     <span className="font-medium text-[var(--color-text-primary)]">
-                      {ABBREVIATION_TO_TOPIC_MAP[area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || area.system}
+                      {ABBREVIATION_TO_TOPIC_MAP[
+                        area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP
+                      ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-emerald-500 font-bold">{area.accuracy}%</span>

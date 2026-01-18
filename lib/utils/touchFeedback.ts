@@ -26,11 +26,11 @@ export function addRippleEffect(
 ): void {
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
-  
+
   // Get click position relative to target
   const x = ('touches' in event ? event.touches[0].clientX : event.clientX) - rect.left;
   const y = ('touches' in event ? event.touches[0].clientY : event.clientY) - rect.top;
-  
+
   // Create ripple element
   const ripple = document.createElement('span');
   ripple.style.position = 'absolute';
@@ -42,14 +42,15 @@ export function addRippleEffect(
   ripple.style.top = `${y - 10}px`;
   ripple.style.pointerEvents = 'none';
   ripple.style.animation = 'ripple-effect 0.6s ease-out';
-  
+
   // Add ripple to target
-  const container = target.style.position === 'relative' || target.style.position === 'absolute' 
-    ? target 
-    : (target.style.position = 'relative', target);
-  
+  const container =
+    target.style.position === 'relative' || target.style.position === 'absolute'
+      ? target
+      : ((target.style.position = 'relative'), target);
+
   container.appendChild(ripple);
-  
+
   // Remove ripple after animation
   setTimeout(() => {
     ripple.remove();
@@ -74,7 +75,7 @@ export function isTouchDevice(): boolean {
 export function getOptimalTouchTargetSize(): number {
   const minSize = 44; // WCAG minimum
   const recommendedSize = 48; // Better for accessibility
-  
+
   return isTouchDevice() ? recommendedSize : minSize;
 }
 
@@ -85,14 +86,14 @@ export function getOptimalTouchTargetSize(): number {
 export function addPressState(element: HTMLElement, activeClass: string = 'active'): () => void {
   const handleStart = () => element.classList.add(activeClass);
   const handleEnd = () => element.classList.remove(activeClass);
-  
+
   element.addEventListener('touchstart', handleStart);
   element.addEventListener('mousedown', handleStart);
   element.addEventListener('touchend', handleEnd);
   element.addEventListener('mouseup', handleEnd);
   element.addEventListener('touchcancel', handleEnd);
   element.addEventListener('mouseleave', handleEnd);
-  
+
   // Return cleanup function
   return () => {
     element.removeEventListener('touchstart', handleStart);
@@ -109,20 +110,20 @@ export function addPressState(element: HTMLElement, activeClass: string = 'activ
  */
 export function preventDoubleTapZoom(element: HTMLElement): () => void {
   let lastTap = 0;
-  
+
   const handleTouch = (event: TouchEvent) => {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
-    
+
     if (tapLength < 500 && tapLength > 0) {
       event.preventDefault();
     }
-    
+
     lastTap = currentTime;
   };
-  
+
   element.addEventListener('touchend', handleTouch, { passive: false });
-  
+
   return () => {
     element.removeEventListener('touchend', handleTouch);
   };

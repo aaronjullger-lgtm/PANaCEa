@@ -14,11 +14,12 @@ vi.mock('@google/generative-ai', () => {
         return {
           generateContent: vi.fn().mockResolvedValue({
             response: {
-              text: () => JSON.stringify({
-                hasMedicalErrors: false,
-                issues: [],
-                severity: 'none',
-              }),
+              text: () =>
+                JSON.stringify({
+                  hasMedicalErrors: false,
+                  issues: [],
+                  severity: 'none',
+                }),
             },
           }),
         };
@@ -43,8 +44,8 @@ vi.mock('../lib/prisma', () => ({
   },
 }));
 
-import { 
-  saveToStaging, 
+import {
+  saveToStaging,
   runAdequacyCheck,
   getStagingStats,
 } from '../services/stagingQuestionService';
@@ -64,7 +65,8 @@ describe('Staging Question Service', () => {
         question: 'What is the most common cause of appendicitis?',
         correctAnswer: 'A',
         explanation: {
-          rationale: 'This is a detailed explanation that is more than fifty words long to meet the adequacy check requirement for explanation length. It provides comprehensive medical information about the topic.',
+          rationale:
+            'This is a detailed explanation that is more than fifty words long to meet the adequacy check requirement for explanation length. It provides comprehensive medical information about the topic.',
         },
         system: 'GI',
         conditionId: 'appendicitis',
@@ -111,7 +113,8 @@ describe('Staging Question Service', () => {
           question: 'Test question?',
           correctAnswer: 'A',
           explanation: {
-            rationale: 'This is a very long explanation that contains more than fifty words which is the minimum requirement for the adequacy check to pass successfully. It provides detailed medical information and reasoning about why the answer is correct and why other options are incorrect. This ensures students understand the concept thoroughly.',
+            rationale:
+              'This is a very long explanation that contains more than fifty words which is the minimum requirement for the adequacy check to pass successfully. It provides detailed medical information and reasoning about why the answer is correct and why other options are incorrect. This ensures students understand the concept thoroughly.',
           },
         },
       };
@@ -125,7 +128,7 @@ describe('Staging Question Service', () => {
       expect(result.hasCorrectAnswer).toBe(true);
       expect(result.explanationLength).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeGreaterThan(0);
-      
+
       // With correct answer and long explanation, score should be at least 0.8
       // (0.4 for correct answer + 0.4 for explanation length)
       expect(result.score).toBeGreaterThanOrEqual(0.8);
@@ -159,7 +162,8 @@ describe('Staging Question Service', () => {
           question: 'Test question?',
           correctAnswer: null,
           explanation: {
-            rationale: 'This is a very long explanation that contains more than fifty words which is the minimum requirement for the adequacy check to pass. It provides detailed medical information.',
+            rationale:
+              'This is a very long explanation that contains more than fifty words which is the minimum requirement for the adequacy check to pass. It provides detailed medical information.',
           },
         },
       };

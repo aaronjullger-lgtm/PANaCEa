@@ -1,17 +1,17 @@
 #!/usr/bin/env tsx
 /**
  * Back-Sync Agent: DB → Local Registry Files
- * 
+ *
  * Ensures that new records created in the database (e.g., by AI or Admin Panel)
  * get written back to the local TypeScript registry files so they aren't lost.
- * 
+ *
  * Logic:
  * 1. Load all Conditions and Drugs from Prisma
  * 2. Read local registry files as raw text
  * 3. Find DB records not present in local files
  * 4. Inject missing entries before the closing `];` bracket
  * 5. Create .bak backup before writing
- * 
+ *
  * Usage: npx tsx scripts/sync_db_to_local.ts
  */
 
@@ -41,7 +41,7 @@ function normalizeName(name: string): string {
 function conditionExistsInFile(fileText: string, conditionName: string): boolean {
   const normalized = normalizeName(conditionName);
   const lines = fileText.split('\n');
-  
+
   for (const line of lines) {
     // Look for: condition: "..."
     const match = line.match(/condition:\s*["']([^"']+)["']/);
@@ -49,7 +49,7 @@ function conditionExistsInFile(fileText: string, conditionName: string): boolean
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -59,7 +59,7 @@ function conditionExistsInFile(fileText: string, conditionName: string): boolean
 function drugExistsInFile(fileText: string, genericName: string): boolean {
   const normalized = normalizeName(genericName);
   const lines = fileText.split('\n');
-  
+
   for (const line of lines) {
     // Look for: genericName: "..."
     const match = line.match(/genericName:\s*["']([^"']+)["']/);
@@ -67,7 +67,7 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -79,25 +79,25 @@ async function main() {
   let cursor: string | undefined = undefined;
   let updatedDbCount = 0;
   const allDbContent = new Map<string, any>();
-  
+
   console.log('Starting DB cleanup and sync...');
-  
+
   while (true) {
     const batch = await prisma.medicalContent.findMany({
       take: BATCH_SIZE,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
-      orderBy: { id: 'asc' }
+      orderBy: { id: 'asc' },
     });
-    
+
     if (batch.length === 0) break;
-    
+
     for (const record of batch) {
       // Clean content
       // const originalJson = JSON.stringify(record.content);
       // const cleanedContent = cleanContentObject(record.content);
       // const newJson = JSON.stringify(cleanedContent);
-      
+
       // Update DB if needed
       // if (originalJson !== newJson) {
       //   await prisma.medicalContent.update({
@@ -107,7 +107,7 @@ async function main() {
       //   updatedDbCount++;
       //   process.stdout.write('u'); // u for updated
       // } else {
-        process.stdout.write('.');
+      process.stdout.write('.');
       // }
 
       // Store for JSON sync
@@ -115,7 +115,7 @@ async function main() {
       // Usually the JSON files are arrays of objects or maps?
       // Let's check the file structure first.
       // Assuming the JSON files are arrays of objects with { conditionId, ... }
-      
+
       // allDbContent.set(record.conditionId, {
       //   conditionId: record.conditionId,
       //   condition: record.condition,
@@ -124,7 +124,7 @@ async function main() {
       //   // The DB schema usually has: id, conditionId, condition, content, createdAt, updatedAt
       // });
     }
-    
+
     cursor = batch[batch.length - 1].id;
   }
   console.log(`\n✅ DB Cleanup Complete. Updated ${updatedDbCount} records.`);
@@ -134,13 +134,13 @@ async function main() {
   const filesToSync = [
     'conditionContent.generated.json',
     'conditionContent.correct.json',
-    'conditionContent.backup.json'
+    'conditionContent.backup.json',
   ];
 
   for (const filename of filesToSync) {
     const filePath = path.resolve(process.cwd(), filename);
     console.log(`Syncing to ${filename}...`);
-    
+
     let fileContent: any[] = [];
     try {
       const raw = await fs.promises.readFile(filePath, 'utf-8');
@@ -172,23 +172,23 @@ async function main() {
         fileMap.set(conditionId, dbRecord);
         addedCount++;
       } else {
-        // Optional: Check if DB is actually newer? 
+        // Optional: Check if DB is actually newer?
         // For now, we assume DB is the master and overwrite content.
         // But we preserve other fields in the file if they exist and aren't in DB record?
         // The DB record constructed above only has conditionId, condition, content.
         const existing = fileMap.get(conditionId);
-        
+
         // Simple check if content changed
         if (JSON.stringify(existing.content) !== JSON.stringify(dbRecord.content)) {
-           fileMap.set(conditionId, { ...existing, ...dbRecord });
-           modifiedCount++;
+          fileMap.set(conditionId, { ...existing, ...dbRecord });
+          modifiedCount++;
         }
       }
     }
 
     // Convert back to array (assuming array format is desired)
     const newContentArray = Array.from(fileMap.values());
-    
+
     // Sort by conditionId for stability
     newContentArray.sort((a, b) => a.conditionId.localeCompare(b.conditionId));
 
@@ -202,5 +202,5 @@ async function main() {
 }
 
 main()
-  .catch(e => console.error(e))
+  .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect());

@@ -1,6 +1,31 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3, Brain, Play } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from 'recharts';
+import {
+  Sparkles,
+  Gauge,
+  Clock,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+  BarChart3,
+  Brain,
+  Play,
+} from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -27,7 +52,10 @@ function calculateReadinessScore(records: PerformanceRecord[]): number {
   return Math.round((accuracy * 0.7 + coverage * 0.3) * 100);
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performanceData, isLoading = false }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+  performanceData,
+  isLoading = false,
+}) => {
   const { getToken } = useAuth();
   const [stabilityTrendData, setStabilityTrendData] = useState<StabilityTrendDatum[]>([]);
   const [stabilityLoading, setStabilityLoading] = useState(true);
@@ -45,7 +73,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
 
         const response = await fetch('/api/user/stability-trend?days=30', {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -55,11 +83,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
         }
 
         const result = await response.json();
-        
+
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
           const formattedData = result.data.map((point: any) => ({
-            date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            date: new Date(point.date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            }),
             avgStability: point.avgStability,
             totalReviews: point.totalReviews,
           }));
@@ -178,7 +209,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 PANCE Readiness Overview
               </h4>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Track your progress across all organ systems. Focus on your weakest areas for maximum improvement.
+                Track your progress across all organ systems. Focus on your weakest areas for
+                maximum improvement.
               </p>
             </div>
           </div>
@@ -191,12 +223,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           <div className="mb-4 p-4 rounded-full bg-slate-700/30">
             <BarChart3 className="w-12 h-12 text-slate-400" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Start Building Your Profile
-          </h3>
+          <h3 className="text-xl font-semibold text-white mb-2">Start Building Your Profile</h3>
           <p className="text-sm text-slate-400 text-center max-w-md mb-6">
-            Complete your first 20-question session to unlock personalized analytics, 
-            track your progress across organ systems, and identify your focus areas.
+            Complete your first 20-question session to unlock personalized analytics, track your
+            progress across organ systems, and identify your focus areas.
           </p>
           <a
             href="/study/main-session"
@@ -219,45 +249,53 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-blue-500/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
-                <Gauge className="w-4 h-4" /> 
+                <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">{readinessScore}%</div>
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                  {readinessScore}%
+                </div>
                 <TrendingUp className="w-5 h-5 text-emerald-500" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
-                Based on accuracy ({Math.round((performanceData.filter(r => r.isCorrect).length / performanceData.length) * 100)}%) + coverage
+                Based on accuracy (
+                {Math.round(
+                  (performanceData.filter((r) => r.isCorrect).length / performanceData.length) * 100
+                )}
+                %) + coverage
               </p>
             </div>
-            
+
             <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-emerald-500/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
-                <TrendingUp className="w-4 h-4" /> 
+                <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">{trendData.at(-1)?.accuracy ?? 0}%</div>
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                  {trendData.at(-1)?.accuracy ?? 0}%
+                </div>
                 <Activity className="w-5 h-5 text-blue-500" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
                 Last {trendData.length} session{trendData.length !== 1 ? 's' : ''}
               </p>
             </div>
-            
+
             <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-amber-500/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
-                <Clock className="w-4 h-4" /> 
+                <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
                 <div className="text-4xl font-bold text-[var(--color-text-primary)]">
-                  {timeData.length ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s` : '—'}
+                  {timeData.length
+                    ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s`
+                    : '—'}
                 </div>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Average per question
-              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">Average per question</p>
             </div>
           </div>
 
@@ -274,7 +312,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {weakestAreas.map((area) => (
-                  <div key={area.system} className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800">
+                  <div
+                    key={area.system}
+                    className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800"
+                  >
                     <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
                       {area.system}
                     </div>
@@ -304,9 +345,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 <ResponsiveContainer width="100%" height={320}>
                   <RadarChart data={radarData} outerRadius={120}>
                     <PolarGrid stroke="#e2e8f0" />
-                    <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
-                    <Radar name="Accuracy" dataKey="accuracy" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} />
+                    <PolarAngleAxis
+                      dataKey="system"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 100]}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    />
+                    <Radar
+                      name="Accuracy"
+                      dataKey="accuracy"
+                      stroke="#6366f1"
+                      fill="#6366f1"
+                      fillOpacity={0.35}
+                    />
                   </RadarChart>
                 </ResponsiveContainer>
               )}
@@ -317,17 +371,46 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 <TrendingUp className="w-4 h-4" /> Accuracy & Pace Trend
               </div>
               {trendData.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-muted)]">Start a session to see trends.</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Start a session to see trends.
+                </p>
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={trendData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                    <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} domain={[0, 100]} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      domain={[0, 100]}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    />
                     <Tooltip />
-                    <Line yAxisId="left" type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} dot={false} name="Accuracy (%)" />
-                    <Line yAxisId="right" type="monotone" dataKey="pace" stroke="#6366f1" strokeWidth={2} dot={false} name="Pace (s)" />
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="accuracy"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={false}
+                      name="Accuracy (%)"
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="pace"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      dot={false}
+                      name="Pace (s)"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -352,7 +435,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 Error loading stability data: {stabilityError}
               </p>
             ) : stabilityLoading ? (
-              <SkeletonLoader width="100%" height={320} />
+              <SkeletonLoader width="100%" height="320" />
             ) : stabilityTrendData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[320px] text-center">
                 <Brain className="w-12 h-12 text-[var(--color-text-muted)] mb-2 opacity-30" />
@@ -368,17 +451,17 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={stabilityTrendData}>
                     <CartesianGrid {...chartTheme.grid} />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
+                    <YAxis
                       tick={chartTheme.axis.tick}
-                      angle={-20}
-                      height={60}
+                      label={{
+                        value: 'Stability',
+                        angle: -90,
+                        position: 'insideLeft',
+                        style: { fill: 'var(--color-text-muted)' },
+                      }}
                     />
-                    <YAxis 
-                      tick={chartTheme.axis.tick}
-                      label={{ value: 'Stability', angle: -90, position: 'insideLeft', style: { fill: 'var(--color-text-muted)' } }}
-                    />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={chartTheme.tooltip.contentStyle}
                       labelStyle={chartTheme.tooltip.labelStyle}
                       formatter={(value: any, name: string) => {
@@ -386,11 +469,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                         return [value, name];
                       }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="avgStability" 
-                      stroke="#8b5cf6" 
-                      strokeWidth={3} 
+                    <Line
+                      type="monotone"
+                      dataKey="avgStability"
+                      stroke="#8b5cf6"
+                      strokeWidth={3}
                       dot={{ fill: '#8b5cf6', r: 4 }}
                       name="avgStability"
                     />
@@ -398,13 +481,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 </ResponsiveContainer>
                 <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
                   <p className="text-xs text-purple-900 dark:text-purple-100">
-                    <strong>What is Stability?</strong> Stability measures how long you'll remember information. 
-                    Higher stability means longer retention and fewer reviews needed. 
+                    <strong>What is Stability?</strong> Stability measures how long you'll remember
+                    information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
                       <span className="block mt-1">
                         Your stability has{' '}
                         <strong>
-                          {stabilityTrendData[stabilityTrendData.length - 1].avgStability > stabilityTrendData[0].avgStability
+                          {stabilityTrendData[stabilityTrendData.length - 1].avgStability >
+                          stabilityTrendData[0].avgStability
                             ? 'increased'
                             : 'remained stable'}
                         </strong>{' '}
@@ -422,15 +506,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
               <Clock className="w-4 h-4" /> Decision Time by System
             </div>
             {timeData.length === 0 ? (
-              <p className="text-sm text-[var(--color-text-muted)]">Time tracking will appear once you complete timed sessions.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Time tracking will appear once you complete timed sessions.
+              </p>
             ) : (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={timeData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} interval={0} angle={-20} height={60} />
+                  <XAxis
+                    dataKey="system"
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    interval={0}
+                    angle={-20}
+                    height={60}
+                  />
                   <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6,6,0,0]} name="Avg seconds" />
+                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds" />
                 </BarChart>
               </ResponsiveContainer>
             )}

@@ -1,84 +1,93 @@
 /**
  * API: Delete OSCE chat history for a session
- * DELETE /api/osce/history?sessionId={sessionId}
+ * DELETE /api/osce/cleanup?sessionId={sessionId}
  * POST /api/osce/cleanup?sessionId={sessionId}
- * 
- * Query params:
- * - sessionId: string (required)
- * 
- * Note: This is called after an encounter is complete to clean up chat history
+ *
+ * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, IDSchema } from '../_shared/schemas';
 import { z } from 'zod';
+import { withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { IDSchema } from '../_shared/schemas';
 
-// Zod schema for cleanup (optional body param - can also use query param)
-const CleanupSchema = z.object({
+// Schema for cleanup (body or query param)
+const CleanupBodySchema = z.object({
   sessionId: IDSchema.optional(),
 });
 
-async function handleCleanup(request: Request, env: Env) {
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestOptions = withCors();
 
+// Shared cleanup handler
+async function handleCleanup(context: any) {
+  const { env, auth, request } = context;
+  const log = createEndpointLogger('/api/osce/cleanup', auth.userId);
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Try to get sessionId from body first (with Zod validation), then fall back to query param
-    let sessionId: string | null = null;
-    
+    // Try to get sessionId from query param first
     const url = new URL(request.url);
-    sessionId = url.searchParams.get('sessionId');
-    
-    // Try body if not in query params
+    let sessionId = url.searchParams.get('sessionId');
+
+    // Try body if not in query params (for POST)
     if (!sessionId && request.method === 'POST') {
-      const validation = await validateRequest(request.clone(), CleanupSchema);
-      if (validation.success) {
-        const data = (validation as { success: true; data: any }).data;
-        sessionId = data.sessionId || null;
+      try {
+        const body = await request.clone().json();
+        const validation = CleanupBodySchema.safeParse(body);
+        if (validation.success && validation.data.sessionId) {
+          sessionId = validation.data.sessionId;
+        }
+      } catch {
+        // No body or invalid JSON, continue with query param check
       }
     }
 
     if (!sessionId) {
-      return createErrorResponse('Missing sessionId parameter', 400);
+      log.warn('Missing sessionId parameter');
+      return { status: 400, error: 'Missing sessionId parameter' };
     }
 
+    // Validate sessionId format
+    const idValidation = IDSchema.safeParse(sessionId);
+    if (!idValidation.success) {
+      log.warn('Invalid sessionId format', { sessionId });
+      return { status: 400, error: 'Invalid sessionId format' };
+    }
+
+    log.info('Cleaning up OSCE chat history', { sessionId });
+
     const result = await prisma.encounterChatHistory.deleteMany({
-      where: { sessionId }
+      where: { sessionId },
     });
 
-    return createSuccessResponse({ 
-      deleted: result.count,
-      message: `Deleted ${result.count} chat messages for session ${sessionId}`
-    });
+    log.info('Cleanup completed', { deleted: result.count });
+    return {
+      data: {
+        deleted: result.count,
+        message: `Deleted ${result.count} chat messages for session ${sessionId}`,
+      },
+    };
   } catch (error: any) {
-    console.error('Error deleting chat history:', error);
-    return createErrorResponse('Failed to delete chat history', 500);
+    log.error('Error deleting chat history', error);
+    return { status: 500, error: 'Failed to delete chat history' };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
 
-export async function onRequestDelete(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+export const onRequestDelete = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withLogging(),
+  handleCleanup
+);
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
-  return handleCleanup(request, env);
-}
-
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
-
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
-  return handleCleanup(request, env);
-}
+export const onRequestPost = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withLogging(),
+  handleCleanup
+);

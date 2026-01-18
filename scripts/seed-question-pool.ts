@@ -1,14 +1,14 @@
 /**
  * Seed Question Pool Script - V2
- * 
+ *
  * Generates PANCE-style questions using Gemini API and seeds them into the PreGeneratedQuestion table.
  * Now properly links to existing Condition and MedicalContent records in the database.
- * 
+ *
  * Flow:
  * 1. Fetch conditions from MedicalContent table by system
  * 2. Generate questions for actual conditions
  * 3. Store with proper conditionId and medicalContentId links
- * 
+ *
  * Usage: npx tsx scripts/seed-question-pool.ts
  */
 
@@ -22,7 +22,22 @@ dotenv.config();
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
+const SYSTEMS = [
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
+];
 const QUESTIONS_PER_CONDITION = 2; // Questions per condition
 const MIN_QUESTIONS_PER_SYSTEM = 10;
 
@@ -68,7 +83,7 @@ async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> 
     take: 20, // Limit per system to keep seeding manageable
   });
 
-  return medicalContent.map(mc => ({
+  return medicalContent.map((mc) => ({
     conditionId: mc.conditionId,
     medicalContentId: mc.id,
     name: mc.condition,
@@ -94,9 +109,9 @@ function robustJsonParse(jsonString: string) {
     return JSON.parse(cleanedString);
   } catch (error) {
     // 3. If parsing fails, log the error and the problematic raw text
-    console.error(" robustJsonParse: Failed to parse JSON.");
-    console.error("  - Error:", error.message);
-    console.error("  - Raw Text (first 500 chars):", cleanedString.substring(0, 500));
+    console.error(' robustJsonParse: Failed to parse JSON.');
+    console.error('  - Error:', error.message);
+    console.error('  - Raw Text (first 500 chars):', cleanedString.substring(0, 500));
     return null; // Return null to indicate failure
   }
 }
@@ -112,7 +127,9 @@ async function generateQuestionsForCondition(
     condition.overview ? `Overview: ${condition.overview.slice(0, 500)}` : '',
     condition.symptoms ? `Key Symptoms: ${condition.symptoms.slice(0, 300)}` : '',
     condition.treatment ? `Treatment: ${condition.treatment.slice(0, 300)}` : '',
-  ].filter(Boolean).join('\n\n');
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
   const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions specifically about "${condition.name}" (${condition.system} system - ${condition.subcategory}).
 
@@ -164,22 +181,25 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
     jsonText = jsonText.trim();
 
     const questions = robustJsonParse(jsonText);
-    
+
     if (!questions || !Array.isArray(questions)) {
       console.error('Invalid questions format - not an array or failed to parse.');
       return [];
     }
 
-    return questions.filter((q: GeneratedQuestion) => 
-      q.question && 
-      Array.isArray(q.options) && 
-      q.options.length === 4 &&
-      q.correctAnswer &&
-      q.explanation
-    ).map(q => ({
-      ...q,
-      conditionName: condition.name, // Ensure condition name is set
-    }));
+    return questions
+      .filter(
+        (q: GeneratedQuestion) =>
+          q.question &&
+          Array.isArray(q.options) &&
+          q.options.length === 4 &&
+          q.correctAnswer &&
+          q.explanation
+      )
+      .map((q) => ({
+        ...q,
+        conditionName: condition.name, // Ensure condition name is set
+      }));
   } catch (error) {
     console.error('Error generating questions with Gemini:', error);
     return [];
@@ -210,7 +230,7 @@ async function seedPool() {
 
     // Get conditions from database
     const conditions = await getConditionsForSystem(system);
-    
+
     if (conditions.length === 0) {
       console.log(`   ⚠ No published conditions found for ${system}, skipping`);
       continue;
@@ -288,7 +308,7 @@ async function seedPool() {
         }
 
         // Rate limiting - wait between API calls
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
         console.error(`      ❌ Error: ${error}`);
         totalFailed += needed;
@@ -298,13 +318,13 @@ async function seedPool() {
 
   // Final stats
   const finalCount = await prisma.preGeneratedQuestion.count({ where: { usedAt: null } });
-  const linkedCount = await prisma.preGeneratedQuestion.count({ 
-    where: { 
+  const linkedCount = await prisma.preGeneratedQuestion.count({
+    where: {
       usedAt: null,
       conditionId: { not: null },
-    } 
+    },
   });
-  
+
   console.log('\n' + '═'.repeat(60));
   console.log('📊 Seeding Complete:');
   console.log(`   Conditions processed: ${totalConditions}`);

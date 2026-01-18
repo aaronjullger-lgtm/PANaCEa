@@ -36,7 +36,10 @@ function mapToDTO(record: any): QuestionDTO {
     question: record.question,
     options: Array.isArray(record.options) ? record.options : [],
     correctAnswer: record.correctAnswer,
-    explanation: typeof record.explanation === 'string' ? record.explanation : JSON.stringify(record.explanation),
+    explanation:
+      typeof record.explanation === 'string'
+        ? record.explanation
+        : JSON.stringify(record.explanation),
     system: record.system,
     difficulty: record.difficulty,
     source: record.source,
@@ -96,7 +99,7 @@ async function storeGeneratedQuestion(payload: {
 
   const generated = await generateSingleQuestion(
     {
-      condition: conditionData.name,
+      condition: conditionData.condition,
       sections: {
         overview: conditionData.content.overview,
         etiology: conditionData.content.etiologyPathophysiology,
@@ -131,7 +134,9 @@ async function storeGeneratedQuestion(payload: {
   return mapToDTO(record);
 }
 
-export async function getQuestions(params: GetQuestionsParams): Promise<{ questions: QuestionDTO[]; total: number; }> {
+export async function getQuestions(
+  params: GetQuestionsParams
+): Promise<{ questions: QuestionDTO[]; total: number }> {
   const limit = clampLimit(params.limit);
   const where = buildWhere(params);
 
@@ -155,7 +160,9 @@ export async function getQuestions(params: GetQuestionsParams): Promise<{ questi
   };
 }
 
-export async function getQuestionsWithFallback(params: GetQuestionsParams): Promise<{ questions: QuestionDTO[]; source: 'database' | 'ai_fallback'; total: number; }> {
+export async function getQuestionsWithFallback(
+  params: GetQuestionsParams
+): Promise<{ questions: QuestionDTO[]; source: 'database' | 'ai_fallback'; total: number }> {
   const { questions, total } = await getQuestions(params);
 
   if (questions.length > 0) {

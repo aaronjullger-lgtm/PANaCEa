@@ -1,10 +1,10 @@
 #!/usr/bin/env tsx
 /**
  * Seed Database from Condition Registry
- * 
+ *
  * This script populates the MedicalContent table directly from the conditionRegistry.
  * This is the source of truth for all medical conditions in the system.
- * 
+ *
  * Usage: tsx scripts/seedDatabaseFromRegistry.ts
  */
 

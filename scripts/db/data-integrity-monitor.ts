@@ -1,6 +1,6 @@
 /**
  * Step 10: Automated Data Integrity Monitoring
- * 
+ *
  * This script provides comprehensive health checks for:
  * - Junction table population
  * - Question linkage rates
@@ -13,7 +13,7 @@ import { prisma, disconnectPrisma } from '../helpers/prisma-client.js';
 
 interface DataHealthReport {
   timestamp: Date;
-  
+
   // Junction table health
   junctionPopulation: {
     DrugConditionLink: { count: number; targetCoverage: number; percentage: number };
@@ -23,32 +23,32 @@ interface DataHealthReport {
     TreatmentConditionLink: { count: number; targetCoverage: number; percentage: number };
     AnatomyConditionLink: { count: number; targetCoverage: number; percentage: number };
   };
-  
+
   // Question linking
   questionLinkRate: number;
   preGeneratedLinkRate: number;
   orphanedQuestions: number;
   orphanedPreGenerated: number;
-  
+
   // Content completeness
   totalConditions: number;
   conditionsWithContent: number;
   avgCompletenessScore: number;
   criticalMissing: number;
-  
+
   // Media coverage
   conditionsWithMedia: number;
   mediaCoverageRate: number;
-  
+
   // User data
   totalUsers: number;
   activeUsers: number;
   orphanedUserProgress: number;
   staleFsrsRecords: number;
-  
+
   // Overall health score (0-100)
   healthScore: number;
-  
+
   // Alerts
   alerts: Array<{
     severity: 'critical' | 'warning' | 'info';
@@ -58,21 +58,15 @@ interface DataHealthReport {
 }
 
 async function checkJunctionTables(): Promise<DataHealthReport['junctionPopulation']> {
-  const [
-    drugLinks,
-    labLinks,
-    imagingLinks,
-    findingLinks,
-    treatmentLinks,
-    anatomyLinks,
-  ] = await Promise.all([
-    prisma.drugConditionLink.count(),
-    prisma.labConditionLink.count(),
-    prisma.imagingConditionLink.count(),
-    prisma.findingConditionLink.count(),
-    prisma.treatmentConditionLink.count(),
-    prisma.anatomyConditionLink.count(),
-  ]);
+  const [drugLinks, labLinks, imagingLinks, findingLinks, treatmentLinks, anatomyLinks] =
+    await Promise.all([
+      prisma.drugConditionLink.count(),
+      prisma.labConditionLink.count(),
+      prisma.imagingConditionLink.count(),
+      prisma.findingConditionLink.count(),
+      prisma.treatmentConditionLink.count(),
+      prisma.anatomyConditionLink.count(),
+    ]);
 
   return {
     DrugConditionLink: {
@@ -109,12 +103,7 @@ async function checkJunctionTables(): Promise<DataHealthReport['junctionPopulati
 }
 
 async function checkQuestionLinkage() {
-  const [
-    totalQuestions,
-    questionsLinked,
-    totalPreGen,
-    preGenLinked,
-  ] = await Promise.all([
+  const [totalQuestions, questionsLinked, totalPreGen, preGenLinked] = await Promise.all([
     prisma.question.count(),
     prisma.question.count({ where: { conditionId: { not: null } } }),
     prisma.preGeneratedQuestion.count(),
@@ -130,10 +119,7 @@ async function checkQuestionLinkage() {
 }
 
 async function checkContentCompleteness() {
-  const [
-    totalConditions,
-    allContent,
-  ] = await Promise.all([
+  const [totalConditions, allContent] = await Promise.all([
     prisma.condition.count(),
     prisma.medicalContent.findMany({
       select: {
@@ -153,9 +139,9 @@ async function checkContentCompleteness() {
   ]);
 
   const conditionsWithContent = allContent.length;
-  
+
   // Calculate completeness scores
-  const scores = allContent.map(content => {
+  const scores = allContent.map((content) => {
     const requiredFields = ['overview', 'symptoms', 'treatment', 'diagnostics'];
     const highYieldFields = [
       'gold_standard_dx',
@@ -165,22 +151,28 @@ async function checkContentCompleteness() {
       'clinical_pearls',
       'best_initial_test',
     ];
-    
-    const requiredScore = requiredFields.filter(f => content[f as keyof typeof content]).length / requiredFields.length * 60;
-    const highYieldScore = highYieldFields.filter(f => {
-      const val = content[f as keyof typeof content];
-      return val && (Array.isArray(val) ? val.length > 0 : true);
-    }).length / highYieldFields.length * 40;
-    
+
+    const requiredScore =
+      (requiredFields.filter((f) => content[f as keyof typeof content]).length /
+        requiredFields.length) *
+      60;
+    const highYieldScore =
+      (highYieldFields.filter((f) => {
+        const val = content[f as keyof typeof content];
+        return val && (Array.isArray(val) ? val.length > 0 : true);
+      }).length /
+        highYieldFields.length) *
+      40;
+
     return requiredScore + highYieldScore;
   });
 
-  const avgCompletenessScore = scores.length > 0
-    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-    : 0;
+  const avgCompletenessScore =
+    scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-  const criticalMissing = allContent.filter(content =>
-    !content.overview || !content.symptoms || !content.treatment || !content.diagnostics
+  const criticalMissing = allContent.filter(
+    (content) =>
+      !content.overview || !content.symptoms || !content.treatment || !content.diagnostics
   ).length;
 
   return {
@@ -192,10 +184,7 @@ async function checkContentCompleteness() {
 }
 
 async function checkMediaCoverage() {
-  const [
-    totalConditions,
-    conditionsWithMedia,
-  ] = await Promise.all([
+  const [totalConditions, conditionsWithMedia] = await Promise.all([
     prisma.condition.count(),
     prisma.condition.count({
       where: {
@@ -208,19 +197,13 @@ async function checkMediaCoverage() {
 
   return {
     conditionsWithMedia,
-    mediaCoverageRate: totalConditions > 0
-      ? Math.round((conditionsWithMedia / totalConditions) * 100)
-      : 0,
+    mediaCoverageRate:
+      totalConditions > 0 ? Math.round((conditionsWithMedia / totalConditions) * 100) : 0,
   };
 }
 
 async function checkUserData() {
-  const [
-    totalUsers,
-    recentUsers,
-    orphanedProgress,
-    staleProgress,
-  ] = await Promise.all([
+  const [totalUsers, recentUsers, orphanedProgress, staleProgress] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({
       where: {
@@ -274,14 +257,16 @@ function calculateHealthScore(report: Omit<DataHealthReport, 'healthScore' | 'al
   else if (report.orphanedUserProgress > 50) score -= 5;
 
   // Bonus for good junction coverage
-  const avgJunctionCoverage = Object.values(report.junctionPopulation)
-    .reduce((sum, j) => sum + j.percentage, 0) / 6;
+  const avgJunctionCoverage =
+    Object.values(report.junctionPopulation).reduce((sum, j) => sum + j.percentage, 0) / 6;
   if (avgJunctionCoverage > 80) score += 5;
 
   return Math.max(0, Math.min(100, score));
 }
 
-function generateAlerts(report: Omit<DataHealthReport, 'healthScore' | 'alerts'>): DataHealthReport['alerts'] {
+function generateAlerts(
+  report: Omit<DataHealthReport, 'healthScore' | 'alerts'>
+): DataHealthReport['alerts'] {
   const alerts: DataHealthReport['alerts'] = [];
 
   // Critical alerts
@@ -318,8 +303,9 @@ function generateAlerts(report: Omit<DataHealthReport, 'healthScore' | 'alerts'>
     });
   }
 
-  const lowJunctions = Object.entries(report.junctionPopulation)
-    .filter(([_, data]) => data.percentage < 30);
+  const lowJunctions = Object.entries(report.junctionPopulation).filter(
+    ([_, data]) => data.percentage < 30
+  );
   if (lowJunctions.length > 0) {
     alerts.push({
       severity: 'warning',
@@ -360,20 +346,27 @@ function printReport(report: DataHealthReport): void {
   console.log('='.repeat(70));
   console.log(`Generated: ${report.timestamp.toLocaleString()}`);
   console.log(`\n🏥 Overall Health Score: ${report.healthScore}/100`);
-  
-  const healthBar = '█'.repeat(Math.floor(report.healthScore / 5)) + 
-                    '░'.repeat(20 - Math.floor(report.healthScore / 5));
+
+  const healthBar =
+    '█'.repeat(Math.floor(report.healthScore / 5)) +
+    '░'.repeat(20 - Math.floor(report.healthScore / 5));
   console.log(`[${healthBar}]`);
 
   console.log(`\n🔗 Junction Tables:`);
   Object.entries(report.junctionPopulation).forEach(([name, data]) => {
     const emoji = data.percentage >= 50 ? '✅' : data.percentage >= 30 ? '⚠️ ' : '🔴';
-    console.log(`  ${emoji} ${name.padEnd(25)} ${data.count.toString().padStart(4)} / ${data.targetCoverage} (${data.percentage}%)`);
+    console.log(
+      `  ${emoji} ${name.padEnd(25)} ${data.count.toString().padStart(4)} / ${data.targetCoverage} (${data.percentage}%)`
+    );
   });
 
   console.log(`\n❓ Question Linkage:`);
-  console.log(`  Question table:           ${report.questionLinkRate}% linked (${report.orphanedQuestions} orphaned)`);
-  console.log(`  PreGeneratedQuestion:     ${report.preGeneratedLinkRate}% linked (${report.orphanedPreGenerated} orphaned)`);
+  console.log(
+    `  Question table:           ${report.questionLinkRate}% linked (${report.orphanedQuestions} orphaned)`
+  );
+  console.log(
+    `  PreGeneratedQuestion:     ${report.preGeneratedLinkRate}% linked (${report.orphanedPreGenerated} orphaned)`
+  );
 
   console.log(`\n📝 Content Quality:`);
   console.log(`  Total conditions:         ${report.totalConditions}`);
@@ -382,7 +375,9 @@ function printReport(report: DataHealthReport): void {
   console.log(`  Missing required fields:  ${report.criticalMissing}`);
 
   console.log(`\n🖼️  Media Coverage:`);
-  console.log(`  Conditions with media:    ${report.conditionsWithMedia} (${report.mediaCoverageRate}%)`);
+  console.log(
+    `  Conditions with media:    ${report.conditionsWithMedia} (${report.mediaCoverageRate}%)`
+  );
 
   console.log(`\n👥 User Data:`);
   console.log(`  Total users:              ${report.totalUsers}`);
@@ -392,7 +387,7 @@ function printReport(report: DataHealthReport): void {
 
   if (report.alerts.length > 0) {
     console.log(`\n🚨 Alerts (${report.alerts.length}):`);
-    report.alerts.forEach(alert => {
+    report.alerts.forEach((alert) => {
       console.log(`  ${severityEmoji[alert.severity]} [${alert.category}] ${alert.message}`);
     });
   } else {
@@ -405,19 +400,14 @@ function printReport(report: DataHealthReport): void {
 async function generateHealthReport(): Promise<DataHealthReport> {
   console.log('🔍 Gathering database health metrics...\n');
 
-  const [
-    junctionPopulation,
-    questionLinkage,
-    contentStats,
-    mediaStats,
-    userData,
-  ] = await Promise.all([
-    checkJunctionTables(),
-    checkQuestionLinkage(),
-    checkContentCompleteness(),
-    checkMediaCoverage(),
-    checkUserData(),
-  ]);
+  const [junctionPopulation, questionLinkage, contentStats, mediaStats, userData] =
+    await Promise.all([
+      checkJunctionTables(),
+      checkQuestionLinkage(),
+      checkContentCompleteness(),
+      checkMediaCoverage(),
+      checkUserData(),
+    ]);
 
   const partialReport = {
     timestamp: new Date(),
@@ -453,7 +443,7 @@ async function main() {
   }
 
   // Exit with non-zero code if critical alerts exist
-  const hasCritical = report.alerts.some(a => a.severity === 'critical');
+  const hasCritical = report.alerts.some((a) => a.severity === 'critical');
   if (hasCritical) {
     console.log('❌ Exiting with error due to critical alerts');
     process.exit(1);
@@ -461,7 +451,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);
   })

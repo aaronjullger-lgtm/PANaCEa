@@ -1,70 +1,75 @@
 /**
  * API: Create or get active OSCE session
  * POST /api/osce/session
+ *
+ * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, OSCESessionSchema } from '../_shared/schemas';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { IDSchema } from '../_shared/schemas';
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+// Schema for OSCE session creation
+const OSCESessionBodySchema = z.object({
+  body: z.object({
+    caseId: IDSchema,
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestPost = authenticatedEndpoint(
+  OSCESessionBodySchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/osce/session', auth.userId);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const { caseId } = validated.body;
+      log.info('Creating OSCE session', { caseId });
 
-  try {
-    // Validate input with Zod schema
-    const validation = await validateRequest(request.clone(), OSCESessionSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const { caseId } = (validation as { success: true; data: any }).data;
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+      });
 
-    const user = await prisma.user.findUnique({ 
-      where: { clerkId: authContext.userId } 
-    });
-    
-    if (!user) {
-      return createErrorResponse('User not found', 404);
-    }
-
-    // Check for existing active session for this case
-    const existingSession = await prisma.patientEncounterSession.findFirst({
-      where: {
-        userId: user.id,
-        caseId: caseId,
-        status: 'active'
+      if (!user) {
+        log.warn('User not found');
+        return { status: 404, error: 'User not found' };
       }
-    });
 
-    if (existingSession) {
-      return createSuccessResponse({ success: true, session: existingSession });
-    }
+      // Check for existing active session for this case
+      const existingSession = await prisma.patientEncounterSession.findFirst({
+        where: {
+          userId: user.id,
+          caseId: caseId,
+          status: 'active',
+        },
+      });
 
-    // Create new session
-    const session = await prisma.patientEncounterSession.create({
-      data: {
-        userId: user.id,
-        caseId,
-        messages: [],
-        status: 'active'
+      if (existingSession) {
+        log.info('Returning existing session', { sessionId: existingSession.id });
+        return { data: { success: true, session: existingSession } };
       }
-    });
 
-    return createSuccessResponse({ success: true, session });
-  } catch (error: any) {
-    console.error('Error creating OSCE session:', error);
-    return createErrorResponse('Internal server error', 500);
-  } finally {
-    await prisma.$disconnect().catch(() => {});
+      // Create new session
+      const session = await prisma.patientEncounterSession.create({
+        data: {
+          userId: user.id,
+          caseId,
+          messages: [],
+          status: 'active',
+        },
+      });
+
+      log.info('Created new OSCE session', { sessionId: session.id });
+      return { data: { success: true, session } };
+    } catch (error: any) {
+      log.error('Error creating OSCE session', error);
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);

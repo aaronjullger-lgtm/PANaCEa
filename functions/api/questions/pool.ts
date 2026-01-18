@@ -1,20 +1,19 @@
 /**
  * API Endpoint: /api/questions/pool
- * 
- * Get questions from the question pool with user-specific filtering
- * Ensures no user sees the same question twice
- * Triggers background generation when pool runs low
+ * GET: Get questions from the question pool with user-specific filtering
+ * POST: Seed a question back into the pool
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import type { CloudflareContext } from '../_shared/types';
-import { 
-  getFromCache, 
-  setInCache, 
-  getQuestionPoolCacheKey, 
+import { z } from 'zod';
+import { authenticatedEndpoint, adminEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import {
+  getFromCache,
+  setInCache,
+  getQuestionPoolCacheKey,
   CACHE_CONFIG,
-  isKVAvailable 
+  isKVAvailable,
 } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 
@@ -30,73 +29,69 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   return shuffled;
 }
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-  GEMINI_API_KEY: string;
-  CACHE?: KVNamespace;
-}
-
-// Thresholds for question pool management
 const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
 
-export const onRequestGet = async (context: CloudflareContext<Env>) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
-  try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+const PoolGetSchema = z.object({
+  query: z.object({
+    system: z.string().optional(),
+    category: z.string().optional(),
+    difficulty: z.string().optional(),
+    count: z.string().optional(),
+    mode: z.string().optional(),
+  }),
+});
 
-    // Look up user by clerkId to get internal database ID
+const PoolPostSchema = z.object({
+  body: z.object({
+    question: z.object({
+      id: z.string(),
+      question: z.string(),
+      options: z.array(z.string()),
+      correctAnswer: z.string(),
+      explanation: z.string(),
+      system: z.string().optional(),
+      conditionId: z.string().optional(),
+      medicalContentId: z.string().optional(),
+      difficulty: z.string().optional(),
+      vignette: z.string().optional(),
+      conditionName: z.string().optional(),
+      subcategory: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+    }),
+  }),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/pool');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
     const user = await prisma.user.findUnique({
-      where: { clerkId: authResult.userId },
-      select: { id: true },
+      where: { clerkId: auth.userId },
+      select: { id: true, role: true },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet. Please refresh and try again.',
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { data: { error: 'User not found', message: 'Your user account has not been synced yet.' }, status: 404 };
     }
 
     const userId = user.id;
+    const system = validated.query?.system || null;
+    const category = validated.query?.category || null;
+    const difficulty = validated.query?.difficulty || null;
+    const count = validated.query?.count ? parseInt(validated.query.count, 10) : DEFAULT_FETCH_COUNT;
+    const mode = validated.query?.mode || null;
 
-    // Parse query parameters
-    const url = new URL(context.request.url);
-    const system = url.searchParams.get('system');
-    const category = url.searchParams.get('category');
-    const difficulty = url.searchParams.get('difficulty');
-    const countStr = url.searchParams.get('count');
-    const count = countStr ? parseInt(countStr, 10) : DEFAULT_FETCH_COUNT;
-    const mode = url.searchParams.get('mode'); // 'curation' for admin curation panel
-
-    // ADMIN CURATION MODE: Return raw pre-generated questions for review
+    // ADMIN CURATION MODE
     if (mode === 'curation') {
-      // Check if user is admin
-      const userWithRole = await prisma.user.findUnique({
-        where: { clerkId: authResult.userId },
-        select: { role: true },
-      });
-
-      if (userWithRole?.role !== 'admin') {
-        return new Response(JSON.stringify({ error: 'Admin access required' }), {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        });
+      if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
+        return { data: { error: 'Admin access required' }, status: 403 };
       }
 
-      // Fetch all pre-generated questions for curation (no user filtering)
       const curationWhere: Record<string, unknown> = {};
       if (system) curationWhere.system = system;
       if (difficulty) curationWhere.difficulty = difficulty;
@@ -104,13 +99,11 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       const curationQuestions = await prisma.preGeneratedQuestion.findMany({
         where: curationWhere,
         orderBy: { generatedAt: 'desc' },
-        take: 100, // Limit to 100 for performance
+        take: 100,
       });
 
-      return new Response(JSON.stringify(curationQuestions), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      logger.info('Admin fetched curation questions', { userId: auth.userId, count: curationQuestions.length });
+      return { data: curationQuestions };
     }
 
     // Get questions user has already seen
@@ -118,348 +111,60 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       where: { userId },
       select: { questionId: true },
     });
-    const seenIds = new Set<string>(seenQuestionIds.map(q => q.questionId));
+    const seenIds = new Set<string>(seenQuestionIds.map((q) => q.questionId));
 
-    // Check cache for pre-generated pool (user-agnostic)
-    // Cache key based on filters, not userId (questions are same for all users)
+    // Check cache
     const cacheKey = getQuestionPoolCacheKey({ system, category, difficulty });
     let cachedPool: Array<any> | null = null;
-    
-    if (isKVAvailable(context.env.CACHE)) {
-      cachedPool = await getFromCache(context.env.CACHE, cacheKey);
+
+    if (isKVAvailable((env as any).CACHE)) {
+      cachedPool = await getFromCache((env as any).CACHE, cacheKey);
     }
 
-    // Try pre-generated pool first
-    const poolQuestions = await getFromPreGeneratedPool(
-      prisma, 
-      userId, 
-      seenIds, 
-      {
-        count,
-        system,
-        category,
-        difficulty,
-      },
-      cachedPool // Pass cached data if available
-    );
-
-    let questions: Array<{
-      id: string;
-      vignette?: string;
-      question: string;
-      options: string[];
-      correctAnswer: string;
-      explanation: string;
-      system: string;
-      difficulty: string;
-      tags?: string[];
-      conditionId?: string;
-      source: 'pool' | 'main';
-    }> = poolQuestions.questions;
+    // Get from pre-generated pool
+    const poolQuestions = await getFromPreGeneratedPool(prisma, userId, seenIds, { count, system, category, difficulty }, cachedPool);
+    let questions = poolQuestions.questions;
     const poolAvailable = poolQuestions.remaining;
 
     // If pool insufficient, supplement from main Question table
     if (questions.length < count) {
       const needed = count - questions.length;
-      const mainQuestions = await getFromMainTable(prisma, userId, seenIds, {
-        count: needed,
-        system,
-        category,
-        difficulty,
-      });
+      const mainQuestions = await getFromMainTable(prisma, userId, seenIds, { count: needed, system, category, difficulty });
       questions = [...questions, ...mainQuestions];
     }
 
-    // Check if pool needs regeneration
     const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
 
-    // Cache the pool questions if KV is available and we fetched from DB
-    if (isKVAvailable(context.env.CACHE) && !cachedPool && poolQuestions.rawQuestions) {
-      await setInCache(
-        context.env.CACHE,
-        cacheKey,
-        poolQuestions.rawQuestions,
-        CACHE_CONFIG.TTL.QUESTION_POOL
-      );
+    // Cache the pool questions if available
+    if (isKVAvailable((env as any).CACHE) && !cachedPool && poolQuestions.rawQuestions) {
+      await setInCache((env as any).CACHE, cacheKey, poolQuestions.rawQuestions, CACHE_CONFIG.TTL.QUESTION_POOL);
     }
 
-    return new Response(JSON.stringify({ 
-      questions,
-      poolStatus: {
-        available: poolAvailable,
-        needsGeneration,
-        threshold: POOL_LOW_THRESHOLD,
-      }
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Cache': cachedPool ? 'HIT' : 'MISS'
+    logger.info('Fetched pool questions', { userId: auth.userId, count: questions.length, poolAvailable });
+
+    return {
+      data: {
+        questions,
+        poolStatus: { available: poolAvailable, needsGeneration, threshold: POOL_LOW_THRESHOLD },
       },
-    });
+      headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
+    };
   } catch (error) {
-    console.error('Error fetching pool questions:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error fetching pool questions', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to fetch pool questions');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});
 
-/**
- * Get questions from pre-generated pool
- */
-async function getFromPreGeneratedPool(
-  prisma: ReturnType<typeof createEdgePrismaClient>,
-  userId: string,
-  seenIds: Set<string>,
-  options: {
-    count: number;
-    system?: string | null;
-    category?: string | null;
-    difficulty?: string | null;
-  },
-  cachedQuestions?: Array<any> | null
-) {
-  const { count, system, category, difficulty } = options;
+export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/pool');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  let preGenQuestions: Array<any>;
-  let remaining: number;
-
-  // Use cached data if available
-  if (cachedQuestions && cachedQuestions.length > 0) {
-    preGenQuestions = cachedQuestions;
-    remaining = cachedQuestions.length;
-  } else {
-    // Build where clause - do NOT filter by usedAt
-    // Questions remain available to all users; per-user filtering happens via seenIds
-    const where: Record<string, unknown> = {};
-    if (system) where.system = system;
-    if (difficulty) where.difficulty = difficulty;
-    if (category) where.questionType = category;
-
-    // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
-    const fetchCount = count * 5;
-
-    // Fetch available pre-generated questions
-    preGenQuestions = await prisma.preGeneratedQuestion.findMany({
-      where,
-      take: fetchCount,
-      orderBy: { generatedAt: 'asc' },
-    });
-
-    // Count remaining unused
-    remaining = await prisma.preGeneratedQuestion.count({ where });
-  }
-
-  // Filter out questions user has already seen
-  const unseenQuestions = preGenQuestions.filter(q => !seenIds.has(q.id));
-
-  // Apply Fisher-Yates shuffle for unbiased randomization
-  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
-
-  // Take only the requested count
-  const selectedQuestions = shuffledQuestions.slice(0, count);
-
-  // Format questions
-  const questions: Array<{
-    id: string;
-    vignette?: string;
-    question: string;
-    options: string[];
-    correctAnswer: string;
-    explanation: string;
-    system: string;
-    difficulty: string;
-    tags?: string[];
-    conditionId?: string;
-    source: 'pool';
-  }> = [];
-  const toMarkUsed: string[] = [];
-
-  for (const q of selectedQuestions) {
-    const data = (q as any).questionData as Record<string, unknown>;
-    // Handle different option field names (options, answers, choices)
-    const optionsData = data.options || data.answers || data.choices;
-    const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
-    
-    questions.push({
-      id: (q as any).id,
-      vignette: data.vignette as string | undefined,
-      question: data.question as string,
-      options,
-      correctAnswer: data.correctAnswer as string,
-      explanation: data.explanation as string,
-      system: (q as any).system || 'General',
-      difficulty: (q as any).difficulty,
-      tags: data.tags as string[] | undefined,
-      conditionId: (q as any).conditionId || undefined,
-      source: 'pool',
-    });
-    toMarkUsed.push((q as any).id);
-  }
-
-  // Record in user history ONLY - do NOT mark questions as globally used
-  // This enables multi-tenant pooling where each user gets fresh questions
-  if (toMarkUsed.length > 0) {
-    await prisma.userQuestionSeen.createMany({
-      data: toMarkUsed.map(questionId => ({
-        userId,
-        questionId,
-        questionType: 'pre_generated',
-        firstSeenAt: new Date(),
-        lastSeenAt: new Date(),
-        timesShown: 1,
-        timesCorrect: 0,
-        timesIncorrect: 0,
-      })),
-      skipDuplicates: true,
-    });
-  }
-
-  return { questions, remaining, rawQuestions: cachedQuestions ? undefined : preGenQuestions };
-}
-
-/**
- * Get questions from main Question table
- */
-async function getFromMainTable(
-  prisma: ReturnType<typeof createEdgePrismaClient>,
-  userId: string,
-  seenIds: Set<string>,
-  options: {
-    count: number;
-    system?: string | null;
-    category?: string | null;
-    difficulty?: string | null;
-  }
-) {
-  const { count, system, category, difficulty } = options;
-
-  // Build where clause
-  const where: Record<string, unknown> = {};
-  if (system) where.system = system;
-  if (difficulty) where.difficulty = difficulty;
-  if (category) {
-    where.tags = { array_contains: category };
-  }
-
-  // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
-  const fetchCount = count * 5;
-
-  // Fetch questions
-  const questions = await prisma.question.findMany({
-    where,
-    take: fetchCount,
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      vignette: true,
-      question: true,
-      options: true,
-      correctAnswer: true,
-      explanation: true,
-      system: true,
-      difficulty: true,
-      tags: true,
-    },
-  });
-
-  // Filter out questions user has already seen
-  const unseenQuestions = questions.filter(q => !seenIds.has(q.id));
-
-  // Apply Fisher-Yates shuffle for unbiased randomization
-  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
-
-  // Take only the requested count
-  const selectedQuestions = shuffledQuestions.slice(0, count);
-
-  // Format questions
-  const result: Array<{
-    id: string;
-    vignette?: string;
-    question: string;
-    options: string[];
-    correctAnswer: string;
-    explanation: string;
-    system: string;
-    difficulty: string;
-    tags?: string[];
-    source: 'main';
-  }> = [];
-  const toRecord: string[] = [];
-
-  for (const q of selectedQuestions) {
-    result.push({
-      id: (q as any).id,
-      vignette: (q as any).vignette || undefined,
-      question: (q as any).question,
-      options: Array.isArray((q as any).options) ? ((q as any).options as string[]) : [],
-      correctAnswer: (q as any).correctAnswer,
-      explanation: (q as any).explanation,
-      system: (q as any).system,
-      difficulty: (q as any).difficulty || 'medium',
-      tags: (q as any).tags as string[] || undefined,
-      source: 'main',
-    });
-    toRecord.push((q as any).id);
-  }
-
-  // Record in history
-  if (toRecord.length > 0) {
-    await prisma.userQuestionSeen.createMany({
-      data: toRecord.map(questionId => ({
-        userId,
-        questionId,
-        questionType: 'question',
-        firstSeenAt: new Date(),
-        lastSeenAt: new Date(),
-        timesShown: 1,
-        timesCorrect: 0,
-        timesIncorrect: 0,
-      })),
-      skipDuplicates: true,
-    });
-  }
-
-  return result;
-}
-
-/**
- * POST handler to seed a question back into the pool
- */
-export const onRequestPost = async (context: CloudflareContext<Env>) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const q = validated.body.question;
 
-    const body = await context.request.json() as { question: any };
-    const q = body.question;
-
-    if (!q || !q.id || !q.question || !q.options || !q.correctAnswer || !q.explanation) {
-      return new Response(JSON.stringify({ error: 'Invalid question data' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Insert into PreGeneratedQuestion table
     await prisma.preGeneratedQuestion.create({
       data: {
         id: q.id,
@@ -480,22 +185,152 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
           tags: q.tags,
         },
         generatedAt: new Date(),
-        usedAt: null, // Ensure it's available
+        usedAt: null,
       },
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    logger.info('Question seeded to pool', { userId: auth.userId, questionId: q.id });
 
+    return { data: { success: true }, status: 201 };
   } catch (error) {
-    console.error('Error seeding question to pool:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    logger.error('Error seeding question to pool', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to seed question to pool');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});
+
+// Helper functions preserved from original file
+async function getFromPreGeneratedPool(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  userId: string,
+  seenIds: Set<string>,
+  options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null },
+  cachedQuestions?: Array<any> | null
+) {
+  const { count, system, category, difficulty } = options;
+  let preGenQuestions: Array<any>;
+  let remaining: number;
+
+  if (cachedQuestions && cachedQuestions.length > 0) {
+    preGenQuestions = cachedQuestions;
+    remaining = cachedQuestions.length;
+  } else {
+    const where: Record<string, unknown> = {};
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+    if (category) where.questionType = category;
+
+    const fetchCount = count * 5;
+    preGenQuestions = await prisma.preGeneratedQuestion.findMany({ where, take: fetchCount, orderBy: { generatedAt: 'asc' } });
+    remaining = await prisma.preGeneratedQuestion.count({ where });
+  }
+
+  const unseenQuestions = preGenQuestions.filter((q) => !seenIds.has(q.id));
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
+  const selectedQuestions = shuffledQuestions.slice(0, count);
+
+  const questions: Array<any> = [];
+  const toMarkUsed: string[] = [];
+
+  for (const q of selectedQuestions) {
+    const data = q.questionData as Record<string, unknown>;
+    const optionsData = data.options || data.answers || data.choices;
+    const options = Array.isArray(optionsData) ? optionsData : [];
+
+    questions.push({
+      id: q.id,
+      vignette: data.vignette,
+      question: data.question,
+      options,
+      correctAnswer: data.correctAnswer,
+      explanation: data.explanation,
+      system: q.system || 'General',
+      difficulty: q.difficulty,
+      tags: data.tags,
+      conditionId: q.conditionId,
+      source: 'pool',
+    });
+    toMarkUsed.push(q.id);
+  }
+
+  if (toMarkUsed.length > 0) {
+    await prisma.userQuestionSeen.createMany({
+      data: toMarkUsed.map((questionId) => ({
+        userId,
+        questionId,
+        questionType: 'pre_generated',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  return { questions, remaining, rawQuestions: cachedQuestions ? undefined : preGenQuestions };
+}
+
+async function getFromMainTable(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  userId: string,
+  seenIds: Set<string>,
+  options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null }
+) {
+  const { count, system, category, difficulty } = options;
+  const where: Record<string, unknown> = {};
+  if (system) where.system = system;
+  if (difficulty) where.difficulty = difficulty;
+  if (category) where.tags = { array_contains: category };
+
+  const fetchCount = count * 5;
+  const questions = await prisma.question.findMany({
+    where,
+    take: fetchCount,
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, vignette: true, question: true, options: true, correctAnswer: true, explanation: true, system: true, difficulty: true, tags: true },
+  });
+
+  const unseenQuestions = questions.filter((q) => !seenIds.has(q.id));
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
+  const selectedQuestions = shuffledQuestions.slice(0, count);
+
+  const result: Array<any> = [];
+  const toRecord: string[] = [];
+
+  for (const q of selectedQuestions as any[]) {
+    result.push({
+      id: q.id,
+      vignette: q.vignette,
+      question: q.question,
+      options: Array.isArray(q.options) ? q.options : [],
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation,
+      system: q.system,
+      difficulty: q.difficulty || 'medium',
+      tags: q.tags,
+      source: 'main',
+    });
+    toRecord.push(q.id);
+  }
+
+  if (toRecord.length > 0) {
+    await prisma.userQuestionSeen.createMany({
+      data: toRecord.map((questionId) => ({
+        userId,
+        questionId,
+        questionType: 'question',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  return result;
+}

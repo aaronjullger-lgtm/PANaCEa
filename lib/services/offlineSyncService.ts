@@ -66,11 +66,11 @@ export function queueSyncOperation(
       timestamp: Date.now(),
       retries: 0,
     };
-    
+
     const pending = getPendingOperations();
     pending.push(op);
     savePendingOperations(pending);
-    
+
     if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Queued ${operation} ${type} operation`);
   } catch (error) {
     console.error('[OfflineSync] Failed to queue operation:', error);
@@ -150,37 +150,38 @@ export async function syncPendingOperations(
     failed: 0,
     conflicts: [],
   };
-  
+
   try {
     if (!isOnline()) {
       if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Cannot sync - device is offline');
       return { ...result, success: false };
     }
-    
+
     const pending = getPendingOperations();
-    
+
     if (pending.length === 0) {
       if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] No pending operations to sync');
       return result;
     }
-    
-    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Syncing ${pending.length} pending operations...`);
-    
+
+    if (DEBUG_OFFLINE_SYNC)
+      console.log(`[OfflineSync] Syncing ${pending.length} pending operations...`);
+
     // Process in batches
     const batches = chunkArray(pending, BATCH_SIZE);
     const remaining: SyncOperation[] = [];
-    
+
     for (const batch of batches) {
       for (const op of batch) {
         try {
           const synced = await syncSingleOperation(op, authToken, conflictResolution);
-          
+
           if (synced) {
             result.synced++;
           } else {
             // Increment retry count
             op.retries++;
-            
+
             if (op.retries < MAX_RETRIES) {
               remaining.push(op);
             } else {
@@ -191,7 +192,7 @@ export async function syncPendingOperations(
         } catch (error) {
           console.error(`[OfflineSync] Error syncing operation ${op.id}:`, error);
           op.retries++;
-          
+
           if (op.retries < MAX_RETRIES) {
             remaining.push(op);
           } else {
@@ -200,15 +201,18 @@ export async function syncPendingOperations(
         }
       }
     }
-    
+
     // Save remaining operations
     savePendingOperations(remaining);
-    
+
     // Update last sync time
     localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
-    
-    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`);
-    
+
+    if (DEBUG_OFFLINE_SYNC)
+      console.log(
+        `[OfflineSync] Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`
+      );
+
     return result;
   } catch (error) {
     console.error('[OfflineSync] Sync failed:', error);
@@ -227,38 +231,38 @@ async function syncSingleOperation(
   try {
     const endpoint = getEndpointForOperation(op);
     const method = getMethodForOperation(op.operation);
-    
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-    
+
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
-    
+
     const response = await fetch(endpoint, {
       method,
       headers,
       body: JSON.stringify(op.data),
     });
-    
+
     if (response.ok) {
       return true;
     }
-    
+
     // Handle conflicts (409 status)
     if (response.status === 409) {
       const serverData = await response.json();
       const resolved = await resolveConflict(op, serverData, conflictResolution);
-      
+
       if (resolved) {
         // Retry with resolved data
         return syncSingleOperation({ ...op, data: resolved }, authToken, conflictResolution);
       }
-      
+
       return false;
     }
-    
+
     console.error(`[OfflineSync] Operation ${op.id} failed with status ${response.status}`);
     return false;
   } catch (error) {
@@ -272,7 +276,7 @@ async function syncSingleOperation(
  */
 function getEndpointForOperation(op: SyncOperation): string {
   const baseUrl = '/api';
-  
+
   switch (op.type) {
     case 'performance':
       return `${baseUrl}/performance`;
@@ -316,23 +320,23 @@ async function resolveConflict(
   switch (resolution.strategy) {
     case 'client-wins':
       return clientOp.data;
-      
+
     case 'server-wins':
       return null; // Discard client changes
-      
+
     case 'newest-wins':
       // Compare timestamps
       const clientTime = clientOp.timestamp;
       const serverTime = serverData.updatedAt ? new Date(serverData.updatedAt).getTime() : 0;
       return clientTime > serverTime ? clientOp.data : null;
-      
+
     case 'merge':
       // Merge non-conflicting fields
       return {
         ...serverData,
         ...clientOp.data,
       };
-      
+
     default:
       return clientOp.data;
   }
@@ -359,7 +363,7 @@ export function getSyncStatus(): {
 } {
   const pending = getPendingOperations();
   const lastSync = localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
-  
+
   return {
     pendingCount: pending.length,
     lastSyncTime: lastSync ? parseInt(lastSync, 10) : null,
@@ -387,7 +391,7 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
   const handleOnline = async () => {
     if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection restored, syncing...');
     setOfflineMode(false);
-    
+
     // Get fresh token if function provided
     let authToken: string | undefined;
     if (getToken) {
@@ -398,23 +402,23 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
         console.error('[OfflineSync] Failed to get auth token:', error);
       }
     }
-    
+
     await syncPendingOperations(authToken);
   };
-  
+
   const handleOffline = () => {
     if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection lost, entering offline mode');
     setOfflineMode(true);
   };
-  
+
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
-  
+
   // Check current status
   if (isOnline() && !isOfflineMode()) {
     handleOnline();
   }
-  
+
   // Return cleanup function
   return () => {
     window.removeEventListener('online', handleOnline);

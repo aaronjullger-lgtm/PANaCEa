@@ -1,6 +1,6 @@
 /**
  * Step 3: Question-to-Condition Linkage System
- * 
+ *
  * This script:
  * 1. Audits questions without condition links
  * 2. Analyzes question text to infer the condition being tested
@@ -14,27 +14,27 @@ interface QuestionLinkageReport {
   totalQuestions: number;
   totalPreGenerated: number;
   totalQuestionAttempts: number;
-  
+
   questionsWithCondition: number;
   questionsWithMedicalContent: number;
   questionsWithBoth: number;
   questionsOrphaned: number;
-  
+
   preGenWithCondition: number;
   preGenWithMedicalContent: number;
   preGenWithBoth: number;
   preGenOrphaned: number;
-  
+
   attemptsWithCondition: number;
   attemptsOrphaned: number;
-  
+
   orphanedQuestions: Array<{
     id: string;
     system: string;
     question: string;
     tags?: any;
   }>;
-  
+
   orphanedPreGen: Array<{
     id: string;
     system: string | null;
@@ -78,24 +78,28 @@ async function auditQuestionLinkage(): Promise<QuestionLinkageReport> {
     });
 
     // Calculate statistics
-    const questionsWithCondition = allQuestions.filter(q => q.conditionId).length;
-    const questionsWithMedicalContent = allQuestions.filter(q => q.medicalContentId).length;
-    const questionsWithBoth = allQuestions.filter(q => q.conditionId && q.medicalContentId).length;
-    const questionsOrphaned = allQuestions.filter(q => !q.conditionId && !q.medicalContentId).length;
+    const questionsWithCondition = allQuestions.filter((q) => q.conditionId).length;
+    const questionsWithMedicalContent = allQuestions.filter((q) => q.medicalContentId).length;
+    const questionsWithBoth = allQuestions.filter(
+      (q) => q.conditionId && q.medicalContentId
+    ).length;
+    const questionsOrphaned = allQuestions.filter(
+      (q) => !q.conditionId && !q.medicalContentId
+    ).length;
 
-    const preGenWithCondition = allPreGen.filter(q => q.conditionId).length;
-    const preGenWithMedicalContent = allPreGen.filter(q => q.medicalContentId).length;
-    const preGenWithBoth = allPreGen.filter(q => q.conditionId && q.medicalContentId).length;
-    const preGenOrphaned = allPreGen.filter(q => !q.conditionId && !q.medicalContentId).length;
+    const preGenWithCondition = allPreGen.filter((q) => q.conditionId).length;
+    const preGenWithMedicalContent = allPreGen.filter((q) => q.medicalContentId).length;
+    const preGenWithBoth = allPreGen.filter((q) => q.conditionId && q.medicalContentId).length;
+    const preGenOrphaned = allPreGen.filter((q) => !q.conditionId && !q.medicalContentId).length;
 
-    const attemptsWithCondition = allAttempts.filter(a => a.conditionId).length;
-    const attemptsOrphaned = allAttempts.filter(a => !a.conditionId).length;
+    const attemptsWithCondition = allAttempts.filter((a) => a.conditionId).length;
+    const attemptsOrphaned = allAttempts.filter((a) => !a.conditionId).length;
 
     // Get orphaned question details
     const orphanedQuestions = allQuestions
-      .filter(q => !q.conditionId && !q.medicalContentId)
+      .filter((q) => !q.conditionId && !q.medicalContentId)
       .slice(0, 20)
-      .map(q => ({
+      .map((q) => ({
         id: q.id,
         system: q.system,
         question: q.question.substring(0, 100),
@@ -103,9 +107,9 @@ async function auditQuestionLinkage(): Promise<QuestionLinkageReport> {
       }));
 
     const orphanedPreGen = allPreGen
-      .filter(q => !q.conditionId && !q.medicalContentId)
+      .filter((q) => !q.conditionId && !q.medicalContentId)
       .slice(0, 20)
-      .map(q => ({
+      .map((q) => ({
         id: q.id,
         system: q.system,
         questionType: q.questionType,
@@ -160,9 +164,10 @@ function inferConditionFromQuestion(
     if (Array.isArray(tags)) {
       for (const tag of tags) {
         const tagLower = String(tag).toLowerCase();
-        const match = conditions.find(c => 
-          c.name.toLowerCase() === tagLower ||
-          c.aliases.some(alias => alias.toLowerCase() === tagLower)
+        const match = conditions.find(
+          (c) =>
+            c.name.toLowerCase() === tagLower ||
+            c.aliases.some((alias) => alias.toLowerCase() === tagLower)
         );
         if (match) return match.id;
       }
@@ -170,9 +175,9 @@ function inferConditionFromQuestion(
       // If tags is an object, check for condition or conditionId
       const conditionTag = tags.condition || tags.conditionId;
       if (conditionTag) {
-        const match = conditions.find(c => 
-          c.id === conditionTag || 
-          c.name.toLowerCase() === String(conditionTag).toLowerCase()
+        const match = conditions.find(
+          (c) =>
+            c.id === conditionTag || c.name.toLowerCase() === String(conditionTag).toLowerCase()
         );
         if (match) return match.id;
       }
@@ -181,11 +186,11 @@ function inferConditionFromQuestion(
 
   // Try to match from question text (vignette + question)
   const questionText = ((question.vignette || '') + ' ' + (question.question || '')).toLowerCase();
-  
+
   // Look for exact condition name matches (prioritize same system)
-  const sameSystemConditions = conditions.filter(c => c.system === question.system);
-  const otherConditions = conditions.filter(c => c.system !== question.system);
-  
+  const sameSystemConditions = conditions.filter((c) => c.system === question.system);
+  const otherConditions = conditions.filter((c) => c.system !== question.system);
+
   // Try same system first
   for (const condition of sameSystemConditions) {
     const conditionName = condition.name.toLowerCase();
@@ -199,7 +204,7 @@ function inferConditionFromQuestion(
       }
     }
   }
-  
+
   // Then try other systems
   for (const condition of otherConditions) {
     const conditionName = condition.name.toLowerCase();
@@ -225,16 +230,10 @@ async function linkQuestionsToConditions(dryRun: boolean = true): Promise<number
       where: {
         OR: [
           {
-            AND: [
-              { conditionId: null },
-              { medicalContentId: null },
-            ],
+            AND: [{ conditionId: null }, { medicalContentId: null }],
           },
           {
-            AND: [
-              { conditionId: { not: null } },
-              { medicalContentId: null },
-            ],
+            AND: [{ conditionId: { not: null } }, { medicalContentId: null }],
           },
         ],
       },
@@ -254,14 +253,14 @@ async function linkQuestionsToConditions(dryRun: boolean = true): Promise<number
     for (const question of orphanedQuestions) {
       // If question already has conditionId, just find the medicalContentId
       let conditionId = question.conditionId;
-      
+
       // If no conditionId, try to infer it
       if (!conditionId) {
         conditionId = inferConditionFromQuestion(question, allConditions);
       }
-      
+
       if (conditionId) {
-        const condition = allConditions.find(c => c.id === conditionId);
+        const condition = allConditions.find((c) => c.id === conditionId);
         console.log(`✓ ${question.id} → ${condition?.name}`);
         updates.push({ id: question.id, conditionId });
         linked++;
@@ -270,7 +269,7 @@ async function linkQuestionsToConditions(dryRun: boolean = true): Promise<number
 
     if (!dryRun && updates.length > 0) {
       console.log(`\n💾 Applying ${updates.length} updates...`);
-      
+
       for (const update of updates) {
         // Find MedicalContent by conditionId and get its id (UUID)
         const medicalContent = await prisma.medicalContent.findUnique({
@@ -308,10 +307,7 @@ async function linkPreGeneratedQuestions(dryRun: boolean = true): Promise<number
     // Get orphaned pre-generated questions
     const orphanedPreGen = await prisma.preGeneratedQuestion.findMany({
       where: {
-        AND: [
-          { conditionId: null },
-          { medicalContentId: null },
-        ],
+        AND: [{ conditionId: null }, { medicalContentId: null }],
       },
       select: {
         id: true,
@@ -325,7 +321,7 @@ async function linkPreGeneratedQuestions(dryRun: boolean = true): Promise<number
     // For PreGeneratedQuestion, we need to look at the questionData JSON
     for (const preGen of orphanedPreGen) {
       const questionData = preGen.questionData as any;
-      
+
       // Try to extract condition from questionData
       if (questionData.conditionId) {
         const conditionExists = await prisma.condition.findUnique({
@@ -363,22 +359,42 @@ function printReport(report: QuestionLinkageReport): void {
 
   console.log(`\n📝 Question Table:`);
   console.log(`  Total:                     ${report.totalQuestions}`);
-  console.log(`  With conditionId:          ${report.questionsWithCondition} (${Math.round(report.questionsWithCondition / report.totalQuestions * 100)}%)`);
-  console.log(`  With medicalContentId:     ${report.questionsWithMedicalContent} (${Math.round(report.questionsWithMedicalContent / report.totalQuestions * 100)}%)`);
-  console.log(`  With both:                 ${report.questionsWithBoth} (${Math.round(report.questionsWithBoth / report.totalQuestions * 100)}%)`);
-  console.log(`  🔴 Orphaned (no links):    ${report.questionsOrphaned} (${Math.round(report.questionsOrphaned / report.totalQuestions * 100)}%)`);
+  console.log(
+    `  With conditionId:          ${report.questionsWithCondition} (${Math.round((report.questionsWithCondition / report.totalQuestions) * 100)}%)`
+  );
+  console.log(
+    `  With medicalContentId:     ${report.questionsWithMedicalContent} (${Math.round((report.questionsWithMedicalContent / report.totalQuestions) * 100)}%)`
+  );
+  console.log(
+    `  With both:                 ${report.questionsWithBoth} (${Math.round((report.questionsWithBoth / report.totalQuestions) * 100)}%)`
+  );
+  console.log(
+    `  🔴 Orphaned (no links):    ${report.questionsOrphaned} (${Math.round((report.questionsOrphaned / report.totalQuestions) * 100)}%)`
+  );
 
   console.log(`\n🎯 PreGeneratedQuestion Table:`);
   console.log(`  Total:                     ${report.totalPreGenerated}`);
-  console.log(`  With conditionId:          ${report.preGenWithCondition} (${Math.round(report.preGenWithCondition / report.totalPreGenerated * 100)}%)`);
-  console.log(`  With medicalContentId:     ${report.preGenWithMedicalContent} (${Math.round(report.preGenWithMedicalContent / report.totalPreGenerated * 100)}%)`);
-  console.log(`  With both:                 ${report.preGenWithBoth} (${Math.round(report.preGenWithBoth / report.totalPreGenerated * 100)}%)`);
-  console.log(`  🔴 Orphaned (no links):    ${report.preGenOrphaned} (${Math.round(report.preGenOrphaned / report.totalPreGenerated * 100)}%)`);
+  console.log(
+    `  With conditionId:          ${report.preGenWithCondition} (${Math.round((report.preGenWithCondition / report.totalPreGenerated) * 100)}%)`
+  );
+  console.log(
+    `  With medicalContentId:     ${report.preGenWithMedicalContent} (${Math.round((report.preGenWithMedicalContent / report.totalPreGenerated) * 100)}%)`
+  );
+  console.log(
+    `  With both:                 ${report.preGenWithBoth} (${Math.round((report.preGenWithBoth / report.totalPreGenerated) * 100)}%)`
+  );
+  console.log(
+    `  🔴 Orphaned (no links):    ${report.preGenOrphaned} (${Math.round((report.preGenOrphaned / report.totalPreGenerated) * 100)}%)`
+  );
 
   console.log(`\n📊 QuestionAttempt Table:`);
   console.log(`  Total:                     ${report.totalQuestionAttempts}`);
-  console.log(`  With conditionId:          ${report.attemptsWithCondition} (${Math.round(report.attemptsWithCondition / report.totalQuestionAttempts * 100)}%)`);
-  console.log(`  🔴 Orphaned (no links):    ${report.attemptsOrphaned} (${Math.round(report.attemptsOrphaned / report.totalQuestionAttempts * 100)}%)`);
+  console.log(
+    `  With conditionId:          ${report.attemptsWithCondition} (${Math.round((report.attemptsWithCondition / report.totalQuestionAttempts) * 100)}%)`
+  );
+  console.log(
+    `  🔴 Orphaned (no links):    ${report.attemptsOrphaned} (${Math.round((report.attemptsOrphaned / report.totalQuestionAttempts) * 100)}%)`
+  );
 
   if (report.orphanedQuestions.length > 0) {
     console.log(`\n⚠️  Sample orphaned questions (showing first 10):`);
@@ -446,7 +462,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);
   })

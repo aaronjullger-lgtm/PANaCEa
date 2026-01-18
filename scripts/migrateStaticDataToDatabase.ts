@@ -1,16 +1,16 @@
 /**
  * Data Migration Script: Static Files → Database
- * 
+ *
  * This script safely migrates data from static JSON/TS files to the Supabase database.
- * 
+ *
  * IMPORTANT: This does NOT delete any static files. They remain as backup.
- * 
+ *
  * What it does:
  * - Reads data from static files (conditionContent, pharmData, etc.)
  * - Inserts/updates records in the database
  * - Creates a migration report
  * - Validates data integrity after migration
- * 
+ *
  * Run with: npx tsx scripts/migrateStaticDataToDatabase.ts
  */
 
@@ -29,7 +29,7 @@ const registryMap = new Map(
 function toTitleCase(str: string): string {
   return str
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
 
@@ -80,12 +80,12 @@ function loadJsonFile<T>(filePath: string): T | null {
 
 /**
  * Migrate condition content to MedicalContent table
- * 
+ *
  * Note: This preserves the existing static file as backup
  */
 async function migrateConditionContent() {
   console.log('\n📋 Migrating Condition Content...');
-  
+
   // Try multiple possible locations
   const possiblePaths = [
     'conditionContent.final.json',
@@ -118,7 +118,7 @@ async function migrateConditionContent() {
   }
 
   console.log(`✓ Loaded data from: ${usedPath}`);
-  
+
   let conditions: [string, any][] = [];
 
   if (Array.isArray(conditionData)) {
@@ -155,10 +155,15 @@ async function migrateConditionContent() {
       // If content has a 'content' property, use that as the actual content
       // and use the outer properties for metadata if available
       let actualContent = content;
-      if (content && typeof content === 'object' && 'content' in content && !('overview' in content)) {
-         // It's likely a wrapper object: { conditionId, condition, content: { ... } }
-         actualContent = content.content;
-         if (content.condition) condition = content.condition;
+      if (
+        content &&
+        typeof content === 'object' &&
+        'content' in content &&
+        !('overview' in content)
+      ) {
+        // It's likely a wrapper object: { conditionId, condition, content: { ... } }
+        actualContent = content.content;
+        if (content.condition) condition = content.condition;
       }
 
       const registryEntry = registryMap.get(conditionId);
@@ -171,15 +176,16 @@ async function migrateConditionContent() {
         // Format: SYSTEM__SUBCATEGORY__CONDITION
         const parts = conditionId.split('__');
         system = parts[0] || 'MISC';
-        
-        const rawCondition = parts.length > 2 ? parts[parts.length - 1] : (parts[2] || conditionId);
+
+        const rawCondition = parts.length > 2 ? parts[parts.length - 1] : parts[2] || conditionId;
         // Only overwrite condition if we didn't get it from the wrapper object
         if (condition === conditionId) {
-            condition = toTitleCase(rawCondition);
+          condition = toTitleCase(rawCondition);
         }
-        
+
         // Subcategory is everything in between
-        const rawSubcategory = parts.length > 2 ? parts.slice(1, parts.length - 1).join('__') : (parts[1] || 'general');
+        const rawSubcategory =
+          parts.length > 2 ? parts.slice(1, parts.length - 1).join('__') : parts[1] || 'general';
         subcategory = formatSubcategory(rawSubcategory);
       }
 
@@ -232,7 +238,6 @@ async function migrateConditionContent() {
 
       console.log(`  ✅ Migrated/Updated: ${conditionId} -> ${condition}`);
       report.successful++;
-
     } catch (error: any) {
       console.error(`  ❌ Failed to migrate ${conditionId}:`, error.message);
       report.failed++;
@@ -250,10 +255,10 @@ async function migrateConditionContent() {
  */
 async function migrateConditions() {
   console.log('\n🏥 Migrating Conditions Registry...');
-  
+
   // Load condition registry (could be TypeScript or JSON)
   const registryPath = 'conditionRegistry.ts';
-  
+
   if (!fs.existsSync(registryPath)) {
     console.log('⚠️  conditionRegistry.ts not found. Skipping.');
     return;
@@ -261,14 +266,14 @@ async function migrateConditions() {
 
   // For now, skip complex TS parsing. We'll get conditions from MedicalContent instead.
   // This ensures we only create Condition records for content we actually have.
-  
+
   console.log('ℹ️  Deriving conditions from MedicalContent table...');
-  
+
   const medicalContent = await prisma.medicalContent.findMany({
     where: {
       system: {
-        not: 'PHARM'
-      }
+        not: 'PHARM',
+      },
     },
     select: {
       conditionId: true,
@@ -290,12 +295,12 @@ async function migrateConditions() {
       // 2. If not found, try to find by "raw" name from ID (to fix snake_case)
       if (!existing) {
         const parts = item.conditionId.split('__');
-        const rawName = parts.length > 2 ? parts[parts.length - 1] : (parts[2] || item.conditionId);
-        
+        const rawName = parts.length > 2 ? parts[parts.length - 1] : parts[2] || item.conditionId;
+
         if (rawName !== item.condition) {
-           existing = await prisma.condition.findFirst({
-             where: { name: rawName }
-           });
+          existing = await prisma.condition.findFirst({
+            where: { name: rawName },
+          });
         }
       }
 
@@ -327,7 +332,6 @@ async function migrateConditions() {
 
       console.log(`  ✅ Created condition: ${item.condition}`);
       report.successful++;
-
     } catch (error: any) {
       console.error(`  ❌ Failed to create condition ${item.condition}:`, error.message);
       report.failed++;
@@ -345,33 +349,32 @@ async function migrateConditions() {
  */
 async function validateMigration() {
   console.log('\n🔍 Validating migration...');
-  
+
   try {
     // Count records in database
     const medicalContentCount = await prisma.medicalContent.count();
     const conditionsCount = await prisma.condition.count();
-    
+
     console.log(`✓ MedicalContent records: ${medicalContentCount}`);
     console.log(`✓ Condition records: ${conditionsCount}`);
-    
+
     // Check for orphaned records
     const orphanedContent = await prisma.medicalContent.findMany({
       where: {
         condition: {
           not: {
-            in: await prisma.condition.findMany().then(cs => cs.map(c => c.name))
-          }
-        }
+            in: await prisma.condition.findMany().then((cs) => cs.map((c) => c.name)),
+          },
+        },
       },
       take: 5,
     });
-    
+
     if (orphanedContent.length > 0) {
       console.log(`⚠️  Found ${orphanedContent.length} orphaned content records`);
     } else {
       console.log('✓ No orphaned records found');
     }
-    
   } catch (error: any) {
     console.error('❌ Validation failed:', error.message);
   }
@@ -383,7 +386,7 @@ async function validateMigration() {
 function generateReport() {
   report.endTime = new Date();
   const duration = report.endTime.getTime() - report.startTime.getTime();
-  
+
   console.log('\n' + '='.repeat(60));
   console.log('📊 MIGRATION REPORT');
   console.log('='.repeat(60));
@@ -394,7 +397,7 @@ function generateReport() {
   console.log(`✅ Successful:     ${report.successful}`);
   console.log(`⏭️  Skipped:        ${report.skipped}`);
   console.log(`❌ Failed:         ${report.failed}`);
-  
+
   if (report.errors.length > 0) {
     console.log(`\n⚠️  ERRORS (${report.errors.length}):`);
     report.errors.forEach((err, idx) => {
@@ -402,17 +405,17 @@ function generateReport() {
       console.log(`   ${err.error}`);
     });
   }
-  
+
   console.log('='.repeat(60));
-  
+
   // Save report to file
   const reportPath = path.resolve(process.cwd(), 'output', 'migration-report.json');
   const outputDir = path.dirname(reportPath);
-  
+
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-  
+
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\n📄 Report saved to: ${reportPath}`);
 }
@@ -425,28 +428,27 @@ async function main() {
   console.log('='.repeat(60));
   console.log('⚠️  IMPORTANT: This does NOT delete any static files!');
   console.log('   All original files remain as backup.');
-  console.log('=' .repeat(60));
-  
+  console.log('='.repeat(60));
+
   try {
     // Step 1: Migrate condition content
     await migrateConditionContent();
-    
+
     // Step 2: Migrate conditions registry
     await migrateConditions();
-    
+
     // Step 3: Validate migration
     await validateMigration();
-    
+
     // Step 4: Generate report
     generateReport();
-    
+
     console.log('\n✨ Migration complete!');
     console.log('\nNext steps:');
     console.log('1. Review the migration report in output/migration-report.json');
     console.log('2. Test your application with database-backed data');
     console.log('3. Keep static files as backup until fully verified');
     console.log('4. Update services to read from database first, fall back to static');
-    
   } catch (error) {
     console.error('\n❌ Fatal error during migration:', error);
     process.exit(1);

@@ -1,6 +1,17 @@
 import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, Heart, Wind, Bug, Activity as ActivityIcon, Utensils, Brain, Bone, Shuffle, Pill } from 'lucide-react';
+import {
+  X,
+  Heart,
+  Wind,
+  Bug,
+  Activity as ActivityIcon,
+  Utensils,
+  Brain,
+  Bone,
+  Shuffle,
+  Pill,
+} from 'lucide-react';
 import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-first-line-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
@@ -136,7 +147,9 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
           </button>
           <div className="flex items-center gap-2">
             <Pill className="w-5 h-5 text-cyan-400" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">First Line Treatment</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
+              First Line Treatment
+            </h1>
           </div>
           <div className="w-12 sm:w-16" />
         </header>
@@ -201,7 +214,12 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
               onNext={nextQuestion}
               nextLabel="Next Question"
               category="procedure"
-              tags={['treatment', 'first-line', currentQuestion.category, currentQuestion.condition]}
+              tags={[
+                'treatment',
+                'first-line',
+                currentQuestion.category,
+                currentQuestion.condition,
+              ]}
               onDeepDive={handleDeepDive}
             />
           ) : undefined
@@ -223,9 +241,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
                   text={option}
                   isSelected={userAnswerIndex === index}
                   isCorrect={
-                    status === 'feedback'
-                      ? index === currentQuestion.correctAnswerIndex
-                      : null
+                    status === 'feedback' ? index === currentQuestion.correctAnswerIndex : null
                   }
                   isAnswered={status === 'feedback'}
                   onSelect={submitAnswer}

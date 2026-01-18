@@ -1,6 +1,6 @@
 /**
  * Goal Card Component
- * 
+ *
  * Displays individual goal with:
  * - Progress bar
  * - Streak badge
@@ -10,11 +10,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Flame, 
-  Calendar, 
-  Target, 
-  Edit2, 
+import {
+  Flame,
+  Calendar,
+  Target,
+  Edit2,
   Trash2,
   CheckCircle,
   Pause,
@@ -33,40 +33,55 @@ interface GoalCardProps {
 export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUpdate }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30';
-      case 'completed': return 'text-green-600 bg-green-100 dark:bg-green-900/30';
-      case 'paused': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
-      case 'failed': return 'text-red-600 bg-red-100 dark:bg-red-900/30';
-      default: return 'text-slate-600 bg-slate-100 dark:bg-slate-800';
+      case 'active':
+        return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30';
+      case 'completed':
+        return 'text-green-600 bg-green-100 dark:bg-green-900/30';
+      case 'paused':
+        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
+      case 'failed':
+        return 'text-red-600 bg-red-100 dark:bg-red-900/30';
+      default:
+        return 'text-slate-600 bg-slate-100 dark:bg-slate-800';
     }
   };
-  
+
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <TrendingUp className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      case 'paused': return <Pause className="w-4 h-4" />;
-      case 'failed': return <XCircle className="w-4 h-4" />;
-      default: return <Target className="w-4 h-4" />;
+      case 'active':
+        return <TrendingUp className="w-4 h-4" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'paused':
+        return <Pause className="w-4 h-4" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Target className="w-4 h-4" />;
     }
   };
-  
+
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'daily': return 'Daily';
-      case 'weekly': return 'Weekly';
-      case 'exam_date': return 'Exam Goal';
-      case 'mastery': return 'Mastery';
-      default: return type;
+      case 'daily':
+        return 'Daily';
+      case 'weekly':
+        return 'Weekly';
+      case 'exam_date':
+        return 'Exam Goal';
+      case 'mastery':
+        return 'Mastery';
+      default:
+        return type;
     }
   };
-  
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
-  
+
   const getDaysUntilTarget = () => {
     if (!goal.targetDate) return null;
     const target = new Date(goal.targetDate);
@@ -74,9 +89,9 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
     const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
   };
-  
+
   const daysRemaining = getDaysUntilTarget();
-  
+
   return (
     <motion.div
       layout
@@ -92,7 +107,9 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               {goal.title}
             </h3>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(goal.status)}`}>
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(goal.status)}`}
+            >
               {getStatusIcon(goal.status)}
               {goal.status}
             </span>
@@ -100,20 +117,18 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
               {getTypeLabel(goal.goalType)}
             </span>
           </div>
-          
+
           {goal.description && (
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-              {goal.description}
-            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{goal.description}</p>
           )}
-          
+
           {goal.motivationNotes && (
             <p className="text-sm text-blue-600 dark:text-blue-400 italic">
               💭 {goal.motivationNotes}
             </p>
           )}
         </div>
-        
+
         <div className="flex gap-2 ml-4">
           <button
             onClick={onEdit}
@@ -131,7 +146,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           </button>
         </div>
       </div>
-      
+
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between text-sm mb-2">
@@ -142,7 +157,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             {goal.progressPercentage.toFixed(0)}%
           </span>
         </div>
-        
+
         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
@@ -152,7 +167,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           />
         </div>
       </div>
-      
+
       {/* Metadata */}
       <div className="flex items-center gap-4 flex-wrap text-sm">
         {/* Streak */}
@@ -167,7 +182,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             )}
           </div>
         )}
-        
+
         {/* Target Date */}
         {goal.targetDate && (
           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
@@ -175,19 +190,15 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             <span>
               {formatDate(goal.targetDate)}
               {daysRemaining !== null && daysRemaining > 0 && (
-                <span className="ml-1 text-xs">
-                  ({daysRemaining} days left)
-                </span>
+                <span className="ml-1 text-xs">({daysRemaining} days left)</span>
               )}
               {daysRemaining !== null && daysRemaining < 0 && (
-                <span className="ml-1 text-xs text-red-600">
-                  (overdue)
-                </span>
+                <span className="ml-1 text-xs text-red-600">(overdue)</span>
               )}
             </span>
           </div>
         )}
-        
+
         {/* Target System */}
         {goal.targetSystem && (
           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
@@ -195,7 +206,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             <span>{goal.targetSystem}</span>
           </div>
         )}
-        
+
         {/* Recurring Badge */}
         {goal.isRecurring && (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
@@ -203,7 +214,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           </span>
         )}
       </div>
-      
+
       {/* Milestones */}
       {goal.milestones && Array.isArray(goal.milestones) && goal.milestones.length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -225,7 +236,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           </div>
         </div>
       )}
-      
+
       {/* Reward Message */}
       {goal.status === 'completed' && goal.rewardMessage && (
         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">

@@ -1,17 +1,17 @@
 /**
  * Learning Pattern Engine
- * 
+ *
  * A sophisticated deep learning-inspired system that models how each student learns,
  * implementing research-backed algorithms for forgetting curves, interference detection,
  * consolidation windows, and spacing optimization.
- * 
+ *
  * Research foundations:
  * - Ebbinghaus (1885) - Original forgetting curve research
  * - Bjork & Bjork (1992) - Desirable difficulties in learning
  * - Rohrer & Taylor (2007) - Spacing and interleaving effects
  * - Dunlosky et al. (2013) - Effective learning strategies meta-analysis
  * - Bahrick (1979) - Long-term retention and spacing
- * 
+ *
  * @module learningPatternEngine
  */
 
@@ -26,24 +26,24 @@ export interface ConceptRetentionModel {
   conceptId: string;
   conditionId: string | null;
   system: string;
-  
+
   // Ebbinghaus forgetting curve parameters (personalized)
-  initialStrength: number;      // How well learned initially (0-100)
-  decayRate: number;            // Personal decay rate for this concept (0.1-0.5)
-  stabilityMultiplier: number;  // How reviews strengthen stability (1.0-3.0)
-  
+  initialStrength: number; // How well learned initially (0-100)
+  decayRate: number; // Personal decay rate for this concept (0.1-0.5)
+  stabilityMultiplier: number; // How reviews strengthen stability (1.0-3.0)
+
   // Retention state
-  currentRetention: number;     // Estimated current retention (0-100)
+  currentRetention: number; // Estimated current retention (0-100)
   lastReviewedAt: Date | null;
   reviewCount: number;
   consecutiveCorrect: number;
   consecutiveIncorrect: number;
-  
+
   // Performance metrics
   averageResponseTimeMs: number;
-  accuracyHistory: number[];    // Last 10 attempts (1 = correct, 0 = incorrect)
+  accuracyHistory: number[]; // Last 10 attempts (1 = correct, 0 = incorrect)
   interferingConcepts: string[]; // Concepts often confused with this one
-  
+
   // Optimal review timing
   optimalIntervalDays: number;
   nextOptimalReview: Date;
@@ -56,7 +56,7 @@ export interface ConceptRetentionModel {
 export interface InterferencePattern {
   conceptA: string;
   conceptB: string;
-  confusionScore: number;       // 0-100, higher = more confused
+  confusionScore: number; // 0-100, higher = more confused
   confusionDirection: 'A→B' | 'B→A' | 'bidirectional';
   occurrences: number;
   lastOccurrence: Date;
@@ -70,10 +70,10 @@ export interface InterferencePattern {
 export interface ConsolidationWindow {
   triggerConceptId: string;
   relatedConcepts: string[];
-  windowStartMs: number;        // Time after trigger to start introducing related
-  windowEndMs: number;          // Time after trigger when window closes
+  windowStartMs: number; // Time after trigger to start introducing related
+  windowEndMs: number; // Time after trigger when window closes
   reason: string;
-  strength: number;             // How strongly related (0-100)
+  strength: number; // How strongly related (0-100)
 }
 
 /**
@@ -81,17 +81,17 @@ export interface ConsolidationWindow {
  */
 export interface SpacingOptimization {
   userId: string;
-  
+
   // Personalized spacing parameters
-  baseIntervalHours: number;    // Initial review interval
-  intervalMultiplier: number;   // How much to increase after success
+  baseIntervalHours: number; // Initial review interval
+  intervalMultiplier: number; // How much to increase after success
   minimumIntervalHours: number; // Don't review sooner than this
-  maximumIntervalDays: number;  // Cap for very stable items
-  
+  maximumIntervalDays: number; // Cap for very stable items
+
   // Learning speed classification
   learningSpeed: 'deliberate' | 'moderate' | 'rapid';
   forgettingSpeed: 'slow' | 'average' | 'fast';
-  
+
   // System-specific overrides
   systemOverrides: Map<string, Partial<SpacingOptimization>>;
 }
@@ -102,29 +102,29 @@ export interface SpacingOptimization {
 export interface LearningPatternAnalysis {
   userId: string;
   analyzedAt: Date;
-  
+
   // Pattern metrics
-  overallLearningEfficiency: number;   // 0-100
-  retentionStrength: number;           // 0-100
-  spacingEffectiveness: number;        // 0-100
-  interferenceSusceptibility: number;  // 0-100 (lower is better)
-  
+  overallLearningEfficiency: number; // 0-100
+  retentionStrength: number; // 0-100
+  spacingEffectiveness: number; // 0-100
+  interferenceSusceptibility: number; // 0-100 (lower is better)
+
   // Concept states
   conceptModels: ConceptRetentionModel[];
   totalConceptsTracked: number;
   conceptsNeedingReview: number;
   conceptsOverdue: number;
-  
+
   // Pattern discoveries
   interferencePatterns: InterferencePattern[];
   consolidationWindows: ConsolidationWindow[];
   spacingOptimization: SpacingOptimization;
-  
+
   // Predictions
   predictedRetentionIn7Days: number;
   predictedRetentionIn30Days: number;
   estimatedTimeToMastery: number; // hours
-  
+
   // Recommendations
   recommendations: LearningRecommendation[];
 }
@@ -146,22 +146,22 @@ export interface ErrorClassification {
   questionId: string;
   conceptId: string;
   errorType: ErrorType;
-  confidence: number;         // How certain of classification (0-100)
-  indicators: string[];       // What led to this classification
-  remediation: string;        // Suggested fix
+  confidence: number; // How certain of classification (0-100)
+  indicators: string[]; // What led to this classification
+  remediation: string; // Suggested fix
 }
 
-export type ErrorType = 
-  | 'knowledge_gap'           // Never learned the concept
-  | 'incomplete_learning'     // Partially learned
-  | 'interference'            // Confused with similar concept
-  | 'retrieval_failure'       // Knew but couldn't recall
-  | 'application_error'       // Know fact but can't apply
-  | 'careless'                // Quick, simple mistake
-  | 'time_pressure'           // Rushed due to time
-  | 'misread'                 // Misunderstood question
-  | 'overthinking'            // Changed correct to incorrect
-  | 'guessing';               // Random guess
+export type ErrorType =
+  | 'knowledge_gap' // Never learned the concept
+  | 'incomplete_learning' // Partially learned
+  | 'interference' // Confused with similar concept
+  | 'retrieval_failure' // Knew but couldn't recall
+  | 'application_error' // Know fact but can't apply
+  | 'careless' // Quick, simple mistake
+  | 'time_pressure' // Rushed due to time
+  | 'misread' // Misunderstood question
+  | 'overthinking' // Changed correct to incorrect
+  | 'guessing'; // Random guess
 
 // ============================================================================
 // Storage Keys
@@ -181,17 +181,17 @@ const STORAGE_KEYS = {
 
 // Ebbinghaus forgetting curve: R = e^(-t/S) where S = stability
 const DEFAULT_INITIAL_STRENGTH = 70;
-const DEFAULT_DECAY_RATE = 0.25;          // ~50% retention after 2.77 days
-const DEFAULT_STABILITY_MULTIPLIER = 1.5;  // Each review increases stability 50%
+const DEFAULT_DECAY_RATE = 0.25; // ~50% retention after 2.77 days
+const DEFAULT_STABILITY_MULTIPLIER = 1.5; // Each review increases stability 50%
 
 // Spacing effect parameters (from Bahrick 1979)
-const BASE_INTERVAL_HOURS = 4;             // First review after 4 hours
-const INTERVAL_MULTIPLIER_DEFAULT = 2.0;   // Double each time
+const BASE_INTERVAL_HOURS = 4; // First review after 4 hours
+const INTERVAL_MULTIPLIER_DEFAULT = 2.0; // Double each time
 const MIN_INTERVAL_HOURS = 1;
 const MAX_INTERVAL_DAYS = 180;
 
 // Interference thresholds
-const INTERFERENCE_THRESHOLD = 0.3;        // 30% error rate indicates interference
+const INTERFERENCE_THRESHOLD = 0.3; // 30% error rate indicates interference
 const INTERFERENCE_MIN_SAMPLES = 5;
 
 // ============================================================================
@@ -214,7 +214,7 @@ class LearningPatternEngine {
 
   /**
    * Calculate estimated retention using personalized Ebbinghaus curve
-   * 
+   *
    * Formula: R = S * e^(-t * d)
    * Where:
    *   R = Retention (0-100)
@@ -229,10 +229,10 @@ class LearningPatternEngine {
 
     const now = new Date();
     const daysSinceReview = (now.getTime() - model.lastReviewedAt.getTime()) / 86400000;
-    
+
     // Apply Ebbinghaus forgetting curve with personal parameters
     const retention = model.initialStrength * Math.exp(-daysSinceReview * model.decayRate);
-    
+
     return Math.max(0, Math.min(100, retention));
   }
 
@@ -250,13 +250,13 @@ class LearningPatternEngine {
     correctAnswer: string
   ): ConceptRetentionModel {
     let model = this.conceptModels.get(conceptId);
-    
+
     if (!model) {
       model = this.createNewConceptModel(conceptId, conditionId, system);
     }
 
     const previousRetention = this.calculateRetention(model);
-    
+
     // Update accuracy history
     model.accuracyHistory.push(wasCorrect ? 1 : 0);
     if (model.accuracyHistory.length > 10) {
@@ -273,9 +273,11 @@ class LearningPatternEngine {
     }
 
     // Update response time average
-    model.averageResponseTimeMs = model.reviewCount === 0
-      ? responseTimeMs
-      : (model.averageResponseTimeMs * model.reviewCount + responseTimeMs) / (model.reviewCount + 1);
+    model.averageResponseTimeMs =
+      model.reviewCount === 0
+        ? responseTimeMs
+        : (model.averageResponseTimeMs * model.reviewCount + responseTimeMs) /
+          (model.reviewCount + 1);
 
     model.reviewCount++;
     model.lastReviewedAt = new Date();
@@ -285,28 +287,26 @@ class LearningPatternEngine {
       // Successful recall strengthens memory
       const strengthBoost = this.calculateStrengthBoost(model, responseTimeMs);
       model.initialStrength = Math.min(100, model.initialStrength + strengthBoost);
-      
+
       // Decrease decay rate (slower forgetting)
       model.decayRate = Math.max(0.05, model.decayRate * 0.95);
-      
+
       // Increase stability multiplier
       model.stabilityMultiplier = Math.min(3.0, model.stabilityMultiplier * 1.05);
     } else {
       // Failed recall weakens estimates
       model.initialStrength = Math.max(20, model.initialStrength - 15);
-      
+
       // Increase decay rate (faster forgetting)
       model.decayRate = Math.min(0.5, model.decayRate * 1.1);
-      
+
       // Check for interference pattern
       this.checkForInterference(conceptId, selectedAnswer, correctAnswer);
     }
 
     // Calculate new optimal interval
     model.optimalIntervalDays = this.calculateOptimalInterval(model);
-    model.nextOptimalReview = new Date(
-      Date.now() + model.optimalIntervalDays * 86400000
-    );
+    model.nextOptimalReview = new Date(Date.now() + model.optimalIntervalDays * 86400000);
 
     // Update urgency
     model.currentRetention = this.calculateRetention(model);
@@ -320,7 +320,8 @@ class LearningPatternEngine {
         errorType: 'overthinking',
         confidence: 80,
         indicators: ['Changed answer', 'Final answer incorrect', 'Original may have been correct'],
-        remediation: 'Trust your first instinct more often - your change pattern shows 2nd guessing hurts',
+        remediation:
+          'Trust your first instinct more often - your change pattern shows 2nd guessing hurts',
       });
     }
 
@@ -332,7 +333,7 @@ class LearningPatternEngine {
 
   /**
    * Calculate strength boost from successful recall
-   * 
+   *
    * Higher boost for:
    * - Faster responses (more automatic)
    * - Longer time since last review (desirable difficulty)
@@ -371,7 +372,7 @@ class LearningPatternEngine {
   private calculateOptimalInterval(model: ConceptRetentionModel): number {
     const spacing = this.getSpacingOptimization();
     const recentAccuracy = this.calculateRecentAccuracy(model);
-    
+
     // Base interval from spacing parameters
     let interval = spacing.baseIntervalHours / 24; // Convert to days
 
@@ -387,10 +388,10 @@ class LearningPatternEngine {
     }
 
     // Adjust for strength
-    interval *= (model.initialStrength / 70); // Normalize around default strength
+    interval *= model.initialStrength / 70; // Normalize around default strength
 
     // Adjust for decay rate
-    interval *= (DEFAULT_DECAY_RATE / model.decayRate);
+    interval *= DEFAULT_DECAY_RATE / model.decayRate;
 
     // Apply bounds
     interval = Math.max(spacing.minimumIntervalHours / 24, interval);
@@ -408,7 +409,7 @@ class LearningPatternEngine {
     model: ConceptRetentionModel
   ): 'overdue' | 'due' | 'upcoming' | 'stable' {
     if (!model.nextOptimalReview) return 'due';
-    
+
     const now = Date.now();
     const nextReview = model.nextOptimalReview.getTime();
     const daysDiff = (nextReview - now) / 86400000;
@@ -438,23 +439,26 @@ class LearningPatternEngine {
     // Try to identify what concept the selected answer belongs to
     // This is a simplified version - in production, would use concept mapping
     const potentialInterference = this.findConceptFromAnswer(selectedAnswer);
-    
+
     if (potentialInterference && potentialInterference !== conceptId) {
       const existing = this.interferencePatterns.find(
-        p => (p.conceptA === conceptId && p.conceptB === potentialInterference) ||
-             (p.conceptB === conceptId && p.conceptA === potentialInterference)
+        (p) =>
+          (p.conceptA === conceptId && p.conceptB === potentialInterference) ||
+          (p.conceptB === conceptId && p.conceptA === potentialInterference)
       );
 
       if (existing) {
         existing.occurrences++;
         existing.confusionScore = Math.min(100, existing.confusionScore + 5);
         existing.lastOccurrence = new Date();
-        
+
         // Determine direction
         if (existing.conceptA === conceptId) {
-          existing.confusionDirection = existing.confusionDirection === 'B→A' ? 'bidirectional' : 'A→B';
+          existing.confusionDirection =
+            existing.confusionDirection === 'B→A' ? 'bidirectional' : 'A→B';
         } else {
-          existing.confusionDirection = existing.confusionDirection === 'A→B' ? 'bidirectional' : 'B→A';
+          existing.confusionDirection =
+            existing.confusionDirection === 'A→B' ? 'bidirectional' : 'B→A';
         }
       } else {
         // Create new interference pattern
@@ -495,7 +499,7 @@ class LearningPatternEngine {
    */
   getActiveInterferencePatterns(minScore = 40): InterferencePattern[] {
     return this.interferencePatterns
-      .filter(p => p.confusionScore >= minScore && p.occurrences >= INTERFERENCE_MIN_SAMPLES)
+      .filter((p) => p.confusionScore >= minScore && p.occurrences >= INTERFERENCE_MIN_SAMPLES)
       .sort((a, b) => b.confusionScore - a.confusionScore);
   }
 
@@ -505,7 +509,7 @@ class LearningPatternEngine {
 
   /**
    * Get consolidation windows - optimal times to introduce related concepts
-   * 
+   *
    * Based on memory consolidation research:
    * - Related concepts should be introduced soon after initial learning
    * - But not immediately (need some initial consolidation)
@@ -517,12 +521,12 @@ class LearningPatternEngine {
 
     const windows: ConsolidationWindow[] = [];
     const timeSinceReview = Date.now() - model.lastReviewedAt.getTime();
-    
+
     // Early consolidation window (4-24 hours)
     if (timeSinceReview >= 4 * 3600000 && timeSinceReview <= 24 * 3600000) {
       // Find related concepts from interference patterns
-      const relatedConcepts = model.interferingConcepts.map(ic => ic);
-      
+      const relatedConcepts = model.interferingConcepts.map((ic) => ic);
+
       if (relatedConcepts.length > 0) {
         windows.push({
           triggerConceptId: conceptId,
@@ -539,10 +543,10 @@ class LearningPatternEngine {
     if (timeSinceReview >= 86400000 && timeSinceReview <= 7 * 86400000) {
       // Find concepts in same system for deeper learning
       const sameSysConcepts = Array.from(this.conceptModels.values())
-        .filter(m => m.system === model.system && m.conceptId !== conceptId)
-        .map(m => m.conceptId)
+        .filter((m) => m.system === model.system && m.conceptId !== conceptId)
+        .map((m) => m.conceptId)
         .slice(0, 5);
-      
+
       if (sameSysConcepts.length > 0) {
         windows.push({
           triggerConceptId: conceptId,
@@ -576,11 +580,12 @@ class LearningPatternEngine {
 
     // Analyze learning speed from accuracy improvement rate
     const earlyAccuracies = models
-      .filter(m => m.reviewCount >= 3)
-      .map(m => m.accuracyHistory.slice(0, 3).reduce((a, b) => a + b, 0) / 3);
-    const avgEarlyAccuracy = earlyAccuracies.length > 0
-      ? earlyAccuracies.reduce((a, b) => a + b, 0) / earlyAccuracies.length
-      : 0.7;
+      .filter((m) => m.reviewCount >= 3)
+      .map((m) => m.accuracyHistory.slice(0, 3).reduce((a, b) => a + b, 0) / 3);
+    const avgEarlyAccuracy =
+      earlyAccuracies.length > 0
+        ? earlyAccuracies.reduce((a, b) => a + b, 0) / earlyAccuracies.length
+        : 0.7;
 
     // Analyze forgetting speed from decay rates
     const avgDecayRate = models.reduce((sum, m) => sum + m.decayRate, 0) / models.length;
@@ -735,8 +740,10 @@ class LearningPatternEngine {
 
   private getRemediationForError(errorType: ErrorType, conceptId: string): string {
     const remediations: Record<ErrorType, string> = {
-      knowledge_gap: 'Study this concept from the beginning - focus on core facts and relationships',
-      incomplete_learning: 'Review explanations and practice active recall - you have partial knowledge',
+      knowledge_gap:
+        'Study this concept from the beginning - focus on core facts and relationships',
+      incomplete_learning:
+        'Review explanations and practice active recall - you have partial knowledge',
       interference: 'Compare and contrast with similar concepts - create a distinction chart',
       retrieval_failure: 'Practice retrieval without hints - strengthen the recall pathway',
       application_error: 'Work through case-based scenarios - practice applying the concept',
@@ -790,7 +797,9 @@ class LearningPatternEngine {
     const total = this.errorHistory.length || 1;
 
     if (distribution.overthinking / total > 0.2) {
-      recommendations.push('You change answers frequently and it often hurts - trust your gut more');
+      recommendations.push(
+        'You change answers frequently and it often hurts - trust your gut more'
+      );
     }
     if (distribution.interference / total > 0.15) {
       recommendations.push('You confuse similar concepts - practice distinguishing drills');
@@ -822,29 +831,32 @@ class LearningPatternEngine {
   generateAnalysis(): LearningPatternAnalysis {
     const models = Array.from(this.conceptModels.values());
     const spacing = this.getSpacingOptimization();
-    
+
     // Calculate metrics
-    const avgRetention = models.length > 0
-      ? models.reduce((sum, m) => sum + this.calculateRetention(m), 0) / models.length
-      : 70;
-    
-    const avgStrength = models.length > 0
-      ? models.reduce((sum, m) => sum + m.initialStrength, 0) / models.length
-      : 70;
+    const avgRetention =
+      models.length > 0
+        ? models.reduce((sum, m) => sum + this.calculateRetention(m), 0) / models.length
+        : 70;
+
+    const avgStrength =
+      models.length > 0
+        ? models.reduce((sum, m) => sum + m.initialStrength, 0) / models.length
+        : 70;
 
     const conceptsNeedingReview = models.filter(
-      m => m.reviewUrgency === 'due' || m.reviewUrgency === 'overdue'
+      (m) => m.reviewUrgency === 'due' || m.reviewUrgency === 'overdue'
     ).length;
 
-    const conceptsOverdue = models.filter(m => m.reviewUrgency === 'overdue').length;
+    const conceptsOverdue = models.filter((m) => m.reviewUrgency === 'overdue').length;
 
     // Calculate interference susceptibility
     const totalInterferenceScore = this.interferencePatterns.reduce(
-      (sum, p) => sum + p.confusionScore, 0
+      (sum, p) => sum + p.confusionScore,
+      0
     );
     const interferenceSusceptibility = Math.min(
       100,
-      (totalInterferenceScore / Math.max(1, this.interferencePatterns.length))
+      totalInterferenceScore / Math.max(1, this.interferencePatterns.length)
     );
 
     // Predict future retention
@@ -852,7 +864,7 @@ class LearningPatternEngine {
     const predictedRetentionIn30Days = avgRetention * Math.exp(-30 * DEFAULT_DECAY_RATE);
 
     // Calculate estimated time to mastery
-    const lowMasteryCount = models.filter(m => m.initialStrength < 70).length;
+    const lowMasteryCount = models.filter((m) => m.initialStrength < 70).length;
     const estimatedTimeToMastery = lowMasteryCount * 3; // ~3 hours per concept
 
     // Generate recommendations
@@ -874,7 +886,7 @@ class LearningPatternEngine {
       conceptsNeedingReview,
       conceptsOverdue,
       interferencePatterns: this.interferencePatterns,
-      consolidationWindows: models.flatMap(m => this.getConsolidationWindows(m.conceptId)),
+      consolidationWindows: models.flatMap((m) => this.getConsolidationWindows(m.conceptId)),
       spacingOptimization: spacing,
       predictedRetentionIn7Days: Math.round(predictedRetentionIn7Days),
       predictedRetentionIn30Days: Math.round(predictedRetentionIn30Days),
@@ -897,9 +909,7 @@ class LearningPatternEngine {
       optimalReviews += Math.floor(model.reviewCount * this.calculateRecentAccuracy(model));
     }
 
-    return totalReviews > 0
-      ? Math.round((optimalReviews / totalReviews) * 100)
-      : 70;
+    return totalReviews > 0 ? Math.round((optimalReviews / totalReviews) * 100) : 70;
   }
 
   private generateRecommendations(
@@ -910,7 +920,7 @@ class LearningPatternEngine {
     const recommendations: LearningRecommendation[] = [];
 
     // Critical: Overdue reviews
-    const overdue = models.filter(m => m.reviewUrgency === 'overdue');
+    const overdue = models.filter((m) => m.reviewUrgency === 'overdue');
     if (overdue.length > 0) {
       recommendations.push({
         priority: 'critical',
@@ -918,13 +928,13 @@ class LearningPatternEngine {
         title: `${overdue.length} concepts overdue for review`,
         description: 'These concepts are at high risk of forgetting - review immediately',
         action: 'Start overdue review session',
-        relatedConcepts: overdue.slice(0, 5).map(m => m.conceptId),
+        relatedConcepts: overdue.slice(0, 5).map((m) => m.conceptId),
         expectedImpact: 90,
       });
     }
 
     // High: Active interference patterns
-    const activeInterference = interference.filter(p => p.confusionScore >= 50);
+    const activeInterference = interference.filter((p) => p.confusionScore >= 50);
     if (activeInterference.length > 0) {
       recommendations.push({
         priority: 'high',
@@ -943,7 +953,8 @@ class LearningPatternEngine {
         priority: 'medium',
         type: 'spacing',
         title: 'Adjust review frequency',
-        description: 'Your forgetting rate is faster than average - more frequent short reviews will help',
+        description:
+          'Your forgetting rate is faster than average - more frequent short reviews will help',
         action: 'Enable frequent mini-reviews',
         expectedImpact: 60,
       });
@@ -951,9 +962,9 @@ class LearningPatternEngine {
 
     // Low: Consolidation opportunities
     const consolidationWindows = models
-      .flatMap(m => this.getConsolidationWindows(m.conceptId))
-      .filter(w => w.strength > 70);
-    
+      .flatMap((m) => this.getConsolidationWindows(m.conceptId))
+      .filter((w) => w.strength > 70);
+
     if (consolidationWindows.length > 0) {
       recommendations.push({
         priority: 'low',
@@ -1054,7 +1065,10 @@ class LearningPatternEngine {
       localStorage.setItem(STORAGE_KEYS.CONCEPT_MODELS, JSON.stringify(concepts));
 
       // Save interference patterns
-      localStorage.setItem(STORAGE_KEYS.INTERFERENCE_PATTERNS, JSON.stringify(this.interferencePatterns));
+      localStorage.setItem(
+        STORAGE_KEYS.INTERFERENCE_PATTERNS,
+        JSON.stringify(this.interferencePatterns)
+      );
 
       // Save spacing params
       if (this.userSpacing) {
@@ -1080,7 +1094,7 @@ class LearningPatternEngine {
     this.interferencePatterns = [];
     this.userSpacing = null;
     this.errorHistory = [];
-    
+
     localStorage.removeItem(STORAGE_KEYS.CONCEPT_MODELS);
     localStorage.removeItem(STORAGE_KEYS.INTERFERENCE_PATTERNS);
     localStorage.removeItem(STORAGE_KEYS.SPACING_PARAMS);
@@ -1101,7 +1115,7 @@ class LearningPatternEngine {
 
   getConceptsDueForReview(): ConceptRetentionModel[] {
     return Array.from(this.conceptModels.values())
-      .filter(m => m.reviewUrgency === 'due' || m.reviewUrgency === 'overdue')
+      .filter((m) => m.reviewUrgency === 'due' || m.reviewUrgency === 'overdue')
       .sort((a, b) => {
         // Sort overdue first, then by urgency
         const urgencyOrder = { overdue: 0, due: 1, upcoming: 2, stable: 3 };
@@ -1111,7 +1125,7 @@ class LearningPatternEngine {
 
   getInterferenceForConcept(conceptId: string): InterferencePattern[] {
     return this.interferencePatterns.filter(
-      p => p.conceptA === conceptId || p.conceptB === conceptId
+      (p) => p.conceptA === conceptId || p.conceptB === conceptId
     );
   }
 }

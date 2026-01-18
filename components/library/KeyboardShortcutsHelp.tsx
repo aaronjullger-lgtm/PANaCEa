@@ -1,6 +1,6 @@
 /**
  * KeyboardShortcutsHelp - Modal showing available keyboard shortcuts
- * 
+ *
  * Quick reference for power users
  */
 

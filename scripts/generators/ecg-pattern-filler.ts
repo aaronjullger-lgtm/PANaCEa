@@ -1,7 +1,7 @@
 /**
  * ECG Pattern Filler - Fills missing fields in ECGPattern table
  * Uses Gemini AI to generate comprehensive clinical content
- * 
+ *
  * Schema fields:
  * - displayName, rate, rhythm, pWave, prInterval, qrsComplex, qtInterval
  * - stSegment, tWave, pathognomonic, hemodynamicEffect, acuteManagement
@@ -21,7 +21,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -32,7 +35,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -121,27 +124,29 @@ Return ONLY the JSON object, no markdown code fences or explanations. Ensure all
 
 async function generateECGContent(record: any): Promise<ECGContent | null> {
   await rateLimiter.acquire();
-  
+
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
-  const prompt = PROMPT_TEMPLATE
-    .replace(/\{PATTERN_NAME\}/g, record.name)
+
+  const prompt = PROMPT_TEMPLATE.replace(/\{PATTERN_NAME\}/g, record.name)
     .replace(/\{NAME\}/g, record.name)
     .replace(/\{CATEGORY\}/g, record.category || 'Unknown')
     .replace(/\{IS_EMERGENCY\}/g, String(record.isEmergency))
     .replace(/\{IS_HIGH_YIELD\}/g, String(record.isHighYield));
-  
+
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     // Extract JSON from response
-    let jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    let jsonStr = text
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
     const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonStr = jsonMatch[0];
     }
-    
+
     const content = JSON.parse(jsonStr) as ECGContent;
     return content;
   } catch (error) {
@@ -174,27 +179,27 @@ function needsUpdate(record: any): boolean {
 async function fillECGPatterns(): Promise<void> {
   console.log('🔍 ECG Pattern Filler v2');
   console.log('='.repeat(50));
-  
+
   // Find records with missing fields
   const records = await prisma.eCGPattern.findMany();
   const toUpdate = records.filter(needsUpdate);
-  
+
   console.log(`Found ${toUpdate.length}/${records.length} records needing updates\n`);
-  
+
   let updated = 0;
   let failed = 0;
-  
+
   for (let i = 0; i < toUpdate.length; i++) {
     const record = toUpdate[i];
     console.log(`  🔄 [${i + 1}/${toUpdate.length}] Processing: ${record.name}...`);
-    
+
     const content = await generateECGContent(record);
-    
+
     if (!content) {
       failed++;
       continue;
     }
-    
+
     try {
       await prisma.eCGPattern.update({
         where: { id: record.id },
@@ -214,22 +219,34 @@ async function fillECGPatterns(): Promise<void> {
           cardioversion: content.cardioversion || record.cardioversion,
           pacing: content.pacing || record.pacing,
           referral: content.referral || record.referral,
-          diagnosticCriteria: content.diagnosticCriteria?.length ? content.diagnosticCriteria : record.diagnosticCriteria,
+          diagnosticCriteria: content.diagnosticCriteria?.length
+            ? content.diagnosticCriteria
+            : record.diagnosticCriteria,
           etiology: content.etiology?.length ? content.etiology : record.etiology,
           symptoms: content.symptoms?.length ? content.symptoms : record.symptoms,
-          associatedConditions: content.associatedConditions?.length ? content.associatedConditions : record.associatedConditions,
+          associatedConditions: content.associatedConditions?.length
+            ? content.associatedConditions
+            : record.associatedConditions,
           medications: content.medications?.length ? content.medications : record.medications,
           mimics: content.mimics?.length ? content.mimics : record.mimics,
           distinguishingFeatures: content.distinguishingFeatures || record.distinguishingFeatures,
-          clinicalPearls: content.clinicalPearls?.length ? content.clinicalPearls : record.clinicalPearls,
-          commonMistakes: content.commonMistakes?.length ? content.commonMistakes : record.commonMistakes,
-          testQuestionTips: content.testQuestionTips?.length ? content.testQuestionTips : record.testQuestionTips,
+          clinicalPearls: content.clinicalPearls?.length
+            ? content.clinicalPearls
+            : record.clinicalPearls,
+          commonMistakes: content.commonMistakes?.length
+            ? content.commonMistakes
+            : record.commonMistakes,
+          testQuestionTips: content.testQuestionTips?.length
+            ? content.testQuestionTips
+            : record.testQuestionTips,
           mnemonics: content.mnemonics?.length ? content.mnemonics : record.mnemonics,
-          boardYieldFacts: content.boardYieldFacts?.length ? content.boardYieldFacts : record.boardYieldFacts,
-          updatedAt: new Date()
-        }
+          boardYieldFacts: content.boardYieldFacts?.length
+            ? content.boardYieldFacts
+            : record.boardYieldFacts,
+          updatedAt: new Date(),
+        },
       });
-      
+
       updated++;
       console.log(`  ✅ Updated: ${record.name}`);
     } catch (error) {
@@ -237,7 +254,7 @@ async function fillECGPatterns(): Promise<void> {
       failed++;
     }
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Summary:`);
   console.log(`   Updated: ${updated}`);

@@ -1,13 +1,16 @@
 /**
  * Anki Export Panel Component
- * 
+ *
  * Provides UI for exporting missed questions to Anki.
  * Features a "Sync Missed" button that exports only today's incorrect answers.
  */
 
 import React, { useState } from 'react';
 import { Download, FileDown, CheckCircle, XCircle } from 'lucide-react';
-import { exportMissedTodayToAnki, type AnkiExportOptions } from '../../lib/services/ankiExportService';
+import {
+  exportMissedTodayToAnki,
+  type AnkiExportOptions,
+} from '../../lib/services/ankiExportService';
 import type { Question, PerformanceRecord } from '../../types';
 
 interface AnkiExportPanelProps {
@@ -64,22 +67,18 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-4">
         <FileDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Anki Export
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Anki Export</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-        Export questions you missed today to your Anki deck for spaced repetition.
-        The file will be downloaded in a format that Anki can import directly.
+        Export questions you missed today to your Anki deck for spaced repetition. The file will be
+        downloaded in a format that Anki can import directly.
       </p>
 
       {/* Export Options */}
       <div className="space-y-3 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Deck Name:
-          </label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Deck Name:</label>
           <input
             type="text"
             value={options.deckName}

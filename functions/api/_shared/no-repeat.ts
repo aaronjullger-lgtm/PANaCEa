@@ -1,6 +1,6 @@
 /**
  * No-Repeat Question Tracking Module
- * 
+ *
  * Uses UserQuestionSeen table for comprehensive question tracking
  * with performance metrics and timing data.
  */
@@ -26,7 +26,7 @@ export async function recordQuestionSeen(
   }
 ) {
   const now = new Date();
-  
+
   try {
     // Upsert to UserQuestionSeen table
     const existing = await prisma.userQuestionSeen.findUnique({
@@ -111,7 +111,7 @@ export async function updateQuestionPerformance(
 ) {
   try {
     const updateData: any = {};
-    
+
     if (wasCorrect) {
       updateData.timesCorrect = { increment: 1 };
     } else {
@@ -161,8 +161,8 @@ export async function updateQuestionPerformance(
  * Get list of question IDs the user has already seen
  */
 export async function getUserSeenQuestions(
-  prisma: any, 
-  userId: string, 
+  prisma: any,
+  userId: string,
   filter?: QuestionFilter
 ): Promise<string[]> {
   const where: any = { userId };
@@ -170,7 +170,7 @@ export async function getUserSeenQuestions(
   if (filter?.questionType) {
     where.questionType = filter.questionType;
   }
-  
+
   try {
     const seen = await prisma.userQuestionSeen.findMany({
       where,
@@ -190,22 +190,24 @@ export async function getUserSeenQuestionsDetailed(
   prisma: any,
   userId: string,
   filter?: QuestionFilter
-): Promise<Array<{
-  questionId: string;
-  questionType: string;
-  timesShown: number;
-  timesCorrect: number;
-  timesIncorrect: number;
-  avgTimeMs: number | null;
-  firstSeenAt: Date;
-  lastSeenAt: Date;
-}>> {
+): Promise<
+  Array<{
+    questionId: string;
+    questionType: string;
+    timesShown: number;
+    timesCorrect: number;
+    timesIncorrect: number;
+    avgTimeMs: number | null;
+    firstSeenAt: Date;
+    lastSeenAt: Date;
+  }>
+> {
   const where: any = { userId };
 
   if (filter?.questionType) {
     where.questionType = filter.questionType;
   }
-  
+
   try {
     return await prisma.userQuestionSeen.findMany({
       where,
@@ -248,7 +250,7 @@ export async function fetchUnseenQuestions(
   if (filter.system) {
     where.system = filter.system;
   }
-  
+
   if (filter.systems && filter.systems.length > 0) {
     where.system = { in: filter.systems };
   }
@@ -298,7 +300,7 @@ export async function getUserQuestionStats(
       totalSeen++;
       totalCorrect += r.timesCorrect || 0;
       totalIncorrect += r.timesIncorrect || 0;
-      
+
       if (r.avgTimeMs) {
         totalTime += r.avgTimeMs;
         timeCount++;
@@ -313,7 +315,7 @@ export async function getUserQuestionStats(
     }
 
     const totalAttempts = totalCorrect + totalIncorrect;
-    
+
     return {
       totalSeen,
       totalCorrect,

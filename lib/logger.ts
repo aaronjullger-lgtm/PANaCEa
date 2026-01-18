@@ -1,12 +1,12 @@
 /**
  * Structured Logging Utility
- * 
+ *
  * Provides environment-aware logging with levels:
  * - error: Always logged (production & development)
  * - warn: Always logged (production & development)
  * - info: Development only by default
  * - debug: Only when DEBUG flags are enabled
- * 
+ *
  * Usage:
  *   import { logger } from '@/lib/logger';
  *   logger.info('User action', { userId, action });
@@ -27,12 +27,12 @@ function getDebugFlag(flag: string): boolean {
   if (typeof process !== 'undefined' && process.env) {
     if (process.env[flag] === 'true') return true;
   }
-  
+
   // Check window for runtime flags (useful for debugging in production)
   if (IS_BROWSER && (window as unknown as Record<string, unknown>)[flag] === true) {
     return true;
   }
-  
+
   // Check localStorage for persistent debug flags
   if (IS_BROWSER) {
     try {
@@ -41,7 +41,7 @@ function getDebugFlag(flag: string): boolean {
       // localStorage may be unavailable
     }
   }
-  
+
   return false;
 }
 
@@ -82,8 +82,8 @@ interface LogEntry {
 
 const LEVEL_COLORS: Record<LogLevel, string> = {
   debug: '#9ca3af', // gray
-  info: '#3b82f6',  // blue
-  warn: '#f59e0b',  // amber
+  info: '#3b82f6', // blue
+  warn: '#f59e0b', // amber
   error: '#ef4444', // red
 };
 
@@ -97,14 +97,14 @@ const LEVEL_EMOJI: Record<LogLevel, string> = {
 function formatForConsole(entry: LogEntry): string[] {
   const prefix = `${LEVEL_EMOJI[entry.level]} [${entry.level.toUpperCase()}]`;
   const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-  
+
   const parts = [
     `%c${prefix}%c ${entry.message} %c(${timestamp})`,
     `color: ${LEVEL_COLORS[entry.level]}; font-weight: bold`,
     'color: inherit',
     'color: #6b7280; font-size: 0.85em',
   ];
-  
+
   return parts;
 }
 
@@ -143,17 +143,17 @@ class Logger {
   private isDebugEnabled(): boolean {
     // Always allow in development
     if (IS_DEVELOPMENT) return true;
-    
+
     // Check specific debug flag
     if (this.debugFlag && getDebugFlag(DEBUG_FLAGS[this.debugFlag])) {
       return true;
     }
-    
+
     // Check global debug flag
     if (getDebugFlag(DEBUG_FLAGS.ALL)) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -196,7 +196,7 @@ class Logger {
 
   private logToBrowser(entry: LogEntry): void {
     const [format, ...styles] = formatForConsole(entry);
-    
+
     switch (entry.level) {
       case 'debug':
         console.debug(format, ...styles, entry.context || '');
@@ -218,7 +218,7 @@ class Logger {
 
   private logToServer(entry: LogEntry): void {
     const output = formatForServer(entry);
-    
+
     switch (entry.level) {
       case 'debug':
       case 'info':

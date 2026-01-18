@@ -1,6 +1,6 @@
 /**
  * Advanced Learning Profile Dashboard
- * 
+ *
  * Comprehensive, real-time analytics dashboard displaying:
  * - Cognitive state monitoring
  * - Learning velocity trends
@@ -115,24 +115,28 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   const [aggregateStats, setAggregateStats] = useState<AggregateStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'cognitive' | 'systems' | 'insights'>('overview');
-  
+  const [activeTab, setActiveTab] = useState<'overview' | 'cognitive' | 'systems' | 'insights'>(
+    'overview'
+  );
+
   // Real-time analytics
   const [cognitiveState, setCognitiveState] = useState<CognitiveState | null>(null);
   const [learningVelocity, setLearningVelocity] = useState<LearningVelocity | null>(null);
   const [timeOfDayStats, setTimeOfDayStats] = useState<PerformanceByTimeOfDay[]>([]);
   const [optimalTime, setOptimalTime] = useState<{ hour: number; confidence: number } | null>(null);
-  const [breakSuggestion, setBreakSuggestion] = useState<{ suggest: boolean; reason?: string }>({ suggest: false });
+  const [breakSuggestion, setBreakSuggestion] = useState<{ suggest: boolean; reason?: string }>({
+    suggest: false,
+  });
 
   // Load profile from database
   const loadProfile = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const token = await getToken();
       const data = await fetchLearningProfile(token);
-      
+
       if (data.error) {
         setError(data.error);
       } else {
@@ -163,7 +167,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   useEffect(() => {
     loadProfile();
     loadRealTimeAnalytics();
-    
+
     // Refresh real-time data periodically
     const interval = setInterval(loadRealTimeAnalytics, 30000);
     return () => clearInterval(interval);
@@ -195,19 +199,27 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
   const getReadinessGradient = (level: string | null): string => {
     switch (level) {
-      case 'ready': return 'from-emerald-500 to-green-400';
-      case 'almost_ready': return 'from-blue-500 to-cyan-400';
-      case 'progressing': return 'from-amber-500 to-yellow-400';
-      default: return 'from-slate-400 to-slate-300';
+      case 'ready':
+        return 'from-emerald-500 to-green-400';
+      case 'almost_ready':
+        return 'from-blue-500 to-cyan-400';
+      case 'progressing':
+        return 'from-amber-500 to-yellow-400';
+      default:
+        return 'from-slate-400 to-slate-300';
     }
   };
 
   const getReadinessLabel = (level: string | null): string => {
     switch (level) {
-      case 'ready': return 'Ready for PANCE';
-      case 'almost_ready': return 'Almost Ready';
-      case 'progressing': return 'Progressing';
-      default: return 'Building Foundation';
+      case 'ready':
+        return 'Ready for PANCE';
+      case 'almost_ready':
+        return 'Almost Ready';
+      case 'progressing':
+        return 'Progressing';
+      default:
+        return 'Building Foundation';
     }
   };
 
@@ -250,8 +262,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           No Learning Profile Yet
         </h3>
         <p className="text-slate-500 dark:text-slate-400 max-w-md">
-          Complete a few study sessions to build your personalized learning profile.
-          We&apos;ll analyze your patterns and provide AI-powered insights to optimize your studying.
+          Complete a few study sessions to build your personalized learning profile. We&apos;ll
+          analyze your patterns and provide AI-powered insights to optimize your studying.
         </p>
       </div>
     );
@@ -290,7 +302,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           { id: 'cognitive' as const, label: 'Mental State', icon: <Brain className="w-4 h-4" /> },
           { id: 'systems' as const, label: 'Systems', icon: <Target className="w-4 h-4" /> },
           { id: 'insights' as const, label: 'AI Insights', icon: <Sparkles className="w-4 h-4" /> },
-        ].map(tab => (
+        ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -318,7 +330,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* PANCE Readiness Hero */}
             {profile.estimatedScore && (
-              <div className={`bg-gradient-to-br ${getReadinessGradient(profile.readinessLevel)} rounded-2xl p-6 text-white shadow-lg`}>
+              <div
+                className={`bg-gradient-to-br ${getReadinessGradient(profile.readinessLevel)} rounded-2xl p-6 text-white shadow-lg`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/80 text-sm font-medium mb-1">Estimated PANCE Score</p>
@@ -328,10 +342,12 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2 mt-3">
                       <GraduationCap className="w-5 h-5 text-white/80" />
-                      <span className="font-medium">{getReadinessLabel(profile.readinessLevel)}</span>
+                      <span className="font-medium">
+                        {getReadinessLabel(profile.readinessLevel)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   {/* Circular Progress */}
                   <div className="relative w-28 h-28">
                     <svg className="w-28 h-28 transform -rotate-90">
@@ -417,27 +433,37 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Trend</p>
-                    <div className={`flex items-center gap-1 text-lg font-semibold ${
-                      learningVelocity.trend === 'accelerating' ? 'text-emerald-500' :
-                      learningVelocity.trend === 'decelerating' ? 'text-red-500' :
-                      'text-slate-500'
-                    }`}>
-                      {learningVelocity.trend === 'accelerating' && <TrendingUp className="w-5 h-5" />}
-                      {learningVelocity.trend === 'decelerating' && <TrendingDown className="w-5 h-5" />}
+                    <div
+                      className={`flex items-center gap-1 text-lg font-semibold ${
+                        learningVelocity.trend === 'accelerating'
+                          ? 'text-emerald-500'
+                          : learningVelocity.trend === 'decelerating'
+                            ? 'text-red-500'
+                            : 'text-slate-500'
+                      }`}
+                    >
+                      {learningVelocity.trend === 'accelerating' && (
+                        <TrendingUp className="w-5 h-5" />
+                      )}
+                      {learningVelocity.trend === 'decelerating' && (
+                        <TrendingDown className="w-5 h-5" />
+                      )}
                       {learningVelocity.trend === 'stable' && '→'}
                       <span className="capitalize">{learningVelocity.trend}</span>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Personal Best Indicator */}
                 {learningVelocity.personalBestRatio > 0.9 && (
                   <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <div className="flex items-center gap-2 text-sm">
-                      <Award className={`w-5 h-5 ${learningVelocity.personalBestRatio >= 1 ? 'text-amber-500' : 'text-slate-400'}`} />
+                      <Award
+                        className={`w-5 h-5 ${learningVelocity.personalBestRatio >= 1 ? 'text-amber-500' : 'text-slate-400'}`}
+                      />
                       <span className="text-slate-600 dark:text-slate-300">
-                        {learningVelocity.personalBestRatio >= 1 
-                          ? 'You\'re at your personal best!' 
+                        {learningVelocity.personalBestRatio >= 1
+                          ? "You're at your personal best!"
                           : `${Math.round(learningVelocity.personalBestRatio * 100)}% of your personal best`}
                       </span>
                     </div>
@@ -452,9 +478,15 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {getHourIcon(optimalTime.hour)}
                   <div>
-                    <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Optimal Study Time</p>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                      Optimal Study Time
+                    </p>
                     <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                      {optimalTime.hour === 0 ? '12' : optimalTime.hour > 12 ? optimalTime.hour - 12 : optimalTime.hour}
+                      {optimalTime.hour === 0
+                        ? '12'
+                        : optimalTime.hour > 12
+                          ? optimalTime.hour - 12
+                          : optimalTime.hour}
                       :00 {optimalTime.hour >= 12 ? 'PM' : 'AM'}
                     </p>
                   </div>
@@ -492,7 +524,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     <Brain className="w-5 h-5 text-purple-500" />
                     Current Mental State
                   </h3>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Cognitive Load */}
                     <CognitiveGauge
@@ -502,14 +534,14 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       lowLabel="Light"
                       highLabel="Heavy"
                       description={
-                        cognitiveState.cognitiveLoad > 70 
-                          ? "Your brain is working hard - consider easier content"
+                        cognitiveState.cognitiveLoad > 70
+                          ? 'Your brain is working hard - consider easier content'
                           : cognitiveState.cognitiveLoad > 40
-                          ? "Good challenge level"
-                          : "Room for more challenging content"
+                            ? 'Good challenge level'
+                            : 'Room for more challenging content'
                       }
                     />
-                    
+
                     {/* Attention Level */}
                     <CognitiveGauge
                       label="Focus Level"
@@ -520,13 +552,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       isPositive
                       description={
                         cognitiveState.attentionLevel > 70
-                          ? "Excellent focus! Great time to study"
+                          ? 'Excellent focus! Great time to study'
                           : cognitiveState.attentionLevel > 40
-                          ? "Moderate focus - minimize distractions"
-                          : "Attention wandering - try a short break"
+                            ? 'Moderate focus - minimize distractions'
+                            : 'Attention wandering - try a short break'
                       }
                     />
-                    
+
                     {/* Fatigue Level */}
                     <CognitiveGauge
                       label="Fatigue"
@@ -536,13 +568,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       highLabel="Tired"
                       description={
                         cognitiveState.fatigueLevel > 60
-                          ? "Mental fatigue detected - accuracy may decline"
+                          ? 'Mental fatigue detected - accuracy may decline'
                           : cognitiveState.fatigueLevel > 30
-                          ? "Some fatigue building - pace yourself"
-                          : "Energy levels good"
+                            ? 'Some fatigue building - pace yourself'
+                            : 'Energy levels good'
                       }
                     />
-                    
+
                     {/* Flow State */}
                     <CognitiveGauge
                       label="Flow State"
@@ -555,8 +587,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         cognitiveState.flowState > 70
                           ? "You're in the zone! Optimal learning state"
                           : cognitiveState.flowState > 40
-                          ? "Approaching flow - find the right challenge"
-                          : "Adjust difficulty to find your flow"
+                            ? 'Approaching flow - find the right challenge'
+                            : 'Adjust difficulty to find your flow'
                       }
                     />
                   </div>
@@ -568,7 +600,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     <Timer className="w-5 h-5 text-blue-500" />
                     Test-Taking Patterns
                   </h3>
-                  
+
                   <div className="space-y-6">
                     {/* Calibration */}
                     {profile.overallCalibrationScore !== null && (
@@ -577,15 +609,21 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         value={`${Math.round(profile.overallCalibrationScore)}/100`}
                         description={
                           profile.overallCalibrationScore >= 70
-                            ? "Excellent! Your confidence accurately predicts your performance."
+                            ? 'Excellent! Your confidence accurately predicts your performance.'
                             : profile.overallCalibrationScore >= 50
-                            ? "Room for improvement - practice noticing uncertainty cues."
-                            : "Work on recognizing when you're truly confident vs guessing."
+                              ? 'Room for improvement - practice noticing uncertainty cues.'
+                              : "Work on recognizing when you're truly confident vs guessing."
                         }
-                        quality={profile.overallCalibrationScore >= 70 ? 'excellent' : profile.overallCalibrationScore >= 50 ? 'good' : 'needs-work'}
+                        quality={
+                          profile.overallCalibrationScore >= 70
+                            ? 'excellent'
+                            : profile.overallCalibrationScore >= 50
+                              ? 'good'
+                              : 'needs-work'
+                        }
                       />
                     )}
-                    
+
                     {/* Answer Change Pattern */}
                     {profile.changeHelpfulRatio !== null && (
                       <PatternInsight
@@ -593,35 +631,49 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         value={`${Math.round(profile.changeHelpfulRatio * 100)}% beneficial`}
                         description={
                           profile.changeHelpfulRatio >= 0.6
-                            ? "Your second guesses usually improve your score. Deliberate when uncertain!"
+                            ? 'Your second guesses usually improve your score. Deliberate when uncertain!'
                             : profile.changeHelpfulRatio <= 0.4
-                            ? "You often change to wrong answers. Trust your first instinct more."
-                            : "Your changes are mixed. Consider why you're changing before you do."
+                              ? 'You often change to wrong answers. Trust your first instinct more.'
+                              : "Your changes are mixed. Consider why you're changing before you do."
                         }
-                        quality={profile.changeHelpfulRatio >= 0.6 ? 'excellent' : profile.changeHelpfulRatio <= 0.4 ? 'needs-work' : 'good'}
+                        quality={
+                          profile.changeHelpfulRatio >= 0.6
+                            ? 'excellent'
+                            : profile.changeHelpfulRatio <= 0.4
+                              ? 'needs-work'
+                              : 'good'
+                        }
                       />
                     )}
-                    
+
                     {/* Pacing */}
                     {profile.rushingTendency !== null && (
                       <PatternInsight
                         label="Pacing Style"
                         value={
-                          profile.rushingTendency > 0.4 ? "Quick decider" :
-                          profile.rushingTendency < 0.2 ? "Methodical thinker" :
-                          "Balanced approach"
+                          profile.rushingTendency > 0.4
+                            ? 'Quick decider'
+                            : profile.rushingTendency < 0.2
+                              ? 'Methodical thinker'
+                              : 'Balanced approach'
                         }
                         description={
                           profile.rushingTendency > 0.4
                             ? "You answer quickly. Make sure you're not missing key details."
                             : profile.rushingTendency < 0.2
-                            ? "You take your time. Watch the clock on timed exams."
-                            : "Good pace - you balance speed and accuracy well."
+                              ? 'You take your time. Watch the clock on timed exams.'
+                              : 'Good pace - you balance speed and accuracy well.'
                         }
-                        quality={profile.rushingTendency > 0.5 ? 'needs-work' : profile.rushingTendency < 0.15 ? 'good' : 'excellent'}
+                        quality={
+                          profile.rushingTendency > 0.5
+                            ? 'needs-work'
+                            : profile.rushingTendency < 0.15
+                              ? 'good'
+                              : 'excellent'
+                        }
                       />
                     )}
-                    
+
                     {/* Fatigue Onset */}
                     {profile.fatigueOnsetQuestion && (
                       <PatternInsight
@@ -669,7 +721,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         <span className="text-xl">
                           {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '✓'}
                         </span>
-                        <span className="font-medium text-emerald-700 dark:text-emerald-300">{system}</span>
+                        <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                          {system}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -685,13 +739,15 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   Systems Needing Focus
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {profile.weakestSystems.map(system => (
+                  {profile.weakestSystems.map((system) => (
                     <div
                       key={system}
                       className="bg-white dark:bg-amber-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-700 group hover:border-amber-400 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-amber-700 dark:text-amber-300">{system}</span>
+                        <span className="font-medium text-amber-700 dark:text-amber-300">
+                          {system}
+                        </span>
                         <ChevronRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -708,24 +764,30 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   Performance by Time of Day
                 </h3>
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                  {timeOfDayStats.map(stat => (
+                  {timeOfDayStats.map((stat) => (
                     <div
                       key={stat.hour}
                       className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50"
                     >
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {stat.hour === 0 ? '12am' : stat.hour > 12 ? `${stat.hour - 12}pm` : `${stat.hour}am`}
+                        {stat.hour === 0
+                          ? '12am'
+                          : stat.hour > 12
+                            ? `${stat.hour - 12}pm`
+                            : `${stat.hour}am`}
                       </p>
-                      <p className={`text-lg font-bold mt-1 ${
-                        stat.accuracy >= 80 ? 'text-emerald-500' :
-                        stat.accuracy >= 60 ? 'text-amber-500' :
-                        'text-red-500'
-                      }`}>
+                      <p
+                        className={`text-lg font-bold mt-1 ${
+                          stat.accuracy >= 80
+                            ? 'text-emerald-500'
+                            : stat.accuracy >= 60
+                              ? 'text-amber-500'
+                              : 'text-red-500'
+                        }`}
+                      >
                         {Math.round(stat.accuracy)}%
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {stat.questionsAttempted}q
-                      </p>
+                      <p className="text-xs text-slate-400 mt-1">{stat.questionsAttempted}q</p>
                     </div>
                   ))}
                 </div>
@@ -752,7 +814,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 </h3>
                 <ul className="space-y-3">
                   {profile.learningInsights.map((insight, i) => (
-                    <li key={i} className="flex items-start gap-3 bg-white/60 dark:bg-purple-900/40 rounded-lg p-3">
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 bg-white/60 dark:bg-purple-900/40 rounded-lg p-3"
+                    >
                       <Sparkles className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
                       <span className="text-purple-700 dark:text-purple-200">{insight}</span>
                     </li>
@@ -775,7 +840,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       className="flex items-start gap-3 bg-white dark:bg-blue-900/40 rounded-lg p-4 border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-600 transition-colors cursor-pointer group"
                     >
                       <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 dark:text-blue-300 font-semibold text-sm">{i + 1}</span>
+                        <span className="text-blue-600 dark:text-blue-300 font-semibold text-sm">
+                          {i + 1}
+                        </span>
                       </div>
                       <span className="text-blue-700 dark:text-blue-200 flex-1">{rec}</span>
                       <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
@@ -792,19 +859,23 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-800">
                     <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span className="font-semibold text-emerald-700 dark:text-emerald-300">Quick Practice</span>
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                    Quick Practice
+                  </span>
                 </div>
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
                   AI-selected questions targeting your weak areas
                 </p>
               </button>
-              
+
               <button className="p-5 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 text-left hover:border-purple-400 transition-colors group">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
                     <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <span className="font-semibold text-purple-700 dark:text-purple-300">Flow Mode</span>
+                  <span className="font-semibold text-purple-700 dark:text-purple-300">
+                    Flow Mode
+                  </span>
                 </div>
                 <p className="text-sm text-purple-600 dark:text-purple-400">
                   Adaptive difficulty to maximize learning efficiency
@@ -841,9 +912,7 @@ const StatCard: React.FC<{
       )}
     </div>
     <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
-    {sublabel && (
-      <p className="text-xs text-slate-400 mt-1">{sublabel}</p>
-    )}
+    {sublabel && <p className="text-xs text-slate-400 mt-1">{sublabel}</p>}
   </div>
 );
 
@@ -867,9 +936,9 @@ const CognitiveGauge: React.FC<{
       return 'text-red-500 bg-red-500';
     }
   };
-  
+
   const colorClass = getColor();
-  
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -877,7 +946,9 @@ const CognitiveGauge: React.FC<{
           <span className={colorClass.split(' ')[0]}>{icon}</span>
           <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
         </div>
-        <span className={`text-lg font-bold ${colorClass.split(' ')[0]}`}>{Math.round(value)}%</span>
+        <span className={`text-lg font-bold ${colorClass.split(' ')[0]}`}>
+          {Math.round(value)}%
+        </span>
       </div>
       <div className="relative h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
         <div
@@ -901,12 +972,14 @@ const PatternInsight: React.FC<{
   quality: 'excellent' | 'good' | 'needs-work' | 'info';
 }> = ({ label, value, description, quality }) => {
   const qualityStyles = {
-    excellent: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    excellent:
+      'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
     good: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-    'needs-work': 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    'needs-work':
+      'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
     info: 'bg-slate-100 dark:bg-slate-700/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   };
-  
+
   return (
     <div className={`rounded-lg p-4 border ${qualityStyles[quality]}`}>
       <div className="flex items-start justify-between gap-4">
@@ -932,23 +1005,28 @@ const RecentSessionsList: React.FC<{
       Recent Sessions
     </h3>
     <div className="divide-y divide-slate-100 dark:divide-slate-700">
-      {sessions.map(session => (
-        <div key={session.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+      {sessions.map((session) => (
+        <div
+          key={session.id}
+          className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+        >
           <div>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
               {formatDate(session.startedAt)}
             </p>
-            <p className="text-xs text-slate-500">
-              {session.totalQuestions} questions
-            </p>
+            <p className="text-xs text-slate-500">{session.totalQuestions} questions</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className={`text-lg font-bold ${
-                session.accuracy >= 80 ? 'text-emerald-500' :
-                session.accuracy >= 60 ? 'text-amber-500' :
-                'text-red-500'
-              }`}>
+              <p
+                className={`text-lg font-bold ${
+                  session.accuracy >= 80
+                    ? 'text-emerald-500'
+                    : session.accuracy >= 60
+                      ? 'text-amber-500'
+                      : 'text-red-500'
+                }`}
+              >
                 {Math.round(session.accuracy)}%
               </p>
               {session.bestStreak > 0 && (

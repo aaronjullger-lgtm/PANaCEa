@@ -1,6 +1,6 @@
 /**
  * Apply Enrichment from JSON
- * 
+ *
  * Applies content from a completed enrichment template JSON file
  * to the database.
  */
@@ -36,7 +36,7 @@ async function applyEnrichment(filePath: string, dryRun: boolean = false): Promi
   }
 
   // Detect format: array of {id, condition, content} or enrichment template
-  const enriched: EnrichedCondition[] = data.map(item => {
+  const enriched: EnrichedCondition[] = data.map((item) => {
     if (item.content) {
       return item; // Already in correct format
     } else if (item.toGenerate) {
@@ -60,11 +60,11 @@ async function applyEnrichment(filePath: string, dryRun: boolean = false): Promi
   for (const item of enriched) {
     try {
       // Skip if content contains placeholder text
-      const hasPlaceholder = 
+      const hasPlaceholder =
         item.content.overview?.includes('[GENERATE:') ||
-        item.content.symptoms?.some(s => s.includes('[GENERATE:')) ||
+        item.content.symptoms?.some((s) => s.includes('[GENERATE:')) ||
         item.content.treatment?.includes('[GENERATE:') ||
-        item.content.diagnostics?.some(d => d.includes('[GENERATE:'));
+        item.content.diagnostics?.some((d) => d.includes('[GENERATE:'));
 
       if (hasPlaceholder) {
         console.log(`⏭️  Skipping ${item.condition} (contains placeholders)`);
@@ -73,11 +73,13 @@ async function applyEnrichment(filePath: string, dryRun: boolean = false): Promi
       }
 
       const updateData: any = { updatedAt: new Date() };
-      
+
       if (item.content.overview) updateData.overview = item.content.overview;
-      if (item.content.symptoms && item.content.symptoms.length > 0) updateData.symptoms = item.content.symptoms;
+      if (item.content.symptoms && item.content.symptoms.length > 0)
+        updateData.symptoms = item.content.symptoms;
       if (item.content.treatment) updateData.treatment = item.content.treatment;
-      if (item.content.diagnostics && item.content.diagnostics.length > 0) updateData.diagnostics = item.content.diagnostics;
+      if (item.content.diagnostics && item.content.diagnostics.length > 0)
+        updateData.diagnostics = item.content.diagnostics;
 
       if (Object.keys(updateData).length === 1) {
         console.log(`⏭️  Skipping ${item.condition} (no valid updates)`);
@@ -87,7 +89,11 @@ async function applyEnrichment(filePath: string, dryRun: boolean = false): Promi
 
       if (dryRun) {
         console.log(`✅ DRY RUN - Would update ${item.condition}`);
-        console.log(`   Fields: ${Object.keys(updateData).filter(k => k !== 'updatedAt').join(', ')}`);
+        console.log(
+          `   Fields: ${Object.keys(updateData)
+            .filter((k) => k !== 'updatedAt')
+            .join(', ')}`
+        );
       } else {
         await prisma.medicalContent.update({
           where: { id: item.id },
@@ -110,27 +116,27 @@ async function applyEnrichment(filePath: string, dryRun: boolean = false): Promi
   console.log(`Successfully applied:    ${successCount} ✅`);
   console.log(`Skipped (placeholders):  ${skippedCount} ⏭️`);
   console.log(`Errors:                  ${errorCount} ❌`);
-  
+
   if (dryRun) {
     console.log('\n⚠️  DRY RUN MODE - No database changes were made');
     console.log('Run without --dry-run to apply changes');
   } else {
     console.log('\n✅ Database updated successfully');
   }
-  
+
   console.log('='.repeat(80) + '\n');
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const filePath = args.find(arg => !arg.startsWith('--')) || 'enrichment-template.json';
+  const filePath = args.find((arg) => !arg.startsWith('--')) || 'enrichment-template.json';
 
   await applyEnrichment(filePath, dryRun);
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);
   })

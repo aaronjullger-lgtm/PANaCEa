@@ -1,10 +1,10 @@
 /**
  * Consolidated Performance Service
- * 
+ *
  * Single entry point for all performance-related operations.
  * Consolidates: performanceService, panaceScorePredictor,
  * panceScorePredictorService, performancePredictionService
- * 
+ *
  * @module services/analytics/performanceService
  */
 
@@ -64,9 +64,12 @@ export interface ScorePrediction {
   confidenceInterval: { low: number; high: number; lower?: number; upper?: number };
   passLikelihood: number;
   probabilityOfPassing?: number;
+  confidence?: 'high' | 'medium' | 'low';
   readinessLevel?: 'not_ready' | 'borderline' | 'likely_pass' | 'confident_pass';
   keyStrengths: string[];
+  strengths?: string[];
   keyRisks?: string[];
+  riskFactors?: string[];
   weaknesses?: string[];
   recommendedFocusAreas?: string[];
   recommendations?: string[];
@@ -85,10 +88,10 @@ export interface ScorePrediction {
 export const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
   cardiovascular: 0.16,
   pulmonary: 0.12,
-  gastrointestinal: 0.10,
-  musculoskeletal: 0.10,
-  'eent': 0.09,
-  'heent': 0.09,
+  gastrointestinal: 0.1,
+  musculoskeletal: 0.1,
+  eent: 0.09,
+  heent: 0.09,
   reproductive: 0.08,
   neurological: 0.08,
   psychiatry: 0.06,
@@ -127,23 +130,24 @@ export function predictScore(
   } = {}
 ): ScorePrediction {
   const { totalQuestions = 0, avgTimePerQuestionMs, streakData, errorPatterns } = options;
-  
+
   // Minimum questions check
   if (totalQuestions < PANCE_CONSTANTS.MIN_QUESTIONS_FOR_PREDICTION) {
     return getInsufficientDataResult(totalQuestions);
   }
-  
+
   // Calculate weighted accuracy based on NCCPA blueprint
   const weightedAccuracy = calculateWeightedAccuracy(systemPerformance);
-  
+
   // Base score calculation (200-800 scale)
-  let rawScore = PANCE_CONSTANTS.MIN_SCORE + 
+  let rawScore =
+    PANCE_CONSTANTS.MIN_SCORE +
     weightedAccuracy * (PANCE_CONSTANTS.MAX_SCORE - PANCE_CONSTANTS.MIN_SCORE);
-  
+
   // Volume adjustment (more questions = more reliable)
-  const volumeAdj = Math.min(1, 0.7 + 0.3 * Math.log10(totalQuestions + 1) / 3);
+  const volumeAdj = Math.min(1, 0.7 + (0.3 * Math.log10(totalQuestions + 1)) / 3);
   rawScore *= volumeAdj;
-  
+
   // Trend adjustment
   let trendAdj = 1.0;
   for (const sys of systemPerformance) {
@@ -153,7 +157,7 @@ export function predictScore(
   }
   trendAdj = Math.max(0.85, Math.min(1.15, trendAdj));
   rawScore *= trendAdj;
-  
+
   // Time management adjustment
   if (avgTimePerQuestionMs) {
     const idealTime = PANCE_CONSTANTS.IDEAL_TIME_PER_QUESTION_MS;
@@ -163,13 +167,13 @@ export function predictScore(
       rawScore -= 10; // Too slow
     }
   }
-  
+
   // Streak bonus
   if (streakData) {
     if (streakData.maxStreak >= 10) rawScore += 10;
     if (streakData.avgStreak < 2 && totalQuestions >= 20) rawScore -= 10;
   }
-  
+
   // Error penalty
   let errorPenalty = 0;
   if (errorPatterns) {
@@ -180,34 +184,39 @@ export function predictScore(
     }
     rawScore -= Math.min(100, errorPenalty);
   }
-  
+
   // Clamp to valid range
   const predictedScore = Math.round(
     Math.max(PANCE_CONSTANTS.MIN_SCORE, Math.min(PANCE_CONSTANTS.MAX_SCORE, rawScore))
   );
-  
+
   // Confidence interval based on sample size
   const uncertainty = 80 * Math.max(0.5, 1 - Math.log10(totalQuestions + 1) / 4);
   const confidenceInterval = {
     low: Math.max(PANCE_CONSTANTS.MIN_SCORE, Math.round(predictedScore - uncertainty)),
     high: Math.min(PANCE_CONSTANTS.MAX_SCORE, Math.round(predictedScore + uncertainty)),
   };
-  
+
   // Pass likelihood using logistic function
   const passLikelihood = calculatePassLikelihood(predictedScore, uncertainty);
-  
+
   // Identify strengths and risks
   const { strengths, risks, focusAreas } = analyzePerformance(systemPerformance);
-  
+
   // Estimate study hours needed
   const pointsNeeded = Math.max(0, PANCE_CONSTANTS.PASS_SCORE - predictedScore);
   const estimatedStudyHoursToPass = Math.ceil(pointsNeeded * 0.5);
-  
+
   // Readiness level
-  const readinessLevel = passLikelihood >= 90 ? 'confident_pass' :
-    passLikelihood >= 75 ? 'likely_pass' :
-    passLikelihood >= 50 ? 'borderline' : 'not_ready';
-  
+  const readinessLevel =
+    passLikelihood >= 90
+      ? 'confident_pass'
+      : passLikelihood >= 75
+        ? 'likely_pass'
+        : passLikelihood >= 50
+          ? 'borderline'
+          : 'not_ready';
+
   return {
     predictedScore,
     scaledScore: predictedScore,
@@ -236,7 +245,7 @@ function getSystemWeight(system: string): number {
 function calculateWeightedAccuracy(systemPerformance: SystemPerformance[]): number {
   let totalWeight = 0;
   let weightedSum = 0;
-  
+
   for (const sys of systemPerformance) {
     const weight = getSystemWeight(sys.system);
     const questions = sys.questionsAttempted || sys.totalQuestions || 0;
@@ -245,7 +254,7 @@ function calculateWeightedAccuracy(systemPerformance: SystemPerformance[]): numb
       totalWeight += weight;
     }
   }
-  
+
   return totalWeight > 0 ? weightedSum / totalWeight : 0.5;
 }
 
@@ -265,7 +274,7 @@ function analyzePerformance(systemPerformance: SystemPerformance[]): {
   const strengths: string[] = [];
   const risks: string[] = [];
   const focusAreas: string[] = [];
-  
+
   for (const sys of systemPerformance) {
     const questions = sys.questionsAttempted || sys.totalQuestions || 0;
     if (sys.accuracy >= 0.8 && questions >= 20) {
@@ -279,7 +288,7 @@ function analyzePerformance(systemPerformance: SystemPerformance[]): {
       risks.push(`${sys.system} declining`);
     }
   }
-  
+
   return {
     strengths: strengths.slice(0, 5),
     risks: risks.slice(0, 5),
@@ -292,21 +301,23 @@ function generateRecommendations(
   passLikelihood: number
 ): string[] {
   const recommendations: string[] = [];
-  
+
   // Weakness-based
   const weakSystems = systemPerformance
-    .filter(s => s.accuracy < 0.6)
+    .filter((s) => s.accuracy < 0.6)
     .sort((a, b) => a.accuracy - b.accuracy);
-  
+
   for (const sys of weakSystems.slice(0, 2)) {
     const questions = sys.questionsAttempted || sys.totalQuestions || 0;
     if (questions < 30) {
       recommendations.push(`Practice more ${sys.system} questions (only ${questions} attempted)`);
     } else {
-      recommendations.push(`Review ${sys.system} fundamentals - accuracy is ${Math.round(sys.accuracy * 100)}%`);
+      recommendations.push(
+        `Review ${sys.system} fundamentals - accuracy is ${Math.round(sys.accuracy * 100)}%`
+      );
     }
   }
-  
+
   // Readiness-based
   if (passLikelihood < 50) {
     recommendations.push('Focus on foundational concepts before advanced topics');
@@ -315,10 +326,10 @@ function generateRecommendations(
     recommendations.push('Focus on weak areas while maintaining strengths');
     recommendations.push('Practice timed blocks to build exam stamina');
   } else {
-    recommendations.push('Maintain current pace - you\'re on track!');
+    recommendations.push("Maintain current pace - you're on track!");
     recommendations.push('Consider full-length practice exams');
   }
-  
+
   return recommendations.slice(0, 5);
 }
 
@@ -346,24 +357,24 @@ function getInsufficientDataResult(questionsAnswered: number): ScorePrediction {
 
 export default {
   // Recording
-  recordQuestionOutcome: (async (...args: Parameters<typeof import('../performanceService').recordQuestionOutcome>) =>
-    (await import('../performanceService')).recordQuestionOutcome(...args)),
-  
+  recordQuestionOutcome: async (
+    ...args: Parameters<typeof import('../performanceService').recordQuestionOutcome>
+  ) => (await import('../performanceService')).recordQuestionOutcome(...args),
+
   // Stats
-  getHierarchicalStats: (async () =>
-    (await import('../performanceService')).getHierarchicalStats()),
-  
+  getHierarchicalStats: async () => (await import('../performanceService')).getHierarchicalStats(),
+
   // Prediction (unified)
   predictScore,
-  
+
   // Session prediction
-  getSessionPrediction: (async () =>
-    (await import('../performancePredictionService')).getPrediction()),
-  
+  getSessionPrediction: async () =>
+    (await import('../performancePredictionService')).getPrediction(),
+
   // Class-based predictor (for advanced use)
-  PANCEScorePredictorService: (async () =>
-    (await import('../panceScorePredictorService')).PANCEScorePredictorService),
-  
+  PANCEScorePredictorService: async () =>
+    (await import('../panceScorePredictorService')).PANCEScorePredictorService,
+
   // Constants
   NCCPA_BLUEPRINT_WEIGHTS,
   PANCE_CONSTANTS,

@@ -1,21 +1,27 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { z } from 'zod';
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export const onRequestOptions = handleCorsOptions;
+const BuzzwordsRandomSchema = z.object({
+  query: z.object({
+    count: z.string().regex(/^\d+$/, 'Count must be a positive integer').default('10'),
+  }),
+});
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const count = parseInt(url.searchParams.get('count') || '10');
+export const onRequestOptions = withCors();
+
+export const onRequestGet = publicEndpoint(BuzzwordsRandomSchema, async (context) => {
+  const { env, validated } = context;
+  const logger = createEndpointLogger('/api/buzzwords/random');
+  const { count } = validated.query;
+
+  // Validate count range
+  const countValue = Math.min(Math.max(parseInt(count, 10), 1), 50); // Limit to 1-50
 
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    logger.error('Database not configured');
+    throw new Error('Database not configured');
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -26,25 +32,18 @@ export async function onRequestGet(context: any) {
     const buzzwords = await prisma.$queryRaw`
       SELECT * FROM "Buzzword"
       ORDER BY RANDOM()
-      LIMIT ${count}
+      LIMIT ${countValue}
     `;
-    
-    return new Response(JSON.stringify(buzzwords), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+
+    logger.info(`Fetched ${buzzwords.length} random buzzwords`, { count: countValue });
+    return { data: buzzwords };
   } catch (error: any) {
-    console.error('Error fetching random buzzwords:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch random buzzwords', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    logger.error('Error fetching random buzzwords', {
+      error: error.message,
+      count: countValue,
     });
+    throw new Error('Failed to fetch random buzzwords');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

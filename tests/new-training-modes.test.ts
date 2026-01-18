@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MODE_REGISTRY } from '../config/training-modes';
-import { 
+import {
   getTodaysMedicalWordle,
   getTodayInMedicine,
   calculateCoinsEarned,
@@ -17,24 +17,24 @@ import {
 
 describe('New Training Modes Configuration', () => {
   it('should not have medical_wordle in MODE_REGISTRY (deprecated)', () => {
-    const wordleMode = MODE_REGISTRY.find(m => m.id === ('medical_wordle' as any));
+    const wordleMode = MODE_REGISTRY.find((m) => m.id === ('medical_wordle' as any));
     expect(wordleMode).toBeUndefined();
   });
 
   it('should have ventilator_hero in MODE_REGISTRY', () => {
-    const ventMode = MODE_REGISTRY.find(m => m.id === 'ventilator_hero');
+    const ventMode = MODE_REGISTRY.find((m) => m.id === 'ventilator_hero');
     expect(ventMode).toBeDefined();
     expect(ventMode?.category).toBe('clinical_simulation');
   });
 
   it('should have clinical simulation modes in MODE_REGISTRY', () => {
-    const clinicalModes = MODE_REGISTRY.filter(m => m.category === 'clinical_simulation');
+    const clinicalModes = MODE_REGISTRY.filter((m) => m.category === 'clinical_simulation');
     // Clinical modes like patient_encounter, ventilator_hero may be present
     expect(clinicalModes.length).toBeGreaterThanOrEqual(0);
   });
 
   it('should have polypharmacy_puzzle in MODE_REGISTRY', () => {
-    const polyMode = MODE_REGISTRY.find(m => m.id === 'polypharmacy_puzzle');
+    const polyMode = MODE_REGISTRY.find((m) => m.id === 'polypharmacy_puzzle');
     expect(polyMode).toBeDefined();
   });
 });
@@ -61,7 +61,7 @@ describe('Daily Rituals - This Day in Medicine', () => {
   it('should return null if no event for today', () => {
     // Most days won't have events
     const event = getTodayInMedicine();
-    
+
     if (event) {
       expect(event.title).toBeDefined();
       expect(event.description).toBeDefined();
@@ -122,9 +122,9 @@ describe('Daily Rituals - Streak Freeze', () => {
 //       peep: 12,
 //       fio2: 80,
 //     };
-    
+
 //     const outcome = evaluateVentilatorSettings(testCase, newSettings);
-    
+
 //     expect(outcome.ph).toBeDefined();
 //     expect(outcome.pco2).toBeDefined();
 //     expect(outcome.po2).toBeDefined();

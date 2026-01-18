@@ -45,6 +45,7 @@ types/
 EMR-style order placement interface.
 
 **Features:**
+
 - 4 tabs: Labs, Imaging, Procedures, Medications
 - Debounced search with autocomplete
 - 6 Quick Order Bundles:
@@ -62,6 +63,7 @@ EMR-style order placement interface.
   - Turnaround time display
 
 **Usage:**
+
 ```tsx
 import { OrderPanel } from '@/components/modes/osce';
 
@@ -70,7 +72,7 @@ import { OrderPanel } from '@/components/modes/osce';
   placedOrders={orders}
   patientAllergies={['Penicillin']}
   patientConditions={['Renal insufficiency']}
-/>
+/>;
 ```
 
 ### 2. BodyMap & ExamPanel
@@ -78,6 +80,7 @@ import { OrderPanel } from '@/components/modes/osce';
 Interactive physical examination system.
 
 **BodyMap Features:**
+
 - 31 clickable anatomical regions
 - Anterior/posterior view toggle
 - Color coding:
@@ -88,6 +91,7 @@ Interactive physical examination system.
   - Blue: Hover state
 
 **ExamPanel Features:**
+
 - 100+ exam maneuvers organized by region
 - Category icons (inspection, palpation, auscultation, percussion)
 - Real-time finding display
@@ -95,6 +99,7 @@ Interactive physical examination system.
 - Exam summary footer
 
 **Usage:**
+
 ```tsx
 import { ExamPanel } from '@/components/modes/osce';
 
@@ -103,7 +108,7 @@ import { ExamPanel } from '@/components/modes/osce';
   completedExams={examFindings}
   suggestedRegions={['heart', 'lungs', 'chest_anterior']}
   caseData={currentCase}
-/>
+/>;
 ```
 
 ### 3. RapportMeter
@@ -111,6 +116,7 @@ import { ExamPanel } from '@/components/modes/osce';
 Real-time patient rapport visualization.
 
 **Features:**
+
 - Circular progress gauge (0-100)
 - Emotional state emoji indicator
 - Milestone tracking with unlocks:
@@ -123,11 +129,13 @@ Real-time patient rapport visualization.
 - Personality trait display
 
 **Variants:**
+
 - Full: Complete card with milestones
 - Compact: Inline progress bar
 - RapportIndicator: Mini inline display
 
 **Usage:**
+
 ```tsx
 import { RapportMeter, RapportIndicator } from '@/components/modes/osce';
 
@@ -151,6 +159,7 @@ import { RapportMeter, RapportIndicator } from '@/components/modes/osce';
 End-of-session comprehensive scoring.
 
 **Features:**
+
 - Overall score with grade coloring
 - ACGME Milestone Level (1-5)
 - 6-domain competency breakdown:
@@ -166,6 +175,7 @@ End-of-session comprehensive scoring.
 - Strengths/improvements summary
 
 **Usage:**
+
 ```tsx
 import { ScoreReport } from '@/components/modes/osce';
 
@@ -173,7 +183,7 @@ import { ScoreReport } from '@/components/modes/osce';
   report={scoreReport}
   onClose={() => setShowReport(false)}
   onRetry={() => startNewCase()}
-/>
+/>;
 ```
 
 ---
@@ -188,12 +198,12 @@ Generates realistic patient personalities for AI simulation.
 
 **Personality Dimensions:**
 
-| Dimension | Options |
-|-----------|---------|
-| Communication Style | verbose, terse, anxious, stoic, angry, confused, evasive, dramatic |
-| Health Literacy | low, medium, high |
-| Pain Behavior | stoic, expressive, catastrophizing |
-| Hidden Agenda | none, seeking_drugs, fear_cancer, hiding_abuse, work_excuse, secondary_gain |
+| Dimension           | Options                                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| Communication Style | verbose, terse, anxious, stoic, angry, confused, evasive, dramatic          |
+| Health Literacy     | low, medium, high                                                           |
+| Pain Behavior       | stoic, expressive, catastrophizing                                          |
+| Hidden Agenda       | none, seeking_drugs, fear_cancer, hiding_abuse, work_excuse, secondary_gain |
 
 **Key Functions:**
 
@@ -211,13 +221,7 @@ const emotion = initializeEmotionalState(personality);
 const rules = generateInformationRules(personality);
 
 // Process an interaction
-const result = processEnhancedInteraction(
-  userMessage,
-  personality,
-  rapport,
-  emotion,
-  rules
-);
+const result = processEnhancedInteraction(userMessage, personality, rapport, emotion, rules);
 // Returns: { updatedRapport, updatedEmotion, nonVerbalCue, shouldRevealHidden }
 
 // Build AI prompt with personality context
@@ -232,6 +236,7 @@ const prompt = buildEnhancedPatientPrompt(
 **Non-Verbal Cues Library:**
 
 The engine injects contextual non-verbal cues:
+
 - Anxiety cues: wringing hands, avoiding eye contact, bouncing leg
 - Pain cues: grimacing, guarding abdomen, shallow breathing
 - Rapport cues: nodding, leaning forward, maintaining eye contact
@@ -244,6 +249,7 @@ The engine injects contextual non-verbal cues:
 Tracks critical actions and calculates competency scores.
 
 **Universal Critical Actions:**
+
 - Verify patient identity
 - Hand hygiene before exam
 - Obtain verbal consent
@@ -254,14 +260,14 @@ Tracks critical actions and calculates competency scores.
 
 **Condition-Specific Actions:**
 
-| Condition | Critical Actions |
-|-----------|-----------------|
-| ACS/MI | ECG within 10 min, Serial troponins, Aspirin 325mg |
-| Stroke | Non-contrast head CT, Blood glucose, NIH Stroke Scale, Last known well time |
-| Sepsis | Serum lactate, Blood cultures before antibiotics, Broad-spectrum abx within 1hr, 30ml/kg fluids |
-| PE | Wells score, D-dimer if appropriate, CT pulmonary angiogram, Anticoagulation |
-| Pneumonia | Chest X-ray, Oxygenation assessment, CURB-65/PSI score, Appropriate antibiotics |
-| Appendicitis | RLQ tenderness, CT/US imaging, NPO status, Surgical consultation |
+| Condition    | Critical Actions                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| ACS/MI       | ECG within 10 min, Serial troponins, Aspirin 325mg                                              |
+| Stroke       | Non-contrast head CT, Blood glucose, NIH Stroke Scale, Last known well time                     |
+| Sepsis       | Serum lactate, Blood cultures before antibiotics, Broad-spectrum abx within 1hr, 30ml/kg fluids |
+| PE           | Wells score, D-dimer if appropriate, CT pulmonary angiogram, Anticoagulation                    |
+| Pneumonia    | Chest X-ray, Oxygenation assessment, CURB-65/PSI score, Appropriate antibiotics                 |
+| Appendicitis | RLQ tenderness, CT/US imaging, NPO status, Surgical consultation                                |
 
 **Usage:**
 
@@ -353,9 +359,11 @@ interface EnhancedOSCEState {
 Returns available orderable items.
 
 **Query Parameters:**
+
 - `type`: 'lab' | 'imaging' | 'procedure' | 'medication' | 'all'
 
 **Response:**
+
 ```json
 {
   "items": [
@@ -379,12 +387,7 @@ To integrate into the existing `PatientEncounterMode.tsx`:
 
 ```tsx
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
-import { 
-  OrderPanel, 
-  ExamPanel, 
-  RapportMeter, 
-  ScoreReport 
-} from '@/components/modes/osce';
+import { OrderPanel, ExamPanel, RapportMeter, ScoreReport } from '@/components/modes/osce';
 
 function PatientEncounterMode({ caseData }) {
   const osce = useEnhancedOSCE();
@@ -397,16 +400,16 @@ function PatientEncounterMode({ caseData }) {
 
   const handleSendMessage = async (message: string) => {
     const { enhancedPrompt, nonVerbalCue } = osce.processMessage(message);
-    
+
     // Call AI with enhanced prompt
     const response = await fetch('/api/osce/chat', {
       method: 'POST',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         prompt: enhancedPrompt,
-        message 
-      })
+        message,
+      }),
     });
-    
+
     // Display non-verbal cue if present
     if (nonVerbalCue) {
       displayCue(nonVerbalCue);
@@ -422,19 +425,16 @@ function PatientEncounterMode({ caseData }) {
 
       {/* Side panel */}
       <div className="w-80">
-        <RapportMeter 
+        <RapportMeter
           meter={osce.state.rapportMeter}
           emotionalState={osce.state.emotionalState}
           personality={osce.state.personality}
         />
-        
+
         {showOrders && (
-          <OrderPanel
-            onOrderPlaced={osce.placeOrder}
-            placedOrders={osce.state.orders}
-          />
+          <OrderPanel onOrderPlaced={osce.placeOrder} placedOrders={osce.state.orders} />
         )}
-        
+
         {showExam && (
           <ExamPanel
             onExamPerformed={osce.recordExamFinding}
@@ -483,19 +483,19 @@ function PatientEncounterMode({ caseData }) {
 
 ## Files Created
 
-| File | Purpose | LOC |
-|------|---------|-----|
-| `components/modes/osce/OrderPanel.tsx` | Order placement UI | ~350 |
-| `components/modes/osce/BodyMap.tsx` | Interactive body diagram | ~400 |
-| `components/modes/osce/ExamPanel.tsx` | Physical exam UI | ~280 |
-| `components/modes/osce/RapportMeter.tsx` | Rapport display | ~220 |
-| `components/modes/osce/ScoreReport.tsx` | Score report UI | ~350 |
-| `components/modes/osce/index.ts` | Exports | ~10 |
-| `services/patientPersonalityEngine.ts` | Personality AI | ~500 |
-| `services/osceScoringEngine.ts` | Scoring logic | ~450 |
-| `hooks/useEnhancedOSCE.ts` | Integration hook | ~280 |
-| `functions/api/osce/orderable-items.ts` | API endpoint | ~150 |
-| `types/osce-enhanced.ts` | TypeScript types | ~200 |
+| File                                     | Purpose                  | LOC  |
+| ---------------------------------------- | ------------------------ | ---- |
+| `components/modes/osce/OrderPanel.tsx`   | Order placement UI       | ~350 |
+| `components/modes/osce/BodyMap.tsx`      | Interactive body diagram | ~400 |
+| `components/modes/osce/ExamPanel.tsx`    | Physical exam UI         | ~280 |
+| `components/modes/osce/RapportMeter.tsx` | Rapport display          | ~220 |
+| `components/modes/osce/ScoreReport.tsx`  | Score report UI          | ~350 |
+| `components/modes/osce/index.ts`         | Exports                  | ~10  |
+| `services/patientPersonalityEngine.ts`   | Personality AI           | ~500 |
+| `services/osceScoringEngine.ts`          | Scoring logic            | ~450 |
+| `hooks/useEnhancedOSCE.ts`               | Integration hook         | ~280 |
+| `functions/api/osce/orderable-items.ts`  | API endpoint             | ~150 |
+| `types/osce-enhanced.ts`                 | TypeScript types         | ~200 |
 
 **Total: ~3,200 lines of code**
 
@@ -504,11 +504,13 @@ function PatientEncounterMode({ caseData }) {
 ## Testing
 
 Run tests:
+
 ```bash
 npm run test -- --grep "OSCE"
 ```
 
 Key test scenarios:
+
 1. Personality generation produces valid matrices
 2. Rapport meter updates correctly with interactions
 3. Critical actions trigger appropriately

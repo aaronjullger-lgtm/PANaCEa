@@ -1,10 +1,29 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
+import {
+  usePhotoDrill,
+  type CategoryType,
+  type ClinicalContext,
+} from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
-import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity as ActivityIcon, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
+import {
+  Flame,
+  X,
+  ArrowRight,
+  RotateCcw,
+  FileImage,
+  Scan,
+  Activity as ActivityIcon,
+  Shuffle,
+  User,
+  Heart,
+  ClipboardList,
+  Eye,
+  EyeOff,
+  Stethoscope,
+} from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -50,7 +69,7 @@ const CATEGORY_CARDS: Array<{
 
 /**
  * PhotoDrillSession - Global Photo Mode UI
- * 
+ *
  * A full-screen immersive interface with two stages:
  * - Lobby: Category selection (skipped if filterType is provided)
  * - Drill: Infinite photo drill with smart type-ahead search
@@ -216,16 +235,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
               >
                 <div className="relative z-10">
                   <div className="mb-4 p-3 bg-[var(--color-accent)]/10 rounded-xl w-fit">
-                    <div className="text-[var(--color-accent)]">
-                      {card.icon}
-                    </div>
+                    <div className="text-[var(--color-accent)]">{card.icon}</div>
                   </div>
                   <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
                     {card.title}
                   </h3>
-                  <p className="text-[var(--color-text-secondary)] text-sm">
-                    {card.description}
-                  </p>
+                  <p className="text-[var(--color-text-secondary)] text-sm">{card.description}</p>
                 </div>
 
                 {/* Arrow indicator */}
@@ -299,12 +314,14 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     <div className="bg-[var(--color-bg-tertiary)] backdrop-blur-sm rounded-xl border border-[var(--color-border)] overflow-hidden">
                       <div className="px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-[var(--color-border)] flex items-center gap-3">
                         <ClipboardList className="w-5 h-5 text-slate-400" />
-                        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Patient Chart</h2>
+                        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                          Patient Chart
+                        </h2>
                         <span className="ml-auto px-2.5 py-1 bg-slate-700/60 rounded-lg text-xs font-medium text-slate-300 uppercase tracking-wide">
                           Clinical Presentation Mode
                         </span>
                       </div>
-                      
+
                       {/* Patient Demographics */}
                       <div className="p-4 border-b border-[var(--color-border)]">
                         <div className="flex items-center gap-4">
@@ -312,14 +329,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                             <User className="w-5 h-5 text-[var(--color-text-muted)]" />
                           </div>
                           <div>
-                            <div className="text-sm text-[var(--color-text-secondary)]">Patient</div>
+                            <div className="text-sm text-[var(--color-text-secondary)]">
+                              Patient
+                            </div>
                             <div className="text-[var(--color-text-primary)] font-medium">
-                              {currentCase.clinicalContext.age}yo {currentCase.clinicalContext.sex === 'M' ? 'Male' : 'Female'}
+                              {currentCase.clinicalContext.age}yo{' '}
+                              {currentCase.clinicalContext.sex === 'M' ? 'Male' : 'Female'}
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Vitals */}
                       <div className="p-4 border-b border-[var(--color-border)]">
                         <div className="flex items-start gap-4">
@@ -327,14 +347,16 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                             <Heart className="w-5 h-5 text-red-400" />
                           </div>
                           <div>
-                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Vital Signs</div>
+                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">
+                              Vital Signs
+                            </div>
                             <div className="text-[var(--color-text-primary)] text-sm font-mono">
                               {currentCase.clinicalContext.vitals}
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Chief Complaint */}
                       <div className="p-4 border-b border-[var(--color-border)]">
                         <div className="flex items-start gap-4">
@@ -342,14 +364,16 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                             <Stethoscope className="w-5 h-5 text-emerald-400" />
                           </div>
                           <div>
-                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Chief Complaint</div>
+                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">
+                              Chief Complaint
+                            </div>
                             <div className="text-[var(--color-text-primary)]">
                               {currentCase.clinicalContext.chiefComplaint}
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* History */}
                       <div className="p-4">
                         <div className="flex items-start gap-4">
@@ -357,30 +381,40 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                             <ClipboardList className="w-5 h-5 text-blue-400" />
                           </div>
                           <div>
-                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">History</div>
+                            <div className="text-sm text-[var(--color-text-secondary)] mb-1">
+                              History
+                            </div>
                             <div className="text-[var(--color-text-primary)] text-sm leading-relaxed">
                               {currentCase.clinicalContext.history}
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Additional Findings (if present) */}
-                      {currentCase.clinicalContext.additionalFindings && currentCase.clinicalContext.additionalFindings.length > 0 && (
-                        <div className="p-4 bg-[var(--color-bg-tertiary)] border-t border-[var(--color-border)]">
-                          <div className="text-sm text-[var(--color-text-secondary)] mb-2">Physical Exam Findings:</div>
-                          <ul className="space-y-1">
-                            {currentCase.clinicalContext.additionalFindings.map((finding, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
-                                <span className="text-violet-400 mt-1">•</span>
-                                <span>{finding}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      {currentCase.clinicalContext.additionalFindings &&
+                        currentCase.clinicalContext.additionalFindings.length > 0 && (
+                          <div className="p-4 bg-[var(--color-bg-tertiary)] border-t border-[var(--color-border)]">
+                            <div className="text-sm text-[var(--color-text-secondary)] mb-2">
+                              Physical Exam Findings:
+                            </div>
+                            <ul className="space-y-1">
+                              {currentCase.clinicalContext.additionalFindings.map(
+                                (finding, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                                  >
+                                    <span className="text-violet-400 mt-1">•</span>
+                                    <span>{finding}</span>
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
                     </div>
-                    
+
                     {/* Reveal Image Button */}
                     <button
                       onClick={handleRevealImage}
@@ -391,7 +425,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     </button>
                   </div>
                 )}
-                
+
                 {/* Image View (shown for non-derm cases or when revealed) */}
                 {(imageRevealed || !currentCase.clinicalContext) && (
                   <div className="relative bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
@@ -413,7 +447,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     )}
                     {/* Modality Badge */}
                     <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
-                      {currentCase.modality === 'derm' ? 'Clinical Presentation' : currentCase.modality}
+                      {currentCase.modality === 'derm'
+                        ? 'Clinical Presentation'
+                        : currentCase.modality}
                     </div>
                   </div>
                 )}
@@ -533,9 +569,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">
-                {score}
-              </div>
+              <div className="text-4xl font-bold text-emerald-400">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>

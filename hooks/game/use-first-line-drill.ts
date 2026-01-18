@@ -4,7 +4,7 @@ import type { FirstLineTreatment } from '@prisma/client';
 
 export type FirstLineDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
-export type FirstLineCategory = 
+export type FirstLineCategory =
   | 'Cardiology'
   | 'Pulmonology'
   | 'Infectious Disease'
@@ -43,23 +43,27 @@ export interface UseFirstLineDrillReturn {
   showCategoryMenu: () => void;
 }
 
-function getRandomTreatments(treatments: FirstLineTreatment[], count: number, exclude: string): FirstLineTreatment[] {
+function getRandomTreatments(
+  treatments: FirstLineTreatment[],
+  count: number,
+  exclude: string
+): FirstLineTreatment[] {
   return treatments
-    .filter(t => t.treatment !== exclude)
+    .filter((t) => t.treatment !== exclude)
     .sort(() => Math.random() - 0.5)
     .slice(0, count);
 }
 
-function generateQuestion(treatment: FirstLineTreatment, allTreatments: FirstLineTreatment[]): FirstLineQuestion {
+function generateQuestion(
+  treatment: FirstLineTreatment,
+  allTreatments: FirstLineTreatment[]
+): FirstLineQuestion {
   const distractors = getRandomTreatments(allTreatments, 3, treatment.treatment);
-  const options = [
-    treatment.treatment,
-    ...distractors.map(d => d.treatment)
-  ];
-  
+  const options = [treatment.treatment, ...distractors.map((d) => d.treatment)];
+
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
   const correctIndex = shuffledOptions.indexOf(treatment.treatment);
-  
+
   return {
     id: `fl-${treatment.id}-${Date.now()}`,
     condition: treatment.condition,
@@ -73,26 +77,26 @@ function generateQuestion(treatment: FirstLineTreatment, allTreatments: FirstLin
 
 function getRandomTreatmentByCategory(
   treatments: FirstLineTreatment[],
-  category: FirstLineCategory, 
+  category: FirstLineCategory,
   exclude?: Set<string>
 ): FirstLineTreatment {
   let pool = treatments;
-  
+
   if (category !== 'random') {
-    pool = treatments.filter(t => t.category === category);
+    pool = treatments.filter((t) => t.category === category);
     if (pool.length === 0) {
       pool = treatments;
     }
   }
-  
+
   // Filter out recently seen conditions
   if (exclude && exclude.size > 0) {
-    const filtered = pool.filter(t => !exclude.has(t.condition));
+    const filtered = pool.filter((t) => !exclude.has(t.condition));
     if (filtered.length > 0) {
       pool = filtered;
     }
   }
-  
+
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -112,7 +116,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<FirstLineDrillStatus>('landing');
-  
+
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
 
@@ -122,7 +126,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
         const data = await firstLineService.getAll();
         setAllTreatments(data);
       } catch (error) {
-        console.error("Failed to load first line treatments", error);
+        console.error('Failed to load first line treatments', error);
       } finally {
         setIsLoading(false);
       }
@@ -132,46 +136,55 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
 
   const currentQuestion = queue[currentIndex] ?? null;
 
-  const generateNewQuestion = useCallback((category: FirstLineCategory): FirstLineQuestion => {
-    if (allTreatments.length === 0) return {} as FirstLineQuestion; // Should be guarded by isLoading
+  const generateNewQuestion = useCallback(
+    (category: FirstLineCategory): FirstLineQuestion => {
+      if (allTreatments.length === 0) return {} as FirstLineQuestion; // Should be guarded by isLoading
 
-    const treatment = getRandomTreatmentByCategory(allTreatments, category, recentConditionsRef.current);
-    
-    // Add to recent conditions and maintain max size
-    recentConditionsRef.current.add(treatment.condition);
-    if (recentConditionsRef.current.size > MAX_RECENT_CONDITIONS) {
-      const firstItem = recentConditionsRef.current.values().next().value;
-      if (firstItem) recentConditionsRef.current.delete(firstItem);
-    }
-    
-    return generateQuestion(treatment, allTreatments);
-  }, [allTreatments]);
+      const treatment = getRandomTreatmentByCategory(
+        allTreatments,
+        category,
+        recentConditionsRef.current
+      );
 
-  const startSession = useCallback((category: FirstLineCategory) => {
-    if (allTreatments.length === 0) return;
+      // Add to recent conditions and maintain max size
+      recentConditionsRef.current.add(treatment.condition);
+      if (recentConditionsRef.current.size > MAX_RECENT_CONDITIONS) {
+        const firstItem = recentConditionsRef.current.values().next().value;
+        if (firstItem) recentConditionsRef.current.delete(firstItem);
+      }
 
-    setSelectedCategory(category);
-    recentConditionsRef.current.clear(); // Clear history on new session
-    
-    const initialQueue: FirstLineQuestion[] = [];
-    for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateNewQuestion(category));
-    }
-    
-    setQueue(initialQueue);
-    setCurrentIndex(0);
-    setScore(0);
-    setStreak(0);
-    setTotalAttempts(0);
-    setUserAnswerIndex(null);
-    setIsCorrect(null);
-    setStatus('playing');
-  }, [generateNewQuestion, allTreatments]);
+      return generateQuestion(treatment, allTreatments);
+    },
+    [allTreatments]
+  );
+
+  const startSession = useCallback(
+    (category: FirstLineCategory) => {
+      if (allTreatments.length === 0) return;
+
+      setSelectedCategory(category);
+      recentConditionsRef.current.clear(); // Clear history on new session
+
+      const initialQueue: FirstLineQuestion[] = [];
+      for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
+        initialQueue.push(generateNewQuestion(category));
+      }
+
+      setQueue(initialQueue);
+      setCurrentIndex(0);
+      setScore(0);
+      setStreak(0);
+      setTotalAttempts(0);
+      setUserAnswerIndex(null);
+      setIsCorrect(null);
+      setStatus('playing');
+    },
+    [generateNewQuestion, allTreatments]
+  );
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
   }, []);
-
 
   const exitToMenu = useCallback(() => {
     setStatus('landing');
@@ -184,29 +197,32 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     setIsCorrect(null);
   }, []);
 
-  const submitAnswer = useCallback((answerIndex: number) => {
-    if (!currentQuestion || status !== 'playing') return;
+  const submitAnswer = useCallback(
+    (answerIndex: number) => {
+      if (!currentQuestion || status !== 'playing') return;
 
-    setUserAnswerIndex(answerIndex);
-    setTotalAttempts(prev => prev + 1);
-    
-    const correct = answerIndex === currentQuestion.correctAnswerIndex;
-    setIsCorrect(correct);
+      setUserAnswerIndex(answerIndex);
+      setTotalAttempts((prev) => prev + 1);
 
-    if (correct) {
-      setScore(prev => prev + 1);
-      setStreak(prev => prev + 1);
-    } else {
-      setStreak(0);
-    }
+      const correct = answerIndex === currentQuestion.correctAnswerIndex;
+      setIsCorrect(correct);
 
-    setStatus('feedback');
-  }, [currentQuestion, status]);
+      if (correct) {
+        setScore((prev) => prev + 1);
+        setStreak((prev) => prev + 1);
+      } else {
+        setStreak(0);
+      }
+
+      setStatus('feedback');
+    },
+    [currentQuestion, status]
+  );
 
   const nextQuestion = useCallback(() => {
     const newQuestion = generateNewQuestion(selectedCategory);
-    setQueue(prev => [...prev, newQuestion]);
-    setCurrentIndex(prev => prev + 1);
+    setQueue((prev) => [...prev, newQuestion]);
+    setCurrentIndex((prev) => prev + 1);
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
@@ -218,7 +234,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
       newQueue.push(generateNewQuestion(selectedCategory));
     }
-    
+
     setQueue(newQueue);
     setCurrentIndex(0);
     setScore(0);

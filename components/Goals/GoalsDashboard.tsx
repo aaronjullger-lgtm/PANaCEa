@@ -1,6 +1,6 @@
 /**
  * Goals Dashboard
- * 
+ *
  * Displays user goals with progress tracking, streaks, and CRUD operations.
  * Features:
  * - Visual progress bars
@@ -14,12 +14,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
-import { 
-  Target, 
-  Plus, 
-  Flame, 
-  Trophy, 
-  Calendar, 
+import {
+  Target,
+  Plus,
+  Flame,
+  Trophy,
+  Calendar,
   TrendingUp,
   CheckCircle,
   Pause,
@@ -67,41 +67,41 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
   const [goals, setGoals] = useState<UserGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<UserGoal | null>(null);
-  
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  
+
   /**
    * Fetch goals from API
    */
   const fetchGoals = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const token = await getToken();
       if (!token) throw new Error('Not authenticated');
-      
+
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (typeFilter !== 'all') params.append('goalType', typeFilter);
-      
+
       const response = await fetch(`/api/user/goals?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
-      
+
       const data = await response.json();
       setGoals(data.goals || []);
     } catch (err) {
@@ -111,110 +111,119 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
       setIsLoading(false);
     }
   }, [getToken, statusFilter, typeFilter]);
-  
+
   /**
    * Create new goal
    */
-  const handleCreateGoal = useCallback(async (goalData: Partial<UserGoal>) => {
-    try {
-      const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
-      
-      const response = await fetch('/api/user/goals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(goalData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to create goal');
+  const handleCreateGoal = useCallback(
+    async (goalData: Partial<UserGoal>) => {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch('/api/user/goals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(goalData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to create goal');
+        }
+
+        await fetchGoals(); // Refresh list
+        setShowCreateModal(false);
+      } catch (err) {
+        console.error('[GoalsDashboard] Create error:', err);
+        throw err;
       }
-      
-      await fetchGoals(); // Refresh list
-      setShowCreateModal(false);
-    } catch (err) {
-      console.error('[GoalsDashboard] Create error:', err);
-      throw err;
-    }
-  }, [getToken, fetchGoals]);
-  
+    },
+    [getToken, fetchGoals]
+  );
+
   /**
    * Update goal
    */
-  const handleUpdateGoal = useCallback(async (goalId: string, updates: Partial<UserGoal>) => {
-    try {
-      const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
-      
-      const response = await fetch(`/api/user/goals/${goalId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to update goal');
+  const handleUpdateGoal = useCallback(
+    async (goalId: string, updates: Partial<UserGoal>) => {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(`/api/user/goals/${goalId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updates),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to update goal');
+        }
+
+        await fetchGoals(); // Refresh list
+        setEditingGoal(null);
+      } catch (err) {
+        console.error('[GoalsDashboard] Update error:', err);
+        throw err;
       }
-      
-      await fetchGoals(); // Refresh list
-      setEditingGoal(null);
-    } catch (err) {
-      console.error('[GoalsDashboard] Update error:', err);
-      throw err;
-    }
-  }, [getToken, fetchGoals]);
-  
+    },
+    [getToken, fetchGoals]
+  );
+
   /**
    * Delete goal
    */
-  const handleDeleteGoal = useCallback(async (goalId: string) => {
-    if (!confirm('Are you sure you want to delete this goal?')) return;
-    
-    try {
-      const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
-      
-      const response = await fetch(`/api/user/goals/${goalId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to delete goal');
+  const handleDeleteGoal = useCallback(
+    async (goalId: string) => {
+      if (!confirm('Are you sure you want to delete this goal?')) return;
+
+      try {
+        const token = await getToken();
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(`/api/user/goals/${goalId}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to delete goal');
+        }
+
+        await fetchGoals(); // Refresh list
+      } catch (err) {
+        console.error('[GoalsDashboard] Delete error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to delete goal');
       }
-      
-      await fetchGoals(); // Refresh list
-    } catch (err) {
-      console.error('[GoalsDashboard] Delete error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete goal');
-    }
-  }, [getToken, fetchGoals]);
-  
+    },
+    [getToken, fetchGoals]
+  );
+
   // Fetch on mount and when filters change
   useEffect(() => {
     void fetchGoals();
   }, [fetchGoals]);
-  
+
   // Calculate stats
   const stats = {
     total: goals.length,
-    active: goals.filter(g => g.status === 'active').length,
-    completed: goals.filter(g => g.status === 'completed').length,
+    active: goals.filter((g) => g.status === 'active').length,
+    completed: goals.filter((g) => g.status === 'completed').length,
     totalStreak: goals.reduce((sum, g) => sum + g.currentStreak, 0),
-    bestStreak: Math.max(...goals.map(g => g.bestStreak), 0),
+    bestStreak: Math.max(...goals.map((g) => g.bestStreak), 0),
   };
-  
+
   return (
     <div className={`goals-dashboard ${className}`}>
       {/* Header */}
@@ -228,7 +237,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             Track your progress and stay motivated
           </p>
         </div>
-        
+
         <button
           onClick={() => setShowCreateModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
@@ -237,7 +246,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           New Goal
         </button>
       </div>
-      
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -249,38 +258,32 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             {stats.active}
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
             <CheckCircle className="w-4 h-4" />
             Completed
           </div>
-          <div className="text-2xl font-bold text-green-600">
-            {stats.completed}
-          </div>
+          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
             <Flame className="w-4 h-4" />
             Total Streak
           </div>
-          <div className="text-2xl font-bold text-orange-600">
-            {stats.totalStreak}
-          </div>
+          <div className="text-2xl font-bold text-orange-600">{stats.totalStreak}</div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
             <Trophy className="w-4 h-4" />
             Best Streak
           </div>
-          <div className="text-2xl font-bold text-yellow-600">
-            {stats.bestStreak}
-          </div>
+          <div className="text-2xl font-bold text-yellow-600">{stats.bestStreak}</div>
         </div>
       </div>
-      
+
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
@@ -298,7 +301,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <option value="failed">Failed</option>
           </select>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-600 dark:text-slate-400">Type:</span>
           <select
@@ -314,12 +317,10 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           </select>
         </div>
       </div>
-      
+
       {/* Goals List */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-600 dark:text-slate-400">
-          Loading goals...
-        </div>
+        <div className="text-center py-12 text-slate-600 dark:text-slate-400">Loading goals...</div>
       ) : error ? (
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
@@ -358,15 +359,12 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           </AnimatePresence>
         </div>
       )}
-      
+
       {/* Modals */}
       {showCreateModal && (
-        <GoalCreateModal
-          onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreateGoal}
-        />
+        <GoalCreateModal onClose={() => setShowCreateModal(false)} onCreate={handleCreateGoal} />
       )}
-      
+
       {editingGoal && (
         <GoalEditModal
           goal={editingGoal}

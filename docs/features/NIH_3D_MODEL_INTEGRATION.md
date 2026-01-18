@@ -11,19 +11,20 @@ This guide explains how to integrate 3D anatomical models from the NIH 3D Print 
 The NIH 3D Print Exchange (https://3d.nih.gov) provides free, scientifically-accurate 3D models that are in the public domain. These models are ideal for medical education.
 
 ### Key Resources
+
 - **NIH 3D Print Exchange**: https://3d.nih.gov
 - **NLM Visible Human Project**: https://www.nlm.nih.gov/research/visible/visible_human.html
 - **NCBI Model Archive**: Search for anatomy models at https://www.ncbi.nlm.nih.gov
 
 ## File Formats Supported
 
-| Format | Extension | Recommended | Notes |
-|--------|-----------|-------------|-------|
-| glTF Binary | `.glb` | ✅ Yes | Best for web, includes textures |
-| glTF | `.gltf` | ✅ Yes | JSON format, textures separate |
-| OBJ | `.obj` | ⚠️ Limited | Simple geometry only |
-| STL | `.stl` | ⚠️ Limited | No color/texture support |
-| FBX | `.fbx` | ❌ No | Requires conversion |
+| Format      | Extension | Recommended | Notes                           |
+| ----------- | --------- | ----------- | ------------------------------- |
+| glTF Binary | `.glb`    | ✅ Yes      | Best for web, includes textures |
+| glTF        | `.gltf`   | ✅ Yes      | JSON format, textures separate  |
+| OBJ         | `.obj`    | ⚠️ Limited  | Simple geometry only            |
+| STL         | `.stl`    | ⚠️ Limited  | No color/texture support        |
+| FBX         | `.fbx`    | ❌ No       | Requires conversion             |
 
 **Recommendation**: Use GLB format for best compatibility and performance.
 
@@ -65,7 +66,7 @@ const SAMPLE_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
       system: 'cardiovascular',
       structures: [
         'left atrium',
-        'right atrium', 
+        'right atrium',
         'left ventricle',
         'right ventricle',
         'mitral valve',
@@ -73,7 +74,7 @@ const SAMPLE_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
         'aortic valve',
         'pulmonary valve',
         'coronary arteries',
-        'pulmonary veins'
+        'pulmonary veins',
       ],
       modelUrl: '/models/heart-detailed.glb',
       format: 'glb',
@@ -87,12 +88,13 @@ const SAMPLE_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
         license: 'Public Domain',
         url: 'https://3d.nih.gov/entries/3DPX-012345',
         dateAccessed: '2026-01-08',
-        citationText: 'NIH 3D Print Exchange. Human Heart Detailed Model. https://3d.nih.gov/entries/3DPX-012345. Accessed [DATE].',
+        citationText:
+          'NIH 3D Print Exchange. Human Heart Detailed Model. https://3d.nih.gov/entries/3DPX-012345. Accessed [DATE].',
       },
       clinicalRelevance: [
         'Valve pathology visualization',
         'Coronary artery anatomy',
-        'Cardiac chamber relationships'
+        'Cardiac chamber relationships',
       ],
       relatedConditions: ['myocardial-infarction', 'mitral-regurgitation', 'aortic-stenosis'],
       scale: 1,
@@ -112,12 +114,15 @@ const SAMPLE_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
 ### Citation Format Examples
 
 **AMA Format:**
+
 > NIH 3D Print Exchange. Human Heart Model. NIH 3D Print Exchange. https://3d.nih.gov/entries/3DPX-012345. Accessed January 8, 2026.
 
 **APA Format:**
+
 > NIH 3D Print Exchange. (2026). Human Heart Model. NIH 3D Print Exchange. Retrieved January 8, 2026, from https://3d.nih.gov/entries/3DPX-012345
 
 **MLA Format:**
+
 > "Human Heart Model." NIH 3D Print Exchange, National Institutes of Health, https://3d.nih.gov/entries/3DPX-012345. Accessed 8 Jan. 2026.
 
 ## Usage in Components
@@ -127,13 +132,13 @@ const SAMPLE_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
 ```tsx
 import { AnatomyModelViewer } from '../components/anatomy';
 
-<AnatomyModelViewer modelId="heart-basic" />
+<AnatomyModelViewer modelId="heart-basic" />;
 ```
 
 ### With Custom Options
 
 ```tsx
-<AnatomyModelViewer 
+<AnatomyModelViewer
   modelId="heart-basic"
   showControls={true}
   showStructureList={true}
@@ -155,9 +160,9 @@ import { anatomyModelService } from '../services/anatomyModelService';
 // Get models related to a condition
 const relatedModels = await anatomyModelService.getModelsForCondition('myocardial-infarction');
 
-{relatedModels.map(model => (
-  <AnatomyModelViewer key={model.id} model={model} />
-))}
+{
+  relatedModels.map((model) => <AnatomyModelViewer key={model.id} model={model} />);
+}
 ```
 
 ## Future Enhancements
@@ -208,15 +213,18 @@ model AnatomyModel {
 ## Troubleshooting
 
 ### Model Not Loading
+
 - Check file path is correct relative to `/public`
 - Verify GLB file is not corrupted
 - Check browser console for loading errors
 
 ### Poor Performance
+
 - Reduce polygon count in the source model
 - Use compressed GLB format (Draco compression)
 - Enable progressive loading
 
 ### Citation Not Displaying
+
 - Ensure `showCitation` prop is true
 - Verify citation data is complete in model metadata

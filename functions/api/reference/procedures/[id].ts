@@ -1,78 +1,74 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
  * GET /api/reference/procedures/:id
- * Fetch a single procedure by ID
+ * Fetch a single procedure by ID with related conditions
+ *
+ * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
  */
-export async function onRequestGet(context: any) {
-  const { request, env, params } = context;
-  const { id } = params;
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
+
+const ProcedureByIdSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid procedure ID format'),
+  }),
+});
+
+// ============================================================================
+// ENDPOINT HANDLERS
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(
+  ProcedureByIdSchema,
+  async ({ env, auth, validated, params }) => {
+    const log = createEndpointLogger('/api/reference/procedures/[id]', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const id = validated?.params?.id || params?.id;
+
+      if (!id) {
+        log.warn('Missing procedure ID');
+        return { status: 400, error: 'Procedure ID is required' };
       }
-    });
-  }
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+      log.info('Fetching procedure', { id });
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    const result = await prisma.procedure.findUnique({
-      where: { id },
-      include: {
-        conditions: {
-          select: { id: true, name: true }
-        }
-      }
-    });
-    
-    if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'Procedure not found' }), { 
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      const result = await prisma.procedure.findUnique({
+        where: { id },
+        include: {
+          conditions: {
+            select: { id: true, name: true },
+          },
+        },
       });
+
+      if (!result) {
+        log.warn('Procedure not found', { id });
+        return { status: 404, error: 'Procedure not found' };
+      }
+
+      log.info('Procedure fetched successfully', { id, conditionCount: result.conditions?.length || 0 });
+      return { data: { success: true, data: result } };
+    } catch (error) {
+      log.error('Failed to fetch procedure', error);
+      return { status: 500, error: 'Failed to fetch procedure' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error: any) {
-    console.error('Error fetching procedure:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch procedure', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

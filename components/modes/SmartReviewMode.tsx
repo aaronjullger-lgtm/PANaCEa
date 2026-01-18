@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Brain, Clock, Zap, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Sparkles, FileText } from 'lucide-react';
+import {
+  X,
+  Brain,
+  Clock,
+  Zap,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Sparkles,
+  FileText,
+} from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
@@ -158,11 +169,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           <div className="flex justify-center">
             <SkeletonLoader width="140px" height="36px" className="rounded-full" />
           </div>
-          
+
           {/* Question card skeleton */}
           <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-8">
             <SkeletonText lines={3} className="mb-8" />
-            
+
             {/* Answer choices skeleton */}
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
@@ -170,7 +181,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
               ))}
             </div>
           </div>
-          
+
           {/* Button skeleton */}
           <div className="flex justify-center">
             <SkeletonLoader width="160px" height="48px" className="rounded-xl" />
@@ -270,7 +281,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           >
             {/* Reason Badge */}
             <div className="flex justify-center">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${badge.color} shadow-lg`}>
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${badge.color} shadow-lg`}
+              >
                 <badge.Icon className="w-5 h-5" />
                 <span className="font-semibold text-sm">{badge.label}</span>
               </div>
@@ -303,7 +316,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                             : 'border-[var(--color-border)]'
                         }`}
                       >
-                        {selectedAnswer === choice.value && <div className="w-2 h-2 bg-white rounded-full" />}
+                        {selectedAnswer === choice.value && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
                       </div>
                       <span className="text-[var(--color-text-primary)]">{choice.text}</span>
                     </div>
@@ -333,7 +348,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                     <div className="font-semibold text-lg mb-2">
                       {isCorrect ? 'Correct!' : 'Incorrect'}
                     </div>
-                    <p className="text-sm text-[var(--color-text-muted)]">{currentItem.question.explanation}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      {currentItem.question.explanation}
+                    </p>
                   </div>
                 </div>
               </motion.div>

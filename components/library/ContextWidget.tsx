@@ -1,6 +1,6 @@
 /**
  * ContextWidget - Displays related context for a condition
- * 
+ *
  * Types:
  * - 'pharm': Related pharmacology (drugs, treatment)
  * - 'physio': Related pathophysiology (mechanism, related conditions)
@@ -129,10 +129,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
                 </h4>
                 <div className="space-y-2">
                   {data.relatedDrugs.map((drug: any) => (
-                    <div
-                      key={drug.id}
-                      className="bg-[var(--color-bg-secondary)] rounded-lg p-3"
-                    >
+                    <div key={drug.id} className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
                       <div className="font-medium text-sm text-[var(--color-text-primary)]">
                         {drug.name}
                       </div>
@@ -152,7 +149,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
               </div>
             )}
 
-            {(!data.treatment && (!data.relatedDrugs || data.relatedDrugs.length === 0)) && (
+            {!data.treatment && (!data.relatedDrugs || data.relatedDrugs.length === 0) && (
               <p className="text-sm text-[var(--color-text-muted)] italic">
                 No pharmacology data available for this condition.
               </p>
@@ -195,11 +192,12 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
               </div>
             )}
 
-            {(!data.pathophysiology && (!data.relatedConditions || data.relatedConditions.length === 0)) && (
-              <p className="text-sm text-[var(--color-text-muted)] italic">
-                No pathophysiology data available for this condition.
-              </p>
-            )}
+            {!data.pathophysiology &&
+              (!data.relatedConditions || data.relatedConditions.length === 0) && (
+                <p className="text-sm text-[var(--color-text-muted)] italic">
+                  No pathophysiology data available for this condition.
+                </p>
+              )}
           </>
         )}
       </div>

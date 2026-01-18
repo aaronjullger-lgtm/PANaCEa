@@ -1,12 +1,10 @@
-import path from "path";
-import { pathToFileURL } from "url";
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 const { CONDITION_REGISTRY, buildConditionDefinition } = await import(
-  pathToFileURL(path.resolve("conditionRegistry.ts")).href
+  pathToFileURL(path.resolve('conditionRegistry.ts')).href
 );
-const { QUESTION_BANK } = await import(
-  pathToFileURL(path.resolve("src/questions.ts")).href
-);
+const { QUESTION_BANK } = await import(pathToFileURL(path.resolve('src/questions.ts')).href);
 
 interface AuditResult {
   missing: string[];
@@ -46,22 +44,22 @@ function runAudit(): AuditResult {
 }
 
 function printSummary(result: AuditResult) {
-  console.log("Question → condition audit summary:\n");
+  console.log('Question → condition audit summary:\n');
   console.log(`Total questions: ${QUESTION_BANK.length}`);
   console.log(`Unique conditions covered: ${Object.keys(result.counts).length}`);
   console.log(`Conditions in registry: ${CONDITION_REGISTRY.length}`);
-  console.log("");
+  console.log('');
 
   if (result.missing.length) {
-    console.log("Missing conditionIds (not found in registry):");
+    console.log('Missing conditionIds (not found in registry):');
     for (const miss of result.missing) {
       console.log(` - ${miss}`);
     }
   } else {
-    console.log("All questions reference valid registry conditionIds.");
+    console.log('All questions reference valid registry conditionIds.');
   }
 
-  console.log("");
+  console.log('');
   console.log(`Orphan conditions (no questions): ${result.orphanConditions.length}`);
 }
 

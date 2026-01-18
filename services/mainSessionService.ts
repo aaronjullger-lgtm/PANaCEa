@@ -1,6 +1,6 @@
 /**
  * Main Session Service
- * 
+ *
  * Client-side orchestrator for the main study session:
  * - Fetches questions from the new /api/questions/session endpoint
  * - Handles fallback to local generation
@@ -89,22 +89,22 @@ export async function fetchSessionQuestions(
   // Map frontend settings to API params
   const params = new URLSearchParams();
   params.set('count', String(count));
-  
+
   if (settings.focus && settings.focus !== 'all') {
     const systemMap: Record<string, string> = {
-      'cardiology': 'CV',
-      'pulmonology': 'PULM',
-      'gastroenterology': 'GI',
-      'neurology': 'NEURO',
-      'musculoskeletal': 'MSK',
-      'dermatology': 'DERM',
-      'hematology': 'HEME',
-      'endocrinology': 'ENDO',
-      'heent': 'HEENT',
-      'renal': 'RENAL',
-      'reproductive': 'REPRO',
-      'psychiatry': 'PSYCH',
-      'infectious': 'ID',
+      cardiology: 'CV',
+      pulmonology: 'PULM',
+      gastroenterology: 'GI',
+      neurology: 'NEURO',
+      musculoskeletal: 'MSK',
+      dermatology: 'DERM',
+      hematology: 'HEME',
+      endocrinology: 'ENDO',
+      heent: 'HEENT',
+      renal: 'RENAL',
+      reproductive: 'REPRO',
+      psychiatry: 'PSYCH',
+      infectious: 'ID',
     };
     const system = systemMap[settings.focus.toLowerCase()] || settings.focus;
     params.set('system', system);
@@ -138,7 +138,7 @@ export async function fetchSessionQuestions(
     }
 
     const data = await response.json();
-    
+
     // Update pool status cache
     lastPoolStatus = data.poolStatus;
 
@@ -268,13 +268,15 @@ export function getSessionSummary(): {
 } | null {
   if (!currentSession) return null;
 
-  const accuracy = currentSession.questionsAnswered > 0
-    ? (currentSession.correctAnswers / currentSession.questionsAnswered) * 100
-    : 0;
+  const accuracy =
+    currentSession.questionsAnswered > 0
+      ? (currentSession.correctAnswers / currentSession.questionsAnswered) * 100
+      : 0;
 
-  const avgTimePerQuestion = currentSession.questionsAnswered > 0
-    ? currentSession.totalTimeMs / currentSession.questionsAnswered
-    : 0;
+  const avgTimePerQuestion =
+    currentSession.questionsAnswered > 0
+      ? currentSession.totalTimeMs / currentSession.questionsAnswered
+      : 0;
 
   const sessionDuration = Date.now() - currentSession.startTime;
 
@@ -288,8 +290,12 @@ export function getSessionSummary(): {
 
   // Sort to find strengths and weaknesses
   const sortedSystems = [...systemStats].sort((a, b) => b.accuracy - a.accuracy);
-  const strengths = sortedSystems.filter(s => s.accuracy >= 70 && s.total >= 2).map(s => s.system);
-  const weaknesses = sortedSystems.filter(s => s.accuracy < 60 && s.total >= 2).map(s => s.system);
+  const strengths = sortedSystems
+    .filter((s) => s.accuracy >= 70 && s.total >= 2)
+    .map((s) => s.system);
+  const weaknesses = sortedSystems
+    .filter((s) => s.accuracy < 60 && s.total >= 2)
+    .map((s) => s.system);
 
   return {
     totalQuestions: currentSession.questionsAnswered,
@@ -322,10 +328,10 @@ export async function prefetchQuestions(
 ): Promise<void> {
   // Background prefetch - don't await or block
   fetchSessionQuestions(settings, token, count)
-    .then(result => {
+    .then((result) => {
       console.log(`[SessionService] Prefetched ${result.questions.length} questions`);
     })
-    .catch(err => {
+    .catch((err) => {
       console.warn('[SessionService] Prefetch failed:', err);
     });
 }
@@ -341,7 +347,7 @@ export async function checkAndReplenishPool(token?: string | null): Promise<void
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ count: 20 }),
     });

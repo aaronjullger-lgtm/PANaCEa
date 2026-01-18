@@ -6,16 +6,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
-import { 
-  BookOpen, 
-  Brain, 
-  Award, 
-  TrendingUp, 
+import {
+  BookOpen,
+  Brain,
+  Award,
+  TrendingUp,
   CheckCircle2,
   ArrowRight,
   Activity as ActivityIcon,
   Target,
-  Repeat
+  Repeat,
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -26,14 +26,14 @@ export function LandingPage() {
   useEffect(() => {
     if (showAuth) {
       document.body.style.overflow = 'hidden';
-      
+
       // Handle escape key
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setShowAuth(false);
         }
       };
-      
+
       document.addEventListener('keydown', handleEscape);
       return () => {
         document.body.style.overflow = 'unset';
@@ -48,23 +48,27 @@ export function LandingPage() {
     {
       icon: TrendingUp,
       title: 'Performance Tracking & Stats',
-      description: 'Detailed analytics and insights into your progress, identifying weak areas and tracking improvement over time'
+      description:
+        'Detailed analytics and insights into your progress, identifying weak areas and tracking improvement over time',
     },
     {
       icon: ActivityIcon,
       title: 'Clinical Image Training',
-      description: 'Practice with ECGs, dermatology images, and radiology cases to build diagnostic skills'
+      description:
+        'Practice with ECGs, dermatology images, and radiology cases to build diagnostic skills',
     },
     {
       icon: BookOpen,
       title: 'Comprehensive Medical Database',
-      description: 'Complete medical reference with 1000+ conditions, treatments, labs, and clinical guidelines built right in'
+      description:
+        'Complete medical reference with 1000+ conditions, treatments, labs, and clinical guidelines built right in',
     },
     {
       icon: Target,
       title: '15+ Training Modes',
-      description: 'Pharmacology, differential diagnosis, first-line treatments, and more specialized practice modes'
-    }
+      description:
+        'Pharmacology, differential diagnosis, first-line treatments, and more specialized practice modes',
+    },
   ];
 
   const benefits = [
@@ -73,7 +77,7 @@ export function LandingPage() {
     'Rapid recall drills for time-sensitive practice',
     'First-line treatment and antibiotic selection training',
     'Detailed explanations with clinical pearls and mnemonics',
-    'Cloud sync across devices'
+    'Cloud sync across devices',
   ];
 
   return (
@@ -87,18 +91,18 @@ export function LandingPage() {
             className="flex items-center gap-3"
           >
             {/* Favicon icons - opposites for light/dark mode */}
-            <img 
-              src="/Favicon.svg" 
-              alt="PANaCEa Icon" 
+            <img
+              src="/Favicon.svg"
+              alt="PANaCEa Icon"
               className="h-12 sm:h-14 w-auto dark:hidden"
             />
-            <img 
-              src="/favicondarkmodeTP.svg" 
-              alt="PANaCEa Icon" 
+            <img
+              src="/favicondarkmodeTP.svg"
+              alt="PANaCEa Icon"
               className="h-12 sm:h-14 w-auto hidden dark:block"
             />
             {/* PANaCEa text with Poppins Bold font */}
-            <span 
+            <span
               className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)]"
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
@@ -136,7 +140,8 @@ export function LandingPage() {
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Comprehensive study platform for PA students with medical database, performance tracking, clinical image training, and 15+ specialized training modes.
+              Comprehensive study platform for PA students with medical database, performance
+              tracking, clinical image training, and 15+ specialized training modes.
             </p>
           </motion.div>
 
@@ -170,7 +175,12 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {['Performance Analytics', '15+ Training Modes', 'Medical Database', '1000+ Conditions'].map((pill, idx) => (
+            {[
+              'Performance Analytics',
+              '15+ Training Modes',
+              'Medical Database',
+              '1000+ Conditions',
+            ].map((pill, idx) => (
               <div
                 key={idx}
                 className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
@@ -191,9 +201,7 @@ export function LandingPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">
-            Key Features
-          </h2>
+          <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">Key Features</h2>
           <p className="text-xl text-[var(--color-text-secondary)]">
             Essential tools for PA school success and exam preparation
           </p>
@@ -233,11 +241,10 @@ export function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-4xl font-bold mb-6">
-                Comprehensive Study Tools
-              </h2>
+              <h2 className="text-4xl font-bold mb-6">Comprehensive Study Tools</h2>
               <p className="text-xl text-[#E9ECF1] mb-8">
-                Track your performance, identify knowledge gaps, and focus your study time effectively.
+                Track your performance, identify knowledge gaps, and focus your study time
+                effectively.
               </p>
               <motion.button
                 onClick={() => {
@@ -269,7 +276,9 @@ export function LandingPage() {
                   className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4"
                 >
                   <CheckCircle2 className="w-6 h-6 text-[#E9ECF1] flex-shrink-0 mt-0.5" />
-                  <span className="text-lg font-medium leading-relaxed text-[#E9ECF1]">{benefit}</span>
+                  <span className="text-lg font-medium leading-relaxed text-[#E9ECF1]">
+                    {benefit}
+                  </span>
                 </motion.div>
               ))}
             </motion.div>
@@ -310,7 +319,10 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-[var(--color-text-muted)]">
-          <p>© {new Date().getFullYear()} PANaCEa. Complete study resource for physician assistant students.</p>
+          <p>
+            © {new Date().getFullYear()} PANaCEa. Complete study resource for physician assistant
+            students.
+          </p>
         </div>
       </footer>
 
@@ -343,23 +355,32 @@ export function LandingPage() {
                       className="p-1 hover:bg-white/20 rounded-lg transition-colors"
                       aria-label="Close"
                     >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
                   <p className="text-[#E9ECF1] text-base">
-                    {authMode === 'sign-up' 
-                      ? 'Create your free account to start studying' 
-                      : 'Sign in to access your personalized study dashboard'
-                    }
+                    {authMode === 'sign-up'
+                      ? 'Create your free account to start studying'
+                      : 'Sign in to access your personalized study dashboard'}
                   </p>
                 </div>
 
                 {/* Clerk Component */}
                 <div className="p-6">
                   {authMode === 'sign-up' ? (
-                    <SignUp 
+                    <SignUp
                       appearance={{
                         elements: {
                           rootBox: 'mx-auto',
@@ -368,13 +389,14 @@ export function LandingPage() {
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton: 'hover:scale-105 transition-transform',
                           formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
-                          footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                          footerActionLink:
+                            'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
                         },
                       }}
                       fallbackRedirectUrl="/"
                     />
                   ) : (
-                    <SignIn 
+                    <SignIn
                       appearance={{
                         elements: {
                           rootBox: 'mx-auto',
@@ -383,7 +405,8 @@ export function LandingPage() {
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton: 'hover:scale-105 transition-transform',
                           formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
-                          footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                          footerActionLink:
+                            'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
                         },
                       }}
                       fallbackRedirectUrl="/"

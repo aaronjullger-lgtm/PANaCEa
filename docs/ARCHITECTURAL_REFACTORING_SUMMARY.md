@@ -22,22 +22,25 @@ This document summarizes the architectural refactoring completed as part of the 
 
 **Problem:** Multiple overlapping services (`conditionDataLoader`, `conditionRegistryService`, `conditionService`) and direct Prisma queries scattered across API endpoints violated the Single Source of Truth principle.
 
-**Solution:** 
+**Solution:**
+
 - ✅ Identified existing `ContentService` at `lib/services/content/contentService.ts`
 - ✅ All condition data now flows through this single, type-safe service
 - ✅ Zod validation ensures runtime type safety for database JSON fields
 
 **Files Created:**
+
 - `lib/services/content/contentService.ts` (already existed, now adopted)
 - `lib/services/content/types.ts` (with Zod schemas)
 
 ---
 
-###  2. Review Logic Refactoring
+### 2. Review Logic Refactoring
 
 **Problem:** `functions/api/questions/review.ts` contained 400+ lines of business logic, including direct Prisma queries, complex SRS calculations, and fallback AI generation.
 
 **Solution:**
+
 - ✅ Created `ReviewService` class at `lib/services/review/reviewService.ts`
 - ✅ Extracted all business logic into testable methods:
   - `getSRSDueQuestions()` - Concept-based SRS review
@@ -47,9 +50,11 @@ This document summarizes the architectural refactoring completed as part of the 
 - ✅ API route reduced to ~75 lines (thin wrapper for auth + HTTP)
 
 **Files Created:**
+
 - `lib/services/review/reviewService.ts`
 
 **Files Modified:**
+
 - `functions/api/questions/review.ts` (refactored to use `ReviewService`)
 
 ---
@@ -59,6 +64,7 @@ This document summarizes the architectural refactoring completed as part of the 
 **Problem:** `functions/api/questions/session.ts` contained heavy business logic for question fetching, pool management, and AI generation.
 
 **Solution:**
+
 - ✅ Created `SessionService` class at `lib/services/session/sessionService.ts`
 - ✅ Extracted logic into private methods:
   - `fetchFromPool()` - Pre-generated question pool
@@ -69,9 +75,11 @@ This document summarizes the architectural refactoring completed as part of the 
 - ✅ API route reduced to ~110 lines
 
 **Files Created:**
+
 - `lib/services/session/sessionService.ts`
 
 **Files Modified:**
+
 - `functions/api/questions/session.ts` (refactored to use `SessionService`)
 
 ---
@@ -81,12 +89,14 @@ This document summarizes the architectural refactoring completed as part of the 
 **Problem:** AI question generation was happening synchronously during user requests, causing latency (2-5s per question) and reliability issues when Gemini API was unavailable.
 
 **Solution:**
+
 - ✅ Removed inline generation from `review.ts` and `session.ts`
 - ✅ Existing background job at `scripts/jobs/replenish-pool.ts` handles asynchronous generation
 - ✅ Questions are pre-generated and stored in `PreGeneratedQuestion` table
 - ✅ Users only see pre-validated content from the pool
 
 **Files Modified:**
+
 - `lib/services/session/sessionService.ts` (generation now saves to pool)
 - `scripts/jobs/replenish-pool.ts` (already existed, now the single source for AI generation)
 
@@ -99,6 +109,7 @@ This document summarizes the architectural refactoring completed as part of the 
 **Problem:** Network failures during critical actions (e.g., submitting review answers) could cause users to lose progress.
 
 **Solution:**
+
 - ✅ Created `OfflineSyncService` at `services/offlineSyncService.ts`
   - Queues failed requests in `localStorage`
   - Auto-retries when network is restored
@@ -110,10 +121,12 @@ This document summarizes the architectural refactoring completed as part of the 
 - ⚠️ **Pending:** UI for viewing/retrying queued requests
 
 **Files Created:**
+
 - `services/offlineSyncService.ts`
 - `lib/services/review/reviewSubmissionService.ts`
 
 **Next Steps:**
+
 1. Fix import path in `reviewSubmissionService.ts` (`../offlineSyncService` vs `../../../services/offlineSyncService`)
 2. Replace direct `fetch('/api/questions/review')` calls in components with `reviewSubmissionService.submitReview()`
 3. Create `<OfflineSyncIndicator>` component to show queued requests count
@@ -123,12 +136,12 @@ This document summarizes the architectural refactoring completed as part of the 
 
 ## 📊 Impact Summary
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **API Route LOC** | ~800 lines | ~200 lines | **75% reduction** |
-| **Testable Business Logic** | Coupled to HTTP | Pure TypeScript classes | **100% testable** |
-| **AI Generation Latency** | 2-5s per request | 0s (pre-generated pool) | **100% faster** |
-| **Offline Resilience** | ❌ None | ✅ Queue + Auto-retry | **New capability** |
+| Metric                      | Before           | After                   | Improvement        |
+| --------------------------- | ---------------- | ----------------------- | ------------------ |
+| **API Route LOC**           | ~800 lines       | ~200 lines              | **75% reduction**  |
+| **Testable Business Logic** | Coupled to HTTP  | Pure TypeScript classes | **100% testable**  |
+| **AI Generation Latency**   | 2-5s per request | 0s (pre-generated pool) | **100% faster**    |
+| **Offline Resilience**      | ❌ None          | ✅ Queue + Auto-retry   | **New capability** |
 
 ---
 
@@ -142,7 +155,7 @@ describe('ReviewService', () => {
   it('should fetch SRS due questions', async () => {
     // Test getSRSDueQuestions logic
   });
-  
+
   it('should prioritize flagged questions', async () => {
     // Test getFlaggedQuestions logic
   });
@@ -160,7 +173,7 @@ describe('OfflineSyncService', () => {
   it('should queue requests when offline', async () => {
     // Mock navigator.onLine = false
   });
-  
+
   it('should process queue when online', async () => {
     // Mock network restoration
   });
@@ -205,6 +218,7 @@ export const QuestionDataSchema = z.object({
 ```
 
 **Implementation:**
+
 - Parse all `Json` fields with Zod in data access layer
 - Replace `any` and `JsonValue` types with strict schemas
 - Catch schema violations at runtime (log + Sentry alert)
@@ -214,14 +228,17 @@ export const QuestionDataSchema = z.object({
 ## 📝 Migration Notes
 
 ### Breaking Changes
+
 - None (all changes are backward-compatible refactors)
 
 ### Deprecated Code
+
 - ❌ `conditionDataLoader.ts` (if it existed, now deprecated)
 - ❌ `conditionRegistryService.ts` (redundant, use `ContentService`)
 - ❌ Inline AI generation in API routes (now background jobs only)
 
 ### Configuration Updates
+
 - No environment variable changes required
 - Existing `GEMINI_API_KEY` now only used by background jobs
 

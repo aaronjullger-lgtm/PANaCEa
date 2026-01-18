@@ -5,11 +5,11 @@ async function getSubcategoriesBySystem() {
     by: ['system', 'subcategory'],
     _count: { _all: true },
     where: { subcategory: { not: null } },
-    orderBy: { system: 'asc' }
+    orderBy: { system: 'asc' },
   });
-  
+
   const bySystem: Record<string, Set<string>> = {};
-  
+
   for (const r of result) {
     if (!bySystem[r.system]) {
       bySystem[r.system] = new Set();
@@ -18,16 +18,16 @@ async function getSubcategoriesBySystem() {
       bySystem[r.system].add(r.subcategory);
     }
   }
-  
+
   console.log('=== SUBCATEGORIES BY SYSTEM ===\n');
-  
+
   for (const [system, subcatsSet] of Object.entries(bySystem).sort()) {
     const subcats = Array.from(subcatsSet).sort();
     console.log(`${system}:`);
-    subcats.forEach(s => console.log(`  - ${s}`));
+    subcats.forEach((s) => console.log(`  - ${s}`));
     console.log();
   }
-  
+
   await disconnectPrisma();
 }
 

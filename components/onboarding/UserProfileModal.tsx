@@ -5,14 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  GraduationCap, 
-  Calendar, 
-  School, 
-  CheckCircle,
-  ChevronRight,
-  X
-} from 'lucide-react';
+import { GraduationCap, Calendar, School, CheckCircle, ChevronRight, X } from 'lucide-react';
 import { RotationSelector } from './RotationSelector';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
@@ -24,11 +17,11 @@ interface UserProfileModalProps {
   canSkip?: boolean;
 }
 
-export function UserProfileModal({ 
-  isOpen, 
-  onComplete, 
+export function UserProfileModal({
+  isOpen,
+  onComplete,
   onSkip,
-  canSkip = true 
+  canSkip = true,
 }: UserProfileModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [school, setSchool] = useState('');
@@ -88,9 +81,7 @@ export function UserProfileModal({
                 <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
                   Welcome to PANaCEa!
                 </h2>
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Step {step} of 2
-                </p>
+                <p className="text-sm text-[var(--color-text-muted)]">Step {step} of 2</p>
               </div>
             </div>
             {canSkip && (
@@ -128,7 +119,8 @@ export function UserProfileModal({
               >
                 <div>
                   <p className="text-[var(--color-text-muted)] mb-6">
-                    Help us personalize your learning experience by sharing a bit about your background.
+                    Help us personalize your learning experience by sharing a bit about your
+                    background.
                   </p>
                 </div>
 
@@ -180,9 +172,7 @@ export function UserProfileModal({
                         onClick={() => setYearInProgram(year)}
                         type="button"
                         className={`pill-select ${
-                          yearInProgram === year
-                            ? 'pill-select-active'
-                            : 'pill-select-inactive'
+                          yearInProgram === year ? 'pill-select-active' : 'pill-select-inactive'
                         }`}
                       >
                         {year}
@@ -203,10 +193,9 @@ export function UserProfileModal({
               >
                 <div>
                   <p className="text-[var(--color-text-muted)] mb-6">
-                    {showRotationSelector 
-                      ? "What clinical rotation are you currently on? This helps us tailor questions to your immediate learning needs."
-                      : "Just one more thing! You're almost ready to start your personalized learning journey."
-                    }
+                    {showRotationSelector
+                      ? 'What clinical rotation are you currently on? This helps us tailor questions to your immediate learning needs.'
+                      : "Just one more thing! You're almost ready to start your personalized learning journey."}
                   </p>
                 </div>
 
@@ -229,7 +218,8 @@ export function UserProfileModal({
                       You're All Set!
                     </h3>
                     <p className="text-[var(--color-text-muted)] text-sm">
-                      We've customized PANaCEa based on your profile. You can update these settings anytime.
+                      We've customized PANaCEa based on your profile. You can update these settings
+                      anytime.
                     </p>
                   </div>
                 )}
@@ -256,14 +246,19 @@ export function UserProfileModal({
                 className={`
                   flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg 
                   font-medium transition-all
-                  ${(step === 1 && !canProceedStep1)
-                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed opacity-50'
-                    : 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
+                  ${
+                    step === 1 && !canProceedStep1
+                      ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed opacity-50'
+                      : 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
                   }
                 `}
               >
                 {step === 1 ? 'Continue' : 'Get Started'}
-                {step === 1 ? <ChevronRight className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+                {step === 1 ? (
+                  <ChevronRight className="w-5 h-5" />
+                ) : (
+                  <CheckCircle className="w-5 h-5" />
+                )}
               </button>
             </div>
             {canSkip && (

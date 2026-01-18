@@ -1,6 +1,6 @@
 /**
  * Imaging Clinical Pearls Filler
- * 
+ *
  * Fills missing clinicalPearls for ImagingStudy records using Gemini 2.5 Flash.
  * Generates board-relevant clinical pearls for imaging findings.
  */
@@ -21,14 +21,14 @@ class TokenBucket {
   async acquire(): Promise<void> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequest;
-    
+
     if (timeSinceLastRequest < 2000) {
-      await new Promise(resolve => setTimeout(resolve, 2000 - timeSinceLastRequest));
+      await new Promise((resolve) => setTimeout(resolve, 2000 - timeSinceLastRequest));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
     }
-    
+
     this.lastRequest = Date.now();
   }
 }
@@ -57,8 +57,8 @@ async function generateClinicalPearls(
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.7,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
 
   await rateLimiter.acquire();
@@ -102,7 +102,7 @@ async function fillImagingClinicalPearls(batchSize: number = 5) {
     // Find ImagingStudy records missing clinicalPearls
     const missingPearls = await prisma.imagingStudy.findMany({
       where: {
-        clinicalPearls: { isEmpty: true }
+        clinicalPearls: { isEmpty: true },
       },
       select: {
         id: true,
@@ -128,7 +128,7 @@ async function fillImagingClinicalPearls(batchSize: number = 5) {
     for (const study of missingPearls) {
       try {
         console.log(`\n🔍 Processing: ${study.name}`);
-        
+
         const clinicalPearls = await generateClinicalPearls(
           study.name,
           study.description || '',
@@ -146,7 +146,6 @@ async function fillImagingClinicalPearls(batchSize: number = 5) {
           console.log(`   ${idx + 1}. ${pearl}`);
         });
         successCount++;
-
       } catch (error) {
         console.error(`❌ Error processing ${study.name}:`, error);
         errorCount++;
@@ -157,7 +156,6 @@ async function fillImagingClinicalPearls(batchSize: number = 5) {
     console.log(`✅ Successfully filled: ${successCount}`);
     console.log(`❌ Errors: ${errorCount}`);
     console.log(`📊 Completion rate: ${((successCount / missingPearls.length) * 100).toFixed(1)}%`);
-
   } catch (error) {
     console.error('Fatal error:', error);
     throw error;
@@ -168,7 +166,7 @@ async function fillImagingClinicalPearls(batchSize: number = 5) {
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const batchSizeArg = args.find(arg => arg.startsWith('--batch='));
+const batchSizeArg = args.find((arg) => arg.startsWith('--batch='));
 const batchSize = batchSizeArg ? parseInt(batchSizeArg.split('=')[1]) : 5;
 
 fillImagingClinicalPearls(batchSize);

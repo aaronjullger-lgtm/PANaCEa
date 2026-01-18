@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * User Statistics Calculation Jobs
- * 
+ *
  * Centralized user-specific calculations:
  * - FSRS card processing and due card calculation
  * - Streak tracking and updates
  * - Weekly progress report generation
  * - Personalized recommendation generation
  * - Performance trend analysis
- * 
+ *
  * These jobs are called by hourly/daily/weekly tasks
  */
 
@@ -30,14 +30,14 @@ export async function updateUserStreaks(): Promise<{
   maintained: number;
 }> {
   console.log('📊 Updating user streaks...');
-  
+
   const stats = { updated: 0, broken: 0, maintained: 0 };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   try {
     // Get all users with learning profiles that have active streaks
     const usersWithStreaks = await prisma.userLearningProfile.findMany({
@@ -51,7 +51,7 @@ export async function updateUserStreaks(): Promise<{
         longestDailyStreak: true,
       },
     });
-    
+
     for (const profile of usersWithStreaks) {
       // Check if user had activity yesterday
       const yesterdayActivity = await prisma.dailyStreak.findFirst({
@@ -61,7 +61,7 @@ export async function updateUserStreaks(): Promise<{
           questionsAnswered: { gt: 0 },
         },
       });
-      
+
       if (!yesterdayActivity) {
         // Missed a day, break streak
         await prisma.userLearningProfile.update({
@@ -72,11 +72,13 @@ export async function updateUserStreaks(): Promise<{
       } else {
         stats.maintained++;
       }
-      
+
       stats.updated++;
     }
-    
-    console.log(`✅ Streaks: ${stats.updated} checked, ${stats.broken} broken, ${stats.maintained} maintained`);
+
+    console.log(
+      `✅ Streaks: ${stats.updated} checked, ${stats.broken} broken, ${stats.maintained} maintained`
+    );
     return stats;
   } catch (error) {
     console.error('❌ Failed to update streaks:', error);
@@ -92,16 +94,16 @@ export async function calculateDueCards(): Promise<{
   totalDueCards: number;
 }> {
   console.log('🎴 Calculating due FSRS cards...');
-  
+
   const stats = { usersProcessed: 0, totalDueCards: 0 };
   const now = new Date();
-  
+
   try {
     // Get users with progress records
     const userProgress = await prisma.userProgress.groupBy({
       by: ['userId'],
     });
-    
+
     for (const user of userProgress) {
       // Count due cards for this user
       const dueCount = await prisma.userProgress.count({
@@ -110,7 +112,7 @@ export async function calculateDueCards(): Promise<{
           nextReviewAt: { lte: now },
         },
       });
-      
+
       // Update learning profile with due count
       await prisma.userLearningProfile.upsert({
         where: { userId: user.userId },
@@ -122,12 +124,14 @@ export async function calculateDueCards(): Promise<{
           updatedAt: now,
         },
       });
-      
+
       stats.usersProcessed++;
       stats.totalDueCards += dueCount;
     }
-    
-    console.log(`✅ Due cards: ${stats.usersProcessed} users, ${stats.totalDueCards} total due cards`);
+
+    console.log(
+      `✅ Due cards: ${stats.usersProcessed} users, ${stats.totalDueCards} total due cards`
+    );
     return stats;
   } catch (error) {
     console.error('❌ Failed to calculate due cards:', error);
@@ -140,10 +144,10 @@ export async function calculateDueCards(): Promise<{
  */
 export async function updateLeaderboardCache(): Promise<number> {
   console.log('🏆 Updating leaderboard cache...');
-  
+
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
+
     // Get top performers in the last hour
     const hourlyLeaders = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -156,7 +160,7 @@ export async function updateLeaderboardCache(): Promise<number> {
       },
       take: 100,
     });
-    
+
     console.log(`✅ Leaderboard: ${hourlyLeaders.length} active users this hour`);
     return hourlyLeaders.length;
   } catch (error) {
@@ -178,26 +182,26 @@ export async function generateDailyRecommendations(): Promise<{
   recommendationsGenerated: number;
 }> {
   console.log('🎯 Generating daily study recommendations...');
-  
+
   const stats = { usersProcessed: 0, recommendationsGenerated: 0 };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   try {
     // Get active users (studied in last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const activeUserIds = await prisma.performanceRecord.groupBy({
       by: ['userId'],
       where: {
         createdAt: { gte: thirtyDaysAgo },
       },
     });
-    
+
     for (const userRecord of activeUserIds) {
       const userId = userRecord.userId;
-      
+
       // Get performance records grouped by system
       const userRecords = await prisma.performanceRecord.findMany({
         where: {
@@ -209,7 +213,7 @@ export async function generateDailyRecommendations(): Promise<{
           isCorrect: true,
         },
       });
-      
+
       // Calculate system stats
       const systemStats: Record<string, { total: number; correct: number }> = {};
       for (const record of userRecords) {
@@ -218,15 +222,15 @@ export async function generateDailyRecommendations(): Promise<{
         systemStats[sys].total++;
         if (record.isCorrect) systemStats[sys].correct++;
       }
-      
+
       // Find weak systems (< 70% accuracy)
       const weakSystems: string[] = [];
       for (const [system, stats] of Object.entries(systemStats)) {
-        if (stats.total >= 5 && (stats.correct / stats.total) < 0.7) {
+        if (stats.total >= 5 && stats.correct / stats.total < 0.7) {
           weakSystems.push(system);
         }
       }
-      
+
       // Count due cards
       const dueCount = await prisma.userProgress.count({
         where: {
@@ -234,7 +238,7 @@ export async function generateDailyRecommendations(): Promise<{
           nextReviewAt: { lte: today },
         },
       });
-      
+
       // Generate recommendation
       const recommendations = [];
       if (weakSystems.length > 0) {
@@ -244,7 +248,7 @@ export async function generateDailyRecommendations(): Promise<{
         recommendations.push(`${dueCount} cards due for review`);
       }
       recommendations.push(`Study goal: ${Math.min(20, Math.max(5, dueCount))} questions today`);
-      
+
       // Update learning profile with recommendations
       await prisma.userLearningProfile.upsert({
         where: { userId },
@@ -260,12 +264,14 @@ export async function generateDailyRecommendations(): Promise<{
           updatedAt: new Date(),
         },
       });
-      
+
       stats.usersProcessed++;
       stats.recommendationsGenerated++;
     }
-    
-    console.log(`✅ Recommendations: ${stats.usersProcessed} users, ${stats.recommendationsGenerated} generated`);
+
+    console.log(
+      `✅ Recommendations: ${stats.usersProcessed} users, ${stats.recommendationsGenerated} generated`
+    );
     return stats;
   } catch (error) {
     console.error('❌ Failed to generate recommendations:', error);
@@ -282,15 +288,15 @@ export async function calculateDAUMetrics(): Promise<{
   returningUsers: number;
 }> {
   console.log('📈 Calculating DAU metrics...');
-  
+
   try {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Count unique users with activity yesterday
     const activeUsers = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -301,9 +307,9 @@ export async function calculateDAUMetrics(): Promise<{
         },
       },
     });
-    
+
     const dau = activeUsers.length;
-    
+
     // Count new users yesterday
     const newUsers = await prisma.user.count({
       where: {
@@ -313,9 +319,9 @@ export async function calculateDAUMetrics(): Promise<{
         },
       },
     });
-    
+
     const returningUsers = Math.max(0, dau - newUsers);
-    
+
     // Log metrics (could store to a dedicated analytics table)
     console.log(`✅ DAU: ${dau} (${newUsers} new, ${returningUsers} returning)`);
     return { dau, newUsers, returningUsers };
@@ -330,18 +336,18 @@ export async function calculateDAUMetrics(): Promise<{
  */
 export async function aggregateConfusionPatterns(): Promise<number> {
   console.log('🔀 Aggregating confusion patterns...');
-  
+
   try {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     // Count confusion pairs created/updated in last week
     const recentConfusions = await prisma.confusionPair.count({
       where: {
         lastOccurrence: { gte: oneWeekAgo },
       },
     });
-    
+
     console.log(`✅ Confusion patterns: ${recentConfusions} patterns found in last week`);
     return recentConfusions;
   } catch (error) {
@@ -363,16 +369,16 @@ export async function generateWeeklyProgressReports(): Promise<{
   usersDeclined: number;
 }> {
   console.log('📊 Generating weekly progress reports...');
-  
+
   const stats = { reportsGenerated: 0, usersImproved: 0, usersDeclined: 0 };
-  
+
   try {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     const twoWeeksAgo = new Date();
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    
+
     // Get users with activity in the last week
     const activeUserIds = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -380,10 +386,10 @@ export async function generateWeeklyProgressReports(): Promise<{
         createdAt: { gte: oneWeekAgo },
       },
     });
-    
+
     for (const userRecord of activeUserIds) {
       const userId = userRecord.userId;
-      
+
       // This week performance
       const thisWeekRecords = await prisma.performanceRecord.findMany({
         where: {
@@ -396,7 +402,7 @@ export async function generateWeeklyProgressReports(): Promise<{
           createdAt: true,
         },
       });
-      
+
       // Last week performance
       const lastWeekRecords = await prisma.performanceRecord.findMany({
         where: {
@@ -410,23 +416,21 @@ export async function generateWeeklyProgressReports(): Promise<{
           isCorrect: true,
         },
       });
-      
+
       // Calculate accuracy
-      const thisWeekCorrect = thisWeekRecords.filter(r => r.isCorrect).length;
-      const thisWeekAccuracy = thisWeekRecords.length > 0
-        ? (thisWeekCorrect / thisWeekRecords.length) * 100
-        : 0;
-      
-      const lastWeekCorrect = lastWeekRecords.filter(r => r.isCorrect).length;
-      const lastWeekAccuracy = lastWeekRecords.length > 0
-        ? (lastWeekCorrect / lastWeekRecords.length) * 100
-        : 0;
-      
+      const thisWeekCorrect = thisWeekRecords.filter((r) => r.isCorrect).length;
+      const thisWeekAccuracy =
+        thisWeekRecords.length > 0 ? (thisWeekCorrect / thisWeekRecords.length) * 100 : 0;
+
+      const lastWeekCorrect = lastWeekRecords.filter((r) => r.isCorrect).length;
+      const lastWeekAccuracy =
+        lastWeekRecords.length > 0 ? (lastWeekCorrect / lastWeekRecords.length) * 100 : 0;
+
       const improvement = thisWeekAccuracy - lastWeekAccuracy;
-      
+
       if (improvement > 0) stats.usersImproved++;
       else if (improvement < 0) stats.usersDeclined++;
-      
+
       // Calculate system breakdown
       const systemBreakdown: Record<string, { total: number; correct: number }> = {};
       for (const record of thisWeekRecords) {
@@ -435,7 +439,7 @@ export async function generateWeeklyProgressReports(): Promise<{
         systemBreakdown[sys].total++;
         if (record.isCorrect) systemBreakdown[sys].correct++;
       }
-      
+
       // Identify strongest and weakest systems
       const systemEntries = Object.entries(systemBreakdown)
         .filter(([_, s]) => s.total >= 3)
@@ -444,21 +448,23 @@ export async function generateWeeklyProgressReports(): Promise<{
           accuracy: s.correct / s.total,
         }))
         .sort((a, b) => b.accuracy - a.accuracy);
-      
-      const strongest = systemEntries.slice(0, 3).map(s => s.system);
-      const weakest = systemEntries.slice(-3).map(s => s.system);
-      
+
+      const strongest = systemEntries.slice(0, 3).map((s) => s.system);
+      const weakest = systemEntries.slice(-3).map((s) => s.system);
+
       // Generate insights
       const insights: string[] = [];
       if (improvement > 5) {
         insights.push(`Great progress! Accuracy improved by ${improvement.toFixed(1)}% this week.`);
       } else if (improvement < -5) {
-        insights.push(`Accuracy dropped ${Math.abs(improvement).toFixed(1)}%. Consider reviewing weak areas.`);
+        insights.push(
+          `Accuracy dropped ${Math.abs(improvement).toFixed(1)}%. Consider reviewing weak areas.`
+        );
       }
       if (weakest.length > 0) {
         insights.push(`Focus areas: ${weakest.join(', ')}`);
       }
-      
+
       // Update learning profile
       await prisma.userLearningProfile.upsert({
         where: { userId },
@@ -482,11 +488,13 @@ export async function generateWeeklyProgressReports(): Promise<{
           updatedAt: new Date(),
         },
       });
-      
+
       stats.reportsGenerated++;
     }
-    
-    console.log(`✅ Weekly reports: ${stats.reportsGenerated} generated, ${stats.usersImproved} improved, ${stats.usersDeclined} declined`);
+
+    console.log(
+      `✅ Weekly reports: ${stats.reportsGenerated} generated, ${stats.usersImproved} improved, ${stats.usersDeclined} declined`
+    );
     return stats;
   } catch (error) {
     console.error('❌ Failed to generate weekly reports:', error);
@@ -503,14 +511,14 @@ export async function calculateWeeklyRetention(): Promise<{
   reactivated: number;
 }> {
   console.log('📉 Calculating weekly retention...');
-  
+
   try {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     const twoWeeksAgo = new Date();
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    
+
     // Users active last week
     const lastWeekActive = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -521,7 +529,7 @@ export async function calculateWeeklyRetention(): Promise<{
         },
       },
     });
-    
+
     // Users active this week
     const thisWeekActive = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -529,24 +537,24 @@ export async function calculateWeeklyRetention(): Promise<{
         createdAt: { gte: oneWeekAgo },
       },
     });
-    
-    const lastWeekUserIds = new Set(lastWeekActive.map(u => u.userId));
-    const thisWeekUserIds = new Set(thisWeekActive.map(u => u.userId));
-    
+
+    const lastWeekUserIds = new Set(lastWeekActive.map((u) => u.userId));
+    const thisWeekUserIds = new Set(thisWeekActive.map((u) => u.userId));
+
     // Retained: active both weeks
-    const retained = [...lastWeekUserIds].filter(id => thisWeekUserIds.has(id)).length;
-    
+    const retained = [...lastWeekUserIds].filter((id) => thisWeekUserIds.has(id)).length;
+
     // Churned: active last week, not this week
-    const churned = [...lastWeekUserIds].filter(id => !thisWeekUserIds.has(id)).length;
-    
+    const churned = [...lastWeekUserIds].filter((id) => !thisWeekUserIds.has(id)).length;
+
     // Reactivated: active this week, not last week
-    const reactivated = [...thisWeekUserIds].filter(id => !lastWeekUserIds.has(id)).length;
-    
-    const weeklyRetention = lastWeekUserIds.size > 0
-      ? (retained / lastWeekUserIds.size) * 100
-      : 0;
-    
-    console.log(`✅ Retention: ${weeklyRetention.toFixed(1)}% (${retained} retained, ${churned} churned, ${reactivated} reactivated)`);
+    const reactivated = [...thisWeekUserIds].filter((id) => !lastWeekUserIds.has(id)).length;
+
+    const weeklyRetention = lastWeekUserIds.size > 0 ? (retained / lastWeekUserIds.size) * 100 : 0;
+
+    console.log(
+      `✅ Retention: ${weeklyRetention.toFixed(1)}% (${retained} retained, ${churned} churned, ${reactivated} reactivated)`
+    );
     return { weeklyRetention, churned, reactivated };
   } catch (error) {
     console.error('❌ Failed to calculate retention:', error);
@@ -559,11 +567,11 @@ export async function calculateWeeklyRetention(): Promise<{
  */
 export async function updatePANCEReadinessEstimates(): Promise<number> {
   console.log('🎓 Updating PANCE readiness estimates...');
-  
+
   try {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     // Get users with activity
     const allUserIds = await prisma.performanceRecord.groupBy({
       by: ['userId'],
@@ -572,15 +580,15 @@ export async function updatePANCEReadinessEstimates(): Promise<number> {
       },
       _count: { id: true },
     });
-    
+
     // Filter to users with at least 50 questions
-    const activeUserIds = allUserIds.filter(u => u._count.id >= 50);
-    
+    const activeUserIds = allUserIds.filter((u) => u._count.id >= 50);
+
     let updated = 0;
-    
+
     for (const userRecord of activeUserIds) {
       const userId = userRecord.userId;
-      
+
       // Calculate overall accuracy
       const records = await prisma.performanceRecord.findMany({
         where: {
@@ -592,17 +600,17 @@ export async function updatePANCEReadinessEstimates(): Promise<number> {
           system: true,
         },
       });
-      
-      const accuracy = records.filter(r => r.isCorrect).length / records.length;
-      
+
+      const accuracy = records.filter((r) => r.isCorrect).length / records.length;
+
       // Estimate PANCE score (200-800 scale, passing ~450)
       // Rough estimate: accuracy * 600 + 200, capped at 800
       const estimatedScore = Math.min(800, Math.round(accuracy * 600 + 200));
-      
+
       // Determine readiness level
       let readinessLevel = 'not_ready';
       let passLikelihood = 0;
-      
+
       if (accuracy >= 0.85) {
         readinessLevel = 'ready';
         passLikelihood = 95;
@@ -615,7 +623,7 @@ export async function updatePANCEReadinessEstimates(): Promise<number> {
       } else {
         passLikelihood = Math.round(accuracy * 60);
       }
-      
+
       await prisma.userLearningProfile.upsert({
         where: { userId },
         create: {
@@ -630,10 +638,10 @@ export async function updatePANCEReadinessEstimates(): Promise<number> {
           updatedAt: new Date(),
         },
       });
-      
+
       updated++;
     }
-    
+
     console.log(`✅ PANCE readiness: ${updated} users updated`);
     return updated;
   } catch (error) {
@@ -655,16 +663,16 @@ export default {
   updateUserStreaks,
   calculateDueCards,
   updateLeaderboardCache,
-  
+
   // Daily
   generateDailyRecommendations,
   calculateDAUMetrics,
   aggregateConfusionPatterns,
-  
+
   // Weekly
   generateWeeklyProgressReports,
   calculateWeeklyRetention,
   updatePANCEReadinessEstimates,
-  
+
   disconnect,
 };

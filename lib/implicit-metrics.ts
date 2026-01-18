@@ -1,15 +1,15 @@
 /**
  * Implicit Behavior Metrics System
- * 
+ *
  * Zero-Friction FSRS integration: Derives memory strength from behavioral data
  * instead of self-rated buttons. Eliminates subjective bias in spaced repetition.
- * 
+ *
  * Metrics tracked:
  * - Response latency (time-to-first-click)
  * - Answer switching (times user changed selection)
  * - Dwell time (total time on question)
  * - Latency variance (consistency across session)
- * 
+ *
  * Research basis:
  * - Retrieval fluency correlates with memory strength (Kelley & Lindsay, 1993)
  * - Response latency predicts future recall (Benjamin et al., 1998)
@@ -82,9 +82,9 @@ export interface ImplicitRatingConfig {
   switchPenalty: number;
   /** Latency thresholds for each rating (as ratio of par time) */
   ratingThresholds: {
-    easy: number;    // Below this = Easy
-    good: number;    // Below this = Good
-    hard: number;    // Below this = Hard
+    easy: number; // Below this = Easy
+    good: number; // Below this = Good
+    hard: number; // Below this = Hard
     // Above hard threshold = Again (if correct) or Again (if incorrect)
   };
 }
@@ -93,13 +93,13 @@ export interface ImplicitRatingConfig {
  * Default configuration based on cognitive research
  */
 export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
-  minValidTime: 1000,      // 1 second minimum
-  maxValidTime: 180000,    // 3 minutes maximum
-  switchPenalty: 0.3,      // Each switch adds 30% to effective latency
+  minValidTime: 1000, // 1 second minimum
+  maxValidTime: 180000, // 3 minutes maximum
+  switchPenalty: 0.3, // Each switch adds 30% to effective latency
   ratingThresholds: {
-    easy: 0.5,   // Under 50% of par time = Easy
-    good: 0.85,  // Under 85% of par time = Good
-    hard: 1.3,   // Under 130% of par time = Hard
+    easy: 0.5, // Under 50% of par time = Easy
+    good: 0.85, // Under 85% of par time = Good
+    hard: 1.3, // Under 130% of par time = Hard
     // Above 130% = borderline, combined with switches
   },
 };
@@ -117,7 +117,7 @@ export function updateLatencyStats(
   const newMean = stats.meanLatency + delta / n;
   const delta2 = newLatency - newMean;
   const newVariance = stats.variance + delta * delta2;
-  
+
   return {
     count: n,
     meanLatency: newMean,
@@ -142,14 +142,11 @@ export function initLatencyStats(): SessionLatencyStats {
  * Calculate latency percentile within session
  * Uses z-score transformation
  */
-export function calculateLatencyPercentile(
-  latency: number,
-  stats: SessionLatencyStats
-): number {
+export function calculateLatencyPercentile(latency: number, stats: SessionLatencyStats): number {
   if (stats.count < 3 || stats.stdDev === 0) {
     return 0.5; // Not enough data, assume median
   }
-  
+
   const zScore = (latency - stats.meanLatency) / stats.stdDev;
   // Convert z-score to percentile using sigmoid approximation
   const percentile = 1 / (1 + Math.exp(-0.7 * zScore));
@@ -158,7 +155,7 @@ export function calculateLatencyPercentile(
 
 /**
  * Derive FSRS rating from implicit behavioral metrics
- * 
+ *
  * Core algorithm:
  * 1. If incorrect → Rating.Again (no exceptions)
  * 2. Calculate effective latency (base + switch penalty)
@@ -177,15 +174,15 @@ export function deriveImplicitRating(
       rating: Rating.Again,
       metrics,
       confidence: 0.95, // High confidence for incorrect
-      latencyPercentile: sessionStats 
-        ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats) 
+      latencyPercentile: sessionStats
+        ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats)
         : 0.5,
       flagged: false,
     };
   }
 
   // Calculate effective latency with switch penalty
-  const switchPenalty = 1 + (metrics.answerSwitches * config.switchPenalty);
+  const switchPenalty = 1 + metrics.answerSwitches * config.switchPenalty;
   const effectiveLatency = metrics.timeToFirstClick * switchPenalty;
 
   // Get par time (use default if not provided)
@@ -197,7 +194,7 @@ export function deriveImplicitRating(
   // Check for invalid response times
   let flagged = false;
   let flagReason: string | undefined;
-  
+
   if (metrics.timeToFirstClick < config.minValidTime) {
     flagged = true;
     flagReason = 'Suspiciously fast response';
@@ -222,7 +219,7 @@ export function deriveImplicitRating(
   // Apply variance-based adjustment if session stats available
   if (sessionStats && sessionStats.count >= 5) {
     const percentile = calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats);
-    
+
     // High variance (inconsistent) responses get slight downgrade
     // Low variance (consistent) responses get slight upgrade
     if (percentile > 0.85 && rating > Rating.Again) {
@@ -241,7 +238,7 @@ export function deriveImplicitRating(
   // Apply trajectory-based adjustment if available (Phase 3A)
   if (metrics.trajectory) {
     const trajectoryAnalysis = interpretTrajectoryForRating(metrics.trajectory, metrics.isCorrect);
-    
+
     // Apply trajectory adjustment
     if (trajectoryAnalysis.suggestedAdjustment === 'upgrade' && rating < Rating.Easy) {
       // High confidence trajectory + correct = upgrade one level
@@ -262,14 +259,14 @@ export function deriveImplicitRating(
 
   // Calculate confidence in derived rating
   let confidence = 0.7; // Base confidence
-  
+
   // Higher confidence for clear-cut cases
   if (latencyRatio < config.ratingThresholds.easy * 0.5) {
     confidence = 0.9; // Very fast and correct
   } else if (latencyRatio > config.ratingThresholds.hard * 1.5) {
     confidence = 0.85; // Very slow
   }
-  
+
   // Lower confidence if answer switches occurred
   confidence -= metrics.answerSwitches * 0.1;
   confidence = Math.max(0.5, confidence);
@@ -278,8 +275,8 @@ export function deriveImplicitRating(
     rating,
     metrics,
     confidence,
-    latencyPercentile: sessionStats 
-      ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats) 
+    latencyPercentile: sessionStats
+      ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats)
       : 0.5,
     flagged,
     flagReason,
@@ -308,24 +305,25 @@ export function estimateParTime(params: {
   hasImage: boolean;
 }): number {
   const { stemLength, optionCount, hasVignette, hasImage } = params;
-  
+
   // Base reading time: ~200 words per minute, assume 5 chars per word
   const readingTimeMs = (stemLength / 5) * (60000 / 200);
-  
+
   // Option consideration time: 5 seconds per option
   const optionTimeMs = optionCount * 5000;
-  
+
   // Vignette adds 15 seconds
   const vignetteTimeMs = hasVignette ? 15000 : 0;
-  
+
   // Image adds 10 seconds
   const imageTimeMs = hasImage ? 10000 : 0;
-  
+
   // Processing and decision time: 10 seconds base
   const processingTimeMs = 10000;
-  
-  const totalParTime = readingTimeMs + optionTimeMs + vignetteTimeMs + imageTimeMs + processingTimeMs;
-  
+
+  const totalParTime =
+    readingTimeMs + optionTimeMs + vignetteTimeMs + imageTimeMs + processingTimeMs;
+
   // Clamp to reasonable bounds
   return Math.max(15000, Math.min(120000, totalParTime));
 }
@@ -345,14 +343,19 @@ export function analyzeSessionMetrics(reviews: ImplicitReviewData[]): {
       avgLatency: 0,
       avgConfidence: 0,
       flaggedCount: 0,
-      ratingDistribution: { [Rating.Again]: 0, [Rating.Hard]: 0, [Rating.Good]: 0, [Rating.Easy]: 0 },
+      ratingDistribution: {
+        [Rating.Again]: 0,
+        [Rating.Hard]: 0,
+        [Rating.Good]: 0,
+        [Rating.Easy]: 0,
+      },
       consistencyScore: 0,
     };
   }
 
   const totalLatency = reviews.reduce((sum, r) => sum + r.metrics.timeToFirstClick, 0);
   const totalConfidence = reviews.reduce((sum, r) => sum + r.confidence, 0);
-  const flaggedCount = reviews.filter(r => r.flagged).length;
+  const flaggedCount = reviews.filter((r) => r.flagged).length;
 
   const ratingDistribution: Record<Rating, number> = {
     [Rating.Again]: 0,
@@ -360,14 +363,13 @@ export function analyzeSessionMetrics(reviews: ImplicitReviewData[]): {
     [Rating.Good]: 0,
     [Rating.Easy]: 0,
   };
-  reviews.forEach(r => ratingDistribution[r.rating]++);
+  reviews.forEach((r) => ratingDistribution[r.rating]++);
 
   // Consistency score: lower variance in latency percentiles = more consistent
   const avgPercentile = reviews.reduce((sum, r) => sum + r.latencyPercentile, 0) / reviews.length;
-  const percentileVariance = reviews.reduce(
-    (sum, r) => sum + Math.pow(r.latencyPercentile - avgPercentile, 2), 
-    0
-  ) / reviews.length;
+  const percentileVariance =
+    reviews.reduce((sum, r) => sum + Math.pow(r.latencyPercentile - avgPercentile, 2), 0) /
+    reviews.length;
   const consistencyScore = 1 - Math.min(1, percentileVariance * 4);
 
   return {

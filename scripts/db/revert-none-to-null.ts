@@ -1,14 +1,14 @@
 /**
  * Database Revert Script: Unlock Fields for Regeneration
- * 
+ *
  * PURPOSE:
  * Converts sentinel value "NONE" back to NULL to allow AI generation scripts
  * to process these fields again. Some records were skipped in previous runs
  * and may actually have content worth discovering.
- * 
+ *
  * USAGE:
  * npx ts-node scripts/db/revert-none-to-null.ts
- * 
+ *
  * CONFIGURATION:
  * Uncomment/comment fields in the FIELDS_TO_UNLOCK array to control which
  * fields get reset. This allows selective unlocking (e.g., only mnemonics today).
@@ -48,7 +48,7 @@ async function unlockStringField(fieldName: string): Promise<UnlockStats> {
   // Find records where field is set to "NONE"
   const lockedCount = await prisma.medicalContent.count({
     where: {
-      [fieldName]: "NONE",
+      [fieldName]: 'NONE',
     },
   });
 
@@ -59,7 +59,7 @@ async function unlockStringField(fieldName: string): Promise<UnlockStats> {
   if (lockedCount > 0) {
     const result = await prisma.medicalContent.updateMany({
       where: {
-        [fieldName]: "NONE",
+        [fieldName]: 'NONE',
       },
       data: {
         [fieldName]: null, // Reset to NULL
@@ -88,7 +88,7 @@ async function unlockJsonField(fieldName: string): Promise<UnlockStats> {
   // Find records where field is set to "NONE" (as JSON string)
   const lockedCount = await prisma.medicalContent.count({
     where: {
-      [fieldName]: { equals: "NONE" },
+      [fieldName]: { equals: 'NONE' },
     },
   });
 
@@ -99,7 +99,7 @@ async function unlockJsonField(fieldName: string): Promise<UnlockStats> {
   if (lockedCount > 0) {
     const result = await prisma.medicalContent.updateMany({
       where: {
-        [fieldName]: { equals: "NONE" },
+        [fieldName]: { equals: 'NONE' },
       },
       data: {
         [fieldName]: Prisma.DbNull, // Reset to SQL NULL
@@ -131,15 +131,16 @@ async function revertNoneToNull() {
 
   try {
     console.log('📋 Fields configured for unlocking:');
-    FIELDS_TO_UNLOCK.forEach(field => {
+    FIELDS_TO_UNLOCK.forEach((field) => {
       console.log(`   • ${field.name} (${field.type})`);
     });
 
     // Process each configured field
     for (const field of FIELDS_TO_UNLOCK) {
-      const fieldStats = field.type === 'json'
-        ? await unlockJsonField(field.name)
-        : await unlockStringField(field.name);
+      const fieldStats =
+        field.type === 'json'
+          ? await unlockJsonField(field.name)
+          : await unlockStringField(field.name);
       stats.push(fieldStats);
     }
 
@@ -154,17 +155,13 @@ async function revertNoneToNull() {
 
     let totalUnlocked = 0;
 
-    stats.forEach(stat => {
-      console.log(
-        `│ ${stat.field.padEnd(25)} │ ${String(stat.recordsUnlocked).padStart(25)} │`
-      );
+    stats.forEach((stat) => {
+      console.log(`│ ${stat.field.padEnd(25)} │ ${String(stat.recordsUnlocked).padStart(25)} │`);
       totalUnlocked += stat.recordsUnlocked;
     });
 
     console.log('├───────────────────────────┼───────────────────────────┤');
-    console.log(
-      `│ ${'TOTAL'.padEnd(25)} │ ${String(totalUnlocked).padStart(25)} │`
-    );
+    console.log(`│ ${'TOTAL'.padEnd(25)} │ ${String(totalUnlocked).padStart(25)} │`);
     console.log('└───────────────────────────┴───────────────────────────┘');
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -186,18 +183,17 @@ async function revertNoneToNull() {
 
       if (field.type === 'json') {
         remaining = await prisma.medicalContent.count({
-          where: { [field.name]: { equals: "NONE" } },
+          where: { [field.name]: { equals: 'NONE' } },
         });
       } else {
         remaining = await prisma.medicalContent.count({
-          where: { [field.name]: "NONE" },
+          where: { [field.name]: 'NONE' },
         });
       }
 
       const status = remaining === 0 ? '✅' : '⚠️';
       console.log(`   ${status} ${field.name}: ${remaining} "NONE" values remaining`);
     }
-
   } catch (error) {
     console.error('\n❌ Error during unlock operation:', error);
     throw error;

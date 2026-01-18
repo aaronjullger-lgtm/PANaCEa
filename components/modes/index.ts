@@ -1,6 +1,6 @@
 /**
  * Mode Components Barrel Export
- * 
+ *
  * Centralized exports for all training mode components.
  */
 

@@ -15,28 +15,29 @@ This plan improves how PANaCEa collects, stores, and uses user-specific data to 
 ## Current User Data Infrastructure
 
 ### ✅ What's Working
-| Model | Purpose | Status |
-|-------|---------|--------|
-| `User` | Core user record (Clerk-synced) | ✅ Working |
-| `UserProgress` | Per-condition FSRS state + review history | ✅ Working |
-| `UserLearningProfile` | Aggregated learning metrics | ⚠️ Partially used |
-| `QuestionAttempt` | Individual answer records | ✅ Working |
-| `StudySession` | Session-level analytics | ✅ Working |
-| `UserQuestionSeen` | No-repeat tracking | ✅ Working |
-| `UserStatisticsSnapshot` | Periodic snapshots | ⚠️ Schema exists, not populated |
+
+| Model                    | Purpose                                   | Status                          |
+| ------------------------ | ----------------------------------------- | ------------------------------- |
+| `User`                   | Core user record (Clerk-synced)           | ✅ Working                      |
+| `UserProgress`           | Per-condition FSRS state + review history | ✅ Working                      |
+| `UserLearningProfile`    | Aggregated learning metrics               | ⚠️ Partially used               |
+| `QuestionAttempt`        | Individual answer records                 | ✅ Working                      |
+| `StudySession`           | Session-level analytics                   | ✅ Working                      |
+| `UserQuestionSeen`       | No-repeat tracking                        | ✅ Working                      |
+| `UserStatisticsSnapshot` | Periodic snapshots                        | ⚠️ Schema exists, not populated |
 
 ### ⚠️ Critical Gaps Identified
 
-| Gap | Impact | Current State |
-|-----|--------|---------------|
-| **Implicit metrics not persisted** | Losing behavioral signals | Client-side only |
-| **No study preferences storage** | Can't personalize experience | localStorage only |
-| **UserLearningProfile sparse** | Recommendations weak | Many fields null |
-| **No learning style tracking** | Can't adapt to user | Not implemented |
-| **Time-of-day data fragmented** | Circadian insights lost | Spread across tables |
-| **No goal tracking** | Can't measure progress | No schema |
-| **Confusion patterns per-user missing** | DDx suggestions generic | Global only |
-| **No device/session tracking** | Can't analyze context | Anonymous |
+| Gap                                     | Impact                       | Current State        |
+| --------------------------------------- | ---------------------------- | -------------------- |
+| **Implicit metrics not persisted**      | Losing behavioral signals    | Client-side only     |
+| **No study preferences storage**        | Can't personalize experience | localStorage only    |
+| **UserLearningProfile sparse**          | Recommendations weak         | Many fields null     |
+| **No learning style tracking**          | Can't adapt to user          | Not implemented      |
+| **Time-of-day data fragmented**         | Circadian insights lost      | Spread across tables |
+| **No goal tracking**                    | Can't measure progress       | No schema            |
+| **Confusion patterns per-user missing** | DDx suggestions generic      | Global only          |
+| **No device/session tracking**          | Can't analyze context        | Anonymous            |
 
 ---
 
@@ -49,57 +50,61 @@ This plan improves how PANaCEa collects, stores, and uses user-specific data to 
 **Solution**: Created UserBehaviorMetrics table and API endpoint.
 
 **Current Libraries** (client-side only):
+
 - `lib/implicit-metrics.ts` - Core metric types
 - `lib/fluency-scoring.ts` - Typing fluency
 - `lib/typing-rhythm.ts` - Keystroke patterns
 - `hooks/useImplicitMetrics.ts` - Collection hook
 
 **Schema**: `UserBehaviorMetrics` table (✅ created)
+
 ```prisma
 model UserBehaviorMetrics {
   id                  String   @id
   userId              String
   questionId          String
   questionType        String?
-  
+
   // Core timing metrics
   timeToFirstClick    Int      // ms
   dwellTime           Int      // ms
   totalResponseTime   Int      // ms
-  
+
   // Interaction patterns
   answerChanges       Int
   optionHovers        Int
   scrollDepth         Int?
-  
+
   // Behavioral signals
   hesitationEvents    Int
   backtrackCount      Int
-  
+
   // Context
   timeOfDay           Int      // 0-23
   deviceType          String?
   wasCorrect          Boolean
   confidenceLevel     Int?
-  
+
   // FSRS derivation
   derivedRating       Int?
   ratingConfidence    Float?
-  
+
   // Advanced metrics (optional)
   trajectoryData      Json?
   typingRhythm        Json?
-  
+
   createdAt           DateTime
   // ...
 }
 ```
 
 **API Endpoints** (✅ created):
+
 - `POST /api/user/behavior-metrics` - Store metrics
 - `GET /api/user/behavior-metrics` - Retrieve metrics
 
 **Implementation**: `functions/api/user/behavior-metrics.ts` (250+ lines)
+
 - Stores all implicit metrics from client
 - Auto-detects device type from user agent
 - Captures time of day automatically
@@ -116,59 +121,60 @@ model UserBehaviorMetrics {
 **Solution**: Created UserPreferences table with comprehensive settings storage.
 
 **Schema**: `UserPreferences` table (✅ created)
+
 ```prisma
 model UserPreferences {
   id                  String   @id
   userId              String   @unique
-  
+
   // Study preferences
   dailyGoal           Int      @default(40)
   preferredSystems    String[]
   sessionLength       Int      @default(20)
   difficulty          String   @default("adaptive")
-  
+
   // Timing preferences
   wakeTime            String?
   studyReminders      Boolean  @default(true)
   reminderTime        String?
   reminderDays        Int[]
-  
+
   // UI preferences
   theme               String   @default("light")
   soundEnabled        Boolean  @default(true)
   hapticFeedback      Boolean  @default(true)
   animationsEnabled   Boolean  @default(true)
   fontSize            String   @default("medium")
-  
+
   // Learning preferences
   showHints           Boolean  @default(true)
   autoAdvance         Boolean  @default(false)
   explanationDepth    String   @default("standard")
   showPearls          Boolean  @default(true)
   showRelatedConcepts Boolean  @default(true)
-  
+
   // Review preferences
   fsrsEnabled         Boolean  @default(true)
   reviewBeforeExam    Boolean  @default(true)
   mixNewAndReview     Boolean  @default(true)
-  
+
   // Advanced settings
   keyboardShortcuts   Boolean  @default(true)
   developerMode       Boolean  @default(false)
   betaFeatures        Boolean  @default(false)
-  
+
   // Notification preferences
   emailDigest         Boolean  @default(true)
   emailFrequency      String   @default("weekly")
   pushNotifications   Boolean  @default(false)
-  
+
   // Privacy preferences
   shareAnonymousData  Boolean  @default(true)
   showOnLeaderboard   Boolean  @default(true)
-  
+
   // Custom JSON for extensibility
   customSettings      Json?
-  
+
   createdAt           DateTime
   updatedAt           DateTime
   // ...
@@ -176,12 +182,14 @@ model UserPreferences {
 ```
 
 **API Endpoints** (✅ created):
+
 - `GET /api/user/preferences` - Fetch preferences (auto-creates if missing)
 - `POST /api/user/preferences` - Create/update all preferences
 - `PATCH /api/user/preferences` - Partial update
 - `DELETE /api/user/preferences` - Reset to defaults
 
 **Implementation**: `functions/api/user/preferences.ts` (300+ lines)
+
 - Full CRUD operations
 - Automatic default creation on first access
 - Cross-device sync
@@ -191,7 +199,7 @@ model UserPreferences {
 ✅ Preferences persist across devices  
 ✅ No data loss on browser clear  
 ✅ Enables server-side personalization  
-✅ Foundation for recommendation algorithms  
+✅ Foundation for recommendation algorithms
 
 **Status**: ✅ Table created, API deployed, ready for client migration from localStorage
 
@@ -206,6 +214,7 @@ model UserPreferences {
 **Implementation**: `scripts/automation/jobs/userProfileEnrichment.ts` (450+ lines)
 
 **Fields Populated**:
+
 - **chronotype**: Determined from hourly performance (morning/afternoon/evening/night/variable)
 - **peakLearningHour**: Hour with highest accuracy (0-23)
 - **avgSessionDuration**: Average questions per session
@@ -221,17 +230,20 @@ model UserPreferences {
 **Job Schedule**: Daily at 3 AM UTC
 
 **Data Sources**:
+
 - StudySession: Session patterns, stamina, duration
 - QuestionAttempt: Performance, timing, confidence
 - UserBehaviorMetrics: Behavioral patterns, answer changes
 
 **Algorithms**:
+
 1. Chronotype Detection: Analyzes hourly performance to determine best time of day
 2. Learning Velocity: Linear regression on daily accuracy trends
 3. Metacognition Score: Compares confidence levels to actual performance
 4. Cognitive Load Threshold: Detects accuracy drop point in rolling windows
 
 **CLI Usage**:
+
 ```bash
 npx tsx scripts/automation/jobs/userProfileEnrichment.ts
 ```
@@ -270,6 +282,7 @@ npx tsx scripts/automation/jobs/userProfileEnrichment.ts
    - persistent: Quick return (<2 min), pushes through
 
 **Output**: `LearningStyleProfile` object with:
+
 - Style classification for each dimension
 - Confidence scores (0-1) for each
 - Overall style label (e.g., "Intuitive Deep Processor")
@@ -277,6 +290,7 @@ npx tsx scripts/automation/jobs/userProfileEnrichment.ts
 - Data quality metrics (questions, sessions, days)
 
 **Functions**:
+
 - `detectLearningStyle(data)`: Main detection function
 - `hasSufficientDataForDetection(data)`: Checks if enough data available
 - `updateUserLearningStyle(userId, data, prisma)`: Updates database
@@ -284,11 +298,13 @@ npx tsx scripts/automation/jobs/userProfileEnrichment.ts
 **Storage**: Results stored in `UserLearningProfile.learningInsights` and `recommendations` fields
 
 **Minimum Data Requirements**:
+
 - 20+ question attempts
 - 3+ study sessions
 - 3+ days of activity
 
 **Confidence Levels**:
+
 - High: 100+ attempts, 10+ sessions, 7+ days
 - Medium: 50+ attempts, 5+ sessions, 5+ days
 - Low: Below medium thresholds
@@ -304,43 +320,44 @@ npx tsx scripts/automation/jobs/userProfileEnrichment.ts
 **Solution**: Created UserGoal table and full CRUD API.
 
 **Schema**: `UserGoal` table (✅ created)
+
 ```prisma
 model UserGoal {
   id                  String   @id
   userId              String
-  
+
   // Goal identification
   title               String
   description         String?
   goalType            String   // 'daily' | 'weekly' | 'exam_date' | 'mastery'
-  
+
   // Goal targets
   targetValue         Int?
   targetUnit          String?  // 'questions' | 'minutes' | 'conditions' | 'accuracy'
   targetDate          DateTime?
   targetSystem        String?  // For mastery goals
   targetStability     Float?   // For FSRS mastery goals
-  
+
   // Progress tracking
   currentValue        Int      @default(0)
   progressPercentage  Float    @default(0)
-  
+
   // Status
   status              String   @default("active")  // 'active' | 'completed' | 'paused' | 'failed'
   isRecurring         Boolean  @default(false)
-  
+
   // Milestones
   milestones          Json?
-  
+
   // Streak tracking
   currentStreak       Int      @default(0)
   bestStreak          Int      @default(0)
   lastMetDate         DateTime?
-  
+
   // Motivation
   motivationNotes     String?
   rewardMessage       String?
-  
+
   createdAt           DateTime
   updatedAt           DateTime
   completedAt         DateTime?
@@ -400,7 +417,7 @@ model UserGoal {
 ✅ Streak tracking (current, best)  
 ✅ Milestone support (JSON array)  
 ✅ Custom motivation notes and rewards  
-✅ Ownership validation  
+✅ Ownership validation
 
 **Status**: ✅ Table created, migration applied, API deployed
 
@@ -413,6 +430,7 @@ model UserGoal {
 **Schema**: `UserConfusionPattern` table
 
 **Fields**:
+
 - conditionA, conditionB
 - occurrences, lastOccurrence
 - wasResolved, resolvedAt
@@ -425,6 +443,7 @@ model UserGoal {
 **Problem**: Don't know study context (device, environment).
 
 **Extend StudySession**:
+
 - deviceType (mobile/tablet/desktop)
 - browserName, screenSize
 - connectionType (wifi/cellular)
@@ -440,6 +459,7 @@ model UserGoal {
 **Schema**: `UserCircadianProfile` table
 
 **Fields**:
+
 - hourlyAccuracy (0-23 hours)
 - hourlyAttempts
 - peakHours, avoidHours
@@ -456,6 +476,7 @@ model UserGoal {
 **Schema**: `UserActivityLog` table
 
 **Event Types**:
+
 - session_start, session_end
 - answer, review
 - milestone_achieved
@@ -472,6 +493,7 @@ model UserGoal {
 **Endpoint**: `GET /api/user/export-data`
 
 **Export Contents**:
+
 - All QuestionAttempts
 - UserProgress records
 - StudySession history
@@ -485,31 +507,32 @@ model UserGoal {
 
 ## Implementation Priority Matrix
 
-| Step | Effort | Impact | Priority | Sprint |
-|------|--------|--------|----------|--------|
-| 1. Persist Implicit Metrics | Medium | Very High | 🔴 P0 | A | ✅ Complete |
-| 2. User Preferences Table | Low | Very High | 🔴 P0 | A | ✅ Complete |
-| 3. Enrich UserLearningProfile | Medium | High | 🟠 P1 | B | ✅ Complete |
-| 4. Learning Style Detection | High | High | 🟠 P1 | B | ✅ Complete |
-| 5. Goal Tracking | Medium | High | 🟠 P1 | B | ✅ Complete |
-| 6. Per-User Confusion Patterns | Low | Medium | 🟡 P2 | C |
-| 7. Session Context Tracking | Low | Medium | 🟡 P2 | C |
-| 8. Circadian Performance Storage | Medium | Medium | 🟡 P2 | C |
-| 9. Activity Timeline | Medium | Low | 🟢 P3 | D |
-| 10. Data Export API | Medium | Medium | 🟢 P3 | D |
+| Step                             | Effort | Impact    | Priority | Sprint |
+| -------------------------------- | ------ | --------- | -------- | ------ | ----------- |
+| 1. Persist Implicit Metrics      | Medium | Very High | 🔴 P0    | A      | ✅ Complete |
+| 2. User Preferences Table        | Low    | Very High | 🔴 P0    | A      | ✅ Complete |
+| 3. Enrich UserLearningProfile    | Medium | High      | 🟠 P1    | B      | ✅ Complete |
+| 4. Learning Style Detection      | High   | High      | 🟠 P1    | B      | ✅ Complete |
+| 5. Goal Tracking                 | Medium | High      | 🟠 P1    | B      | ✅ Complete |
+| 6. Per-User Confusion Patterns   | Low    | Medium    | 🟡 P2    | C      |
+| 7. Session Context Tracking      | Low    | Medium    | 🟡 P2    | C      |
+| 8. Circadian Performance Storage | Medium | Medium    | 🟡 P2    | C      |
+| 9. Activity Timeline             | Medium | Low       | 🟢 P3    | D      |
+| 10. Data Export API              | Medium | Medium    | 🟢 P3    | D      |
 
 ---
 
 ## Sprint Plan
 
-**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core data persistence  
-  - ✅ UserBehaviorMetrics table and API
-  - ✅ UserPreferences table and API
-  - Ready for client integration
+**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core data persistence
+
+- ✅ UserBehaviorMetrics table and API
+- ✅ UserPreferences table and API
+- Ready for client integration
 
 **Sprint B (Next)**: Steps 3-5 - Learning personalization  
 **Sprint C (1 week)**: Steps 6-8 - Context & patterns  
-**Sprint D (1 week)**: Steps 9-10 - Timeline & compliance  
+**Sprint D (1 week)**: Steps 9-10 - Timeline & compliance
 
 ---
 
@@ -517,19 +540,21 @@ model UserGoal {
 
 ### ✅ Sprint A Complete
 
-| File | Purpose | Status | Lines |
-|------|---------|--------|-------|
-| `prisma/schema.prisma` | Added UserBehaviorMetrics & UserPreferences models | ✅ Modified | +150 |
-| `functions/api/user/behavior-metrics.ts` | Store/retrieve implicit metrics | ✅ Created | 250 |
-| `functions/api/user/preferences.ts` | Full CRUD for user preferences | ✅ Created | 300 |
+| File                                     | Purpose                                            | Status      | Lines |
+| ---------------------------------------- | -------------------------------------------------- | ----------- | ----- |
+| `prisma/schema.prisma`                   | Added UserBehaviorMetrics & UserPreferences models | ✅ Modified | +150  |
+| `functions/api/user/behavior-metrics.ts` | Store/retrieve implicit metrics                    | ✅ Created  | 250   |
+| `functions/api/user/preferences.ts`      | Full CRUD for user preferences                     | ✅ Created  | 300   |
 
 **Database Changes**:
+
 - ✅ Migration `add_user_behavior_and_preferences` applied
 - ✅ UserBehaviorMetrics table created with indexes
 - ✅ UserPreferences table created with unique userId constraint
 - ✅ Foreign keys to User table established
 
 **API Endpoints**:
+
 - `POST /api/user/behavior-metrics` - Store behavior data
 - `GET /api/user/behavior-metrics` - Retrieve behavior data
 - `GET /api/user/preferences` - Fetch preferences
@@ -539,31 +564,35 @@ model UserGoal {
 
 ### ✅ Sprint B Complete
 
-| File | Purpose | Status | Lines |
-|------|---------|--------|-------|
-| `scripts/automation/jobs/userProfileEnrichment.ts` | Daily enrichment of UserLearningProfile | ✅ Created | 450 |
-| `lib/learningStyleDetection.ts` | Detect learning style from behavior | ✅ Created | 480 |
-| `functions/api/user/goals.ts` | Goal tracking CRUD | ✅ Created | 420 |
-| `prisma/schema.prisma` | Added UserGoal model | ✅ Modified | +50 |
+| File                                               | Purpose                                 | Status      | Lines |
+| -------------------------------------------------- | --------------------------------------- | ----------- | ----- |
+| `scripts/automation/jobs/userProfileEnrichment.ts` | Daily enrichment of UserLearningProfile | ✅ Created  | 450   |
+| `lib/learningStyleDetection.ts`                    | Detect learning style from behavior     | ✅ Created  | 480   |
+| `functions/api/user/goals.ts`                      | Goal tracking CRUD                      | ✅ Created  | 420   |
+| `prisma/schema.prisma`                             | Added UserGoal model                    | ✅ Modified | +50   |
 
 **Database Changes**:
+
 - ✅ Migration `add_user_goals` applied
 - ✅ UserGoal table created with 3 indexes
 - ✅ Foreign key to User table with CASCADE delete
 
 **API Endpoints**:
+
 - `GET /api/user/goals` - List goals with filtering
 - `POST /api/user/goals` - Create new goal
 - `PATCH /api/user/goals/:id` - Update goal (auto-complete, streak tracking)
 - `DELETE /api/user/goals/:id` - Delete goal
 
 **Jobs Created**:
+
 - `enrichAllUserProfiles()` - Daily job to populate UserLearningProfile fields
-  * Processes active users in batches of 50
-  * Calculates 12+ aggregated metrics
-  * Updates chronotype, learning velocity, metacognition score
+  - Processes active users in batches of 50
+  - Calculates 12+ aggregated metrics
+  - Updates chronotype, learning velocity, metacognition score
 
 **Libraries Created**:
+
 - Learning style detection with 4 dimensions
 - Confidence scoring for each dimension
 - Personalized recommendations generator
@@ -571,24 +600,25 @@ model UserGoal {
 
 ### 🔄 Sprint C To-Do
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `prisma/schema.prisma` | Add UserConfusionPattern, extend StudySession, add UserCircadianProfile | 🔄 Ready |
-| `scripts/automation/jobs/confusionPatternDetection.ts` | Track per-user confusion pairs | 🔄 Ready |
-| `scripts/automation/jobs/circadianAnalysis.ts` | Analyze hourly performance patterns | 🔄 Ready |
+| File                                                   | Purpose                                                                 | Status   |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- | -------- |
+| `prisma/schema.prisma`                                 | Add UserConfusionPattern, extend StudySession, add UserCircadianProfile | 🔄 Ready |
+| `scripts/automation/jobs/confusionPatternDetection.ts` | Track per-user confusion pairs                                          | 🔄 Ready |
+| `scripts/automation/jobs/circadianAnalysis.ts`         | Analyze hourly performance patterns                                     | 🔄 Ready |
 
 ---
 
 ## Sprint Plan
 
-**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core data persistence  
-  - ✅ UserBehaviorMetrics table and API
-  - ✅ UserPreferences table and API
-  - Ready for client integration
+**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core data persistence
+
+- ✅ UserBehaviorMetrics table and API
+- ✅ UserPreferences table and API
+- Ready for client integration
 
 **Sprint B (Next)**: Steps 3-5 - Learning personalization  
 **Sprint C (1 week)**: Steps 6-8 - Context & patterns  
-**Sprint D (1 week)**: Steps 9-10 - Timeline & compliance  
+**Sprint D (1 week)**: Steps 9-10 - Timeline & compliance
 
 ---
 
@@ -605,14 +635,14 @@ User Action → Client Collection → API Submission → DB Storage → Aggregat
 
 ## Files to Create/Modify
 
-| File | Purpose |
-|------|---------|
-| `prisma/migrations/add_user_data_tables.sql` | Schema for Steps 1-2, 5-9 |
-| `functions/api/user/preferences.ts` | Sync preferences |
-| `functions/api/user/behavior-metrics.ts` | Store implicit data |
-| `functions/api/user/goals.ts` | Goal CRUD |
-| `functions/api/user/export-data.ts` | GDPR export |
-| `scripts/automation/jobs/userProfileAggregation.ts` | Daily enrichment |
+| File                                                | Purpose                   |
+| --------------------------------------------------- | ------------------------- |
+| `prisma/migrations/add_user_data_tables.sql`        | Schema for Steps 1-2, 5-9 |
+| `functions/api/user/preferences.ts`                 | Sync preferences          |
+| `functions/api/user/behavior-metrics.ts`            | Store implicit data       |
+| `functions/api/user/goals.ts`                       | Goal CRUD                 |
+| `functions/api/user/export-data.ts`                 | GDPR export               |
+| `scripts/automation/jobs/userProfileAggregation.ts` | Daily enrichment          |
 
 ---
 

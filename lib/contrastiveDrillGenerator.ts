@@ -1,17 +1,20 @@
-
 import { ContrastiveSet } from '@prisma/client';
 
 export interface GeneratedContrastiveQuestion {
-    vignette: string;
-    keyDistinguishers: string[];
-    whyNotOthers: { [otherCondition: string]: string };
+  vignette: string;
+  keyDistinguishers: string[];
+  whyNotOthers: { [otherCondition: string]: string };
 }
 
-export function buildContrastivePrompt(set: ContrastiveSet, targetCondition: string, otherConditions: string[]): string {
-    const distinguishers = set.distinguishers as Record<string, string[]>;
-    const targetDistinguishers = distinguishers[targetCondition];
+export function buildContrastivePrompt(
+  set: ContrastiveSet,
+  targetCondition: string,
+  otherConditions: string[]
+): string {
+  const distinguishers = set.distinguishers as Record<string, string[]>;
+  const targetDistinguishers = distinguishers[targetCondition];
 
-    return `
+  return `
 Generate a clinical vignette for a CONTRASTIVE LEARNING drill.
 
 SYMPTOM: ${set.symptom}

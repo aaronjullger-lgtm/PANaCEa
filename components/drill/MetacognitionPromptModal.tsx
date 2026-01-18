@@ -11,7 +11,7 @@ interface MetacognitionPromptModalProps {
 
 /**
  * MetacognitionPromptModal - Displays reflection prompts for metacognitive learning
- * 
+ *
  * Shows when:
  * - User has consecutive misses in a subcategory
  * - Question involves a known confusion pair
@@ -29,11 +29,11 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
 
   const handleNextQuestion = () => {
     if (currentResponse.trim()) {
-      setResponses(prev => [...prev, currentResponse]);
+      setResponses((prev) => [...prev, currentResponse]);
     }
-    
+
     if (currentQuestionIndex < prompt.reflectionQuestions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setCurrentResponse('');
     } else {
       // All questions answered or skipped, dismiss
@@ -98,16 +98,14 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className="w-full max-w-lg bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header with gradient */}
           <div className={`p-5 bg-gradient-to-r ${getTriggerColor()} text-white`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl">
-                  {getTriggerIcon()}
-                </div>
+                <div className="p-2 bg-white/20 rounded-xl">{getTriggerIcon()}</div>
                 <div>
                   <h2 className="text-lg font-bold">{getTriggerTitle()}</h2>
                   <p className="text-sm text-white/80">{conditionName}</p>
@@ -150,9 +148,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
                 <span className="text-xs text-[var(--color-text-muted)]">
                   Question {currentQuestionIndex + 1} of {prompt.reflectionQuestions.length}
                 </span>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  Optional reflection
-                </span>
+                <span className="text-xs text-[var(--color-text-muted)]">Optional reflection</span>
               </div>
               <p className="text-base font-medium text-[var(--color-text-primary)]">
                 {prompt.reflectionQuestions[currentQuestionIndex]}
@@ -162,7 +158,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
             {/* Response textarea (optional) */}
             <textarea
               value={currentResponse}
-              onChange={e => setCurrentResponse(e.target.value)}
+              onChange={(e) => setCurrentResponse(e.target.value)}
               placeholder="Type your thoughts here (optional)..."
               className="w-full h-24 p-3 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
@@ -176,8 +172,8 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
                     idx === currentQuestionIndex
                       ? 'bg-blue-500'
                       : idx < currentQuestionIndex
-                      ? 'bg-emerald-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
+                        ? 'bg-emerald-500'
+                        : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 />
               ))}

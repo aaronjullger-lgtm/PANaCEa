@@ -14,7 +14,7 @@ interface DiagnosisInputProps {
 
 /**
  * DiagnosisInput - Command Palette style input for medical diagnosis selection.
- * 
+ *
  * Provides autocomplete functionality with keyboard navigation for selecting
  * from a list of medical conditions.
  */
@@ -32,9 +32,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
 
   // Filter conditions based on input (case-insensitive)
   const filteredConditions = inputValue.trim()
-    ? options.filter((condition) =>
-        condition.toLowerCase().includes(inputValue.toLowerCase())
-      )
+    ? options.filter((condition) => condition.toLowerCase().includes(inputValue.toLowerCase()))
     : [];
 
   // Reset highlighted index when filtered results change
@@ -77,9 +75,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev < filteredConditions.length - 1 ? prev + 1 : prev
-        );
+        setHighlightedIndex((prev) => (prev < filteredConditions.length - 1 ? prev + 1 : prev));
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -186,10 +182,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
 /**
  * Helper component to highlight matching text in dropdown options.
  */
-const HighlightedText: React.FC<{ text: string; query: string }> = ({
-  text,
-  query,
-}) => {
+const HighlightedText: React.FC<{ text: string; query: string }> = ({ text, query }) => {
   if (!query.trim()) return <>{text}</>;
 
   const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');

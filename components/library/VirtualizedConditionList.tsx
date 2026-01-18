@@ -1,6 +1,6 @@
 /**
  * VirtualizedConditionList - Performance-optimized list for large condition sets
- * 
+ *
  * Uses windowing to only render visible items, enabling smooth scrolling
  * through 2000+ conditions without performance degradation.
  */
@@ -50,7 +50,7 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
   // Calculate row height (includes gap)
   const rowHeight = itemHeight + 16; // 16px gap
   const itemsPerRow = columns;
-  
+
   // Calculate total rows
   const totalRows = Math.ceil(conditions.length / itemsPerRow);
   const totalHeight = totalRows * rowHeight;
@@ -100,10 +100,13 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
           <div
             key={i}
             className={`grid gap-4 ${
-              columns === 1 ? 'grid-cols-1' :
-              columns === 2 ? 'grid-cols-2' :
-              columns === 3 ? 'grid-cols-3' :
-              'grid-cols-4'
+              columns === 1
+                ? 'grid-cols-1'
+                : columns === 2
+                  ? 'grid-cols-2'
+                  : columns === 3
+                    ? 'grid-cols-3'
+                    : 'grid-cols-4'
             }`}
           >
             {Array.from({ length: columns }).map((_, j) => (
@@ -135,12 +138,7 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="overflow-y-auto"
-      style={{ height }}
-      onScroll={handleScroll}
-    >
+    <div ref={containerRef} className="overflow-y-auto" style={{ height }} onScroll={handleScroll}>
       {/* Spacer for total height */}
       <div style={{ height: totalHeight, position: 'relative' }}>
         {/* Visible rows */}
@@ -154,10 +152,7 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
           }}
         >
           {visibleRows.map((row, rowIndex) => (
-            <div
-              key={startRow + rowIndex}
-              className={`grid ${columnClasses[columns]} gap-4 mb-4`}
-            >
+            <div key={startRow + rowIndex} className={`grid ${columnClasses[columns]} gap-4 mb-4`}>
               {row.map((condition) => (
                 <motion.div
                   key={condition.id}

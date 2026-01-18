@@ -30,6 +30,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 Get these values from:
+
 - **Supabase URL & Keys**: Supabase Dashboard → Project Settings → API
 - **Database URLs**: Supabase Dashboard → Project Settings → Database → Connection String
 
@@ -42,6 +43,7 @@ npx prisma db push
 ```
 
 This will create:
+
 - `MediaAsset` table with new fields (status, folder, mediaType, etc.)
 - `EducationalResource` table for textbooks/PDFs
 - All other existing tables
@@ -84,6 +86,7 @@ Log into your Supabase Dashboard:
 For each bucket, click the three dots → **Policies** → **New Policy**:
 
 **For uploads (authenticated users only):**
+
 ```sql
 CREATE POLICY "Allow authenticated uploads"
 ON storage.objects FOR INSERT
@@ -92,6 +95,7 @@ WITH CHECK (bucket_id = 'medical-images');
 ```
 
 **For public reads (everyone can view approved media):**
+
 ```sql
 CREATE POLICY "Allow public reads"
 ON storage.objects FOR SELECT
@@ -144,6 +148,7 @@ npm run media:process-existing
 ```
 
 What this does:
+
 - Scans `assets/media/ekg`, `assets/media/labs`, `assets/media/imaging`, etc.
 - Runs AI quality checks on each image
 - Populates the approval queue with status `pending_review`
@@ -161,7 +166,7 @@ formData.append('tags', JSON.stringify(['chest', 'x-ray', 'pneumonia']));
 
 const response = await fetch('/api/media/upload', {
   method: 'POST',
-  body: formData
+  body: formData,
 });
 ```
 
@@ -174,10 +179,12 @@ npm run dev:all
 ```
 
 This runs:
+
 - **Frontend** (Vite dev server on port 3000)
 - **Backend API** (Express server on port 3001)
 
 The backend includes the Context-Aware Orchestrator that runs every 6 hours to:
+
 - Generate questions using approved media
 - Process new uploads
 - Run health checks
@@ -187,6 +194,7 @@ The backend includes the Context-Aware Orchestrator that runs every 6 hours to:
 ### 1. Upload Phase
 
 Files are uploaded to Supabase Storage:
+
 - User uploads via admin UI or API
 - Files stored in `medical-images` or `educational-resources` bucket
 - Initial status: `pending_review`
@@ -195,12 +203,14 @@ Files are uploaded to Supabase Storage:
 ### 2. AI Check Phase
 
 Automatic quality assessment:
+
 - AI analyzes image resolution, clarity, clinical relevance
 - Assigns quality score (0-100)
 - Extracts metadata (tags, clinical features)
 - Generates recommendations
 
 **Auto-approval criteria:**
+
 - Quality score ≥ 80
 - High confidence match to condition
 - No critical issues detected
@@ -208,17 +218,20 @@ Automatic quality assessment:
 ### 3. Human Approve Phase
 
 Admin reviews in Media Approval Dashboard:
+
 - View pending items with AI metadata
 - See quality score and recommendations
 - Approve or reject with reason
 - Batch approve/reject multiple items
 
 **Upon approval:**
+
 - Status changes to `approved`
 - Folder moves to `clinical_verified`
 - Media becomes available for question generation
 
 **Upon rejection:**
+
 - Status changes to `rejected`
 - Folder moves to `archive`
 - Rejection reason logged for audit
@@ -226,6 +239,7 @@ Admin reviews in Media Approval Dashboard:
 ### 4. Live Phase
 
 Approved media is used throughout the app:
+
 - Photo Drill modes pull from approved media
 - Question generator uses verified images
 - Educational resources linked to conditions
@@ -239,25 +253,25 @@ Key fields for the approval workflow:
 ```prisma
 model MediaAsset {
   // Approval workflow
-  status         String   @default("pending_review") 
+  status         String   @default("pending_review")
                          // "pending_review" | "approved" | "rejected" | "flagged"
-  
+
   // Organization
-  folder         String   @default("inbox") 
+  folder         String   @default("inbox")
                          // "inbox" (no-use) | "clinical_verified" (use) | "archive"
-  
+
   // Media type support
-  mediaType      String   @default("image") 
+  mediaType      String   @default("image")
                          // "image" | "pdf" | "video" | "audio"
-  
+
   // Quality assessment
   qualityScore   Float?   // AI-assigned score (0-100)
-  
+
   // Textbook/Lecture fields
   textContent    String?  @db.Text // OCR text for search
   pageCount      Int?     // For PDFs
   duration       Int?     // For videos (seconds)
-  
+
   // Source tracking
   sourceUrl      String?  // Where it came from
   citation       String?  // Academic citation
@@ -273,6 +287,7 @@ GET /api/media/pending?category=ecg&includeStats=true
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -322,7 +337,8 @@ Content-Type: application/json
 
 ### Error: "Storage bucket 'medical-images' does not exist"
 
-**Solution**: 
+**Solution**:
+
 1. Go to Supabase Dashboard → Storage
 2. Create the missing bucket
 3. Set it to Public
@@ -335,6 +351,7 @@ Content-Type: application/json
 ### Images not appearing after approval
 
 **Check:**
+
 1. Bucket is set to Public in Supabase
 2. Storage policies allow public reads
 3. `originalUrl` field is correctly set in database
@@ -343,6 +360,7 @@ Content-Type: application/json
 ### AI quality assessment failing
 
 **Check:**
+
 1. `GEMINI_API_KEY` is set in environment
 2. API key has sufficient quota
 3. Image file is valid and readable
@@ -356,7 +374,7 @@ Edit `services/mediaApprovalService.ts`:
 ```typescript
 function shouldAutoApprove(assessment: QualityAssessment): boolean {
   return (
-    assessment.qualityScore >= 80 &&  // Change this threshold
+    assessment.qualityScore >= 80 && // Change this threshold
     assessment.confidence >= 0.9 &&
     assessment.issues.length === 0
   );
@@ -379,8 +397,8 @@ await prisma.mediaVersion.create({
   data: {
     mediaId: media.id,
     changes: { qualityScore: newScore },
-    changedBy: userId
-  }
+    changedBy: userId,
+  },
 });
 ```
 
@@ -397,6 +415,7 @@ Once the basic workflow is running:
 ## Support
 
 For issues or questions:
+
 - Check the [GitHub Issues](https://github.com/yourusername/PANaCEa/issues)
 - Review the [Developer Guide](./DEVELOPER_GUIDE.md)
 - Contact the dev team

@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * Hourly Automation Tasks
- * 
+ *
  * Runs every hour to maintain system health and performance:
  * - API connectivity checks
  * - Database connection verification
  * - Real-time error monitoring
  * - Question quality validation
  * - Performance metrics collection
- * 
+ *
  * Usage: tsx scripts/automation/hourlyTasks.ts
  * Schedule: 0 * * * * (every hour)
  */
@@ -128,7 +128,7 @@ async function monitorBackgroundJobs(): Promise<void> {
   const start = Date.now();
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
+
     const failedJobs = await prisma.backgroundJob.count({
       where: {
         status: 'failed',
@@ -265,7 +265,9 @@ function printReport(): void {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   console.log(`⏰ Timestamp: ${report.timestamp.toISOString()}`);
-  console.log(`📊 Summary: ${report.summary.passed} passed, ${report.summary.failed} failed, ${report.summary.warnings} warnings\n`);
+  console.log(
+    `📊 Summary: ${report.summary.passed} passed, ${report.summary.failed} failed, ${report.summary.warnings} warnings\n`
+  );
 
   report.checks.forEach((check) => {
     const icon = check.status === 'pass' ? '✅' : check.status === 'fail' ? '❌' : '⚠️';
@@ -282,7 +284,7 @@ function printReport(): void {
  */
 function saveReport(): void {
   const reportDir = path.join(process.cwd(), 'logs', 'hourly');
-  
+
   // Create directory if it doesn't exist
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
@@ -290,7 +292,7 @@ function saveReport(): void {
 
   const filename = `hourly-${report.timestamp.toISOString().replace(/[:.]/g, '-')}.json`;
   const filepath = path.join(reportDir, filename);
-  
+
   fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
   console.log(`💾 Report saved to: ${filepath}\n`);
 }

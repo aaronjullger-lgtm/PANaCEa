@@ -20,11 +20,11 @@ import {
   Upload,
   AlertTriangle,
 } from 'lucide-react';
-import type { 
+import type {
   MedicalContent,
   ContentStatus,
   ContentFilter,
-  ContentSort
+  ContentSort,
 } from '../../types/admin-cms';
 import type { SystemCode } from '../../types';
 
@@ -44,7 +44,7 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
   const [sortBy, setSortBy] = useState<ContentSort>({ field: 'updatedAt', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
-  
+
   // Load content (in production, this would fetch from API/database)
   useEffect(() => {
     loadContent();
@@ -75,7 +75,7 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        item =>
+        (item) =>
           item.condition.toLowerCase().includes(query) ||
           item.conditionId.toLowerCase().includes(query) ||
           item.subcategory.toLowerCase().includes(query)
@@ -84,19 +84,19 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
 
     // Status filter
     if (selectedStatus !== 'all') {
-      filtered = filtered.filter(item => item.status === selectedStatus);
+      filtered = filtered.filter((item) => item.status === selectedStatus);
     }
 
     // System filter
     if (selectedSystem !== 'all') {
-      filtered = filtered.filter(item => item.system === selectedSystem);
+      filtered = filtered.filter((item) => item.system === selectedSystem);
     }
 
     // Sort
     filtered.sort((a, b) => {
       const field = sortBy.field;
       let comparison = 0;
-      
+
       if (field === 'updatedAt') {
         comparison = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
       } else if (field === 'condition') {
@@ -108,7 +108,7 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
       } else if (field === 'status') {
         comparison = a.status.localeCompare(b.status);
       }
-      
+
       return sortBy.direction === 'asc' ? comparison : -comparison;
     });
 
@@ -189,7 +189,9 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
             >
               <Filter className="w-4 h-4" />
               Filters
-              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              />
             </button>
 
             {/* Quick Actions */}
@@ -305,7 +307,8 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                 No content found
               </h3>
               <p className="text-[var(--color-text-muted)] max-w-md">
-                No medical content matches your current filters. Try adjusting your search or filters.
+                No medical content matches your current filters. Try adjusting your search or
+                filters.
               </p>
             </div>
           ) : (
@@ -337,52 +340,54 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                   {filteredContent
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                     .map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-[var(--color-bg-tertiary)]/50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-[var(--color-text-primary)]">
-                            {item.condition}
+                      <tr
+                        key={item.id}
+                        className="hover:bg-[var(--color-bg-tertiary)]/50 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="font-medium text-[var(--color-text-primary)]">
+                              {item.condition}
+                            </div>
+                            <div className="text-sm text-[var(--color-text-muted)]">
+                              {item.subcategory}
+                            </div>
                           </div>
-                          <div className="text-sm text-[var(--color-text-muted)]">
-                            {item.subcategory}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-1 text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded">
+                            {item.system}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border ${getStatusColor(item.status)}`}
+                          >
+                            {getStatusIcon(item.status)}
+                            {item.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">
+                          v{item.version}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">
+                          {new Date(item.updatedAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
+                              <Eye className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            </button>
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
+                              <Edit className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            </button>
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
+                              <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded">
-                          {item.system}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border ${getStatusColor(item.status)}`}>
-                          {getStatusIcon(item.status)}
-                          {item.status.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">
-                        v{item.version}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">
-                        {new Date(item.updatedAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                            <Eye className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          </button>
-                          <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                            <Edit className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          </button>
-                          <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                            <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -394,11 +399,12 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
           <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-[var(--color-text-muted)]">
               Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredContent.length)} to{' '}
-              {Math.min(currentPage * itemsPerPage, filteredContent.length)} of {filteredContent.length} items
+              {Math.min(currentPage * itemsPerPage, filteredContent.length)} of{' '}
+              {filteredContent.length} items
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -408,7 +414,11 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                 Page {currentPage} of {Math.ceil(filteredContent.length / itemsPerPage)}
               </span>
               <button
-                onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContent.length / itemsPerPage), p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(filteredContent.length / itemsPerPage), p + 1)
+                  )
+                }
                 disabled={currentPage >= Math.ceil(filteredContent.length / itemsPerPage)}
                 className="px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >

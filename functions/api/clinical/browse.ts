@@ -1,7 +1,20 @@
-import { handleCorsOptions, authenticateRequest, createErrorResponse } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+/**
+ * API: GET /api/clinical/browse
+ *
+ * Clinical browser endpoint - fetches conditions, drugs, and physiology
+ * organized by organ system for the clinical reference library.
+ *
+ * AUTHENTICATED endpoint - requires valid auth token.
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
+
+const ClinicalBrowseSchema = z.object({
+  query: z.object({}).optional(), // No query params required
+});
 
 const SYSTEM_LABELS: Record<string, string> = {
   CV: 'Cardiovascular',
@@ -19,7 +32,7 @@ const SYSTEM_LABELS: Record<string, string> = {
   ID: 'Infectious Disease',
   GU: 'Genitourinary',
   PRO: 'Professional Practice',
-  OTHER: 'Other'
+  OTHER: 'Other',
 };
 
 interface ClinicalBrowseResponse {
@@ -57,25 +70,23 @@ interface ClinicalBrowseResponse {
   }>;
 }
 
-export async function onRequestGet(context: { request: Request; env: any }) {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({ env, auth }) => {
+  const log = createEndpointLogger('/api/clinical/browse', auth.userId);
 
   if (!env.DATABASE_URL) {
-    return createErrorResponse('Database not configured', 500);
+    log.error('Database not configured');
+    return { status: 500, error: 'Database not configured' };
   }
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    log.info('Building clinical browser payload');
+
     // Fetch published medical content for conditions
     const content = await prisma.medicalContent.findMany({
       where: { status: 'published' },
@@ -119,66 +130,80 @@ export async function onRequestGet(context: { request: Request; env: any }) {
 
     const systemCodes = Object.keys(SYSTEM_LABELS);
 
-    const systems: ClinicalBrowseResponse['systems'] = systemCodes.map((code) => {
-      const conditionsByCategory: Record<string, any[]> = {};
+    const systems: ClinicalBrowseResponse['systems'] = systemCodes
+      .map((code) => {
+        const conditionsByCategory: Record<string, any[]> = {};
 
-      content
-        .filter((c: any) => {
-          if (c.system === code) return true;
-          // Allow cross-tagged related systems
-          return Array.isArray((c as any).relatedSystems) && (c as any).relatedSystems.includes(code);
-        })
-        .forEach((c: any) => {
-          const cat = c.subcategory || 'General';
-          if (!conditionsByCategory[cat]) conditionsByCategory[cat] = [];
-          conditionsByCategory[cat].push({
-            id: c.id,
-            conditionId: c.conditionId,
-            name: c.condition,
-            subcategory: c.subcategory,
-            system: c.system,
-            overview: c.overview,
-            buzzwords: c.buzzwords,
+        content
+          .filter((c: any) => {
+            if (c.system === code) return true;
+            // Allow cross-tagged related systems
+            return (
+              Array.isArray((c as any).relatedSystems) && (c as any).relatedSystems.includes(code)
+            );
+          })
+          .forEach((c: any) => {
+            const cat = c.subcategory || 'General';
+            if (!conditionsByCategory[cat]) conditionsByCategory[cat] = [];
+            conditionsByCategory[cat].push({
+              id: c.id,
+              conditionId: c.conditionId,
+              name: c.condition,
+              subcategory: c.subcategory,
+              system: c.system,
+              overview: c.overview,
+              buzzwords: c.buzzwords,
+            });
           });
+
+        const categories = Object.entries(conditionsByCategory)
+          .sort((a, b) => b[1].length - a[1].length)
+          .map(([name, conditions]) => ({
+            name,
+            conditions: conditions.sort((a, b) => a.name.localeCompare(b.name)),
+          }));
+
+        const systemDrugs = drugs.filter((d) => {
+          if (Array.isArray(d.tags) && d.tags.some((t) => t.toUpperCase() === code)) return true;
+          // Heuristic: map by class keywords
+          return d.drugClass.some((cls) => cls.toUpperCase().includes(code));
         });
 
-      const categories = Object.entries(conditionsByCategory)
-        .sort((a, b) => b[1].length - a[1].length)
-        .map(([name, conditions]) => ({
-          name,
-          conditions: conditions.sort((a, b) => a.name.localeCompare(b.name)),
-        }));
+        const systemPhys = physiology.filter((p: any) =>
+          p.system ? p.system.toUpperCase() === code : false
+        );
 
-      const systemDrugs = drugs.filter((d) => {
-        if (Array.isArray(d.tags) && d.tags.some((t) => t.toUpperCase() === code)) return true;
-        // Heuristic: map by class keywords
-        return d.drugClass.some((cls) => cls.toUpperCase().includes(code));
-      });
+        return {
+          code,
+          name: SYSTEM_LABELS[code] || code,
+          categories,
+          drugs: systemDrugs,
+          physiology: systemPhys.map((p) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            description: p.description,
+            clinicalSignificance: p.clinicalSignificance,
+          })),
+        };
+      })
+      .filter((s) => s.categories.length > 0 || s.drugs.length > 0 || s.physiology.length > 0);
 
-      const systemPhys = physiology.filter((p: any) => p.system ? p.system.toUpperCase() === code : false);
-
-      return {
-        code,
-        name: SYSTEM_LABELS[code] || code,
-        categories,
-        drugs: systemDrugs,
-        physiology: systemPhys.map((p) => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          description: p.description,
-          clinicalSignificance: p.clinicalSignificance,
-        })),
-      };
-    }).filter(s => s.categories.length > 0 || s.drugs.length > 0 || s.physiology.length > 0);
-
-    return new Response(JSON.stringify({ systems }), {
-      headers: { 'Content-Type': 'application/json' },
+    log.info('Clinical browser payload built successfully', { 
+      systemsCount: systems.length,
+      totalConditions: content.length,
+      totalDrugs: drugs.length,
+      totalPhysiology: physiology.length,
     });
-  } catch (error: any) {
-    console.error('Error building clinical browser payload', error);
-    return createErrorResponse('Failed to load clinical resources', 500);
+
+    return { systems };
+  } catch (error) {
+    log.error('Error building clinical browser payload', error);
+    return {
+      status: 500,
+      error: 'Failed to load clinical resources',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

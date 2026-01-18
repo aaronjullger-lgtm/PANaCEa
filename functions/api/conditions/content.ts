@@ -1,56 +1,26 @@
 /**
  * GET /api/conditions/content?name={conditionName}
- * 
+ *
  * PUBLIC endpoint - Returns condition content for question generation.
  * Used by frontend geminiService to get enriched content context.
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { publicEndpoint } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { z } from 'zod';
 
-interface Env {
-  DATABASE_URL?: string;
-}
+const ContentSchema = z.object({
+  query: z.object({
+    name: z.string().min(1, 'Condition name is required'),
+  }),
+});
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
-
-// Handle CORS preflight
-export function onRequestOptions(): Response {
-  return handleCorsOptions();
-}
-
-const corsHeaders = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const conditionName = url.searchParams.get('name');
-
-  if (!conditionName) {
-    return new Response(
-      JSON.stringify({ error: 'Missing required parameter: name' }),
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  if (!env.DATABASE_URL) {
-    return new Response(
-      JSON.stringify({ error: 'Database not configured' }),
-      { status: 500, headers: corsHeaders }
-    );
-  }
-
+export const onRequestGet = publicEndpoint(ContentSchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    const conditionName = validated.query.name;
+
     // Search for condition content by name (case-insensitive)
     let record = await prisma.medicalContent.findFirst({
       where: {
@@ -70,17 +40,14 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     }
 
     if (!record) {
-      return new Response(
-        JSON.stringify({ 
-          found: false,
-          message: `No published content found for: ${conditionName}` 
-        }),
-        { status: 200, headers: corsHeaders }
-      );
+      return {
+        found: false,
+        message: `No published content found for: ${conditionName}`,
+      };
     }
 
     // Return structured content
-    const content = {
+    return {
       found: true,
       conditionId: record.conditionId,
       condition: record.condition,
@@ -110,22 +77,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         aiConfidence: record.aiConfidence,
       },
     };
-
-    return new Response(
-      JSON.stringify(content),
-      { status: 200, headers: corsHeaders }
-    );
-
-  } catch (error) {
-    console.error('[Conditions Content API] Error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error' 
-      }),
-      { status: 500, headers: corsHeaders }
-    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

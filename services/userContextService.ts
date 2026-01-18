@@ -1,6 +1,6 @@
 /**
  * User Context Service
- * 
+ *
  * Provides context-aware functionality based on user's career stage
  * (student preparing for PANCE vs practicing PA maintaining certification via PANRE-LA)
  */
@@ -11,8 +11,8 @@ export type CareerStage = 'student' | 'practicing' | 'unknown';
 
 export interface UserContext {
   careerStage: CareerStage;
-  isPANCEUser: boolean;      // Student preparing for initial certification
-  isPANREUser: boolean;      // Practicing PA doing recertification
+  isPANCEUser: boolean; // Student preparing for initial certification
+  isPANREUser: boolean; // Practicing PA doing recertification
   graduationYear?: number;
   isCertifiedPA?: boolean;
 }
@@ -26,10 +26,10 @@ const CAREER_STAGE_KEY = 'panceai_career_stage'; // Dedicated key for career sta
  */
 export function getUserContext(): UserContext {
   const profile = loadUserProfile();
-  
+
   // PRIORITY 1: Check for explicit career stage setting (this persists user's choice)
   let careerStage: CareerStage = 'unknown';
-  
+
   try {
     const explicitStage = localStorage.getItem(CAREER_STAGE_KEY);
     if (explicitStage && (explicitStage === 'student' || explicitStage === 'practicing')) {
@@ -58,12 +58,12 @@ export function getUserContext(): UserContext {
       careerStage = 'student';
     }
   }
-  
+
   // Default to student if still unknown (PANCE is the most common use case)
   if (careerStage === 'unknown') {
     careerStage = 'student';
   }
-  
+
   return {
     careerStage,
     isPANCEUser: careerStage === 'student',
@@ -78,7 +78,7 @@ export function getUserContext(): UserContext {
 export function setUserContext(context: Partial<UserContext>): void {
   const current = getUserContext();
   const newCareerStage = context.careerStage ?? current.careerStage;
-  
+
   const updated = {
     ...current,
     ...context,
@@ -86,16 +86,19 @@ export function setUserContext(context: Partial<UserContext>): void {
     isPANCEUser: newCareerStage === 'student',
     isPANREUser: newCareerStage === 'practicing',
   };
-  
+
   // Save to both keys for maximum reliability
   localStorage.setItem(USER_CONTEXT_KEY, JSON.stringify(updated));
-  
+
   // Also save career stage to dedicated key (most important for persistence)
   if (context.careerStage) {
     localStorage.setItem('panceai_career_stage', context.careerStage);
   }
-  
-  console.log('[UserContext] Saved context:', { careerStage: updated.careerStage, isPANREUser: updated.isPANREUser });
+
+  console.log('[UserContext] Saved context:', {
+    careerStage: updated.careerStage,
+    isPANREUser: updated.isPANREUser,
+  });
 }
 
 /**

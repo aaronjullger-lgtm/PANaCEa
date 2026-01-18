@@ -1,6 +1,6 @@
 /**
  * AnatomyStructure Generator
- * 
+ *
  * Generates comprehensive anatomy structure records with AI assistance
  * Includes high-yield PANCE anatomy structures
  */
@@ -133,13 +133,17 @@ CRITICAL JSON RULES:
 
 Return the JSON now:`;
 
-async function generateAnatomyStructure(item: { name: string; category: string }, retryCount = 0): Promise<AnatomyStructureData | null> {
+async function generateAnatomyStructure(
+  item: { name: string; category: string },
+  retryCount = 0
+): Promise<AnatomyStructureData | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
-  let prompt = PROMPT_TEMPLATE
-    .replace('{{ITEM_NAME}}', item.name)
-    .replace('{{CATEGORY}}', item.category);
-  
+
+  let prompt = PROMPT_TEMPLATE.replace('{{ITEM_NAME}}', item.name).replace(
+    '{{CATEGORY}}',
+    item.category
+  );
+
   // Simplified retry prompt
   if (retryCount > 0) {
     prompt = `Generate valid JSON for anatomy structure: "${item.name}"
@@ -203,7 +207,7 @@ Rules: Use apostrophes not quotes inside strings, spell out symbols, no null val
   try {
     const result = await model.generateContent(prompt);
     let jsonStr = result.response.text().trim();
-    
+
     // Clean up response
     jsonStr = jsonStr
       .replace(/^```json\s*/i, '')
@@ -211,14 +215,14 @@ Rules: Use apostrophes not quotes inside strings, spell out symbols, no null val
       .replace(/```\s*$/, '')
       .replace(/^\uFEFF/, '')
       .replace(/\r\n/g, '\n');
-    
+
     const firstBrace = jsonStr.indexOf('{');
     const lastBrace = jsonStr.lastIndexOf('}');
     if (firstBrace === -1 || lastBrace === -1) {
       throw new Error('No JSON found');
     }
     jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-    
+
     // Fix common issues
     jsonStr = jsonStr
       .replace(/≥/g, ' greater than or equal to ')
@@ -228,13 +232,13 @@ Rules: Use apostrophes not quotes inside strings, spell out symbols, no null val
       .replace(/['']/g, "'")
       .replace(/[""]/g, '"')
       .replace(/,(\s*[}\]])/g, '$1');
-    
+
     let parsed: AnatomyStructureData;
     try {
       parsed = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error(`  ⚠️  JSON parse error: ${parseError}`);
-      
+
       // Try fixing string values with proper type annotations
       const fixed = jsonStr.replace(
         /"([^"]+)"\s*:\s*"([^"]*)"/g,
@@ -245,26 +249,26 @@ Rules: Use apostrophes not quotes inside strings, spell out symbols, no null val
           return _match;
         }
       );
-      
+
       try {
         parsed = JSON.parse(fixed);
         console.log(`  ℹ️  JSON fixed automatically`);
       } catch {
         if (retryCount === 0) {
           console.log(`  🔄 Retrying with simplified prompt...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           return generateAnatomyStructure(item, 1);
         }
         throw parseError;
       }
     }
-    
+
     return parsed;
   } catch (error) {
     console.error(`  ❌ Error: ${error}`);
     if (retryCount === 0) {
       console.log(`  🔄 Retrying...`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return generateAnatomyStructure(item, 1);
     }
     return null;
@@ -274,16 +278,16 @@ Rules: Use apostrophes not quotes inside strings, spell out symbols, no null val
 async function removeDuplicates() {
   console.log('\n🔍 Checking for duplicates...');
   const all = await prisma.anatomyStructure.findMany({
-    select: { id: true, name: true, createdAt: true }
+    select: { id: true, name: true, createdAt: true },
   });
-  
+
   const toDelete: string[] = [];
-  const seen = new Map<string, typeof all[0]>();
-  
+  const seen = new Map<string, (typeof all)[0]>();
+
   for (const item of all) {
     const key = item.name.toLowerCase().trim();
     const existing = seen.get(key);
-    
+
     if (existing) {
       if (item.createdAt > existing.createdAt) {
         toDelete.push(item.id);
@@ -297,7 +301,7 @@ async function removeDuplicates() {
       seen.set(key, item);
     }
   }
-  
+
   if (toDelete.length > 0) {
     await prisma.anatomyStructure.deleteMany({ where: { id: { in: toDelete } } });
     console.log(`  ✅ Removed ${toDelete.length} duplicate(s)`);
@@ -309,9 +313,9 @@ async function removeDuplicates() {
 async function main() {
   console.log('🦴 AnatomyStructure Generator');
   console.log('='.repeat(60));
-  
+
   await removeDuplicates();
-  
+
   // High-yield PANCE anatomy structures organized by system/region
   const ITEMS_TO_GENERATE = [
     // HEAD & NECK - Nerves
@@ -327,19 +331,19 @@ async function main() {
     { name: 'Optic Nerve (CN II)', category: 'Cranial Nerve' },
     { name: 'Olfactory Nerve (CN I)', category: 'Cranial Nerve' },
     { name: 'Vestibulocochlear Nerve (CN VIII)', category: 'Cranial Nerve' },
-    
+
     // HEAD & NECK - Vessels
     { name: 'Carotid Artery', category: 'Head/Neck Vessel' },
     { name: 'Internal Jugular Vein', category: 'Head/Neck Vessel' },
     { name: 'External Jugular Vein', category: 'Head/Neck Vessel' },
     { name: 'Vertebral Artery', category: 'Head/Neck Vessel' },
     { name: 'Circle of Willis', category: 'Cerebral Vessel' },
-    
+
     // HEAD & NECK - Muscles
     { name: 'Sternocleidomastoid Muscle', category: 'Neck Muscle' },
     { name: 'Scalene Muscles', category: 'Neck Muscle' },
     { name: 'Trapezius Muscle', category: 'Neck/Back Muscle' },
-    
+
     // HEAD & NECK - Structures
     { name: 'Thyroid Gland', category: 'Endocrine Organ' },
     { name: 'Parathyroid Glands', category: 'Endocrine Organ' },
@@ -347,7 +351,7 @@ async function main() {
     { name: 'Submandibular Gland', category: 'Salivary Gland' },
     { name: 'Carotid Triangle', category: 'Anatomical Triangle' },
     { name: 'Posterior Triangle of Neck', category: 'Anatomical Triangle' },
-    
+
     // UPPER EXTREMITY - Nerves
     { name: 'Brachial Plexus', category: 'Peripheral Nerve' },
     { name: 'Median Nerve', category: 'Peripheral Nerve' },
@@ -356,7 +360,7 @@ async function main() {
     { name: 'Musculocutaneous Nerve', category: 'Peripheral Nerve' },
     { name: 'Axillary Nerve', category: 'Peripheral Nerve' },
     { name: 'Long Thoracic Nerve', category: 'Peripheral Nerve' },
-    
+
     // UPPER EXTREMITY - Muscles
     { name: 'Rotator Cuff', category: 'Shoulder Muscle Group' },
     { name: 'Supraspinatus Muscle', category: 'Shoulder Muscle' },
@@ -369,7 +373,7 @@ async function main() {
     { name: 'Thenar Muscles', category: 'Hand Muscle' },
     { name: 'Hypothenar Muscles', category: 'Hand Muscle' },
     { name: 'Interosseous Muscles of Hand', category: 'Hand Muscle' },
-    
+
     // UPPER EXTREMITY - Bones/Joints
     { name: 'Shoulder Joint', category: 'Joint' },
     { name: 'Elbow Joint', category: 'Joint' },
@@ -380,13 +384,13 @@ async function main() {
     { name: 'Humerus', category: 'Bone' },
     { name: 'Radius', category: 'Bone' },
     { name: 'Ulna', category: 'Bone' },
-    
+
     // UPPER EXTREMITY - Ligaments/Structures
     { name: 'Carpal Tunnel', category: 'Anatomical Space' },
     { name: 'Cubital Tunnel', category: 'Anatomical Space' },
     { name: 'Guyon Canal', category: 'Anatomical Space' },
     { name: 'Anatomical Snuffbox', category: 'Anatomical Region' },
-    
+
     // THORAX
     { name: 'Heart', category: 'Thoracic Organ' },
     { name: 'Lungs', category: 'Thoracic Organ' },
@@ -403,7 +407,7 @@ async function main() {
     { name: 'Esophagus', category: 'Thoracic Organ' },
     { name: 'Trachea', category: 'Airway Structure' },
     { name: 'Bronchi', category: 'Airway Structure' },
-    
+
     // ABDOMEN
     { name: 'Liver', category: 'Abdominal Organ' },
     { name: 'Gallbladder', category: 'Abdominal Organ' },
@@ -425,7 +429,7 @@ async function main() {
     { name: 'External Oblique Muscle', category: 'Abdominal Muscle' },
     { name: 'Internal Oblique Muscle', category: 'Abdominal Muscle' },
     { name: 'Transversus Abdominis', category: 'Abdominal Muscle' },
-    
+
     // PELVIS
     { name: 'Bladder', category: 'Pelvic Organ' },
     { name: 'Prostate Gland', category: 'Male Reproductive' },
@@ -436,7 +440,7 @@ async function main() {
     { name: 'Pelvic Floor Muscles', category: 'Pelvic Muscle' },
     { name: 'Pudendal Nerve', category: 'Pelvic Nerve' },
     { name: 'Iliac Arteries', category: 'Pelvic Vessel' },
-    
+
     // SPINE
     { name: 'Cervical Vertebrae', category: 'Spine' },
     { name: 'Thoracic Vertebrae', category: 'Spine' },
@@ -449,7 +453,7 @@ async function main() {
     { name: 'Ligamentum Flavum', category: 'Spinal Ligament' },
     { name: 'Anterior Longitudinal Ligament', category: 'Spinal Ligament' },
     { name: 'Posterior Longitudinal Ligament', category: 'Spinal Ligament' },
-    
+
     // LOWER EXTREMITY - Nerves
     { name: 'Sciatic Nerve', category: 'Peripheral Nerve' },
     { name: 'Femoral Nerve', category: 'Peripheral Nerve' },
@@ -459,7 +463,7 @@ async function main() {
     { name: 'Superficial Peroneal Nerve', category: 'Peripheral Nerve' },
     { name: 'Obturator Nerve', category: 'Peripheral Nerve' },
     { name: 'Lateral Femoral Cutaneous Nerve', category: 'Peripheral Nerve' },
-    
+
     // LOWER EXTREMITY - Muscles
     { name: 'Quadriceps Femoris', category: 'Thigh Muscle' },
     { name: 'Hamstring Muscles', category: 'Thigh Muscle' },
@@ -472,7 +476,7 @@ async function main() {
     { name: 'Tibialis Anterior', category: 'Leg Muscle' },
     { name: 'Tibialis Posterior', category: 'Leg Muscle' },
     { name: 'Peroneal Muscles', category: 'Leg Muscle' },
-    
+
     // LOWER EXTREMITY - Bones/Joints
     { name: 'Hip Joint', category: 'Joint' },
     { name: 'Knee Joint', category: 'Joint' },
@@ -483,7 +487,7 @@ async function main() {
     { name: 'Patella', category: 'Bone' },
     { name: 'Calcaneus', category: 'Tarsal Bone' },
     { name: 'Talus', category: 'Tarsal Bone' },
-    
+
     // LOWER EXTREMITY - Ligaments/Structures
     { name: 'Anterior Cruciate Ligament (ACL)', category: 'Knee Ligament' },
     { name: 'Posterior Cruciate Ligament (PCL)', category: 'Knee Ligament' },
@@ -495,7 +499,7 @@ async function main() {
     { name: 'Tarsal Tunnel', category: 'Anatomical Space' },
     { name: 'Femoral Triangle', category: 'Anatomical Triangle' },
     { name: 'Popliteal Fossa', category: 'Anatomical Region' },
-    
+
     // LOWER EXTREMITY - Vessels
     { name: 'Femoral Artery', category: 'Lower Extremity Vessel' },
     { name: 'Popliteal Artery', category: 'Lower Extremity Vessel' },
@@ -504,7 +508,7 @@ async function main() {
     { name: 'Great Saphenous Vein', category: 'Lower Extremity Vessel' },
     { name: 'Small Saphenous Vein', category: 'Lower Extremity Vessel' },
     { name: 'Deep Veins of Lower Extremity', category: 'Lower Extremity Vessel' },
-    
+
     // DERMATOMES & MYOTOMES (high-yield for PANCE)
     { name: 'C5 Dermatome/Myotome', category: 'Dermatome' },
     { name: 'C6 Dermatome/Myotome', category: 'Dermatome' },
@@ -514,9 +518,9 @@ async function main() {
     { name: 'L4 Dermatome/Myotome', category: 'Dermatome' },
     { name: 'L5 Dermatome/Myotome', category: 'Dermatome' },
     { name: 'S1 Dermatome/Myotome', category: 'Dermatome' },
-    
+
     // === ADDITIONAL COMPREHENSIVE PANCE ANATOMY ===
-    
+
     // HEAD - Additional Structures
     { name: 'Cerebrum', category: 'Brain Structure' },
     { name: 'Cerebellum', category: 'Brain Structure' },
@@ -538,7 +542,7 @@ async function main() {
     { name: 'Pia Mater', category: 'CNS Covering' },
     { name: 'Cerebral Ventricles', category: 'CSF System' },
     { name: 'Choroid Plexus', category: 'CSF System' },
-    
+
     // EYE Anatomy
     { name: 'Retina', category: 'Eye Structure' },
     { name: 'Cornea', category: 'Eye Structure' },
@@ -550,7 +554,7 @@ async function main() {
     { name: 'Aqueous Humor', category: 'Eye Structure' },
     { name: 'Vitreous Humor', category: 'Eye Structure' },
     { name: 'Extraocular Muscles', category: 'Eye Muscle' },
-    
+
     // EAR Anatomy
     { name: 'External Ear', category: 'Ear Structure' },
     { name: 'Tympanic Membrane', category: 'Ear Structure' },
@@ -558,7 +562,7 @@ async function main() {
     { name: 'Cochlea', category: 'Inner Ear' },
     { name: 'Semicircular Canals', category: 'Inner Ear' },
     { name: 'Eustachian Tube', category: 'Ear Structure' },
-    
+
     // ORAL/PHARYNGEAL
     { name: 'Tongue', category: 'Oral Structure' },
     { name: 'Soft Palate', category: 'Oral Structure' },
@@ -567,7 +571,7 @@ async function main() {
     { name: 'Larynx', category: 'Airway Structure' },
     { name: 'Vocal Cords', category: 'Laryngeal Structure' },
     { name: 'Epiglottis', category: 'Laryngeal Structure' },
-    
+
     // CARDIAC Detailed
     { name: 'Right Atrium', category: 'Cardiac Chamber' },
     { name: 'Left Atrium', category: 'Cardiac Chamber' },
@@ -583,7 +587,7 @@ async function main() {
     { name: 'Purkinje Fibers', category: 'Cardiac Conduction' },
     { name: 'Pericardium', category: 'Cardiac Structure' },
     { name: 'Interventricular Septum', category: 'Cardiac Structure' },
-    
+
     // PULMONARY Detailed
     { name: 'Right Lung', category: 'Pulmonary Organ' },
     { name: 'Left Lung', category: 'Pulmonary Organ' },
@@ -593,7 +597,7 @@ async function main() {
     { name: 'Pleura', category: 'Pulmonary Covering' },
     { name: 'Pleural Space', category: 'Thoracic Space' },
     { name: 'Mediastinum', category: 'Thoracic Space' },
-    
+
     // GI Detailed
     { name: 'Duodenum', category: 'Small Intestine' },
     { name: 'Jejunum', category: 'Small Intestine' },
@@ -613,7 +617,7 @@ async function main() {
     { name: 'Greater Omentum', category: 'Peritoneal Structure' },
     { name: 'Lesser Omentum', category: 'Peritoneal Structure' },
     { name: 'Mesentery', category: 'Peritoneal Structure' },
-    
+
     // RENAL/URINARY Detailed
     { name: 'Renal Cortex', category: 'Kidney Structure' },
     { name: 'Renal Medulla', category: 'Kidney Structure' },
@@ -624,7 +628,7 @@ async function main() {
     { name: 'Urethra', category: 'Urinary System' },
     { name: 'Renal Artery', category: 'Renal Vessel' },
     { name: 'Renal Vein', category: 'Renal Vessel' },
-    
+
     // ENDOCRINE
     { name: 'Anterior Pituitary', category: 'Endocrine Gland' },
     { name: 'Posterior Pituitary', category: 'Endocrine Gland' },
@@ -633,7 +637,7 @@ async function main() {
     { name: 'Adrenal Cortex', category: 'Adrenal Gland' },
     { name: 'Adrenal Medulla', category: 'Adrenal Gland' },
     { name: 'Thymus', category: 'Lymphoid/Endocrine' },
-    
+
     // LYMPHATIC
     { name: 'Cervical Lymph Nodes', category: 'Lymph Node' },
     { name: 'Axillary Lymph Nodes', category: 'Lymph Node' },
@@ -641,7 +645,7 @@ async function main() {
     { name: 'Mediastinal Lymph Nodes', category: 'Lymph Node' },
     { name: 'Thoracic Duct', category: 'Lymphatic Vessel' },
     { name: 'Right Lymphatic Duct', category: 'Lymphatic Vessel' },
-    
+
     // REPRODUCTIVE - Male
     { name: 'Testes', category: 'Male Reproductive' },
     { name: 'Epididymis', category: 'Male Reproductive' },
@@ -649,7 +653,7 @@ async function main() {
     { name: 'Seminal Vesicles', category: 'Male Reproductive' },
     { name: 'Penis', category: 'Male Reproductive' },
     { name: 'Scrotum', category: 'Male Reproductive' },
-    
+
     // REPRODUCTIVE - Female Detailed
     { name: 'Cervix', category: 'Female Reproductive' },
     { name: 'Vagina', category: 'Female Reproductive' },
@@ -658,7 +662,7 @@ async function main() {
     { name: 'Myometrium', category: 'Female Reproductive' },
     { name: 'Broad Ligament', category: 'Female Reproductive' },
     { name: 'Round Ligament', category: 'Female Reproductive' },
-    
+
     // SKIN/INTEGUMENTARY
     { name: 'Epidermis', category: 'Skin Layer' },
     { name: 'Dermis', category: 'Skin Layer' },
@@ -666,47 +670,47 @@ async function main() {
     { name: 'Hair Follicle', category: 'Skin Appendage' },
     { name: 'Sebaceous Gland', category: 'Skin Appendage' },
     { name: 'Sweat Glands', category: 'Skin Appendage' },
-    { name: 'Nail', category: 'Skin Appendage' }
+    { name: 'Nail', category: 'Skin Appendage' },
   ];
-  
+
   console.log(`\nGenerating ${ITEMS_TO_GENERATE.length} anatomy structure records...\n`);
-  
-  const existing = await prisma.anatomyStructure.findMany({ 
-    select: { name: true, id: true } 
+
+  const existing = await prisma.anatomyStructure.findMany({
+    select: { name: true, id: true },
   });
-  const existingNames = new Set(existing.map(e => e.name.toLowerCase()));
-  
+  const existingNames = new Set(existing.map((e) => e.name.toLowerCase()));
+
   let created = 0;
   let skipped = 0;
   let failed = 0;
-  
+
   for (const item of ITEMS_TO_GENERATE) {
     if (existingNames.has(item.name.toLowerCase())) {
       console.log(`  ⏭️  Skipped: ${item.name}`);
       skipped++;
       continue;
     }
-    
+
     console.log(`  🔄 Creating: ${item.name}...`);
     const data = await generateAnatomyStructure(item);
-    
+
     if (!data) {
       failed++;
       continue;
     }
-    
+
     try {
       // Remove any relation fields that might be in the response
       const { AnatomyConditionLink, Condition, ...createData } = data as any;
-      
+
       await prisma.anatomyStructure.create({
         data: {
           id: crypto.randomUUID(),
           ...createData,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
-      
+
       existingNames.add(item.name.toLowerCase());
       created++;
       console.log(`  ✅ Created: ${item.name}`);
@@ -714,19 +718,19 @@ async function main() {
       console.error(`  ❌ Failed to save: ${error}`);
       failed++;
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
+
+    await new Promise((resolve) => setTimeout(resolve, 800));
   }
-  
+
   console.log('\n' + '='.repeat(60));
   console.log('📊 Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Skipped: ${skipped}`);
   console.log(`   Failed: ${failed}`);
-  
+
   const total = await prisma.anatomyStructure.count();
   console.log(`   Total in database: ${total}`);
-  
+
   await prisma.$disconnect();
 }
 

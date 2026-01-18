@@ -1,6 +1,6 @@
 /**
  * Medical Content Display Types
- * 
+ *
  * Type-safe interfaces for rendering medical content from the database.
  * Handles JSONB field parsing and nested content structures.
  */
@@ -52,7 +52,7 @@ export interface MedicalContentDisplay {
   system: string;
   subcategory: string;
   condition: string;
-  
+
   // Status and versioning
   status: string;
   version: number;
@@ -64,7 +64,7 @@ export interface MedicalContentDisplay {
   publishedBy?: string | null;
   approvedAt?: Date | string | null;
   approvedBy?: string | null;
-  
+
   // Primary text content fields
   overview?: string | null;
   pathophysiology?: string | null;
@@ -78,40 +78,40 @@ export interface MedicalContentDisplay {
   prognosis?: string | null;
   riskFactors?: string | null;
   differentialDiagnosis?: string | null;
-  
+
   // Clinical context fields
   classic_patient?: string | null;
   patient_education?: string | null;
   prevention?: string | null;
   disposition?: string | null;
   guidelines?: string | null;
-  
+
   // Diagnostic fields
   gold_standard_dx?: string | null;
   best_initial_test?: string | null;
-  
+
   // Treatment fields
   first_line_rx?: string | null;
   rx_mechanism?: string | null;
   rx_side_effects?: string | null;
-  
+
   // Metadata fields
   image_query?: string | null;
   mnemonic?: string | null;
   pance_yield?: number | null;
   gender_bias?: string | null;
-  
+
   // Array fields
   relatedSystems?: string[];
   buzzwords?: string[];
-  
+
   // JSONB fields (need safe parsing)
   clinical_pearls?: string[] | null;
   classic_triad?: string[] | null;
   differentials?: string[] | null;
   synonyms?: string[] | null;
   age_demographic?: AgeDemographic | null;
-  
+
   // Complex nested content JSONB
   content?: NestedContent | null;
 }
@@ -119,18 +119,13 @@ export interface MedicalContentDisplay {
 /**
  * Utility type for field values that can be in various formats
  */
-export type ContentFieldValue = 
-  | string 
-  | string[] 
-  | Record<string, unknown> 
-  | null 
-  | undefined;
+export type ContentFieldValue = string | string[] | Record<string, unknown> | null | undefined;
 
 /**
  * Type guard to check if a value is a string array
  */
 export function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(item => typeof item === 'string');
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 /**
@@ -143,12 +138,12 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
 /**
  * Field renderer type for determining how to display content
  */
-export type FieldRenderType = 
-  | 'markdown'      // Plain text/markdown string
-  | 'bullet-list'   // Array of strings to render as bullets
-  | 'key-value'     // Object with key-value pairs
-  | 'steps'         // Ordered treatment steps
-  | 'empty';        // Null/undefined value
+export type FieldRenderType =
+  | 'markdown' // Plain text/markdown string
+  | 'bullet-list' // Array of strings to render as bullets
+  | 'key-value' // Object with key-value pairs
+  | 'steps' // Ordered treatment steps
+  | 'empty'; // Null/undefined value
 
 /**
  * Determines the appropriate render type for a field value

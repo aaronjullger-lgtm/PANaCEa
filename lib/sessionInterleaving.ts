@@ -1,23 +1,23 @@
 /**
  * Session Interleaving Utility
- * 
+ *
  * @deprecated DEPRECATED as of v2.0.0 - Use MainSessionQuestionSelector instead.
- * 
+ *
  * The new Interleaved Assembler in lib/services/mainSessionQuestionSelector.ts
  * implements stricter interleaving (no same system twice in a row) and is
  * integrated directly into the question selection algorithm.
- * 
+ *
  * This file is kept for backward compatibility with existing imports but
  * should not be used for new code.
- * 
+ *
  * See: docs/plans/interleaver-upgrade.md for migration details.
- * 
+ *
  * ---
- * 
+ *
  * Legacy Purpose: Prevent clustering of questions from the same system, which reduces
  * learning effectiveness. Research shows interleaved practice improves long-term
  * retention compared to blocked practice.
- * 
+ *
  * Legacy Rules:
  * - Maximum 2 questions from the same system in any 5-question sliding window
  * - Respects question difficulty and other properties
@@ -32,7 +32,7 @@ interface Question {
 
 /**
  * Check if a question sequence violates interleaving rules
- * 
+ *
  * @param questions - Array of questions to check
  * @param maxSameSystem - Maximum questions from same system in window (default: 2)
  * @param windowSize - Size of sliding window to check (default: 5)
@@ -53,10 +53,10 @@ export function findInterleavingViolations(
   // Slide window through questions
   for (let i = 0; i <= questions.length - windowSize; i++) {
     const window = questions.slice(i, i + windowSize);
-    
+
     // Count questions per system in this window
     const systemCounts = new Map<string, number>();
-    
+
     for (const q of window) {
       systemCounts.set(q.system, (systemCounts.get(q.system) || 0) + 1);
     }
@@ -76,12 +76,12 @@ export function findInterleavingViolations(
 
 /**
  * Ensure questions are properly interleaved by system
- * 
+ *
  * Uses a greedy algorithm:
  * 1. Select questions one at a time
  * 2. Always choose a question that doesn't violate the window constraint
  * 3. If all remaining questions would violate, choose the least-recently-used system
- * 
+ *
  * @param questions - Array of questions to interleave
  * @param maxSameSystem - Maximum questions from same system in window (default: 2)
  * @param windowSize - Size of sliding window to check (default: 5)
@@ -127,7 +127,7 @@ export function ensureInterleaving<T extends Question>(
     // If no valid question found, choose from least-represented system
     if (selectedIndex === -1) {
       // Find system with lowest count in current window
-      const systemsInRemaining = new Set(remaining.map(q => q.system));
+      const systemsInRemaining = new Set(remaining.map((q) => q.system));
       let minCount = Infinity;
       let leastUsedSystem = '';
 
@@ -140,8 +140,8 @@ export function ensureInterleaving<T extends Question>(
       }
 
       // Select first question from least-used system
-      selectedIndex = remaining.findIndex(q => q.system === leastUsedSystem);
-      
+      selectedIndex = remaining.findIndex((q) => q.system === leastUsedSystem);
+
       if (selectedIndex === -1) {
         // Fallback: just take first remaining question
         selectedIndex = 0;
@@ -158,7 +158,7 @@ export function ensureInterleaving<T extends Question>(
 
 /**
  * Validate that a question sequence meets interleaving requirements
- * 
+ *
  * @param questions - Array of questions to validate
  * @param maxSameSystem - Maximum questions from same system in window (default: 2)
  * @param windowSize - Size of sliding window to check (default: 5)
@@ -175,7 +175,7 @@ export function validateInterleaving(
 
 /**
  * Get interleaving quality metrics for a question sequence
- * 
+ *
  * @param questions - Array of questions to analyze
  * @param windowSize - Size of sliding window to check (default: 5)
  * @returns Metrics about interleaving quality
@@ -201,12 +201,12 @@ export function getInterleavingMetrics(
   }
 
   // Count unique systems
-  const uniqueSystems = new Set(questions.map(q => q.system)).size;
+  const uniqueSystems = new Set(questions.map((q) => q.system)).size;
 
   // Find max consecutive same system
   let maxConsecutive = 1;
   let currentConsecutive = 1;
-  
+
   for (let i = 1; i < questions.length; i++) {
     if (questions[i].system === questions[i - 1].system) {
       currentConsecutive++;
@@ -223,7 +223,7 @@ export function getInterleavingMetrics(
   if (questions.length >= windowSize) {
     for (let i = 0; i <= questions.length - windowSize; i++) {
       const window = questions.slice(i, i + windowSize);
-      const systemsInWindow = new Set(window.map(q => q.system));
+      const systemsInWindow = new Set(window.map((q) => q.system));
       totalUniqueSystems += systemsInWindow.size;
       windowCount++;
     }
@@ -245,7 +245,7 @@ export function getInterleavingMetrics(
 
 /**
  * Get a human-readable report of interleaving quality
- * 
+ *
  * @param questions - Array of questions to analyze
  * @returns String report
  */
@@ -265,7 +265,8 @@ export function getInterleavingReport(questions: Question[]): string {
   ];
 
   if (metrics.violations > 0) {
-    lines.push(``,
+    lines.push(
+      ``,
       `⚠️  Warning: This sequence has ${metrics.violations} violation(s).`,
       `Consider calling ensureInterleaving() to fix.`
     );
@@ -277,7 +278,7 @@ export function getInterleavingReport(questions: Question[]): string {
 /**
  * Shuffle questions while maintaining interleaving constraints
  * Useful for adding variety while respecting learning science
- * 
+ *
  * @param questions - Array of questions to shuffle
  * @param maxSameSystem - Maximum questions from same system in window (default: 2)
  * @param windowSize - Size of sliding window to check (default: 5)
@@ -290,7 +291,7 @@ export function shuffleWithInterleaving<T extends Question>(
 ): T[] {
   // First shuffle randomly
   const shuffled = [...questions].sort(() => Math.random() - 0.5);
-  
+
   // Then apply interleaving
   return ensureInterleaving(shuffled, maxSameSystem, windowSize);
 }
@@ -298,7 +299,7 @@ export function shuffleWithInterleaving<T extends Question>(
 /**
  * Group questions by system for analysis
  * Useful for debugging and understanding session composition
- * 
+ *
  * @param questions - Array of questions to group
  * @returns Map of system -> question IDs
  */

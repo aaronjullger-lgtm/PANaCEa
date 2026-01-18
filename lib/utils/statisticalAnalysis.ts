@@ -1,13 +1,13 @@
 /**
  * Statistical Analysis Utility
- * 
+ *
  * Provides comprehensive statistical calculations for learning analytics:
  * - Confidence intervals
  * - Standard deviation
  * - Learning velocity (improvement rate)
  * - Trend analysis
  * - Statistical significance testing
- * 
+ *
  * @module lib/utils/statisticalAnalysis
  */
 
@@ -64,20 +64,18 @@ export function calculateStatistics(data: number[]): StatisticalSummary {
 
   const sorted = [...data].sort((a, b) => a - b);
   const n = data.length;
-  
+
   // Mean
   const mean = data.reduce((sum, val) => sum + val, 0) / n;
-  
+
   // Median
-  const median = n % 2 === 0
-    ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
-    : sorted[Math.floor(n / 2)];
-  
+  const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
+
   // Variance and Standard Deviation
-  const squaredDiffs = data.map(val => Math.pow(val - mean, 2));
+  const squaredDiffs = data.map((val) => Math.pow(val - mean, 2));
   const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / n;
   const standardDeviation = Math.sqrt(variance);
-  
+
   // Min, Max, Range
   const min = sorted[0];
   const max = sorted[n - 1];
@@ -110,20 +108,20 @@ export function calculateConfidenceInterval(
 
   // Z-score for confidence level
   const zScores: Record<number, number> = {
-    0.90: 1.645,
+    0.9: 1.645,
     0.95: 1.96,
     0.99: 2.576,
   };
   const z = zScores[confidenceLevel] || 1.96;
-  
+
   const p = successes / total;
   const n = total;
-  
+
   // Wilson score interval (more accurate for small samples)
-  const denominator = 1 + z * z / n;
-  const center = (p + z * z / (2 * n)) / denominator;
-  const adjustment = z / denominator * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n));
-  
+  const denominator = 1 + (z * z) / n;
+  const center = (p + (z * z) / (2 * n)) / denominator;
+  const adjustment = (z / denominator) * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+
   const lower = Math.max(0, center - adjustment);
   const upper = Math.min(1, center + adjustment);
   const marginOfError = (upper - lower) / 2;
@@ -154,12 +152,15 @@ export function analyzeTrend(
   }
 
   // Convert timestamps to days from first data point
-  const firstTimestamp = typeof dataPoints[0].timestamp === 'number' 
-    ? dataPoints[0].timestamp 
-    : dataPoints[0].timestamp.getTime();
-  
-  const normalizedData = dataPoints.map(d => ({
-    x: ((typeof d.timestamp === 'number' ? d.timestamp : d.timestamp.getTime()) - firstTimestamp) / (1000 * 60 * 60 * 24),
+  const firstTimestamp =
+    typeof dataPoints[0].timestamp === 'number'
+      ? dataPoints[0].timestamp
+      : dataPoints[0].timestamp.getTime();
+
+  const normalizedData = dataPoints.map((d) => ({
+    x:
+      ((typeof d.timestamp === 'number' ? d.timestamp : d.timestamp.getTime()) - firstTimestamp) /
+      (1000 * 60 * 60 * 24),
     y: d.value,
   }));
 
@@ -215,19 +216,19 @@ export function comparePerformance(
 ): PerformanceComparison {
   const p1 = period1.total > 0 ? period1.successes / period1.total : 0;
   const p2 = period2.total > 0 ? period2.successes / period2.total : 0;
-  
+
   const difference = p2 - p1;
   const percentChange = p1 > 0 ? ((p2 - p1) / p1) * 100 : 0;
-  
+
   // Two-proportion z-test
   const pooledP = (period1.successes + period2.successes) / (period1.total + period2.total);
   const se = Math.sqrt(pooledP * (1 - pooledP) * (1 / period1.total + 1 / period2.total));
-  
+
   const zScore = se > 0 ? Math.abs(difference) / se : 0;
-  
+
   // Approximate p-value from z-score
   const pValue = 2 * (1 - normalCDF(zScore));
-  
+
   // Effect size (Cohen's h for proportions)
   const effectSize = Math.abs(2 * Math.asin(Math.sqrt(p2)) - 2 * Math.asin(Math.sqrt(p1)));
 
@@ -255,7 +256,7 @@ function normalCDF(z: number): number {
   z = Math.abs(z) / Math.sqrt(2);
 
   const t = 1.0 / (1.0 + p * z);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
+  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
 
   return 0.5 * (1.0 + sign * y);
 }
@@ -263,10 +264,7 @@ function normalCDF(z: number): number {
 /**
  * Calculate moving average for smoothing time series data
  */
-export function calculateMovingAverage(
-  data: number[],
-  windowSize: number = 5
-): number[] {
+export function calculateMovingAverage(data: number[], windowSize: number = 5): number[] {
   if (data.length < windowSize) {
     return data;
   }
@@ -294,13 +292,13 @@ export function detectPlateau(
 
   // Check recent data points
   const recentPoints = dataPoints.slice(-10);
-  const stats = calculateStatistics(recentPoints.map(d => d.value));
-  
+  const stats = calculateStatistics(recentPoints.map((d) => d.value));
+
   // Calculate coefficient of variation (relative standard deviation)
   const cv = stats.mean > 0 ? (stats.standardDeviation / stats.mean) * 100 : 0;
-  
+
   const isPlateau = cv < thresholdPercent;
-  
+
   // Calculate how long the plateau has been going
   let daysSincePlateau = 0;
   if (isPlateau && recentPoints.length >= 2) {
@@ -327,10 +325,10 @@ export function generateLearningInsights(
   totalQuestions: number
 ): string[] {
   const insights: string[] = [];
-  
+
   // Confidence interval insight
   const ci = calculateConfidenceInterval(
-    Math.round(currentAccuracy * totalQuestions / 100),
+    Math.round((currentAccuracy * totalQuestions) / 100),
     totalQuestions
   );
   if (totalQuestions >= 10) {
@@ -338,7 +336,7 @@ export function generateLearningInsights(
       `Your true ability is likely between ${ci.lower.toFixed(1)}% and ${ci.upper.toFixed(1)}% (95% confidence).`
     );
   }
-  
+
   // Trend analysis
   if (accuracyHistory.length >= 5) {
     const trend = analyzeTrend(accuracyHistory);
@@ -351,7 +349,7 @@ export function generateLearningInsights(
         `Performance has been declining. Consider reviewing fundamentals or adjusting your study strategy.`
       );
     }
-    
+
     // Plateau detection
     const plateau = detectPlateau(accuracyHistory);
     if (plateau.isPlateau && plateau.daysSincePlateau > 7) {
@@ -360,14 +358,14 @@ export function generateLearningInsights(
       );
     }
   }
-  
+
   // Sample size warning
   if (totalQuestions < 30) {
     insights.push(
       `With only ${totalQuestions} questions, results may vary significantly. Complete at least 50 for stable metrics.`
     );
   }
-  
+
   return insights;
 }
 
@@ -383,33 +381,33 @@ export function predictPANCEScore(
   // PANCE uses scaled scores from 200-800, passing is typically 350-400
   const baseScore = 500;
   const maxDeviation = 300;
-  
+
   // Difficulty adjustment
   const difficultyMultiplier = {
     easy: 0.85,
     medium: 1.0,
     hard: 1.15,
   };
-  
+
   const adjustedAccuracy = accuracy * difficultyMultiplier[difficultyLevel];
-  
+
   // Convert accuracy to scaled score
   // 50% accuracy ≈ 350 (borderline pass)
   // 75% accuracy ≈ 500 (average)
   // 90%+ accuracy ≈ 650+ (high pass)
   const normalizedAccuracy = (adjustedAccuracy - 50) / 50; // -1 to 1 scale
   const predictedScore = Math.round(baseScore + normalizedAccuracy * maxDeviation);
-  
+
   // Calculate confidence range based on sample size
   const ci = calculateConfidenceInterval(
-    Math.round(accuracy * totalQuestions / 100),
+    Math.round((accuracy * totalQuestions) / 100),
     totalQuestions
   );
   const rangeMultiplier = maxDeviation / 50; // Scale CI to score range
-  
+
   const min = Math.max(200, Math.round(predictedScore - ci.marginOfError * rangeMultiplier));
   const max = Math.min(800, Math.round(predictedScore + ci.marginOfError * rangeMultiplier));
-  
+
   // Pass likelihood
   let passLikelihood: string;
   if (min >= 400) {

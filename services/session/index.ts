@@ -4,10 +4,10 @@
  * FORTRESS MODE: Consolidated session management services.
  *
  * @example
- * import { 
- *   fetchSessionQuestions, 
+ * import {
+ *   fetchSessionQuestions,
  *   recordQuestionAttempt,
- *   shouldTakeBreak 
+ *   shouldTakeBreak
  * } from '@/services/session';
  */
 
@@ -22,7 +22,7 @@ export {
   shouldTakeBreak,
   startNewSession,
   endSessionWithSummary,
-  
+
   // Main session
   initializeSession,
   getSessionState,
@@ -33,20 +33,20 @@ export {
   getSessionSummary,
   getPoolStatus,
   checkAndReplenishPool,
-  
+
   // Momentum
   recordMomentumResult,
   calculateMomentum,
   resetMomentum,
   getMomentumInsights,
   detectFatigueSignals,
-  
+
   // Optimizer
   analyzeCognitiveState,
   optimizeSession,
   calculateOptimalSessionLength,
   predictFatiguePoint,
-  
+
   // Types
   type FullSessionState,
   type MomentumLevel,

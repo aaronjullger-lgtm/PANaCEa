@@ -57,25 +57,24 @@ Return ONLY the JSON object, no markdown or explanations.`;
 
 async function generateDDxContent(record: any): Promise<DDxContent | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
-  const prompt = PROMPT_TEMPLATE
-    .replace('{COMPLAINT}', record.presentingComplaint)
+
+  const prompt = PROMPT_TEMPLATE.replace('{COMPLAINT}', record.presentingComplaint)
     .replace('{CATEGORY}', record.category || 'Unknown')
     .replace('{MOST_DANGEROUS}', JSON.stringify(record.mostDangerous || []))
     .replace('{KEY_QUESTIONS}', JSON.stringify(record.keyQuestions || []))
     .replace('{OFTEN_MISSED}', JSON.stringify(record.oftenMissed || []));
-  
+
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     // Extract JSON from response
     let jsonStr = text;
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonStr = jsonMatch[0];
     }
-    
+
     const content = JSON.parse(jsonStr) as DDxContent;
     return content;
   } catch (error) {
@@ -87,34 +86,33 @@ async function generateDDxContent(record: any): Promise<DDxContent | null> {
 async function fillDDxFields(): Promise<void> {
   console.log('🔍 DDx Field Filler');
   console.log('='.repeat(50));
-  
+
   // Find records with missing fields
   const records = await prisma.differentialDiagnosis.findMany();
-  
-  const needsUpdate = records.filter(r => 
-    !r.mnemonics?.length || 
-    !(r.differentialList as any[])?.length ||
-    !r.keyExamFindings?.length
+
+  const needsUpdate = records.filter(
+    (r) =>
+      !r.mnemonics?.length || !(r.differentialList as any[])?.length || !r.keyExamFindings?.length
   );
-  
+
   console.log(`Found ${needsUpdate.length}/${records.length} records needing updates\n`);
-  
+
   let updated = 0;
   let failed = 0;
-  
+
   for (const record of needsUpdate) {
     console.log(`  🔄 Processing: ${record.presentingComplaint}...`);
-    
+
     const content = await generateDDxContent(record);
-    
+
     if (!content) {
       failed++;
       continue;
     }
-    
+
     try {
       // Convert differentials to string array (just diagnosis names)
-      const differentialStrings = content.differentials?.map(d => d.diagnosis) || [];
+      const differentialStrings = content.differentials?.map((d) => d.diagnosis) || [];
       // Convert exam findings to string array (flatten the object)
       const examFindings: string[] = [];
       if (content.physicalExamFindings) {
@@ -122,28 +120,31 @@ async function fillDDxFields(): Promise<void> {
           findings.forEach((f: string) => examFindings.push(`${category}: ${f}`));
         }
       }
-      
+
       await prisma.differentialDiagnosis.update({
         where: { id: record.id },
         data: {
-          mnemonics: content.mnemonic ? [content.mnemonic, ...(record.mnemonics || [])] : record.mnemonics,
-          differentialList: differentialStrings.length > 0 ? differentialStrings : record.differentialList,
+          mnemonics: content.mnemonic
+            ? [content.mnemonic, ...(record.mnemonics || [])]
+            : record.mnemonics,
+          differentialList:
+            differentialStrings.length > 0 ? differentialStrings : record.differentialList,
           keyExamFindings: examFindings.length > 0 ? examFindings : record.keyExamFindings,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
-      
+
       updated++;
       console.log(`  ✅ Updated: ${record.presentingComplaint}`);
     } catch (error) {
       console.error(`  ❌ Failed to update ${record.presentingComplaint}: ${error}`);
       failed++;
     }
-    
+
     // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Summary:`);
   console.log(`   Updated: ${updated}`);

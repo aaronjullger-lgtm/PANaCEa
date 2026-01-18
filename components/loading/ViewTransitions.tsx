@@ -1,6 +1,6 @@
 /**
  * View Transition Loading States
- * 
+ *
  * Provides smooth, context-aware transitions between major views.
  * Eliminates jarring hard cuts and provides clear state indication.
  */
@@ -66,12 +66,7 @@ export function ViewTransitionOverlay({ from, to, progress }: ViewTransitionProp
               transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
               className="text-[var(--color-accent)]"
             >
-              <svg
-                className="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -102,7 +97,7 @@ export function ViewTransitionOverlay({ from, to, progress }: ViewTransitionProp
             >
               {VIEW_LABELS[to]}
             </motion.p>
-            
+
             {progress !== undefined && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -118,9 +113,7 @@ export function ViewTransitionOverlay({ from, to, progress }: ViewTransitionProp
                     className="h-full bg-[var(--color-accent)] rounded-full"
                   />
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] mt-2">
-                  Loading...
-                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] mt-2">Loading...</p>
               </motion.div>
             )}
           </div>
@@ -180,12 +173,8 @@ export function DataLoadingIndicator({ message }: { message?: string }) {
           />
         ))}
       </div>
-      
-      {message && (
-        <span className="text-sm text-[var(--color-text-secondary)]">
-          {message}
-        </span>
-      )}
+
+      {message && <span className="text-sm text-[var(--color-text-secondary)]">{message}</span>}
     </motion.div>
   );
 }
@@ -197,16 +186,16 @@ export function useViewTransition() {
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [transitionState, setTransitionState] = React.useState<ViewTransitionProps | null>(null);
 
-  const startTransition = React.useCallback((
-    from: ViewTransitionProps['from'],
-    to: ViewTransitionProps['to']
-  ) => {
-    setIsTransitioning(true);
-    setTransitionState({ from, to, progress: 0 });
-  }, []);
+  const startTransition = React.useCallback(
+    (from: ViewTransitionProps['from'], to: ViewTransitionProps['to']) => {
+      setIsTransitioning(true);
+      setTransitionState({ from, to, progress: 0 });
+    },
+    []
+  );
 
   const updateProgress = React.useCallback((progress: number) => {
-    setTransitionState(prev => prev ? { ...prev, progress } : null);
+    setTransitionState((prev) => (prev ? { ...prev, progress } : null));
   }, []);
 
   const endTransition = React.useCallback(() => {

@@ -8,15 +8,15 @@ let cleanedCount = 0;
 
 content.forEach((item: any) => {
   if (!item.content) return;
-  
-  Object.keys(item.content).forEach(key => {
+
+  Object.keys(item.content).forEach((key) => {
     const val = item.content[key];
     if (typeof val === 'string') {
-      if (val.endsWith("---")) {
-        item.content[key] = val.replace(/\s*---\s*$/, "").trim();
+      if (val.endsWith('---')) {
+        item.content[key] = val.replace(/\s*---\s*$/, '').trim();
         cleanedCount++;
-      } else if (val.endsWith("--")) {
-        item.content[key] = val.replace(/\s*--\s*$/, "").trim();
+      } else if (val.endsWith('--')) {
+        item.content[key] = val.replace(/\s*--\s*$/, '').trim();
         cleanedCount++;
       }
     }

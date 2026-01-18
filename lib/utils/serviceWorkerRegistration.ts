@@ -1,6 +1,6 @@
 /**
  * Service Worker Registration Utility
- * 
+ *
  * Handles service worker registration, updates, and lifecycle management.
  */
 
@@ -29,29 +29,32 @@ export async function register(config?: ServiceWorkerConfig): Promise<void> {
     console.log('Service workers are not supported in this browser');
     return;
   }
-  
+
   // Only register in production or when explicitly enabled
   if ((import.meta as any).env.MODE === 'development' && !(import.meta as any).env.VITE_ENABLE_SW) {
     console.log('Service worker disabled in development mode');
     return;
   }
-  
+
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
     });
-    
+
     console.log('Service Worker registered successfully:', registration);
-    
+
     // Check for updates periodically
-    setInterval(() => {
-      registration.update();
-    }, 60 * 60 * 1000); // Check every hour
-    
+    setInterval(
+      () => {
+        registration.update();
+      },
+      60 * 60 * 1000
+    ); // Check every hour
+
     // Handle updates
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
-      
+
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -66,7 +69,7 @@ export async function register(config?: ServiceWorkerConfig): Promise<void> {
         });
       }
     });
-    
+
     // Listen for controller change (new SW took over)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       console.log('Service worker controller changed');
@@ -75,18 +78,17 @@ export async function register(config?: ServiceWorkerConfig): Promise<void> {
         window.location.reload();
       }
     });
-    
+
     // Setup online/offline listeners
     window.addEventListener('online', () => {
       console.log('Application is online');
       config?.onOnline?.();
     });
-    
+
     window.addEventListener('offline', () => {
       console.log('Application is offline');
       config?.onOffline?.();
     });
-    
   } catch (error) {
     console.error('Service Worker registration failed:', error);
   }
@@ -99,7 +101,7 @@ export async function unregister(): Promise<void> {
   if (!isServiceWorkerSupported()) {
     return;
   }
-  
+
   try {
     const registration = await navigator.serviceWorker.ready;
     await registration.unregister();
@@ -116,9 +118,9 @@ export async function skipWaiting(): Promise<void> {
   if (!isServiceWorkerSupported()) {
     return;
   }
-  
+
   const registration = await navigator.serviceWorker.ready;
-  
+
   if (registration.waiting) {
     registration.waiting.postMessage({ type: 'SKIP_WAITING' });
   }
@@ -131,11 +133,11 @@ export async function clearCaches(): Promise<void> {
   if (!isServiceWorkerSupported()) {
     return;
   }
-  
+
   try {
     const registration = await navigator.serviceWorker.ready;
     registration.active?.postMessage({ type: 'CLEAR_CACHE' });
-    
+
     // Also clear cache storage directly
     if ('caches' in window) {
       const cacheNames = await caches.keys();
@@ -167,14 +169,14 @@ export async function getCacheInfo(): Promise<{
     const usage = estimate.usage || 0;
     const quota = estimate.quota || 0;
     const percentage = quota > 0 ? (usage / quota) * 100 : 0;
-    
+
     return {
       usage,
       quota,
       percentage: Math.round(percentage * 100) / 100,
     };
   }
-  
+
   return { usage: 0, quota: 0, percentage: 0 };
 }
 
@@ -183,11 +185,11 @@ export async function getCacheInfo(): Promise<{
  */
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
@@ -206,7 +208,7 @@ export async function requestPersistentStorage(): Promise<boolean> {
       return false;
     }
   }
-  
+
   return false;
 }
 
@@ -217,7 +219,7 @@ export async function isStoragePersisted(): Promise<boolean> {
   if ('storage' in navigator && 'persisted' in navigator.storage) {
     return await navigator.storage.persisted();
   }
-  
+
   return false;
 }
 
@@ -231,7 +233,7 @@ export function showUpdateNotification(): Promise<boolean> {
     const shouldUpdate = confirm(
       'A new version of PANaCEa is available. Would you like to update now?'
     );
-    
+
     if (shouldUpdate) {
       skipWaiting().then(() => {
         resolve(true);

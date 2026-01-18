@@ -5,26 +5,31 @@ This directory contains systemd service files for running PANaCEa as system serv
 ## Installation
 
 1. **Copy service files to systemd directory:**
+
    ```bash
    sudo cp deployment/systemd/*.service /etc/systemd/system/
    ```
 
 2. **Create panacea user (if not exists):**
+
    ```bash
    sudo useradd -r -s /bin/false panacea
    ```
 
 3. **Set proper ownership:**
+
    ```bash
    sudo chown -R panacea:panacea /opt/PANaCEa
    ```
 
 4. **Reload systemd configuration:**
+
    ```bash
    sudo systemctl daemon-reload
    ```
 
 5. **Enable services to start on boot:**
+
    ```bash
    sudo systemctl enable panacea-server
    sudo systemctl enable panacea-worker
@@ -39,24 +44,28 @@ This directory contains systemd service files for running PANaCEa as system serv
 ## Management
 
 ### Check status:
+
 ```bash
 sudo systemctl status panacea-server
 sudo systemctl status panacea-worker
 ```
 
 ### View logs:
+
 ```bash
 sudo journalctl -u panacea-server -f
 sudo journalctl -u panacea-worker -f
 ```
 
 ### Restart services:
+
 ```bash
 sudo systemctl restart panacea-server
 sudo systemctl restart panacea-worker
 ```
 
 ### Stop services:
+
 ```bash
 sudo systemctl stop panacea-server
 sudo systemctl stop panacea-worker
@@ -72,6 +81,7 @@ sudo systemctl stop panacea-worker
 ## Security
 
 The services run with restricted privileges:
+
 - Dedicated `panacea` user with no login shell
 - `NoNewPrivileges=true` prevents privilege escalation
 - `PrivateTmp=true` provides isolated /tmp

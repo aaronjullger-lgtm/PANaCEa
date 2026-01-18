@@ -86,8 +86,23 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 32,
         trend: 'up',
         conditions: [
-          { id: 'mi', name: 'Myocardial Infarction', accuracy: 85, totalAttempts: 18, masteryLevel: 'proficient', srsStatus: 'mastered' },
-          { id: 'angina', name: 'Angina Pectoris', accuracy: 78, totalAttempts: 14, masteryLevel: 'developing', srsStatus: 'learning', lastPracticed: new Date(Date.now() - 86400000) },
+          {
+            id: 'mi',
+            name: 'Myocardial Infarction',
+            accuracy: 85,
+            totalAttempts: 18,
+            masteryLevel: 'proficient',
+            srsStatus: 'mastered',
+          },
+          {
+            id: 'angina',
+            name: 'Angina Pectoris',
+            accuracy: 78,
+            totalAttempts: 14,
+            masteryLevel: 'developing',
+            srsStatus: 'learning',
+            lastPracticed: new Date(Date.now() - 86400000),
+          },
         ],
       },
       {
@@ -98,8 +113,23 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 28,
         trend: 'stable',
         conditions: [
-          { id: 'afib', name: 'Atrial Fibrillation', accuracy: 75, totalAttempts: 12, masteryLevel: 'developing', srsStatus: 'due', lastPracticed: new Date(Date.now() - 172800000) },
-          { id: 'vfib', name: 'Ventricular Fibrillation', accuracy: 68, totalAttempts: 8, masteryLevel: 'novice', srsStatus: 'learning' },
+          {
+            id: 'afib',
+            name: 'Atrial Fibrillation',
+            accuracy: 75,
+            totalAttempts: 12,
+            masteryLevel: 'developing',
+            srsStatus: 'due',
+            lastPracticed: new Date(Date.now() - 172800000),
+          },
+          {
+            id: 'vfib',
+            name: 'Ventricular Fibrillation',
+            accuracy: 68,
+            totalAttempts: 8,
+            masteryLevel: 'novice',
+            srsStatus: 'learning',
+          },
         ],
       },
       {
@@ -110,8 +140,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 29,
         trend: 'up',
         conditions: [
-          { id: 'hfref', name: 'HFrEF', accuracy: 82, totalAttempts: 15, masteryLevel: 'proficient', srsStatus: 'mastered' },
-          { id: 'hfpef', name: 'HFpEF', accuracy: 78, totalAttempts: 14, masteryLevel: 'developing', srsStatus: 'learning' },
+          {
+            id: 'hfref',
+            name: 'HFrEF',
+            accuracy: 82,
+            totalAttempts: 15,
+            masteryLevel: 'proficient',
+            srsStatus: 'mastered',
+          },
+          {
+            id: 'hfpef',
+            name: 'HFpEF',
+            accuracy: 78,
+            totalAttempts: 14,
+            masteryLevel: 'developing',
+            srsStatus: 'learning',
+          },
         ],
       },
     ],
@@ -133,8 +177,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 25,
         trend: 'up',
         conditions: [
-          { id: 'copd', name: 'COPD', accuracy: 80, totalAttempts: 15, masteryLevel: 'proficient', srsStatus: 'mastered' },
-          { id: 'asthma', name: 'Asthma', accuracy: 68, totalAttempts: 10, masteryLevel: 'developing', srsStatus: 'due' },
+          {
+            id: 'copd',
+            name: 'COPD',
+            accuracy: 80,
+            totalAttempts: 15,
+            masteryLevel: 'proficient',
+            srsStatus: 'mastered',
+          },
+          {
+            id: 'asthma',
+            name: 'Asthma',
+            accuracy: 68,
+            totalAttempts: 10,
+            masteryLevel: 'developing',
+            srsStatus: 'due',
+          },
         ],
       },
       {
@@ -145,8 +203,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 22,
         trend: 'down',
         conditions: [
-          { id: 'cap', name: 'Community-Acquired Pneumonia', accuracy: 72, totalAttempts: 12, masteryLevel: 'developing', srsStatus: 'learning' },
-          { id: 'tb', name: 'Tuberculosis', accuracy: 64, totalAttempts: 10, masteryLevel: 'novice', srsStatus: 'due' },
+          {
+            id: 'cap',
+            name: 'Community-Acquired Pneumonia',
+            accuracy: 72,
+            totalAttempts: 12,
+            masteryLevel: 'developing',
+            srsStatus: 'learning',
+          },
+          {
+            id: 'tb',
+            name: 'Tuberculosis',
+            accuracy: 64,
+            totalAttempts: 10,
+            masteryLevel: 'novice',
+            srsStatus: 'due',
+          },
         ],
       },
     ],
@@ -168,8 +240,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 22,
         trend: 'stable',
         conditions: [
-          { id: 'gerd', name: 'GERD', accuracy: 75, totalAttempts: 10, masteryLevel: 'developing', srsStatus: 'learning' },
-          { id: 'pud', name: 'Peptic Ulcer Disease', accuracy: 65, totalAttempts: 12, masteryLevel: 'novice', srsStatus: 'due' },
+          {
+            id: 'gerd',
+            name: 'GERD',
+            accuracy: 75,
+            totalAttempts: 10,
+            masteryLevel: 'developing',
+            srsStatus: 'learning',
+          },
+          {
+            id: 'pud',
+            name: 'Peptic Ulcer Disease',
+            accuracy: 65,
+            totalAttempts: 12,
+            masteryLevel: 'novice',
+            srsStatus: 'due',
+          },
         ],
       },
       {
@@ -180,8 +266,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 18,
         trend: 'down',
         conditions: [
-          { id: 'cirrhosis', name: 'Cirrhosis', accuracy: 55, totalAttempts: 8, masteryLevel: 'novice', srsStatus: 'due' },
-          { id: 'hepatitis', name: 'Viral Hepatitis', accuracy: 62, totalAttempts: 10, masteryLevel: 'novice', srsStatus: 'learning' },
+          {
+            id: 'cirrhosis',
+            name: 'Cirrhosis',
+            accuracy: 55,
+            totalAttempts: 8,
+            masteryLevel: 'novice',
+            srsStatus: 'due',
+          },
+          {
+            id: 'hepatitis',
+            name: 'Viral Hepatitis',
+            accuracy: 62,
+            totalAttempts: 10,
+            masteryLevel: 'novice',
+            srsStatus: 'learning',
+          },
         ],
       },
     ],
@@ -203,8 +303,22 @@ const SAMPLE_DATA: SystemMetrics[] = [
         questionsAnswered: 28,
         trend: 'up',
         conditions: [
-          { id: 'stroke-ischemic', name: 'Ischemic Stroke', accuracy: 88, totalAttempts: 15, masteryLevel: 'expert', srsStatus: 'mastered' },
-          { id: 'stroke-hemorrhagic', name: 'Hemorrhagic Stroke', accuracy: 82, totalAttempts: 13, masteryLevel: 'proficient', srsStatus: 'mastered' },
+          {
+            id: 'stroke-ischemic',
+            name: 'Ischemic Stroke',
+            accuracy: 88,
+            totalAttempts: 15,
+            masteryLevel: 'expert',
+            srsStatus: 'mastered',
+          },
+          {
+            id: 'stroke-hemorrhagic',
+            name: 'Hemorrhagic Stroke',
+            accuracy: 82,
+            totalAttempts: 13,
+            masteryLevel: 'proficient',
+            srsStatus: 'mastered',
+          },
         ],
       },
     ],
@@ -311,18 +425,25 @@ const getAccuracyColorText = (accuracy: number): string => {
 
 const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
   switch (level) {
-    case 'expert': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-    case 'proficient': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    case 'developing': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    case 'novice': return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+    case 'expert':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+    case 'proficient':
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'developing':
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+    case 'novice':
+      return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
   }
 };
 
 const getSrsStatusIcon = (status: ConditionMetrics['srsStatus']) => {
   switch (status) {
-    case 'mastered': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-    case 'learning': return <BookOpen className="w-4 h-4 text-blue-500" />;
-    case 'due': return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+    case 'mastered':
+      return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+    case 'learning':
+      return <BookOpen className="w-4 h-4 text-blue-500" />;
+    case 'due':
+      return <AlertTriangle className="w-4 h-4 text-amber-500" />;
   }
 };
 
@@ -351,7 +472,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
         <BarChart3 className="w-4 h-4" />
         All Systems
       </button>
-      
+
       {systemName && (
         <>
           <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -367,13 +488,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
           </button>
         </>
       )}
-      
+
       {categoryName && (
         <>
           <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-900 dark:text-white font-semibold">
-            {categoryName}
-          </span>
+          <span className="text-slate-900 dark:text-white font-semibold">{categoryName}</span>
         </>
       )}
     </nav>
@@ -406,9 +525,9 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
     md: 'p-4',
     lg: 'p-5',
   };
-  
+
   const coverage = Math.round((questionsAnswered / totalQuestions) * 100);
-  
+
   return (
     <motion.button
       whileHover={{ scale: 1.02, y: -2 }}
@@ -417,11 +536,11 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
       className={`${sizeClasses[size]} rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all text-left group relative overflow-hidden`}
     >
       {/* Background accuracy indicator */}
-      <div 
+      <div
         className={`absolute bottom-0 left-0 right-0 ${getAccuracyColor(accuracy)} opacity-10`}
         style={{ height: `${accuracy}%` }}
       />
-      
+
       <div className="relative">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
@@ -430,24 +549,34 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
           </span>
           <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
         </div>
-        
+
         {/* Accuracy */}
         <div className="flex items-baseline gap-1 mb-2">
           <span className={`text-2xl font-bold ${getAccuracyColorText(accuracy)}`}>
             {accuracy}%
           </span>
           {trend && trendDelta !== undefined && (
-            <span className={`text-xs font-medium flex items-center gap-0.5 ${
-              trend === 'up' ? 'text-emerald-600' : trend === 'down' ? 'text-red-600' : 'text-slate-500'
-            }`}>
-              {trend === 'up' ? <TrendingUp className="w-3 h-3" /> : 
-               trend === 'down' ? <TrendingDown className="w-3 h-3" /> : 
-               <Minus className="w-3 h-3" />}
+            <span
+              className={`text-xs font-medium flex items-center gap-0.5 ${
+                trend === 'up'
+                  ? 'text-emerald-600'
+                  : trend === 'down'
+                    ? 'text-red-600'
+                    : 'text-slate-500'
+              }`}
+            >
+              {trend === 'up' ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : trend === 'down' ? (
+                <TrendingDown className="w-3 h-3" />
+              ) : (
+                <Minus className="w-3 h-3" />
+              )}
               {trend !== 'stable' && `${trendDelta > 0 ? '+' : ''}${trendDelta}%`}
             </span>
           )}
         </div>
-        
+
         {/* Coverage bar */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
@@ -455,7 +584,7 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
             <span>{coverage}%</span>
           </div>
           <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-slate-400 dark:bg-slate-500 transition-all duration-500"
               style={{ width: `${coverage}%` }}
             />
@@ -472,10 +601,10 @@ interface ConditionRowProps {
 }
 
 const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) => {
-  const daysAgo = condition.lastPracticed 
+  const daysAgo = condition.lastPracticed
     ? Math.floor((Date.now() - condition.lastPracticed.getTime()) / (1000 * 60 * 60 * 24))
     : null;
-    
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -484,17 +613,17 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
         {/* SRS Status */}
-        <div className="flex-shrink-0">
-          {getSrsStatusIcon(condition.srsStatus)}
-        </div>
-        
+        <div className="flex-shrink-0">{getSrsStatusIcon(condition.srsStatus)}</div>
+
         {/* Condition info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium text-slate-900 dark:text-white truncate">
               {condition.name}
             </span>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getMasteryColor(condition.masteryLevel)}`}>
+            <span
+              className={`px-2 py-0.5 text-xs font-medium rounded-full ${getMasteryColor(condition.masteryLevel)}`}
+            >
               {condition.masteryLevel}
             </span>
           </div>
@@ -508,7 +637,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
             )}
           </div>
         </div>
-        
+
         {/* Accuracy */}
         <div className="text-right flex-shrink-0">
           <div className={`text-xl font-bold ${getAccuracyColorText(condition.accuracy)}`}>
@@ -516,7 +645,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
           </div>
         </div>
       </div>
-      
+
       {/* Practice button */}
       <button
         onClick={onPractice}
@@ -585,8 +714,8 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
     const avgAccuracy = Math.round(
       systemData.reduce((acc, s) => acc + s.accuracy * s.questionsAnswered, 0) / total
     );
-    const weakAreas = systemData.filter(s => s.accuracy < 70).length;
-    const strongAreas = systemData.filter(s => s.accuracy >= 80).length;
+    const weakAreas = systemData.filter((s) => s.accuracy < 70).length;
+    const strongAreas = systemData.filter((s) => s.accuracy >= 80).length;
     return { total, avgAccuracy, weakAreas, strongAreas };
   }, [systemData]);
 
@@ -602,7 +731,9 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Questions Answered</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+              Questions Answered
+            </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
               {summaryStats.total}
             </div>

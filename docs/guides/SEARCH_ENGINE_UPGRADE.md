@@ -7,12 +7,14 @@ Upgraded PANaCEa's search system from client-side text filtering to a robust, da
 ## Architecture
 
 ### Previous Implementation
+
 - **Client-side filtering**: `conditionSearch.ts` and `drugSearch.ts` filtered static registry arrays
 - **Limited scale**: All data loaded in browser memory
 - **Basic matching**: Simple string contains/Levenshtein distance
 - **No alias support**: Couldn't find "MI" when searching for myocardial infarction
 
 ### New Implementation
+
 - **Database-driven**: Queries PostgreSQL via Prisma for scalability
 - **Server-side API**: `/api/content/search` endpoint with validation
 - **Intelligent ranking**: Multi-tier scoring (exact → alias → fuzzy → keyword)
@@ -25,11 +27,13 @@ Upgraded PANaCEa's search system from client-side text filtering to a robust, da
 ### 1. Content Search Service (`lib/services/contentSearchService.ts`)
 
 **Core Function:**
+
 ```typescript
 searchContent(query: string, limit = 10, includeTypes = ['condition', 'drug'])
 ```
 
 **Ranking Algorithm:**
+
 1. **Exact Match** (100 points): Query exactly matches name/displayName
 2. **Starts With** (80 points): Name starts with query
 3. **Alias Exact** (90 points): Alias exactly matches query
@@ -41,6 +45,7 @@ searchContent(query: string, limit = 10, includeTypes = ['condition', 'drug'])
 **Database Queries:**
 
 **Conditions:**
+
 ```typescript
 prisma.condition.findMany({
   where: {
@@ -49,12 +54,13 @@ prisma.condition.findMany({
       { displayName: { contains: query, mode: 'insensitive' } },
       { aliases: { hasSome: [query] } }, // PostgreSQL array search
       { system: { contains: query, mode: 'insensitive' } },
-    ]
-  }
-})
+    ],
+  },
+});
 ```
 
 **Drugs:**
+
 ```typescript
 prisma.drug.findMany({
   where: {
@@ -64,12 +70,13 @@ prisma.drug.findMany({
       { aliases: { hasSome: [query] } },
       { drugClass: { hasSome: [query] } }, // Array search
       { displayName: { contains: query, mode: 'insensitive' } },
-    ]
-  }
-})
+    ],
+  },
+});
 ```
 
 **Return Format:**
+
 ```typescript
 interface SearchResult {
   id: string;
@@ -87,6 +94,7 @@ interface SearchResult {
 ```
 
 **Helper Functions:**
+
 - `calculateSimilarity()`: Multi-tier string matching
 - `levenshteinDistance()`: Edit distance for fuzzy matching
 - `scoreAliasMatch()`: Prioritize exact alias matches
@@ -94,10 +102,11 @@ interface SearchResult {
 - `formatSearchResult()`: Convert to API response format
 
 **Convenience Wrappers:**
+
 ```typescript
-searchConditions(query, limit = 10)  // Only conditions
-searchDrugs(query, limit = 10)       // Only drugs
-getSearchStats()                     // Analytics
+searchConditions(query, (limit = 10)); // Only conditions
+searchDrugs(query, (limit = 10)); // Only drugs
+getSearchStats(); // Analytics
 ```
 
 ### 2. API Endpoint (`functions/api/content/search.ts`)
@@ -105,17 +114,20 @@ getSearchStats()                     // Analytics
 **Endpoint:** `GET /api/content/search`
 
 **Query Parameters:**
+
 - `q` (required): Search query (min 2 chars)
 - `limit` (optional): Max results (1-50, default 10)
 - `type` (optional): `condition`, `drug`, or `condition,drug` (default: both)
 
 **Validation:**
+
 - Query presence check
 - Query length validation (min 2 chars)
 - Database configuration check
 - Type parameter sanitization
 
 **Response Format:**
+
 ```json
 {
   "results": [
@@ -139,6 +151,7 @@ getSearchStats()                     // Analytics
 ```
 
 **Error Handling:**
+
 - 400: Missing/invalid query
 - 500: Database errors (with details in dev mode)
 - CORS headers for cross-origin requests
@@ -149,36 +162,40 @@ getSearchStats()                     // Analytics
 **Enhancements:**
 
 1. **Debounced Search Hook:**
+
 ```typescript
 const debouncedQuery = useDebounce(query, 300);
 ```
 
 2. **Server-side Fetch:**
+
 ```typescript
 const fetchServerResults = async (searchQuery: string) => {
-  const response = await fetch(
-    `/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`
-  );
+  const response = await fetch(`/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
   return response.json();
 };
 ```
 
 3. **Loading States:**
+
 - `isSearching`: Shows spinner icon in search box
 - Loading overlay: "Searching medical content..."
 - Error alerts: Red banner for API failures
 
 4. **Hybrid Search:**
+
 - **Client-side**: Training modes (instant, no API call)
 - **Server-side**: Medical content (conditions/drugs from database)
 
 5. **UI Updates:**
+
 - `Loader2` spinner icon when searching
 - Error banner with retry message
 - Empty state variations (no input vs no results)
 - Match type indicators (exact, alias, fuzzy)
 
 **User Experience:**
+
 - Type → 300ms delay → API call → results
 - Instant mode search (no delay)
 - Keyboard navigation (↑↓, Enter, Esc)
@@ -188,6 +205,7 @@ const fetchServerResults = async (searchQuery: string) => {
 ## Database Schema Requirements
 
 ### Condition Model
+
 ```prisma
 model Condition {
   id          String   @id @default(uuid())
@@ -196,7 +214,7 @@ model Condition {
   aliases     String[] @default([]) // Medical aliases/abbreviations
   system      String   // CV, PULM, GI, etc.
   // ... other fields
-  
+
   @@index([name])
   @@index([displayName])
   @@index([system])
@@ -204,6 +222,7 @@ model Condition {
 ```
 
 ### Drug Model
+
 ```prisma
 model Drug {
   id          String   @id @default(uuid())
@@ -213,12 +232,13 @@ model Drug {
   drugClass   String[] // Drug classifications
   displayName String?  // Formatted name
   // ... other fields
-  
+
   @@index([genericName])
 }
 ```
 
 **Key Features:**
+
 - `aliases` and `drugClass` use PostgreSQL arrays
 - `hasSome` operator for array searching
 - Case-insensitive mode on all text searches
@@ -229,16 +249,19 @@ model Drug {
 ### API Usage
 
 **Search all content:**
+
 ```bash
 curl "http://localhost:3000/api/content/search?q=diabetes&limit=5"
 ```
 
 **Search only conditions:**
+
 ```bash
 curl "http://localhost:3000/api/content/search?q=heart&type=condition"
 ```
 
 **Search with alias matching:**
+
 ```bash
 curl "http://localhost:3000/api/content/search?q=MI"
 # Returns "Myocardial Infarction" with metadata showing "MI" matched alias
@@ -318,16 +341,19 @@ const fetchResults = async (q: string) => {
 ## Migration Notes
 
 ### Breaking Changes
+
 - Old `searchConditions()` in `src/lib/conditionSearch.ts` is now deprecated
 - Old `searchDrugs()` in `src/lib/drugSearch.ts` is now deprecated
 - Command Palette no longer imports local search utilities
 
 ### Backwards Compatibility
+
 - API endpoint is new, no breaking changes to existing endpoints
 - Search service can be used alongside old search for migration period
 - Old search functions can remain for non-UI search needs
 
 ### Rollout Strategy
+
 1. ✅ Deploy search service to lib/services
 2. ✅ Deploy API endpoint (opt-in via new URL)
 3. ✅ Update Command Palette (main user-facing change)
@@ -338,18 +364,21 @@ const fetchResults = async (q: string) => {
 ## Future Enhancements
 
 ### Short-term
+
 - [ ] Add search analytics (track popular queries)
 - [ ] Implement search result caching (Redis/memory)
 - [ ] Add "Did you mean?" suggestions for typos
 - [ ] Highlight matched text in results
 
 ### Medium-term
+
 - [ ] Full-text search on content fields (overview, pearls)
 - [ ] Autocomplete/suggestions as user types
 - [ ] Search filters (system, difficulty, high-yield only)
 - [ ] Search history per user
 
 ### Long-term
+
 - [ ] Elasticsearch/Algolia integration for advanced search
 - [ ] Natural language queries ("show me cardio conditions")
 - [ ] Semantic search using embeddings
@@ -358,21 +387,25 @@ const fetchResults = async (q: string) => {
 ## Troubleshooting
 
 ### API Returns Empty Results
+
 - **Check**: Database has synced condition/drug data
 - **Verify**: Aliases are populated in database
 - **Test**: Query directly in Prisma Studio
 
 ### Search is Slow
+
 - **Check**: Database indexes exist (run `prisma migrate`)
 - **Verify**: Connection pooling is configured
 - **Monitor**: Query execution time in logs
 
 ### Aliases Not Matching
+
 - **Check**: Aliases array is populated (not empty)
 - **Verify**: `hasSome` operator works (PostgreSQL feature)
 - **Test**: Direct Prisma query with `hasSome`
 
 ### Command Palette Not Updating
+
 - **Check**: Debounce delay (wait 300ms after typing)
 - **Verify**: API endpoint is accessible
 - **Console**: Check for network errors in dev tools
@@ -389,6 +422,7 @@ const fetchResults = async (q: string) => {
 ## Summary
 
 The upgraded search engine provides:
+
 - ✅ **Scalable**: Database-driven, handles thousands of conditions
 - ✅ **Intelligent**: Multi-tier ranking with medical alias support
 - ✅ **Fast**: Debounced, cached, indexed queries

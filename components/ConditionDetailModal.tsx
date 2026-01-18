@@ -1,19 +1,19 @@
 // src/components/ConditionDetailModal.tsx
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { ConditionMeta } from "../src/types/conditions";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { ConditionMeta } from '../src/types/conditions';
 import {
   getConditionById,
   getConditionByIdSync,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
-} from "../lib/loadConditions";
-import ConditionSidebar from "./ConditionSidebar";
-import FormattedSection from "./conditions/FormattedSection";
-import { BuzzwordBanner } from "./conditions/BuzzwordBanner";
-import { ConditionFamilyView } from "./library/ConditionFamilyView";
-import { useAuth } from "@clerk/clerk-react";
+} from '../lib/loadConditions';
+import ConditionSidebar from './ConditionSidebar';
+import FormattedSection from './conditions/FormattedSection';
+import { BuzzwordBanner } from './conditions/BuzzwordBanner';
+import { ConditionFamilyView } from './library/ConditionFamilyView';
+import { useAuth } from '@clerk/clerk-react';
 
 /**
  * Build a standardized condition ID from metadata
@@ -22,8 +22,8 @@ function buildConditionId(meta: ConditionMeta): string {
   const norm = (s: string) =>
     s
       .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "");
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
 
   return `${meta.system}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
 }
@@ -38,33 +38,33 @@ interface ContentSection {
   key: string;
   title: string;
   content?: ConditionContent;
-  accent?: "danger" | "default";
+  accent?: 'danger' | 'default';
 }
 
 const SCROLL_OFFSET = 96;
 
-const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default" }[] = [
-  { key: "overview", title: "Overview" },
-  { key: "anatomy", title: "Anatomy" },
-  { key: "keyPoints", title: "Key Points" },
-  { key: "etiology", title: "Etiology" },
-  { key: "pathophysiology", title: "Pathophysiology" },
-  { key: "epidemiology", title: "Epidemiology" },
-  { key: "riskFactors", title: "Risk Factors" },
-  { key: "clinicalPresentation", title: "Clinical Presentation" },
-  { key: "symptoms", title: "Symptoms" },
-  { key: "physicalExam", title: "Physical Exam" },
-  { key: "specialTests", title: "Special Tests" },
-  { key: "examFindings", title: "Exam Findings" },
-  { key: "diagnostics", title: "Diagnostics" },
-  { key: "differentialDiagnosis", title: "Differential Diagnosis" },
-  { key: "management", title: "Management" },
-  { key: "treatment", title: "Treatment" },
-  { key: "treatmentPearls", title: "Treatment Pearls" },
-  { key: "complications", title: "Complications" },
-  { key: "redFlags", title: "Red Flags", accent: "danger" },
-  { key: "prognosis", title: "Prognosis" },
-  { key: "preventionEducation", title: "Prevention & Education" },
+const SECTION_ORDER: { key: string; title: string; accent?: 'danger' | 'default' }[] = [
+  { key: 'overview', title: 'Overview' },
+  { key: 'anatomy', title: 'Anatomy' },
+  { key: 'keyPoints', title: 'Key Points' },
+  { key: 'etiology', title: 'Etiology' },
+  { key: 'pathophysiology', title: 'Pathophysiology' },
+  { key: 'epidemiology', title: 'Epidemiology' },
+  { key: 'riskFactors', title: 'Risk Factors' },
+  { key: 'clinicalPresentation', title: 'Clinical Presentation' },
+  { key: 'symptoms', title: 'Symptoms' },
+  { key: 'physicalExam', title: 'Physical Exam' },
+  { key: 'specialTests', title: 'Special Tests' },
+  { key: 'examFindings', title: 'Exam Findings' },
+  { key: 'diagnostics', title: 'Diagnostics' },
+  { key: 'differentialDiagnosis', title: 'Differential Diagnosis' },
+  { key: 'management', title: 'Management' },
+  { key: 'treatment', title: 'Treatment' },
+  { key: 'treatmentPearls', title: 'Treatment Pearls' },
+  { key: 'complications', title: 'Complications' },
+  { key: 'redFlags', title: 'Red Flags', accent: 'danger' },
+  { key: 'prognosis', title: 'Prognosis' },
+  { key: 'preventionEducation', title: 'Prevention & Education' },
 ];
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
@@ -75,17 +75,14 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const { getToken } = useAuth();
   const [extendedData, setExtendedData] = useState<any>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
-  const [activeSection, setActiveSection] = useState<string>("");
+  const [activeSection, setActiveSection] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const [content, setContent] = useState<ConditionEntry | undefined>(undefined);
 
-  const conditionId = useMemo(
-    () => buildConditionId(condition),
-    [condition]
-  );
+  const conditionId = useMemo(() => buildConditionId(condition), [condition]);
 
   // Load condition content asynchronously
   useEffect(() => {
@@ -97,7 +94,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
       // If not loaded, fetch just this condition (fast path)
       if (!entry) {
-        entry = (await getConditionById(conditionId)) ?? (await getConditionById(condition.condition));
+        entry =
+          (await getConditionById(conditionId)) ?? (await getConditionById(condition.condition));
       }
 
       if (mounted) {
@@ -121,11 +119,14 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     async function loadExtendedData() {
       try {
         const token = await getToken();
-        const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        const response = await fetch(
+          `${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
+        );
 
         // Check if response is JSON before parsing
         const contentType = response.headers.get('content-type');
@@ -146,7 +147,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           if (mounted) setIsLoading(false); // Stop loading even on error
         }
       } catch (e) {
-        console.warn("Could not load extended data (anatomy, special tests) - this is optional", e);
+        console.warn('Could not load extended data (anatomy, special tests) - this is optional', e);
         if (mounted) setIsLoading(false); // Stop loading even on error
       }
     }
@@ -167,12 +168,12 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     // This allows the modal to populate quickly even if the global content cache hasn't loaded yet
     const contentSource = content?.sections || extendedData?.coreContent;
 
-    SECTION_ORDER.forEach(config => {
+    SECTION_ORDER.forEach((config) => {
       // Check standard content
       if (contentSource?.[config.key] && isMeaningfulContent(contentSource[config.key])) {
         availableSections.push({
           ...config,
-          content: contentSource[config.key]
+          content: contentSource[config.key],
         });
         return;
       }
@@ -193,9 +194,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   }, [content?.sections, extendedData]);
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, []);
 
@@ -206,7 +207,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     const observer = new IntersectionObserver(
       (entries) => {
         const containerRect = container.getBoundingClientRect();
-        let closestKey = "";
+        let closestKey = '';
         let smallestDistance = Number.POSITIVE_INFINITY;
 
         entries.forEach((entry) => {
@@ -240,8 +241,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         return;
       }
 
-      const bottomGap =
-        container.scrollHeight - (container.scrollTop + container.clientHeight);
+      const bottomGap = container.scrollHeight - (container.scrollTop + container.clientHeight);
       if (bottomGap <= 2) {
         setActiveSection(sections[sections.length - 1].key);
         return;
@@ -274,11 +274,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       }
     });
 
-    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener('scroll', handleScroll);
       observer.disconnect();
     };
   }, [sections]);
@@ -298,7 +298,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     if (container && target) {
       const top = target.offsetTop - container.offsetTop - SCROLL_OFFSET;
-      container.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+      container.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
     }
   };
 
@@ -325,10 +325,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           />
 
           <div className="condition-content-panel">
-            <div
-              className="condition-scrollable condition-scrollable-padded"
-              ref={contentRef}
-            >
+            <div className="condition-scrollable condition-scrollable-padded" ref={contentRef}>
               {isLoading && sections.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
                   <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -348,10 +345,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                     <section className="condition-media">
                       <div className="condition-media-frame">
                         <img
-                          src={`/media/${mediaIds[mediaIndex].includes(".")
-                            ? mediaIds[mediaIndex]
-                            : `${mediaIds[mediaIndex]}.png`
-                            }`}
+                          src={`/media/${
+                            mediaIds[mediaIndex].includes('.')
+                              ? mediaIds[mediaIndex]
+                              : `${mediaIds[mediaIndex]}.png`
+                          }`}
                           alt={`${condition.condition} media ${mediaIndex + 1}`}
                         />
                         {mediaIds.length > 1 && (
@@ -359,9 +357,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                             <button
                               className="media-button"
                               onClick={() =>
-                                setMediaIndex(
-                                  (mediaIndex - 1 + mediaIds.length) % mediaIds.length
-                                )
+                                setMediaIndex((mediaIndex - 1 + mediaIds.length) % mediaIds.length)
                               }
                               aria-label="Previous media"
                             >
@@ -369,9 +365,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                             </button>
                             <button
                               className="media-button"
-                              onClick={() =>
-                                setMediaIndex((mediaIndex + 1) % mediaIds.length)
-                              }
+                              onClick={() => setMediaIndex((mediaIndex + 1) % mediaIds.length)}
                               aria-label="Next media"
                             >
                               ›
@@ -385,7 +379,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                             <button
                               key={idx}
                               onClick={() => setMediaIndex(idx)}
-                              className={`dot ${idx === mediaIndex ? "active" : ""}`}
+                              className={`dot ${idx === mediaIndex ? 'active' : ''}`}
                               aria-label={`View media ${idx + 1}`}
                             />
                           ))}
@@ -411,15 +405,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                         >
                           <h3 className="condition-section-title">{section.title}</h3>
                           <div
-                            className={`condition-content ${section.accent === "danger" ? "condition-content-danger" : ""
-                              }`}
+                            className={`condition-content ${
+                              section.accent === 'danger' ? 'condition-content-danger' : ''
+                            }`}
                           >
                             {section.key === 'anatomy' && extendedData?.anatomyStructures ? (
                               <div className="space-y-4">
                                 {extendedData.anatomyStructures.map((item: any) => (
-                                  <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                  <div
+                                    key={item.id}
+                                    className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                                  >
                                     <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
-                                    <p className="text-sm text-gray-500 mb-2">{item.region} • {item.system}</p>
+                                    <p className="text-sm text-gray-500 mb-2">
+                                      {item.region} • {item.system}
+                                    </p>
                                     <p className="text-gray-700">{item.description}</p>
                                   </div>
                                 ))}
@@ -427,16 +427,29 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                             ) : section.key === 'specialTests' && extendedData?.specialTests ? (
                               <div className="space-y-4">
                                 {extendedData.specialTests.map((test: any) => (
-                                  <div key={test.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                  <div
+                                    key={test.id}
+                                    className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                                  >
                                     <h4 className="font-bold text-lg text-gray-900">{test.name}</h4>
                                     <div className="flex gap-4 text-sm text-gray-600 mt-1 mb-2">
-                                      {test.sensitivity && <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">Sensitivity: {test.sensitivity}%</span>}
-                                      {test.specificity && <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Specificity: {test.specificity}%</span>}
+                                      {test.sensitivity && (
+                                        <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
+                                          Sensitivity: {test.sensitivity}%
+                                        </span>
+                                      )}
+                                      {test.specificity && (
+                                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
+                                          Specificity: {test.specificity}%
+                                        </span>
+                                      )}
                                     </div>
                                     <p className="text-gray-700 mb-3">{test.description}</p>
                                     {test.technique && (
                                       <div className="mt-2 p-3 bg-white rounded border border-gray-200">
-                                        <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">Technique</span>
+                                        <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">
+                                          Technique
+                                        </span>
                                         <p className="text-sm text-gray-800">{test.technique}</p>
                                       </div>
                                     )}
@@ -462,10 +475,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             Close
           </button>
           {onDrillCondition && (
-            <button
-              onClick={() => onDrillCondition(condition)}
-              className="condition-drill"
-            >
+            <button onClick={() => onDrillCondition(condition)} className="condition-drill">
               Drill this condition
             </button>
           )}

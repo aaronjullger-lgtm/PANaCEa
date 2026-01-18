@@ -1,13 +1,13 @@
 /**
  * Enhanced Question Pool Service
- * 
+ *
  * Integrates Sprint A & B utilities:
  * - Step 1: Condition resolver (fuzzy matching)
  * - Step 2: NCCPA blueprint weighting
  * - Step 3: Question deduplication
  * - Step 4: Adaptive difficulty
  * - Step 5: Session interleaving
- * 
+ *
  * This service wraps the existing question fetching with intelligent
  * selection, deduplication, adaptive difficulty, and proper interleaving.
  */
@@ -21,7 +21,10 @@ import { calculateSessionDistribution } from '../../lib/nccpa-question-weighting
 
 // Sprint B utilities
 import { filterUnseenQuestions, getUserSeenQuestionIds } from '../../lib/questionDeduplication';
-import { getUserPerformanceBySystem, getRecommendedDifficultiesBySystem } from '../../lib/adaptiveDifficulty';
+import {
+  getUserPerformanceBySystem,
+  getRecommendedDifficultiesBySystem,
+} from '../../lib/adaptiveDifficulty';
 import { ensureInterleaving, validateInterleaving } from '../../lib/sessionInterleaving';
 
 // Existing services
@@ -52,7 +55,7 @@ export async function getEnhancedQuestionBatch(
     // STEP 1: Determine systems using NCCPA weighting
     let systemDistribution: Map<string, number>;
     let systems: string[];
-    
+
     if (focus !== 'all') {
       // Single system focus
       systems = [focus.toUpperCase()];
@@ -136,11 +139,11 @@ export async function getEnhancedQuestionBatch(
     const unseenQuestionIds = await filterUnseenQuestions(
       prisma,
       userId,
-      questionsBySystem.map(q => q.id),
+      questionsBySystem.map((q) => q.id),
       'pre_generated'
     );
 
-    const unseenQuestions = questionsBySystem.filter(q => unseenQuestionIds.includes(q.id));
+    const unseenQuestions = questionsBySystem.filter((q) => unseenQuestionIds.includes(q.id));
     const filteredCount = questionsBySystem.length - unseenQuestions.length;
 
     // STEP 6: Select exact count needed, respecting system distribution
@@ -155,9 +158,9 @@ export async function getEnhancedQuestionBatch(
     // Prioritize filling each system to target
     for (const [system, targetCount] of systemDistribution.entries()) {
       const systemQuestions = unseenQuestions
-        .filter(q => q.system === system)
+        .filter((q) => q.system === system)
         .slice(0, targetCount);
-      
+
       selectedQuestions.push(...systemQuestions);
       systemCounters.set(system, systemQuestions.length);
     }
@@ -165,9 +168,9 @@ export async function getEnhancedQuestionBatch(
     // If we're short, fill with any unseen questions
     if (selectedQuestions.length < count) {
       const remaining = unseenQuestions
-        .filter(q => !selectedQuestions.includes(q))
+        .filter((q) => !selectedQuestions.includes(q))
         .slice(0, count - selectedQuestions.length);
-      
+
       selectedQuestions.push(...remaining);
     }
 
@@ -180,7 +183,7 @@ export async function getEnhancedQuestionBatch(
 
     // STEP 8: Convert to Question format
     const convertedQuestions: Question[] = [];
-    
+
     for (const q of interleavedQuestions) {
       const converted = await convertPoolQuestion({
         id: q.id,
@@ -197,7 +200,11 @@ export async function getEnhancedQuestionBatch(
       });
 
       // STEP 9: Resolve conditionId if missing (Sprint A Step 1)
-      if (!converted.conditionId || converted.conditionId === 'unknown' || converted.conditionId.includes('-')) {
+      if (
+        !converted.conditionId ||
+        converted.conditionId === 'unknown' ||
+        converted.conditionId.includes('-')
+      ) {
         try {
           const resolved = await resolveConditionId(
             prisma,
@@ -208,12 +215,14 @@ export async function getEnhancedQuestionBatch(
 
           if (resolved) {
             converted.conditionId = resolved.conditionId;
-            
+
             // Update database with resolved conditionId
-            await prisma.preGeneratedQuestion.update({
-              where: { id: q.id },
-              data: { conditionId: resolved.conditionId },
-            }).catch(err => console.warn('[EnhancedPool] Failed to update conditionId:', err));
+            await prisma.preGeneratedQuestion
+              .update({
+                where: { id: q.id },
+                data: { conditionId: resolved.conditionId },
+              })
+              .catch((err) => console.warn('[EnhancedPool] Failed to update conditionId:', err));
           }
         } catch (error) {
           console.warn('[EnhancedPool] Failed to resolve conditionId:', error);
@@ -234,7 +243,6 @@ export async function getEnhancedQuestionBatch(
         interleavingValid,
       },
     };
-
   } catch (error) {
     console.error('[EnhancedPool] Failed to get enhanced questions:', error);
     throw error;
@@ -253,7 +261,7 @@ export async function getEnhancedQuestion(
   try {
     // Get user performance for this system
     let difficulty = targetDifficulty;
-    
+
     if (!difficulty && system) {
       const performance = await getUserPerformanceBySystem(prisma, userId, system, 7);
       difficulty = performance.recommendedDifficulty;
@@ -306,7 +314,11 @@ export async function getEnhancedQuestion(
     });
 
     // Resolve conditionId if needed
-    if (!converted.conditionId || converted.conditionId === 'unknown' || converted.conditionId.includes('-')) {
+    if (
+      !converted.conditionId ||
+      converted.conditionId === 'unknown' ||
+      converted.conditionId.includes('-')
+    ) {
       try {
         const resolved = await resolveConditionId(
           prisma,
@@ -317,11 +329,13 @@ export async function getEnhancedQuestion(
 
         if (resolved) {
           converted.conditionId = resolved.conditionId;
-          
-          await prisma.preGeneratedQuestion.update({
-            where: { id: q.id },
-            data: { conditionId: resolved.conditionId },
-          }).catch(err => console.warn('[EnhancedPool] Failed to update conditionId:', err));
+
+          await prisma.preGeneratedQuestion
+            .update({
+              where: { id: q.id },
+              data: { conditionId: resolved.conditionId },
+            })
+            .catch((err) => console.warn('[EnhancedPool] Failed to update conditionId:', err));
         }
       } catch (error) {
         console.warn('[EnhancedPool] Failed to resolve conditionId:', error);
@@ -329,7 +343,6 @@ export async function getEnhancedQuestion(
     }
 
     return converted;
-
   } catch (error) {
     console.error('[EnhancedPool] Failed to get enhanced question:', error);
     return null;
@@ -406,7 +419,6 @@ export async function getEnhancedPoolStatus(
       percentExplored,
       byDifficulty,
     };
-
   } catch (error) {
     console.error('[EnhancedPool] Failed to get pool status:', error);
     throw error;

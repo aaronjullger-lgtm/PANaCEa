@@ -10,27 +10,27 @@ PANaCEa now has a comprehensive **registry-first architecture** with **14 medica
 
 ### ✅ Implemented with Sync Scripts
 
-| # | Registry | File | Entities | Sync Command | AI Generation |
-|---|----------|------|----------|--------------|---------------|
-| 1 | **Conditions** | `conditionRegistry.ts` | 500+ | `npm run sync:conditions` | ⏳ Via automation |
-| 2 | **Drugs** | `drugRegistry.ts` | 100+ | `npm run sync:drugs` | ⏳ Needs implementation |
-| 3 | **Special Tests** | `specialTestRegistry.ts` | 40+ | `npm run sync:special-tests` | ✅ Full AI content |
-| 4 | **Anatomy** | `anatomyRegistry.ts` | 50+ | `npm run sync:anatomy` | ⏳ Needs implementation |
+| #   | Registry          | File                     | Entities | Sync Command                 | AI Generation           |
+| --- | ----------------- | ------------------------ | -------- | ---------------------------- | ----------------------- |
+| 1   | **Conditions**    | `conditionRegistry.ts`   | 500+     | `npm run sync:conditions`    | ⏳ Via automation       |
+| 2   | **Drugs**         | `drugRegistry.ts`        | 100+     | `npm run sync:drugs`         | ⏳ Needs implementation |
+| 3   | **Special Tests** | `specialTestRegistry.ts` | 40+      | `npm run sync:special-tests` | ✅ Full AI content      |
+| 4   | **Anatomy**       | `anatomyRegistry.ts`     | 50+      | `npm run sync:anatomy`       | ⏳ Needs implementation |
 
 ### 🆕 New Registries Created (Need Sync Scripts + DB Tables)
 
-| # | Registry | File | Entities | Purpose |
-|---|----------|------|----------|---------|
-| 5 | **Lab Tests** | `labTestRegistry.ts` | 100+ | CBC, CMP, cardiac markers, thyroid, coag, ABG |
-| 6 | **Imaging** | `imagingRegistry.ts` | 90+ | X-ray, CT, MRI, ultrasound, nuclear medicine |
-| 7 | **Symptoms** | `symptomRegistry.ts` | 80+ | Constitutional, cardiopulmonary, GI, neuro, MSK |
-| 8 | **Findings** | `findingRegistry.ts` | 60+ | Physical exam findings by system |
-| 9 | **Surgeries** | `surgeryRegistry.ts` | 60+ | Procedures by specialty (general, ortho, cardiac, etc.) |
-| 10 | **Treatments** | `treatmentRegistry.ts` | 60+ | Non-surgical interventions, therapies, devices |
-| 11 | **Guidelines** | `guidelineRegistry.ts` | 70+ | AHA, ACC, USPSTF, CDC, IDSA guidelines |
-| 12 | **Scoring Systems** | `scoringSystemRegistry.ts` | 70+ | Risk calculators, severity scores, diagnostic tools |
-| 13 | **Abbreviations** | `abbreviationRegistry.ts` | 150+ | Medical abbreviations by category |
-| 14 | **Differentials** | `differentialRegistry.ts` | 90+ | DDx by presenting complaint |
+| #   | Registry            | File                       | Entities | Purpose                                                 |
+| --- | ------------------- | -------------------------- | -------- | ------------------------------------------------------- |
+| 5   | **Lab Tests**       | `labTestRegistry.ts`       | 100+     | CBC, CMP, cardiac markers, thyroid, coag, ABG           |
+| 6   | **Imaging**         | `imagingRegistry.ts`       | 90+      | X-ray, CT, MRI, ultrasound, nuclear medicine            |
+| 7   | **Symptoms**        | `symptomRegistry.ts`       | 80+      | Constitutional, cardiopulmonary, GI, neuro, MSK         |
+| 8   | **Findings**        | `findingRegistry.ts`       | 60+      | Physical exam findings by system                        |
+| 9   | **Surgeries**       | `surgeryRegistry.ts`       | 60+      | Procedures by specialty (general, ortho, cardiac, etc.) |
+| 10  | **Treatments**      | `treatmentRegistry.ts`     | 60+      | Non-surgical interventions, therapies, devices          |
+| 11  | **Guidelines**      | `guidelineRegistry.ts`     | 70+      | AHA, ACC, USPSTF, CDC, IDSA guidelines                  |
+| 12  | **Scoring Systems** | `scoringSystemRegistry.ts` | 70+      | Risk calculators, severity scores, diagnostic tools     |
+| 13  | **Abbreviations**   | `abbreviationRegistry.ts`  | 150+     | Medical abbreviations by category                       |
+| 14  | **Differentials**   | `differentialRegistry.ts`  | 90+      | DDx by presenting complaint                             |
 
 ---
 
@@ -61,8 +61,9 @@ Registries contain ONLY minimal metadata:
 ### 2. AI Content Generation
 
 During sync, Gemini API generates:
+
 - Detailed descriptions
-- Clinical significance  
+- Clinical significance
 - Indications/contraindications
 - High-yield pearls
 - Related conditions
@@ -93,18 +94,21 @@ Application → JSON Files → Static Content
 ### Adding a New Drug
 
 1. **Edit registry**:
+
 ```typescript
 // drugRegistry.ts
-{ genericName: "Tirzepatide", brandName: "Mounjaro", 
+{ genericName: "Tirzepatide", brandName: "Mounjaro",
   drugClass: ["GLP-1/GIP Agonist"], isHighYield: true }
 ```
 
 2. **Sync to database**:
+
 ```bash
 npm run sync:drugs
 ```
 
 3. **AI generates** (automatically):
+
 - Mechanism: "Dual GIP and GLP-1 receptor agonist..."
 - Indications: "Type 2 diabetes, significant weight loss..."
 - Dosing: "Start 2.5mg weekly, titrate..."
@@ -116,17 +120,20 @@ npm run sync:drugs
 ### Adding a New Lab Test
 
 1. **Edit registry**:
+
 ```typescript
 // labTestRegistry.ts
 { name: "Procalcitonin", category: "Inflammatory Markers" }
 ```
 
 2. **Sync** (when script is created):
+
 ```bash
 npm run sync:lab-tests
 ```
 
 3. **AI generates**:
+
 - Normal range
 - Interpretation (low/high)
 - Clinical significance
@@ -148,11 +155,13 @@ npm run sync:lab-tests
 ### ⏳ Need to Create
 
 For each of these registries, we need:
+
 1. Database table in Prisma schema
 2. Sync script with AI generation
 3. npm script command
 
 **Pending Sync Scripts**:
+
 - `syncLabTestTable.ts` → LabTest table
 - `syncImagingTable.ts` → ImagingStudy table
 - `syncSymptomTable.ts` → Symptom table
@@ -182,7 +191,7 @@ model LabTest {
   relatedTests String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
   @@index([name])
 }
@@ -200,7 +209,7 @@ model ImagingStudy {
   interpretation String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([modality])
   @@index([bodyRegion])
 }
@@ -216,7 +225,7 @@ model Symptom {
   differentialApproach String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
 }
 
@@ -231,7 +240,7 @@ model Finding {
   differentialDiagnosis String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([system])
 }
 
@@ -248,7 +257,7 @@ model Surgery {
   recovery    String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([specialty])
 }
 
@@ -264,13 +273,13 @@ model Treatment {
   complications String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
 }
 
 model Guideline {
   id          String   @id @default(uuid())
-  name        String   
+  name        String
   organization String
   category    String
   year        Int?
@@ -282,7 +291,7 @@ model Guideline {
   url         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([name, organization, year])
   @@index([organization])
   @@index([category])
@@ -300,7 +309,7 @@ model ScoringSystem {
   evidenceBase String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
 }
 
@@ -315,7 +324,7 @@ model Abbreviation {
   examples    String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
 }
 
@@ -331,7 +340,7 @@ model Differential {
   diagnosticApproach String? @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
   @@index([isEmergency])
 }
@@ -342,16 +351,19 @@ model Differential {
 ## 🔄 Automation Integration
 
 ### Hourly (`npm run automation:hourly`)
+
 - Detects new registry entries synced to DB
 - Validates AI-generated content quality
 - Monitors API usage
 
 ### Daily (`npm run automation:daily`)
+
 - Enhances existing entries with additional content
 - Links related entities (conditions ↔ symptoms ↔ labs)
 - Updates based on new medical literature
 
 ### Weekly (`npm run automation:weekly`)
+
 - Comprehensive content audit
 - Identifies gaps (registries with missing AI content)
 - Suggests new entries for registries
@@ -360,13 +372,13 @@ model Differential {
 
 ## 📊 Content Statistics
 
-| Category | Registries | Total Entities | Status |
-|----------|-----------|----------------|--------|
-| **Core Medical** | 4 | 690+ | ✅ Implemented |
-| **Clinical Tools** | 4 | 370+ | 🆕 Created |
-| **Knowledge Base** | 4 | 340+ | 🆕 Created |
-| **Reference** | 2 | 240+ | 🆕 Created |
-| **TOTAL** | **14** | **1,640+** | **Complete** |
+| Category           | Registries | Total Entities | Status         |
+| ------------------ | ---------- | -------------- | -------------- |
+| **Core Medical**   | 4          | 690+           | ✅ Implemented |
+| **Clinical Tools** | 4          | 370+           | 🆕 Created     |
+| **Knowledge Base** | 4          | 340+           | 🆕 Created     |
+| **Reference**      | 2          | 240+           | 🆕 Created     |
+| **TOTAL**          | **14**     | **1,640+**     | **Complete**   |
 
 ---
 
@@ -391,6 +403,7 @@ All PANCE content areas covered:
 ## 🚦 Next Steps
 
 ### Immediate (Critical)
+
 1. ✅ Create all 14 registries (DONE)
 2. ⏳ Add database tables to Prisma schema
 3. ⏳ Create sync scripts for new registries (10 remaining)
@@ -398,12 +411,14 @@ All PANCE content areas covered:
 5. ⏳ Run master sync: `npm run sync:all-registries`
 
 ### Short-term
+
 6. ⏳ Update automation to detect new entity types
 7. ⏳ Create cross-linking between entities
 8. ⏳ Add search/filter UI for each registry type
 9. ⏳ Generate initial weekly report
 
 ### Long-term
+
 10. ⏳ Implement automatic guideline update detection
 11. ⏳ Add user feedback mechanism for corrections
 12. ⏳ Create mobile-optimized reference pages
@@ -435,6 +450,7 @@ All PANCE content areas covered:
 ## ✨ Achievement Unlocked
 
 🏆 **Complete Medical Knowledge Registry System**
+
 - 14 registries created
 - 1,640+ medical entities catalogued
 - AI-powered content generation

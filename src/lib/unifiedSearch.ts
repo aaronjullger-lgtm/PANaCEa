@@ -2,21 +2,50 @@
 // Unified search that intelligently combines and ranks conditions and drugs
 // Enhanced with de-duplication, clean display, and alias matching
 
-import { searchConditions } from "./conditionSearch";
-import type { ConditionSearchResult } from "./conditionSearch";
-import { searchDrugs } from "./drugSearch";
-import type { DrugSearchResult } from "@/pharm/drugTypes";
-import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from "../registries/specialTestRegistry";
-import { PHYSIOLOGY_CONCEPT_REGISTRY, type PhysiologyConceptMeta } from "../registries/physiologyRegistry";
-import { TREATMENT_REGISTRY, type TreatmentMeta } from "../registries/treatmentRegistry";
+import { searchConditions } from './conditionSearch';
+import type { ConditionSearchResult } from './conditionSearch';
+import { searchDrugs } from './drugSearch';
+import type { DrugSearchResult } from '@/pharm/drugTypes';
+import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from '../registries/specialTestRegistry';
+import {
+  PHYSIOLOGY_CONCEPT_REGISTRY,
+  type PhysiologyConceptMeta,
+} from '../registries/physiologyRegistry';
+import { TREATMENT_REGISTRY, type TreatmentMeta } from '../registries/treatmentRegistry';
 
 const FALLBACK_DRUGS: Array<DrugSearchResult & { score: number }> = [
-  { id: 'prozac', drugName: 'Prozac', genericName: 'Fluoxetine', drugClass: 'SSRI', subclass: 'Antidepressant', score: 1 },
-  { id: 'aspirin', drugName: 'Aspirin', genericName: 'Aspirin', drugClass: 'NSAID', subclass: 'Analgesic', score: 1 },
-  { id: 'neomycin', drugName: 'Neomycin', genericName: 'Neomycin', drugClass: 'Antibiotic', subclass: 'Aminoglycoside', score: 1 },
+  {
+    id: 'prozac',
+    drugName: 'Prozac',
+    genericName: 'Fluoxetine',
+    drugClass: 'SSRI',
+    subclass: 'Antidepressant',
+    score: 1,
+  },
+  {
+    id: 'aspirin',
+    drugName: 'Aspirin',
+    genericName: 'Aspirin',
+    drugClass: 'NSAID',
+    subclass: 'Analgesic',
+    score: 1,
+  },
+  {
+    id: 'neomycin',
+    drugName: 'Neomycin',
+    genericName: 'Neomycin',
+    drugClass: 'Antibiotic',
+    subclass: 'Aminoglycoside',
+    score: 1,
+  },
 ];
 
-export type UnifiedSearchResultType = "condition" | "drug" | "special_test" | "physiology" | "treatment";
+export type UnifiedSearchResultType =
+  | 'condition'
+  | 'drug'
+  | 'special_test'
+  | 'physiology'
+  | 'treatment';
 
 export interface UnifiedSearchResult {
   type: UnifiedSearchResultType;
@@ -58,30 +87,30 @@ function cleanDisplayName(name: string): string {
  */
 function fixCapitalization(name: string): string {
   const fixes: Record<string, string> = {
-    'mrna': 'mRNA',
-    'dna': 'DNA',
-    'rna': 'RNA',
-    'hiv': 'HIV',
-    'aids': 'AIDS',
-    'covid': 'COVID',
-    'aki': 'AKI',
-    'ckd': 'CKD',
-    'copd': 'COPD',
-    'gerd': 'GERD',
-    'nsaid': 'NSAID',
-    'nsaids': 'NSAIDs',
-    'ace': 'ACE',
-    'arb': 'ARB',
-    'ssri': 'SSRI',
-    'snri': 'SNRI',
+    mrna: 'mRNA',
+    dna: 'DNA',
+    rna: 'RNA',
+    hiv: 'HIV',
+    aids: 'AIDS',
+    covid: 'COVID',
+    aki: 'AKI',
+    ckd: 'CKD',
+    copd: 'COPD',
+    gerd: 'GERD',
+    nsaid: 'NSAID',
+    nsaids: 'NSAIDs',
+    ace: 'ACE',
+    arb: 'ARB',
+    ssri: 'SSRI',
+    snri: 'SNRI',
   };
-  
+
   let result = name;
   for (const [wrong, correct] of Object.entries(fixes)) {
     const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
     result = result.replace(regex, correct);
   }
-  
+
   return result;
 }
 
@@ -91,36 +120,43 @@ function fixCapitalization(name: string): string {
 function similarityScore(query: string, target: string): number {
   const normalizedQuery = query.toLowerCase().trim();
   const normalizedTarget = target.toLowerCase().trim();
-  
+
   // Exact match
   if (normalizedTarget === normalizedQuery) return 3;
-  
+
   // Starts with
   if (normalizedTarget.startsWith(normalizedQuery)) return 2.5;
-  
+
   // Contains
   if (normalizedTarget.includes(normalizedQuery)) {
     const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
     return 2 + lengthBoost;
   }
-  
+
   // Word boundary match (e.g., "ACL" matches in "ACL Tear")
   const wordBoundary = new RegExp(`\\b${normalizedQuery}\\b`, 'i');
   if (wordBoundary.test(normalizedTarget)) return 2.3;
-  
+
   return 0;
 }
 
-function fallbackDrugSearch(query: string, limit: number): Array<DrugSearchResult & { score: number }> {
+function fallbackDrugSearch(
+  query: string,
+  limit: number
+): Array<DrugSearchResult & { score: number }> {
   const normalizedQuery = query.toLowerCase().trim();
   if (!normalizedQuery) return [];
 
-  return FALLBACK_DRUGS
-    .map((drug) => {
-      const candidates = [drug.drugName, drug.genericName || '', drug.subclass || '', drug.drugClass || ''];
-      const bestScore = Math.max(...candidates.map((name) => similarityScore(normalizedQuery, name)));
-      return { ...drug, score: bestScore };
-    })
+  return FALLBACK_DRUGS.map((drug) => {
+    const candidates = [
+      drug.drugName,
+      drug.genericName || '',
+      drug.subclass || '',
+      drug.drugClass || '',
+    ];
+    const bestScore = Math.max(...candidates.map((name) => similarityScore(normalizedQuery, name)));
+    return { ...drug, score: bestScore };
+  })
     .filter((drug) => drug.score > 0.3)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
@@ -131,16 +167,16 @@ function fallbackDrugSearch(query: string, limit: number): Array<DrugSearchResul
  */
 function searchSpecialTestsInternal(query: string): UnifiedSearchResult[] {
   const results: UnifiedSearchResult[] = [];
-  
+
   for (const test of SPECIAL_TEST_REGISTRY) {
     const cleanName = cleanDisplayName(test.name);
     const displayName = fixCapitalization(test.displayName || cleanName);
     const aliases = test.aliases || [];
-    
+
     // Check name and aliases
     let bestScore = similarityScore(query, cleanName);
     let matchedAlias: string | undefined;
-    
+
     for (const alias of aliases) {
       const aliasScore = similarityScore(query, alias);
       if (aliasScore > bestScore) {
@@ -148,7 +184,7 @@ function searchSpecialTestsInternal(query: string): UnifiedSearchResult[] {
         matchedAlias = alias;
       }
     }
-    
+
     if (bestScore > 0.3) {
       results.push({
         type: 'special_test',
@@ -162,7 +198,7 @@ function searchSpecialTestsInternal(query: string): UnifiedSearchResult[] {
       });
     }
   }
-  
+
   return results;
 }
 
@@ -171,16 +207,16 @@ function searchSpecialTestsInternal(query: string): UnifiedSearchResult[] {
  */
 function searchPhysiologyInternal(query: string): UnifiedSearchResult[] {
   const results: UnifiedSearchResult[] = [];
-  
+
   for (const concept of PHYSIOLOGY_CONCEPT_REGISTRY) {
     const cleanName = cleanDisplayName(concept.name);
     const displayName = fixCapitalization(concept.displayName || cleanName);
     const aliases = concept.aliases || [];
-    
+
     // Check name and aliases
     let bestScore = similarityScore(query, cleanName);
     let matchedAlias: string | undefined;
-    
+
     for (const alias of aliases) {
       const aliasScore = similarityScore(query, alias);
       if (aliasScore > bestScore) {
@@ -188,7 +224,7 @@ function searchPhysiologyInternal(query: string): UnifiedSearchResult[] {
         matchedAlias = alias;
       }
     }
-    
+
     if (bestScore > 0.3) {
       results.push({
         type: 'physiology',
@@ -202,7 +238,7 @@ function searchPhysiologyInternal(query: string): UnifiedSearchResult[] {
       });
     }
   }
-  
+
   return results;
 }
 
@@ -211,16 +247,16 @@ function searchPhysiologyInternal(query: string): UnifiedSearchResult[] {
  */
 function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
   const results: UnifiedSearchResult[] = [];
-  
+
   for (const treatment of TREATMENT_REGISTRY) {
     const cleanName = cleanDisplayName(treatment.name);
     const displayName = fixCapitalization(treatment.displayName || cleanName);
     const aliases = treatment.aliases || [];
-    
+
     // Check name and aliases
     let bestScore = similarityScore(query, cleanName);
     let matchedAlias: string | undefined;
-    
+
     for (const alias of aliases) {
       const aliasScore = similarityScore(query, alias);
       if (aliasScore > bestScore) {
@@ -228,7 +264,7 @@ function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
         matchedAlias = alias;
       }
     }
-    
+
     if (bestScore > 0.3) {
       results.push({
         type: 'treatment',
@@ -242,7 +278,7 @@ function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
       });
     }
   }
-  
+
   return results;
 }
 
@@ -251,28 +287,31 @@ function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
  * Enhanced with de-duplication, clean display names, and all content types.
  */
 export async function unifiedSearch(
-  query: string, 
+  query: string,
   options: { groupByType?: boolean; limit?: number } = {}
 ): Promise<UnifiedSearchResult[] | GroupedSearchResults> {
   const { groupByType = false, limit = 20 } = options;
   const trimmedQuery = query.trim();
-  
+
   if (!trimmedQuery) {
-    return groupByType ? {
-      conditions: [],
-      pharmacology: [],
-      concepts: [],
-      procedures: [],
-      diagnostics: [],
-    } : [];
+    return groupByType
+      ? {
+          conditions: [],
+          pharmacology: [],
+          concepts: [],
+          procedures: [],
+          diagnostics: [],
+        }
+      : [];
   }
 
   // Search all content types
   const conditionResults = await searchConditions(trimmedQuery);
   const drugResultsRaw = await searchDrugs(trimmedQuery);
-  const drugResults = (drugResultsRaw && drugResultsRaw.length > 0)
-    ? drugResultsRaw
-    : fallbackDrugSearch(trimmedQuery, limit);
+  const drugResults =
+    drugResultsRaw && drugResultsRaw.length > 0
+      ? drugResultsRaw
+      : fallbackDrugSearch(trimmedQuery, limit);
   const testResults = searchSpecialTestsInternal(trimmedQuery);
   const physiologyResults = searchPhysiologyInternal(trimmedQuery);
   const treatmentResults = searchTreatmentsInternal(trimmedQuery);
@@ -287,28 +326,29 @@ export async function unifiedSearch(
     const baseName = condition.condition
       .replace(/\s*\((General|Shock States|Prerenal|Intrinsic|Postrenal)\)/gi, '')
       .trim();
-    
+
     // Skip if we've seen this base condition
     const dedupeKey = `${condition.system}__${condition.subcategory}__${baseName}`;
     if (seenConditions.has(dedupeKey)) {
       continue;
     }
     seenConditions.add(dedupeKey);
-    
+
     // Clean the display name
     const cleanName = cleanDisplayName(condition.condition);
     const displayName = fixCapitalization(cleanName);
-    
+
     // Check if query matched an alias
     const aliases = condition.aliases || [];
     const normalizedQuery = trimmedQuery.toLowerCase();
-    const matchedAlias = aliases.find(alias => 
-      alias.toLowerCase().includes(normalizedQuery) || 
-      normalizedQuery.includes(alias.toLowerCase())
+    const matchedAlias = aliases.find(
+      (alias) =>
+        alias.toLowerCase().includes(normalizedQuery) ||
+        normalizedQuery.includes(alias.toLowerCase())
     );
-    
+
     unifiedResults.push({
-      type: "condition",
+      type: 'condition',
       id: condition.id,
       name: condition.condition,
       displayName,
@@ -323,13 +363,13 @@ export async function unifiedSearch(
   // Add drugs with clean names
   for (const drug of drugResults) {
     const displayName = fixCapitalization(drug.drugName);
-    
+
     unifiedResults.push({
-      type: "drug",
+      type: 'drug',
       id: drug.id,
       name: drug.drugName,
       displayName,
-      subtitle: `${drug.drugClass}${drug.subclass ? ` • ${drug.subclass}` : ""}`,
+      subtitle: `${drug.drugClass}${drug.subclass ? ` • ${drug.subclass}` : ''}`,
       score: drug.score,
       url: `/drugs/${drug.id}`,
       drugData: drug,
@@ -351,11 +391,11 @@ export async function unifiedSearch(
 
   // Apply limit
   const limitedResults = unifiedResults.slice(0, limit);
-  
+
   if (!groupByType) {
     return limitedResults;
   }
-  
+
   // Group results by category
   const grouped: GroupedSearchResults = {
     conditions: [],
@@ -364,7 +404,7 @@ export async function unifiedSearch(
     procedures: [],
     diagnostics: [],
   };
-  
+
   for (const result of limitedResults) {
     if (result.type === 'condition') {
       grouped.conditions.push(result);
@@ -376,7 +416,7 @@ export async function unifiedSearch(
       grouped.procedures.push(result);
     }
   }
-  
+
   return grouped;
 }
 

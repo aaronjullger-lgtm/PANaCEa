@@ -12,11 +12,11 @@ The automation system consists of:
 
 ## Schedule Summary
 
-| Frequency | Time | Tasks |
-|-----------|------|-------|
-| Hourly | :00 | Health checks, streak updates, leaderboard cache |
-| Daily | 3 AM EST | Content validation, DAU metrics, recommendations |
-| Weekly | Sunday 2 AM EST | Progress reports, retention analysis, DB optimization |
+| Frequency | Time            | Tasks                                                 |
+| --------- | --------------- | ----------------------------------------------------- |
+| Hourly    | :00             | Health checks, streak updates, leaderboard cache      |
+| Daily     | 3 AM EST        | Content validation, DAU metrics, recommendations      |
+| Weekly    | Sunday 2 AM EST | Progress reports, retention analysis, DB optimization |
 
 ## Job Modules
 
@@ -42,7 +42,11 @@ await updateLeaderboardCache();
 #### Daily Jobs
 
 ```typescript
-import { generateDailyRecommendations, calculateDAUMetrics, aggregateConfusionPatterns } from './jobs';
+import {
+  generateDailyRecommendations,
+  calculateDAUMetrics,
+  aggregateConfusionPatterns,
+} from './jobs';
 
 // Generate personalized study recommendations
 await generateDailyRecommendations();
@@ -57,7 +61,11 @@ await aggregateConfusionPatterns();
 #### Weekly Jobs
 
 ```typescript
-import { generateWeeklyProgressReports, calculateWeeklyRetention, updatePANCEReadinessEstimates } from './jobs';
+import {
+  generateWeeklyProgressReports,
+  calculateWeeklyRetention,
+  updatePANCEReadinessEstimates,
+} from './jobs';
 
 // Generate user progress reports
 await generateWeeklyProgressReports();
@@ -75,19 +83,19 @@ Monitors system health and infrastructure.
 
 #### Available Checks
 
-| Check | Description |
-|-------|-------------|
-| `checkDatabaseConnection()` | Verify DB connectivity |
-| `checkDatabasePerformance()` | Test query latency |
-| `checkGeminiAPI()` | Verify Gemini API access |
-| `checkClerkAuth()` | Check Clerk authentication |
-| `checkSupabaseStorage()` | Verify Supabase storage |
-| `checkErrorRates()` | Monitor background job failures |
-| `checkFlaggedQuestions()` | Count pending question flags |
-| `checkContentAvailability()` | Verify medical content |
-| `checkQuestionPool()` | Check question availability |
-| `runSmokeTest()` | Simulate basic user workflow |
-| `checkSSLExpiry()` | Verify SSL certificate |
+| Check                        | Description                     |
+| ---------------------------- | ------------------------------- |
+| `checkDatabaseConnection()`  | Verify DB connectivity          |
+| `checkDatabasePerformance()` | Test query latency              |
+| `checkGeminiAPI()`           | Verify Gemini API access        |
+| `checkClerkAuth()`           | Check Clerk authentication      |
+| `checkSupabaseStorage()`     | Verify Supabase storage         |
+| `checkErrorRates()`          | Monitor background job failures |
+| `checkFlaggedQuestions()`    | Count pending question flags    |
+| `checkContentAvailability()` | Verify medical content          |
+| `checkQuestionPool()`        | Check question availability     |
+| `runSmokeTest()`             | Simulate basic user workflow    |
+| `checkSSLExpiry()`           | Verify SSL certificate          |
 
 #### Aggregate Functions
 
@@ -110,6 +118,7 @@ console.log(`${summary.passed}/${summary.total} checks passed`);
 ### Hourly Automation (`.github/workflows/hourly-automation.yml`)
 
 Runs every hour at :00:
+
 - Database connectivity check
 - Gemini API health check
 - Content availability check
@@ -118,6 +127,7 @@ Runs every hour at :00:
 ### Daily Automation (`.github/workflows/daily-automation.yml`)
 
 Runs at 3 AM EST:
+
 - Full health check suite
 - Content accuracy validation
 - User recommendation generation
@@ -127,6 +137,7 @@ Runs at 3 AM EST:
 ### Weekly Automation (`.github/workflows/weekly-automation.yml`)
 
 Runs Sundays at 2 AM EST:
+
 - Comprehensive health audit
 - Weekly progress reports for all users
 - Retention analysis
@@ -201,6 +212,7 @@ export { myNewJob } from './userStatistics';
 ### Workflow Status
 
 Check workflow status in GitHub Actions:
+
 - ✅ Green = All tasks passed
 - ⚠️ Yellow = Some warnings but no failures
 - ❌ Red = Critical failures

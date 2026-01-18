@@ -1,6 +1,6 @@
 /**
  * Media Storage Service
- * 
+ *
  * Manages medical images (ECG, dermatology, radiology) using Supabase Storage.
  * Handles upload, retrieval, and metadata management for the photo drill modes.
  */
@@ -40,8 +40,19 @@ export interface MediaAssetInfo {
 /**
  * Upload a media file to Supabase Storage with quality assessment
  */
-export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAssetInfo & { qualityScore?: number; autoApproved?: boolean }> {
-  const { file, filename, category, conditionId, tags = [], description, altText, uploadedBy } = options;
+export async function uploadMedia(
+  options: UploadMediaOptions
+): Promise<MediaAssetInfo & { qualityScore?: number; autoApproved?: boolean }> {
+  const {
+    file,
+    filename,
+    category,
+    conditionId,
+    tags = [],
+    description,
+    altText,
+    uploadedBy,
+  } = options;
 
   // Sanitize filename: remove spaces, special chars, make lowercase
   const sanitizedFilename = filename
@@ -133,7 +144,7 @@ export async function getMediaByCondition(conditionId: string): Promise<MediaAss
     orderBy: { uploadedAt: 'desc' },
   });
 
-  return assets.map(asset => ({
+  return assets.map((asset) => ({
     id: asset.id,
     filename: asset.filename,
     category: getMediaCategory(asset.type),
@@ -151,13 +162,13 @@ export async function getMediaByCondition(conditionId: string): Promise<MediaAss
  */
 export async function getMediaByCategory(category: MediaCategory): Promise<MediaAssetInfo[]> {
   const type = getCategoryType(category);
-  
+
   const assets = await prisma.mediaAsset.findMany({
     where: { type },
     orderBy: { uploadedAt: 'desc' },
   });
 
-  return assets.map(asset => ({
+  return assets.map((asset) => ({
     id: asset.id,
     filename: asset.filename,
     category,
@@ -183,7 +194,7 @@ export async function searchMediaByTags(tags: string[]): Promise<MediaAssetInfo[
     orderBy: { uploadedAt: 'desc' },
   });
 
-  return assets.map(asset => ({
+  return assets.map((asset) => ({
     id: asset.id,
     filename: asset.filename,
     category: getMediaCategory(asset.type),
@@ -220,9 +231,7 @@ export async function deleteMedia(mediaId: string): Promise<void> {
 
   try {
     // Delete from Supabase Storage
-    const { error } = await supabaseAdmin.storage
-      .from(MEDIA_BUCKET)
-      .remove([storagePath]);
+    const { error } = await supabaseAdmin.storage.from(MEDIA_BUCKET).remove([storagePath]);
 
     if (error) {
       console.error('Error deleting from storage:', error);

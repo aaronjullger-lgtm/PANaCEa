@@ -17,12 +17,12 @@ ErrorBoundary caught an error: Error: Missing Publishable Key for Clerk!
 3. Click **Add variable**
 4. Add the following:
 
-| Variable Name | Value | Environment |
-|--------------|-------|-------------|
+| Variable Name                | Value                             | Environment          |
+| ---------------------------- | --------------------------------- | -------------------- |
 | `VITE_CLERK_PUBLISHABLE_KEY` | `pk_test_xxxxx` (your actual key) | Production + Preview |
-| `CLERK_SECRET_KEY` | `sk_test_xxxxx` (your actual key) | Production + Preview |
-| `GEMINI_API_KEY` | Your Gemini API key | Production + Preview |
-| `DATABASE_URL` | Your database connection string | Production + Preview |
+| `CLERK_SECRET_KEY`           | `sk_test_xxxxx` (your actual key) | Production + Preview |
+| `GEMINI_API_KEY`             | Your Gemini API key               | Production + Preview |
+| `DATABASE_URL`               | Your database connection string   | Production + Preview |
 
 ### Step 2: Get Your Clerk Keys
 
@@ -61,11 +61,13 @@ After deployment completes:
 You mentioned having the keys as secrets in GitHub and Cloudflare. Here's why that's not enough:
 
 ### GitHub Secrets
+
 - ✅ Used for GitHub Actions workflows
 - ❌ NOT available to Cloudflare Pages builds
 - **Use case:** Running automation scripts, tests in CI/CD
 
 ### Cloudflare Secrets (Workers/Pages)
+
 - Must be set as **Environment Variables** in Pages project settings
 - ✅ Available during build and runtime
 - **Use case:** Building and running the app
@@ -74,10 +76,10 @@ You mentioned having the keys as secrets in GitHub and Cloudflare. Here's why th
 
 Vite variables work differently:
 
-| Variable Type | When Loaded | Where Set |
-|--------------|-------------|-----------|
-| `VITE_*` | **Build time** | Cloudflare Pages Environment Variables |
-| Regular vars | **Runtime** | Cloudflare Pages Environment Variables |
+| Variable Type | When Loaded    | Where Set                              |
+| ------------- | -------------- | -------------------------------------- |
+| `VITE_*`      | **Build time** | Cloudflare Pages Environment Variables |
+| Regular vars  | **Runtime**    | Cloudflare Pages Environment Variables |
 
 **Key Point:** `VITE_CLERK_PUBLISHABLE_KEY` is embedded into your JavaScript bundle during the build process. If it's not set when Cloudflare builds your app, the bundle won't contain it.
 
@@ -88,17 +90,20 @@ Vite variables work differently:
 For a fully functional deployment, set these in Cloudflare Pages Environment Variables:
 
 ### Frontend (Build-time - Required)
+
 - [ ] `VITE_CLERK_PUBLISHABLE_KEY` - Clerk authentication (client)
 - [ ] `VITE_GEMINI_API_KEY` - If using Gemini from client (optional)
 - [ ] `VITE_SUPABASE_URL` - If using Supabase client (optional)
 - [ ] `VITE_SUPABASE_ANON_KEY` - If using Supabase client (optional)
 
 ### Backend (Runtime - Required)
+
 - [ ] `CLERK_SECRET_KEY` - Clerk authentication (server)
 - [ ] `GEMINI_API_KEY` - Gemini API access
 - [ ] `DATABASE_URL` - PostgreSQL connection string
 
 ### Backend (Runtime - Optional)
+
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - For admin Supabase operations
 - [ ] `SMTP_*` - Email configuration (if using)
 
@@ -107,6 +112,7 @@ For a fully functional deployment, set these in Cloudflare Pages Environment Var
 ## Testing Locally vs. Production
 
 ### Local Development (.env file)
+
 ```bash
 # Copy example
 cp .env.example .env
@@ -122,6 +128,7 @@ npm run dev
 ```
 
 ### Cloudflare Pages (Environment Variables UI)
+
 - Same variables, but set through Cloudflare dashboard
 - Must be set for BOTH Production and Preview environments
 - Remember to redeploy after changes

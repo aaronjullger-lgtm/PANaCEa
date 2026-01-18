@@ -8,25 +8,17 @@ import {
   TASK_DECK,
   GEMINI_FLASH_MODEL,
   GEMINI_PRO_MODEL,
-} from "../src/constants";
-import type {
-  Question,
-  SessionSettings,
-  SystemCode,
-  ConditionDefinition,
-} from "../types";
+} from '../src/constants';
+import type { Question, SessionSettings, SystemCode, ConditionDefinition } from '../types';
 import type { PatientEncounterCase, PatientPersona } from '../types/drill-modes';
-import type { ConditionMeta } from "../src/types/conditions";
+import type { ConditionMeta } from '../src/types/conditions';
 import {
   getConditionByIdSync,
   isMeaningfulContent,
   normalizeConditionContent,
-} from "../lib/loadConditions";
-import { getApiEndpoint, API_ENDPOINTS } from "../lib/utils/apiConfig";
-import {
-  getConditionsBySystem,
-  getAllConditions,
-} from "./conditionService";
+} from '../lib/loadConditions';
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+import { getConditionsBySystem, getAllConditions } from './conditionService';
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
@@ -44,35 +36,42 @@ interface ConditionMetadata {
 /**
  * Get a random condition for a specific organ system
  */
-async function getRandomConditionForSystemDB(systemCode: string): Promise<ConditionMetadata | null> {
+async function getRandomConditionForSystemDB(
+  systemCode: string
+): Promise<ConditionMetadata | null> {
   try {
     const conditions = await getConditionsBySystem(systemCode);
-    
+
     // Defensive: Ensure we have a valid array with conditions
     if (!conditions || !Array.isArray(conditions) || conditions.length === 0) {
       console.warn(`[getRandomConditionForSystemDB] No conditions found for system ${systemCode}`);
       return null;
     }
-    
+
     const randomIndex = Math.floor(Math.random() * conditions.length);
     const condition = conditions[randomIndex];
-    
+
     // Defensive: Validate the condition object has required fields
     if (!condition || typeof condition !== 'object') {
-      console.warn(`[getRandomConditionForSystemDB] Invalid condition at index ${randomIndex} for ${systemCode}`);
+      console.warn(
+        `[getRandomConditionForSystemDB] Invalid condition at index ${randomIndex} for ${systemCode}`
+      );
       return null;
     }
-    
+
     // Safely access properties with fallbacks
     // ConditionMeta uses 'condition' field, but some responses may use 'name'
     const conditionName = condition.condition || (condition as any).name;
     const conditionSystem = condition.system || systemCode;
-    
+
     if (!conditionName) {
-      console.warn(`[getRandomConditionForSystemDB] Condition missing name field for ${systemCode}:`, condition);
+      console.warn(
+        `[getRandomConditionForSystemDB] Condition missing name field for ${systemCode}:`,
+        condition
+      );
       return null;
     }
-    
+
     return {
       name: conditionName,
       system: conditionSystem,
@@ -93,27 +92,30 @@ async function findConditionByName(conditionName: string): Promise<ConditionMeta
     console.warn('[findConditionByName] Invalid conditionName:', conditionName);
     return null;
   }
-  
+
   try {
     const allConditions = await getAllConditions();
-    
+
     // Defensive: Ensure we have a valid array
     if (!allConditions || !Array.isArray(allConditions)) {
-      console.error('[findConditionByName] getAllConditions did not return an array:', typeof allConditions);
+      console.error(
+        '[findConditionByName] getAllConditions did not return an array:',
+        typeof allConditions
+      );
       return null;
     }
-    
+
     if (allConditions.length === 0) {
       console.warn('[findConditionByName] No conditions available in database');
       return null;
     }
-    
+
     const normalizedSearch = conditionName.toLowerCase().trim();
-    
+
     // Use a safer find with explicit null checks
-    const match = allConditions.find(c => {
+    const match = allConditions.find((c) => {
       if (!c || typeof c !== 'object') return false;
-      
+
       // Check primary condition name
       const conditionNameField = c.condition || (c as any).name;
       if (conditionNameField && typeof conditionNameField === 'string') {
@@ -121,26 +123,26 @@ async function findConditionByName(conditionName: string): Promise<ConditionMeta
           return true;
         }
       }
-      
+
       // Check aliases
       if (c.aliases && Array.isArray(c.aliases)) {
-        return c.aliases.some((a: string) => 
-          a && typeof a === 'string' && a.toLowerCase().trim() === normalizedSearch
+        return c.aliases.some(
+          (a: string) => a && typeof a === 'string' && a.toLowerCase().trim() === normalizedSearch
         );
       }
-      
+
       return false;
     });
-    
+
     if (!match) return null;
-    
+
     // Safely extract the condition name
     const matchedName = match.condition || (match as any).name;
     if (!matchedName || !match.system) {
       console.warn('[findConditionByName] Matched condition missing required fields:', match);
       return null;
     }
-    
+
     return {
       name: matchedName,
       system: match.system,
@@ -177,8 +179,8 @@ function normalizeId(value: unknown): string {
   const str = safeString(value, 'unknown');
   return str
     .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 }
 
 /**
@@ -190,7 +192,7 @@ function buildConditionId(meta: ConditionMeta): string {
   const safeSystem = safeString(meta.system, 'UNKNOWN');
   const safeSubcategory = normalizeId(meta.subcategory);
   const safeCondition = normalizeId(meta.condition);
-  
+
   return `${safeSystem}__${safeSubcategory}__${safeCondition}`;
 }
 
@@ -225,14 +227,17 @@ async function findConditionMeta(conditionName: string): Promise<ConditionMeta |
     console.warn('findConditionMeta called with empty conditionName');
     return undefined;
   }
-  
+
   try {
     const conditionData = await findConditionByName(conditionName);
     if (!conditionData) return undefined;
-    
+
     // Validate required fields exist before using them
     if (!conditionData.system || !conditionData.name) {
-      console.warn('findConditionMeta: conditionData missing required fields (system or name)', conditionData);
+      console.warn(
+        'findConditionMeta: conditionData missing required fields (system or name)',
+        conditionData
+      );
       return undefined;
     }
 
@@ -330,46 +335,52 @@ function getRetryInfo(status: number): { retryable: boolean; retryAfterMs: numbe
 /**
  * Sleep helper for retry delays
  */
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function callGeminiText(
-  modelName: string = "gemini-2.5-flash",
+  modelName: string = 'gemini-2.5-flash',
   prompt: string,
   temperature: number = 0.8,
   options: { maxRetries?: number } = {}
 ): Promise<string> {
   const { maxRetries = 2 } = options;
-  
-  const isTestEnv = typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
+
+  const isTestEnv =
+    typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
   if (isTestEnv) {
-    const hash = Array.from(prompt || '').reduce((acc, char) => (acc + char.charCodeAt(0)) % 100000, 0);
+    const hash = Array.from(prompt || '').reduce(
+      (acc, char) => (acc + char.charCodeAt(0)) % 100000,
+      0
+    );
     const preview = prompt.replace(/\s+/g, ' ').trim();
     const mock = `[Gemini mock ${hash}] ${preview}`;
     return mock.length < 40 ? mock.padEnd(40, '.') : mock;
   }
 
   let lastError: GeminiApiError | Error | null = null;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_PROXY), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modelName, prompt, temperature }),
       });
 
       if (!response.ok) {
         const { retryable, retryAfterMs } = getRetryInfo(response.status);
-        
+
         // If retryable and we have retries left, wait and continue
         if (retryable && attempt < maxRetries) {
-          console.warn(`[Gemini] Request failed with ${response.status}, retrying in ${retryAfterMs}ms (attempt ${attempt + 1}/${maxRetries})`);
+          console.warn(
+            `[Gemini] Request failed with ${response.status}, retrying in ${retryAfterMs}ms (attempt ${attempt + 1}/${maxRetries})`
+          );
           await sleep(retryAfterMs);
           continue;
         }
-        
+
         // Non-retryable or out of retries
-        let errorDetails = "";
+        let errorDetails = '';
         try {
           const errorData = await response.json();
           errorDetails = errorData.error || errorData.details || response.statusText;
@@ -385,53 +396,57 @@ export async function callGeminiText(
         );
       }
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Backend server returned non-JSON response. Please ensure the server is running (npm run dev:all).");
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(
+          'Backend server returned non-JSON response. Please ensure the server is running (npm run dev:all).'
+        );
       }
 
       const data = await response.json();
-      const text = typeof data === "string" ? data : data.text;
+      const text = typeof data === 'string' ? data : data.text;
 
       if (!text || !text.trim()) {
-        throw new Error("Empty response from Gemini");
+        throw new Error('Empty response from Gemini');
       }
 
       return text;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // If it's already a GeminiApiError, rethrow (already handled retry logic above)
       if (error instanceof GeminiApiError) {
         throw error;
       }
-      
+
       // For network errors, attempt retry
-      if (attempt < maxRetries && (
-        error instanceof TypeError || // Network error
-        (error instanceof Error && error.message.includes('fetch'))
-      )) {
-        console.warn(`[Gemini] Network error, retrying in 2000ms (attempt ${attempt + 1}/${maxRetries})`);
+      if (
+        attempt < maxRetries &&
+        (error instanceof TypeError || // Network error
+          (error instanceof Error && error.message.includes('fetch')))
+      ) {
+        console.warn(
+          `[Gemini] Network error, retrying in 2000ms (attempt ${attempt + 1}/${maxRetries})`
+        );
         await sleep(2000);
         continue;
       }
-      
+
       throw lastError;
     }
   }
-  
-  throw lastError || new Error("Gemini request failed after retries");
+
+  throw lastError || new Error('Gemini request failed after retries');
 }
 
 // --- Helper: strip any HTML tags from a string (for options/condition) ---
 
 const stripHtmlTags = (text: string | null | undefined): string => {
   const safe = safeString(text);
-  return safe.replace(/<\/?[^>]+(>|$)/g, "");
+  return safe.replace(/<\/?[^>]+(>|$)/g, '');
 };
 
-const slugify = (value: string | null | undefined): string =>
-  normalizeId(value);
+const slugify = (value: string | null | undefined): string => normalizeId(value);
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
@@ -453,14 +468,14 @@ function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
     }
   };
 
-  maybeAdd("overview", "Overview");
-  maybeAdd("etiology", "Etiology");
-  maybeAdd("diagnostics", "Diagnostics");
-  maybeAdd("clinicalPresentation", "Clinical Presentation");
-  maybeAdd("riskFactors", "Risk Factors");
-  maybeAdd("prognosis", "Prognosis");
+  maybeAdd('overview', 'Overview');
+  maybeAdd('etiology', 'Etiology');
+  maybeAdd('diagnostics', 'Diagnostics');
+  maybeAdd('clinicalPresentation', 'Clinical Presentation');
+  maybeAdd('riskFactors', 'Risk Factors');
+  maybeAdd('prognosis', 'Prognosis');
 
-  return pieces.join("\n");
+  return pieces.join('\n');
 }
 
 // --- Deck / history state ---
@@ -479,15 +494,15 @@ let enabledSystemsCacheKey: string | null = null;
 
 function getEnabledSystems(): Set<SystemCode> {
   const saved = localStorage.getItem('panceai_enabled_systems');
-  
+
   // Return cached result if localStorage value hasn't changed
   if (saved === enabledSystemsCacheKey && cachedEnabledSystems) {
     return cachedEnabledSystems;
   }
-  
+
   // Update cache
   enabledSystemsCacheKey = saved;
-  
+
   if (saved) {
     try {
       cachedEnabledSystems = new Set(JSON.parse(saved) as SystemCode[]);
@@ -503,16 +518,16 @@ function getEnabledSystems(): Set<SystemCode> {
 
 export function refillShuffledContentQueue() {
   const enabledSystems = getEnabledSystems();
-  
+
   // Filter deck to only include enabled systems
-  let deck = PANCE_DECK.filter(system => enabledSystems.has(system as SystemCode));
-  
+  let deck = PANCE_DECK.filter((system) => enabledSystems.has(system as SystemCode));
+
   // If no systems are enabled, use all systems (fallback)
   if (deck.length === 0) {
     console.warn('No systems enabled, using all systems as fallback');
     deck = [...PANCE_DECK];
   }
-  
+
   // Shuffle the filtered deck
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -539,12 +554,14 @@ export async function fetchNewQuestion(
   const { focus, difficulty } = settings;
 
   // Get user context for career-aware prompting
-  let userContextInstruction = "";
+  let userContextInstruction = '';
   try {
     // Dynamic import with type assertion to handle TS inference issues
-    const userContextModule = await import('./userContextService') as { getUserContext: () => { isPANREUser: boolean } };
+    const userContextModule = (await import('./userContextService')) as {
+      getUserContext: () => { isPANREUser: boolean };
+    };
     const userContext = userContextModule.getUserContext();
-    
+
     if (userContext.isPANREUser) {
       userContextInstruction = `
 Context: This question is for a PRACTICING PA preparing for PANRE recertification.
@@ -561,20 +578,22 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
     }
   } catch (e) {
     // If userContextService fails, continue without context adjustment
-    console.warn('[geminiService] Could not load user context, continuing without context-aware prompting');
+    console.warn(
+      '[geminiService] Could not load user context, continuing without context-aware prompting'
+    );
   }
 
-  let detailedDifficultyInstruction = "";
+  let detailedDifficultyInstruction = '';
   switch (difficulty) {
-    case "easier":
+    case 'easier':
       detailedDifficultyInstruction =
         "Generate an 'Easier' question. This question should be easier than a standard PANCE question and must test the foundational characteristics of a common, core topic. Focus on 'classic' textbook presentations and first-order knowledge to help me build competence.";
       break;
-    case "same":
+    case 'same':
       detailedDifficultyInstruction =
         "Generate a 'PANCE-level' question. This question must be on-par with the difficulty of a real PANCE question. It should be a clinical vignette with plausible distractors that tests second-order thinking (e.g., diagnosis, management, or next diagnostic step).";
       break;
-    case "harder":
+    case 'harder':
       detailedDifficultyInstruction =
         "Generate a 'Harder' question that is more difficult than a standard PANCE question. You can do this by using a complex patient (multiple comorbidities), testing a less common 'zebra' condition, or asking a multi-step reasoning question (e.g., 'What is the mechanism of action of the second-line treatment for this complex patient?').";
       break;
@@ -584,15 +603,15 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
     recentQuestionHistory.length > 0
       ? `Critically, avoid generating a question that is substantively or thematically similar to any of these recently generated questions: 
 - "${recentQuestionHistory.join('"\n- "')}"`
-      : "Avoid generating questions that are substantively identical or too similar to common practice questions. The goal is to provide a fresh challenge.";
+      : 'Avoid generating questions that are substantively identical or too similar to common practice questions. The goal is to provide a fresh challenge.';
 
-  let prompt = "";
+  let prompt = '';
 
   // Optional condition chosen client-side (for hybrid targeting and stats)
   let chosenConditionDef: ConditionDefinition | undefined;
   let chosenConditionMeta: ConditionMeta | undefined;
   let conditionRegistryNotes: string | undefined;
-  
+
   // If the client requested a specific condition (e.g. drill from heatmap),
   // resolve it into a ConditionDefinition from the registry.
   let chosenSubcategory: string | undefined;
@@ -604,17 +623,20 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
     if (meta) {
       chosenConditionMeta = meta;
       chosenConditionDef = buildConditionDefinition(meta);
-      
+
       // Load database content via API (browser-safe)
       try {
-        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
+        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
+          await import('./conditionContentService');
         const dbContent = await fetchConditionContent(settings.conditionName);
-        
+
         if (dbContent && hasCompleteContent(dbContent)) {
           conditionRegistryNotes = buildDatabaseContext(dbContent);
           console.log(`✓ Using database content for requested condition ${settings.conditionName}`);
         } else {
-          console.warn(`⚠ Incomplete database content for ${settings.conditionName}, will use registry/API knowledge`);
+          console.warn(
+            `⚠ Incomplete database content for ${settings.conditionName}, will use registry/API knowledge`
+          );
         }
       } catch (error) {
         console.error(`Error loading database content for ${settings.conditionName}:`, error);
@@ -623,7 +645,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
   }
 
   // -------- FOCUS: ALL (use content + task decks) --------
-  if (focus === "all") {
+  if (focus === 'all') {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
     }
@@ -634,7 +656,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
 
     // Hybrid: pick a random condition within this system (except PRO/OTHER)
     let selectedConditionMeta: ConditionMeta | undefined;
-    if (systemCode !== "PRO" && systemCode !== "OTHER") {
+    if (systemCode !== 'PRO' && systemCode !== 'OTHER') {
       // NEW: Use database-driven registry instead of static import
       try {
         const dbCondition = await getRandomConditionForSystemDB(systemCode);
@@ -653,31 +675,41 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       } catch (error) {
         console.error(`Error fetching random condition for ${systemCode}:`, error);
       }
-      
+
       if (selectedConditionMeta && isValidConditionMeta(selectedConditionMeta)) {
         chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
-        
+
         // Load database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
-          const dbContent = await fetchConditionContent(safeString(selectedConditionMeta.condition));
-          
+          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
+            await import('./conditionContentService');
+          const dbContent = await fetchConditionContent(
+            safeString(selectedConditionMeta.condition)
+          );
+
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);
-            console.log(`✓ Using database content for ${safeString(selectedConditionMeta.condition)}`);
+            console.log(
+              `✓ Using database content for ${safeString(selectedConditionMeta.condition)}`
+            );
           } else {
-            console.warn(`⚠ Incomplete database content for ${safeString(selectedConditionMeta.condition)}, using registry/API knowledge`);
+            console.warn(
+              `⚠ Incomplete database content for ${safeString(selectedConditionMeta.condition)}, using registry/API knowledge`
+            );
             conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
           }
         } catch (error) {
-          console.error(`Error loading database content for ${safeString(selectedConditionMeta.condition)}:`, error);
+          console.error(
+            `Error loading database content for ${safeString(selectedConditionMeta.condition)}:`,
+            error
+          );
           conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
         }
       }
     }
 
-    if (contentTopicAbbr === "PRO") {
+    if (contentTopicAbbr === 'PRO') {
       // Professional Practice special handling (no condition registry)
       prompt = `You are generating a structured JSON object for a PANCE practice question.
 ${userContextInstruction}
@@ -718,12 +750,13 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
       const registryInstruction = conditionRegistryNotes
         ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
-        : "";
+        : '';
 
       // Validate selectedConditionMeta before using in string template
-      const conditionContext = selectedConditionMeta && isValidConditionMeta(selectedConditionMeta)
-        ? `You are targeting the subcategory "${safeString(selectedConditionMeta.subcategory, 'General')}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${safeString(selectedConditionMeta.condition)}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
-        : `You are targeting the "${fullContentTopicName}" system.`;
+      const conditionContext =
+        selectedConditionMeta && isValidConditionMeta(selectedConditionMeta)
+          ? `You are targeting the subcategory "${safeString(selectedConditionMeta.subcategory, 'General')}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${safeString(selectedConditionMeta.condition)}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
+          : `You are targeting the "${fullContentTopicName}" system.`;
 
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
 
@@ -764,42 +797,47 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     }
   } else {
     // -------- FOCUS: topic / growth / generic (non-ALL) --------
-    let topicInstruction = "";
-    if (focus === "topic" && settings.topic) {
-      const fullTopicName =
-        ABBREVIATION_TO_TOPIC_MAP[settings.topic] || settings.topic;
+    let topicInstruction = '';
+    if (focus === 'topic' && settings.topic) {
+      const fullTopicName = ABBREVIATION_TO_TOPIC_MAP[settings.topic] || settings.topic;
       topicInstruction = `The "topic" field in the JSON MUST be exactly "${fullTopicName}".`;
-    } else if (focus === "growth" && growthAreas.length > 0) {
+    } else if (focus === 'growth' && growthAreas.length > 0) {
       const fullGrowthAreas = growthAreas
         .map((abbr) => ABBREVIATION_TO_TOPIC_MAP[abbr] || abbr)
-        .join(", ");
+        .join(', ');
       topicInstruction = `First choose exactly ONE topic from: [${fullGrowthAreas}] and use that value in the "topic" field.`;
     } else {
       topicInstruction = `First choose exactly ONE topic from: [${PANCE_TOPICS.join(
-        ", "
+        ', '
       )}] and use that value in the "topic" field.`;
     }
-    let subcategoryInstruction = "";
+    let subcategoryInstruction = '';
     if (chosenSubcategory) {
       subcategoryInstruction = `- Subcategory targeting: Choose ONE condition from the "${chosenSubcategory}" subcategory of this system. The JSON "subcategory" must be exactly "${chosenSubcategory}".`;
     }
     // Optional: tighten the question onto a specific condition
-    let conditionInstruction = "";
+    let conditionInstruction = '';
     if (chosenConditionDef) {
       const fullTopicName =
-        ABBREVIATION_TO_TOPIC_MAP[chosenConditionDef.system] ||
-        chosenConditionDef.system;
+        ABBREVIATION_TO_TOPIC_MAP[chosenConditionDef.system] || chosenConditionDef.system;
 
       // If we have the meta, get the context to ensure accuracy
-      if (chosenConditionMeta && isValidConditionMeta(chosenConditionMeta) && !conditionRegistryNotes) {
+      if (
+        chosenConditionMeta &&
+        isValidConditionMeta(chosenConditionMeta) &&
+        !conditionRegistryNotes
+      ) {
         // Fetch database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
+          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
+            await import('./conditionContentService');
           const dbContent = await fetchConditionContent(safeString(chosenConditionMeta.condition));
-          
+
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);
-            console.log(`✓ Using database content for ${safeString(chosenConditionMeta.condition)}`);
+            console.log(
+              `✓ Using database content for ${safeString(chosenConditionMeta.condition)}`
+            );
           } else {
             conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
           }
@@ -811,13 +849,13 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
       const registryInstruction = conditionRegistryNotes
         ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
-        : "";
+        : '';
 
-       conditionInstruction = chosenConditionDef 
-         ? `- Condition targeting: The question's PRIMARY condition MUST be "${safeString(chosenConditionDef.condition)}" within the "${safeString(chosenConditionDef.subcategory, 'General')}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${safeString(chosenConditionDef.condition)}".${registryInstruction}`
-         : "";
-  }
-    
+      conditionInstruction = chosenConditionDef
+        ? `- Condition targeting: The question's PRIMARY condition MUST be "${safeString(chosenConditionDef.condition)}" within the "${safeString(chosenConditionDef.subcategory, 'General')}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${safeString(chosenConditionDef.condition)}".${registryInstruction}`
+        : '';
+    }
+
     prompt = `You are generating a structured JSON object for a PANCE practice question.
 ${userContextInstruction}
 
@@ -838,7 +876,7 @@ Core Instructions:
 Topic and Difficulty:
 - ${topicInstruction}
 - ${detailedDifficultyInstruction}
-${conditionInstruction ? conditionInstruction + "\n" : ""}
+${conditionInstruction ? conditionInstruction + '\n' : ''}
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -855,43 +893,35 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
   // --- Call Gemini through proxy and parse JSON ---
 
-   try {
+  try {
     const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8);
 
     // Repair common HTML-table newline bug:
     // Gemini sometimes puts a real newline between tags like </td>\n    <td>,
     // which is illegal inside a JSON string. This collapses any ">\n<" into "><".
-    const jsonString = rawText.replace(/>\s*\n\s*</g, "><");
+    const jsonString = rawText.replace(/>\s*\n\s*</g, '><');
 
     let parsed: ParsedQuestionResponse;
     try {
       parsed = JSON.parse(jsonString) as ParsedQuestionResponse;
     } catch (parseError) {
-      console.error(
-        "Failed to parse JSON from Gemini. String that failed:",
-        rawText
-      );
-      throw new Error(
-        "The API returned a malformed JSON response. Please try again."
-      );
+      console.error('Failed to parse JSON from Gemini. String that failed:', rawText);
+      throw new Error('The API returned a malformed JSON response. Please try again.');
     }
 
     // Basic sanity checks
     if (
       !parsed.question ||
-      !parsed.question.includes("?") ||
+      !parsed.question.includes('?') ||
       !Array.isArray(parsed.options) ||
       parsed.options.length !== 4 ||
-      typeof parsed.correctAnswerIndex !== "number" ||
+      typeof parsed.correctAnswerIndex !== 'number' ||
       !parsed.rationale ||
       !parsed.topic ||
       !parsed.condition ||
       !Array.isArray(parsed.pearls)
     ) {
-      console.warn(
-        "Received malformed JSON data from API, retrying once...",
-        parsed
-      );
+      console.warn('Received malformed JSON data from API, retrying once...', parsed);
       return fetchNewQuestion(settings, growthAreas);
     }
 
@@ -907,17 +937,15 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
     const topicAbbreviation = TOPIC_MAP[parsed.topic] || parsed.topic;
     if (!TOPIC_MAP[parsed.topic]) {
-      console.warn(
-        `API returned an unknown topic "${parsed.topic}". Storing it as-is.`
-      );
+      console.warn(`API returned an unknown topic "${parsed.topic}". Storing it as-is.`);
     }
 
     // Build the base question object
     const baseQuestion: Question = {
       ...parsed,
       topic: topicAbbreviation,
-      conditionId: parsed.conditionId || "",
-      condition: parsed.condition || "Unknown Condition",
+      conditionId: parsed.conditionId || '',
+      condition: parsed.condition || 'Unknown Condition',
     };
 
     // If we pre-selected a condition (hybrid mode), lock it in here
@@ -936,26 +964,24 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         baseQuestion.system = baseQuestion.system ?? def.system;
         baseQuestion.subcategory = baseQuestion.subcategory ?? def.subcategory;
       } else {
-        baseQuestion.conditionId = `OTHER__unspecified__${slugify(
-          baseQuestion.condition
-        )}`;
-        baseQuestion.system = baseQuestion.system ?? "OTHER";
-        baseQuestion.subcategory = baseQuestion.subcategory ?? "Uncategorized";
+        baseQuestion.conditionId = `OTHER__unspecified__${slugify(baseQuestion.condition)}`;
+        baseQuestion.system = baseQuestion.system ?? 'OTHER';
+        baseQuestion.subcategory = baseQuestion.subcategory ?? 'Uncategorized';
       }
     }
 
     return baseQuestion;
   } catch (error) {
-    console.error("Error during fetchNewQuestion:", error);
+    console.error('Error during fetchNewQuestion:', error);
     if (
       error instanceof Error &&
-      (error.message.startsWith("The API returned an invalid response") ||
-        error.message.startsWith("The API returned a malformed JSON"))
+      (error.message.startsWith('The API returned an invalid response') ||
+        error.message.startsWith('The API returned a malformed JSON'))
     ) {
       throw error;
     }
     throw new Error(
-      "Failed to generate a new question. Please check your Gemini API key and network connection."
+      'Failed to generate a new question. Please check your Gemini API key and network connection.'
     );
   }
 }
@@ -978,14 +1004,14 @@ export async function prefetchQuestions(
 // --- Study-guide / flashcard generator ---
 
 export async function generateContent(
-  type: "study-guide" | "flashcards",
+  type: 'study-guide' | 'flashcards',
   topic: string,
   useProModel: boolean
 ): Promise<string> {
   const fullTopicName = ABBREVIATION_TO_TOPIC_MAP[topic] || topic;
 
   let prompt: string;
-  if (type === "study-guide") {
+  if (type === 'study-guide') {
     prompt = `Generate a concise, high-yield study guide for a PA student on the PANCE topic: "${fullTopicName}". Focus on pathophysiology, clinical presentation, diagnosis, and treatment. Format clearly with headings and bullet points.`;
   } else {
     prompt = `Generate 10 high-yield PANCE flashcards for the topic "${fullTopicName}". Format them as:
@@ -1003,10 +1029,8 @@ A: [Answer]
     const text = await callGeminiText(modelName, prompt, temperature);
     return text;
   } catch (error) {
-    console.error("Error generating content:", error);
-    throw new Error(
-      "Failed to generate content. The API may be busy or an error occurred."
-    );
+    console.error('Error generating content:', error);
+    throw new Error('Failed to generate content. The API may be busy or an error occurred.');
   }
 }
 
@@ -1041,10 +1065,8 @@ Your Task:
     const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
     return text;
   } catch (error) {
-    console.error("Error generating alternate rationale:", error);
-    throw new Error(
-      "Failed to generate an explanation. The API may be busy or an error occurred."
-    );
+    console.error('Error generating alternate rationale:', error);
+    throw new Error('Failed to generate an explanation. The API may be busy or an error occurred.');
   }
 }
 
@@ -1058,7 +1080,7 @@ export async function chatWithPatientSimulator(
   caseData: PatientEncounterCase,
   chatHistory: ChatMessage[],
   userMessage: string,
-  persona?: PatientPersona | null,
+  persona?: PatientPersona | null
 ): Promise<string> {
   const personaHeader = persona
     ? `
@@ -1110,9 +1132,9 @@ Current conversation history is provided below. Respond to the last user message
   // Note: In a real production app, we'd use the proper 'contents' array structure with 'parts'.
   // For this proxy helper, we'll concatenate the prompt since callGeminiText takes a string prompt.
   // However, to maintain context, we should append the history to the prompt.
-  
-  let fullPrompt = systemPrompt + "\n\nCONVERSATION HISTORY:\n";
-  chatHistory.forEach(msg => {
+
+  let fullPrompt = systemPrompt + '\n\nCONVERSATION HISTORY:\n';
+  chatHistory.forEach((msg) => {
     fullPrompt += `${msg.role === 'user' ? 'Doctor' : 'Patient'}: ${msg.content}\n`;
   });
   fullPrompt += `Doctor: ${userMessage}\nPatient:`;
@@ -1151,19 +1173,25 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
 
   try {
     const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.0);
-    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    const cleanJson = stripHtmlTags(response)
+      .replace(/```json|```/g, '')
+      .trim();
     return JSON.parse(cleanJson);
   } catch (error) {
-    console.error("Error evaluating diagnosis:", error);
+    console.error('Error evaluating diagnosis:', error);
     // Fallback to simple string match if AI fails
     const normalizedUser = (userDiagnosis || '').toLowerCase();
     const normalizedCorrect = (correctDiagnosis || '').toLowerCase();
-    const isCorrect = normalizedUser && normalizedCorrect && 
+    const isCorrect =
+      normalizedUser &&
+      normalizedCorrect &&
       (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser));
     return {
       isCorrect,
       score: isCorrect ? 100 : 0,
-      feedback: isCorrect ? "Correct diagnosis." : `Incorrect. The correct diagnosis was ${correctDiagnosis}.`
+      feedback: isCorrect
+        ? 'Correct diagnosis.'
+        : `Incorrect. The correct diagnosis was ${correctDiagnosis}.`,
     };
   }
 }
@@ -1233,13 +1261,15 @@ Instructions:
 
   try {
     const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.4);
-    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    const cleanJson = stripHtmlTags(response)
+      .replace(/```json|```/g, '')
+      .trim();
     return JSON.parse(cleanJson);
   } catch (error) {
-    console.error("Error generating diagnostic result:", error);
+    console.error('Error generating diagnostic result:', error);
     return {
-      result: "Result unavailable.",
-      interpretation: "Test could not be processed."
+      result: 'Result unavailable.',
+      interpretation: 'Test could not be processed.',
     };
   }
 }
@@ -1269,10 +1299,12 @@ Return JSON: { "isCorrect": boolean, "score": number, "feedback": "string" }
 
   try {
     const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.2);
-    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    const cleanJson = stripHtmlTags(response)
+      .replace(/```json|```/g, '')
+      .trim();
     return JSON.parse(cleanJson);
   } catch (error) {
-    return { isCorrect: false, score: 0, feedback: "Error evaluating plan." };
+    return { isCorrect: false, score: 0, feedback: 'Error evaluating plan.' };
   }
 }
 
@@ -1327,7 +1359,13 @@ export interface GradingResult {
 
 export async function gradeSOAPNote(
   soapNote: SOAPNote,
-  patientCase: { patientInfo: string; chiefComplaint: string; history: string; vitals?: string; physicalExam?: string; }
+  patientCase: {
+    patientInfo: string;
+    chiefComplaint: string;
+    history: string;
+    vitals?: string;
+    physicalExam?: string;
+  }
 ): Promise<GradingResult> {
   const prompt = `
     You are an expert medical educator grading a PA student's SOAP note.
@@ -1371,18 +1409,18 @@ export async function gradeSOAPNote(
     const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim();
     return JSON.parse(jsonString) as GradingResult;
   } catch (error) {
-    console.error("Error grading SOAP note:", error);
+    console.error('Error grading SOAP note:', error);
     // Fallback to a basic error result
     return {
       overallScore: 0,
       sectionScores: { subjective: 0, objective: 0, assessment: 0, plan: 0 },
       feedback: {
         strengths: [],
-        improvements: ["Failed to grade note due to AI service error."],
+        improvements: ['Failed to grade note due to AI service error.'],
         criticalMissing: [],
-        billingElements: []
+        billingElements: [],
       },
-      grade: 'F'
+      grade: 'F',
     };
   }
 }
@@ -1417,9 +1455,9 @@ export async function validateSemanticMatch(
 
   try {
     const responseText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.1);
-    return (responseText || '').toLowerCase().includes("true");
+    return (responseText || '').toLowerCase().includes('true');
   } catch (error) {
-    console.error("Semantic validation error:", error);
+    console.error('Semantic validation error:', error);
     return false; // Fallback to strict
   }
 }

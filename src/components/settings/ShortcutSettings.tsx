@@ -1,6 +1,6 @@
 /**
  * ShortcutSettings - Keyboard Shortcut Configuration Panel
- * 
+ *
  * Allows users to view and customize keyboard shortcuts for the application.
  * Features:
  * - Visual display of all shortcuts
@@ -28,10 +28,7 @@ interface ShortcutSettingsProps {
   className?: string;
 }
 
-export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
-  onUpdate,
-  className = '',
-}) => {
+export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, className = '' }) => {
   const { shortcuts, updateShortcut, resetShortcuts } = useShortcutContext();
   const [listeningFor, setListeningFor] = useState<ShortcutAction | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
@@ -79,7 +76,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
       // Update the shortcut
       updateShortcut(listeningFor, newKey);
       setListeningFor(null);
-      
+
       // Show success message
       setSuccessMessage(
         `${getActionDisplayName(listeningFor)} set to "${formatKeyForDisplay(newKey)}"`
@@ -122,7 +119,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
     resetShortcuts();
     setSuccessMessage('Shortcuts reset to defaults');
     setTimeout(() => setSuccessMessage(null), 2000);
-    
+
     if (onUpdate) {
       onUpdate();
     }
@@ -135,14 +132,17 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
   };
 
   return (
-    <div ref={containerRef} className={`bg-slate-900 rounded-xl border border-slate-700 p-6 ${className}`}>
+    <div
+      ref={containerRef}
+      className={`bg-slate-900 rounded-xl border border-slate-700 p-6 ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Keyboard className="w-6 h-6 text-blue-400" />
           <h2 className="text-2xl font-bold text-slate-100">Keyboard Shortcuts</h2>
         </div>
-        
+
         <button
           onClick={handleReset}
           className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-600"
@@ -154,7 +154,9 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
 
       {/* Instructions */}
       <p className="text-slate-400 text-sm mb-6">
-        Click any shortcut button to rebind it. Press <kbd className="px-2 py-1 bg-slate-800 rounded border border-slate-600 text-xs">Escape</kbd> to cancel.
+        Click any shortcut button to rebind it. Press{' '}
+        <kbd className="px-2 py-1 bg-slate-800 rounded border border-slate-600 text-xs">Escape</kbd>{' '}
+        to cancel.
       </p>
 
       {/* Success Message */}
@@ -204,9 +206,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
               {/* Action Name */}
               <div className="flex-1">
                 <h3 className="text-slate-100 font-medium">{displayName}</h3>
-                <p className="text-slate-500 text-xs mt-1">
-                  {getActionDescription(action)}
-                </p>
+                <p className="text-slate-500 text-xs mt-1">{getActionDescription(action)}</p>
               </div>
 
               {/* Key Button */}
@@ -215,9 +215,10 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
                 disabled={isListening}
                 className={`
                   min-w-[120px] px-6 py-3 rounded-lg font-mono text-sm font-bold transition-all
-                  ${isListening
-                    ? 'bg-blue-600 text-white border-2 border-blue-400 animate-pulse'
-                    : 'bg-slate-700 text-slate-200 border-2 border-slate-600 hover:border-blue-500 hover:bg-slate-600'
+                  ${
+                    isListening
+                      ? 'bg-blue-600 text-white border-2 border-blue-400 animate-pulse'
+                      : 'bg-slate-700 text-slate-200 border-2 border-slate-600 hover:border-blue-500 hover:bg-slate-600'
                   }
                 `}
               >
@@ -238,8 +239,8 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
       {/* Footer Note */}
       <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
         <p className="text-slate-400 text-xs">
-          <strong className="text-slate-300">Note:</strong> Shortcuts are automatically saved to your browser's local storage. 
-          They will not trigger when you are typing in text fields.
+          <strong className="text-slate-300">Note:</strong> Shortcuts are automatically saved to
+          your browser's local storage. They will not trigger when you are typing in text fields.
         </p>
       </div>
     </div>
@@ -313,14 +314,11 @@ export const ShortcutSettingsCompact: React.FC<ShortcutSettingsProps> = ({
     <div className={`bg-slate-800 rounded-lg p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-slate-100 font-semibold text-sm">Shortcuts</h3>
-        <button
-          onClick={resetShortcuts}
-          className="text-xs text-slate-400 hover:text-slate-200"
-        >
+        <button onClick={resetShortcuts} className="text-xs text-slate-400 hover:text-slate-200">
           Reset
         </button>
       </div>
-      
+
       <div className="space-y-2">
         {actions.map((action) => (
           <div key={action} className="flex items-center justify-between text-sm">
@@ -329,16 +327,14 @@ export const ShortcutSettingsCompact: React.FC<ShortcutSettingsProps> = ({
               onClick={() => setListeningFor(action)}
               className={`
                 px-3 py-1 rounded font-mono text-xs
-                ${listeningFor === action
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ${
+                  listeningFor === action
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }
               `}
             >
-              {listeningFor === action
-                ? 'Press key...'
-                : formatKeyForDisplay(shortcuts[action])
-              }
+              {listeningFor === action ? 'Press key...' : formatKeyForDisplay(shortcuts[action])}
             </button>
           </div>
         ))}

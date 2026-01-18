@@ -1,53 +1,53 @@
 #!/usr/bin/env tsx
 /**
  * Universal Auto-Author Script - Generate Missing Content for ALL Registries
- * 
+ *
  * Identifies entities in the database that are missing core content
  * and generates it using AI in sequential stages to prevent overwhelm.
- * 
+ *
  * Stages:
  *   1. Conditions (existing)
  *   2. Lab Tests
  *   3. Imaging Studies
  *   4. Treatments
  *   5. Physiology Concepts
- * 
+ *
  * Usage:
  *   tsx scripts/generateMissingContent.ts [options]
- *   
+ *
  * Options:
  *   --stage=N             Process only stage N (1-5)
  *   --max-per-stage=N     Process at most N entities per stage (default: 50)
  *   --delay=MS            Delay between API calls in milliseconds (default: 2000)
  *   --dry-run             Show what would be processed without making changes
  *   --extended            Include extended fields for conditions
- * 
+ *
  * Environment Variables:
  *   GEMINI_API_KEY or GOOGLE_API_KEY - Required for AI generation
- * 
+ *
  * Examples:
  *   npm run generate:missing-content
  *   tsx scripts/generateMissingContent.ts --stage=2 --max-per-stage=20
  *   tsx scripts/generateMissingContent.ts --dry-run
  */
 
-import { config } from "dotenv";
-import { fileURLToPath } from "url";
-import { PrismaClient } from "@prisma/client";
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { PrismaClient } from '@prisma/client';
 import {
   generateConditionContent,
   generateLabContent,
   generateImagingContent,
   generateTreatmentContent,
   generatePhysiologyContent,
-} from "../lib/services/autoAuthor/contentGenerator";
+} from '../lib/services/autoAuthor/contentGenerator';
 import {
   validateGeneratedContent,
   validateLabContent,
   validateImagingContent,
   validateTreatmentContent,
   validatePhysiologyContent,
-} from "../lib/services/cms/contentValidator";
+} from '../lib/services/cms/contentValidator';
 
 // Load environment variables
 config();
@@ -81,15 +81,15 @@ function parseArgs(): {
   let includeExtendedFields = false;
 
   for (const arg of args) {
-    if (arg.startsWith("--stage=")) {
-      stage = parseInt(arg.split("=")[1], 10) || null;
-    } else if (arg.startsWith("--max-per-stage=")) {
-      maxPerStage = parseInt(arg.split("=")[1], 10) || 50;
-    } else if (arg.startsWith("--delay=")) {
-      delayMs = parseInt(arg.split("=")[1], 10) || 2000;
-    } else if (arg === "--dry-run") {
+    if (arg.startsWith('--stage=')) {
+      stage = parseInt(arg.split('=')[1], 10) || null;
+    } else if (arg.startsWith('--max-per-stage=')) {
+      maxPerStage = parseInt(arg.split('=')[1], 10) || 50;
+    } else if (arg.startsWith('--delay=')) {
+      delayMs = parseInt(arg.split('=')[1], 10) || 2000;
+    } else if (arg === '--dry-run') {
       dryRun = true;
-    } else if (arg === "--extended") {
+    } else if (arg === '--extended') {
       includeExtendedFields = true;
     }
   }
@@ -107,12 +107,12 @@ async function processConditions(
   dryRun: boolean,
   includeExtendedFields: boolean
 ): Promise<StageStats> {
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log("║         STAGE 1: Conditions                                ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║         STAGE 1: Conditions                                ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: StageStats = {
-    stageName: "Conditions",
+    stageName: 'Conditions',
     total: 0,
     generated: 0,
     skipped: 0,
@@ -123,11 +123,7 @@ async function processConditions(
   // Find conditions missing content
   const missingConditions = await prisma.medicalContent.findMany({
     where: {
-      OR: [
-        { overview: null },
-        { symptoms: null },
-        { treatment: null },
-      ],
+      OR: [{ overview: null }, { symptoms: null }, { treatment: null }],
     },
     select: {
       id: true,
@@ -141,14 +137,14 @@ async function processConditions(
   stats.total = missingConditions.length;
 
   if (stats.total === 0) {
-    console.log("✅ All conditions already have content!\n");
+    console.log('✅ All conditions already have content!\n');
     return stats;
   }
 
   console.log(`Found ${stats.total} conditions missing content\n`);
 
   if (dryRun) {
-    console.log("🔎 DRY RUN - Would process:");
+    console.log('🔎 DRY RUN - Would process:');
     missingConditions.forEach((c, i) => console.log(`   ${i + 1}. ${c.condition} (${c.system})`));
     console.log();
     return stats;
@@ -180,9 +176,9 @@ async function processConditions(
           // Convert arrays to bullet-point text format for storage
           const arrayToText = (arr: string[] | undefined): string | null => {
             if (!arr || arr.length === 0) return null;
-            return arr.map(item => `• ${item}`).join('\n');
+            return arr.map((item) => `• ${item}`).join('\n');
           };
-          
+
           await prisma.medicalContent.update({
             where: { id: condition.id },
             data: {
@@ -229,12 +225,12 @@ async function processLabTests(
   delayMs: number,
   dryRun: boolean
 ): Promise<StageStats> {
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log("║         STAGE 2: Lab Tests                                 ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║         STAGE 2: Lab Tests                                 ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: StageStats = {
-    stageName: "Lab Tests",
+    stageName: 'Lab Tests',
     total: 0,
     generated: 0,
     skipped: 0,
@@ -244,10 +240,7 @@ async function processLabTests(
 
   const missingLabs = await prisma.labTest.findMany({
     where: {
-      OR: [
-        { typicalUse: null },
-        { commonAbnormalities: { isEmpty: true } },
-      ],
+      OR: [{ typicalUse: null }, { commonAbnormalities: { isEmpty: true } }],
     },
     select: {
       id: true,
@@ -260,14 +253,14 @@ async function processLabTests(
   stats.total = missingLabs.length;
 
   if (stats.total === 0) {
-    console.log("✅ All lab tests already have content!\n");
+    console.log('✅ All lab tests already have content!\n');
     return stats;
   }
 
   console.log(`Found ${stats.total} lab tests missing content\n`);
 
   if (dryRun) {
-    console.log("🔎 DRY RUN - Would process:");
+    console.log('🔎 DRY RUN - Would process:');
     missingLabs.forEach((l, i) => console.log(`   ${i + 1}. ${l.name} (${l.category})`));
     console.log();
     return stats;
@@ -326,12 +319,12 @@ async function processImagingStudies(
   delayMs: number,
   dryRun: boolean
 ): Promise<StageStats> {
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log("║         STAGE 3: Imaging Studies                           ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║         STAGE 3: Imaging Studies                           ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: StageStats = {
-    stageName: "Imaging Studies",
+    stageName: 'Imaging Studies',
     total: 0,
     generated: 0,
     skipped: 0,
@@ -341,10 +334,7 @@ async function processImagingStudies(
 
   const missingImaging = await prisma.imagingStudy.findMany({
     where: {
-      OR: [
-        { description: null },
-        { indications: { isEmpty: true } },
-      ],
+      OR: [{ description: null }, { indications: { isEmpty: true } }],
     },
     select: {
       id: true,
@@ -357,14 +347,14 @@ async function processImagingStudies(
   stats.total = missingImaging.length;
 
   if (stats.total === 0) {
-    console.log("✅ All imaging studies already have content!\n");
+    console.log('✅ All imaging studies already have content!\n');
     return stats;
   }
 
   console.log(`Found ${stats.total} imaging studies missing content\n`);
 
   if (dryRun) {
-    console.log("🔎 DRY RUN - Would process:");
+    console.log('🔎 DRY RUN - Would process:');
     missingImaging.forEach((img, i) => console.log(`   ${i + 1}. ${img.name} (${img.modality})`));
     console.log();
     return stats;
@@ -424,12 +414,12 @@ async function processTreatments(
   delayMs: number,
   dryRun: boolean
 ): Promise<StageStats> {
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log("║         STAGE 4: Treatments                                ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║         STAGE 4: Treatments                                ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: StageStats = {
-    stageName: "Treatments",
+    stageName: 'Treatments',
     total: 0,
     generated: 0,
     skipped: 0,
@@ -456,14 +446,14 @@ async function processTreatments(
   stats.total = missingTreatments.length;
 
   if (stats.total === 0) {
-    console.log("✅ All treatments already have content!\n");
+    console.log('✅ All treatments already have content!\n');
     return stats;
   }
 
   console.log(`Found ${stats.total} treatments missing content\n`);
 
   if (dryRun) {
-    console.log("🔎 DRY RUN - Would process:");
+    console.log('🔎 DRY RUN - Would process:');
     missingTreatments.forEach((t, i) => console.log(`   ${i + 1}. ${t.name} (${t.category})`));
     console.log();
     return stats;
@@ -492,7 +482,9 @@ async function processTreatments(
               description: result.content.description,
               indications: result.content.commonIndications,
               clinicalPearls: result.content.seriousSideEffects,
-              boardYieldFacts: result.content.mechanismOfAction ? [result.content.mechanismOfAction] : [],
+              boardYieldFacts: result.content.mechanismOfAction
+                ? [result.content.mechanismOfAction]
+                : [],
             },
           });
           stats.generated++;
@@ -524,12 +516,12 @@ async function processPhysiology(
   delayMs: number,
   dryRun: boolean
 ): Promise<StageStats> {
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log("║         STAGE 5: Physiology Concepts                       ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║         STAGE 5: Physiology Concepts                       ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: StageStats = {
-    stageName: "Physiology Concepts",
+    stageName: 'Physiology Concepts',
     total: 0,
     generated: 0,
     skipped: 0,
@@ -539,11 +531,7 @@ async function processPhysiology(
 
   const missingPhysiology = await prisma.physiologyConcept.findMany({
     where: {
-      OR: [
-        { description: null },
-        { mechanism: null },
-        { clinicalSignificance: null },
-      ],
+      OR: [{ description: null }, { mechanism: null }, { clinicalSignificance: null }],
     },
     select: {
       id: true,
@@ -556,14 +544,14 @@ async function processPhysiology(
   stats.total = missingPhysiology.length;
 
   if (stats.total === 0) {
-    console.log("✅ All physiology concepts already have content!\n");
+    console.log('✅ All physiology concepts already have content!\n');
     return stats;
   }
 
   console.log(`Found ${stats.total} physiology concepts missing content\n`);
 
   if (dryRun) {
-    console.log("🔎 DRY RUN - Would process:");
+    console.log('🔎 DRY RUN - Would process:');
     missingPhysiology.forEach((p, i) => console.log(`   ${i + 1}. ${p.name} (${p.category})`));
     console.log();
     return stats;
@@ -618,22 +606,22 @@ async function processPhysiology(
 // MAIN EXECUTION
 // ======================================================
 async function main() {
-  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 
   if (!apiKey) {
-    console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
-    console.error("   Please set your API key:");
-    console.error("   export GEMINI_API_KEY=your_key_here\n");
+    console.error('❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required');
+    console.error('   Please set your API key:');
+    console.error('   export GEMINI_API_KEY=your_key_here\n');
     process.exit(1);
   }
 
   const { stage, maxPerStage, delayMs, dryRun, includeExtendedFields } = parseArgs();
 
-  console.log("╔════════════════════════════════════════════════════════════╗");
-  console.log("║    Universal Auto-Author: Multi-Registry Content Pipeline ║");
-  console.log("╚════════════════════════════════════════════════════════════╝");
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║    Universal Auto-Author: Multi-Registry Content Pipeline ║');
+  console.log('╚════════════════════════════════════════════════════════════╝');
   console.log(`\nConfiguration:`);
-  console.log(`  Stage Filter: ${stage || "All stages (1-5)"}`);
+  console.log(`  Stage Filter: ${stage || 'All stages (1-5)'}`);
   console.log(`  Max Per Stage: ${maxPerStage}`);
   console.log(`  Delay (ms): ${delayMs}`);
   console.log(`  Dry Run: ${dryRun}`);
@@ -644,7 +632,13 @@ async function main() {
   try {
     // Run stages
     if (!stage || stage === 1) {
-      const s1 = await processConditions(apiKey, maxPerStage, delayMs, dryRun, includeExtendedFields);
+      const s1 = await processConditions(
+        apiKey,
+        maxPerStage,
+        delayMs,
+        dryRun,
+        includeExtendedFields
+      );
       allStats.push(s1);
     }
 
@@ -669,9 +663,9 @@ async function main() {
     }
 
     // Print summary
-    console.log("\n╔════════════════════════════════════════════════════════════╗");
-    console.log("║                  Universal Auto-Author Summary             ║");
-    console.log("╚════════════════════════════════════════════════════════════╝\n");
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║                  Universal Auto-Author Summary             ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
 
     let totalGenerated = 0;
     let totalFailed = 0;
@@ -692,14 +686,14 @@ async function main() {
     console.log(`  ❌ Total Failed: ${totalFailed}\n`);
 
     if (totalFailed > 0) {
-      console.log("⚠️  Some entities failed. Re-run to retry or check errors above.\n");
+      console.log('⚠️  Some entities failed. Re-run to retry or check errors above.\n');
       process.exit(1);
     } else {
-      console.log("✅ Auto-author run completed successfully!\n");
+      console.log('✅ Auto-author run completed successfully!\n');
       process.exit(0);
     }
   } catch (error: any) {
-    console.error("\n❌ Fatal error:", error.message);
+    console.error('\n❌ Fatal error:', error.message);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

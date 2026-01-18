@@ -1,80 +1,73 @@
 /**
  * Custom Study Session API Endpoint
- * 
  * POST /api/questions/custom-session
  * Fetches questions matching custom filters for ephemeral study sessions.
  * No FSRS tracking - questions are returned without modifying user progress.
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
-import { handleCorsOptions } from '../_shared/auth';
-import { validateRequest, CustomSessionSchema } from '../_shared/schemas';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-/**
- * POST handler - fetch questions for custom session
- */
-export async function onRequestPost(context: any) {
-  const { request, env } = context;
-  
-  // Handle CORS preflight
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-  
-  // Authenticate (optional for custom sessions - allow anonymous)
-  const auth = await authenticateRequest(request, env);
-  const userId = auth?.userId || 'anonymous';
-  
+const CustomSessionSchema = z.object({
+  body: z.object({
+    config: z.object({
+      systems: z.array(z.string()).optional(),
+      subcategories: z.array(z.string()).optional(),
+      conditions: z.array(z.string()).optional(),
+      focusAreas: z.array(z.string()).optional(),
+      difficulty: z.enum(['same', 'easier', 'harder']).optional(),
+    }),
+    count: z.number().int().min(1).max(50).optional(),
+  }),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/custom-session');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
-    // Validate input with Zod schema
-    const validation = await validateRequest(request.clone(), CustomSessionSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const { config, count } = (validation as { success: true; data: any }).data;
-    
-    const requestedCount = Math.min(count || 10, 50); // Cap at 50
-    
+    const { config, count } = validated.body;
+    const requestedCount = Math.min(count || 10, 50);
+    const userId = auth.userId || 'anonymous';
+
     // Build query filters
     const whereConditions: any[] = [];
-    
+
     // Filter by systems
     if (config.systems.length > 0) {
       whereConditions.push({
-        system: { in: config.systems }
+        system: { in: config.systems },
       });
     }
-    
+
     // Filter by subcategories (if specified)
     if (config.subcategories && config.subcategories.length > 0) {
       whereConditions.push({
-        subcategory: { in: config.subcategories }
+        subcategory: { in: config.subcategories },
       });
     }
-    
+
     // Filter by specific conditions (if specified)
     if (config.conditions && config.conditions.length > 0) {
       whereConditions.push({
-        conditionId: { in: config.conditions }
+        conditionId: { in: config.conditions },
       });
     }
-    
+
     // Only fetch approved questions
     whereConditions.push({
-      status: 'approved'
+      status: 'approved',
     });
-    
-    // Apply difficulty filter through metadata
-    // Note: This requires questions to have difficulty metadata
-    // For now, we'll apply difficulty through selection strategy
-    
+
     // Fetch questions from pool
     const poolQuestions = await prisma.questionPool.findMany({
       where: {
-        AND: whereConditions
+        AND: whereConditions,
       },
       select: {
         id: true,
@@ -92,42 +85,38 @@ export async function onRequestPost(context: any) {
         focusArea: true,
         metadata: true,
       },
-      // Fetch more than needed for randomization
       take: requestedCount * 3,
     });
-    
+
     // Apply focus area filtering if specified
     let filteredQuestions = poolQuestions;
     if (config.focusAreas && config.focusAreas.length > 0) {
-      // Filter by focus area if questions have it tagged
-      // Allow questions without focusArea tag to pass through (for backward compatibility)
-      filteredQuestions = poolQuestions.filter(q => 
-        !q.focusArea || config.focusAreas.includes(q.focusArea)
+      filteredQuestions = poolQuestions.filter(
+        (q) => !q.focusArea || config.focusAreas.includes(q.focusArea)
       );
     }
-    
+
     // Apply difficulty weighting
     let weightedQuestions = filteredQuestions;
     if (config.difficulty && config.difficulty !== 'same') {
-      // Sort by difficulty, take appropriate subset
       weightedQuestions = filteredQuestions.sort((a, b) => {
         const aDiff = a.difficulty || 50;
         const bDiff = b.difficulty || 50;
-        
+
         if (config.difficulty === 'easier') {
-          return aDiff - bDiff; // Lower difficulty first
+          return aDiff - bDiff;
         } else {
-          return bDiff - aDiff; // Higher difficulty first
+          return bDiff - aDiff;
         }
       });
     }
-    
+
     // Shuffle and select requested count
     const shuffled = shuffleArray(weightedQuestions);
     const selectedQuestions = shuffled.slice(0, requestedCount);
-    
+
     // Transform to Question format expected by client
-    const questions = selectedQuestions.map((q: typeof poolQuestions[number]) => ({
+    const questions = selectedQuestions.map((q: any) => ({
       id: q.id,
       question: q.question,
       options: q.options as string[],
@@ -142,55 +131,40 @@ export async function onRequestPost(context: any) {
       focusArea: q.focusArea,
       difficulty: q.difficulty,
     }));
-    
+
     // Calculate total available
     const totalAvailable = await prisma.questionPool.count({
       where: {
-        AND: whereConditions
-      }
+        AND: whereConditions,
+      },
     });
-    
+
     // Generate warning if not enough questions
     let warning: string | undefined;
     if (questions.length < requestedCount) {
       warning = `Only ${questions.length} questions available matching your filters. Consider broadening your selection.`;
     }
-    
-    return new Response(
-      JSON.stringify({
+
+    logger.info('Custom session questions fetched', { userId, count: questions.length, systems: config.systems });
+
+    return {
+      data: {
         questions,
         totalAvailable,
         warning,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        }
-      }
-    );
-    
+      },
+    };
   } catch (error) {
-    console.error('[CustomSession API] Error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to fetch custom session questions',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
-    );
+    logger.error('Error fetching custom session questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId || 'anonymous',
+    });
+    throw new Error('Failed to fetch custom session questions');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
-/**
- * Fisher-Yates shuffle algorithm
- */
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -198,11 +172,4 @@ function shuffleArray<T>(array: T[]): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
-}
-
-/**
- * OPTIONS handler for CORS
- */
-export async function onRequestOptions() {
-  return handleCorsOptions();
 }

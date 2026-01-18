@@ -1,6 +1,6 @@
 /**
  * Error Handling Middleware for CloudFlare Functions
- * 
+ *
  * Provides consistent error handling, logging, and monitoring
  * across all CloudFlare Pages Functions endpoints.
  */
@@ -76,12 +76,9 @@ export class RateLimitError extends APIError {
 /**
  * Format error for client response
  */
-export function formatErrorResponse(
-  error: Error | APIError,
-  context: ErrorContext
-): ErrorResponse {
+export function formatErrorResponse(error: Error | APIError, context: ErrorContext): ErrorResponse {
   const isAPIError = error instanceof APIError;
-  
+
   return {
     error: error.name,
     message: isAPIError ? error.message : 'Internal server error',
@@ -94,11 +91,7 @@ export function formatErrorResponse(
 /**
  * Log error with context (CloudFlare Workers compatible)
  */
-export function logError(
-  error: Error,
-  context: ErrorContext,
-  env?: any
-): void {
+export function logError(error: Error, context: ErrorContext, env?: any): void {
   const errorLog = {
     level: 'error',
     error: {
@@ -109,15 +102,15 @@ export function logError(
     context,
     timestamp: context.timestamp,
   };
-  
+
   // Console log for CloudFlare logs
   console.error('[CloudFlare Function Error]', JSON.stringify(errorLog, null, 2));
-  
+
   // Send to external monitoring (if configured)
   if (env?.SENTRY_DSN) {
     // Note: Full Sentry SDK not available in Workers runtime
     // Use fetch to send to Sentry ingest API or logging service
-    sendToSentry(error, context, env).catch(err => {
+    sendToSentry(error, context, env).catch((err) => {
       console.error('[Sentry] Failed to send error:', err);
     });
   }
@@ -126,13 +119,9 @@ export function logError(
 /**
  * Send error to Sentry (CloudFlare Workers compatible)
  */
-async function sendToSentry(
-  error: Error,
-  context: ErrorContext,
-  env: any
-): Promise<void> {
+async function sendToSentry(error: Error, context: ErrorContext, env: any): Promise<void> {
   if (!env.SENTRY_DSN) return;
-  
+
   const sentryPayload = {
     exception: {
       values: [
@@ -161,17 +150,17 @@ async function sendToSentry(
     },
     timestamp: new Date(context.timestamp).getTime() / 1000,
   };
-  
+
   // Extract DSN components
   const dsnMatch = env.SENTRY_DSN.match(/https:\/\/([^@]+)@([^\/]+)\/(.+)/);
   if (!dsnMatch) {
     console.error('[Sentry] Invalid DSN format');
     return;
   }
-  
+
   const [, publicKey, host, projectId] = dsnMatch;
   const sentryUrl = `https://${host}/api/${projectId}/store/`;
-  
+
   try {
     await fetch(sentryUrl, {
       method: 'POST',
@@ -189,11 +178,13 @@ async function sendToSentry(
 /**
  * Parse stack trace into Sentry format
  */
-function parseStackTrace(stack: string): Array<{ filename: string; function: string; lineno?: number }> {
+function parseStackTrace(
+  stack: string
+): Array<{ filename: string; function: string; lineno?: number }> {
   return stack
     .split('\n')
     .slice(1) // Skip first line (error message)
-    .map(line => {
+    .map((line) => {
       const match = line.match(/at (.+?) \((.+?):(\d+):(\d+)\)/);
       if (match) {
         return {
@@ -204,7 +195,7 @@ function parseStackTrace(stack: string): Array<{ filename: string; function: str
       }
       return { filename: 'unknown', function: line.trim() };
     })
-    .filter(frame => frame.filename !== 'unknown');
+    .filter((frame) => frame.filename !== 'unknown');
 }
 
 /**
@@ -222,24 +213,24 @@ export function withErrorHandler<T extends PagesFunction>(
     const endpoint = options?.endpoint || new URL(request.url).pathname;
     const requestId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
-    
+
     const errorContext: ErrorContext = {
       endpoint,
       method: request.method,
       requestId,
       timestamp,
     };
-    
+
     try {
       // Extract userId from Clerk session if available
       const clerkUserId = request.headers.get('x-clerk-user-id');
       if (clerkUserId) {
         errorContext.userId = clerkUserId;
       }
-      
+
       // Call the actual handler
       const response = await handler(context);
-      
+
       // Add request ID to successful responses
       if (response instanceof Response) {
         const headers = new Headers(response.headers);
@@ -250,29 +241,29 @@ export function withErrorHandler<T extends PagesFunction>(
           headers,
         });
       }
-      
+
       return response;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      
+
       // Log error
       if (options?.logErrors !== false) {
         logError(err, errorContext, env);
       }
-      
+
       // Format error response
       const errorResponse = formatErrorResponse(err, errorContext);
-      
+
       // Add retry-after header for rate limit errors
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Request-ID': requestId,
       };
-      
+
       if (err instanceof RateLimitError && err.details?.retryAfter) {
         headers['Retry-After'] = String(err.details.retryAfter);
       }
-      
+
       return new Response(JSON.stringify(errorResponse), {
         status: errorResponse.statusCode,
         headers,
@@ -284,11 +275,8 @@ export function withErrorHandler<T extends PagesFunction>(
 /**
  * Validate required environment variables
  */
-export function validateEnv(
-  env: any,
-  required: string[]
-): { valid: boolean; missing: string[] } {
-  const missing = required.filter(key => !env[key]);
+export function validateEnv(env: any, required: string[]): { valid: boolean; missing: string[] } {
+  const missing = required.filter((key) => !env[key]);
   return {
     valid: missing.length === 0,
     missing,

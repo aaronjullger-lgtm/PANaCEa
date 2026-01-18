@@ -1,23 +1,23 @@
 #!/usr/bin/env tsx
 /**
  * Sync AnatomyStructure Table from Registry
- * 
+ *
  * This script syncs the AnatomyStructure table with the anatomyRegistry.
- * 
+ *
  * IMPORTANT: This script only ADDS new anatomy structures. It never overwrites existing database records.
  * This preserves any manual edits or AI-generated content in the database.
- * 
+ *
  * Workflow:
  * 1. Add anatomy structure to anatomyRegistry.ts
  * 2. Run this script to sync AnatomyStructure table (adds only, no overwrites)
  * 3. Automation detects new structures and generates detailed content
- * 
+ *
  * Usage: tsx scripts/syncAnatomyTable.ts
  */
 
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { ANATOMY_REGISTRY, buildAnatomyId } from '../anatomyRegistry';
+import { ANATOMY_REGISTRY, buildAnatomyId } from '../src/registries/anatomyRegistry';
 import { fileURLToPath } from 'url';
 
 // Load environment variables
@@ -81,7 +81,9 @@ async function syncAnatomy(meta: any): Promise<void> {
       },
     });
     report.created++;
-    console.log(`  ✨ Created: ${meta.name} (${meta.system}${meta.region ? ' - ' + meta.region : ''})`);
+    console.log(
+      `  ✨ Created: ${meta.name} (${meta.system}${meta.region ? ' - ' + meta.region : ''})`
+    );
   } catch (error: any) {
     report.failed++;
     report.errors.push({
@@ -149,16 +151,18 @@ async function main() {
       process.exit(1);
     } else {
       console.log('\n✅ AnatomyStructure table sync completed successfully!');
-      
+
       if (report.created > 0) {
         console.log(`\n💡 ${report.created} new anatomy structures added to database.`);
         console.log('   Automation will generate detailed content for these structures.');
       }
-      
+
       if (report.skipped > 0) {
-        console.log(`\n📝 ${report.skipped} structures already exist in database (preserved, not overwritten).`);
+        console.log(
+          `\n📝 ${report.skipped} structures already exist in database (preserved, not overwritten).`
+        );
       }
-      
+
       process.exit(0);
     }
   } catch (error: any) {

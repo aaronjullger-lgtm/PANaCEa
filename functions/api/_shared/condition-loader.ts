@@ -1,6 +1,6 @@
 /**
  * Condition Loader for Cloudflare Pages Functions
- * 
+ *
  * Loads medical condition data from the database for question generation.
  * Following the database-first principle from .clinerules.
  */
@@ -33,7 +33,7 @@ export interface ConditionData {
 
 /**
  * Load condition data from the database by name or partial match
- * 
+ *
  * @param prisma - Prisma client instance
  * @param queryText - Condition name or search query
  * @returns ConditionData or null if not found
@@ -48,16 +48,16 @@ export async function loadConditionData(
       where: {
         name: {
           equals: queryText,
-          mode: 'insensitive'
-        }
+          mode: 'insensitive',
+        },
       },
       select: {
         id: true,
         name: true,
         system: true,
         subcategory: true,
-        content: true
-      }
+        content: true,
+      },
     });
 
     // If not found, try partial match
@@ -66,16 +66,16 @@ export async function loadConditionData(
         where: {
           name: {
             contains: queryText,
-            mode: 'insensitive'
-          }
+            mode: 'insensitive',
+          },
         },
         select: {
           id: true,
           name: true,
           system: true,
           subcategory: true,
-          content: true
-        }
+          content: true,
+        },
       });
     }
 
@@ -85,16 +85,16 @@ export async function loadConditionData(
         where: {
           OR: [
             { buzzwords: { has: queryText.toLowerCase() } },
-            { clinicalPearl: { contains: queryText, mode: 'insensitive' } }
-          ]
+            { clinicalPearl: { contains: queryText, mode: 'insensitive' } },
+          ],
         },
         select: {
           id: true,
           name: true,
           system: true,
           subcategory: true,
-          content: true
-        }
+          content: true,
+        },
       });
     }
 
@@ -103,16 +103,15 @@ export async function loadConditionData(
     }
 
     // Parse content if it's a string (JSONB should auto-parse, but just in case)
-    const content = typeof condition.content === 'string' 
-      ? JSON.parse(condition.content) 
-      : condition.content;
+    const content =
+      typeof condition.content === 'string' ? JSON.parse(condition.content) : condition.content;
 
     return {
       id: condition.id,
       name: condition.name,
       system: condition.system,
       subcategory: condition.subcategory,
-      content: content as ConditionContent
+      content: content as ConditionContent,
     };
   } catch (error) {
     console.error('Failed to load condition data:', error);
@@ -122,7 +121,7 @@ export async function loadConditionData(
 
 /**
  * Load multiple conditions by system for bulk generation
- * 
+ *
  * @param prisma - Prisma client instance
  * @param system - Organ system name
  * @param limit - Maximum number of conditions to return
@@ -138,17 +137,17 @@ export async function loadConditionsBySystem(
       where: {
         system: {
           equals: system,
-          mode: 'insensitive'
-        }
+          mode: 'insensitive',
+        },
       },
       select: {
         id: true,
         name: true,
         system: true,
         subcategory: true,
-        content: true
+        content: true,
       },
-      take: limit
+      take: limit,
     });
 
     return conditions.map((c: any) => ({
@@ -156,7 +155,7 @@ export async function loadConditionsBySystem(
       name: c.name,
       system: c.system,
       subcategory: c.subcategory,
-      content: typeof c.content === 'string' ? JSON.parse(c.content) : c.content
+      content: typeof c.content === 'string' ? JSON.parse(c.content) : c.content,
     }));
   } catch (error) {
     console.error('Failed to load conditions by system:', error);
@@ -166,7 +165,7 @@ export async function loadConditionsBySystem(
 
 /**
  * Load a random condition for random question generation
- * 
+ *
  * @param prisma - Prisma client instance
  * @param excludeIds - IDs to exclude (e.g., recently used)
  * @returns ConditionData or null
@@ -178,9 +177,12 @@ export async function loadRandomCondition(
   try {
     // Get total count
     const totalCount = await prisma.medicalContent.count({
-      where: excludeIds.length > 0 ? {
-        id: { notIn: excludeIds }
-      } : undefined
+      where:
+        excludeIds.length > 0
+          ? {
+              id: { notIn: excludeIds },
+            }
+          : undefined,
     });
 
     if (totalCount === 0) {
@@ -191,17 +193,20 @@ export async function loadRandomCondition(
     const randomOffset = Math.floor(Math.random() * totalCount);
 
     const condition = await prisma.medicalContent.findFirst({
-      where: excludeIds.length > 0 ? {
-        id: { notIn: excludeIds }
-      } : undefined,
+      where:
+        excludeIds.length > 0
+          ? {
+              id: { notIn: excludeIds },
+            }
+          : undefined,
       skip: randomOffset,
       select: {
         id: true,
         name: true,
         system: true,
         subcategory: true,
-        content: true
-      }
+        content: true,
+      },
     });
 
     if (!condition) {
@@ -213,9 +218,8 @@ export async function loadRandomCondition(
       name: condition.name,
       system: condition.system,
       subcategory: condition.subcategory,
-      content: typeof condition.content === 'string' 
-        ? JSON.parse(condition.content) 
-        : condition.content
+      content:
+        typeof condition.content === 'string' ? JSON.parse(condition.content) : condition.content,
     };
   } catch (error) {
     console.error('Failed to load random condition:', error);

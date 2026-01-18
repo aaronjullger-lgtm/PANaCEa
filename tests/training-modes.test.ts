@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  MODE_REGISTRY,
-  TrainingModeId,
-  TrainingModeConfig,
-} from '../config/training-modes';
+import { MODE_REGISTRY, TrainingModeId, TrainingModeConfig } from '../config/training-modes';
 
 describe('Training Modes Configuration', () => {
   describe('MODE_REGISTRY', () => {
@@ -41,7 +37,12 @@ describe('Training Modes Configuration', () => {
     });
 
     it('should have valid category values for all modes', () => {
-      const validCategories = ['visual_diagnostics', 'clinical_simulation', 'question_practice', 'specialty_drills'];
+      const validCategories = [
+        'visual_diagnostics',
+        'clinical_simulation',
+        'question_practice',
+        'specialty_drills',
+      ];
 
       MODE_REGISTRY.forEach((mode) => {
         expect(validCategories).toContain(mode.category);

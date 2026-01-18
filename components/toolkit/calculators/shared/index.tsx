@@ -1,6 +1,6 @@
 /**
  * Shared Calculator Components
- * 
+ *
  * Reusable UI components for standardized calculator design
  */
 
@@ -11,7 +11,7 @@ import type { CalculatorResult, CriteriaItem, InputFieldConfig } from '../types'
 
 /**
  * ClinicalInput - Standardized input field for calculators
- * 
+ *
  * Supports both number and select inputs with consistent styling
  */
 interface ClinicalInputProps extends InputFieldConfig {}
@@ -43,10 +43,8 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
           </span>
         )}
       </div>
-      
-      {sublabel && (
-        <p className="text-xs text-slate-400">{sublabel}</p>
-      )}
+
+      {sublabel && <p className="text-xs text-slate-400">{sublabel}</p>}
 
       {type === 'number' ? (
         <div className="relative">
@@ -86,7 +84,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
 
 /**
  * CheckboxCriteria - Checkbox list for scoring calculators
- * 
+ *
  * Consistent styling for CURB-65, CHA₂DS₂-VASc, Wells, etc.
  */
 interface CheckboxCriteriaProps {
@@ -94,9 +92,9 @@ interface CheckboxCriteriaProps {
   variant?: 'default' | 'compact';
 }
 
-export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({ 
-  items, 
-  variant = 'default' 
+export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
+  items,
+  variant = 'default',
 }) => {
   return (
     <div className="space-y-3">
@@ -105,13 +103,15 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
           key={idx}
           className={`
             flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-all
-            ${item.disabled 
-              ? 'opacity-50 cursor-not-allowed' 
-              : 'hover:bg-slate-800/60 hover:border-slate-600'
+            ${
+              item.disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-slate-800/60 hover:border-slate-600'
             }
-            ${item.state 
-              ? 'bg-blue-950/30 border-2 border-blue-700' 
-              : 'bg-slate-900/50 border-2 border-slate-700'
+            ${
+              item.state
+                ? 'bg-blue-950/30 border-2 border-blue-700'
+                : 'bg-slate-900/50 border-2 border-slate-700'
             }
           `}
         >
@@ -124,24 +124,19 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="font-semibold text-slate-100">
-                {item.title}
-              </div>
+              <div className="font-semibold text-slate-100">{item.title}</div>
               {item.points !== undefined && (
-                <span className={`
+                <span
+                  className={`
                   px-2 py-0.5 rounded text-xs font-bold
-                  ${item.state 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-slate-700 text-slate-400'
-                  }
-                `}>
+                  ${item.state ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400'}
+                `}
+                >
                   +{item.points}
                 </span>
               )}
             </div>
-            <div className="text-sm text-slate-400 leading-relaxed">
-              {item.description}
-            </div>
+            <div className="text-sm text-slate-400 leading-relaxed">{item.description}</div>
           </div>
         </label>
       ))}
@@ -151,7 +146,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
 
 /**
  * ResultDisplay - Animated result card with risk bar
- * 
+ *
  * Shows score, interpretation, and clinical recommendation
  */
 interface ResultDisplayProps {
@@ -160,10 +155,10 @@ interface ResultDisplayProps {
   className?: string;
 }
 
-export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
-  result, 
+export const ResultDisplay: React.FC<ResultDisplayProps> = ({
+  result,
   showRiskBar = true,
-  className = '' 
+  className = '',
 }) => {
   const getRiskColor = () => {
     switch (result.riskLevel) {
@@ -192,10 +187,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   };
 
   const colors = getRiskColor();
-  const IconComponent = 
-    result.riskLevel === 'low' ? CheckCircle2 
-    : result.riskLevel === 'moderate' ? Info 
-    : AlertCircle;
+  const IconComponent =
+    result.riskLevel === 'low'
+      ? CheckCircle2
+      : result.riskLevel === 'moderate'
+        ? Info
+        : AlertCircle;
 
   return (
     <motion.div
@@ -208,7 +205,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     >
       <div className="flex items-start gap-4">
         <IconComponent className={`w-10 h-10 ${colors.icon} flex-shrink-0`} />
-        
+
         <div className="flex-1 space-y-4">
           {/* Score & Interpretation */}
           <div>
@@ -226,22 +223,27 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                 {result.interpretation}
               </span>
             </div>
-            
+
             {/* Risk Bar */}
             {showRiskBar && (
               <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ 
-                    width: result.riskLevel === 'low' ? '33%' 
-                      : result.riskLevel === 'moderate' ? '66%' 
-                      : '100%' 
+                  animate={{
+                    width:
+                      result.riskLevel === 'low'
+                        ? '33%'
+                        : result.riskLevel === 'moderate'
+                          ? '66%'
+                          : '100%',
                   }}
                   transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                   className={`h-full ${
-                    result.riskLevel === 'low' ? 'bg-emerald-500' 
-                    : result.riskLevel === 'moderate' ? 'bg-amber-500' 
-                    : 'bg-red-500'
+                    result.riskLevel === 'low'
+                      ? 'bg-emerald-500'
+                      : result.riskLevel === 'moderate'
+                        ? 'bg-amber-500'
+                        : 'bg-red-500'
                   }`}
                 />
               </div>
@@ -256,26 +258,20 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                 Clinical Recommendation
               </h4>
             </div>
-            <p className="text-slate-300 leading-relaxed">
-              {result.recommendation}
-            </p>
+            <p className="text-slate-300 leading-relaxed">{result.recommendation}</p>
           </div>
 
           {/* Additional Details */}
           {result.details && (
             <div className="pt-3 border-t border-slate-700">
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {result.details}
-              </p>
+              <p className="text-sm text-slate-400 leading-relaxed">{result.details}</p>
             </div>
           )}
 
           {/* Reference */}
           {result.reference && (
             <div className="pt-2">
-              <p className="text-xs text-slate-500 italic">
-                Reference: {result.reference}
-              </p>
+              <p className="text-xs text-slate-500 italic">Reference: {result.reference}</p>
             </div>
           )}
         </div>
@@ -293,15 +289,11 @@ interface CalculatorHeaderProps {
   onBack: () => void;
 }
 
-export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
-  title,
-  subtitle,
-  onBack,
-}) => {
+export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subtitle, onBack }) => {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h2 
+        <h2
           className="text-4xl font-bold text-slate-100 tracking-wide mb-1"
           style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
         >

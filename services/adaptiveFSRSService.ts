@@ -1,6 +1,6 @@
 /**
  * Adaptive FSRS Service
- * 
+ *
  * Integrates user analytics with FSRS scheduling to provide:
  * - Personalized retention targets based on cognitive state
  * - Dynamic interval adjustments based on user performance patterns
@@ -75,7 +75,7 @@ export class AdaptiveFSRS {
     this.baseFsrs = new FSRS(defaultParameters);
     this.personalizedParams = { ...defaultParameters };
     this.systemOverrides = new Map();
-    
+
     // Calculate personalized parameters if we have mastery data
     if (systemMastery.length > 0) {
       this.calibrateFromMastery(systemMastery);
@@ -87,27 +87,32 @@ export class AdaptiveFSRS {
    */
   calibrateFromMastery(systemMastery: SystemMasteryProfile[]): void {
     const velocity = getLearningVelocity();
-    const avgMastery = systemMastery.reduce((sum, s) => sum + s.masteryLevel, 0) / systemMastery.length;
-    
+    const avgMastery =
+      systemMastery.reduce((sum, s) => sum + s.masteryLevel, 0) / systemMastery.length;
+
     // Determine learning speed
-    const learningSpeed: 'slow' | 'normal' | 'fast' = 
-      velocity.trend === 'accelerating' ? 'fast' :
-      velocity.trend === 'decelerating' ? 'slow' : 'normal';
-    
+    const learningSpeed: 'slow' | 'normal' | 'fast' =
+      velocity.trend === 'accelerating'
+        ? 'fast'
+        : velocity.trend === 'decelerating'
+          ? 'slow'
+          : 'normal';
+
     // Calculate forgetting rate from mastery decay
-    const avgForgettingCurve = systemMastery.reduce((sum, s) => sum + (s.forgettingCurve || 14), 0) / systemMastery.length;
-    const forgettingRate = Math.max(10, 100 / avgForgettingCurve * 7);
-    
+    const avgForgettingCurve =
+      systemMastery.reduce((sum, s) => sum + (s.forgettingCurve || 14), 0) / systemMastery.length;
+    const forgettingRate = Math.max(10, (100 / avgForgettingCurve) * 7);
+
     const personalized = calculatePersonalizedFSRS(
       avgMastery,
       5, // Default difficulty
       learningSpeed,
       forgettingRate
     );
-    
+
     this.personalizedParams = personalized.parameters;
     this.baseFsrs = new FSRS(this.personalizedParams);
-    
+
     // Get system-specific overrides
     const overrides = getSystemFSRSAdjustments(systemMastery);
     for (const [system, params] of overrides) {
@@ -133,19 +138,20 @@ export class AdaptiveFSRS {
     now: Date = new Date()
   ): AdaptiveSchedulingResult {
     this.updateCognitiveState();
-    
+
     const adjustments: SchedulingAdjustment[] = [];
     let intervalModifier = 1.0;
-    
+
     // Get appropriate FSRS instance for this system
-    const fsrs = system && this.systemOverrides.has(system)
-      ? new FSRS(this.systemOverrides.get(system)!)
-      : this.baseFsrs;
-    
+    const fsrs =
+      system && this.systemOverrides.has(system)
+        ? new FSRS(this.systemOverrides.get(system)!)
+        : this.baseFsrs;
+
     // Base scheduling
     const baseResult = fsrs.next(card, now, rating);
     let adjustedInterval = baseResult.card.scheduled_days;
-    
+
     // 1. Cognitive State Adjustments
     if (this.cognitiveState) {
       const cognitiveAdjustment = this.calculateCognitiveAdjustment(rating);
@@ -154,7 +160,7 @@ export class AdaptiveFSRS {
         adjustments.push(cognitiveAdjustment.adjustment);
       }
     }
-    
+
     // 2. Learning Velocity Adjustments
     if (this.learningVelocity) {
       const velocityAdjustment = this.calculateVelocityAdjustment();
@@ -163,14 +169,14 @@ export class AdaptiveFSRS {
         adjustments.push(velocityAdjustment.adjustment);
       }
     }
-    
+
     // 3. Time of Day Optimization
     const todAdjustment = this.calculateTimeOfDayAdjustment(now);
     intervalModifier *= todAdjustment.modifier;
     if (todAdjustment.adjustment) {
       adjustments.push(todAdjustment.adjustment);
     }
-    
+
     // 4. System-Specific Modifiers
     if (system) {
       const systemAdjustment = this.calculateSystemAdjustment(system);
@@ -179,18 +185,18 @@ export class AdaptiveFSRS {
         adjustments.push(systemAdjustment.adjustment);
       }
     }
-    
+
     // Apply all modifications
     adjustedInterval = Math.max(0.0035, adjustedInterval * intervalModifier); // Min 5 minutes
-    
+
     // Create adjusted card
     const adjustedCard: FSRSCard = {
       ...baseResult.card,
       scheduled_days: adjustedInterval,
     };
-    
+
     const adjustedDue = new Date(now.getTime() + adjustedInterval * 86400000);
-    
+
     // Calculate confidence level
     let confidenceLevel: 'low' | 'medium' | 'high' = 'medium';
     if (card.reps >= 5 && this.learningVelocity && this.learningVelocity.retentionEfficiency > 80) {
@@ -198,7 +204,7 @@ export class AdaptiveFSRS {
     } else if (card.reps < 2) {
       confidenceLevel = 'low';
     }
-    
+
     return {
       card: adjustedCard,
       due: adjustedDue,
@@ -217,11 +223,11 @@ export class AdaptiveFSRS {
     adjustment: SchedulingAdjustment | null;
   } {
     if (!this.cognitiveState) return { modifier: 1, adjustment: null };
-    
+
     const { fatigueLevel, flowState, cognitiveLoad } = this.cognitiveState;
     let modifier = 1;
     let adjustment: SchedulingAdjustment | null = null;
-    
+
     // High fatigue = shorter intervals (need more reinforcement)
     if (fatigueLevel > 60) {
       modifier = 0.85;
@@ -249,7 +255,7 @@ export class AdaptiveFSRS {
         impact: -5,
       };
     }
-    
+
     return { modifier, adjustment };
   }
 
@@ -261,11 +267,11 @@ export class AdaptiveFSRS {
     adjustment: SchedulingAdjustment | null;
   } {
     if (!this.learningVelocity) return { modifier: 1, adjustment: null };
-    
+
     const { trend, retentionEfficiency, personalBestRatio } = this.learningVelocity;
     let modifier = 1;
     let adjustment: SchedulingAdjustment | null = null;
-    
+
     if (trend === 'accelerating' && retentionEfficiency > 85) {
       modifier = 1.1;
       adjustment = {
@@ -281,12 +287,12 @@ export class AdaptiveFSRS {
         impact: -10,
       };
     }
-    
+
     // Personal best bonus
     if (personalBestRatio > 1.2) {
       modifier *= 1.05;
     }
-    
+
     return { modifier, adjustment };
   }
 
@@ -300,7 +306,7 @@ export class AdaptiveFSRS {
     const optimalTime = getOptimalStudyTime();
     const currentHour = now.getHours();
     const hourDiff = Math.abs(currentHour - optimalTime.hour);
-    
+
     // If studying during optimal time, slight bonus
     if (hourDiff <= 1 && optimalTime.confidence > 0.6) {
       return {
@@ -312,7 +318,7 @@ export class AdaptiveFSRS {
         },
       };
     }
-    
+
     // If far from optimal time with high confidence
     if (hourDiff >= 6 && optimalTime.confidence > 0.7) {
       return {
@@ -324,7 +330,7 @@ export class AdaptiveFSRS {
         },
       };
     }
-    
+
     return { modifier: 1, adjustment: null };
   }
 
@@ -338,11 +344,14 @@ export class AdaptiveFSRS {
     if (!this.systemOverrides.has(system)) {
       return { modifier: 1, adjustment: null };
     }
-    
+
     const override = this.systemOverrides.get(system)!;
-    
+
     // If this system has a higher retention target, intervals are naturally shorter
-    if (override.request_retention && override.request_retention > this.personalizedParams.request_retention) {
+    if (
+      override.request_retention &&
+      override.request_retention > this.personalizedParams.request_retention
+    ) {
       return {
         modifier: 0.9,
         adjustment: {
@@ -352,7 +361,7 @@ export class AdaptiveFSRS {
         },
       };
     }
-    
+
     return { modifier: 1, adjustment: null };
   }
 
@@ -365,16 +374,18 @@ export class AdaptiveFSRS {
   ): AdaptiveReviewPriority[] {
     const now = new Date();
     this.updateCognitiveState();
-    
-    const priorities: AdaptiveReviewPriority[] = cards.map(item => {
-      const dueDate = new Date(item.card.last_review.getTime() + item.card.scheduled_days * 86400000);
+
+    const priorities: AdaptiveReviewPriority[] = cards.map((item) => {
+      const dueDate = new Date(
+        item.card.last_review.getTime() + item.card.scheduled_days * 86400000
+      );
       const daysOverdue = (now.getTime() - dueDate.getTime()) / 86400000;
-      
+
       // Calculate priority score
       let priority = 50;
       let reason = 'Scheduled review';
       let urgency: 'critical' | 'high' | 'medium' | 'low' = 'medium';
-      
+
       // Overdue items get highest priority
       if (daysOverdue > 7) {
         priority = 100;
@@ -397,25 +408,25 @@ export class AdaptiveFSRS {
         reason = 'Future review';
         urgency = 'low';
       }
-      
+
       // Cards with high lapse count need attention
       if (item.card.lapses >= 3) {
         priority += 15;
         reason += ' - high lapse count';
         if (urgency !== 'critical') urgency = 'high';
       }
-      
+
       // Learning cards need more frequent attention
       if (item.card.state === FSRSState.Learning || item.card.state === FSRSState.Relearning) {
         priority += 10;
       }
-      
+
       // Adjust for cognitive state
       if (this.cognitiveState && this.cognitiveState.fatigueLevel > 60 && priority < 70) {
         // If fatigued, deprioritize non-urgent items
         priority -= 10;
       }
-      
+
       return {
         conditionId: item.conditionId,
         card: item.card,
@@ -426,11 +437,9 @@ export class AdaptiveFSRS {
         urgency,
       };
     });
-    
+
     // Sort by priority (descending) and return top items
-    return priorities
-      .sort((a, b) => b.priority - a.priority)
-      .slice(0, maxItems);
+    return priorities.sort((a, b) => b.priority - a.priority).slice(0, maxItems);
   }
 
   /**
@@ -443,59 +452,56 @@ export class AdaptiveFSRS {
     systemMastery: SystemMasteryProfile[]
   ): StudySessionPlan {
     this.updateCognitiveState();
-    
+
     const cognitive = this.cognitiveState;
     const velocity = this.learningVelocity;
-    
+
     // Base calculations
     const avgTimePerQuestion = 75; // seconds
     const totalPossibleQuestions = Math.floor((availableMinutes * 60) / avgTimePerQuestion);
-    
+
     // Adjust based on cognitive state
     let adjustedQuestions = totalPossibleQuestions;
     if (cognitive && cognitive.fatigueLevel > 50) {
       adjustedQuestions = Math.floor(totalPossibleQuestions * 0.8);
     }
-    
+
     // Split between new and review cards
     // Reviews are generally faster, prioritize them
     const reviewWeight = 0.7;
-    let reviewCardsLimit = Math.min(
-      reviewCardsDue,
-      Math.floor(adjustedQuestions * reviewWeight)
-    );
+    let reviewCardsLimit = Math.min(reviewCardsDue, Math.floor(adjustedQuestions * reviewWeight));
     let newCardsLimit = Math.min(
       newCardsAvailable,
       adjustedQuestions - reviewCardsLimit,
       Math.floor(adjustedQuestions * 0.3) // Cap new cards at 30%
     );
-    
+
     // If fatigued, reduce new cards significantly
     if (cognitive && cognitive.fatigueLevel > 60) {
       newCardsLimit = Math.floor(newCardsLimit * 0.5);
     }
-    
+
     // Focus systems based on mastery
     const focusSystems = systemMastery
-      .filter(s => s.masteryLevel < 70)
+      .filter((s) => s.masteryLevel < 70)
       .sort((a, b) => a.masteryLevel - b.masteryLevel)
       .slice(0, 3)
-      .map(s => s.system);
-    
+      .map((s) => s.system);
+
     // Break suggestions
     const breakSuggestions: { afterQuestion: number; durationMinutes: number }[] = [];
     const totalQuestions = reviewCardsLimit + newCardsLimit;
-    
+
     if (totalQuestions > 25) {
       breakSuggestions.push({ afterQuestion: 25, durationMinutes: 5 });
     }
     if (totalQuestions > 50) {
       breakSuggestions.push({ afterQuestion: 50, durationMinutes: 10 });
     }
-    
+
     // Difficulty progression
     const difficultyProgression: ('easy' | 'medium' | 'hard')[] = [];
-    
+
     if (cognitive && cognitive.fatigueLevel < 30) {
       // Fresh - start medium, progress to hard
       difficultyProgression.push('medium', 'hard', 'medium');
@@ -506,7 +512,7 @@ export class AdaptiveFSRS {
       // Normal - balanced
       difficultyProgression.push('easy', 'medium', 'hard', 'medium');
     }
-    
+
     return {
       recommendedQuestions: adjustedQuestions,
       newCardsLimit,

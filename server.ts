@@ -1,20 +1,19 @@
-
 /**
  * ============================================================================
  * ⚠️  LEGACY SERVER - LOCAL DEVELOPMENT ONLY ⚠️
  * ============================================================================
- * 
+ *
  * This Express server is for LOCAL DEVELOPMENT and TESTING only.
- * 
+ *
  * PRODUCTION uses Cloudflare Pages Functions in /functions/api/
- * 
+ *
  * When to use this server:
  * - `npm run dev:all` - Runs Vite + this server for local proxy testing
  * - Testing Express-specific middleware or routes before migrating to CF
- * 
+ *
  * DO NOT deploy this server to production. All production API traffic
  * should go through Cloudflare Pages Functions.
- * 
+ *
  * See: CLOUDFLARE_FUNCTIONS_GUIDE.md for production deployment info.
  * ============================================================================
  */
@@ -66,52 +65,42 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security Middleware with CSP Configuration
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'", // Required for React and Vite dev mode
-        "https://*.clerk.accounts.dev",
-        "https://clerk.com",
-        "https://*.clerk.com"
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'" // Required for Tailwind and inline styles
-      ],
-      workerSrc: [
-        "'self'",
-        "blob:" // Required for Service Workers
-      ],
-      connectSrc: [
-        "'self'",
-        "https://*.clerk.accounts.dev",
-        "https://clerk.com",
-        "https://*.clerk.com",
-        "https://api.clerk.com",
-        process.env.FRONTEND_URL || "http://localhost:3000"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "blob:",
-        "https://*.clerk.accounts.dev",
-        "https://*.clerk.com"
-      ],
-      fontSrc: [
-        "'self'",
-        "data:"
-      ],
-      frameSrc: [
-        "https://*.clerk.accounts.dev",
-        "https://*.clerk.com"
-      ]
-    }
-  },
-  crossOriginEmbedderPolicy: false // Required for some third-party integrations
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'", // Required for React and Vite dev mode
+          'https://*.clerk.accounts.dev',
+          'https://clerk.com',
+          'https://*.clerk.com',
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'", // Required for Tailwind and inline styles
+        ],
+        workerSrc: [
+          "'self'",
+          'blob:', // Required for Service Workers
+        ],
+        connectSrc: [
+          "'self'",
+          'https://*.clerk.accounts.dev',
+          'https://clerk.com',
+          'https://*.clerk.com',
+          'https://api.clerk.com',
+          process.env.FRONTEND_URL || 'http://localhost:3000',
+        ],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://*.clerk.accounts.dev', 'https://*.clerk.com'],
+        fontSrc: ["'self'", 'data:'],
+        frameSrc: ['https://*.clerk.accounts.dev', 'https://*.clerk.com'],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Required for some third-party integrations
+  })
+);
 
 console.log('✓ Security headers configured (CSP allows Clerk, Service Workers, API calls)');
 
@@ -121,17 +110,19 @@ const limiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: { error: 'Too many requests, please try again later.' }
+  message: { error: 'Too many requests, please try again later.' },
 });
 
 // Apply rate limiting to all requests
 app.use(limiter);
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeBody); // Sanitize all request bodies
 

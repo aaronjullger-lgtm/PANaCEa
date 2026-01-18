@@ -1,6 +1,6 @@
 /**
  * ShortcutContext - Customizable Keyboard Shortcut System
- * 
+ *
  * Provides a centralized system for managing keyboard shortcuts across the app.
  * Features:
  * - Customizable key bindings
@@ -16,7 +16,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 // TYPES
 // ============================================================================
 
-export type ShortcutAction = 
+export type ShortcutAction =
   | 'FLIP_CARD'
   | 'MARK_CORRECT'
   | 'MARK_WRONG'
@@ -32,13 +32,13 @@ export type ShortcutMap = Record<ShortcutAction, string>;
 // ============================================================================
 
 export const DEFAULT_SHORTCUTS: ShortcutMap = {
-  FLIP_CARD: ' ',          // Space
-  MARK_CORRECT: '1',       // Number 1
-  MARK_WRONG: '2',         // Number 2
+  FLIP_CARD: ' ', // Space
+  MARK_CORRECT: '1', // Number 1
+  MARK_WRONG: '2', // Number 2
   NEXT_QUESTION: 'ArrowRight',
   PREV_QUESTION: 'ArrowLeft',
   PLAY_AUDIO: 'p',
-  TOGGLE_STATS: 's',       // S for stats
+  TOGGLE_STATS: 's', // S for stats
 };
 
 // ============================================================================
@@ -70,17 +70,17 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsedShortcuts = JSON.parse(saved) as Partial<ShortcutMap>;
-        
+
         // Merge with defaults to handle new actions added in future updates
         const mergedShortcuts = { ...DEFAULT_SHORTCUTS };
-        
+
         // Override with saved values
         for (const action in parsedShortcuts) {
           if (action in DEFAULT_SHORTCUTS) {
             mergedShortcuts[action as ShortcutAction] = parsedShortcuts[action as ShortcutAction]!;
           }
         }
-        
+
         setShortcuts(mergedShortcuts);
         console.log('[ShortcutContext] Loaded custom shortcuts from localStorage');
       }
@@ -92,9 +92,9 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update a single shortcut
   const updateShortcut = useCallback((action: ShortcutAction, newKey: string) => {
-    setShortcuts(prev => {
+    setShortcuts((prev) => {
       const updated = { ...prev, [action]: newKey };
-      
+
       // Save to localStorage
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -102,7 +102,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (error) {
         console.error('[ShortcutContext] Failed to save shortcuts to localStorage:', error);
       }
-      
+
       return updated;
     });
   }, []);
@@ -110,7 +110,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Reset all shortcuts to defaults
   const resetShortcuts = useCallback(() => {
     setShortcuts(DEFAULT_SHORTCUTS);
-    
+
     try {
       localStorage.removeItem(STORAGE_KEY);
       console.log('[ShortcutContext] Reset shortcuts to defaults');
@@ -120,15 +120,21 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   // Get key for a specific action
-  const getKeyForAction = useCallback((action: ShortcutAction): string => {
-    return shortcuts[action];
-  }, [shortcuts]);
+  const getKeyForAction = useCallback(
+    (action: ShortcutAction): string => {
+      return shortcuts[action];
+    },
+    [shortcuts]
+  );
 
   // Get action for a specific key (reverse lookup)
-  const getActionForKey = useCallback((key: string): ShortcutAction | null => {
-    const entry = Object.entries(shortcuts).find(([_, value]) => value === key);
-    return entry ? (entry[0] as ShortcutAction) : null;
-  }, [shortcuts]);
+  const getActionForKey = useCallback(
+    (key: string): ShortcutAction | null => {
+      const entry = Object.entries(shortcuts).find(([_, value]) => value === key);
+      return entry ? (entry[0] as ShortcutAction) : null;
+    },
+    [shortcuts]
+  );
 
   const value: ShortcutContextValue = {
     shortcuts,
@@ -138,11 +144,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getActionForKey,
   };
 
-  return (
-    <ShortcutContext.Provider value={value}>
-      {children}
-    </ShortcutContext.Provider>
-  );
+  return <ShortcutContext.Provider value={value}>{children}</ShortcutContext.Provider>;
 };
 
 // ============================================================================
@@ -151,11 +153,11 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 /**
  * Hook for registering a keyboard shortcut
- * 
+ *
  * @param action - The shortcut action to listen for
  * @param callback - Function to call when the shortcut is triggered
  * @param options - Optional configuration
- * 
+ *
  * @example
  * useShortcut('FLIP_CARD', () => {
  *   console.log('Space pressed!');
@@ -166,12 +168,12 @@ export function useShortcut(
   action: ShortcutAction,
   callback: () => void,
   options?: {
-    enabled?: boolean;  // Whether the shortcut is currently active (default: true)
-    preventDefault?: boolean;  // Whether to prevent default browser behavior (default: true)
+    enabled?: boolean; // Whether the shortcut is currently active (default: true)
+    preventDefault?: boolean; // Whether to prevent default browser behavior (default: true)
   }
 ): void {
   const context = useContext(ShortcutContext);
-  
+
   if (!context) {
     throw new Error('useShortcut must be used within a ShortcutProvider');
   }
@@ -189,10 +191,8 @@ export function useShortcut(
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ignore if user is typing in an input field
       const target = event.target as HTMLElement;
-      const isInputField = 
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable;
+      const isInputField =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
       if (isInputField) return;
 
@@ -201,7 +201,7 @@ export function useShortcut(
         if (preventDefault) {
           event.preventDefault();
         }
-        
+
         callback();
       }
     };
@@ -222,17 +222,17 @@ export function useShortcut(
 
 /**
  * Hook to access the shortcut context
- * 
+ *
  * @example
  * const { shortcuts, updateShortcut, resetShortcuts } = useShortcutContext();
  */
 export function useShortcutContext(): ShortcutContextValue {
   const context = useContext(ShortcutContext);
-  
+
   if (!context) {
     throw new Error('useShortcutContext must be used within a ShortcutProvider');
   }
-  
+
   return context;
 }
 
@@ -246,15 +246,15 @@ export function useShortcutContext(): ShortcutContextValue {
 export function formatKeyForDisplay(key: string): string {
   const keyMap: Record<string, string> = {
     ' ': 'Space',
-    'ArrowUp': 'Arrow Up',
-    'ArrowDown': 'Arrow Down',
-    'ArrowLeft': 'Arrow Left',
-    'ArrowRight': 'Arrow Right',
-    'Enter': 'Enter',
-    'Escape': 'Escape',
-    'Tab': 'Tab',
-    'Backspace': 'Backspace',
-    'Delete': 'Delete',
+    ArrowUp: 'Arrow Up',
+    ArrowDown: 'Arrow Down',
+    ArrowLeft: 'Arrow Left',
+    ArrowRight: 'Arrow Right',
+    Enter: 'Enter',
+    Escape: 'Escape',
+    Tab: 'Tab',
+    Backspace: 'Backspace',
+    Delete: 'Delete',
   };
 
   return keyMap[key] || key.toUpperCase();
@@ -269,13 +269,13 @@ export function isKeyConflict(
   excludeAction?: ShortcutAction
 ): ShortcutAction | null {
   const entries = Object.entries(shortcuts) as [ShortcutAction, string][];
-  
+
   for (const [action, assignedKey] of entries) {
     if (assignedKey === key && action !== excludeAction) {
       return action;
     }
   }
-  
+
   return null;
 }
 

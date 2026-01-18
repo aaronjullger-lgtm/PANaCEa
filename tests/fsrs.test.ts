@@ -1,6 +1,6 @@
 /**
  * FSRS v5 Algorithm Comprehensive Test Suite
- * 
+ *
  * Tests the core spaced repetition algorithm to ensure:
  * - Correct state transitions
  * - Proper interval calculations

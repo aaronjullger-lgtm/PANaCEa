@@ -1,6 +1,7 @@
 # 🎭 Playwright Smoke Tests - Quick Reference
 
 ## 🚀 Installation Complete!
+
 ✅ Playwright installed with Chromium, Firefox, WebKit
 ✅ Configuration optimized for localhost:3000
 ✅ Test files created in `e2e/` directory
@@ -10,6 +11,7 @@
 ## 📝 Run Instructions
 
 ### Step 1️⃣: One-Time Authentication Setup
+
 ```bash
 # Start your dev server
 npm run dev
@@ -17,11 +19,13 @@ npm run dev
 # In a NEW terminal, run auth setup (browser will open)
 npm run test:auth
 ```
+
 **👉 Log in manually in the browser, then the script saves your session automatically!**
 
 ---
 
 ### Step 2️⃣: Run the Smoke Tests
+
 ```bash
 # All tests (recommended first run)
 npm run test:smoke
@@ -38,6 +42,7 @@ npm run test:e2e:headed
 ## 🎯 What Gets Tested
 
 ### Study Modes (11 total):
+
 - ✅ Drill Dashboard
 - ✅ Pharmacology Drill → `/api/questions/pharmacology-drill`
 - ✅ ECG/Media Drill → `/api/drills/media` **(CRITICAL - had 500s)**
@@ -51,6 +56,7 @@ npm run test:e2e:headed
 - ✅ Analytics
 
 ### Critical Checks:
+
 - ❌ No 500 Internal Server Error
 - ❌ No 401 Unauthorized
 - ❌ No blank white screens
@@ -106,11 +112,13 @@ Running 11 tests...
 ## 🐛 Troubleshooting
 
 **Authentication expired?**
+
 ```bash
 npm run test:auth
 ```
 
 **Dev server not running?**
+
 ```bash
 # Terminal 1:
 npm run dev
@@ -120,6 +128,7 @@ npm run test:smoke
 ```
 
 **Want to see what's happening?**
+
 ```bash
 npm run test:e2e:ui
 ```
@@ -149,17 +158,21 @@ package.json              # New test scripts added
 ## 💡 Pro Tips
 
 1. **Use UI Mode for Development:**
+
    ```bash
    npm run test:e2e:ui
    ```
+
    - Time travel through test execution
    - Inspect elements visually
    - Debug with breakpoints
 
 2. **Run Before Deploying:**
+
    ```bash
    npm run test:smoke
    ```
+
    - Catches regressions in 30 seconds
    - Tests all critical paths
 
@@ -167,6 +180,7 @@ package.json              # New test scripts added
    ```bash
    npx playwright codegen http://localhost:3000
    ```
+
    - Record interactions
    - Auto-generates test code
 
@@ -182,4 +196,4 @@ package.json              # New test scripts added
 
 **Happy Testing! 🚀**
 
-*No more guessing which parts of your app are broken!*
+_No more guessing which parts of your app are broken!_

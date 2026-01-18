@@ -2,7 +2,7 @@
 /**
  * PANCE Entry Generation Orchestrator
  * Runs all entry generators in sequence to fill database gaps
- * 
+ *
  * Usage:
  *   npx tsx scripts/generators/run-all-entry-generators.ts
  */
@@ -25,10 +25,13 @@ const GENERATORS = [
 
 const scriptsDir = path.join(process.cwd(), 'scripts', 'generators');
 
-function runGenerator(scriptName: string, args: string[] = []): Promise<{ success: boolean; output: string }> {
+function runGenerator(
+  scriptName: string,
+  args: string[] = []
+): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
     const scriptPath = path.join(scriptsDir, scriptName);
-    
+
     if (!existsSync(scriptPath)) {
       resolve({ success: false, output: `Script not found: ${scriptPath}` });
       return;

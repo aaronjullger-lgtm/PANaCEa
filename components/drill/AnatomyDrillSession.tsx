@@ -1,6 +1,6 @@
 /**
  * AnatomyDrillSession - Regional anatomy review drill
- * 
+ *
  * Multiple-choice questions covering anatomical structures and clinical correlates.
  * Enhanced with database-linked reference material in feedback panels.
  */
@@ -18,21 +18,24 @@ interface AnatomyDrillSessionProps {
   onNavigateToReference?: (type: string, id: string) => void;
 }
 
-const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({ 
+const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
   onExit,
   onNavigateToReference,
 }) => {
   const drill = useAnatomyDrill();
   const stats = getDrillLandingStats('anatomy_review');
-  
+
   // Handler for deep dive into reference material
-  const handleDeepDive = useCallback((type: string, id: string) => {
-    if (onNavigateToReference) {
-      onNavigateToReference(type, id);
-    } else {
-      console.log('Deep dive requested:', type, id);
-    }
-  }, [onNavigateToReference]);
+  const handleDeepDive = useCallback(
+    (type: string, id: string) => {
+      if (onNavigateToReference) {
+        onNavigateToReference(type, id);
+      } else {
+        console.log('Deep dive requested:', type, id);
+      }
+    },
+    [onNavigateToReference]
+  );
 
   // Landing page
   if (drill.status === 'landing') {
@@ -80,7 +83,11 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
             isCorrect={drill.isCorrect!}
             correctAnswer={drill.currentQuestion.options[drill.currentQuestion.correctIndex]}
             explanation={drill.currentQuestion.explanation}
-            userAnswer={drill.userAnswerIndex !== null ? drill.currentQuestion.options[drill.userAnswerIndex] : null}
+            userAnswer={
+              drill.userAnswerIndex !== null
+                ? drill.currentQuestion.options[drill.userAnswerIndex]
+                : null
+            }
             onNext={drill.nextQuestion}
             category="anatomy"
             tags={drill.currentQuestion.tags || []}

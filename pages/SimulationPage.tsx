@@ -1,6 +1,6 @@
 /**
  * SimulationPage - Core PANCE Simulation Dedicated Page
- * 
+ *
  * Displays the adaptive quiz engine with focus options (All Topics / Growth Areas / Flagged)
  * Replaces the modal flow with a dedicated route at /simulation/core-pance
  */
@@ -35,12 +35,12 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   // Calculate real stats from performance data
   const stats = useMemo(() => {
     const recent = performanceData.slice(-100);
-    const correct = recent.filter(r => r.isCorrect).length;
+    const correct = recent.filter((r) => r.isCorrect).length;
     const accuracy = recent.length > 0 ? Math.round((correct / recent.length) * 100) : 0;
-    
+
     const today = new Date().toDateString();
-    const todayQuestions = performanceData.filter(r => 
-      new Date(r.timestamp).toDateString() === today
+    const todayQuestions = performanceData.filter(
+      (r) => new Date(r.timestamp).toDateString() === today
     ).length;
 
     return {
@@ -86,9 +86,21 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
     }
   };
 
-  const focusOptions: Array<{ id: FocusOption; label: string; icon: React.ElementType; color: string; stat?: number }> = [
+  const focusOptions: Array<{
+    id: FocusOption;
+    label: string;
+    icon: React.ElementType;
+    color: string;
+    stat?: number;
+  }> = [
     { id: 'all', label: 'All Topics', icon: Brain, color: 'blue', stat: stats.totalQuestions },
-    { id: 'growth', label: 'Growth Areas', icon: TrendingUp, color: 'amber', stat: stats.growthAreasCount },
+    {
+      id: 'growth',
+      label: 'Growth Areas',
+      icon: TrendingUp,
+      color: 'amber',
+      stat: stats.growthAreasCount,
+    },
     { id: 'flagged', label: 'Flagged', icon: Flag, color: 'purple', stat: stats.flaggedCount },
     { id: 'due', label: 'Due for Review', icon: Clock, color: 'emerald' },
   ];
@@ -109,7 +121,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             <ChevronLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
-          
+
           <div className="flex items-center gap-4 mb-3">
             <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-700">
               <Brain className="w-10 h-10 text-blue-600 dark:text-blue-400" />
@@ -137,31 +149,39 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <Target className="w-4 h-4 text-emerald-500" />
               <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.accuracy}%</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {stats.accuracy}%
+            </div>
           </div>
-          
+
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-[var(--color-text-muted)]">Today</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.todayQuestions}</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {stats.todayQuestions}
+            </div>
           </div>
-          
+
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-amber-500" />
               <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.growthAreasCount}</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {stats.growthAreasCount}
+            </div>
           </div>
-          
+
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
               <Flag className="w-4 h-4 text-purple-500" />
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.flaggedCount}</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {stats.flaggedCount}
+            </div>
           </div>
         </motion.div>
 
@@ -175,12 +195,12 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
             Choose Your Focus
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {focusOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = selectedFocus === option.id;
-              
+
               return (
                 <button
                   key={option.id}
@@ -192,11 +212,13 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl ${
-                      isSelected
-                        ? `bg-${option.color}-500 text-white`
-                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
-                    }`}>
+                    <div
+                      className={`p-3 rounded-xl ${
+                        isSelected
+                          ? `bg-${option.color}-500 text-white`
+                          : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                      }`}
+                    >
                       <Icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
@@ -205,11 +227,13 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                           {option.label}
                         </span>
                         {option.stat !== undefined && (
-                          <span className={`text-sm px-2 py-0.5 rounded-full ${
-                            isSelected
-                              ? `bg-${option.color}-100 dark:bg-${option.color}-800 text-${option.color}-700 dark:text-${option.color}-200`
-                              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
-                          }`}>
+                          <span
+                            className={`text-sm px-2 py-0.5 rounded-full ${
+                              isSelected
+                                ? `bg-${option.color}-100 dark:bg-${option.color}-800 text-${option.color}-700 dark:text-${option.color}-200`
+                                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                            }`}
+                          >
                             {option.stat}
                           </span>
                         )}
@@ -217,9 +241,15 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                     </div>
                   </div>
                   {isSelected && (
-                    <div className={`absolute top-3 right-3 w-6 h-6 rounded-full bg-${option.color}-500 flex items-center justify-center`}>
+                    <div
+                      className={`absolute top-3 right-3 w-6 h-6 rounded-full bg-${option.color}-500 flex items-center justify-center`}
+                    >
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                   )}
@@ -229,9 +259,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           </div>
 
           <div className="p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {getFocusDescription()}
-            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">{getFocusDescription()}</p>
           </div>
         </motion.div>
 
@@ -245,7 +273,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
             Difficulty Adjustment
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { id: 'easier' as const, label: 'Easier', desc: 'Build confidence' },
@@ -264,9 +292,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                 <div className="font-semibold text-[var(--color-text-primary)] mb-1">
                   {option.label}
                 </div>
-                <div className="text-sm text-[var(--color-text-muted)]">
-                  {option.desc}
-                </div>
+                <div className="text-sm text-[var(--color-text-muted)]">{option.desc}</div>
               </button>
             ))}
           </div>

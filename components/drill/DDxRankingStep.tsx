@@ -1,13 +1,13 @@
 /**
  * DDx Ranking Step Component
  * Sprint 6: Differential Diagnosis ranking for clinical reasoning enhancement
- * 
+ *
  * Users rank differentials by likelihood before seeing the answer.
  * This promotes clinical reasoning patterns used in real practice.
  */
 
-import React, { useState, useCallback } from "react";
-import { motion, Reorder, AnimatePresence } from "framer-motion";
+import React, { useState, useCallback } from 'react';
+import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import {
   GripVertical,
   ChevronUp,
@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Brain,
   Lightbulb,
-} from "lucide-react";
+} from 'lucide-react';
 
 // =============================================================================
 // TYPES
@@ -27,7 +27,7 @@ export interface DifferentialItem {
   id: string;
   name: string;
   isCorrectAnswer?: boolean; // True if this is THE answer (most likely)
-  likelihood?: "most_likely" | "likely" | "less_likely" | "unlikely";
+  likelihood?: 'most_likely' | 'likely' | 'less_likely' | 'unlikely';
   reasoning?: string;
 }
 
@@ -68,49 +68,60 @@ export function DDxRankingStep({
   const [showReasoning, setShowReasoning] = useState(false);
 
   // Handle reorder via drag
-  const handleReorder = useCallback((newOrder: DifferentialItem[]) => {
-    if (!disabled && !isSubmitted) {
-      setItems(newOrder);
-    }
-  }, [disabled, isSubmitted]);
+  const handleReorder = useCallback(
+    (newOrder: DifferentialItem[]) => {
+      if (!disabled && !isSubmitted) {
+        setItems(newOrder);
+      }
+    },
+    [disabled, isSubmitted]
+  );
 
   // Move item up in ranking
-  const moveUp = useCallback((index: number) => {
-    if (index === 0 || disabled || isSubmitted) return;
-    const newItems = [...items];
-    [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
-    setItems(newItems);
-  }, [items, disabled, isSubmitted]);
+  const moveUp = useCallback(
+    (index: number) => {
+      if (index === 0 || disabled || isSubmitted) return;
+      const newItems = [...items];
+      [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+      setItems(newItems);
+    },
+    [items, disabled, isSubmitted]
+  );
 
   // Move item down in ranking
-  const moveDown = useCallback((index: number) => {
-    if (index === items.length - 1 || disabled || isSubmitted) return;
-    const newItems = [...items];
-    [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
-    setItems(newItems);
-  }, [items, disabled, isSubmitted]);
+  const moveDown = useCallback(
+    (index: number) => {
+      if (index === items.length - 1 || disabled || isSubmitted) return;
+      const newItems = [...items];
+      [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+      setItems(newItems);
+    },
+    [items, disabled, isSubmitted]
+  );
 
   // Calculate score based on ranking
   const calculateScore = (ranking: string[]): RankingResult => {
     const correctPosition = ranking.indexOf(correctAnswerId);
     const totalItems = ranking.length;
-    
+
     // Score based on position (first = 100, last = 0)
     let score: number;
     let feedback: string;
-    
+
     if (correctPosition === 0) {
       score = 100;
-      feedback = "Excellent! You correctly identified the most likely diagnosis.";
+      feedback = 'Excellent! You correctly identified the most likely diagnosis.';
     } else if (correctPosition === 1) {
       score = 80;
-      feedback = "Good reasoning! The correct answer was your second choice.";
+      feedback = 'Good reasoning! The correct answer was your second choice.';
     } else if (correctPosition === 2) {
       score = 60;
-      feedback = "The correct diagnosis was third on your list. Review the distinguishing features.";
+      feedback =
+        'The correct diagnosis was third on your list. Review the distinguishing features.';
     } else {
       score = Math.max(0, 40 - (correctPosition - 2) * 15);
-      feedback = "The correct diagnosis ranked lower. Consider what findings you may have underweighted.";
+      feedback =
+        'The correct diagnosis ranked lower. Consider what findings you may have underweighted.';
     }
 
     return {
@@ -124,7 +135,7 @@ export function DDxRankingStep({
 
   // Handle submission
   const handleSubmit = () => {
-    const ranking = items.map(item => item.id);
+    const ranking = items.map((item) => item.id);
     const result = calculateScore(ranking);
     setResult(result);
     setIsSubmitted(true);
@@ -134,19 +145,19 @@ export function DDxRankingStep({
   // Get item styling based on result
   const getItemStyle = (item: DifferentialItem, index: number) => {
     if (!isSubmitted) {
-      return "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700";
+      return 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700';
     }
-    
+
     if (item.id === correctAnswerId) {
-      return "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-600";
+      return 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-600';
     }
-    
+
     // Wrong answers at top are more problematic
     if (index < result!.correctPosition) {
-      return "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700";
+      return 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700';
     }
-    
-    return "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700";
+
+    return 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700';
   };
 
   return (
@@ -178,12 +189,7 @@ export function DDxRankingStep({
 
       {/* Ranking List */}
       <div className="space-y-2">
-        <Reorder.Group
-          axis="y"
-          values={items}
-          onReorder={handleReorder}
-          className="space-y-2"
-        >
+        <Reorder.Group axis="y" values={items} onReorder={handleReorder} className="space-y-2">
           <AnimatePresence>
             {items.map((item, index) => (
               <Reorder.Item
@@ -193,21 +199,24 @@ export function DDxRankingStep({
                 className={`
                   relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all
                   ${getItemStyle(item, index)}
-                  ${!disabled && !isSubmitted ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
+                  ${!disabled && !isSubmitted ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}
                 `}
-                whileDrag={{ scale: 1.02, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
+                whileDrag={{ scale: 1.02, boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 {/* Rank Number */}
-                <div className={`
+                <div
+                  className={`
                   flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
-                  ${isSubmitted && item.id === correctAnswerId
-                    ? "bg-emerald-500 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                  ${
+                    isSubmitted && item.id === correctAnswerId
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                   }
-                `}>
+                `}
+                >
                   {index + 1}
                 </div>
 
@@ -220,16 +229,19 @@ export function DDxRankingStep({
 
                 {/* Item Name */}
                 <div className="flex-grow">
-                  <span className={`
+                  <span
+                    className={`
                     font-medium
-                    ${isSubmitted && item.id === correctAnswerId
-                      ? "text-emerald-700 dark:text-emerald-300"
-                      : "text-slate-800 dark:text-slate-200"
+                    ${
+                      isSubmitted && item.id === correctAnswerId
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-slate-800 dark:text-slate-200'
                     }
-                  `}>
+                  `}
+                  >
                     {item.name}
                   </span>
-                  
+
                   {/* Show reasoning after submission */}
                   {isSubmitted && showReasoning && item.reasoning && (
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -288,41 +300,46 @@ export function DDxRankingStep({
           animate={{ opacity: 1, y: 0 }}
           className={`
             mt-6 p-4 rounded-xl border-2
-            ${result.score >= 80
-              ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400"
-              : result.score >= 60
-                ? "bg-amber-50 dark:bg-amber-900/20 border-amber-400"
-                : "bg-red-50 dark:bg-red-900/20 border-red-400"
+            ${
+              result.score >= 80
+                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400'
+                : result.score >= 60
+                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400'
+                  : 'bg-red-50 dark:bg-red-900/20 border-red-400'
             }
           `}
         >
           <div className="flex items-start gap-3">
-            <div className={`
+            <div
+              className={`
               flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg
-              ${result.score >= 80
-                ? "bg-emerald-500 text-white"
-                : result.score >= 60
-                  ? "bg-amber-500 text-white"
-                  : "bg-red-500 text-white"
+              ${
+                result.score >= 80
+                  ? 'bg-emerald-500 text-white'
+                  : result.score >= 60
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-red-500 text-white'
               }
-            `}>
+            `}
+            >
               {result.score}%
             </div>
             <div className="flex-grow">
-              <h4 className={`
+              <h4
+                className={`
                 font-semibold mb-1
-                ${result.score >= 80
-                  ? "text-emerald-700 dark:text-emerald-300"
-                  : result.score >= 60
-                    ? "text-amber-700 dark:text-amber-300"
-                    : "text-red-700 dark:text-red-300"
+                ${
+                  result.score >= 80
+                    ? 'text-emerald-700 dark:text-emerald-300'
+                    : result.score >= 60
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-red-700 dark:text-red-300'
                 }
-              `}>
+              `}
+              >
                 DDx Ranking Score
               </h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {result.feedback}
-              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{result.feedback}</p>
               <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
                 You ranked the correct answer #{result.correctPosition + 1} out of {items.length}
               </p>
@@ -334,7 +351,7 @@ export function DDxRankingStep({
             onClick={() => setShowReasoning(!showReasoning)}
             className="mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
           >
-            {showReasoning ? "Hide" : "Show"} detailed reasoning
+            {showReasoning ? 'Hide' : 'Show'} detailed reasoning
           </button>
         </motion.div>
       )}

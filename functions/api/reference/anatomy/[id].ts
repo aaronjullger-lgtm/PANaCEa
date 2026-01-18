@@ -1,70 +1,92 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
+/**
+ * Anatomy Structure Detail API
+ * GET /api/reference/anatomy/:id
+ *
+ * Fetches a single anatomy structure by ID with related conditions
+ *
+ * Sprint: Security Hardening Sprint 3
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
-export async function onRequestGet(context: any) {
-  const { request, env, params } = context;
-  const { id } = params;
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+const AnatomyDetailSchema = z.object({
+  params: z
+    .object({
+      id: z.string().uuid('Invalid anatomy structure ID format'),
+    })
+    .optional(),
+});
+
+// ============================================================================
+// CORS HANDLER
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+// ============================================================================
+// GET HANDLER
+// ============================================================================
+
+export const onRequestGet = authenticatedEndpoint(
+  AnatomyDetailSchema,
+  async ({ env, auth, params }) => {
+    const log = createEndpointLogger('/api/reference/anatomy/[id]', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      const { id } = params;
+
+      if (!id) {
+        return {
+          status: 400,
+          error: 'Anatomy structure ID is required',
+        };
       }
-    });
-  }
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+      log.info('Fetching anatomy structure detail', { id });
 
-  try {
-    const result = await prisma.anatomyStructure.findUnique({
-      where: { id },
-      include: { conditions: { select: { id: true, name: true } } }
-    });
-    
-    if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'Not found' }), { 
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      const result = await prisma.anatomyStructure.findUnique({
+        where: { id },
+        include: { conditions: { select: { id: true, name: true } } },
       });
+
+      if (!result) {
+        log.warn('Anatomy structure not found', { id });
+        return {
+          status: 404,
+          error: 'Anatomy structure not found',
+        };
+      }
+
+      log.info('Anatomy structure fetch successful', { id });
+
+      return {
+        data: {
+          success: true,
+          data: result,
+        },
+      };
+    } catch (error) {
+      log.error('Error fetching anatomy structure detail', error);
+      return {
+        status: 500,
+        error: 'Failed to fetch anatomy structure',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error: any) {
-    console.error('Error fetching anatomy detail:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch anatomy detail', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

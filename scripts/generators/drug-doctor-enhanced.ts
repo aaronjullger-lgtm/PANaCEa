@@ -1,6 +1,6 @@
 /**
  * Drug Doctor Enhanced v3
- * 
+ *
  * A comprehensive drug database curator that:
  * 1. Gap Analysis - Reports missing/inadequate fields
  * 2. Non-Pharm Cleanup - AI validates and removes non-drug entries
@@ -9,12 +9,12 @@
  * 5. Content Enhancement - Improves subpar content
  * 6. Name Formatting - Ensures proper capitalization
  * 7. PANCE Gap Discovery - Finds missing high-yield drugs for PANCE
- * 
+ *
  * Model: Gemini 2.5 Flash STRICTLY (temp 0.1, JSON output)
- * 
+ *
  * Usage:
  *   npx tsx scripts/generators/drug-doctor-enhanced.ts [options]
- * 
+ *
  * Options:
  *   --dry-run          Preview changes without modifying database
  *   --analyze-only     Run gap analysis and duplicate check only
@@ -62,7 +62,10 @@ class TokenBucket {
   private tokens: number;
   private lastRefill: number;
 
-  constructor(private capacity: number, private refillPerSecond: number) {
+  constructor(
+    private capacity: number,
+    private refillPerSecond: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -97,20 +100,62 @@ function sleep(ms: number): Promise<void> {
 // ==================== Field Definitions ====================
 
 const STRING_FIELDS = [
-  'genericName', 'brandName', 'displayName', 'mechanismOfAction', 'mechanismDetailed',
-  'dosing', 'clinicalNotes', 'pregnancyCategory', 'pregnancyNotes', 'lactationSafety',
-  'lactationNotes', 'pediatricDosing', 'pediatricNotes', 'geriatricDosing', 'geriatricNotes',
-  'renalDosing', 'hepaticDosing', 'elimination', 'metabolism', 'metabolismDetail',
-  'absorption', 'distribution', 'eliminationRoute', 'halfLife', 'onsetOfAction',
-  'peakEffect', 'duration', 'bioavailability', 'reversalAgent', 'antidote', 'toxicity',
-  'maxDailyDose', 'administrationTips', 'storageRequirements', 'typicalCost',
+  'genericName',
+  'brandName',
+  'displayName',
+  'mechanismOfAction',
+  'mechanismDetailed',
+  'dosing',
+  'clinicalNotes',
+  'pregnancyCategory',
+  'pregnancyNotes',
+  'lactationSafety',
+  'lactationNotes',
+  'pediatricDosing',
+  'pediatricNotes',
+  'geriatricDosing',
+  'geriatricNotes',
+  'renalDosing',
+  'hepaticDosing',
+  'elimination',
+  'metabolism',
+  'metabolismDetail',
+  'absorption',
+  'distribution',
+  'eliminationRoute',
+  'halfLife',
+  'onsetOfAction',
+  'peakEffect',
+  'duration',
+  'bioavailability',
+  'reversalAgent',
+  'antidote',
+  'toxicity',
+  'maxDailyDose',
+  'administrationTips',
+  'storageRequirements',
+  'typicalCost',
 ] as const;
 
 const ARRAY_FIELDS = [
-  'drugClass', 'aliases', 'tags', 'indications', 'contraindications', 'blackBoxWarnings',
-  'riskStrategies', 'monitoringParams', 'clinicalPearls', 'commonMistakes', 'mnemonics',
-  'testQuestionTips', 'boardYieldFacts', 'foodInteractions', 'routesOfAdmin',
-  'formulations', 'sideEffects', 'interactions',
+  'drugClass',
+  'aliases',
+  'tags',
+  'indications',
+  'contraindications',
+  'blackBoxWarnings',
+  'riskStrategies',
+  'monitoringParams',
+  'clinicalPearls',
+  'commonMistakes',
+  'mnemonics',
+  'testQuestionTips',
+  'boardYieldFacts',
+  'foodInteractions',
+  'routesOfAdmin',
+  'formulations',
+  'sideEffects',
+  'interactions',
 ] as const;
 
 const BOOLEAN_FIELDS = ['genericAvailable', 'isFirstLine', 'isHighYield'] as const;
@@ -119,65 +164,170 @@ const JSON_FIELDS = ['pharmacokinetics', 'cyp450Effects', 'majorInteractions'] a
 
 // Fields that must have actual content (not just "None")
 const REQUIRED_CONTENT_FIELDS = [
-  'mechanismOfAction', 'indications', 'contraindications', 'dosing', 'sideEffects',
-  'drugClass', 'clinicalPearls', 'monitoringParams',
+  'mechanismOfAction',
+  'indications',
+  'contraindications',
+  'dosing',
+  'sideEffects',
+  'drugClass',
+  'clinicalPearls',
+  'monitoringParams',
 ] as const;
 
 // ==================== Placeholders & Invalid Names ====================
 
 const PLACEHOLDER_VALUES = new Set([
-  'none', 'n/a', 'not available', 'unknown', 'na', '-', '--', '...', 'tbd',
-  'to be determined', 'pending', 'not specified', 'unspecified', '',
+  'none',
+  'n/a',
+  'not available',
+  'unknown',
+  'na',
+  '-',
+  '--',
+  '...',
+  'tbd',
+  'to be determined',
+  'pending',
+  'not specified',
+  'unspecified',
+  '',
 ]);
 
 const INVALID_DRUG_NAMES = new Set([
-  'oral', 'po', 'iv', 'im', 'sq', 'subcutaneous', 'topical', 'intravenous',
-  'intramuscular', 'tablet', 'capsule', 'injection', 'solution', 'suspension',
-  'cream', 'ointment', 'gel', 'spray', 'inhaler', 'suppository', 'patch',
-  'drops', 'lotion', 'powder', 'syrup', 'elixir', 'antibiotic', 'antiviral',
-  'antifungal', 'analgesic', 'nsaid', 'steroid', 'vaccine', 'corticosteroid',
-  'beta blocker', 'ace inhibitor', 'arb', 'ssri', 'snri', 'maoi', 'diuretic',
-  'anticoagulant', 'antiplatelet', 'statin', 'immunosuppressant', 'chemotherapy',
-  'opioid', 'benzodiazepine', 'antidepressant', 'antipsychotic', 'medication',
-  'drug', 'agent', 'therapy', 'treatment', 'once daily', 'twice daily', 'bid',
-  'tid', 'qid', 'prn', 'mg', 'mcg', 'ml', 'unit', 'units',
+  'oral',
+  'po',
+  'iv',
+  'im',
+  'sq',
+  'subcutaneous',
+  'topical',
+  'intravenous',
+  'intramuscular',
+  'tablet',
+  'capsule',
+  'injection',
+  'solution',
+  'suspension',
+  'cream',
+  'ointment',
+  'gel',
+  'spray',
+  'inhaler',
+  'suppository',
+  'patch',
+  'drops',
+  'lotion',
+  'powder',
+  'syrup',
+  'elixir',
+  'antibiotic',
+  'antiviral',
+  'antifungal',
+  'analgesic',
+  'nsaid',
+  'steroid',
+  'vaccine',
+  'corticosteroid',
+  'beta blocker',
+  'ace inhibitor',
+  'arb',
+  'ssri',
+  'snri',
+  'maoi',
+  'diuretic',
+  'anticoagulant',
+  'antiplatelet',
+  'statin',
+  'immunosuppressant',
+  'chemotherapy',
+  'opioid',
+  'benzodiazepine',
+  'antidepressant',
+  'antipsychotic',
+  'medication',
+  'drug',
+  'agent',
+  'therapy',
+  'treatment',
+  'once daily',
+  'twice daily',
+  'bid',
+  'tid',
+  'qid',
+  'prn',
+  'mg',
+  'mcg',
+  'ml',
+  'unit',
+  'units',
 ]);
 
 // ==================== Drug Class Standardization ====================
 
 const STANDARD_DRUG_CLASSES: Record<string, string> = {
-  'ace inhibitor': 'ACE Inhibitor', 'ace-inhibitor': 'ACE Inhibitor',
-  'arb': 'ARB', 'angiotensin receptor blocker': 'ARB',
-  'beta blocker': 'Beta Blocker', 'beta-blocker': 'Beta Blocker',
-  'calcium channel blocker': 'Calcium Channel Blocker', 'ccb': 'Calcium Channel Blocker',
-  'diuretic': 'Diuretic', 'loop diuretic': 'Loop Diuretic',
+  'ace inhibitor': 'ACE Inhibitor',
+  'ace-inhibitor': 'ACE Inhibitor',
+  arb: 'ARB',
+  'angiotensin receptor blocker': 'ARB',
+  'beta blocker': 'Beta Blocker',
+  'beta-blocker': 'Beta Blocker',
+  'calcium channel blocker': 'Calcium Channel Blocker',
+  ccb: 'Calcium Channel Blocker',
+  diuretic: 'Diuretic',
+  'loop diuretic': 'Loop Diuretic',
   'thiazide diuretic': 'Thiazide Diuretic',
-  'ssri': 'SSRI', 'selective serotonin reuptake inhibitor': 'SSRI',
-  'snri': 'SNRI', 'serotonin-norepinephrine reuptake inhibitor': 'SNRI',
-  'maoi': 'MAOI', 'monoamine oxidase inhibitor': 'MAOI',
-  'tricyclic antidepressant': 'Tricyclic Antidepressant', 'tca': 'Tricyclic Antidepressant',
-  'benzodiazepine': 'Benzodiazepine', 'antipsychotic': 'Antipsychotic',
-  'antibiotic': 'Antibiotic', 'penicillin': 'Penicillin', 'cephalosporin': 'Cephalosporin',
-  'macrolide': 'Macrolide', 'fluoroquinolone': 'Fluoroquinolone',
-  'tetracycline': 'Tetracycline', 'aminoglycoside': 'Aminoglycoside',
-  'antiviral': 'Antiviral', 'antifungal': 'Antifungal',
-  'nsaid': 'NSAID', 'nonsteroidal anti-inflammatory drug': 'NSAID',
-  'opioid': 'Opioid', 'narcotic': 'Opioid', 'analgesic': 'Analgesic',
-  'insulin': 'Insulin', 'sulfonylurea': 'Sulfonylurea', 'biguanide': 'Biguanide',
-  'glp-1 agonist': 'GLP-1 Agonist', 'dpp-4 inhibitor': 'DPP-4 Inhibitor',
-  'sglt2 inhibitor': 'SGLT2 Inhibitor', 'corticosteroid': 'Corticosteroid',
-  'proton pump inhibitor': 'Proton Pump Inhibitor', 'ppi': 'Proton Pump Inhibitor',
-  'h2 blocker': 'H2 Receptor Antagonist', 'antihistamine': 'Antihistamine',
-  'anticonvulsant': 'Anticonvulsant', 'antiepileptic': 'Antiepileptic',
-  'bronchodilator': 'Bronchodilator', 'inhaled corticosteroid': 'Inhaled Corticosteroid',
-  'anticoagulant': 'Anticoagulant', 'antiplatelet': 'Antiplatelet', 'statin': 'Statin',
-  'biologic': 'Biologic', 'monoclonal antibody': 'Monoclonal Antibody',
+  ssri: 'SSRI',
+  'selective serotonin reuptake inhibitor': 'SSRI',
+  snri: 'SNRI',
+  'serotonin-norepinephrine reuptake inhibitor': 'SNRI',
+  maoi: 'MAOI',
+  'monoamine oxidase inhibitor': 'MAOI',
+  'tricyclic antidepressant': 'Tricyclic Antidepressant',
+  tca: 'Tricyclic Antidepressant',
+  benzodiazepine: 'Benzodiazepine',
+  antipsychotic: 'Antipsychotic',
+  antibiotic: 'Antibiotic',
+  penicillin: 'Penicillin',
+  cephalosporin: 'Cephalosporin',
+  macrolide: 'Macrolide',
+  fluoroquinolone: 'Fluoroquinolone',
+  tetracycline: 'Tetracycline',
+  aminoglycoside: 'Aminoglycoside',
+  antiviral: 'Antiviral',
+  antifungal: 'Antifungal',
+  nsaid: 'NSAID',
+  'nonsteroidal anti-inflammatory drug': 'NSAID',
+  opioid: 'Opioid',
+  narcotic: 'Opioid',
+  analgesic: 'Analgesic',
+  insulin: 'Insulin',
+  sulfonylurea: 'Sulfonylurea',
+  biguanide: 'Biguanide',
+  'glp-1 agonist': 'GLP-1 Agonist',
+  'dpp-4 inhibitor': 'DPP-4 Inhibitor',
+  'sglt2 inhibitor': 'SGLT2 Inhibitor',
+  corticosteroid: 'Corticosteroid',
+  'proton pump inhibitor': 'Proton Pump Inhibitor',
+  ppi: 'Proton Pump Inhibitor',
+  'h2 blocker': 'H2 Receptor Antagonist',
+  antihistamine: 'Antihistamine',
+  anticonvulsant: 'Anticonvulsant',
+  antiepileptic: 'Antiepileptic',
+  bronchodilator: 'Bronchodilator',
+  'inhaled corticosteroid': 'Inhaled Corticosteroid',
+  anticoagulant: 'Anticoagulant',
+  antiplatelet: 'Antiplatelet',
+  statin: 'Statin',
+  biologic: 'Biologic',
+  'monoclonal antibody': 'Monoclonal Antibody',
 };
 
 // ==================== Utility Functions ====================
 
 function normalizeName(name: string): string {
-  return name.toLowerCase().trim()
+  return name
+    .toLowerCase()
+    .trim()
     .replace(/\s+/g, ' ')
     .replace(/[^a-z0-9\s\-]/g, '')
     .replace(/\s*\(.*?\)\s*/g, '')
@@ -190,9 +340,10 @@ function levenshteinDistance(a: string, b: string): number {
   for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
-      matrix[i][j] = b.charAt(i - 1) === a.charAt(j - 1)
-        ? matrix[i - 1][j - 1]
-        : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      matrix[i][j] =
+        b.charAt(i - 1) === a.charAt(j - 1)
+          ? matrix[i - 1][j - 1]
+          : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
     }
   }
   return matrix[b.length][a.length];
@@ -254,11 +405,25 @@ function isValidDrugName(name: string): boolean {
 // ==================== Name Formatting ====================
 
 const SPECIAL_CASES: Record<string, string> = {
-  'hctz': 'HCTZ', 'nsaid': 'NSAID', 'nsaids': 'NSAIDs',
-  'ace': 'ACE', 'arb': 'ARB', 'ssri': 'SSRI', 'snri': 'SNRI', 'maoi': 'MAOI',
-  'tnf': 'TNF', 'iv': 'IV', 'po': 'PO', 'im': 'IM',
-  'dtap': 'DTaP', 'mmr': 'MMR', 'tdap': 'Tdap', 'hpv': 'HPV',
-  'cana2edta': 'CaNa2EDTA', 'hiv': 'HIV', 'aids': 'AIDS',
+  hctz: 'HCTZ',
+  nsaid: 'NSAID',
+  nsaids: 'NSAIDs',
+  ace: 'ACE',
+  arb: 'ARB',
+  ssri: 'SSRI',
+  snri: 'SNRI',
+  maoi: 'MAOI',
+  tnf: 'TNF',
+  iv: 'IV',
+  po: 'PO',
+  im: 'IM',
+  dtap: 'DTaP',
+  mmr: 'MMR',
+  tdap: 'Tdap',
+  hpv: 'HPV',
+  cana2edta: 'CaNa2EDTA',
+  hiv: 'HIV',
+  aids: 'AIDS',
 };
 
 function capitalizeWord(word: string): string {
@@ -277,12 +442,18 @@ function formatGenericName(name: string): string {
 
 function formatBrandName(name: string): string {
   if (!name || PLACEHOLDER_VALUES.has(name.toLowerCase().trim())) return 'No brand name available.';
-  return name.split(/[-\/\s]+/).map(capitalizeWord).join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
+  return name
+    .split(/[-\/\s]+/)
+    .map(capitalizeWord)
+    .join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
 }
 
 function formatDisplayName(name: string): string {
   if (!name) return name;
-  return name.split(/[-\/\s]+/).map(capitalizeWord).join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
+  return name
+    .split(/[-\/\s]+/)
+    .map(capitalizeWord)
+    .join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
 }
 
 function standardizeDrugClasses(classes: string[]): string[] {
@@ -302,7 +473,10 @@ function standardizeDrugClasses(classes: string[]): string[] {
 
 function cleanText(text: string): string {
   if (!text) return text;
-  return text.trim().replace(/\s+/g, ' ').replace(/\n{3,}/g, '\n\n');
+  return text
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n');
 }
 
 function cleanArray(arr: unknown[], placeholder: string): string[] {
@@ -331,9 +505,15 @@ async function runGapAnalysis(): Promise<GapReport[]> {
   console.log('📊 PHASE 1: GAP ANALYSIS');
   console.log('═'.repeat(70));
 
-  const allFields = [...STRING_FIELDS, ...ARRAY_FIELDS, ...BOOLEAN_FIELDS, ...NUMBER_FIELDS, ...JSON_FIELDS];
+  const allFields = [
+    ...STRING_FIELDS,
+    ...ARRAY_FIELDS,
+    ...BOOLEAN_FIELDS,
+    ...NUMBER_FIELDS,
+    ...JSON_FIELDS,
+  ];
   const reports: GapReport[] = [];
-  
+
   // Get total count first
   const totalCount = await prisma.drug.count();
   console.log(`\nAnalyzing ${totalCount} drugs in batches of ${BATCH_SIZE}...\n`);
@@ -397,7 +577,7 @@ async function runGapAnalysis(): Promise<GapReport[]> {
   console.log(`   Drugs with issues: ${reports.length}`);
   console.log(`   Total missing fields: ${totalMissing}`);
   console.log(`   Total inadequate fields: ${totalInadequate}`);
-  
+
   console.log('\n📈 MOST COMMONLY MISSING FIELDS:');
   const sorted = Object.entries(fieldMissingCounts)
     .sort(([, a], [, b]) => b - a)
@@ -451,14 +631,23 @@ Return JSON only:
   try {
     await tokenBucket.acquire();
     const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?|```/g, '').trim();
+    const text = result.response
+      .text()
+      .replace(/```json\n?|```/g, '')
+      .trim();
     return JSON.parse(text);
   } catch {
-    return { isValidDrug: true, reasoning: 'AI validation failed - keeping entry', suggestedAction: 'keep' };
+    return {
+      isValidDrug: true,
+      reasoning: 'AI validation failed - keeping entry',
+      suggestedAction: 'keep',
+    };
   }
 }
 
-async function cleanupNonPharmEntries(dryRun: boolean): Promise<{ deleted: number; renamed: number }> {
+async function cleanupNonPharmEntries(
+  dryRun: boolean
+): Promise<{ deleted: number; renamed: number }> {
   console.log('\n' + '═'.repeat(70));
   console.log('🧹 PHASE 1B: NON-PHARM CLEANUP');
   console.log('═'.repeat(70));
@@ -483,14 +672,16 @@ async function cleanupNonPharmEntries(dryRun: boolean): Promise<{ deleted: numbe
 
     for (const drug of drugs) {
       const name = drug.genericName.toLowerCase().trim();
-      
+
       // Quick heuristic check for suspicious entries
-      const isSuspicious = 
+      const isSuspicious =
         name.length < 4 ||
         name.length > 50 ||
         INVALID_DRUG_NAMES.has(name) ||
         /^\d+/.test(name) ||
-        /\b(mg|ml|mcg|units?|tablets?|capsules?|injection|solution|oral|iv|im|bid|tid|qid|prn)\b/i.test(name) ||
+        /\b(mg|ml|mcg|units?|tablets?|capsules?|injection|solution|oral|iv|im|bid|tid|qid|prn)\b/i.test(
+          name
+        ) ||
         !/[a-z]{3,}/i.test(name);
 
       if (isSuspicious) {
@@ -506,7 +697,7 @@ async function cleanupNonPharmEntries(dryRun: boolean): Promise<{ deleted: numbe
   // AI verification of suspicious entries
   for (const entry of suspiciousEntries) {
     console.log(`   Checking: "${entry.genericName}"...`);
-    
+
     const validation = await validateDrugWithAI(entry.genericName);
 
     if (validation.suggestedAction === 'delete') {
@@ -516,12 +707,14 @@ async function cleanupNonPharmEntries(dryRun: boolean): Promise<{ deleted: numbe
       }
       deleted++;
     } else if (validation.suggestedAction === 'rename' && validation.correctedName) {
-      console.log(`     ✏️ RENAME: "${entry.genericName}" → "${validation.correctedName}" (${validation.reasoning})`);
+      console.log(
+        `     ✏️ RENAME: "${entry.genericName}" → "${validation.correctedName}" (${validation.reasoning})`
+      );
       if (!dryRun) {
         try {
           await prisma.drug.update({
             where: { id: entry.id },
-            data: { 
+            data: {
               genericName: validation.correctedName.toLowerCase(),
               displayName: formatDisplayName(validation.correctedName),
             },
@@ -551,7 +744,10 @@ interface DuplicateGroup {
 }
 
 // AI-powered duplicate verification
-async function verifyDuplicatesWithAI(drug1: string, drug2: string): Promise<{ areDuplicates: boolean; reasoning: string }> {
+async function verifyDuplicatesWithAI(
+  drug1: string,
+  drug2: string
+): Promise<{ areDuplicates: boolean; reasoning: string }> {
   const prompt = `You are a clinical pharmacist. Determine if these two entries refer to the SAME pharmaceutical agent (true duplicates):
 
 Entry 1: "${drug1}"
@@ -572,14 +768,20 @@ Return JSON only: {"areDuplicates": true/false, "reasoning": "brief explanation"
   try {
     await tokenBucket.acquire();
     const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?|```/g, '').trim();
+    const text = result.response
+      .text()
+      .replace(/```json\n?|```/g, '')
+      .trim();
     return JSON.parse(text);
   } catch {
     return { areDuplicates: false, reasoning: 'AI verification failed' };
   }
 }
 
-async function findFuzzyDuplicates(threshold = 0.80, verifyWithAI = true): Promise<DuplicateGroup[]> {
+async function findFuzzyDuplicates(
+  threshold = 0.8,
+  verifyWithAI = true
+): Promise<DuplicateGroup[]> {
   console.log('\n' + '═'.repeat(70));
   console.log('🔍 PHASE 2: FUZZY DUPLICATE DETECTION');
   console.log('═'.repeat(70));
@@ -647,9 +849,12 @@ async function findFuzzyDuplicates(threshold = 0.80, verifyWithAI = true): Promi
       for (let i = 1; i < group.drugs.length; i++) {
         const candidate = group.drugs[i];
         console.log(`   Checking: "${baseDrug.genericName}" vs "${candidate.genericName}"...`);
-        
-        const verification = await verifyDuplicatesWithAI(baseDrug.genericName, candidate.genericName);
-        
+
+        const verification = await verifyDuplicatesWithAI(
+          baseDrug.genericName,
+          candidate.genericName
+        );
+
         if (verification.areDuplicates) {
           console.log(`     ✓ CONFIRMED duplicate: ${verification.reasoning}`);
           verifiedDrugs.push(candidate);
@@ -663,7 +868,9 @@ async function findFuzzyDuplicates(threshold = 0.80, verifyWithAI = true): Promi
       }
     }
 
-    console.log(`\n   AI verified ${verifiedGroups.length} actual duplicate groups (from ${duplicateGroups.length} candidates)`);
+    console.log(
+      `\n   AI verified ${verifiedGroups.length} actual duplicate groups (from ${duplicateGroups.length} candidates)`
+    );
     return verifiedGroups;
   }
 
@@ -718,7 +925,10 @@ async function mergeDuplicateGroup(group: DuplicateGroup, dryRun: boolean): Prom
 
   for (const victim of victims) {
     for (const field of STRING_FIELDS) {
-      if (!isMeaningfulString((survivor as any)[field]) && isMeaningfulString((victim as any)[field])) {
+      if (
+        !isMeaningfulString((survivor as any)[field]) &&
+        isMeaningfulString((victim as any)[field])
+      ) {
         updates[field] = (victim as any)[field];
       }
     }
@@ -737,12 +947,18 @@ async function mergeDuplicateGroup(group: DuplicateGroup, dryRun: boolean): Prom
       }
     }
     for (const field of BOOLEAN_FIELDS) {
-      if (typeof (survivor as any)[field] !== 'boolean' && typeof (victim as any)[field] === 'boolean') {
+      if (
+        typeof (survivor as any)[field] !== 'boolean' &&
+        typeof (victim as any)[field] === 'boolean'
+      ) {
         updates[field] = (victim as any)[field];
       }
     }
     for (const field of NUMBER_FIELDS) {
-      if (typeof (survivor as any)[field] !== 'number' && typeof (victim as any)[field] === 'number') {
+      if (
+        typeof (survivor as any)[field] !== 'number' &&
+        typeof (victim as any)[field] === 'number'
+      ) {
         updates[field] = (victim as any)[field];
       }
     }
@@ -763,7 +979,9 @@ async function mergeDuplicateGroup(group: DuplicateGroup, dryRun: boolean): Prom
       console.log(`     🗑️ Deleted duplicate: ${victim.genericName}`);
     }
   } else {
-    console.log(`     [DRY RUN] Would harvest ${Object.keys(updates).length} fields and delete ${victims.length} duplicates`);
+    console.log(
+      `     [DRY RUN] Would harvest ${Object.keys(updates).length} fields and delete ${victims.length} duplicates`
+    );
   }
 
   return victims.length;
@@ -853,7 +1071,10 @@ interface DrugGenerationResult {
   typicalCost: string;
 }
 
-async function generateDrugContent(drugName: string, existingData?: Partial<DrugGenerationResult>): Promise<DrugGenerationResult | null> {
+async function generateDrugContent(
+  drugName: string,
+  existingData?: Partial<DrugGenerationResult>
+): Promise<DrugGenerationResult | null> {
   const prompt = `You are a PA/NP pharmacology educator for the PANCE exam. Generate comprehensive drug information for "${drugName}".
 
 VALIDATION FIRST:
@@ -961,7 +1182,10 @@ RULES:
     try {
       await tokenBucket.acquire();
       const result = await model.generateContent(prompt);
-      const text = result.response.text().replace(/```json\n?|```/g, '').trim();
+      const text = result.response
+        .text()
+        .replace(/```json\n?|```/g, '')
+        .trim();
       const parsed = JSON.parse(text) as DrugGenerationResult;
 
       if (parsed.isValid === false) {
@@ -984,7 +1208,9 @@ RULES:
         return null;
       }
 
-      console.log(`  🔄 Retry ${attempts}/${maxAttempts} after ${delay}ms (${msg.slice(0, 50)}...)`);
+      console.log(
+        `  🔄 Retry ${attempts}/${maxAttempts} after ${delay}ms (${msg.slice(0, 50)}...)`
+      );
       await sleep(delay);
       delay = Math.min(delay * 2, 30000);
     }
@@ -1021,10 +1247,16 @@ function sanitizeAndFormat(data: DrugGenerationResult, originalName: string): Re
     aliases: ensureArray(data.aliases, 'No aliases available.'),
     tags: ensureArray(data.tags, 'general'),
     isHighYield: typeof data.isHighYield === 'boolean' ? data.isHighYield : false,
-    panceYield: typeof data.panceYield === 'number' && data.panceYield >= 1 && data.panceYield <= 3 ? data.panceYield : 2,
+    panceYield:
+      typeof data.panceYield === 'number' && data.panceYield >= 1 && data.panceYield <= 3
+        ? data.panceYield
+        : 2,
     isFirstLine: typeof data.isFirstLine === 'boolean' ? data.isFirstLine : false,
     genericAvailable: typeof data.genericAvailable === 'boolean' ? data.genericAvailable : true,
-    insuranceTier: typeof data.insuranceTier === 'number' && data.insuranceTier >= 1 && data.insuranceTier <= 4 ? data.insuranceTier : 2,
+    insuranceTier:
+      typeof data.insuranceTier === 'number' && data.insuranceTier >= 1 && data.insuranceTier <= 4
+        ? data.insuranceTier
+        : 2,
     clinicalNotes: ensureString(data.clinicalNotes, 'No clinical notes available.'),
     clinicalPearls: ensureArray(data.clinicalPearls, 'No clinical pearls available.'),
     boardYieldFacts: ensureArray(data.boardYieldFacts, 'No board yield facts available.'),
@@ -1055,39 +1287,57 @@ function sanitizeAndFormat(data: DrugGenerationResult, originalName: string): Re
     peakEffect: ensureString(data.peakEffect, 'Peak effect data not available.'),
     duration: ensureString(data.duration, 'Duration data not available.'),
     bioavailability: ensureString(data.bioavailability, 'Bioavailability data not available.'),
-    pharmacokinetics: data.pharmacokinetics && typeof data.pharmacokinetics === 'object' ? {
-      absorption: ensureString(data.pharmacokinetics.absorption, 'Not available'),
-      distribution: ensureString(data.pharmacokinetics.distribution, 'Not available'),
-      metabolism: ensureString(data.pharmacokinetics.metabolism, 'Not available'),
-      elimination: ensureString(data.pharmacokinetics.elimination, 'Not available'),
-      halfLife: ensureString(data.pharmacokinetics.halfLife, 'Not available'),
-      bioavailability: ensureString(data.pharmacokinetics.bioavailability, 'Not available'),
-    } : {
-      absorption: 'Not available',
-      distribution: 'Not available',
-      metabolism: 'Not available',
-      elimination: 'Not available',
-      halfLife: 'Not available',
-      bioavailability: 'Not available',
-    },
-    cyp450Effects: data.cyp450Effects && typeof data.cyp450Effects === 'object' ? {
-      inhibits: ensureArray(data.cyp450Effects.inhibits, 'No significant inhibition.'),
-      induces: ensureArray(data.cyp450Effects.induces, 'No significant induction.'),
-      substrates: ensureArray(data.cyp450Effects.substrates, 'Not significantly metabolized by CYP450.'),
-    } : {
-      inhibits: ['No significant inhibition.'],
-      induces: ['No significant induction.'],
-      substrates: ['Not significantly metabolized by CYP450.'],
-    },
-    majorInteractions: Array.isArray(data.majorInteractions) && data.majorInteractions.length > 0
-      ? data.majorInteractions.map((i) => ({
-          drug: formatDisplayName(String(i.drug || 'Unknown')),
-          severity: String(i.severity || 'moderate'),
-          mechanism: String(i.mechanism || 'Not specified'),
-          clinicalEffect: String(i.clinicalEffect || 'Not specified'),
-          management: String(i.management || 'Monitor closely'),
-        }))
-      : [{ drug: 'None', severity: 'none', mechanism: 'No significant interactions', clinicalEffect: 'None', management: 'None' }],
+    pharmacokinetics:
+      data.pharmacokinetics && typeof data.pharmacokinetics === 'object'
+        ? {
+            absorption: ensureString(data.pharmacokinetics.absorption, 'Not available'),
+            distribution: ensureString(data.pharmacokinetics.distribution, 'Not available'),
+            metabolism: ensureString(data.pharmacokinetics.metabolism, 'Not available'),
+            elimination: ensureString(data.pharmacokinetics.elimination, 'Not available'),
+            halfLife: ensureString(data.pharmacokinetics.halfLife, 'Not available'),
+            bioavailability: ensureString(data.pharmacokinetics.bioavailability, 'Not available'),
+          }
+        : {
+            absorption: 'Not available',
+            distribution: 'Not available',
+            metabolism: 'Not available',
+            elimination: 'Not available',
+            halfLife: 'Not available',
+            bioavailability: 'Not available',
+          },
+    cyp450Effects:
+      data.cyp450Effects && typeof data.cyp450Effects === 'object'
+        ? {
+            inhibits: ensureArray(data.cyp450Effects.inhibits, 'No significant inhibition.'),
+            induces: ensureArray(data.cyp450Effects.induces, 'No significant induction.'),
+            substrates: ensureArray(
+              data.cyp450Effects.substrates,
+              'Not significantly metabolized by CYP450.'
+            ),
+          }
+        : {
+            inhibits: ['No significant inhibition.'],
+            induces: ['No significant induction.'],
+            substrates: ['Not significantly metabolized by CYP450.'],
+          },
+    majorInteractions:
+      Array.isArray(data.majorInteractions) && data.majorInteractions.length > 0
+        ? data.majorInteractions.map((i) => ({
+            drug: formatDisplayName(String(i.drug || 'Unknown')),
+            severity: String(i.severity || 'moderate'),
+            mechanism: String(i.mechanism || 'Not specified'),
+            clinicalEffect: String(i.clinicalEffect || 'Not specified'),
+            management: String(i.management || 'Monitor closely'),
+          }))
+        : [
+            {
+              drug: 'None',
+              severity: 'none',
+              mechanism: 'No significant interactions',
+              clinicalEffect: 'None',
+              management: 'None',
+            },
+          ],
     interactions: ensureArray(data.interactions, 'No significant interactions.'),
     foodInteractions: ensureArray(data.foodInteractions, 'No significant food interactions.'),
     routesOfAdmin: ensureArray(data.routesOfAdmin, 'Route not specified.'),
@@ -1117,11 +1367,14 @@ async function enhanceDrugs(options: {
   const { limit, dryRun = false, batchSize = 50, gapReports } = options;
 
   // Use gap reports if available, otherwise process all drugs
-  const drugsToProcess = gapReports && gapReports.length > 0
-    ? gapReports.filter((r) => r.totalIssues > 0)
-    : await runGapAnalysis();
+  const drugsToProcess =
+    gapReports && gapReports.length > 0
+      ? gapReports.filter((r) => r.totalIssues > 0)
+      : await runGapAnalysis();
 
-  console.log(`\nProcessing ${limit ? Math.min(limit, drugsToProcess.length) : drugsToProcess.length} drugs with issues...\n`);
+  console.log(
+    `\nProcessing ${limit ? Math.min(limit, drugsToProcess.length) : drugsToProcess.length} drugs with issues...\n`
+  );
 
   let processed = 0;
   let enhanced = 0;
@@ -1145,7 +1398,9 @@ async function enhanceDrugs(options: {
     }
 
     console.log(`\n📝 [${processed + 1}] ${drug.genericName}`);
-    console.log(`   Missing: ${report.missingFields.length}, Inadequate: ${report.inadequateFields.length}`);
+    console.log(
+      `   Missing: ${report.missingFields.length}, Inadequate: ${report.inadequateFields.length}`
+    );
 
     const generated = await generateDrugContent(drug.genericName);
 
@@ -1195,11 +1450,13 @@ async function enhanceDrugs(options: {
 
             // Find the record that is blocking us
             const targetDrug = await prisma.drug.findUnique({
-              where: { genericName: targetName }
+              where: { genericName: targetName },
             });
 
             if (targetDrug) {
-              console.log(`   🔄 JIT Merge: Moving data to ID ${targetDrug.id} and deleting duplicate.`);
+              console.log(
+                `   🔄 JIT Merge: Moving data to ID ${targetDrug.id} and deleting duplicate.`
+              );
 
               // Remove the name change (since target already has that name)
               delete updateData.genericName;
@@ -1208,7 +1465,7 @@ async function enhanceDrugs(options: {
               if (Object.keys(updateData).length > 0) {
                 await prisma.drug.update({
                   where: { id: targetDrug.id },
-                  data: updateData
+                  data: updateData,
                 });
                 console.log(`   ✓ Data merged into target.`);
               }
@@ -1280,7 +1537,8 @@ async function formatAllNames(dryRun: boolean): Promise<void> {
       if (newDisplay !== drug.displayName) updates.displayName = newDisplay;
 
       const newClasses = standardizeDrugClasses(drug.drugClass || []);
-      if (JSON.stringify(newClasses) !== JSON.stringify(drug.drugClass)) updates.drugClass = newClasses;
+      if (JSON.stringify(newClasses) !== JSON.stringify(drug.drugClass))
+        updates.drugClass = newClasses;
 
       if (Object.keys(updates).length > 0) {
         if (!dryRun) {
@@ -1293,7 +1551,9 @@ async function formatAllNames(dryRun: boolean): Promise<void> {
             if (error.code === 'P2002' && error.meta?.target?.includes('genericName')) {
               const targetName = updates.genericName;
               console.log(`  ⚠️ Collision: "${targetName}" exists. Merging...`);
-              const targetDrug = await prisma.drug.findUnique({ where: { genericName: targetName } });
+              const targetDrug = await prisma.drug.findUnique({
+                where: { genericName: targetName },
+              });
               if (targetDrug) {
                 delete updates.genericName;
                 if (Object.keys(updates).length > 0) {
@@ -1346,7 +1606,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Peripheral Vascular: Cilostazol, pentoxifylline, antiplatelet therapy',
     'Shock/Critical Care: Vasopressors (norepinephrine, epinephrine, dopamine, dobutamine, vasopressin, phenylephrine), inotropes',
   ],
-  
+
   // Pulmonary (12% of PANCE)
   pulmonary: [
     'Asthma: SABAs (albuterol, levalbuterol), LABAs (salmeterol, formoterol, vilanterol), ICS (fluticasone, budesonide, mometasone, beclomethasone), ICS-LABA combos, LAMAs, leukotriene modifiers (montelukast, zafirlukast), theophylline, biologics (omalizumab, mepolizumab, benralizumab, dupilumab)',
@@ -1357,7 +1617,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Pulmonary Fibrosis: Pirfenidone, nintedanib',
     'Allergic Rhinitis: Intranasal corticosteroids, antihistamines (cetirizine, loratadine, fexofenadine, diphenhydramine), decongestants',
   ],
-  
+
   // Gastrointestinal (10% of PANCE)
   gastrointestinal: [
     'GERD/PUD: PPIs (omeprazole, esomeprazole, pantoprazole, lansoprazole, rabeprazole), H2RAs (famotidine, ranitidine), sucralfate, misoprostol, H. pylori therapy (clarithromycin, amoxicillin, metronidazole, bismuth)',
@@ -1369,7 +1629,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Hepatic: Lactulose for hepatic encephalopathy, rifaximin, ursodiol, cholestyramine for pruritus',
     'Pancreatic: Pancreatic enzyme replacement (pancrelipase)',
   ],
-  
+
   // Musculoskeletal (10% of PANCE)
   musculoskeletal: [
     'NSAIDs: Ibuprofen, naproxen, celecoxib, meloxicam, diclofenac, ketorolac, indomethacin, piroxicam',
@@ -1380,7 +1640,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Fibromyalgia: Pregabalin, duloxetine, milnacipran, amitriptyline',
     'Osteoarthritis: Acetaminophen, topical NSAIDs, topical capsaicin, intra-articular corticosteroids, hyaluronic acid',
   ],
-  
+
   // Endocrine (9% of PANCE)
   endocrine: [
     'Type 2 Diabetes: Metformin, sulfonylureas (glipizide, glyburide, glimepiride), DPP-4 inhibitors (sitagliptin, saxagliptin, linagliptin), GLP-1 agonists (liraglutide, semaglutide, dulaglutide, exenatide), SGLT2 inhibitors (empagliflozin, dapagliflozin, canagliflozin), thiazolidinediones (pioglitazone), alpha-glucosidase inhibitors (acarbose)',
@@ -1391,7 +1651,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Calcium/Bone: Calcitonin, cinacalcet, sevelamer, calcium carbonate/acetate',
     'Hypoglycemia Treatment: Glucagon, dextrose, diazoxide',
   ],
-  
+
   // Neurologic (6% of PANCE)
   neurologic: [
     'Seizures: Phenytoin, carbamazepine, valproic acid, levetiracetam, lamotrigine, topiramate, oxcarbazepine, lacosamide, brivaracetam, phenobarbital, ethosuximide, clobazam, benzodiazepines (for status)',
@@ -1403,7 +1663,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Myasthenia Gravis: Pyridostigmine, immunosuppressants',
     'Restless Legs: Dopamine agonists, gabapentin enacarbil',
   ],
-  
+
   // Psychiatry (6% of PANCE)
   psychiatry: [
     'Depression: SSRIs (sertraline, fluoxetine, paroxetine, citalopram, escitalopram), SNRIs (venlafaxine, duloxetine, desvenlafaxine), TCAs (amitriptyline, nortriptyline, desipramine), bupropion, mirtazapine, trazodone, vilazodone, vortioxetine, MAOIs (phenelzine, tranylcypromine, selegiline patch)',
@@ -1416,7 +1676,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'PTSD: Sertraline, paroxetine, prazosin for nightmares',
     'Substance Use: Naltrexone, acamprosate, disulfiram (alcohol); buprenorphine, methadone, naltrexone (opioid); varenicline, bupropion, nicotine replacement (tobacco)',
   ],
-  
+
   // Infectious Disease (9% of PANCE)
   infectiousDisease: [
     'Penicillins: Amoxicillin, amoxicillin-clavulanate, ampicillin, ampicillin-sulbactam, piperacillin-tazobactam, penicillin G, penicillin VK, nafcillin, oxacillin, dicloxacillin',
@@ -1431,7 +1691,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'HIV: NRTIs (tenofovir, emtricitabine, abacavir, lamivudine), NNRTIs (efavirenz, rilpivirine, doravirine), protease inhibitors (darunavir, atazanavir), integrase inhibitors (dolutegravir, bictegravir, raltegravir)',
     'Parasitic: Ivermectin, albendazole, mebendazole, praziquantel, metronidazole, nitazoxanide, pyrimethamine, atovaquone, primaquine, chloroquine, hydroxychloroquine, mefloquine, permethrin',
   ],
-  
+
   // Dermatology (5% of PANCE)
   dermatology: [
     'Topical Corticosteroids: Low (hydrocortisone), medium (triamcinolone), high (fluocinonide, betamethasone), super high (clobetasol)',
@@ -1441,7 +1701,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Infections: Mupirocin, retapamulin, topical antifungals (clotrimazole, ketoconazole, terbinafine, ciclopirox), oral antifungals',
     'Rosacea: Metronidazole topical, azelaic acid, ivermectin topical, brimonidine, oxymetazoline',
   ],
-  
+
   // Renal/Genitourinary (6% of PANCE)
   renal: [
     'Diuretics: Loop (furosemide, bumetanide, torsemide), thiazide (hydrochlorothiazide, chlorthalidone, metolazone), potassium-sparing (spironolactone, eplerenone, amiloride, triamterene), carbonic anhydrase inhibitors (acetazolamide)',
@@ -1452,7 +1712,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'CKD Management: Phosphate binders, erythropoiesis-stimulating agents (epoetin, darbepoetin), vitamin D analogs (calcitriol, paricalcitol), sodium bicarbonate',
     'Kidney Stones: Tamsulosin, potassium citrate, thiazides, allopurinol',
   ],
-  
+
   // EENT (9% of PANCE)
   eent: [
     'Glaucoma: Prostaglandin analogs (latanoprost, bimatoprost, travoprost), beta blockers (timolol, betaxolol), alpha agonists (brimonidine, apraclonidine), carbonic anhydrase inhibitors (dorzolamide, brinzolamide), rho kinase inhibitors (netarsudil)',
@@ -1463,7 +1723,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Sinusitis: Intranasal corticosteroids, saline irrigation, amoxicillin, amoxicillin-clavulanate, doxycycline',
     'Vertigo/Vestibular: Meclizine, dimenhydrinate, scopolamine, promethazine, ondansetron, betahistine',
   ],
-  
+
   // Hematology/Oncology (5% of PANCE)
   hematology: [
     'Anemia: Iron supplements (ferrous sulfate, ferrous gluconate, iron sucrose, ferric carboxymaltose), vitamin B12, folate, erythropoietin',
@@ -1474,7 +1734,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Sickle Cell: Hydroxyurea, voxelotor, crizanlizumab, L-glutamine',
     'VTE Prophylaxis: LMWH (enoxaparin, dalteparin), fondaparinux, mechanical prophylaxis',
   ],
-  
+
   // Reproductive/OB-GYN (8% of PANCE)
   reproductive: [
     'Contraception: Combined hormonal (ethinyl estradiol + various progestins), progestin-only (norethindrone, desogestrel), IUDs (levonorgestrel, copper), implants (etonogestrel), injections (medroxyprogesterone), emergency (levonorgestrel, ulipristal)',
@@ -1485,7 +1745,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Pregnancy: Prenatal vitamins, folic acid, antiemetics, tocolytics (nifedipine, indomethacin, magnesium sulfate), corticosteroids for fetal lung maturity (betamethasone, dexamethasone), oxytocin, misoprostol, methylergonovine',
     'Postpartum: Methylergonovine, oxytocin, carboprost, misoprostol for hemorrhage',
   ],
-  
+
   // Emergency/Toxicology (3% of PANCE)
   emergency: [
     'ACLS Drugs: Epinephrine, amiodarone, lidocaine, atropine, vasopressin, calcium, sodium bicarbonate, magnesium',
@@ -1495,7 +1755,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Local Anesthetics: Lidocaine, bupivacaine, epinephrine for vasoconstriction',
     'Rapid Sequence Intubation: Succinylcholine, rocuronium, etomidate, propofol, ketamine',
   ],
-  
+
   // Pediatric-Specific (varies)
   pediatric: [
     'Pediatric Antibiotics: Amoxicillin (preferred for AOM, strep pharyngitis), azithromycin, cephalosporins, weight-based dosing',
@@ -1505,7 +1765,7 @@ const PANCE_BLUEPRINT_CATEGORIES = {
     'Pediatric Fever/Pain: Acetaminophen, ibuprofen (NOT aspirin due to Reye syndrome)',
     'Neonatal: Erythromycin eye prophylaxis, vitamin K, hepatitis B vaccine, surfactant, caffeine citrate',
   ],
-  
+
   // Geriatric-Specific (varies)
   geriatric: [
     'Beers Criteria High-Risk Drugs: Avoid/minimize anticholinergics, benzodiazepines, certain antipsychotics, NSAIDs long-term, sliding scale insulin',
@@ -1516,12 +1776,17 @@ const PANCE_BLUEPRINT_CATEGORIES = {
   ],
 };
 
-async function discoverMissingPANCEDrugs(existingDrugs: string[], dryRun: boolean): Promise<number> {
+async function discoverMissingPANCEDrugs(
+  existingDrugs: string[],
+  dryRun: boolean
+): Promise<number> {
   console.log('\n' + '═'.repeat(70));
   console.log('🔬 PHASE 5: ENHANCED PANCE DRUG GAP DISCOVERY');
   console.log('═'.repeat(70));
   console.log(`   📊 Existing database: ${existingDrugs.length} drugs`);
-  console.log(`   📋 Analyzing ${Object.keys(PANCE_BLUEPRINT_CATEGORIES).length} PANCE blueprint categories`);
+  console.log(
+    `   📋 Analyzing ${Object.keys(PANCE_BLUEPRINT_CATEGORIES).length} PANCE blueprint categories`
+  );
   console.log(`   🔍 Multiple subcategories per system for thorough coverage\n`);
 
   let totalAdded = 0;
@@ -1529,9 +1794,7 @@ async function discoverMissingPANCEDrugs(existingDrugs: string[], dryRun: boolea
   let totalErrors = 0;
 
   // Create normalized set for faster lookup
-  const normalizedExisting = new Set(
-    existingDrugs.map((d) => d.toLowerCase().trim())
-  );
+  const normalizedExisting = new Set(existingDrugs.map((d) => d.toLowerCase().trim()));
 
   // Process each main category
   for (const [systemName, subcategories] of Object.entries(PANCE_BLUEPRINT_CATEGORIES)) {
@@ -1583,8 +1846,11 @@ CRITICAL RULES:
       try {
         await tokenBucket.acquire();
         const result = await model.generateContent(prompt);
-        const text = result.response.text().replace(/```json\n?|```/g, '').trim();
-        
+        const text = result.response
+          .text()
+          .replace(/```json\n?|```/g, '')
+          .trim();
+
         let suggestions: MissingDrugSuggestion[];
         try {
           suggestions = JSON.parse(text);
@@ -1641,7 +1907,9 @@ CRITICAL RULES:
             continue;
           }
 
-          console.log(`         🆕 ${suggestion.genericName} (${suggestion.brandName || 'no brand'}) [Yield: ${suggestion.panceYield}]`);
+          console.log(
+            `         🆕 ${suggestion.genericName} (${suggestion.brandName || 'no brand'}) [Yield: ${suggestion.panceYield}]`
+          );
           console.log(`            → ${suggestion.reasoning}`);
 
           if (!dryRun) {
@@ -1792,11 +2060,11 @@ async function main(): Promise<void> {
     // If discovery-only, skip directly to Phase 5
     if (discoveryOnly) {
       console.log('\n🚀 Discovery-only mode - skipping to Phase 5');
-      
+
       // Get existing drug names for comparison
       const existingDrugs: string[] = [];
       let discoveryCursor: string | undefined;
-      
+
       while (true) {
         const batch = await prisma.drug.findMany({
           take: BATCH_SIZE,
@@ -1811,7 +2079,7 @@ async function main(): Promise<void> {
       }
 
       await discoverMissingPANCEDrugs(existingDrugs, dryRun);
-      
+
       console.log('\n' + '═'.repeat(70));
       console.log('✅ DRUG DOCTOR ENHANCED v3 - DISCOVERY COMPLETE');
       console.log('═'.repeat(70) + '\n');
@@ -1828,8 +2096,8 @@ async function main(): Promise<void> {
 
     // Phase 2: Fuzzy Duplicate Detection with AI Verification
     if (!skipDedup) {
-      const duplicates = await findFuzzyDuplicates(0.80, true); // Lower threshold, AI verification
-      
+      const duplicates = await findFuzzyDuplicates(0.8, true); // Lower threshold, AI verification
+
       if (duplicates.length > 0 && !analyzeOnly) {
         console.log('\n🔄 Merging verified duplicate groups...');
         let totalMerged = 0;
@@ -1858,7 +2126,7 @@ async function main(): Promise<void> {
       // Get existing drug names for comparison
       const existingDrugs: string[] = [];
       let discoveryCursor: string | undefined;
-      
+
       while (true) {
         const batch = await prisma.drug.findMany({
           take: BATCH_SIZE,
@@ -1878,7 +2146,6 @@ async function main(): Promise<void> {
     console.log('\n' + '═'.repeat(70));
     console.log('✅ DRUG DOCTOR ENHANCED v3 - COMPLETE');
     console.log('═'.repeat(70) + '\n');
-
   } catch (err) {
     console.error('\n❌ Fatal error:', err);
     throw err;

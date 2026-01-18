@@ -1,6 +1,6 @@
 /**
  * DrillLoadingState
- * 
+ *
  * Standardized loading skeleton for all drill modes.
  * Provides consistent UX across the app during data fetching.
  */
@@ -29,7 +29,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   variant = 'question',
 }) => {
   return (
-    <div 
+    <div
       className="min-h-[500px] bg-[var(--color-bg-primary)] p-6"
       role="status"
       aria-label={message}
@@ -44,7 +44,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
               <div className="w-24 h-4 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
             </div>
           </div>
-          
+
           {showTimer && (
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse" />
@@ -115,11 +115,11 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
                   key={idx}
                   initial={{ opacity: 0.5 }}
                   animate={{ opacity: 1 }}
-                  transition={{ 
-                    duration: 0.5, 
+                  transition={{
+                    duration: 0.5,
                     delay: idx * 0.1,
                     repeat: Infinity,
-                    repeatType: 'reverse'
+                    repeatType: 'reverse',
                   }}
                   className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]"
                 >
@@ -186,18 +186,12 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
         className="max-w-md w-full text-center"
       >
         <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
-          {icon || (
-            <span className="text-4xl">✓</span>
-          )}
+          {icon || <span className="text-4xl">✓</span>}
         </div>
-        
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
-          {title}
-        </h3>
-        <p className="text-[var(--color-text-muted)] mb-6">
-          {message}
-        </p>
-        
+
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
+        <p className="text-[var(--color-text-muted)] mb-6">{message}</p>
+
         {onAction && (
           <button
             onClick={onAction}

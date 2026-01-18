@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -10,13 +9,13 @@ async function verifyContent() {
       where: {
         name: {
           contains: 'inguinal_hernia',
-          mode: 'insensitive'
-        }
+          mode: 'insensitive',
+        },
       },
       include: {
-        anatomyStructures: true,
-        specialTests: true
-      }
+        AnatomyStructure: true,
+        SpecialTest: true,
+      },
     });
 
     if (!condition) {
@@ -25,10 +24,10 @@ async function verifyContent() {
     }
 
     console.log(`\nVerifying content for: ${condition.name} (${condition.id})`);
-    
+
     console.log('\n--- Anatomy ---');
-    if (condition.anatomyStructures.length > 0) {
-      condition.anatomyStructures.forEach(a => {
+    if (condition.AnatomyStructure.length > 0) {
+      condition.AnatomyStructure.forEach((a) => {
         console.log(`- Structure: ${a.name}`);
         console.log(`  Description: ${a.description ? a.description.substring(0, 100) : 'N/A'}...`);
         // console.log(`  Label: ${a.label}`);
@@ -38,8 +37,8 @@ async function verifyContent() {
     }
 
     console.log('\n--- Special Tests ---');
-    if (condition.specialTests.length > 0) {
-      condition.specialTests.forEach(t => {
+    if (condition.SpecialTest.length > 0) {
+      condition.SpecialTest.forEach((t) => {
         console.log(`- Test: ${t.name}`);
         console.log(`  Description: ${t.description ? t.description.substring(0, 100) : 'N/A'}...`);
         console.log(`  Findings: ${t.interpretation}`);
@@ -47,7 +46,6 @@ async function verifyContent() {
     } else {
       console.log('No special tests found.');
     }
-
   } catch (error) {
     console.error('Error verifying content:', error);
   } finally {

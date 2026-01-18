@@ -1,6 +1,6 @@
 /**
  * useLibraryPreferences - Persist user preferences for the Clinical Reference Library
- * 
+ *
  * Stores in localStorage:
  * - Last selected system
  * - Last selected subcategory
@@ -46,10 +46,13 @@ function loadPreferences(): LibraryPreferences {
  */
 function savePreferences(prefs: LibraryPreferences): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      ...prefs,
-      lastVisited: new Date().toISOString(),
-    }));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...prefs,
+        lastVisited: new Date().toISOString(),
+      })
+    );
   } catch (err) {
     console.warn('[useLibraryPreferences] Failed to save preferences:', err);
   }
@@ -77,7 +80,7 @@ export function useLibraryPreferences() {
   }, [preferences, isLoaded]);
 
   const setActiveSystem = useCallback((system: string) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
       activeSystem: system,
       activeSubcategory: null, // Reset subcategory when system changes
@@ -85,14 +88,14 @@ export function useLibraryPreferences() {
   }, []);
 
   const setActiveSubcategory = useCallback((subcategory: string | null) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
       activeSubcategory: subcategory,
     }));
   }, []);
 
   const setHighYieldOnly = useCallback((enabled: boolean) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
       highYieldOnly: enabled,
     }));

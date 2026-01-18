@@ -10,7 +10,7 @@ interface YieldBadgeProps {
 
 /**
  * YieldBadge - Displays PANCE yield score with color coding
- * 
+ *
  * Supports both numeric (1-3) and text ('HIGH', 'MEDIUM', 'LOW') formats.
  * Uses sportsbook-style color coding: red for high yield, amber for medium, gray for low.
  */
@@ -24,8 +24,15 @@ export const YieldBadge: React.FC<YieldBadgeProps> = ({
     return null;
   }
 
-  const { level, numericValue, displayText, icon: Icon, bgClass, textClass, borderClass } = 
-    parseYieldValue(yieldValue);
+  const {
+    level,
+    numericValue,
+    displayText,
+    icon: Icon,
+    bgClass,
+    textClass,
+    borderClass,
+  } = parseYieldValue(yieldValue);
 
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs gap-1',
@@ -72,7 +79,7 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
   // Handle string values
   else if (typeof yieldValue === 'string') {
     const upper = yieldValue.toUpperCase();
-    
+
     // Check for text levels
     if (upper.includes('HIGH')) {
       level = 'high';
@@ -93,13 +100,12 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
     }
   }
 
-  const displayText = level === 'high' ? 'HIGH YIELD' :
-                     level === 'medium' ? 'MEDIUM YIELD' :
-                     'LOW YIELD';
+  const displayText =
+    level === 'high' ? 'HIGH YIELD' : level === 'medium' ? 'MEDIUM YIELD' : 'LOW YIELD';
 
   const configs = {
     high: {
-      icon: Flame,  // 🔥 for HIGH YIELD
+      icon: Flame, // 🔥 for HIGH YIELD
       bgClass: 'bg-red-950/50',
       textClass: 'text-red-200',
       borderClass: 'border-red-700/60',
@@ -134,11 +140,16 @@ export const YieldStars: React.FC<{
   className?: string;
 }> = ({ yield: yieldValue, className = '' }) => {
   const { numericValue, level } = parseYieldValue(yieldValue);
-  const stars = numericValue ? Math.max(1, Math.min(5, numericValue)) : level === 'high' ? 5 : level === 'medium' ? 3 : 1;
+  const stars = numericValue
+    ? Math.max(1, Math.min(5, numericValue))
+    : level === 'high'
+      ? 5
+      : level === 'medium'
+        ? 3
+        : 1;
 
-  const colorClass = level === 'high' ? 'text-red-400' :
-                     level === 'medium' ? 'text-amber-400' :
-                     'text-slate-500';
+  const colorClass =
+    level === 'high' ? 'text-red-400' : level === 'medium' ? 'text-amber-400' : 'text-slate-500';
 
   return (
     <div className={`flex items-center gap-0.5 ${className}`}>

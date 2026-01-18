@@ -1,6 +1,6 @@
 /**
  * Offline Sync Service
- * 
+ *
  * Phase 4: Handles offline resilience and debouncing
  * - Debounces save operations (500ms)
  * - Stores operations in localStorage when offline
@@ -98,7 +98,7 @@ export function queueOperation(
   token?: string
 ): string {
   const id = `${operation}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   const op: SyncOperation = {
     id,
     operation,
@@ -113,7 +113,7 @@ export function queueOperation(
   saveQueue(queue);
 
   if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Queued operation: ${operation} (${id})`);
-  
+
   // Try to sync immediately if online
   if (navigator.onLine) {
     setTimeout(() => processQueue(token), 100);
@@ -133,13 +133,14 @@ export async function processQueue(token?: string): Promise<void> {
   }
 
   const queue = getQueue();
-  const pending = queue.filter(op => op.status === 'pending' && op.attempts < MAX_ATTEMPTS);
+  const pending = queue.filter((op) => op.status === 'pending' && op.attempts < MAX_ATTEMPTS);
 
   if (pending.length === 0) {
     return;
   }
 
-  if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Processing ${pending.length} pending operations`);
+  if (DEBUG_OFFLINE_SYNC)
+    console.log(`[OfflineSync] Processing ${pending.length} pending operations`);
 
   for (const op of pending) {
     try {
@@ -152,19 +153,23 @@ export async function processQueue(token?: string): Promise<void> {
         // Permanent failure - move to dead letter queue
         moveToDeadLetterQueue(op);
         op.status = 'failed';
-        console.error(`[OfflineSync] ✗ Permanent failure: ${op.operation} (${op.id}) after ${op.attempts} attempts`);
+        console.error(
+          `[OfflineSync] ✗ Permanent failure: ${op.operation} (${op.id}) after ${op.attempts} attempts`
+        );
       } else {
-        console.warn(`[OfflineSync] Retry ${op.attempts}/${MAX_ATTEMPTS}: ${op.operation} (${op.id})`);
+        console.warn(
+          `[OfflineSync] Retry ${op.attempts}/${MAX_ATTEMPTS}: ${op.operation} (${op.id})`
+        );
       }
     }
   }
 
   // Update queue - remove synced and permanently failed items
-  const updatedQueue = queue.filter(op => op.status === 'pending');
+  const updatedQueue = queue.filter((op) => op.status === 'pending');
   saveQueue(updatedQueue);
 
   // If there are still pending items, schedule another retry
-  const stillPending = updatedQueue.filter(op => op.status === 'pending');
+  const stillPending = updatedQueue.filter((op) => op.status === 'pending');
   if (stillPending.length > 0) {
     setTimeout(() => processQueue(token), RETRY_DELAY);
   }
@@ -175,16 +180,16 @@ export async function processQueue(token?: string): Promise<void> {
  */
 async function syncOperation(op: SyncOperation, token?: string): Promise<void> {
   const endpoint = getEndpointForOperation(op.operation);
-  
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  
+
   // Attach authentication token if provided
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
@@ -217,10 +222,10 @@ function getEndpointForOperation(operation: SyncOperation['operation']): string 
 /**
  * Debounced save function
  * Phase 4: Wait 500ms before hitting the API
- * 
+ *
  * Note: Map is automatically cleaned up when timeout executes.
  * For long-running apps, consider periodic cleanup of stale entries.
- * 
+ *
  * @param key - Unique key for this operation (for debouncing)
  * @param operation - Type of operation to perform
  * @param data - Data to sync
@@ -246,14 +251,17 @@ export function debouncedSave(
   const timeout = setTimeout(() => {
     if (navigator.onLine) {
       // Try direct save
-      syncOperation({
-        id: key,
-        operation,
-        data,
-        timestamp: Date.now(),
-        attempts: 0,
-        status: 'pending',
-      }, token).catch(() => {
+      syncOperation(
+        {
+          id: key,
+          operation,
+          data,
+          timestamp: Date.now(),
+          attempts: 0,
+          status: 'pending',
+        },
+        token
+      ).catch(() => {
         // If fails, queue for retry
         queueOperation(operation, data, token);
       });
@@ -289,18 +297,20 @@ export function flushPendingToLocalStorage(): void {
   const performanceKey = 'panceai_performance_v2';
   const missedKey = 'panceai_missed_v2';
   const flaggedKey = 'panceai_flagged_v2';
-  
+
   try {
     // Read current data
     const performanceData = localStorage.getItem(performanceKey);
     const missedData = localStorage.getItem(missedKey);
     const flaggedData = localStorage.getItem(flaggedKey);
-    
+
     // Queue any pending operations synchronously
     if (performanceData || missedData || flaggedData) {
       const queue = getQueue();
-      const existingProgressOp = queue.find(op => op.operation === 'save_progress' && op.status === 'pending');
-      
+      const existingProgressOp = queue.find(
+        (op) => op.operation === 'save_progress' && op.status === 'pending'
+      );
+
       if (!existingProgressOp) {
         // Create a new pending operation for the sync endpoint
         const op: SyncOperation = {
@@ -309,8 +319,12 @@ export function flushPendingToLocalStorage(): void {
           data: {
             performanceRecords: performanceData ? JSON.parse(performanceData) : [],
             savedQuestions: [
-              ...(missedData ? JSON.parse(missedData).map((q: any) => ({ ...q, type: 'missed' })) : []),
-              ...(flaggedData ? JSON.parse(flaggedData).map((q: any) => ({ ...q, type: 'flagged' })) : []),
+              ...(missedData
+                ? JSON.parse(missedData).map((q: any) => ({ ...q, type: 'missed' }))
+                : []),
+              ...(flaggedData
+                ? JSON.parse(flaggedData).map((q: any) => ({ ...q, type: 'flagged' }))
+                : []),
             ],
           },
           timestamp: Date.now(),
@@ -319,13 +333,14 @@ export function flushPendingToLocalStorage(): void {
         };
         queue.push(op);
         saveQueue(queue);
-        if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Flushed pending data to queue on beforeunload');
+        if (DEBUG_OFFLINE_SYNC)
+          console.log('[OfflineSync] Flushed pending data to queue on beforeunload');
       }
     }
   } catch (error) {
     console.error('[OfflineSync] Failed to flush pending data:', error);
   }
-  
+
   // Clear any pending timeouts
   clearDebouncedSaves();
 }
@@ -350,9 +365,9 @@ export function getQueueStatus(): {
   const queue = getQueue();
   return {
     total: queue.length,
-    pending: queue.filter(op => op.status === 'pending').length,
-    synced: queue.filter(op => op.status === 'synced').length,
-    failed: queue.filter(op => op.status === 'failed').length,
+    pending: queue.filter((op) => op.status === 'pending').length,
+    synced: queue.filter((op) => op.status === 'synced').length,
+    failed: queue.filter((op) => op.status === 'failed').length,
   };
 }
 
@@ -383,7 +398,8 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
   };
 
   const handleOffline = () => {
-    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection lost - operations will be queued');
+    if (DEBUG_OFFLINE_SYNC)
+      console.log('[OfflineSync] Connection lost - operations will be queued');
   };
 
   window.addEventListener('online', handleOnline);

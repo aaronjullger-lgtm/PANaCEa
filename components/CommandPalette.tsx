@@ -2,7 +2,7 @@
  * Command Palette Component
  * Provides quick navigation and search functionality across the app
  * Activated with Cmd+K / Ctrl+K
- * 
+ *
  * Search Features:
  * - Server-side database search with intelligent ranking
  * - Debounced API calls (300ms)
@@ -60,11 +60,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export const CommandPalette: React.FC<CommandPaletteProps> = ({
-  isOpen,
-  onClose,
-  onNavigate,
-}) => {
+export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onNavigate }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
@@ -99,30 +95,33 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   /**
    * Fetch search results from server-side API
    */
-  const fetchServerResults = useCallback(async (searchQuery: string): Promise<ApiSearchResult[]> => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      return [];
-    }
-
-    try {
-      setSearchError(null);
-      const response = await fetch(
-        `/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Search failed');
+  const fetchServerResults = useCallback(
+    async (searchQuery: string): Promise<ApiSearchResult[]> => {
+      if (!searchQuery.trim() || searchQuery.length < 2) {
+        return [];
       }
 
-      const data = await response.json();
-      return data.results || [];
-    } catch (error) {
-      console.error('Search API error:', error);
-      setSearchError(error instanceof Error ? error.message : 'Search failed');
-      return [];
-    }
-  }, []);
+      try {
+        setSearchError(null);
+        const response = await fetch(
+          `/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Search failed');
+        }
+
+        const data = await response.json();
+        return data.results || [];
+      } catch (error) {
+        console.error('Search API error:', error);
+        setSearchError(error instanceof Error ? error.message : 'Search failed');
+        return [];
+      }
+    },
+    []
+  );
 
   /**
    * Search results effect - triggers on debounced query change
@@ -131,16 +130,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     const fetchResults = async () => {
       if (!debouncedQuery.trim()) {
         // Show popular modes when no query
-        setResults(MODE_REGISTRY.slice(0, 8).map(mode => ({
-          id: mode.id,
-          title: mode.label,
-          subtitle: mode.description,
-          category: 'mode' as const,
-          action: () => {
-            onNavigate(mode.id);
-            onClose();
-          },
-        })));
+        setResults(
+          MODE_REGISTRY.slice(0, 8).map((mode) => ({
+            id: mode.id,
+            title: mode.label,
+            subtitle: mode.description,
+            category: 'mode' as const,
+            action: () => {
+              onNavigate(mode.id);
+              onClose();
+            },
+          }))
+        );
         setIsSearching(false);
         return;
       }
@@ -150,7 +151,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       const lowerQuery = debouncedQuery.toLowerCase();
 
       // Search training modes (client-side, instant)
-      MODE_REGISTRY.forEach(mode => {
+      MODE_REGISTRY.forEach((mode) => {
         if (
           mode.label.toLowerCase().includes(lowerQuery) ||
           mode.description.toLowerCase().includes(lowerQuery) ||
@@ -172,10 +173,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       // Search medical content (server-side, database)
       try {
         const apiResults = await fetchServerResults(debouncedQuery);
-        
-        apiResults.forEach(result => {
+
+        apiResults.forEach((result) => {
           const category = result.type === 'condition' ? 'condition' : 'drug';
-          
+
           searchResults.push({
             id: `${result.type}-${result.id}`,
             title: result.title,
@@ -207,11 +208,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => (prev + 1) % results.length);
+          setSelectedIndex((prev) => (prev + 1) % results.length);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => (prev - 1 + results.length) % results.length);
+          setSelectedIndex((prev) => (prev - 1 + results.length) % results.length);
           break;
         case 'Enter':
           e.preventDefault();
@@ -311,10 +312,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           )}
 
           {/* Results */}
-          <div
-            ref={resultsRef}
-            className="max-h-[60vh] overflow-y-auto py-2"
-          >
+          <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto py-2">
             {isSearching && query.trim().length >= 2 ? (
               <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                 <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-blue-500" />
@@ -338,14 +336,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onClick={result.action}
                   onMouseEnter={() => setSelectedIndex(index)}
                   className={`w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                    index === selectedIndex
-                      ? 'bg-slate-50 dark:bg-slate-700/50'
-                      : ''
+                    index === selectedIndex ? 'bg-slate-50 dark:bg-slate-700/50' : ''
                   }`}
                 >
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-medium uppercase ${getCategoryColor(result.category)}`}>
+                      <span
+                        className={`text-xs font-medium uppercase ${getCategoryColor(result.category)}`}
+                      >
                         {result.category}
                       </span>
                       <span className="text-slate-900 dark:text-white font-medium">
@@ -368,13 +366,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-4">
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">↑↓</kbd> Navigate
+                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                  ↑↓
+                </kbd>{' '}
+                Navigate
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">↵</kbd> Select
+                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                  ↵
+                </kbd>{' '}
+                Select
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">esc</kbd> Close
+                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                  esc
+                </kbd>{' '}
+                Close
               </span>
             </div>
           </div>

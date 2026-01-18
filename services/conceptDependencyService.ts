@@ -1,18 +1,18 @@
 /**
  * Concept Dependency Service
- * 
+ *
  * Maps prerequisite relationships between medical concepts, detects knowledge gaps
  * from answer patterns, builds personalized concept trees, and identifies
  * "keystone concepts" that unlock multiple topics.
- * 
+ *
  * This service creates an intelligent understanding of how medical knowledge
  * is structured and how concepts relate to each other, enabling:
- * 
+ *
  * 1. Prerequisite identification - What do you need to know first?
  * 2. Knowledge gap detection - Where are the holes in understanding?
  * 3. Keystone concept identification - Which concepts unlock the most?
  * 4. Learning path optimization - What order maximizes efficiency?
- * 
+ *
  * @module conceptDependencyService
  */
 
@@ -24,24 +24,24 @@
  * A directed edge in the knowledge graph representing a prerequisite relationship
  */
 export interface ConceptDependency {
-  prerequisiteId: string;      // The concept that should be learned first
+  prerequisiteId: string; // The concept that should be learned first
   prerequisiteName: string;
-  dependentId: string;         // The concept that depends on the prerequisite
+  dependentId: string; // The concept that depends on the prerequisite
   dependentName: string;
-  strength: number;            // How strongly required (0-100)
+  strength: number; // How strongly required (0-100)
   relationshipType: DependencyType;
-  evidence: string[];          // Why this dependency exists
+  evidence: string[]; // Why this dependency exists
 }
 
-export type DependencyType = 
-  | 'hard_prerequisite'        // Must know A to understand B
-  | 'soft_prerequisite'        // Helps to know A for B
-  | 'builds_upon'              // B is advanced version of A
-  | 'applies_to'               // B is clinical application of A (basic science)
-  | 'differentiates_from'      // Need to know A to distinguish from B
-  | 'mechanism_of'             // A explains mechanism of B
-  | 'treatment_for'            // A is treatment approach for B
-  | 'complication_of';         // A can lead to or complicate B
+export type DependencyType =
+  | 'hard_prerequisite' // Must know A to understand B
+  | 'soft_prerequisite' // Helps to know A for B
+  | 'builds_upon' // B is advanced version of A
+  | 'applies_to' // B is clinical application of A (basic science)
+  | 'differentiates_from' // Need to know A to distinguish from B
+  | 'mechanism_of' // A explains mechanism of B
+  | 'treatment_for' // A is treatment approach for B
+  | 'complication_of'; // A can lead to or complicate B
 
 /**
  * A concept node with its dependency metadata
@@ -51,18 +51,18 @@ export interface ConceptNode {
   name: string;
   system: string;
   category: 'basic_science' | 'clinical' | 'diagnostic' | 'therapeutic';
-  
+
   // Dependency metrics
-  prerequisites: ConceptDependency[];    // What you need to know first
-  dependents: ConceptDependency[];       // What this concept enables
-  keystoneScore: number;                 // How many concepts this unlocks (0-100)
-  foundationalScore: number;             // How foundational is this (0-100)
-  
+  prerequisites: ConceptDependency[]; // What you need to know first
+  dependents: ConceptDependency[]; // What this concept enables
+  keystoneScore: number; // How many concepts this unlocks (0-100)
+  foundationalScore: number; // How foundational is this (0-100)
+
   // Student-specific state
-  masteryEstimate: number;               // Current estimated mastery (0-100)
-  prerequisitesMet: boolean;             // Are all hard prerequisites mastered?
-  readyToLearn: boolean;                 // Ready for optimal learning?
-  blockedBy: string[];                   // Prerequisites not yet mastered
+  masteryEstimate: number; // Current estimated mastery (0-100)
+  prerequisitesMet: boolean; // Are all hard prerequisites mastered?
+  readyToLearn: boolean; // Ready for optimal learning?
+  blockedBy: string[]; // Prerequisites not yet mastered
 }
 
 /**
@@ -75,19 +75,19 @@ export interface KnowledgeGap {
   gapType: GapType;
   severity: 'critical' | 'significant' | 'moderate' | 'minor';
   evidence: GapEvidence[];
-  blocksConceptIds: string[];            // Concepts blocked by this gap
-  blocksCount: number;                   // How many concepts are blocked
-  remediationPriority: number;           // 0-100, higher = fix first
+  blocksConceptIds: string[]; // Concepts blocked by this gap
+  blocksCount: number; // How many concepts are blocked
+  remediationPriority: number; // 0-100, higher = fix first
   suggestedResources: string[];
 }
 
-export type GapType = 
-  | 'missing_foundation'                 // Never learned prerequisite
-  | 'partial_understanding'              // Knows some but not enough
-  | 'shallow_encoding'                   // Memorized but doesn't understand
-  | 'application_failure'                // Knows theory, can't apply
-  | 'integration_failure'                // Can't connect concepts
-  | 'procedural_gap';                    // Knows what but not how
+export type GapType =
+  | 'missing_foundation' // Never learned prerequisite
+  | 'partial_understanding' // Knows some but not enough
+  | 'shallow_encoding' // Memorized but doesn't understand
+  | 'application_failure' // Knows theory, can't apply
+  | 'integration_failure' // Can't connect concepts
+  | 'procedural_gap'; // Knows what but not how
 
 export interface GapEvidence {
   questionId: string;
@@ -104,16 +104,16 @@ export interface KeystoneConcept {
   conceptId: string;
   conceptName: string;
   system: string;
-  
+
   // Impact metrics
-  directUnlocks: string[];               // Concepts directly dependent
-  indirectUnlocks: string[];             // Concepts transitively dependent
-  totalImpact: number;                   // Total concepts affected
-  
+  directUnlocks: string[]; // Concepts directly dependent
+  indirectUnlocks: string[]; // Concepts transitively dependent
+  totalImpact: number; // Total concepts affected
+
   // Learning priority
   currentMastery: number;
-  potentialGain: number;                 // Learning impact if mastered
-  recommendedPriority: number;           // 0-100
+  potentialGain: number; // Learning impact if mastered
+  recommendedPriority: number; // 0-100
 }
 
 /**
@@ -122,19 +122,19 @@ export interface KeystoneConcept {
 export interface LearningPath {
   userId: string;
   generatedAt: Date;
-  
+
   // Path structure
   stages: LearningStage[];
   totalConcepts: number;
   estimatedHours: number;
-  
+
   // Progress tracking
   currentStage: number;
   completedConcepts: string[];
-  
+
   // Optimization info
   optimizationStrategy: 'breadth_first' | 'depth_first' | 'keystone_priority' | 'gap_priority';
-  efficiencyScore: number;               // How efficient is this path (0-100)
+  efficiencyScore: number; // How efficient is this path (0-100)
 }
 
 export interface LearningStage {
@@ -163,69 +163,234 @@ const CORE_DEPENDENCIES: Array<{
   strength: number;
 }> = [
   // Cardiovascular foundation → conditions
-  { prerequisite: 'cardiac_anatomy', dependent: 'heart_failure', type: 'hard_prerequisite', strength: 90 },
-  { prerequisite: 'cardiac_anatomy', dependent: 'myocardial_infarction', type: 'hard_prerequisite', strength: 95 },
-  { prerequisite: 'cardiac_physiology', dependent: 'arrhythmias', type: 'hard_prerequisite', strength: 90 },
-  { prerequisite: 'coronary_circulation', dependent: 'angina', type: 'hard_prerequisite', strength: 85 },
-  { prerequisite: 'coronary_circulation', dependent: 'myocardial_infarction', type: 'mechanism_of', strength: 95 },
-  
+  {
+    prerequisite: 'cardiac_anatomy',
+    dependent: 'heart_failure',
+    type: 'hard_prerequisite',
+    strength: 90,
+  },
+  {
+    prerequisite: 'cardiac_anatomy',
+    dependent: 'myocardial_infarction',
+    type: 'hard_prerequisite',
+    strength: 95,
+  },
+  {
+    prerequisite: 'cardiac_physiology',
+    dependent: 'arrhythmias',
+    type: 'hard_prerequisite',
+    strength: 90,
+  },
+  {
+    prerequisite: 'coronary_circulation',
+    dependent: 'angina',
+    type: 'hard_prerequisite',
+    strength: 85,
+  },
+  {
+    prerequisite: 'coronary_circulation',
+    dependent: 'myocardial_infarction',
+    type: 'mechanism_of',
+    strength: 95,
+  },
+
   // Respiratory foundation → conditions
-  { prerequisite: 'pulmonary_anatomy', dependent: 'pneumonia', type: 'hard_prerequisite', strength: 80 },
-  { prerequisite: 'pulmonary_physiology', dependent: 'copd', type: 'hard_prerequisite', strength: 85 },
+  {
+    prerequisite: 'pulmonary_anatomy',
+    dependent: 'pneumonia',
+    type: 'hard_prerequisite',
+    strength: 80,
+  },
+  {
+    prerequisite: 'pulmonary_physiology',
+    dependent: 'copd',
+    type: 'hard_prerequisite',
+    strength: 85,
+  },
   { prerequisite: 'pulmonary_physiology', dependent: 'asthma', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'gas_exchange', dependent: 'respiratory_failure', type: 'hard_prerequisite', strength: 95 },
-  
+  {
+    prerequisite: 'gas_exchange',
+    dependent: 'respiratory_failure',
+    type: 'hard_prerequisite',
+    strength: 95,
+  },
+
   // Renal foundation → conditions
-  { prerequisite: 'renal_anatomy', dependent: 'acute_kidney_injury', type: 'hard_prerequisite', strength: 85 },
-  { prerequisite: 'renal_physiology', dependent: 'chronic_kidney_disease', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'fluid_balance', dependent: 'electrolyte_disorders', type: 'hard_prerequisite', strength: 95 },
-  { prerequisite: 'acid_base_balance', dependent: 'metabolic_acidosis', type: 'mechanism_of', strength: 95 },
-  
+  {
+    prerequisite: 'renal_anatomy',
+    dependent: 'acute_kidney_injury',
+    type: 'hard_prerequisite',
+    strength: 85,
+  },
+  {
+    prerequisite: 'renal_physiology',
+    dependent: 'chronic_kidney_disease',
+    type: 'mechanism_of',
+    strength: 90,
+  },
+  {
+    prerequisite: 'fluid_balance',
+    dependent: 'electrolyte_disorders',
+    type: 'hard_prerequisite',
+    strength: 95,
+  },
+  {
+    prerequisite: 'acid_base_balance',
+    dependent: 'metabolic_acidosis',
+    type: 'mechanism_of',
+    strength: 95,
+  },
+
   // Endocrine foundation → conditions
-  { prerequisite: 'glucose_metabolism', dependent: 'diabetes_mellitus', type: 'hard_prerequisite', strength: 95 },
-  { prerequisite: 'thyroid_physiology', dependent: 'hypothyroidism', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'thyroid_physiology', dependent: 'hyperthyroidism', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'adrenal_physiology', dependent: 'cushings_syndrome', type: 'mechanism_of', strength: 85 },
-  
+  {
+    prerequisite: 'glucose_metabolism',
+    dependent: 'diabetes_mellitus',
+    type: 'hard_prerequisite',
+    strength: 95,
+  },
+  {
+    prerequisite: 'thyroid_physiology',
+    dependent: 'hypothyroidism',
+    type: 'mechanism_of',
+    strength: 90,
+  },
+  {
+    prerequisite: 'thyroid_physiology',
+    dependent: 'hyperthyroidism',
+    type: 'mechanism_of',
+    strength: 90,
+  },
+  {
+    prerequisite: 'adrenal_physiology',
+    dependent: 'cushings_syndrome',
+    type: 'mechanism_of',
+    strength: 85,
+  },
+
   // Neurology foundation → conditions
   { prerequisite: 'neuroanatomy', dependent: 'stroke', type: 'hard_prerequisite', strength: 90 },
-  { prerequisite: 'cerebrovascular_anatomy', dependent: 'stroke', type: 'mechanism_of', strength: 95 },
-  { prerequisite: 'neurotransmitters', dependent: 'parkinsons', type: 'mechanism_of', strength: 85 },
-  { prerequisite: 'neuromuscular_junction', dependent: 'myasthenia_gravis', type: 'mechanism_of', strength: 90 },
-  
+  {
+    prerequisite: 'cerebrovascular_anatomy',
+    dependent: 'stroke',
+    type: 'mechanism_of',
+    strength: 95,
+  },
+  {
+    prerequisite: 'neurotransmitters',
+    dependent: 'parkinsons',
+    type: 'mechanism_of',
+    strength: 85,
+  },
+  {
+    prerequisite: 'neuromuscular_junction',
+    dependent: 'myasthenia_gravis',
+    type: 'mechanism_of',
+    strength: 90,
+  },
+
   // GI foundation → conditions
-  { prerequisite: 'gi_anatomy', dependent: 'appendicitis', type: 'hard_prerequisite', strength: 85 },
+  {
+    prerequisite: 'gi_anatomy',
+    dependent: 'appendicitis',
+    type: 'hard_prerequisite',
+    strength: 85,
+  },
   { prerequisite: 'gi_physiology', dependent: 'gerd', type: 'mechanism_of', strength: 80 },
   { prerequisite: 'hepatic_function', dependent: 'cirrhosis', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'biliary_anatomy', dependent: 'cholelithiasis', type: 'hard_prerequisite', strength: 85 },
-  
+  {
+    prerequisite: 'biliary_anatomy',
+    dependent: 'cholelithiasis',
+    type: 'hard_prerequisite',
+    strength: 85,
+  },
+
   // Hematology foundation → conditions
   { prerequisite: 'hematopoiesis', dependent: 'anemia', type: 'hard_prerequisite', strength: 90 },
   { prerequisite: 'coagulation_cascade', dependent: 'dvt', type: 'mechanism_of', strength: 90 },
-  { prerequisite: 'coagulation_cascade', dependent: 'pulmonary_embolism', type: 'mechanism_of', strength: 85 },
+  {
+    prerequisite: 'coagulation_cascade',
+    dependent: 'pulmonary_embolism',
+    type: 'mechanism_of',
+    strength: 85,
+  },
   { prerequisite: 'coagulation_cascade', dependent: 'dic', type: 'mechanism_of', strength: 95 },
-  
+
   // Infectious disease foundation
   { prerequisite: 'immunology_basics', dependent: 'sepsis', type: 'mechanism_of', strength: 85 },
-  { prerequisite: 'bacterial_pathogenesis', dependent: 'pneumonia', type: 'mechanism_of', strength: 80 },
-  { prerequisite: 'viral_pathogenesis', dependent: 'influenza', type: 'mechanism_of', strength: 75 },
-  
+  {
+    prerequisite: 'bacterial_pathogenesis',
+    dependent: 'pneumonia',
+    type: 'mechanism_of',
+    strength: 80,
+  },
+  {
+    prerequisite: 'viral_pathogenesis',
+    dependent: 'influenza',
+    type: 'mechanism_of',
+    strength: 75,
+  },
+
   // Pharmacology connections
-  { prerequisite: 'diabetes_mellitus', dependent: 'insulin_therapy', type: 'treatment_for', strength: 90 },
-  { prerequisite: 'heart_failure', dependent: 'ace_inhibitors', type: 'treatment_for', strength: 85 },
-  { prerequisite: 'arrhythmias', dependent: 'antiarrhythmics', type: 'treatment_for', strength: 90 },
-  { prerequisite: 'hypertension', dependent: 'antihypertensives', type: 'treatment_for', strength: 85 },
-  
+  {
+    prerequisite: 'diabetes_mellitus',
+    dependent: 'insulin_therapy',
+    type: 'treatment_for',
+    strength: 90,
+  },
+  {
+    prerequisite: 'heart_failure',
+    dependent: 'ace_inhibitors',
+    type: 'treatment_for',
+    strength: 85,
+  },
+  {
+    prerequisite: 'arrhythmias',
+    dependent: 'antiarrhythmics',
+    type: 'treatment_for',
+    strength: 90,
+  },
+  {
+    prerequisite: 'hypertension',
+    dependent: 'antihypertensives',
+    type: 'treatment_for',
+    strength: 85,
+  },
+
   // Differential diagnosis links
-  { prerequisite: 'angina', dependent: 'myocardial_infarction', type: 'differentiates_from', strength: 90 },
+  {
+    prerequisite: 'angina',
+    dependent: 'myocardial_infarction',
+    type: 'differentiates_from',
+    strength: 90,
+  },
   { prerequisite: 'asthma', dependent: 'copd', type: 'differentiates_from', strength: 85 },
-  { prerequisite: 'hypothyroidism', dependent: 'hyperthyroidism', type: 'differentiates_from', strength: 80 },
-  
+  {
+    prerequisite: 'hypothyroidism',
+    dependent: 'hyperthyroidism',
+    type: 'differentiates_from',
+    strength: 80,
+  },
+
   // Complication chains
-  { prerequisite: 'diabetes_mellitus', dependent: 'diabetic_neuropathy', type: 'complication_of', strength: 85 },
-  { prerequisite: 'diabetes_mellitus', dependent: 'diabetic_retinopathy', type: 'complication_of', strength: 85 },
+  {
+    prerequisite: 'diabetes_mellitus',
+    dependent: 'diabetic_neuropathy',
+    type: 'complication_of',
+    strength: 85,
+  },
+  {
+    prerequisite: 'diabetes_mellitus',
+    dependent: 'diabetic_retinopathy',
+    type: 'complication_of',
+    strength: 85,
+  },
   { prerequisite: 'hypertension', dependent: 'stroke', type: 'complication_of', strength: 80 },
-  { prerequisite: 'cirrhosis', dependent: 'hepatic_encephalopathy', type: 'complication_of', strength: 90 },
+  {
+    prerequisite: 'cirrhosis',
+    dependent: 'hepatic_encephalopathy',
+    type: 'complication_of',
+    strength: 90,
+  },
 ];
 
 /**
@@ -235,12 +400,22 @@ const SYSTEM_FOUNDATIONS: Record<string, string[]> = {
   cardiovascular: ['cardiac_anatomy', 'cardiac_physiology', 'coronary_circulation', 'ecg_basics'],
   pulmonary: ['pulmonary_anatomy', 'pulmonary_physiology', 'gas_exchange', 'ventilation_perfusion'],
   renal: ['renal_anatomy', 'renal_physiology', 'fluid_balance', 'acid_base_balance'],
-  endocrine: ['endocrine_overview', 'glucose_metabolism', 'thyroid_physiology', 'adrenal_physiology'],
+  endocrine: [
+    'endocrine_overview',
+    'glucose_metabolism',
+    'thyroid_physiology',
+    'adrenal_physiology',
+  ],
   neurology: ['neuroanatomy', 'neurophysiology', 'neurotransmitters', 'cerebrovascular_anatomy'],
   gastrointestinal: ['gi_anatomy', 'gi_physiology', 'hepatic_function', 'biliary_anatomy'],
   musculoskeletal: ['msk_anatomy', 'bone_physiology', 'joint_mechanics', 'muscle_physiology'],
   hematology: ['hematopoiesis', 'coagulation_cascade', 'immunology_basics', 'blood_typing'],
-  infectious: ['microbiology_basics', 'bacterial_pathogenesis', 'viral_pathogenesis', 'immunology_basics'],
+  infectious: [
+    'microbiology_basics',
+    'bacterial_pathogenesis',
+    'viral_pathogenesis',
+    'immunology_basics',
+  ],
   dermatology: ['skin_anatomy', 'wound_healing', 'immune_skin_response'],
   psychiatry: ['neurotransmitters', 'neuroanatomy', 'psychology_basics'],
   reproductive: ['reproductive_anatomy', 'hormonal_regulation', 'embryology_basics'],
@@ -315,9 +490,17 @@ class ConceptDependencyService {
   private createConceptNode(conceptId: string): ConceptNode {
     // Determine category from naming convention
     let category: ConceptNode['category'] = 'clinical';
-    if (conceptId.includes('anatomy') || conceptId.includes('physiology') || conceptId.includes('basics')) {
+    if (
+      conceptId.includes('anatomy') ||
+      conceptId.includes('physiology') ||
+      conceptId.includes('basics')
+    ) {
       category = 'basic_science';
-    } else if (conceptId.includes('therapy') || conceptId.includes('treatment') || conceptId.includes('inhibitors')) {
+    } else if (
+      conceptId.includes('therapy') ||
+      conceptId.includes('treatment') ||
+      conceptId.includes('inhibitors')
+    ) {
       category = 'therapeutic';
     } else if (conceptId.includes('diagnosis') || conceptId.includes('test')) {
       category = 'diagnostic';
@@ -351,7 +534,7 @@ class ConceptDependencyService {
   private formatConceptName(conceptId: string): string {
     return conceptId
       .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   }
 
@@ -371,10 +554,7 @@ class ConceptDependencyService {
     }
   }
 
-  private countTransitiveDependents(
-    conceptId: string,
-    visited: Set<string> = new Set()
-  ): number {
+  private countTransitiveDependents(conceptId: string, visited: Set<string> = new Set()): number {
     if (visited.has(conceptId)) return 0;
     visited.add(conceptId);
 
@@ -430,12 +610,12 @@ class ConceptDependencyService {
 
       // Check if this reveals a foundational gap
       const missingPrereqs = this.findMissingPrerequisites(conceptId);
-      
+
       if (missingPrereqs.length > 0) {
         // The error might be due to missing prerequisites
         for (const prereqId of missingPrereqs) {
-          const existingGap = this.knowledgeGaps.find(g => g.conceptId === prereqId);
-          
+          const existingGap = this.knowledgeGaps.find((g) => g.conceptId === prereqId);
+
           if (existingGap) {
             existingGap.evidence.push({
               questionId,
@@ -463,8 +643,8 @@ class ConceptDependencyService {
       }
 
       // Also track direct concept gap
-      const directGap = this.knowledgeGaps.find(g => g.conceptId === conceptId);
-      
+      const directGap = this.knowledgeGaps.find((g) => g.conceptId === conceptId);
+
       if (directGap) {
         directGap.evidence.push({
           questionId,
@@ -507,7 +687,7 @@ class ConceptDependencyService {
       this.masteryEstimates.set(conceptId, Math.min(100, current + 5));
 
       // Check if gap should be removed
-      const gapIndex = this.knowledgeGaps.findIndex(g => g.conceptId === conceptId);
+      const gapIndex = this.knowledgeGaps.findIndex((g) => g.conceptId === conceptId);
       if (gapIndex >= 0) {
         const gap = this.knowledgeGaps[gapIndex];
         // Need multiple correct answers to remove a gap
@@ -529,7 +709,7 @@ class ConceptDependencyService {
     if (!node) return [];
 
     const missing: string[] = [];
-    
+
     for (const prereq of node.prerequisites) {
       if (prereq.relationshipType === 'hard_prerequisite') {
         const prereqMastery = this.masteryEstimates.get(prereq.prerequisiteId) || 50;
@@ -542,11 +722,7 @@ class ConceptDependencyService {
     return missing;
   }
 
-  private inferGapType(
-    responseTimeMs: number,
-    errorPattern: string,
-    node: ConceptNode
-  ): GapType {
+  private inferGapType(responseTimeMs: number, errorPattern: string, node: ConceptNode): GapType {
     // Very fast wrong answer = never learned or guessing
     if (responseTimeMs < 10000) {
       return 'missing_foundation';
@@ -581,7 +757,7 @@ class ConceptDependencyService {
   ): KnowledgeGap {
     const node = this.conceptNodes.get(conceptId);
     const blocksCount = this.countTransitiveDependents(conceptId);
-    const blocksConceptIds = node?.dependents.map(d => d.dependentId) || [];
+    const blocksConceptIds = node?.dependents.map((d) => d.dependentId) || [];
 
     return {
       conceptId,
@@ -637,7 +813,7 @@ class ConceptDependencyService {
   private updateGapSeverity(gap: KnowledgeGap): void {
     const evidenceCount = gap.evidence.length;
     const recentEvidence = gap.evidence.filter(
-      e => Date.now() - e.timestamp.getTime() < 7 * 86400000
+      (e) => Date.now() - e.timestamp.getTime() < 7 * 86400000
     ).length;
 
     if (evidenceCount >= 5 || recentEvidence >= 3) {
@@ -652,7 +828,12 @@ class ConceptDependencyService {
   }
 
   private demoteGapSeverity(gap: KnowledgeGap): void {
-    const severityOrder: KnowledgeGap['severity'][] = ['critical', 'significant', 'moderate', 'minor'];
+    const severityOrder: KnowledgeGap['severity'][] = [
+      'critical',
+      'significant',
+      'moderate',
+      'minor',
+    ];
     const currentIndex = severityOrder.indexOf(gap.severity);
     if (currentIndex < severityOrder.length - 1) {
       gap.severity = severityOrder[currentIndex + 1];
@@ -710,16 +891,16 @@ class ConceptDependencyService {
       const currentMastery = this.masteryEstimates.get(node.conceptId) || 50;
       if (currentMastery >= 80) continue; // Already mastered
 
-      const directUnlocks = node.dependents.map(d => d.dependentId);
+      const directUnlocks = node.dependents.map((d) => d.dependentId);
       const indirectUnlocks: string[] = [];
-      
+
       for (const dep of node.dependents) {
         const transitive = this.getTransitiveDependents(dep.dependentId);
-        indirectUnlocks.push(...transitive.filter(id => !directUnlocks.includes(id)));
+        indirectUnlocks.push(...transitive.filter((id) => !directUnlocks.includes(id)));
       }
 
       const totalImpact = directUnlocks.length + indirectUnlocks.length;
-      const potentialGain = totalImpact * (100 - currentMastery) / 100;
+      const potentialGain = (totalImpact * (100 - currentMastery)) / 100;
 
       keystones.push({
         conceptId: node.conceptId,
@@ -734,9 +915,7 @@ class ConceptDependencyService {
       });
     }
 
-    return keystones
-      .sort((a, b) => b.potentialGain - a.potentialGain)
-      .slice(0, limit);
+    return keystones.sort((a, b) => b.potentialGain - a.potentialGain).slice(0, limit);
   }
 
   private getTransitiveDependents(conceptId: string, visited: Set<string> = new Set()): string[] {
@@ -763,7 +942,11 @@ class ConceptDependencyService {
    * Generate an optimized learning path based on current gaps and goals
    */
   generateLearningPath(
-    strategy: 'breadth_first' | 'depth_first' | 'keystone_priority' | 'gap_priority' = 'gap_priority'
+    strategy:
+      | 'breadth_first'
+      | 'depth_first'
+      | 'keystone_priority'
+      | 'gap_priority' = 'gap_priority'
   ): LearningPath {
     const stages: LearningStage[] = [];
     const processedConcepts: Set<string> = new Set();
@@ -813,9 +996,12 @@ class ConceptDependencyService {
     stageNum: number
   ): void {
     // Stage 1: Critical gaps and their prerequisites
-    const criticalGaps = this.knowledgeGaps.filter(g => g.severity === 'critical');
+    const criticalGaps = this.knowledgeGaps.filter((g) => g.severity === 'critical');
     if (criticalGaps.length > 0) {
-      const concepts = this.getPrerequisitesFirst(criticalGaps.map(g => g.conceptId), processed);
+      const concepts = this.getPrerequisitesFirst(
+        criticalGaps.map((g) => g.conceptId),
+        processed
+      );
       if (concepts.length > 0) {
         stages.push({
           stageNumber: ++stageNum,
@@ -826,14 +1012,17 @@ class ConceptDependencyService {
           prerequisitesRequired: [],
           unlocksNext: this.getDirectDependents(concepts),
         });
-        concepts.forEach(c => processed.add(c));
+        concepts.forEach((c) => processed.add(c));
       }
     }
 
     // Stage 2: Significant gaps
-    const significantGaps = this.knowledgeGaps.filter(g => g.severity === 'significant');
+    const significantGaps = this.knowledgeGaps.filter((g) => g.severity === 'significant');
     if (significantGaps.length > 0) {
-      const concepts = this.getPrerequisitesFirst(significantGaps.map(g => g.conceptId), processed);
+      const concepts = this.getPrerequisitesFirst(
+        significantGaps.map((g) => g.conceptId),
+        processed
+      );
       if (concepts.length > 0) {
         stages.push({
           stageNumber: ++stageNum,
@@ -844,14 +1033,19 @@ class ConceptDependencyService {
           prerequisitesRequired: stages[0]?.concepts || [],
           unlocksNext: this.getDirectDependents(concepts),
         });
-        concepts.forEach(c => processed.add(c));
+        concepts.forEach((c) => processed.add(c));
       }
     }
 
     // Stage 3: Moderate gaps
-    const moderateGaps = this.knowledgeGaps.filter(g => g.severity === 'moderate' || g.severity === 'minor');
+    const moderateGaps = this.knowledgeGaps.filter(
+      (g) => g.severity === 'moderate' || g.severity === 'minor'
+    );
     if (moderateGaps.length > 0) {
-      const concepts = this.getPrerequisitesFirst(moderateGaps.map(g => g.conceptId), processed);
+      const concepts = this.getPrerequisitesFirst(
+        moderateGaps.map((g) => g.conceptId),
+        processed
+      );
       if (concepts.length > 0) {
         stages.push({
           stageNumber: ++stageNum,
@@ -862,7 +1056,7 @@ class ConceptDependencyService {
           prerequisitesRequired: stages[stages.length - 1]?.concepts || [],
           unlocksNext: this.getDirectDependents(concepts),
         });
-        concepts.forEach(c => processed.add(c));
+        concepts.forEach((c) => processed.add(c));
       }
     }
   }
@@ -873,11 +1067,11 @@ class ConceptDependencyService {
     stageNum: number
   ): void {
     const keystones = this.getKeystoneConcepts(20);
-    
+
     // Group by impact tiers
-    const highImpact = keystones.filter(k => k.totalImpact >= 10);
-    const mediumImpact = keystones.filter(k => k.totalImpact >= 5 && k.totalImpact < 10);
-    const lowImpact = keystones.filter(k => k.totalImpact < 5);
+    const highImpact = keystones.filter((k) => k.totalImpact >= 10);
+    const mediumImpact = keystones.filter((k) => k.totalImpact >= 5 && k.totalImpact < 10);
+    const lowImpact = keystones.filter((k) => k.totalImpact < 5);
 
     for (const [tier, label, desc] of [
       [highImpact, 'High-Impact Foundations', 'These concepts unlock the most other topics'],
@@ -885,7 +1079,10 @@ class ConceptDependencyService {
       [lowImpact, 'Refinement', 'Smaller impact but still valuable keystones'],
     ] as const) {
       if (tier.length > 0) {
-        const concepts = this.getPrerequisitesFirst(tier.map(k => k.conceptId), processed);
+        const concepts = this.getPrerequisitesFirst(
+          tier.map((k) => k.conceptId),
+          processed
+        );
         if (concepts.length > 0) {
           stages.push({
             stageNumber: ++stageNum,
@@ -894,9 +1091,9 @@ class ConceptDependencyService {
             concepts,
             estimatedHours: concepts.length * 1.5,
             prerequisitesRequired: stages[stages.length - 1]?.concepts || [],
-            unlocksNext: tier.flatMap(k => k.directUnlocks),
+            unlocksNext: tier.flatMap((k) => k.directUnlocks),
           });
-          concepts.forEach(c => processed.add(c));
+          concepts.forEach((c) => processed.add(c));
         }
       }
     }
@@ -913,7 +1110,7 @@ class ConceptDependencyService {
       foundations.push(...foundationList.slice(0, 2)); // First 2 from each system
     }
 
-    const uniqueFoundations = [...new Set(foundations)].filter(f => !processed.has(f));
+    const uniqueFoundations = [...new Set(foundations)].filter((f) => !processed.has(f));
     if (uniqueFoundations.length > 0) {
       stages.push({
         stageNumber: ++stageNum,
@@ -924,13 +1121,13 @@ class ConceptDependencyService {
         prerequisitesRequired: [],
         unlocksNext: this.getDirectDependents(uniqueFoundations),
       });
-      uniqueFoundations.forEach(c => processed.add(c));
+      uniqueFoundations.forEach((c) => processed.add(c));
     }
 
     // Then clinical conditions across all systems
     const clinicalConcepts = Array.from(this.conceptNodes.values())
-      .filter(n => n.category === 'clinical' && !processed.has(n.conceptId))
-      .map(n => n.conceptId)
+      .filter((n) => n.category === 'clinical' && !processed.has(n.conceptId))
+      .map((n) => n.conceptId)
       .slice(0, 30);
 
     if (clinicalConcepts.length > 0) {
@@ -943,7 +1140,7 @@ class ConceptDependencyService {
         prerequisitesRequired: uniqueFoundations,
         unlocksNext: this.getDirectDependents(clinicalConcepts),
       });
-      clinicalConcepts.forEach(c => processed.add(c));
+      clinicalConcepts.forEach((c) => processed.add(c));
     }
   }
 
@@ -958,20 +1155,21 @@ class ConceptDependencyService {
       .sort(([, a], [, b]) => a - b)
       .map(([system]) => system);
 
-    for (const system of sortedSystems.slice(0, 3)) { // Focus on 3 weakest systems
+    for (const system of sortedSystems.slice(0, 3)) {
+      // Focus on 3 weakest systems
       const systemConcepts = Array.from(this.conceptNodes.values())
-        .filter(n => n.system === system && !processed.has(n.conceptId))
+        .filter((n) => n.system === system && !processed.has(n.conceptId))
         .sort((a, b) => b.foundationalScore - a.foundationalScore)
-        .map(n => n.conceptId);
+        .map((n) => n.conceptId);
 
       if (systemConcepts.length > 0) {
         // Split into foundation and clinical stages
-        const foundations = systemConcepts.filter(c => {
+        const foundations = systemConcepts.filter((c) => {
           const node = this.conceptNodes.get(c);
           return node?.category === 'basic_science';
         });
 
-        const clinical = systemConcepts.filter(c => {
+        const clinical = systemConcepts.filter((c) => {
           const node = this.conceptNodes.get(c);
           return node?.category !== 'basic_science';
         });
@@ -986,7 +1184,7 @@ class ConceptDependencyService {
             prerequisitesRequired: [],
             unlocksNext: clinical,
           });
-          foundations.forEach(c => processed.add(c));
+          foundations.forEach((c) => processed.add(c));
         }
 
         if (clinical.length > 0) {
@@ -999,7 +1197,7 @@ class ConceptDependencyService {
             prerequisitesRequired: foundations,
             unlocksNext: [],
           });
-          clinical.forEach(c => processed.add(c));
+          clinical.forEach((c) => processed.add(c));
         }
       }
     }
@@ -1018,9 +1216,9 @@ class ConceptDependencyService {
 
       // Check if all prerequisites are processed
       const unmetPrereqs = node.prerequisites
-        .filter(p => p.relationshipType === 'hard_prerequisite')
-        .filter(p => !processed.has(p.prerequisiteId) && !result.includes(p.prerequisiteId))
-        .map(p => p.prerequisiteId);
+        .filter((p) => p.relationshipType === 'hard_prerequisite')
+        .filter((p) => !processed.has(p.prerequisiteId) && !result.includes(p.prerequisiteId))
+        .map((p) => p.prerequisiteId);
 
       if (unmetPrereqs.length > 0) {
         // Add prerequisites first
@@ -1087,7 +1285,10 @@ class ConceptDependencyService {
         const node = this.conceptNodes.get(conceptId);
         if (node) {
           for (const prereq of node.prerequisites) {
-            if (prereq.relationshipType === 'hard_prerequisite' && !processed.has(prereq.prerequisiteId)) {
+            if (
+              prereq.relationshipType === 'hard_prerequisite' &&
+              !processed.has(prereq.prerequisiteId)
+            ) {
               orderingViolations++;
             }
           }
@@ -1098,19 +1299,17 @@ class ConceptDependencyService {
     score -= orderingViolations * 5;
 
     // Check gap coverage
-    const stageConcepts = new Set(stages.flatMap(s => s.concepts));
-    const coveredGaps = this.knowledgeGaps.filter(g => stageConcepts.has(g.conceptId));
-    const gapCoverageRatio = this.knowledgeGaps.length > 0
-      ? coveredGaps.length / this.knowledgeGaps.length
-      : 1;
+    const stageConcepts = new Set(stages.flatMap((s) => s.concepts));
+    const coveredGaps = this.knowledgeGaps.filter((g) => stageConcepts.has(g.conceptId));
+    const gapCoverageRatio =
+      this.knowledgeGaps.length > 0 ? coveredGaps.length / this.knowledgeGaps.length : 1;
     score += gapCoverageRatio * 15;
 
     // Check keystone coverage
     const keystones = this.getKeystoneConcepts(10);
-    const coveredKeystones = keystones.filter(k => stageConcepts.has(k.conceptId));
-    const keystoneCoverageRatio = keystones.length > 0
-      ? coveredKeystones.length / keystones.length
-      : 1;
+    const coveredKeystones = keystones.filter((k) => stageConcepts.has(k.conceptId));
+    const keystoneCoverageRatio =
+      keystones.length > 0 ? coveredKeystones.length / keystones.length : 1;
     score += keystoneCoverageRatio * 15;
 
     return Math.max(0, Math.min(100, Math.round(score)));
@@ -1146,7 +1345,9 @@ class ConceptDependencyService {
   }
 
   getCriticalGaps(): KnowledgeGap[] {
-    return this.knowledgeGaps.filter(g => g.severity === 'critical' || g.severity === 'significant');
+    return this.knowledgeGaps.filter(
+      (g) => g.severity === 'critical' || g.severity === 'significant'
+    );
   }
 
   getConceptNode(conceptId: string): ConceptNode | undefined {
@@ -1172,7 +1373,7 @@ class ConceptDependencyService {
   }
 
   getReadyConcepts(): ConceptNode[] {
-    return Array.from(this.conceptNodes.values()).filter(n => n.readyToLearn);
+    return Array.from(this.conceptNodes.values()).filter((n) => n.readyToLearn);
   }
 
   // ==========================================================================
@@ -1195,7 +1396,7 @@ class ConceptDependencyService {
       if (gapsStr) {
         this.knowledgeGaps = JSON.parse(gapsStr).map((g: KnowledgeGap) => ({
           ...g,
-          evidence: g.evidence.map(e => ({
+          evidence: g.evidence.map((e) => ({
             ...e,
             timestamp: new Date(e.timestamp),
           })),
@@ -1243,7 +1444,7 @@ class ConceptDependencyService {
     this.knowledgeGaps = [];
     this.currentLearningPath = null;
     this.masteryEstimates.clear();
-    
+
     localStorage.removeItem(STORAGE_KEYS.KNOWLEDGE_GAPS);
     localStorage.removeItem(STORAGE_KEYS.LEARNING_PATH);
     localStorage.removeItem(STORAGE_KEYS.MASTERY_ESTIMATES);

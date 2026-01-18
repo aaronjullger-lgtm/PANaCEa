@@ -1,9 +1,9 @@
 /**
  * Content Health Checker
  * Runs nightly to audit content quality and flag issues
- * 
+ *
  * Usage: tsx scripts/contentHealthChecker.ts
- * 
+ *
  * NOTE: This now uses the database as the source of truth for content.
  */
 
@@ -39,7 +39,7 @@ async function loadConditionContent(): Promise<ConditionContent> {
     });
 
     const contentMap: ConditionContent = {};
-    content.forEach(item => {
+    content.forEach((item) => {
       contentMap[item.conditionId] = item as any;
     });
 
@@ -194,10 +194,10 @@ export async function runContentHealthCheck(): Promise<ContentHealthReport> {
 
   // Generate summary
   const summary = {
-    missingExplanations: allIssues.filter(i => i.issueType === 'missing_explanation').length,
-    brokenMediaLinks: allIssues.filter(i => i.issueType === 'broken_media').length,
-    invalidFields: allIssues.filter(i => i.issueType === 'invalid_field').length,
-    outdatedContent: allIssues.filter(i => i.issueType === 'outdated').length,
+    missingExplanations: allIssues.filter((i) => i.issueType === 'missing_explanation').length,
+    brokenMediaLinks: allIssues.filter((i) => i.issueType === 'broken_media').length,
+    invalidFields: allIssues.filter((i) => i.issueType === 'invalid_field').length,
+    outdatedContent: allIssues.filter((i) => i.issueType === 'outdated').length,
   };
 
   const report: ContentHealthReport = {
@@ -228,9 +228,9 @@ function printReport(report: ContentHealthReport): void {
   console.log(`  📅 Outdated Content: ${report.summary.outdatedContent}\n`);
 
   // Group issues by severity
-  const highSeverity = report.issues.filter(i => i.severity === 'high');
-  const mediumSeverity = report.issues.filter(i => i.severity === 'medium');
-  const lowSeverity = report.issues.filter(i => i.severity === 'low');
+  const highSeverity = report.issues.filter((i) => i.severity === 'high');
+  const mediumSeverity = report.issues.filter((i) => i.severity === 'medium');
+  const lowSeverity = report.issues.filter((i) => i.severity === 'low');
 
   if (highSeverity.length > 0) {
     console.log(`\n🚨 HIGH SEVERITY ISSUES (${highSeverity.length}):`);
@@ -274,7 +274,7 @@ if (require.main === module) {
       printReport(report);
 
       // Exit with error code if critical issues found
-      const criticalIssues = report.issues.filter(i => i.severity === 'high').length;
+      const criticalIssues = report.issues.filter((i) => i.severity === 'high').length;
       if (criticalIssues > 0) {
         console.log(`[WARNING]  ${criticalIssues} critical issues require attention!`);
         process.exit(1);

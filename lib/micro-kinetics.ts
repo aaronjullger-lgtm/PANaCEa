@@ -1,14 +1,14 @@
 /**
  * Micro-Kinetic Telemetry System
- * 
+ *
  * Tracks mouse cursor movement patterns to infer cognitive load, uncertainty,
  * and expertise level during MCQ answer selection.
- * 
+ *
  * Research basis:
  * - Fitts's Law: Movement time = a + b × log2(2D/W)
  * - Mouse trajectory analysis reveals decision conflict and hesitation
  * - MAD (Maximum Absolute Deviation) quantifies response competition
- * 
+ *
  * References:
  * - Freeman & Ambady (2010): "MouseTracker software"
  * - Kieslich & Henninger (2017): "mousetrap R package"
@@ -122,16 +122,21 @@ function perpendicularDistance(
 ): number {
   const lineLength = distance(lineStart, lineEnd);
   if (lineLength === 0) return distance(point, lineStart);
-  
+
   // Calculate perpendicular distance using cross product
-  const t = Math.max(0, Math.min(1, (
-    (point.x - lineStart.x) * (lineEnd.x - lineStart.x) +
-    (point.y - lineStart.y) * (lineEnd.y - lineStart.y)
-  ) / (lineLength * lineLength)));
-  
+  const t = Math.max(
+    0,
+    Math.min(
+      1,
+      ((point.x - lineStart.x) * (lineEnd.x - lineStart.x) +
+        (point.y - lineStart.y) * (lineEnd.y - lineStart.y)) /
+        (lineLength * lineLength)
+    )
+  );
+
   const projX = lineStart.x + t * (lineEnd.x - lineStart.x);
   const projY = lineStart.y + t * (lineEnd.y - lineStart.y);
-  
+
   return distance(point, { x: projX, y: projY });
 }
 
@@ -140,7 +145,7 @@ function perpendicularDistance(
  */
 function calculateVelocities(points: TrajectoryPoint[]): TrajectoryPoint[] {
   if (points.length < 2) return points;
-  
+
   return points.map((point, i) => {
     if (i === 0) {
       return { ...point, velocity: 0 };
@@ -155,23 +160,23 @@ function calculateVelocities(points: TrajectoryPoint[]): TrajectoryPoint[] {
 
 /**
  * Calculate Maximum Absolute Deviation (MAD)
- * 
+ *
  * MAD measures the largest perpendicular distance from the actual trajectory
  * to the ideal straight-line path. Higher MAD indicates more decision conflict.
  */
 function calculateMAD(trajectory: RawTrajectory): number {
   if (trajectory.points.length < 2) return 0;
-  
+
   const start = trajectory.startPoint;
   const end = { x: trajectory.target.centerX, y: trajectory.target.centerY };
-  
+
   let maxDeviation = 0;
-  
+
   for (const point of trajectory.points) {
     const deviation = perpendicularDistance(point, start, end);
     maxDeviation = Math.max(maxDeviation, deviation);
   }
-  
+
   // Normalize by ideal distance
   const idealDist = distance(start, end);
   return idealDist > 0 ? maxDeviation / idealDist : 0;
@@ -179,51 +184,51 @@ function calculateMAD(trajectory: RawTrajectory): number {
 
 /**
  * Calculate Area Under Curve (AUC)
- * 
+ *
  * AUC measures the total area between the actual trajectory and the ideal path.
  * Uses trapezoidal integration of perpendicular deviations.
  */
 function calculateAUC(trajectory: RawTrajectory): number {
   if (trajectory.points.length < 2) return 0;
-  
+
   const start = trajectory.startPoint;
   const end = { x: trajectory.target.centerX, y: trajectory.target.centerY };
   const idealDist = distance(start, end);
-  
+
   if (idealDist === 0) return 0;
-  
+
   let totalArea = 0;
-  
+
   for (let i = 1; i < trajectory.points.length; i++) {
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
-    
+
     const dev1 = perpendicularDistance(p1, start, end);
     const dev2 = perpendicularDistance(p2, start, end);
     const segmentLength = distance(p1, p2);
-    
+
     // Trapezoidal area
-    totalArea += (dev1 + dev2) / 2 * segmentLength;
+    totalArea += ((dev1 + dev2) / 2) * segmentLength;
   }
-  
+
   // Normalize by ideal distance squared (area normalization)
   return totalArea / (idealDist * idealDist);
 }
 
 /**
  * Calculate Hesitation Index
- * 
+ *
  * Detects velocity drops (near-stops) during the trajectory, especially
  * near the target. Higher values indicate more hesitation/second-guessing.
  */
 function calculateHesitationIndex(trajectory: RawTrajectory): number {
   const pointsWithVelocity = calculateVelocities(trajectory.points);
   if (pointsWithVelocity.length < 3) return 0;
-  
+
   const target = { x: trajectory.target.centerX, y: trajectory.target.centerY };
   let hesitationCount = 0;
   let totalPoints = 0;
-  
+
   // Focus on points within final approach distance
   for (const point of pointsWithVelocity) {
     const distToTarget = distance(point, target);
@@ -234,44 +239,44 @@ function calculateHesitationIndex(trajectory: RawTrajectory): number {
       }
     }
   }
-  
+
   return totalPoints > 0 ? hesitationCount / totalPoints : 0;
 }
 
 /**
  * Calculate Jitter Score
- * 
+ *
  * Measures micro-corrections (small back-and-forth movements) during final approach.
  * High jitter indicates stress, uncertainty, or fine-motor difficulty.
  */
 function calculateJitterScore(trajectory: RawTrajectory): number {
   if (trajectory.points.length < 5) return 0;
-  
+
   const target = { x: trajectory.target.centerX, y: trajectory.target.centerY };
   let microCorrections = 0;
   let relevantSegments = 0;
-  
+
   // Analyze final approach
   for (let i = 2; i < trajectory.points.length; i++) {
     const p0 = trajectory.points[i - 2];
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
-    
+
     const distToTarget = distance(p2, target);
     if (distToTarget > FINAL_APPROACH_DISTANCE) continue;
-    
+
     relevantSegments++;
-    
+
     // Detect direction reversal (micro-correction)
     const dx1 = p1.x - p0.x;
     const dy1 = p1.y - p0.y;
     const dx2 = p2.x - p1.x;
     const dy2 = p2.y - p1.y;
-    
+
     // Check for direction reversal with small magnitude
     const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
     const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-    
+
     if (dist1 < JITTER_THRESHOLD_PX * 3 || dist2 < JITTER_THRESHOLD_PX * 3) {
       // Small movement - check for reversal
       const dotProduct = dx1 * dx2 + dy1 * dy2;
@@ -280,29 +285,29 @@ function calculateJitterScore(trajectory: RawTrajectory): number {
       }
     }
   }
-  
+
   return relevantSegments > 0 ? microCorrections / relevantSegments : 0;
 }
 
 /**
  * Calculate Trajectory Efficiency
- * 
+ *
  * Ratio of ideal (straight-line) distance to actual path length.
  * 1.0 = perfectly efficient, lower values = more deviation.
  */
 function calculateEfficiency(trajectory: RawTrajectory): number {
   if (trajectory.points.length < 2) return 1;
-  
+
   const start = trajectory.startPoint;
   const end = { x: trajectory.target.centerX, y: trajectory.target.centerY };
   const idealDist = distance(start, end);
-  
+
   // Calculate actual path length
   let pathLength = distance(start, trajectory.points[0]);
   for (let i = 1; i < trajectory.points.length; i++) {
     pathLength += distance(trajectory.points[i - 1], trajectory.points[i]);
   }
-  
+
   return pathLength > 0 ? idealDist / pathLength : 1;
 }
 
@@ -311,58 +316,59 @@ function calculateEfficiency(trajectory: RawTrajectory): number {
  */
 function countReversals(trajectory: RawTrajectory): number {
   if (trajectory.points.length < 3) return 0;
-  
+
   let reversals = 0;
-  
+
   for (let i = 2; i < trajectory.points.length; i++) {
     const p0 = trajectory.points[i - 2];
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
-    
+
     const dx1 = p1.x - p0.x;
     const dy1 = p1.y - p0.y;
     const dx2 = p2.x - p1.x;
     const dy2 = p2.y - p1.y;
-    
+
     // Check for significant direction change
     const dotProduct = dx1 * dx2 + dy1 * dy2;
     const mag1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
     const mag2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-    
+
     if (mag1 > 5 && mag2 > 5) {
       const cosAngle = dotProduct / (mag1 * mag2);
-      if (cosAngle < -0.5) { // More than 120 degree turn
+      if (cosAngle < -0.5) {
+        // More than 120 degree turn
         reversals++;
       }
     }
   }
-  
+
   return reversals;
 }
 
 /**
  * Calculate composite confidence score from all metrics
- * 
+ *
  * Higher confidence = more direct, efficient trajectory with less hesitation
  * Lower confidence = more deviation, hesitation, and jitter
  */
 function calculateConfidenceScore(metrics: Omit<TrajectoryMetrics, 'confidenceScore'>): number {
   // Weights for each metric (sum to 1.0)
   const weights = {
-    mad: 0.25,        // High MAD = low confidence
+    mad: 0.25, // High MAD = low confidence
     efficiency: 0.25, // Low efficiency = low confidence
     hesitation: 0.25, // High hesitation = low confidence
-    jitter: 0.15,     // High jitter = low confidence
-    auc: 0.10,        // High AUC = low confidence
+    jitter: 0.15, // High jitter = low confidence
+    auc: 0.1, // High AUC = low confidence
   };
-  
+
   // Normalize metrics to 0-1 scale where 1 = confident
   const madScore = Math.max(0, 1 - metrics.mad);
   const efficiencyScore = metrics.efficiency;
   const hesitationScore = Math.max(0, 1 - metrics.hesitationIndex);
   const jitterScore = Math.max(0, 1 - metrics.jitterScore);
   const aucScore = Math.max(0, 1 - Math.min(metrics.auc, 1));
-  
+
   return (
     weights.mad * madScore +
     weights.efficiency * efficiencyScore +
@@ -374,30 +380,30 @@ function calculateConfidenceScore(metrics: Omit<TrajectoryMetrics, 'confidenceSc
 
 /**
  * Analyze a complete mouse trajectory and compute all metrics
- * 
+ *
  * @param trajectory - Raw trajectory data from tracking
  * @returns Computed trajectory metrics
  */
 export function analyzeTrajectory(trajectory: RawTrajectory): TrajectoryMetrics {
   const start = trajectory.startPoint;
   const end = { x: trajectory.target.centerX, y: trajectory.target.centerY };
-  
+
   const idealDistance = distance(start, end);
   const movementTime = trajectory.endTime - trajectory.startTime;
-  
+
   // Calculate path length
   let pathLength = trajectory.points.length > 0 ? distance(start, trajectory.points[0]) : 0;
   for (let i = 1; i < trajectory.points.length; i++) {
     pathLength += distance(trajectory.points[i - 1], trajectory.points[i]);
   }
-  
+
   const mad = calculateMAD(trajectory);
   const auc = calculateAUC(trajectory);
   const hesitationIndex = calculateHesitationIndex(trajectory);
   const jitterScore = calculateJitterScore(trajectory);
   const efficiency = calculateEfficiency(trajectory);
   const reversals = countReversals(trajectory);
-  
+
   const baseMetrics = {
     mad,
     auc,
@@ -409,7 +415,7 @@ export function analyzeTrajectory(trajectory: RawTrajectory): TrajectoryMetrics 
     idealDistance,
     reversals,
   };
-  
+
   return {
     ...baseMetrics,
     confidenceScore: calculateConfidenceScore(baseMetrics),
@@ -433,7 +439,7 @@ export function serializeTrajectoryMetrics(metrics: TrajectoryMetrics): Record<s
 
 /**
  * Interpret trajectory metrics for FSRS rating adjustment
- * 
+ *
  * @param metrics - Computed trajectory metrics
  * @param isCorrect - Whether the answer was correct
  * @returns Rating adjustment suggestion
@@ -447,12 +453,11 @@ export function interpretTrajectoryForRating(
   trajectoryConfidence: 'high' | 'medium' | 'low';
 } {
   const confidence = metrics.confidenceScore;
-  
+
   // Determine confidence level
-  const trajectoryConfidence: 'high' | 'medium' | 'low' = 
-    confidence >= 0.75 ? 'high' :
-    confidence >= 0.5 ? 'medium' : 'low';
-  
+  const trajectoryConfidence: 'high' | 'medium' | 'low' =
+    confidence >= 0.75 ? 'high' : confidence >= 0.5 ? 'medium' : 'low';
+
   if (isCorrect) {
     // Correct answer
     if (trajectoryConfidence === 'high') {
@@ -486,7 +491,7 @@ export function interpretTrajectoryForRating(
       };
     }
   }
-  
+
   return {
     suggestedAdjustment: 'none',
     reason: 'Average trajectory confidence',

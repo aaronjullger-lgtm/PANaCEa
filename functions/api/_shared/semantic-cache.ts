@@ -1,4 +1,3 @@
-
 interface CacheQuery {
   queryText: string;
   questionType: string;
@@ -19,51 +18,51 @@ function tokenize(text: string): string[] {
     .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(t => t.length > 0);
+    .filter((t) => t.length > 0);
 }
 
 function calculateSimilarity(tokens1: string[], tokens2: string[]): number {
   const set1 = new Set(tokens1);
   const set2 = new Set(tokens2);
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
+
+  const intersection = new Set([...set1].filter((x) => set2.has(x)));
   const union = new Set([...set1, ...set2]);
-  
+
   if (union.size === 0) return 0;
   return intersection.size / union.size;
 }
 
 function normalizeMedicalTerms(text: string): string {
   const normalizations: Record<string, string> = {
-    'pericarditis': 'pericarditis',
+    pericarditis: 'pericarditis',
     'acute pericarditis': 'pericarditis',
     'pericardial inflammation': 'pericarditis',
     'myocardial infarction': 'mi',
     'heart attack': 'mi',
-    'mi': 'mi',
-    'stemi': 'mi',
-    'nstemi': 'mi',
+    mi: 'mi',
+    stemi: 'mi',
+    nstemi: 'mi',
     'diabetes mellitus': 'diabetes',
-    'diabetes': 'diabetes',
+    diabetes: 'diabetes',
     'type 2 diabetes': 'diabetes',
-    't2dm': 'diabetes',
+    t2dm: 'diabetes',
     'congestive heart failure': 'chf',
     'heart failure': 'chf',
-    'chf': 'chf',
-    'copd': 'copd',
+    chf: 'chf',
+    copd: 'copd',
     'chronic obstructive pulmonary disease': 'copd',
-    'pneumonia': 'pneumonia',
+    pneumonia: 'pneumonia',
     'community acquired pneumonia': 'pneumonia',
-    'cap': 'pneumonia',
+    cap: 'pneumonia',
   };
-  
+
   let normalized = text.toLowerCase();
-  
+
   for (const [variant, canonical] of Object.entries(normalizations)) {
     const regex = new RegExp(`\\b${variant}\\b`, 'gi');
     normalized = normalized.replace(regex, canonical);
   }
-  
+
   return normalized;
 }
 
@@ -74,7 +73,7 @@ export async function findSimilarCachedQuestion(
   try {
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
     const queryTokens = tokenize(normalizedQuery);
-    
+
     const cacheEntries = await prisma.semanticCache.findMany({
       where: {
         questionType: query.questionType,
@@ -86,16 +85,16 @@ export async function findSimilarCachedQuestion(
       },
       take: 50,
     });
-    
+
     let bestMatch: CacheMatch | null = null;
     let highestSimilarity = 0;
-    
+
     for (const entry of cacheEntries) {
       const normalizedCache = normalizeMedicalTerms(entry.queryText);
       const cacheTokens = tokenize(normalizedCache);
-      
+
       const similarity = calculateSimilarity(queryTokens, cacheTokens);
-      
+
       if (similarity > highestSimilarity && similarity >= SIMILARITY_THRESHOLD) {
         highestSimilarity = similarity;
         bestMatch = {
@@ -105,7 +104,7 @@ export async function findSimilarCachedQuestion(
         };
       }
     }
-    
+
     if (bestMatch) {
       await prisma.semanticCache.update({
         where: { id: bestMatch.cacheId },
@@ -115,7 +114,7 @@ export async function findSimilarCachedQuestion(
         },
       });
     }
-    
+
     return bestMatch;
   } catch (error) {
     console.error('Error finding cached question:', error);

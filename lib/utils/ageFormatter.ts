@@ -1,6 +1,6 @@
 /**
  * Age Formatter Utility
- * 
+ *
  * Handles various age formats for patient encounters including:
  * - Numeric years: 45 → "45-year-old"
  * - String with units: "3 months" → "3-month-old"
@@ -40,7 +40,7 @@ export function parsePatientAge(age: number | string | null | undefined): Parsed
     const isPediatric = age < 18;
     const isNeonate = age < 1; // Will be 0 for neonates represented as years
     const isInfant = age < 2;
-    
+
     return {
       value: age,
       unit: 'years',
@@ -54,7 +54,7 @@ export function parsePatientAge(age: number | string | null | undefined): Parsed
 
   // Handle string formats
   const ageStr = String(age).toLowerCase().trim();
-  
+
   // Already formatted pattern: "45-year-old", "3-month-old"
   const alreadyFormattedMatch = ageStr.match(/^(\d+)-?(year|month|week|day|hour)s?-old$/i);
   if (alreadyFormattedMatch) {
@@ -77,7 +77,7 @@ export function parsePatientAge(age: number | string | null | undefined): Parsed
     const value = parseInt(abbreviatedMatch[1], 10);
     const abbrev = abbreviatedMatch[2].toLowerCase();
     let unit: ParsedAge['unit'] = 'years';
-    
+
     switch (abbrev) {
       case 'yo':
       case 'y':
@@ -98,7 +98,7 @@ export function parsePatientAge(age: number | string | null | undefined): Parsed
         unit = 'hours';
         break;
     }
-    
+
     return buildParsedAge(value, unit);
   }
 
@@ -176,9 +176,8 @@ function buildParsedAge(value: number, unit: ParsedAge['unit']): ParsedAge {
 
   // Build display strings
   const unitSingular = unit.slice(0, -1); // Remove trailing 's'
-  const displayString = value === 1
-    ? `${value}-${unitSingular}-old`
-    : `${value}-${unitSingular}-old`;
+  const displayString =
+    value === 1 ? `${value}-${unitSingular}-old` : `${value}-${unitSingular}-old`;
 
   // Short display
   let shortDisplay = '';

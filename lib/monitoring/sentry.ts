@@ -1,6 +1,6 @@
 /**
  * Sentry Error Tracking Configuration
- * 
+ *
  * IMPORTANT: This module uses lazy loading to prevent conflicts with Clerk.
  * Sentry is only loaded when VITE_SENTRY_DSN is configured.
  */
@@ -43,7 +43,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
   try {
     // Dynamically import Sentry only when we have a DSN
     Sentry = await import('@sentry/react');
-    
+
     const defaultConfig: SentryConfig = {
       dsn,
       environment: mode || 'production',
@@ -70,7 +70,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       tracesSampleRate: finalConfig.tracesSampleRate,
       replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
       replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
-      
+
       // Filter sensitive data
       beforeSend: (event) => {
         if (event.request?.headers) {
@@ -79,7 +79,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
         }
         return event;
       },
-      
+
       // Ignore common non-critical errors
       ignoreErrors: [
         'top.GLOBALS',
@@ -116,23 +116,23 @@ export function captureError(
   }
 ): string {
   console.error('[Error]', error.message, context);
-  
+
   if (!Sentry || !isInitialized) {
     return '';
   }
-  
+
   if (context?.tags) {
     Sentry.setTags(context.tags);
   }
-  
+
   if (context?.extra) {
     Sentry.setExtras(context.extra);
   }
-  
+
   if (context?.user) {
     Sentry.setUser(context.user);
   }
-  
+
   return Sentry.captureException(error, {
     level: context?.level || 'error',
   });
@@ -153,15 +153,15 @@ export function captureMessage(
     console.log(`[${level}]`, message, context);
     return '';
   }
-  
+
   if (context?.tags) {
     Sentry.setTags(context.tags);
   }
-  
+
   if (context?.extra) {
     Sentry.setExtras(context.extra);
   }
-  
+
   return Sentry.captureMessage(message, level);
 }
 
@@ -177,7 +177,7 @@ export function setUserContext(user: {
   if (!Sentry || !isInitialized) {
     return;
   }
-  
+
   Sentry.setUser({
     id: user.id,
     email: user.email,
@@ -192,7 +192,7 @@ export function clearUserContext(): void {
   if (!Sentry || !isInitialized) {
     return;
   }
-  
+
   Sentry.setUser(null);
 }
 
@@ -208,7 +208,7 @@ export function addBreadcrumb(
   if (!Sentry || !isInitialized) {
     return;
   }
-  
+
   Sentry.addBreadcrumb({
     message,
     category,
@@ -229,7 +229,7 @@ export async function measurePerformance<T>(
   if (!Sentry || !isInitialized) {
     return operation();
   }
-  
+
   return Sentry.startSpan(
     {
       name,

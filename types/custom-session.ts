@@ -1,6 +1,6 @@
 /**
  * Custom Study Session Types
- * 
+ *
  * Types for the Quizlet-style custom study session feature.
  * Key differences from regular FSRS-tracked sessions:
  * - No spaced repetition tracking
@@ -15,12 +15,12 @@ import type { SystemCode, Question } from './index';
  * Focus areas for filtering questions by content type
  */
 export type FocusArea =
-  | 'anatomy'          // Anatomy & physiology questions
-  | 'pathophysiology'  // Disease mechanisms, etiology
-  | 'diagnosis'        // Clinical presentation, workup, differential
-  | 'pharmacology'     // Drug therapy, mechanisms, side effects
-  | 'management'       // Treatment plans, follow-up
-  | 'procedures';      // Procedures, special tests
+  | 'anatomy' // Anatomy & physiology questions
+  | 'pathophysiology' // Disease mechanisms, etiology
+  | 'diagnosis' // Clinical presentation, workup, differential
+  | 'pharmacology' // Drug therapy, mechanisms, side effects
+  | 'management' // Treatment plans, follow-up
+  | 'procedures'; // Procedures, special tests
 
 /**
  * Configuration for a custom study session
@@ -28,28 +28,28 @@ export type FocusArea =
 export interface CustomSessionConfig {
   /** Selected organ systems (multi-select) */
   systems: SystemCode[];
-  
+
   /** Selected subcategories (filtered by selected systems) */
   subcategories: string[];
-  
+
   /** Selected specific conditions (optional, for ultra-focused sessions) */
   conditions: string[];
-  
+
   /** Content focus areas to include */
   focusAreas: FocusArea[];
-  
+
   /** Number of questions per increment before retry phase */
   questionsPerIncrement: number;
-  
+
   /** Question difficulty */
   difficulty: 'easier' | 'same' | 'harder';
-  
+
   /** Whether to retry missed questions at end of increment */
   retryMissedQuestions: boolean;
-  
+
   /** Include user-uploaded material questions (BYON) */
   includeUserMaterials?: boolean;
-  
+
   /** Specific user material IDs to include */
   userMaterialIds?: string[];
 }
@@ -60,31 +60,31 @@ export interface CustomSessionConfig {
 export interface CustomSessionState {
   /** Session configuration */
   config: CustomSessionConfig;
-  
+
   /** Current increment number (starts at 1) */
   currentIncrement: number;
-  
+
   /** Total questions answered in session */
   questionsAnswered: number;
-  
+
   /** Total correct answers */
   correctCount: number;
-  
+
   /** Questions missed during current increment (to retry) */
   retryQueue: Question[];
-  
+
   /** Questions for the current increment */
   currentQuestions: Question[];
-  
+
   /** Index of current question in currentQuestions */
   currentQuestionIndex: number;
-  
+
   /** Whether we're in the retry phase */
   isRetryPhase: boolean;
-  
+
   /** Timestamp when session started */
   startedAt: string;
-  
+
   /** Track which questions have been answered with their results */
   answeredQuestions: AnsweredQuestion[];
 }
@@ -107,34 +107,34 @@ export interface AnsweredQuestion {
 export interface CustomSessionSummary {
   /** Total questions answered (including retries) */
   totalAnswered: number;
-  
+
   /** Questions correct on first attempt */
   correctFirstAttempt: number;
-  
+
   /** Questions correct on retry */
   correctOnRetry: number;
-  
+
   /** Total time spent in session */
   totalTimeMs: number;
-  
+
   /** Average time per question */
   avgTimePerQuestion: number;
-  
+
   /** Accuracy percentage (first attempt) */
   firstAttemptAccuracy: number;
-  
+
   /** Accuracy percentage (overall including retries) */
   overallAccuracy: number;
-  
+
   /** Performance by system */
   systemBreakdown: SystemBreakdown[];
-  
+
   /** Performance by focus area */
   focusAreaBreakdown: FocusAreaBreakdown[];
-  
+
   /** Weak areas identified (topics with <70% accuracy) */
   weakAreas: string[];
-  
+
   /** Strong areas identified (topics with >90% accuracy) */
   strongAreas: string[];
 }
@@ -166,7 +166,7 @@ export interface FocusAreaBreakdown {
 export interface AvailableContent {
   /** Systems with their subcategories and conditions */
   systems: SystemWithContent[];
-  
+
   /** User's uploaded materials (if any) */
   userMaterials: UserMaterialSummary[];
 }
@@ -304,7 +304,10 @@ export interface UploadMaterialResponse {
 /**
  * Display metadata for focus areas
  */
-export const FOCUS_AREA_META: Record<FocusArea, { label: string; description: string; icon: string }> = {
+export const FOCUS_AREA_META: Record<
+  FocusArea,
+  { label: string; description: string; icon: string }
+> = {
   anatomy: {
     label: 'Anatomy & Physiology',
     description: 'Structure and normal function',

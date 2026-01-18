@@ -12,19 +12,22 @@ function flattenToStringArray(input: any): string[] {
   if (!input) return [];
   if (typeof input === 'string') return [input];
   if (Array.isArray(input)) {
-    return input.map(item => {
+    return input.map((item) => {
       if (typeof item === 'string') return item;
       if (typeof item === 'object' && item !== null) {
         // Handle specific object shapes found in the JSON
         if (item.item) return item.item;
-        if (item.buzzword) return `${item.buzzword}${item.explanation ? ': ' + item.explanation : ''}`;
-        if (item.complication) return `${item.complication}${item.explanation ? ': ' + item.explanation : ''}`;
-        if (item.concept) return `${item.concept}${item.explanation ? ': ' + item.explanation : ''}`;
-        
+        if (item.buzzword)
+          return `${item.buzzword}${item.explanation ? ': ' + item.explanation : ''}`;
+        if (item.complication)
+          return `${item.complication}${item.explanation ? ': ' + item.explanation : ''}`;
+        if (item.concept)
+          return `${item.concept}${item.explanation ? ': ' + item.explanation : ''}`;
+
         // Fallback: try to extract values or stringify
-        const values = Object.values(item).filter(v => typeof v === 'string');
+        const values = Object.values(item).filter((v) => typeof v === 'string');
         if (values.length > 0) return values.join(': ');
-        
+
         return JSON.stringify(item);
       }
       return String(item);
@@ -38,26 +41,30 @@ function flattenToText(input: any): string | null {
   if (!input) return null;
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) {
-    return input.map(item => {
-      if (typeof item === 'string') return item;
-      if (typeof item === 'object' && item !== null) {
-        // Handle { item: "...", explanation: "..." } or { concept: "...", explanation: "..." }
-        const title = item.item || item.concept || '';
-        const explanation = item.explanation || '';
-        
-        // Clean up title if it already has markdown formatting like * **Title**
-        const cleanTitle = title.replace(/^ \*\*(.*?)\*\*$/, '$1').replace(/^\*\*(.*?)\*\*$/, '$1');
-        
-        if (cleanTitle && explanation) {
-          return `**${cleanTitle}**
+    return input
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item !== null) {
+          // Handle { item: "...", explanation: "..." } or { concept: "...", explanation: "..." }
+          const title = item.item || item.concept || '';
+          const explanation = item.explanation || '';
+
+          // Clean up title if it already has markdown formatting like * **Title**
+          const cleanTitle = title
+            .replace(/^ \*\*(.*?)\*\*$/, '$1')
+            .replace(/^\*\*(.*?)\*\*$/, '$1');
+
+          if (cleanTitle && explanation) {
+            return `**${cleanTitle}**
 ${explanation}`;
+          }
+          if (title) return title;
+          if (explanation) return explanation;
+          return JSON.stringify(item);
         }
-        if (title) return title;
-        if (explanation) return explanation;
-        return JSON.stringify(item);
-      }
-      return String(item);
-    }).join('\n\n');
+        return String(item);
+      })
+      .join('\n\n');
   }
   return String(input);
 }
@@ -73,7 +80,7 @@ async function main() {
   }
   const rawContent = fs.readFileSync(JSON_PATH, 'utf-8');
   const contentData = JSON.parse(rawContent);
-  
+
   // Create a map for faster lookup
   const contentMap = new Map(contentData.map((item: any) => [item.conditionId, item]));
 
@@ -86,7 +93,7 @@ async function main() {
 
   // 3. Iterate through Registry and populate DB
   console.log('🔄 Processing registry and populating database...');
-  
+
   let createdConditions = 0;
   let createdContent = 0;
   let missingContent = 0;
@@ -128,7 +135,7 @@ async function main() {
 
     // Find and Normalize Content
     const jsonItem = contentMap.get(conditionId);
-    
+
     if (jsonItem && (jsonItem as any).content) {
       // Content is already normalized by normalizeContent.ts
       const normalizedContent = (jsonItem as any).content;
@@ -141,7 +148,7 @@ async function main() {
             system: meta.system,
             subcategory: meta.subcategory,
             condition: meta.condition,
-            
+
             // Exploded content columns
             overview: normalizedContent.overview || null,
             etiology: flattenToText(normalizedContent.etiology),
@@ -159,14 +166,14 @@ async function main() {
 
             status: 'published',
             version: 1,
-            updatedBy: 'system_revamp'
+            updatedBy: 'system_revamp',
           },
           create: {
             conditionId: conditionId,
             system: meta.system,
             subcategory: meta.subcategory,
             condition: meta.condition,
-            
+
             // Exploded content columns
             overview: normalizedContent.overview || null,
             etiology: flattenToText(normalizedContent.etiology),
@@ -185,7 +192,7 @@ async function main() {
             status: 'published', // Default to published for this revamp
             version: 1,
             createdBy: 'system_revamp',
-            updatedBy: 'system_revamp'
+            updatedBy: 'system_revamp',
           },
         });
         createdContent++;

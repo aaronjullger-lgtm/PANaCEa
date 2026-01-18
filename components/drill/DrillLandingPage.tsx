@@ -1,6 +1,6 @@
 /**
  * DrillLandingPage - Standardized landing page for drill modes
- * 
+ *
  * Provides a consistent entry point for all drill modes with:
  * - Title and description
  * - Learning objectives
@@ -8,13 +8,22 @@
  * - History/Stats summary
  * - Instructions
  * - Estimated time
- * 
+ *
  * Uses muted semantic color palette for professional appearance.
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon, Play, BarChart3, Clock, Target, BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
+import {
+  LucideIcon,
+  Play,
+  BarChart3,
+  Clock,
+  Target,
+  BookOpen,
+  Lightbulb,
+  ArrowLeft,
+} from 'lucide-react';
 
 export interface DrillStats {
   totalAttempts?: number;
@@ -81,7 +90,8 @@ export function DrillLandingPage({
       bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
       border: 'border-steel-blue-200 dark:border-steel-blue-800',
       text: 'text-steel-blue-600 dark:text-steel-blue-400',
-      button: 'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
+      button:
+        'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
       tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
     },
     green: {
@@ -95,25 +105,28 @@ export function DrillLandingPage({
       bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
       border: 'border-deep-plum-200 dark:border-deep-plum-800',
       text: 'text-deep-plum-600 dark:text-deep-plum-400',
-      button: 'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
+      button:
+        'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
       tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
     },
     orange: {
       bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
       border: 'border-muted-amber-200 dark:border-muted-amber-800',
       text: 'text-muted-amber-600 dark:text-muted-amber-400',
-      button: 'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
+      button:
+        'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
       tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
     },
     red: {
       bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
       border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
       text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
-      button: 'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
+      button:
+        'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
       tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
     },
     // New muted semantic colors
-    'sage': {
+    sage: {
       bg: 'bg-sage-50 dark:bg-sage-900/20',
       border: 'border-sage-200 dark:border-sage-800',
       text: 'text-sage-600 dark:text-sage-400',
@@ -124,40 +137,46 @@ export function DrillLandingPage({
       bg: 'bg-slate-teal-50 dark:bg-slate-teal-900/20',
       border: 'border-slate-teal-200 dark:border-slate-teal-800',
       text: 'text-slate-teal-600 dark:text-slate-teal-400',
-      button: 'bg-slate-teal-600 hover:bg-slate-teal-700 dark:bg-slate-teal-500 dark:hover:bg-slate-teal-400',
+      button:
+        'bg-slate-teal-600 hover:bg-slate-teal-700 dark:bg-slate-teal-500 dark:hover:bg-slate-teal-400',
       tag: 'bg-slate-teal-100 text-slate-teal-700 dark:bg-slate-teal-900/30 dark:text-slate-teal-300',
     },
     'dusty-rose': {
       bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
       border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
       text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
-      button: 'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
+      button:
+        'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
       tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
     },
     'steel-blue': {
       bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
       border: 'border-steel-blue-200 dark:border-steel-blue-800',
       text: 'text-steel-blue-600 dark:text-steel-blue-400',
-      button: 'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
+      button:
+        'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
       tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
     },
     'muted-amber': {
       bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
       border: 'border-muted-amber-200 dark:border-muted-amber-800',
       text: 'text-muted-amber-600 dark:text-muted-amber-400',
-      button: 'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
+      button:
+        'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
       tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
     },
     'deep-plum': {
       bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
       border: 'border-deep-plum-200 dark:border-deep-plum-800',
       text: 'text-deep-plum-600 dark:text-deep-plum-400',
-      button: 'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
+      button:
+        'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
       tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
     },
   };
 
-  const colors = colorClasses[accentColor as keyof typeof colorClasses] || colorClasses['steel-blue'];
+  const colors =
+    colorClasses[accentColor as keyof typeof colorClasses] || colorClasses['steel-blue'];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
@@ -186,12 +205,8 @@ export function DrillLandingPage({
               <Icon className="w-12 h-12" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
-                {title}
-              </h1>
-              <p className="text-lg text-[var(--color-text-secondary)]">
-                {description}
-              </p>
+              <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h1>
+              <p className="text-lg text-[var(--color-text-secondary)]">{description}</p>
             </div>
           </div>
 
@@ -255,7 +270,9 @@ export function DrillLandingPage({
             <ul className="space-y-2">
               {objectives.map((objective, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className={`w-5 h-5 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                  <div
+                    className={`w-5 h-5 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0 mt-0.5`}
+                  >
                     <span className={`text-xs font-bold ${colors.text}`}>{index + 1}</span>
                   </div>
                   <span className="text-[var(--color-text-secondary)]">{objective}</span>
@@ -348,19 +365,13 @@ export function DrillLandingPage({
           >
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className={`w-5 h-5 ${colors.text}`} />
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-                How it Works
-              </h2>
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">How it Works</h2>
             </div>
             <ul className="space-y-3">
               {instructions.map((instruction, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <span className={`${colors.text} font-bold text-lg mt-0.5`}>
-                    {index + 1}.
-                  </span>
-                  <span className="text-[var(--color-text-secondary)] flex-1">
-                    {instruction}
-                  </span>
+                  <span className={`${colors.text} font-bold text-lg mt-0.5`}>{index + 1}.</span>
+                  <span className="text-[var(--color-text-secondary)] flex-1">{instruction}</span>
                 </li>
               ))}
             </ul>
@@ -386,10 +397,7 @@ export function DrillLandingPage({
             transition={{ delay: 0.45 }}
             className="text-center"
           >
-            <button
-              onClick={onViewHistory}
-              className="btn-ghost"
-            >
+            <button onClick={onViewHistory} className="btn-ghost">
               View History and Stats
             </button>
           </motion.div>

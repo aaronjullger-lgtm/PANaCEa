@@ -1,6 +1,6 @@
 /**
  * Longitudinal Progress Dashboard
- * 
+ *
  * Tracks mastery scores over the entire educational career
  * (Didactic Year → Clinical Year → PANCE preparation)
  */
@@ -29,25 +29,23 @@ interface TimelinePhase {
 /**
  * Group performance data into phases based on time periods
  */
-function calculateTimelinePhases(
-  performanceData: PerformanceRecord[]
-): TimelinePhase[] {
+function calculateTimelinePhases(performanceData: PerformanceRecord[]): TimelinePhase[] {
   if (performanceData.length === 0) return [];
 
   // Sort by timestamp
   const sorted = [...performanceData].sort((a, b) => a.timestamp - b.timestamp);
-  
+
   const firstDate = new Date(sorted[0].timestamp);
   const lastDate = new Date(sorted[sorted.length - 1].timestamp);
-  
+
   // Calculate the time span in months
-  const monthsDiff = 
+  const monthsDiff =
     (lastDate.getFullYear() - firstDate.getFullYear()) * 12 +
     (lastDate.getMonth() - firstDate.getMonth());
-  
+
   // Determine phase division strategy
   let phases: TimelinePhase[] = [];
-  
+
   if (monthsDiff < 3) {
     // Less than 3 months - weekly phases
     phases = calculateWeeklyPhases(sorted);
@@ -58,7 +56,7 @@ function calculateTimelinePhases(
     // Over a year - quarterly phases
     phases = calculateQuarterlyPhases(sorted);
   }
-  
+
   return phases;
 }
 
@@ -68,29 +66,29 @@ function calculateTimelinePhases(
 function calculateWeeklyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
   const phases: TimelinePhase[] = [];
   const weekMap = new Map<string, PerformanceRecord[]>();
-  
-  sorted.forEach(record => {
+
+  sorted.forEach((record) => {
     const date = new Date(record.timestamp);
     const weekStart = new Date(date);
     weekStart.setDate(date.getDate() - date.getDay()); // Start of week
     weekStart.setHours(0, 0, 0, 0);
-    
+
     const weekKey = weekStart.toISOString().split('T')[0];
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, []);
     }
     weekMap.get(weekKey)!.push(record);
   });
-  
+
   weekMap.forEach((records, weekKey) => {
     const weekStart = new Date(weekKey);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    
-    const correct = records.filter(r => r.isCorrect).length;
+
+    const correct = records.filter((r) => r.isCorrect).length;
     const total = records.length;
     const accuracy = total > 0 ? (correct / total) * 100 : 0;
-    
+
     phases.push({
       phase: `Week of ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
       startDate: weekStart,
@@ -101,7 +99,7 @@ function calculateWeeklyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
       masteryScore: calculateMasteryScore(correct, total, accuracy),
     });
   });
-  
+
   return phases.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
@@ -111,26 +109,26 @@ function calculateWeeklyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
 function calculateMonthlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
   const phases: TimelinePhase[] = [];
   const monthMap = new Map<string, PerformanceRecord[]>();
-  
-  sorted.forEach(record => {
+
+  sorted.forEach((record) => {
     const date = new Date(record.timestamp);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    
+
     if (!monthMap.has(monthKey)) {
       monthMap.set(monthKey, []);
     }
     monthMap.get(monthKey)!.push(record);
   });
-  
+
   monthMap.forEach((records, monthKey) => {
     const [year, month] = monthKey.split('-').map(Number);
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0); // Last day of month
-    
-    const correct = records.filter(r => r.isCorrect).length;
+
+    const correct = records.filter((r) => r.isCorrect).length;
     const total = records.length;
     const accuracy = total > 0 ? (correct / total) * 100 : 0;
-    
+
     phases.push({
       phase: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       startDate: monthStart,
@@ -141,7 +139,7 @@ function calculateMonthlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
       masteryScore: calculateMasteryScore(correct, total, accuracy),
     });
   });
-  
+
   return phases.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
@@ -151,28 +149,28 @@ function calculateMonthlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
 function calculateQuarterlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
   const phases: TimelinePhase[] = [];
   const quarterMap = new Map<string, PerformanceRecord[]>();
-  
-  sorted.forEach(record => {
+
+  sorted.forEach((record) => {
     const date = new Date(record.timestamp);
     const quarter = Math.floor(date.getMonth() / 3) + 1;
     const quarterKey = `${date.getFullYear()}-Q${quarter}`;
-    
+
     if (!quarterMap.has(quarterKey)) {
       quarterMap.set(quarterKey, []);
     }
     quarterMap.get(quarterKey)!.push(record);
   });
-  
+
   quarterMap.forEach((records, quarterKey) => {
     const [year, q] = quarterKey.split('-');
     const quarter = parseInt(q.substring(1));
     const quarterStart = new Date(parseInt(year), (quarter - 1) * 3, 1);
     const quarterEnd = new Date(parseInt(year), quarter * 3, 0); // Last day of quarter
-    
-    const correct = records.filter(r => r.isCorrect).length;
+
+    const correct = records.filter((r) => r.isCorrect).length;
     const total = records.length;
     const accuracy = total > 0 ? (correct / total) * 100 : 0;
-    
+
     phases.push({
       phase: quarterKey,
       startDate: quarterStart,
@@ -183,7 +181,7 @@ function calculateQuarterlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] 
       masteryScore: calculateMasteryScore(correct, total, accuracy),
     });
   });
-  
+
   return phases.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
@@ -198,25 +196,24 @@ const MAX_MASTERY_SCORE = 100;
  * Calculate mastery score (weighted by volume and accuracy)
  * Score ranges from 0-100
  */
-function calculateMasteryScore(
-  correct: number,
-  total: number,
-  accuracy: number
-): number {
+function calculateMasteryScore(correct: number, total: number, accuracy: number): number {
   if (total === 0) return 0;
-  
+
   // Base score is accuracy
   let score = accuracy;
-  
+
   // Volume bonus: diminishing returns after VOLUME_BONUS_THRESHOLD questions
-  const volumeBonus = Math.min(MAX_VOLUME_BONUS, (total / VOLUME_BONUS_THRESHOLD) * MAX_VOLUME_BONUS);
+  const volumeBonus = Math.min(
+    MAX_VOLUME_BONUS,
+    (total / VOLUME_BONUS_THRESHOLD) * MAX_VOLUME_BONUS
+  );
   score += volumeBonus;
-  
+
   // Consistency bonus: if accuracy is consistently high
   if (accuracy >= CONSISTENCY_THRESHOLD) {
     score += CONSISTENCY_BONUS;
   }
-  
+
   return Math.min(MAX_MASTERY_SCORE, Math.round(score));
 }
 
@@ -225,7 +222,7 @@ function calculateMasteryScore(
  */
 function getMaxMasteryScore(phases: TimelinePhase[]): number {
   if (phases.length === 0) return 100;
-  return Math.max(...phases.map(p => p.masteryScore), 100);
+  return Math.max(...phases.map((p) => p.masteryScore), 100);
 }
 
 export default function LongitudinalProgressDashboard({
@@ -233,26 +230,21 @@ export default function LongitudinalProgressDashboard({
   userYearInProgram,
   theme = 'light',
 }: LongitudinalProgressDashboardProps): React.ReactElement {
-  const phases = useMemo(
-    () => calculateTimelinePhases(performanceData),
-    [performanceData]
-  );
+  const phases = useMemo(() => calculateTimelinePhases(performanceData), [performanceData]);
 
   const maxScore = useMemo(() => getMaxMasteryScore(phases), [phases]);
-  
+
   const currentMastery = phases.length > 0 ? phases[phases.length - 1].masteryScore : 0;
   const startingMastery = phases.length > 0 ? phases[0].masteryScore : 0;
   const improvement = currentMastery - startingMastery;
-  
+
   const totalQuestions = phases.reduce((sum, p) => sum + p.questions, 0);
 
   if (phases.length === 0) {
     return (
       <div
         className={`rounded-lg p-6 text-center ${
-          theme === 'light'
-            ? 'bg-gray-50 text-gray-500'
-            : 'bg-gray-800 text-gray-400'
+          theme === 'light' ? 'bg-gray-50 text-gray-500' : 'bg-gray-800 text-gray-400'
         }`}
       >
         <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -264,38 +256,22 @@ export default function LongitudinalProgressDashboard({
   }
 
   return (
-    <div
-      className={`rounded-lg p-6 ${
-        theme === 'light' ? 'bg-white' : 'bg-gray-900'
-      }`}
-    >
+    <div className={`rounded-lg p-6 ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}>
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp
-          className={`w-6 h-6 ${
-            theme === 'light' ? 'text-blue-600' : 'text-blue-400'
-          }`}
+          className={`w-6 h-6 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`}
         />
-        <h3
-          className={`text-xl font-bold ${
-            theme === 'light' ? 'text-gray-900' : 'text-white'
-          }`}
-        >
+        <h3 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
           Longitudinal Progress
         </h3>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div
-          className={`rounded-lg p-4 ${
-            theme === 'light' ? 'bg-blue-50' : 'bg-blue-900/20'
-          }`}
-        >
+        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-blue-50' : 'bg-blue-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">
             <Target
-              className={`w-4 h-4 ${
-                theme === 'light' ? 'text-blue-600' : 'text-blue-400'
-              }`}
+              className={`w-4 h-4 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`}
             />
             <span
               className={`text-xs font-medium ${
@@ -314,11 +290,7 @@ export default function LongitudinalProgressDashboard({
           </p>
         </div>
 
-        <div
-          className={`rounded-lg p-4 ${
-            theme === 'light' ? 'bg-green-50' : 'bg-green-900/20'
-          }`}
-        >
+        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-green-50' : 'bg-green-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className={`w-4 h-4 ${
@@ -346,20 +318,17 @@ export default function LongitudinalProgressDashboard({
                 : 'text-red-500'
             }`}
           >
-            {improvement >= 0 ? '+' : ''}{improvement}
+            {improvement >= 0 ? '+' : ''}
+            {improvement}
           </p>
         </div>
 
         <div
-          className={`rounded-lg p-4 ${
-            theme === 'light' ? 'bg-purple-50' : 'bg-purple-900/20'
-          }`}
+          className={`rounded-lg p-4 ${theme === 'light' ? 'bg-purple-50' : 'bg-purple-900/20'}`}
         >
           <div className="flex items-center gap-2 mb-2">
             <Award
-              className={`w-4 h-4 ${
-                theme === 'light' ? 'text-purple-600' : 'text-purple-400'
-              }`}
+              className={`w-4 h-4 ${theme === 'light' ? 'text-purple-600' : 'text-purple-400'}`}
             />
             <span
               className={`text-xs font-medium ${
@@ -396,9 +365,7 @@ export default function LongitudinalProgressDashboard({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
               className={`rounded-lg p-3 ${
-                theme === 'light'
-                  ? 'bg-gray-50 hover:bg-gray-100'
-                  : 'bg-gray-800 hover:bg-gray-700'
+                theme === 'light' ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-800 hover:bg-gray-700'
               } transition-colors`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -410,9 +377,7 @@ export default function LongitudinalProgressDashboard({
                   {phase.phase}
                 </span>
                 <span
-                  className={`text-xs ${
-                    theme === 'light' ? 'text-gray-600' : 'text-gray-400'
-                  }`}
+                  className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}
                 >
                   {phase.questions} questions • {phase.accuracy}% accuracy
                 </span>
@@ -424,9 +389,7 @@ export default function LongitudinalProgressDashboard({
                   transition={{ duration: 0.5, delay: index * 0.05 }}
                   className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-end pr-2"
                 >
-                  <span className="text-xs font-bold text-white">
-                    {phase.masteryScore}
-                  </span>
+                  <span className="text-xs font-bold text-white">{phase.masteryScore}</span>
                 </motion.div>
               </div>
             </motion.div>
@@ -450,20 +413,17 @@ export default function LongitudinalProgressDashboard({
           />
           <div>
             <h4
-              className={`font-semibold mb-1 ${
-                theme === 'light' ? 'text-gray-900' : 'text-white'
-              }`}
+              className={`font-semibold mb-1 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}
             >
               Keep Building Your Foundation
             </h4>
-            <p
-              className={`text-sm ${
-                theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-              }`}
-            >
-              The effort you put in months ago is still contributing to your overall PANCE readiness. 
-              {userYearInProgram === 'Clinical Year' && ' Your didactic foundation continues to strengthen your clinical performance.'}
-              {userYearInProgram === 'Preparing for PANCE' && ' Every session builds on the comprehensive knowledge base you\'ve developed throughout your journey.'}
+            <p className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+              The effort you put in months ago is still contributing to your overall PANCE
+              readiness.
+              {userYearInProgram === 'Clinical Year' &&
+                ' Your didactic foundation continues to strengthen your clinical performance.'}
+              {userYearInProgram === 'Preparing for PANCE' &&
+                " Every session builds on the comprehensive knowledge base you've developed throughout your journey."}
               {!userYearInProgram && ' Each study session adds to your growing mastery.'}
             </p>
           </div>

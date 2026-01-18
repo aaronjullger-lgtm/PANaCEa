@@ -28,20 +28,24 @@ StudyPANaCEa/
 ## Files to Organize
 
 ### Documentation (move to docs/)
-- All *.md files from root
+
+- All \*.md files from root
 - Organize by category
 
 ### Scripts (organize in scripts/)
+
 - Seed scripts → scripts/seed/
 - Migration scripts → scripts/migration/
 - Deprecated scripts → scripts/deprecated/
 
 ### Registry Files
+
 - Keep in root (they're imported directly)
 - These are active code files
 
 ### To Delete
-- *.backup files
-- *.DEPRECATED files
-- *.DELETED files
+
+- \*.backup files
+- \*.DEPRECATED files
+- \*.DELETED files
 - Duplicate/old scripts

@@ -13,7 +13,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -24,7 +27,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -104,22 +107,31 @@ async function main() {
   console.log('='.repeat(60));
 
   const args = process.argv.slice(2);
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : 50;
 
   // Find concepts with gaps
   const allConcepts = await prisma.physiologyConcept.findMany();
-  const conceptsWithGaps = allConcepts.filter(c => {
-    return (!c.drugTargets || c.drugTargets.length === 0) ||
-           (!c.aliases || c.aliases.length === 0) ||
-           (!c.compensatoryMechanisms || c.compensatoryMechanisms.length === 0) ||
-           (!c.associatedLabs || c.associatedLabs.length === 0) ||
-           (!c.decompensationSigns || c.decompensationSigns.length === 0) ||
-           !c.displayName;
+  const conceptsWithGaps = allConcepts.filter((c) => {
+    return (
+      !c.drugTargets ||
+      c.drugTargets.length === 0 ||
+      !c.aliases ||
+      c.aliases.length === 0 ||
+      !c.compensatoryMechanisms ||
+      c.compensatoryMechanisms.length === 0 ||
+      !c.associatedLabs ||
+      c.associatedLabs.length === 0 ||
+      !c.decompensationSigns ||
+      c.decompensationSigns.length === 0 ||
+      !c.displayName
+    );
   });
 
   const toProcess = conceptsWithGaps.slice(0, batchSize);
-  console.log(`Found ${conceptsWithGaps.length} concepts with gaps, processing ${toProcess.length}\n`);
+  console.log(
+    `Found ${conceptsWithGaps.length} concepts with gaps, processing ${toProcess.length}\n`
+  );
 
   let filled = 0;
   let failed = 0;

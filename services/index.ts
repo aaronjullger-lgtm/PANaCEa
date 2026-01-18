@@ -1,11 +1,11 @@
 /**
  * StudyPANaCEa Services - Unified Entry Point
- * 
+ *
  * This module provides organized access to all services in the application.
  * Services are grouped by concern for easier discovery and maintainability.
- * 
+ *
  * ## Import Patterns
- * 
+ *
  * ### Recommended: Import from category
  * ```typescript
  * import { questionService, sessionService } from '@/services/core';
@@ -13,22 +13,22 @@
  * import { geminiService } from '@/services/ai';
  * import { fsrsService, examService } from '@/services/domain';
  * ```
- * 
+ *
  * ### Alternative: Import from main index
  * ```typescript
  * import { core, analytics, ai, domain } from '@/services';
- * 
+ *
  * core.questionService.getQuestion(...);
  * analytics.scorePredictorService.predict(...);
  * ```
- * 
+ *
  * ## Categories
- * 
+ *
  * - **core**: Question management, sessions, drills, content
  * - **analytics**: Performance tracking, predictions, behavioral analysis
  * - **ai**: Gemini integration, content generation, AI tutoring
  * - **domain**: FSRS algorithm, exam simulation, reference data, media
- * 
+ *
  * @module services
  */
 
@@ -48,10 +48,10 @@ export * from './domain';
 
 /**
  * SERVICE CONSOLIDATION SUMMARY
- * 
+ *
  * Original: 77 services in flat structure
  * New: 4 organized categories
- * 
+ *
  * CORE (services/core/):
  * - questionService: Primary question operations
  * - questionPoolService: Question pool management
@@ -62,7 +62,7 @@ export * from './domain';
  * - drillStatsService: Drill statistics
  * - conditionService: Medical conditions
  * - conditionContentService: Condition content loading
- * 
+ *
  * ANALYTICS (services/analytics/):
  * - analyticsService: User analytics engine
  * - performanceService: Performance tracking
@@ -76,7 +76,7 @@ export * from './domain';
  * - researchAnalytics: Research-backed analytics
  * - predictiveEngine: Predictive analytics
  * - masteryPredictor: Mastery velocity prediction
- * 
+ *
  * AI (services/ai/):
  * - geminiService: Google Gemini AI interface
  * - contentPipeline: Automated content generation
@@ -87,7 +87,7 @@ export * from './domain';
  * - socraticService: Socratic hints/tutoring
  * - virtualPreceptor: Virtual preceptor AI
  * - virtualAttending: Virtual attending AI
- * 
+ *
  * DOMAIN (services/domain/):
  * - fsrsService: FSRS v5 spaced repetition
  * - examService: Full exam simulation

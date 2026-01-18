@@ -1,12 +1,12 @@
 /**
  * SmartImage Component
- * 
+ *
  * A performant, accessible image component with:
  * - Lazy loading (Intersection Observer)
  * - Blur-up skeleton loader
  * - Graceful error fallback
  * - Aspect ratio preservation
- * 
+ *
  * Use for medical images (X-rays, CTs, dermoscopy) throughout the app.
  */
 
@@ -17,7 +17,21 @@ import { ImageOff, Loader2 } from 'lucide-react';
 // Only include props that don't conflict with framer-motion
 type SafeImgProps = Pick<
   React.ImgHTMLAttributes<HTMLImageElement>,
-  'crossOrigin' | 'decoding' | 'height' | 'width' | 'referrerPolicy' | 'sizes' | 'srcSet' | 'useMap' | 'id' | 'title' | 'tabIndex' | 'role' | 'aria-label' | 'aria-describedby' | 'aria-hidden'
+  | 'crossOrigin'
+  | 'decoding'
+  | 'height'
+  | 'width'
+  | 'referrerPolicy'
+  | 'sizes'
+  | 'srcSet'
+  | 'useMap'
+  | 'id'
+  | 'title'
+  | 'tabIndex'
+  | 'role'
+  | 'aria-label'
+  | 'aria-describedby'
+  | 'aria-hidden'
 >;
 
 export interface SmartImageProps extends SafeImgProps {
@@ -116,9 +130,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     };
   }, [isInView, src, onLoadSuccess, onLoadError]);
 
-  const aspectRatioStyle = aspectRatio
-    ? { aspectRatio }
-    : {};
+  const aspectRatioStyle = aspectRatio ? { aspectRatio } : {};
 
   return (
     <div
@@ -140,7 +152,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             {blurUp && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800" />
             )}
-            
+
             {/* Loading spinner */}
             {showLoader && loadState === 'loading' && (
               <Loader2 className="w-8 h-8 text-slate-400 dark:text-slate-500 animate-spin z-10" />
@@ -235,7 +247,12 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
               aria-label="Close zoomed view"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </motion.div>

@@ -65,12 +65,14 @@ curl -X POST -H "Authorization: Bearer $AUTH_TOKEN" \
 **Changes Needed**:
 
 1. Remove old import:
+
 ```typescript
 // DELETE THIS
 import { conditionDataLoader } from '../services/conditionDataLoader';
 ```
 
 2. Add API function:
+
 ```typescript
 const fetchSystemQuestion = async (system: string, difficulty?: string) => {
   const response = await fetch('/api/questions/system-drill', {
@@ -78,13 +80,14 @@ const fetchSystemQuestion = async (system: string, difficulty?: string) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ system, difficulty }),
   });
-  
+
   if (!response.ok) throw new Error('Failed to fetch question');
   return response.json();
 };
 ```
 
 3. Update question loading:
+
 ```typescript
 // IN handleSystemSelect or similar
 const question = await fetchSystemQuestion(systemId, difficulty);
@@ -104,6 +107,7 @@ setCurrentQuestion(question);
 **Pattern**: Copy SystemDrillSession and modify:
 
 1. **Change landing page**:
+
 ```typescript
 <DrillLandingPage
   title="Pharmacology Drill"
@@ -115,6 +119,7 @@ setCurrentQuestion(question);
 ```
 
 2. **Drug class selector** instead of system selector:
+
 ```typescript
 const DRUG_CLASSES = [
   { id: 'beta-blockers', name: 'Beta Blockers', icon: Heart },
@@ -125,6 +130,7 @@ const DRUG_CLASSES = [
 ```
 
 3. **Fetch function**:
+
 ```typescript
 const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
   const response = await fetch('/api/questions/pharmacology-drill', {
@@ -132,7 +138,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ drugClass, difficulty }),
   });
-  
+
   if (!response.ok) throw new Error('Failed to fetch question');
   return response.json();
 };
@@ -147,6 +153,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 ### Task 4: Manual QA (1 hour)
 
 **Clinical Library**:
+
 - [ ] Open library
 - [ ] Select different systems (CV, PULM, GI)
 - [ ] Search for conditions ("diabetes", "pneumonia")
@@ -157,6 +164,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 - [ ] Try on mobile (Chrome DevTools)
 
 **System Drill**:
+
 - [ ] Select System Drill
 - [ ] Choose CV system
 - [ ] Verify question loads
@@ -166,6 +174,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 - [ ] Test with different systems
 
 **Pharmacology Drill**:
+
 - [ ] Select Pharmacology Drill
 - [ ] Choose drug class
 - [ ] Verify question loads
@@ -180,7 +189,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 
 **Test These Scenarios**:
 
-1. **Network failure**: 
+1. **Network failure**:
    - Disconnect WiFi mid-request
    - Should show friendly error message
    - Should have "Retry" button
@@ -201,12 +210,14 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 ## Files Reference
 
 ### API Routes
+
 - `functions/api/content/library.ts`
 - `functions/api/content/context-widgets.ts`
 - `functions/api/questions/system-drill.ts`
 - `functions/api/questions/pharmacology-drill.ts`
 
 ### Components
+
 - `components/library/LibraryCard.tsx`
 - `components/library/ContextWidget.tsx`
 - `components/library/LibraryFilters.tsx`
@@ -215,6 +226,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 - `components/drill/PharmacologyDrillSession.tsx` (to create)
 
 ### Documentation
+
 - `SPRINT_6_IMPLEMENTATION.md` - Detailed tracking
 - `SPRINT_6_SUMMARY.md` - Executive summary
 - `SPRINT_6_QUICK_START.md` - This guide
@@ -226,6 +238,7 @@ const fetchPharmQuestion = async (drugClass?: string, difficulty?: string) => {
 ### Issue: API returns 401
 
 **Solution**: Check Clerk authentication
+
 ```typescript
 // Verify authenticateRequest is working
 const { user, error } = await authenticateRequest(context);
@@ -235,6 +248,7 @@ console.log('User:', user, 'Error:', error);
 ### Issue: Context widgets don't load
 
 **Solution**: Check conditionId format
+
 ```typescript
 // Both formats should work
 conditionId: selectedContent.conditionId || selected Content.id
@@ -243,6 +257,7 @@ conditionId: selectedContent.conditionId || selected Content.id
 ### Issue: Questions not random enough
 
 **Solution**: Use proper random skip
+
 ```typescript
 const randomSkip = Math.floor(Math.random() * totalCount);
 const question = await prisma.question.findFirst({
@@ -255,6 +270,7 @@ const question = await prisma.question.findFirst({
 ### Issue: LibraryCard shows raw JSON
 
 **Solution**: Ensure data is properly formatted
+
 ```typescript
 // Check renderContent function handles your data type
 if (typeof content === 'string') {
@@ -283,29 +299,32 @@ Before marking Sprint 6 complete:
 
 ## Performance Targets
 
-| Metric | Target | How to Test |
-|--------|--------|-------------|
-| Library load | <1s | Chrome DevTools Network tab |
-| Context widget | <500ms | Network tab, filter by API call |
-| Question fetch | <300ms | Network tab, filter by API call |
-| Card render | <100ms | React DevTools Profiler |
-| Search debounce | 300ms | Type and observe delay |
+| Metric          | Target | How to Test                     |
+| --------------- | ------ | ------------------------------- |
+| Library load    | <1s    | Chrome DevTools Network tab     |
+| Context widget  | <500ms | Network tab, filter by API call |
+| Question fetch  | <300ms | Network tab, filter by API call |
+| Card render     | <100ms | React DevTools Profiler         |
+| Search debounce | 300ms  | Type and observe delay          |
 
 ---
 
 ## Support Resources
 
 **Documentation**:
+
 - `DATABASE_FIRST_ARCHITECTURE.md` - Architecture overview
 - `CLOUDFLARE_FUNCTIONS_GUIDE.md` - API patterns
 - `SPRINT_5_COMPLETE.md` - Previous sprint reference
 
 **Code Examples**:
+
 - `QuizView.tsx` - Question fetching pattern
 - `components/drill/SystemDrillSession.tsx` - Drill mode pattern
 - `functions/api/questions/generate.ts` - Question generation example
 
 **Getting Help**:
+
 - Check Cloudflare Functions logs (dashboard)
 - Use browser DevTools Console/Network
 - Review Prisma schema for data structure
@@ -315,14 +334,14 @@ Before marking Sprint 6 complete:
 
 ## Time Estimates
 
-| Task | Estimate | Priority |
-|------|----------|----------|
-| Test API endpoints | 30 min | HIGH |
-| Refactor SystemDrillSession | 1-2 hours | HIGH |
-| Create PharmacologyDrillSession | 2-3 hours | HIGH |
-| Manual QA | 1 hour | MEDIUM |
-| Error handling | 30 min | MEDIUM |
-| Performance testing | 30 min | LOW |
+| Task                            | Estimate  | Priority |
+| ------------------------------- | --------- | -------- |
+| Test API endpoints              | 30 min    | HIGH     |
+| Refactor SystemDrillSession     | 1-2 hours | HIGH     |
+| Create PharmacologyDrillSession | 2-3 hours | HIGH     |
+| Manual QA                       | 1 hour    | MEDIUM   |
+| Error handling                  | 30 min    | MEDIUM   |
+| Performance testing             | 30 min    | LOW      |
 
 **Total**: 5-7 hours to complete Sprint 6
 
@@ -341,7 +360,7 @@ Sprint 6 is **DONE** when:
 ✅ Mobile responsive  
 ✅ Build passes  
 ✅ QA complete  
-✅ Deployed to production  
+✅ Deployed to production
 
 ---
 

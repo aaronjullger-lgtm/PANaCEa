@@ -1,6 +1,6 @@
 /**
  * Skeleton Loader Component
- * 
+ *
  * Provides skeleton screens for better perceived performance while content loads.
  * Shows placeholder UI that mimics the structure of the actual content.
  */
@@ -38,18 +38,18 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     lg: 'rounded-lg',
     full: 'rounded-full',
   };
-  
+
   const style = {
     width: typeof width === 'number' ? `${width}px` : width,
     height: typeof height === 'number' ? `${height}px` : height,
   };
-  
+
   const baseClasses = `
     bg-muted/50
     ${radiusClasses[radius]}
     ${className}
   `;
-  
+
   if (variant === 'pulse') {
     return (
       <motion.div
@@ -66,7 +66,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       />
     );
   }
-  
+
   if (variant === 'wave') {
     return (
       <div className={`${baseClasses} overflow-hidden relative`} style={style}>
@@ -84,7 +84,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       </div>
     );
   }
-  
+
   return <div className={baseClasses} style={style} />;
 };
 
@@ -112,11 +112,7 @@ export const SkeletonText: React.FC<{
   return (
     <div className={`space-y-2 ${className}`}>
       {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton
-          key={index}
-          height="1rem"
-          width={index === lines - 1 ? '70%' : '100%'}
-        />
+        <Skeleton key={index} height="1rem" width={index === lines - 1 ? '70%' : '100%'} />
       ))}
     </div>
   );
@@ -133,14 +129,11 @@ export const SkeletonQuizQuestion: React.FC<{ className?: string }> = ({ classNa
         <Skeleton height="1.25rem" width="40%" className="mb-3" />
         <SkeletonText lines={4} />
       </div>
-      
+
       {/* Answer options */}
       <div className="space-y-3 mt-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="p-4 border border-border rounded-lg"
-          >
+          <div key={i} className="p-4 border border-border rounded-lg">
             <Skeleton height="1rem" width="80%" />
           </div>
         ))}
@@ -217,7 +210,7 @@ export const QuestionSkeleton: React.FC<{ className?: string }> = ({ className =
  * ChatSkeleton - Mimics alternating chat bubbles
  * Used for patient encounter loading states
  */
-export const ChatSkeleton: React.FC<{ 
+export const ChatSkeleton: React.FC<{
   messages?: number;
   className?: string;
 }> = ({ messages = 3, className = '' }) => {
@@ -226,26 +219,14 @@ export const ChatSkeleton: React.FC<{
       {Array.from({ length: messages }).map((_, index) => {
         const isUser = index % 2 === 0;
         return (
-          <div
-            key={index}
-            className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-          >
+          <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div
               className={`max-w-[80%] p-4 rounded-lg ${
-                isUser 
-                  ? 'bg-primary/10 rounded-br-none' 
-                  : 'bg-muted rounded-bl-none'
+                isUser ? 'bg-primary/10 rounded-br-none' : 'bg-muted rounded-bl-none'
               }`}
             >
-              <Skeleton 
-                height="1rem" 
-                width={`${60 + Math.random() * 30}%`}
-                className="mb-2"
-              />
-              <Skeleton 
-                height="1rem" 
-                width={`${40 + Math.random() * 40}%`}
-              />
+              <Skeleton height="1rem" width={`${60 + Math.random() * 30}%`} className="mb-2" />
+              <Skeleton height="1rem" width={`${40 + Math.random() * 40}%`} />
             </div>
           </div>
         );
@@ -271,7 +252,7 @@ export const StatCardSkeleton: React.FC<{ className?: string }> = ({ className =
 /**
  * TableSkeleton - Loading state for data tables
  */
-export const TableSkeleton: React.FC<{ 
+export const TableSkeleton: React.FC<{
   rows?: number;
   columns?: number;
   className?: string;
@@ -286,20 +267,13 @@ export const TableSkeleton: React.FC<{
           ))}
         </div>
       </div>
-      
+
       {/* Rows */}
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div 
-          key={rowIndex} 
-          className="p-4 border-b border-border last:border-b-0"
-        >
+        <div key={rowIndex} className="p-4 border-b border-border last:border-b-0">
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
             {Array.from({ length: columns }).map((_, colIndex) => (
-              <Skeleton 
-                key={colIndex} 
-                height="1rem" 
-                width={`${50 + Math.random() * 40}%`}
-              />
+              <Skeleton key={colIndex} height="1rem" width={`${50 + Math.random() * 40}%`} />
             ))}
           </div>
         </div>

@@ -1,6 +1,6 @@
 /**
  * SystemPerformanceWidget.tsx
- * 
+ *
  * Displays system-level performance breakdown from Rolling 360 stats.
  * Highlights under-studied systems (deficit > 5% from blueprint).
  */
@@ -14,20 +14,20 @@ import { useRolling360Stats, SystemStats } from '../../../hooks/useRolling360Sta
 // =============================================================================
 
 const BLUEPRINT_TARGETS: Record<string, number> = {
-  'Cardiovascular': 13,
-  'Pulmonary': 10,
-  'Gastrointestinal': 10,
-  'Musculoskeletal': 10,
-  'HEENT': 9,
-  'Reproductive': 8,
-  'Neurological': 7,
-  'Psychiatry': 6,
-  'Endocrine': 6,
-  'Dermatology': 5,
-  'Genitourinary': 5,
-  'Hematology': 3,
+  Cardiovascular: 13,
+  Pulmonary: 10,
+  Gastrointestinal: 10,
+  Musculoskeletal: 10,
+  HEENT: 9,
+  Reproductive: 8,
+  Neurological: 7,
+  Psychiatry: 6,
+  Endocrine: 6,
+  Dermatology: 5,
+  Genitourinary: 5,
+  Hematology: 3,
   'Infectious Disease': 3,
-  'Renal': 5,
+  Renal: 5,
 };
 
 // =============================================================================
@@ -74,9 +74,7 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       className={`p-3 rounded-xl transition-colors ${
-        isUnderStudied 
-          ? 'bg-amber-500/10 border border-amber-500/20' 
-          : 'bg-slate-700/30'
+        isUnderStudied ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -88,13 +86,15 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
             </span>
           )}
         </div>
-        <span className={`text-sm font-semibold ${
-          stats.accuracy >= 70 
-            ? 'text-teal-400' 
-            : stats.accuracy >= 50 
-              ? 'text-amber-400' 
-              : 'text-red-400'
-        }`}>
+        <span
+          className={`text-sm font-semibold ${
+            stats.accuracy >= 70
+              ? 'text-teal-400'
+              : stats.accuracy >= 50
+                ? 'text-amber-400'
+                : 'text-red-400'
+          }`}
+        >
           {stats.accuracy.toFixed(0)}%
         </span>
       </div>
@@ -103,10 +103,10 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
         <motion.div
           className={`h-full ${
-            stats.accuracy >= 70 
-              ? 'bg-gradient-to-r from-teal-500 to-emerald-500' 
-              : stats.accuracy >= 50 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+            stats.accuracy >= 70
+              ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
+              : stats.accuracy >= 50
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                 : 'bg-gradient-to-r from-red-500 to-pink-500'
           }`}
           initial={{ width: 0 }}
@@ -117,7 +117,9 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
 
       {/* Stats row */}
       <div className="flex items-center justify-between mt-2 text-xs text-slate-400">
-        <span>{stats.correct}/{stats.total} correct</span>
+        <span>
+          {stats.correct}/{stats.total} correct
+        </span>
         <span className={deficit > 0 ? 'text-amber-400' : 'text-slate-500'}>
           {actualPercent.toFixed(0)}% / {targetPercent}% target
         </span>
@@ -136,7 +138,7 @@ interface SystemPerformanceWidgetProps {
   maxSystems?: number;
 }
 
-export function SystemPerformanceWidget({ 
+export function SystemPerformanceWidget({
   className = '',
   showAll = false,
   maxSystems = 6,
@@ -152,7 +154,9 @@ export function SystemPerformanceWidget({
   // Error state
   if (error) {
     return (
-      <div className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}>
+      <div
+        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}
+      >
         <p className="text-red-400 text-center">Failed to load system data</p>
       </div>
     );
@@ -161,12 +165,24 @@ export function SystemPerformanceWidget({
   // Not enough data
   if (!stats || stats.totalInWindow < 10) {
     return (
-      <div className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}>
+      <div
+        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+      >
         <h3 className="text-lg font-semibold text-white mb-4">System Performance</h3>
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
-            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <svg
+              className="w-8 h-8 text-slate-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
             </svg>
           </div>
           <p className="text-slate-400">Answer more questions to see system breakdown</p>
@@ -180,9 +196,7 @@ export function SystemPerformanceWidget({
     .filter(([_, s]) => s.total >= 3) // Need at least 3 questions
     .sort((a, b) => a[1].accuracy - b[1].accuracy);
 
-  const displaySystems = showAll || expanded 
-    ? sortedSystems 
-    : sortedSystems.slice(0, maxSystems);
+  const displaySystems = showAll || expanded ? sortedSystems : sortedSystems.slice(0, maxSystems);
 
   const hasMore = sortedSystems.length > maxSystems;
 
@@ -190,7 +204,9 @@ export function SystemPerformanceWidget({
   const weakestCount = stats.weakestSystems?.length || 0;
 
   return (
-    <div className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}>
+    <div
+      className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-white">System Performance</h3>

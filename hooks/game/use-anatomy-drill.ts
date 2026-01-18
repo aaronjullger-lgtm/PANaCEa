@@ -1,6 +1,6 @@
 /**
  * useAnatomyDrill - Hook for Anatomy Review drill mode
- * 
+ *
  * Fetches anatomy questions from the database and manages drill state.
  * Practice regional anatomy, landmarks, and clinical correlates.
  */
@@ -63,13 +63,13 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
 
     try {
       const response = await fetch('/api/questions?category=anatomy&limit=20');
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch questions: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.questions || data.questions.length === 0) {
         throw new Error('No anatomy questions available. Please run seed script.');
       }
@@ -77,8 +77,8 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
       // Transform database questions
       const transformedQuestions: AnatomyQuestion[] = data.questions.map((q: any) => {
         const options = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : (q.tags || []);
-        
+        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags || [];
+
         // Find index of correct answer in options array
         const correctIndex = options.findIndex((opt: string) => opt === q.correctAnswer);
 
@@ -158,8 +158,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });
@@ -203,8 +202,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });

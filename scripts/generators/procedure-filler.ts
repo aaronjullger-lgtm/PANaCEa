@@ -13,7 +13,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -24,7 +27,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -89,9 +92,13 @@ async function main() {
 
   // Find procedures with gaps
   const allProcedures = await prisma.procedure.findMany();
-  const proceduresWithGaps = allProcedures.filter(p => {
-    return (!p.anatomicLandmarks || p.anatomicLandmarks.length === 0) ||
-           (!p.absoluteContraindications || p.absoluteContraindications.length === 0);
+  const proceduresWithGaps = allProcedures.filter((p) => {
+    return (
+      !p.anatomicLandmarks ||
+      p.anatomicLandmarks.length === 0 ||
+      !p.absoluteContraindications ||
+      p.absoluteContraindications.length === 0
+    );
   });
 
   console.log(`Found ${proceduresWithGaps.length} procedures with gaps\n`);
@@ -100,7 +107,9 @@ async function main() {
   let failed = 0;
 
   for (const procedure of proceduresWithGaps) {
-    console.log(`Processing [${filled + failed + 1}/${proceduresWithGaps.length}]: ${procedure.name}`);
+    console.log(
+      `Processing [${filled + failed + 1}/${proceduresWithGaps.length}]: ${procedure.name}`
+    );
 
     const content = await generateContent(procedure);
     if (!content) {

@@ -59,6 +59,7 @@ Extracts clinical pearls using three regex patterns:
 3. **Clinical Keywords**: Sentences containing "classic presentation", "gold standard", "first-line", "diagnostic criteria", "pathognomonic"
 
 Filters:
+
 - Length: 10-500 characters
 - Quality: Avoids generic statements like "the correct answer is..."
 - Deduplication: Uses Set to remove duplicates
@@ -68,8 +69,8 @@ Filters:
 
 ```typescript
 Input rationale:
-"Paget's disease presents with elevated alkaline phosphatase. Key Takeaway: Look for 
-bone pain, hearing loss, and 'cotton wool' skull appearance on X-ray. The gold standard 
+"Paget's disease presents with elevated alkaline phosphatase. Key Takeaway: Look for
+bone pain, hearing loss, and 'cotton wool' skull appearance on X-ray. The gold standard
 diagnostic test is bone biopsy showing mosaic pattern of lamellar bone."
 
 Extracted pearls:
@@ -160,7 +161,7 @@ seedGeneratedQuestion(question, token, system, poolDifficulty);
 for (let i = 0; i < needed; i++) {
   const q = await fetchNewQuestion(settings, growthAreas);
   generatedQuestions.push(q);
-  
+
   // Pearl Harvester: Extract and save clinical pearls
   if (q.rationale && q.conditionId) {
     const extractedPearls = extractPearlsFromRationale(q.rationale);
@@ -168,7 +169,7 @@ for (let i = 0; i < needed; i++) {
       savePearlsToDatabase(q.conditionId, extractedPearls, token);
     }
   }
-  
+
   seedGeneratedQuestion(q, token, system, poolDifficulty);
 }
 ```
@@ -186,21 +187,19 @@ for (let i = 0; i < needed; i++) {
 const getNextQuestion = useCallback(() => {
   // Try pearls first if available
   if (usePearls && pearlQuestions.length > 0) {
-    const available = pearlQuestions.filter((p) => 
-      !usedQuestions.has(p.conditionId + p.pearl)
-    );
-    
+    const available = pearlQuestions.filter((p) => !usedQuestions.has(p.conditionId + p.pearl));
+
     if (available.length === 0) {
       setUsedQuestions(new Set()); // Reset
     }
-    
+
     const randomPearl = available[Math.floor(Math.random() * available.length)];
     setCurrentQuestion(randomPearl.pearl);
     setCurrentAnswer(randomPearl.conditionName);
     setQuestionSource('pearl');
     return;
   }
-  
+
   // Fallback to buzzwords
   const selectedBuzzword = buzzwordsList[Math.floor(Math.random() * buzzwordsList.length)];
   setCurrentQuestion(selectedBuzzword);
@@ -246,7 +245,7 @@ content: {
   clinicalPresentation?: string;
   diagnosticApproach?: string;
   treatment?: string;
-  
+
   // New field
   pearls?: string[];  // Array of clinical pearls extracted from questions
 }
@@ -282,7 +281,7 @@ const settings = {
   system: 'CARDIO',
   count: 20,
   difficulty: 'SAME',
-  conditions: []
+  conditions: [],
 };
 
 // This will automatically extract and save pearls during generation
@@ -297,9 +296,9 @@ const questions = await getQuestionBatch(settings, getToken);
 import RapidRecallDrill from '@/components/drill/recall/RapidRecallDrill';
 
 // Pass system prop to load system-specific pearls
-<RapidRecallDrill 
-  system="CARDIO" 
-  onExit={() => setMode('menu')} 
+<RapidRecallDrill
+  system="CARDIO"
+  onExit={() => setMode('menu')}
 />
 
 // Console: [RapidRecallDrill] Loaded 47 pearl questions for CARDIO
@@ -308,10 +307,9 @@ import RapidRecallDrill from '@/components/drill/recall/RapidRecallDrill';
 ### Example 3: Fetch Pearls for Study Guide
 
 ```typescript
-const response = await fetch(
-  `/api/conditions/pearls?conditionId=acute-coronary-syndrome`,
-  { headers: { 'Authorization': `Bearer ${token}` } }
-);
+const response = await fetch(`/api/conditions/pearls?conditionId=acute-coronary-syndrome`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
 
 const data = await response.json();
 // {
@@ -352,18 +350,18 @@ Body: {
 
 ```sql
 -- Count conditions with pearls
-SELECT COUNT(*) 
-FROM "MedicalContent" 
+SELECT COUNT(*)
+FROM "MedicalContent"
 WHERE "content"::jsonb ? 'pearls';
 
 -- Average pearls per condition
-SELECT AVG(jsonb_array_length("content"::jsonb->'pearls')) 
-FROM "MedicalContent" 
+SELECT AVG(jsonb_array_length("content"::jsonb->'pearls'))
+FROM "MedicalContent"
 WHERE "content"::jsonb ? 'pearls';
 
 -- Total pearls across all conditions
-SELECT SUM(jsonb_array_length("content"::jsonb->'pearls')) 
-FROM "MedicalContent" 
+SELECT SUM(jsonb_array_length("content"::jsonb->'pearls'))
+FROM "MedicalContent"
 WHERE "content"::jsonb ? 'pearls';
 ```
 
@@ -378,11 +376,11 @@ import { generateEmbedding } from '@/services/embeddingService';
 
 async function rankPearls(pearls: string[]): Promise<string[]> {
   const embeddings = await Promise.all(pearls.map(generateEmbedding));
-  const scores = embeddings.map(e => calculateRelevanceScore(e));
+  const scores = embeddings.map((e) => calculateRelevanceScore(e));
   return pearls
     .map((pearl, i) => ({ pearl, score: scores[i] }))
     .sort((a, b) => b.score - a.score)
-    .map(p => p.pearl);
+    .map((p) => p.pearl);
 }
 ```
 
@@ -397,7 +395,7 @@ Merge similar pearls from different conditions:
 // - Chest Pain Evaluation
 
 // Deduplicate using semantic similarity
-const similarPearls = await findSimilarPearls(pearl, threshold=0.85);
+const similarPearls = await findSimilarPearls(pearl, (threshold = 0.85));
 if (similarPearls.length > 0) {
   await mergePearls(similarPearls);
 }
@@ -410,11 +408,11 @@ Generate new questions directly from pearls:
 ```typescript
 import { generateQuestionFromPearl } from '@/services/pearlQuestionService';
 
-const pearl = "STEMI requires emergent reperfusion within 90 minutes";
+const pearl = 'STEMI requires emergent reperfusion within 90 minutes';
 const question = await generateQuestionFromPearl(pearl, {
   format: 'multiple-choice',
   difficulty: 'SAME',
-  distractors: 3
+  distractors: 3,
 });
 
 // Question: "What is the time goal for emergent reperfusion in STEMI?"
@@ -447,19 +445,19 @@ Body: {
 // tests/services/questionService.test.ts
 describe('extractPearlsFromRationale', () => {
   it('should extract key takeaway', () => {
-    const rationale = "Key Takeaway: STEMI requires reperfusion within 90 minutes.";
+    const rationale = 'Key Takeaway: STEMI requires reperfusion within 90 minutes.';
     const pearls = extractPearlsFromRationale(rationale);
-    expect(pearls).toContain("STEMI requires reperfusion within 90 minutes");
+    expect(pearls).toContain('STEMI requires reperfusion within 90 minutes');
   });
 
   it('should extract clinical keyword sentence', () => {
-    const rationale = "The gold standard test is coronary angiography.";
+    const rationale = 'The gold standard test is coronary angiography.';
     const pearls = extractPearlsFromRationale(rationale);
-    expect(pearls).toContain("The gold standard test is coronary angiography");
+    expect(pearls).toContain('The gold standard test is coronary angiography');
   });
 
   it('should deduplicate pearls', () => {
-    const rationale = "Key Takeaway: Test 1. Clinical Pearl: Test 1.";
+    const rationale = 'Key Takeaway: Test 1. Clinical Pearl: Test 1.';
     const pearls = extractPearlsFromRationale(rationale);
     expect(pearls.length).toBe(1);
   });
@@ -473,17 +471,17 @@ describe('extractPearlsFromRationale', () => {
 describe('Pearl Harvester Integration', () => {
   it('should save pearls after Gemini generation', async () => {
     const question = await getQuestion({...});
-    
+
     // Check that pearls were saved
     const response = await fetch(`/api/conditions/pearls?conditionId=${question.conditionId}`);
     const data = await response.json();
-    
+
     expect(data.pearls.length).toBeGreaterThan(0);
   });
 
   it('should use pearls in RapidRecallDrill', async () => {
     render(<RapidRecallDrill system="CARDIO" />);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Clinical Pearl/i)).toBeInTheDocument();
     });
@@ -518,11 +516,13 @@ describe('Pearl Harvester Integration', () => {
 The Pearl Harvester pattern provides a sustainable, cost-effective approach to building a high-quality clinical knowledge base. By extracting and caching clinical pearls from AI-generated content, we reduce API costs while improving performance and content consistency.
 
 **Key Metrics:**
+
 - 90%+ reduction in AI costs for Rapid Recall mode
 - 10-200x faster question delivery (DB vs. API)
 - Automatic knowledge base growth with every question generation
 
 **Next Steps:**
+
 1. Monitor pearl extraction quality over 1-2 weeks
 2. Implement admin dashboard for pearl curation
 3. Add AI-powered pearl ranking and deduplication

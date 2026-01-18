@@ -1,4 +1,3 @@
-
 /**
  * Shared validation utilities for API endpoints
  */
@@ -9,7 +8,7 @@
  */
 export function validateRequired(body: any, fields: string[]): string[] {
   if (!body) return fields;
-  return fields.filter(field => {
+  return fields.filter((field) => {
     const value = body[field];
     return value === undefined || value === null || value === '';
   });
@@ -132,8 +131,9 @@ export function checkRateLimit(
  */
 export function getRateLimitKey(request: Request, prefix: string = ''): string {
   // Use CF-Connecting-IP header if available, fallback to X-Forwarded-For
-  const ip = request.headers.get('CF-Connecting-IP') ||
-             request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
-             'unknown';
+  const ip =
+    request.headers.get('CF-Connecting-IP') ||
+    request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
+    'unknown';
   return `${prefix}:${ip}`;
 }

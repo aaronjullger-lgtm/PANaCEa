@@ -13,7 +13,7 @@ const JSON_ARRAY_FIELDS = [
   'treatment',
   'clinical_pearls',
   'relatedSystems',
-  'buzzwords'
+  'buzzwords',
 ] as const;
 
 // Fields that are simple strings needing newline cleanup
@@ -34,7 +34,7 @@ const STRING_FIELDS = [
   'rx_side_effects',
   'disposition',
   'mnemonic',
-  'guidelines'
+  'guidelines',
 ] as const;
 
 /**
@@ -45,7 +45,7 @@ function parsePostgresArray(raw: any): any[] | null {
   if (typeof raw !== 'string') return raw;
 
   const trimmed = raw.trim();
-  
+
   // If it's already a JSON array string, parse it
   if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
     try {
@@ -64,10 +64,10 @@ function parsePostgresArray(raw: any): any[] | null {
     // Split by comma, but respect quoted strings
     // This regex matches: "quoted string" OR unquoted_string
     const matches = content.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-    
+
     if (!matches) return [];
 
-    return matches.map(m => {
+    return matches.map((m) => {
       // Remove wrapping double quotes if present and unescape inner quotes
       if (m.startsWith('"') && m.endsWith('"')) {
         return m.slice(1, -1).replace(/""/g, '"');
@@ -87,8 +87,8 @@ function cleanText(text: any): string | null {
   if (!text) return null;
 
   let cleaned = text
-    .replace(/\\n/g, '\n')     // Fix literal escaped newlines
-    .replace(/\r\n/g, '\n')    // Fix Windows line endings
+    .replace(/\\n/g, '\n') // Fix literal escaped newlines
+    .replace(/\r\n/g, '\n') // Fix Windows line endings
     .trim();
 
   // Fix common CSV import artifact: Double quotes around headers
@@ -137,7 +137,7 @@ function normalizeRecord(record: any): { data: any; needsUpdate: boolean; fixes:
     if (!original) continue;
 
     const cleaned = cleanText(original);
-    
+
     if (cleaned !== original) {
       data[field] = cleaned;
       fixes.push(`Cleaned text formatting in ${field}`);
@@ -203,13 +203,13 @@ async function normalizeFormatting() {
               },
             })
           );
-          
+
           totalUpdated++;
-          
+
           // Count fix types
-          if (fixes.some(f => f.includes('Postgres array'))) arraysFix++;
-          if (fixes.some(f => f.includes('text'))) textFix++;
-          
+          if (fixes.some((f) => f.includes('Postgres array'))) arraysFix++;
+          if (fixes.some((f) => f.includes('text'))) textFix++;
+
           console.log(`   ✅ ${record.conditionId}: ${fixes.join(', ')}`);
         }
 
@@ -273,8 +273,7 @@ async function normalizeFormatting() {
 }
 
 // Run the script
-normalizeFormatting()
-  .catch((error) => {
-    console.error('Script failed:', error);
-    process.exit(1);
-  });
+normalizeFormatting().catch((error) => {
+  console.error('Script failed:', error);
+  process.exit(1);
+});

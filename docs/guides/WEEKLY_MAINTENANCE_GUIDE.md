@@ -21,6 +21,7 @@ Central orchestration script that runs 7 comprehensive maintenance operations:
 ### Integration: `automation/weeklyTasks.ts`
 
 Existing weekly automation now calls the maintenance suite, then performs additional audit tasks:
+
 - Content accuracy checks against medical standards
 - Outdated content identification
 - Performance metrics aggregation
@@ -79,11 +80,13 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Identify missing or incomplete content across all conditions.
 
 **Checks**:
+
 - Total conditions in registry vs. medical content
 - Missing medical content records
 - Incomplete content (missing overview, pathophysiology, diagnostics, buzzwords)
 
 **Output**:
+
 ```
 📊 Gap Analysis Results:
    Total conditions: 1180
@@ -98,6 +101,7 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Fill critical content gaps using AI (Gemini 2.5 Pro).
 
 **Operations**:
+
 - Runs `content-doctor:phase2` to generate missing content
 - Creates comprehensive medical content for incomplete conditions
 - Generates all required fields (overview, etiology, pathophysiology, etc.)
@@ -105,6 +109,7 @@ npm run maintenance:weekly -- --verbose
 **Skipped if**: `--skip-generation` flag or no GEMINI_API_KEY
 
 **Output**:
+
 ```
 🤖 Running content-doctor Phase 2...
 ✅ Content generation complete
@@ -117,14 +122,16 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Apply consistent markdown formatting across all content.
 
 **Formatting Rules**:
+
 - **Bold** (`**text**`): Medical abbreviations (PANCE, MI, CHF), key terms (pathognomonic, first-line)
-- *Italic* (`*text*`): Medications (generic names), Latin terms (in situ, in vivo), organisms
+- _Italic_ (`*text*`): Medications (generic names), Latin terms (in situ, in vivo), organisms
 - **Lists**: Consistent bullets (`- item`), proper nesting
 - **Line breaks**: Remove excessive breaks, consistent spacing
 
 **Batch Processing**: 50 conditions per batch to avoid Supabase 5MB limit
 
 **Output**:
+
 ```
 📊 Processing 1180 conditions in 24 batches...
 ✅ Formatting complete
@@ -139,6 +146,7 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Evaluate content adequacy against derived quality standards.
 
 **Standards** (75th percentile benchmarks):
+
 - Overview: ≥50 words
 - Etiology: ≥40 words
 - Pathophysiology: ≥50 words
@@ -150,12 +158,13 @@ npm run maintenance:weekly -- --verbose
 **AI Regeneration**: Automatically enhances inadequate content using Gemini 2.5 Pro
 
 **Output**:
+
 ```
 📊 Quality Assessment Results:
    Total assessed: 1180
    Below standard: 156 (13.2%)
    Meeting standard: 1024 (86.8%)
-   
+
 🤖 Running AI regeneration for inadequate content...
 ✅ Regeneration complete
 ```
@@ -167,6 +176,7 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Regenerate specific fields with significant gaps.
 
 **Fields Monitored**:
+
 - **Buzzwords**: Pathognomonic findings (regenerate if >10 missing)
 - **Mnemonics**: Memory aids (regenerate if >50 missing)
 - **Guidelines**: Clinical guidelines (regenerate if >50 missing)
@@ -176,12 +186,13 @@ npm run maintenance:weekly -- --verbose
 **Threshold Logic**: Only regenerates fields with significant gaps to avoid unnecessary API usage
 
 **Output**:
+
 ```
 📊 Field Gap Analysis:
    Missing buzzwords: 8
    Missing mnemonics: 127
    Missing guidelines: 203
-   
+
 🔧 Regenerating mnemonics...
 ✅ Mnemonics enhanced (127 conditions)
 ```
@@ -193,18 +204,20 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Ensure all content has required fields and proper structure.
 
 **Required Fields**:
+
 - Overview (concise summary)
 - Pathophysiology (disease mechanism)
 - Diagnostics (workup and testing)
 
 **Output**:
+
 ```
 📊 Structure Validation Results:
    Total conditions: 1180
    Structural issues: 23
 ```
 
-*Note*: Structural issues are typically fixed by earlier content generation and regeneration steps.
+_Note_: Structural issues are typically fixed by earlier content generation and regeneration steps.
 
 ---
 
@@ -213,12 +226,14 @@ npm run maintenance:weekly -- --verbose
 **Purpose**: Validate database integrity and identify data quality issues.
 
 **Checks**:
+
 - Registry-to-content sync (condition count vs. medical content count)
 - Orphaned records (content without matching condition in registry)
 - Duplicate conditionId values
 - Data consistency
 
 **Output**:
+
 ```
 ✅ Registry: 1180 conditions
 ✅ Content: 1138 medical records
@@ -284,20 +299,21 @@ npm run maintenance:weekly
 
 ### Timing Estimates
 
-| Operation | Single System | Full Database |
-|-----------|---------------|---------------|
-| Gap Analysis | 1-2 min | 3-5 min |
-| Content Generation | 5-10 min | 30-60 min |
-| Format Standardization | 2-3 min | 20-30 min |
-| Quality Assessment | 3-5 min | 30-45 min |
-| Field Enhancement | 2-5 min | 15-30 min |
-| Structure Validation | 1 min | 3-5 min |
-| Health Check | 30 sec | 1-2 min |
-| **Total** | **15-25 min** | **2-3 hours** |
+| Operation              | Single System | Full Database |
+| ---------------------- | ------------- | ------------- |
+| Gap Analysis           | 1-2 min       | 3-5 min       |
+| Content Generation     | 5-10 min      | 30-60 min     |
+| Format Standardization | 2-3 min       | 20-30 min     |
+| Quality Assessment     | 3-5 min       | 30-45 min     |
+| Field Enhancement      | 2-5 min       | 15-30 min     |
+| Structure Validation   | 1 min         | 3-5 min       |
+| Health Check           | 30 sec        | 1-2 min       |
+| **Total**              | **15-25 min** | **2-3 hours** |
 
 ### API Usage
 
 **Gemini API Calls**:
+
 - Rate limited: 1 second delay between requests
 - Content generation: ~1-2 calls per condition
 - Quality regeneration: ~1-3 calls per inadequate condition
@@ -308,6 +324,7 @@ npm run maintenance:weekly
 ### Database Load
 
 **Batch Processing**:
+
 - Fetch operations: 50 conditions per batch (24 batches for 1,180 conditions)
 - Update operations: Individual records
 - Memory-safe: Never loads entire database into memory
@@ -334,6 +351,7 @@ If health check reports errors:
 ```
 
 **Resolution**:
+
 1. Review error details
 2. Run targeted scripts: `npm run sync:all`, `npm run db:validate`
 3. Manually investigate orphaned/duplicate records
@@ -346,6 +364,7 @@ If health check reports errors:
 ### 1. Test on Single System First
 
 Before running on full database:
+
 ```bash
 npm run maintenance:weekly:dry-run -- --system=HEENT
 npm run maintenance:weekly -- --system=HEENT
@@ -356,6 +375,7 @@ Validate results, then scale to full database.
 ### 2. Run During Low-Traffic Hours
 
 Schedule for 2-4 AM when user activity is minimal to avoid:
+
 - Database connection saturation
 - Slow query performance
 - User-facing service interruptions
@@ -363,6 +383,7 @@ Schedule for 2-4 AM when user activity is minimal to avoid:
 ### 3. Monitor Reports Weekly
 
 Review weekly maintenance reports for:
+
 - Increasing gap trends (missing/incomplete content)
 - Declining quality metrics
 - Recurring health check failures
@@ -371,6 +392,7 @@ Review weekly maintenance reports for:
 ### 4. API Key Management
 
 Ensure `GEMINI_API_KEY` is set in `.env`:
+
 ```bash
 # Check if API key is configured
 echo $GEMINI_API_KEY
@@ -388,18 +410,21 @@ echo "GEMINI_API_KEY=your_key_here" >> .env
 ### Content Doctor
 
 Maintenance suite calls `content-doctor.ts` for:
+
 - Phase 2 content generation
 - Field-specific regeneration (buzzwords, mnemonics, guidelines)
 
 ### Standardization Scripts
 
 Integrates with:
+
 - `standardize-formatting.ts` - Markdown formatting
 - `assess-content-adequacy.ts` - Quality assessment (logic replicated inline)
 
 ### Weekly Automation
 
 `automation/weeklyTasks.ts` now includes maintenance suite, then adds:
+
 - Content accuracy audit
 - Outdated content identification
 - Performance metrics
@@ -413,6 +438,7 @@ Integrates with:
 ### Issue: "GEMINI_API_KEY not set"
 
 **Solution**: Add API key to `.env` file
+
 ```bash
 echo "GEMINI_API_KEY=your_key_here" >> .env
 ```
@@ -424,6 +450,7 @@ echo "GEMINI_API_KEY=your_key_here" >> .env
 ### Issue: Content generation skipped
 
 **Possible causes**:
+
 - `--skip-generation` flag used
 - `GEMINI_API_KEY` not set
 - `--dry-run` mode
@@ -433,6 +460,7 @@ echo "GEMINI_API_KEY=your_key_here" >> .env
 ### Issue: Health check failures
 
 **Actions**:
+
 1. Review specific error messages
 2. Run diagnostic scripts:
    ```bash

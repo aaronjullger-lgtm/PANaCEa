@@ -9,9 +9,11 @@ This document summarizes all the changes made to address the critical bugs, UI s
 ## Action Block 1: Critical Bug Fixes (Auth & Sync) ✅
 
 ### 1. Fix 401 Sync Error ✅
+
 **File:** `lib/services/sync/offlineSync.ts`
 
 **Changes Made:**
+
 - Refactored `syncOperation()` to accept an optional `token` parameter
 - Updated `processQueue()` to accept and pass token to sync operations
 - Modified `debouncedSave()` to accept and use authentication token
@@ -19,6 +21,7 @@ This document summarizes all the changes made to address the critical bugs, UI s
 - Added helper function `retrieveToken()` to reduce code duplication
 
 **Usage:**
+
 ```typescript
 // In your app, pass the token getter to setupAutoSync
 import { useAuth } from '@clerk/clerk-react';
@@ -32,11 +35,13 @@ processQueue(token);
 ```
 
 ### 2. Security Fix (Gemini) ✅
+
 **File:** `services/geminiService.ts`
 
 **Status:** Already secured - verified that the service uses `fetch('/geminiProxy')` pattern and does not expose client-side API keys.
 
 ### 3. Authentication Verification ✅
+
 **File:** `functions/api/_shared/auth.ts`
 
 **Status:** Already correctly implements Clerk token verification using `@clerk/backend`.
@@ -46,13 +51,16 @@ processQueue(token);
 ## Action Block 2: UI/UX Standardization & Theming ✅
 
 ### 1. Global Button Architecture ✅
+
 **File:** `index.css`
 
 **Changes Made:**
+
 - Added `.btn-ghost` component class for transparent buttons with hover effects
 - Existing `.btn-primary` and `.btn-secondary` classes already in place
 
 **Button Classes Available:**
+
 ```css
 .btn-primary   /* Blue button for primary actions */
 .btn-secondary /* White/slate button for secondary actions */
@@ -60,17 +68,21 @@ processQueue(token);
 ```
 
 ### 2. Profile Picture Contrast Fix ✅
+
 **File:** `components/AuthButton.tsx`
 
 **Changes Made:**
+
 - Added `dark:bg-slate-700` background to avatar container
 - Enhanced Clerk UserButton appearance with proper dark mode colors
 - Set background color variables for better contrast
 
 ### 3. Drill Mode Landing Pages ✅
+
 **File:** `components/drill/DrillLandingPage.tsx` (NEW)
 
 **Features:**
+
 - Standardized component for all drill mode entry points
 - Displays title, description, icon, and accent colors
 - Shows stats (attempts, avg score, best score, time spent)
@@ -79,6 +91,7 @@ processQueue(token);
 - Optional history/stats viewer
 
 **Usage:**
+
 ```typescript
 import { DrillLandingPage } from './components/drill/DrillLandingPage';
 
@@ -108,9 +121,11 @@ import { DrillLandingPage } from './components/drill/DrillLandingPage';
 ## Action Block 3: New Features & Logic Improvements ✅
 
 ### 1. Keybind System ✅
+
 **File:** `contexts/KeybindContext.tsx` (NEW)
 
 **Features:**
+
 - Global keyboard shortcut management
 - Prevents ghost triggers by checking for focused input elements
 - Persistent storage in localStorage
@@ -118,6 +133,7 @@ import { DrillLandingPage } from './components/drill/DrillLandingPage';
 - Supports modifier keys (Ctrl, Shift, Alt)
 
 **Default Keybinds:**
+
 - `Enter` - Submit answer
 - `→` - Next question
 - `←` - Previous question
@@ -131,6 +147,7 @@ import { DrillLandingPage } from './components/drill/DrillLandingPage';
 - `Escape` - Exit current mode
 
 **Usage:**
+
 ```typescript
 import { KeybindProvider, useKeybind } from './contexts/KeybindContext';
 
@@ -146,6 +163,7 @@ useKeybind('submit', (event) => {
 ```
 
 ### 2. Rotation Toggle (SRS Override) ✅
+
 **File:** `lib/services/srsService.ts`
 
 **Status:** Infrastructure already exists. The `getDueCards()` function has been updated to support rotation mode with tag-based filtering:
@@ -153,21 +171,24 @@ useKeybind('submit', (event) => {
 ```typescript
 const cards = getDueCards(
   userId,
-  ['Surgery', 'CV'],  // Filter by these tags
-  true                 // Sort by difficulty
+  ['Surgery', 'CV'], // Filter by these tags
+  true // Sort by difficulty
 );
 ```
 
 ### 3. Sparklines ✅
+
 **File:** `components/Sparkline.tsx` (NEW)
 
 **Features:**
+
 - Lightweight SVG sparkline for inline trend visualization
 - SparklineBar component for bar charts
 - TrendIndicator component for showing change with direction and percentage
 - No external dependencies (pure SVG)
 
 **Usage:**
+
 ```typescript
 import { Sparkline, SparklineBar, TrendIndicator } from './components/Sparkline';
 
@@ -203,9 +224,11 @@ import { Sparkline, SparklineBar, TrendIndicator } from './components/Sparkline'
 ## Action Block 4: Infrastructure & Database ✅
 
 ### 1. Prisma Schema Review ✅
+
 **File:** `prisma/schema.prisma`
 
 **Status:** Comprehensive schema already in place with the following key models:
+
 - `User` - User profiles and authentication
 - `PerformanceRecord` - Quiz performance tracking
 - `SRSItem` - Spaced repetition system data
@@ -220,9 +243,11 @@ import { Sparkline, SparklineBar, TrendIndicator } from './components/Sparkline'
 - `QuestionVerification` - Fact-checking and re-validation
 
 ### 2. Question Bank Service ✅
+
 **File:** `lib/services/questionBankService.ts` (NEW)
 
 **Features:**
+
 - Hybrid approach: Query database first, fallback to AI generation
 - Automatically saves AI-generated questions to staging
 - Tracks used questions per user for no-repeat logic
@@ -230,6 +255,7 @@ import { Sparkline, SparklineBar, TrendIndicator } from './components/Sparkline'
 - Reduces API costs by using pre-generated questions
 
 **Usage:**
+
 ```typescript
 import { fetchQuestionHybrid } from './lib/services/questionBankService';
 
@@ -251,19 +277,21 @@ const question = await fetchQuestionHybrid(
    - **Option C: Local PostgreSQL** - Good for development
 
 2. **Set up your DATABASE_URL:**
+
    ```bash
    # Create .env file
    cp .env.example .env
-   
+
    # Add your database URL
    # For Supabase:
    DATABASE_URL="postgresql://user:password@host:5432/database"
-   
+
    # For local PostgreSQL:
    DATABASE_URL="postgresql://localhost:5432/panacea"
    ```
 
 3. **Run Prisma migrations:**
+
    ```bash
    npx prisma migrate dev --name initial_setup
    npx prisma generate
@@ -279,16 +307,20 @@ const question = await fetchQuestionHybrid(
 ## Action Block 5: Cleanup & Activation ✅
 
 ### 1. Routes Already Active ✅
+
 **File:** `App.tsx`
 
 **Status:** The following routes are already implemented and active:
+
 - `/tools/ar-anatomy` → `ARAnatomyMode` component
 - PANRE-LA → `PANRELASimulator` component
 
 ### 2. Certified PA Toggle ✅
+
 **File:** `components/SettingsStatsModal.tsx`
 
 **Changes Made:**
+
 - Added "Certified PA" checkbox in the User Profile section
 - When enabled, grants access to PANRE-LA Simulator
 - Stored in user profile with `isCertifiedPA` flag
@@ -296,13 +328,16 @@ const question = await fetchQuestionHybrid(
 **Location:** Settings → User Profile → Certified PA toggle
 
 ### 3. Types Consolidation ✅
+
 **File:** `src/types/index.ts` (NEW)
 
 **Status:** All types have been consolidated from:
+
 - `/types.ts` (root)
 - `/src/types/content.ts`
 
 **Next Steps Required:**
+
 - Update imports throughout the codebase to use `@/src/types` instead of `@/types`
 - This can be done gradually as files are modified
 
@@ -313,6 +348,7 @@ const question = await fetchQuestionHybrid(
 **Security Scan Results:** ✅ No vulnerabilities detected
 
 All code changes have been scanned using CodeQL and no security issues were found:
+
 - Authentication tokens properly handled
 - No exposed API keys
 - Safe localStorage access (SSR-compatible)
@@ -397,6 +433,7 @@ npm run deploy
 ## Testing Your Changes 🧪
 
 ### 1. Test Authentication Sync
+
 1. Sign in with Clerk
 2. Complete a quiz session
 3. Check browser console for sync logs: `[OfflineSync] ✓ Synced`
@@ -404,23 +441,27 @@ npm run deploy
 5. Go back online and verify sync resumes
 
 ### 2. Test Dark Mode Avatar
+
 1. Toggle to dark mode
 2. Check that profile avatar is visible with good contrast
 3. Verify avatar letter is readable
 
 ### 3. Test Keybinds
+
 1. Open the app
 2. Press `Ctrl+/` to see keyboard shortcuts modal
 3. Try various keybinds (Enter to submit, F to flag, etc.)
 4. Verify keybinds don't trigger when typing in input fields
 
 ### 4. Test Certified PA Toggle
+
 1. Go to Settings
 2. Scroll to "Certified PA" checkbox
 3. Enable it
 4. Verify PANRE-LA Simulator becomes accessible
 
 ### 5. Test Sparklines
+
 1. Navigate to Patient Encounter mode
 2. Check that lab trends display sparklines
 3. Verify sparklines update as values change
@@ -430,12 +471,15 @@ npm run deploy
 ## Migration Notes 📝
 
 ### Breaking Changes
+
 None - all changes are backward compatible.
 
 ### Deprecated Features
+
 None
 
 ### New Dependencies Added
+
 None - all new features use existing dependencies.
 
 ---
@@ -475,4 +519,3 @@ None - all new features use existing dependencies.
 ## Contributors
 
 Special thanks to the development team for implementing these features!
-

@@ -44,7 +44,7 @@ const QUESTION_TYPES = [
   'risk-factor',
   'complication',
   'lab-interpretation',
-  'imaging-interpretation'
+  'imaging-interpretation',
 ];
 
 /**
@@ -53,26 +53,26 @@ const QUESTION_TYPES = [
 async function fetchConditionsFromDatabase(): Promise<ConditionWithContent[]> {
   const medicalContent = await prisma.medicalContent.findMany({
     where: {
-      status: 'published'
+      status: 'published',
     },
     select: {
       id: true,
       conditionId: true,
-      condition: true,    // This is the condition name string
+      condition: true, // This is the condition name string
       system: true,
       overview: true,
       symptoms: true,
       treatment: true,
-    }
+    },
   });
 
-  return medicalContent.map(mc => ({
+  return medicalContent.map((mc) => ({
     conditionId: mc.conditionId,
     medicalContentId: mc.id,
-    name: mc.condition,        // condition field is the name string
+    name: mc.condition, // condition field is the name string
     system: mc.system,
     overview: mc.overview ?? undefined,
-    symptoms: mc.symptoms ? mc.symptoms.split(',').map(s => s.trim()) : undefined,
+    symptoms: mc.symptoms ? mc.symptoms.split(',').map((s) => s.trim()) : undefined,
     treatment: mc.treatment ?? undefined,
   }));
 }
@@ -82,7 +82,7 @@ async function fetchConditionsFromDatabase(): Promise<ConditionWithContent[]> {
  */
 function buildPrompt(condition: ConditionWithContent, questionType: string): string {
   let conditionContext = '';
-  
+
   if (condition.overview) {
     conditionContext += `\nCondition Overview: ${condition.overview.substring(0, 500)}`;
   }
@@ -130,27 +130,30 @@ CRITICAL:
 - Return ONLY valid JSON, no markdown`;
 }
 
-async function generateSeed(condition: ConditionWithContent, questionType: string): Promise<QuestionSeedData | null> {
+async function generateSeed(
+  condition: ConditionWithContent,
+  questionType: string
+): Promise<QuestionSeedData | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
+
   const prompt = buildPrompt(condition, questionType);
-  
+
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     let jsonStr = text;
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1];
-    
+
     jsonStr = jsonStr
       .trim()
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
       .replace(/,(\s*[}\]])/g, '$1');
-    
+
     const parsed = JSON.parse(jsonStr);
-    
+
     return {
       conditionId: condition.conditionId,
       medicalContentId: condition.medicalContentId,
@@ -162,7 +165,7 @@ async function generateSeed(condition: ConditionWithContent, questionType: strin
       correctAnswer: parsed.correctAnswer,
       distractors: parsed.distractors || [],
       explanation: parsed.explanation,
-      tags: parsed.tags || [condition.system.toLowerCase()]
+      tags: parsed.tags || [condition.system.toLowerCase()],
     };
   } catch (error) {
     console.error(`    ⚠️  Error: ${error}`);
@@ -173,12 +176,12 @@ async function generateSeed(condition: ConditionWithContent, questionType: strin
 async function main() {
   console.log('🌱 QuestionSeed Generator V2 (Database-Linked)');
   console.log('═'.repeat(60));
-  
+
   // Fetch conditions from MedicalContent
   console.log('\n📊 Fetching conditions from MedicalContent...');
   const conditions = await fetchConditionsFromDatabase();
   console.log(`   Found ${conditions.length} conditions with published content`);
-  
+
   if (conditions.length === 0) {
     console.log('❌ No published conditions found in MedicalContent!');
     console.log('   Run content seeding scripts first.');
@@ -196,48 +199,48 @@ async function main() {
   for (const [system, count] of Object.entries(systemCounts).sort((a, b) => b[1] - a[1])) {
     console.log(`     ${system}: ${count} conditions`);
   }
-  
+
   const existing = await prisma.questionSeed.count();
   console.log(`\nCurrent seeds: ${existing}`);
-  
+
   const TARGET = 150;
   const toGenerate = Math.max(0, TARGET - existing);
   console.log(`Target: ${TARGET}, Need to generate: ${toGenerate}`);
-  
+
   if (toGenerate === 0) {
     console.log('✅ Already at target!');
     await prisma.$disconnect();
     return;
   }
-  
+
   // Get existing seeds to avoid duplicates
   const existingSeeds = await prisma.questionSeed.findMany({
-    select: { conditionId: true, questionType: true }
+    select: { conditionId: true, questionType: true },
   });
-  const existingKeys = new Set(existingSeeds.map(s => `${s.conditionId}-${s.questionType}`));
-  
+  const existingKeys = new Set(existingSeeds.map((s) => `${s.conditionId}-${s.questionType}`));
+
   let created = 0;
   let failed = 0;
-  
+
   for (const condition of conditions) {
     if (created >= toGenerate) break;
-    
+
     // Create different question types for each condition
     for (const qType of QUESTION_TYPES) {
       if (created >= toGenerate) break;
-      
+
       const key = `${condition.conditionId}-${qType}`;
       if (existingKeys.has(key)) continue;
-      
+
       console.log(`  🔄 [${created + 1}/${toGenerate}] ${condition.name} - ${qType}...`);
-      
+
       const data = await generateSeed(condition, qType);
-      
+
       if (!data) {
         failed++;
         continue;
       }
-      
+
       try {
         await prisma.questionSeed.create({
           data: {
@@ -254,10 +257,10 @@ async function main() {
             explanation: data.explanation,
             difficulty: 'medium', // All seeds are PANCE-level
             tags: data.tags,
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
-        
+
         existingKeys.add(key);
         created++;
         console.log(`    ✅ Created (linked to: ${data.conditionId})`);
@@ -265,19 +268,19 @@ async function main() {
         console.error(`    ❌ Save failed: ${error}`);
         failed++;
       }
-      
-      await new Promise(r => setTimeout(r, 600));
+
+      await new Promise((r) => setTimeout(r, 600));
     }
   }
-  
+
   console.log('\n' + '═'.repeat(60));
   console.log('📊 Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Failed: ${failed}`);
-  
+
   const total = await prisma.questionSeed.count();
   console.log(`   Total in database: ${total}`);
-  
+
   await prisma.$disconnect();
 }
 

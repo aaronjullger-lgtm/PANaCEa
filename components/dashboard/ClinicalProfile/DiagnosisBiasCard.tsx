@@ -17,7 +17,10 @@ export const DiagnosisBiasCard: React.FC<Props> = ({ biases }) => {
       ) : (
         <ul className="space-y-2">
           {biases.slice(0, 5).map((item) => (
-            <li key={item.condition} className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-200">
+            <li
+              key={item.condition}
+              className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-200"
+            >
               <span>{item.condition}</span>
               <span className="text-slate-500">{item.count}×</span>
             </li>

@@ -79,18 +79,19 @@ export async function calculatePercentile(challengeId: string, userScore: number
 
   if (allAttempts.length === 0) return 100;
 
-  const worseCount = allAttempts.filter(a => a.score < userScore).length;
+  const worseCount = allAttempts.filter((a) => a.score < userScore).length;
   return Math.round((worseCount / allAttempts.length) * 100);
 }
 
-export async function getRankingForChallenge(challengeId: string, userScore: number, userTimeMs: number): Promise<number> {
+export async function getRankingForChallenge(
+  challengeId: string,
+  userScore: number,
+  userTimeMs: number
+): Promise<number> {
   const allAttempts = await prisma.grandRoundsAttempt.findMany({
     where: { challengeId },
     select: { score: true, timeSpentMs: true },
-    orderBy: [
-      { score: 'desc' },
-      { timeSpentMs: 'asc' },
-    ],
+    orderBy: [{ score: 'desc' }, { timeSpentMs: 'asc' }],
   });
 
   let rank = 1;
@@ -106,4 +107,3 @@ export async function getRankingForChallenge(challengeId: string, userScore: num
 
   return rank;
 }
-

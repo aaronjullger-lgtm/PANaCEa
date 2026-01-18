@@ -1,35 +1,35 @@
 // Lazy load conditions to improve initial bundle size
 let conditionsCache: Record<string, unknown> | null = null;
-const CONTENT_API_PATH = "/api/content/all";
+const CONTENT_API_PATH = '/api/content/all';
 
 async function getConditions(): Promise<Record<string, unknown>> {
   if (conditionsCache) {
     return conditionsCache;
   }
-  
+
   // Import shared API config utility
   const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
   const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
   try {
     const response = await fetch(apiUrl);
-    
+
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       conditionsCache = await response.json();
       console.log(`✓ Loaded ${Object.keys(conditionsCache).length} conditions from database`);
       return conditionsCache;
     }
-    
+
     // Database API returned non-OK response
     console.warn(`Database API returned status ${response.status} for ${apiUrl}`);
-    
+
     // Try to get error details from response
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
       const errorData = await response.json();
       console.error('API Error:', errorData);
-      
+
       if (response.status === 503) {
         console.error(`⚠ DATABASE UNAVAILABLE: ${errorData.message || 'Backend cannot connect to database'}
   This is expected if:
@@ -41,7 +41,7 @@ async function getConditions(): Promise<Record<string, unknown>> {
       console.error(`⚠ API returned non-JSON response (likely HTML 404 page)
   Backend server is not running or endpoint does not exist`);
     }
-    
+
     console.error(`
 REQUIRED ACTIONS:
   1. Start backend: npm run dev:server or npm run dev:all
@@ -58,8 +58,8 @@ REQUIRED ACTIONS:
   return {};
 }
 
-export type SectionData = 
-  | string[] 
+export type SectionData =
+  | string[]
   | { type: 'steps'; items: { title: string; content: string }[] }
   | { type: 'grid'; items: Record<string, string> }
   | null;
@@ -75,85 +75,79 @@ export interface ConditionEntry {
   sections: ConditionSections;
 }
 
-const PLACEHOLDER_TEXT = "[NO CONTENT PROVIDED]";
+const PLACEHOLDER_TEXT = '[NO CONTENT PROVIDED]';
 
-export function normalizeConditionContent(
-  value?: ConditionContent
-): ConditionContent {
+export function normalizeConditionContent(value?: ConditionContent): ConditionContent {
   if (value == null) return null;
 
   // Pass through structured data (Steps/Grid)
-  if (typeof value === 'object' && !Array.isArray(value) && 'type' in value && (value.type === 'steps' || value.type === 'grid')) {
+  if (
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    'type' in value &&
+    (value.type === 'steps' || value.type === 'grid')
+  ) {
     return value as SectionData;
   }
 
-  if (typeof value === "string") return value;
+  if (typeof value === 'string') return value;
 
   if (Array.isArray(value)) {
     const parts = value
-      .map((item) =>
-        typeof item === "string"
-          ? item
-          : item != null
-            ? String(item)
-            : ""
-      )
+      .map((item) => (typeof item === 'string' ? item : item != null ? String(item) : ''))
       .filter(Boolean);
 
     // Preserve arrays so the renderer can display true bullet lists.
     return parts.length ? parts : null;
   }
 
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     // Handle objects with notes, imaging, labs, or other keys
     const entries = Object.entries(value);
     const allParts: string[] = [];
-    
+
     for (const [, val] of entries) {
-      if (typeof val === "string") {
+      if (typeof val === 'string') {
         allParts.push(val);
       } else if (Array.isArray(val)) {
         const arrayParts = val
-          .map((item) =>
-            typeof item === "string"
-              ? item
-              : item != null
-                ? String(item)
-                : ""
-          )
+          .map((item) => (typeof item === 'string' ? item : item != null ? String(item) : ''))
           .filter(Boolean);
         allParts.push(...arrayParts);
       }
     }
-    
-    return allParts.length ? allParts.join("\n") : null;
+
+    return allParts.length ? allParts.join('\n') : null;
   }
 
   return null;
 }
 
 function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
-  if (!raw || typeof raw !== "object") return undefined;
+  if (!raw || typeof raw !== 'object') return undefined;
   const entry = raw as Record<string, unknown>;
 
   // Check if this is the new format (sections directly) or old format (with condition/sections wrapper)
-  const hasConditionKey = "condition" in entry && typeof entry.condition === "string";
-  const hasSectionsKey = "sections" in entry && entry.sections !== null && typeof entry.sections === "object";
-  
+  const hasConditionKey = 'condition' in entry && typeof entry.condition === 'string';
+  const hasSectionsKey =
+    'sections' in entry && entry.sections !== null && typeof entry.sections === 'object';
+
   let conditionId: string;
   let rawSections: Record<string, unknown>;
-  
+
   if (hasSectionsKey) {
     // Old format: { condition: "...", sections: { ... } }
-    conditionId = hasConditionKey && (entry.condition as string).trim().length > 0
-      ? (entry.condition as string)
-      : id;
+    conditionId =
+      hasConditionKey && (entry.condition as string).trim().length > 0
+        ? (entry.condition as string)
+        : id;
     rawSections = entry.sections as Record<string, unknown>;
   } else {
     // New format: sections are directly on the object
-    conditionId = hasConditionKey && (entry.condition as string).trim().length > 0
-      ? (entry.condition as string)
-      : id;
+    conditionId =
+      hasConditionKey && (entry.condition as string).trim().length > 0
+        ? (entry.condition as string)
+        : id;
     rawSections = entry;
   }
 
@@ -170,11 +164,11 @@ function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
     'updatedAt',
   ]);
 
-  if (rawSections && typeof rawSections === "object") {
+  if (rawSections && typeof rawSections === 'object') {
     for (const [key, val] of Object.entries(rawSections)) {
       // Skip metadata keys present in DB/API payloads
       if (METADATA_KEYS.has(key)) continue;
-      
+
       // Normalize all value types (strings, arrays, objects with notes/imaging/labs)
       const normalized = normalizeConditionContent(val as ConditionContent);
       if (normalized !== null) {
@@ -193,26 +187,23 @@ export async function loadConditions(): Promise<Record<string, ConditionEntry | 
   if (CONDITIONS_CACHE) {
     return CONDITIONS_CACHE;
   }
-  
+
   const conditions = await getConditions();
   CONDITIONS_CACHE = Object.fromEntries(
-    Object.entries(conditions).map(([id, raw]) => [
-      id,
-      normalizeEntry(raw, id),
-    ])
+    Object.entries(conditions).map(([id, raw]) => [id, normalizeEntry(raw, id)])
   ) as Record<string, ConditionEntry | undefined>;
-  
+
   return CONDITIONS_CACHE;
 }
 
 /**
  * @deprecated Legacy synchronous export for backward compatibility.
  * WARNING: This object is empty until loadConditions() is called.
- * 
+ *
  * Migration path:
  * - Replace: const data = CONDITIONS;
  * - With: const data = await loadConditions();
- * 
+ *
  * This synchronous export will be removed in a future version.
  */
 export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
@@ -220,29 +211,30 @@ export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
 export function isMeaningfulContent(value?: unknown): boolean {
   if (value == null) return false;
 
-  if (typeof value === "string") {
-    const normalized = value.replace(/\s+/g, " ").trim();
+  if (typeof value === 'string') {
+    const normalized = value.replace(/\s+/g, ' ').trim();
     if (!normalized) return false;
     return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
   }
 
   if (Array.isArray(value)) {
     return value.some((item) => {
-      if (typeof item !== "string") return item != null;
-      const normalized = item.replace(/\s+/g, " ").trim();
+      if (typeof item !== 'string') return item != null;
+      const normalized = item.replace(/\s+/g, ' ').trim();
       return normalized.length > 0 && normalized.toUpperCase() !== PLACEHOLDER_TEXT;
     });
   }
 
   // Structured sections (steps/grid)
-  if (typeof value === "object" && value !== null && "type" in value) {
+  if (typeof value === 'object' && value !== null && 'type' in value) {
     const typed = value as any;
-    if (typed.type === "steps") return Array.isArray(typed.items) && typed.items.length > 0;
-    if (typed.type === "grid") return typed.items && typeof typed.items === "object" && Object.keys(typed.items).length > 0;
+    if (typed.type === 'steps') return Array.isArray(typed.items) && typed.items.length > 0;
+    if (typed.type === 'grid')
+      return typed.items && typeof typed.items === 'object' && Object.keys(typed.items).length > 0;
   }
 
   // Any other object: treat as meaningful if it has keys.
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     return Object.keys(value as Record<string, unknown>).length > 0;
   }
 
@@ -250,7 +242,7 @@ export function isMeaningfulContent(value?: unknown): boolean {
 }
 
 export async function getConditionById(id: string): Promise<ConditionEntry | undefined> {
-  if (!id || typeof id !== "string") return undefined;
+  if (!id || typeof id !== 'string') return undefined;
 
   // Fast path: if we've already loaded the full cache (or a prior single fetch), use it.
   if (conditionsCache && conditionsCache[id]) {
@@ -284,6 +276,6 @@ export async function getConditionById(id: string): Promise<ConditionEntry | und
 
 // Synchronous version for backward compatibility (may return undefined if not loaded)
 export function getConditionByIdSync(id: string): ConditionEntry | undefined {
-  if (!id || typeof id !== "string" || !conditionsCache) return undefined;
+  if (!id || typeof id !== 'string' || !conditionsCache) return undefined;
   return normalizeEntry(conditionsCache[id], id);
 }

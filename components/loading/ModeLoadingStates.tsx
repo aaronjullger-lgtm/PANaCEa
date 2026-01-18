@@ -1,6 +1,6 @@
 /**
  * Enhanced Mode Loading States
- * 
+ *
  * Specialized skeleton loaders for each training mode to improve perceived performance.
  * These match the actual content structure of each mode for seamless transitions.
  */
@@ -46,11 +46,11 @@ export const GrandRoundsLoadingState: React.FC = () => {
               key={i}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              transition={{ 
-                duration: 0.5, 
+              transition={{
+                duration: 0.5,
                 delay: i * 0.1,
                 repeat: Infinity,
-                repeatType: 'reverse'
+                repeatType: 'reverse',
               }}
               className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
             >
@@ -169,8 +169,8 @@ export const CramModeLoadingState: React.FC = () => {
  * Generic loading state with pulsing message
  * Fallback for modes without specialized skeletons
  */
-export const GenericModeLoadingState: React.FC<{ message?: string }> = ({ 
-  message = 'Loading training mode...' 
+export const GenericModeLoadingState: React.FC<{ message?: string }> = ({
+  message = 'Loading training mode...',
 }) => {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">

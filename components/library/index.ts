@@ -1,9 +1,9 @@
 /**
  * Library Components Barrel Export
- * 
+ *
  * Phase 3+ components for the Medical Content Library overhaul
  * Comprehensive component suite for condition reference and study
- * 
+ *
  * Now includes intelligent DDx features with database integration
  */
 
@@ -46,9 +46,9 @@ export { ConditionMaster } from './ConditionMaster';
 export { ConditionDetailPanel } from './ConditionDetailPanel';
 
 // Hooks
-export { 
-  useLibraryPreferences, 
-  useDebouncedSearch, 
+export {
+  useLibraryPreferences,
+  useDebouncedSearch,
   useRecentConditions,
   useConditionBookmarks,
 } from './hooks';

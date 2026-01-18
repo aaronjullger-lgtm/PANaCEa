@@ -1,11 +1,11 @@
-import React from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import { ConditionContent } from "../../lib/loadConditions";
-import TreatmentRenderer from "./renderers/TreatmentRenderer";
-import DiagnosticsRenderer from "./renderers/DiagnosticsRenderer";
-import { sanitizeMedicalMarkdown } from "./markdownSanitizer";
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { ConditionContent } from '../../lib/loadConditions';
+import TreatmentRenderer from './renderers/TreatmentRenderer';
+import DiagnosticsRenderer from './renderers/DiagnosticsRenderer';
+import { sanitizeMedicalMarkdown } from './markdownSanitizer';
 
 interface FormattedSectionProps {
   content?: ConditionContent;
@@ -13,7 +13,7 @@ interface FormattedSectionProps {
 
 /**
  * FormattedSection - Renders medical condition content from the database.
- * 
+ *
  * The DB content is already well-formatted markdown. This component:
  * - Renders string fields (overview, pathophysiology, etc.) directly as markdown
  * - Renders array fields (symptoms, physicalExam, etc.) as bullet lists
@@ -25,7 +25,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   // Handle Structured Data (Steps/Grid) - legacy renderers
   if (typeof content === 'object' && !Array.isArray(content) && content !== null) {
     const typedContent = content as any;
-    
+
     if (typedContent.type === 'steps') {
       return <TreatmentRenderer items={typedContent.items} />;
     }
@@ -36,7 +36,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   }
 
   // Prepare Markdown Content
-  let markdown = "";
+  let markdown = '';
 
   if (Array.isArray(content)) {
     // Array fields: symptoms, physicalExam, riskFactors, complications, etc.
@@ -48,18 +48,18 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         if (typeof item !== 'string') return '';
         const cleaned = sanitizeMedicalMarkdown(item.trim());
         if (!cleaned) return '';
-        
+
         // Check if the item already starts with a list marker
         if (/^\s*[-*+]\s/.test(cleaned)) {
           return cleaned;
         }
-        
+
         // Make it a bullet point
         return `- ${cleaned}`;
       })
       .filter(Boolean)
-      .join("\n");
-  } else if (typeof content === "string") {
+      .join('\n');
+  } else if (typeof content === 'string') {
     // String fields: overview, pathophysiology, epidemiology, etc.
     // Already properly formatted markdown from DB - preserve as-is
     if (!content.trim()) return null;
@@ -81,21 +81,21 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
           h1: ({ node, ...props }) => <h4 className="condition-heading-1" {...props} />,
           h2: ({ node, ...props }) => <h5 className="condition-heading-2" {...props} />,
           h3: ({ node, ...props }) => <h6 className="condition-heading-3" {...props} />,
-          
+
           // Ensure tables are scrollable on narrow screens
           table: ({ node, ...props }) => (
             <div className="condition-table-wrap">
               <table {...props} />
             </div>
           ),
-          
+
           // Style list items for better readability
           li: ({ node, children, ...props }) => (
             <li className="condition-list-item" {...props}>
               {children}
             </li>
           ),
-          
+
           // Style paragraphs within list items
           p: ({ node, children, ...props }) => (
             <p className="condition-paragraph" {...props}>

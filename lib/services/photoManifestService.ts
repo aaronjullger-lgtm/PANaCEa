@@ -1,6 +1,6 @@
 /**
  * Photo Manifest Service
- * 
+ *
  * Fetches medical images from the database/storage for photo drill modes
  * Replaces placeholder images with actual medical images from Supabase
  * Only fetches APPROVED images for use in production
@@ -52,10 +52,10 @@ export async function getImageForCondition(
       },
       take: 1,
     });
-    
+
     if (approvedMedia && approvedMedia.length > 0) {
       const firstImage = approvedMedia[0];
-      
+
       return {
         imageUrl: firstImage.originalUrl || '',
         thumbnailUrl: firstImage.thumbnailUrl || undefined,
@@ -66,7 +66,7 @@ export async function getImageForCondition(
   } catch (error) {
     console.warn(`Failed to fetch image for ${conditionName}:`, error);
   }
-  
+
   // Fallback to placeholder
   return getPlaceholderImage(conditionName, category);
 }
@@ -107,9 +107,9 @@ export async function getImagesForCondition(
       },
       take: limit,
     });
-    
+
     if (approvedMedia && approvedMedia.length > 0) {
-      return approvedMedia.map(m => ({
+      return approvedMedia.map((m) => ({
         imageUrl: m.originalUrl || '',
         thumbnailUrl: m.thumbnailUrl || undefined,
         educationalCaption: m.description || getDefaultCaption(conditionName, category),
@@ -119,7 +119,7 @@ export async function getImagesForCondition(
   } catch (error) {
     console.warn(`Failed to fetch images for ${conditionName}:`, error);
   }
-  
+
   // Fallback to single placeholder
   return [getPlaceholderImage(conditionName, category)];
 }
@@ -162,7 +162,7 @@ export async function batchGetImages(
   conditions: Array<{ name: string; category: PhotoCategory }>
 ): Promise<Map<string, PhotoInfo>> {
   const result = new Map<string, PhotoInfo>();
-  
+
   // Process all in parallel
   await Promise.all(
     conditions.map(async ({ name, category }) => {
@@ -170,7 +170,7 @@ export async function batchGetImages(
       result.set(name, photo);
     })
   );
-  
+
   return result;
 }
 
@@ -182,9 +182,9 @@ function getPlaceholderImage(conditionName: string, category: PhotoCategory): Ph
     derm: '8b5cf6',
     radiology: '0ea5e9',
   };
-  
+
   const color = categoryColors[category];
-  
+
   return {
     imageUrl: `https://placehold.co/600x400/${color}/FFF?text=${encodeURIComponent(conditionName)}`,
     educationalCaption: getDefaultCaption(conditionName, category),

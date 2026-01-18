@@ -1,70 +1,73 @@
 /**
  * API Endpoint: /api/performance/record
- * 
+ *
  * Record drill session performance data to the database
+ * 
+ * SECURITY: Sprint 4 - Converted to middleware pattern
+ * - authenticatedEndpoint for auth enforcement
+ * - Zod schema validation
+ * - Secure logging
+ * - Safe Prisma disconnect
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, PerformanceRecordSchema } from '../_shared/schemas';
+import { z } from 'zod';
+import {
+  authenticatedEndpoint,
+  withCors,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { logger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+// Zod schema for performance record submission
+const PerformanceRecordSchema = z.object({
+  drillType: z.string().min(1).max(100),
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+  questionsAttempted: z.number().int().min(0).max(1000),
+  correctAnswers: z.number().int().min(0).max(1000),
+  accuracy: z.number().min(0).max(1),
+  timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
+  bestStreak: z.number().int().min(0).max(1000).optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  try {
-    // Authenticate request
-    const env = context.env as Env;
-    const authResult = await authenticateRequest(context.request as any, env);
-    if (!authResult || !authResult.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
 
-    // Validate request body with Zod schema
-    const validation = await validateRequest(context.request as any, PerformanceRecordSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
+export const onRequestOptions = withCors();
 
-    const {
-      drillType,
-      startTime,
-      endTime,
-      questionsAttempted,
-      correctAnswers,
-      accuracy,
-      timeSpent,
-      bestStreak,
-      metadata,
-    } = validation.data;
-
-    // Create Prisma client
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(
+  PerformanceRecordSchema,
+  async (context: AuthenticatedContext & ValidatedContext<PerformanceRecordInput>) => {
+    const { env, auth, validated } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
+      const {
+        drillType,
+        startTime,
+        endTime,
+        questionsAttempted,
+        correctAnswers,
+        accuracy,
+        timeSpent,
+        bestStreak,
+        metadata,
+      } = validated;
+
       // Check if user exists in database
       const user = await prisma.user.findUnique({
-        where: { clerkId: authResult.userId },
+        where: { clerkId: auth.userId },
         select: { id: true },
       });
 
       if (!user) {
-        return new Response(
-          JSON.stringify({
-            error: 'User not found',
-            message: 'User must be synced from Clerk webhook first',
-          }),
-          {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
+        logger.warn('User not found for performance record', { clerkId: auth.userId });
+        return {
+          status: 404,
+          error: 'User not found. User must be synced from Clerk webhook first.',
+        };
       }
 
       // Create performance record
@@ -76,39 +79,36 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           totalQuestions: questionsAttempted,
           accuracy,
           timeSpent,
-          streak: bestStreak,
+          streak: bestStreak ?? 0,
           sessionStart: new Date(startTime),
           sessionEnd: new Date(endTime),
           metadata: metadata ? JSON.stringify(metadata) : null,
         },
       });
 
-      // Return success response
-      return new Response(
-        JSON.stringify({
+      logger.info('Performance record created', {
+        userId: user.id,
+        recordId: record.id,
+        drillType,
+        accuracy,
+      });
+
+      return {
+        data: {
           success: true,
           recordId: record.id,
           message: 'Performance data recorded successfully',
-        }),
-        {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    } finally {
-      await prisma.$disconnect();
-    }
-  } catch (error) {
-    console.error('Error recording performance:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
+        },
+        status: 201,
+      };
+    } catch (error) {
+      logger.error('Error recording performance', error, { userId: auth.userId });
+      return {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+        error: 'Failed to record performance data',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-};
+);

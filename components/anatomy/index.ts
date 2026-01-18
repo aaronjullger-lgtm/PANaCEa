@@ -1,6 +1,6 @@
 /**
  * Anatomy Components Index
- * 
+ *
  * Central export for 3D anatomy model viewing components
  */
 

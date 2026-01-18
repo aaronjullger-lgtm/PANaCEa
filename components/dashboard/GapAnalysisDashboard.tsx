@@ -53,7 +53,7 @@ const StarShape = (props: any) => {
     const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
     points.push([cx + size * Math.cos(angle), cy + size * Math.sin(angle)]);
     const innerAngle = angle + Math.PI / 5;
-    points.push([cx + (size * 0.4) * Math.cos(innerAngle), cy + (size * 0.4) * Math.sin(innerAngle)]);
+    points.push([cx + size * 0.4 * Math.cos(innerAngle), cy + size * 0.4 * Math.sin(innerAngle)]);
   }
   return (
     <polygon
@@ -103,7 +103,9 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-amber-600">#{index + 1}</span>
-                  <h4 className="font-semibold text-slate-900 dark:text-slate-100">{system.name}</h4>
+                  <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                    {system.name}
+                  </h4>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                   +{Math.round(system.topPerformerGap)}% to reach Top 10%
@@ -149,11 +151,15 @@ const CustomTooltip = ({ active, payload }: any) => {
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="text-slate-600 dark:text-slate-400">Cohort Average:</span>
-          <span className="font-semibold text-slate-700 dark:text-slate-300">{data.cohortAverage}%</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
+            {data.cohortAverage}%
+          </span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="text-slate-600 dark:text-slate-400">Top 10%:</span>
-          <span className="font-semibold text-amber-600 dark:text-amber-500">{data.cohortP90}%</span>
+          <span className="font-semibold text-amber-600 dark:text-amber-500">
+            {data.cohortP90}%
+          </span>
         </div>
         <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
@@ -242,7 +248,9 @@ export const GapAnalysisDashboard: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md text-center">
           <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Unable to Load Analysis</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+            Unable to Load Analysis
+          </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">{error || 'No data available'}</p>
           <button
             onClick={() => window.location.reload()}
@@ -295,7 +303,8 @@ export const GapAnalysisDashboard: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Gap Analysis</h1>
           </div>
           <p className="text-slate-600 dark:text-slate-400">
-            Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total attempts
+            Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total
+            attempts
           </p>
         </motion.div>
 
@@ -338,7 +347,10 @@ export const GapAnalysisDashboard: React.FC = () => {
               <span className="text-sm text-zinc-600">High Priority Areas</span>
             </div>
             <p className="text-2xl font-bold text-zinc-900">
-              {data.systems.filter((s) => s.status === 'critical' || s.status === 'weakness').length}
+              {
+                data.systems.filter((s) => s.status === 'critical' || s.status === 'weakness')
+                  .length
+              }
             </p>
           </motion.div>
         </div>
@@ -353,7 +365,9 @@ export const GapAnalysisDashboard: React.FC = () => {
             className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6"
           >
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Performance vs. Top 10%</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
+                Performance vs. Top 10%
+              </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Sorted by improvement opportunity (highest yield first)
               </p>
@@ -366,15 +380,20 @@ export const GapAnalysisDashboard: React.FC = () => {
                 margin={{ top: 20, right: 30, bottom: 20, left: 100 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" horizontal={false} />
-                
+
                 <XAxis
                   type="number"
                   domain={[0, 100]}
                   stroke="#64748b"
                   tick={{ fill: '#64748b', fontSize: 11 }}
-                  label={{ value: 'Accuracy (%)', position: 'bottom', fill: '#64748b', fontSize: 12 }}
+                  label={{
+                    value: 'Accuracy (%)',
+                    position: 'bottom',
+                    fill: '#64748b',
+                    fontSize: 12,
+                  }}
                 />
-                
+
                 <YAxis
                   type="category"
                   dataKey="name"
@@ -400,11 +419,7 @@ export const GapAnalysisDashboard: React.FC = () => {
                 ))}
 
                 {/* Cohort Average Markers (Small Tick) */}
-                <Scatter
-                  dataKey="cohortAverage"
-                  shape={<TickShape />}
-                  fill="#9ca3af"
-                />
+                <Scatter dataKey="cohortAverage" shape={<TickShape />} fill="#9ca3af" />
 
                 {/* User Accuracy Markers (Large Circle) */}
                 <Scatter dataKey="accuracy" fill="#3b82f6">
@@ -414,11 +429,7 @@ export const GapAnalysisDashboard: React.FC = () => {
                 </Scatter>
 
                 {/* Top 10% Markers (Star) */}
-                <Scatter
-                  dataKey="cohortP90"
-                  shape={<StarShape />}
-                  fill="#f59e0b"
-                />
+                <Scatter dataKey="cohortP90" shape={<StarShape />} fill="#f59e0b" />
               </ComposedChart>
             </ResponsiveContainer>
 

@@ -1,6 +1,6 @@
 /**
  * Todoist Integration Service
- * 
+ *
  * Allows users to export their study plan and question review tasks to Todoist.
  * Integrates with Todoist API to create projects, tasks, and subtasks.
  */
@@ -24,7 +24,7 @@ export interface StudyTaskExport {
  */
 export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTaskExport {
   const tasks: TodoistTask[] = [];
-  
+
   // Add exam date as high-priority task
   tasks.push({
     content: '🎯 PANCE Exam Day',
@@ -33,11 +33,11 @@ export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTask
     priority: 4,
     labels: ['exam', 'pance'],
   });
-  
+
   // Add weekly study tasks
   for (const week of weeklyPlan) {
     const weekStart = new Date(week.startDate);
-    
+
     // Add week overview task
     tasks.push({
       content: `📚 ${week.weekLabel}: ${week.topics.join(', ')}`,
@@ -46,17 +46,17 @@ export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTask
       priority: 3,
       labels: ['study', 'weekly-plan'],
     });
-    
+
     // Add daily study sessions for the week
     for (let day = 0; day < 7; day++) {
       const studyDate = new Date(weekStart);
       studyDate.setDate(studyDate.getDate() + day);
-      
+
       // Skip if date is in the past
       if (studyDate < new Date()) continue;
-      
+
       const dayName = studyDate.toLocaleDateString('en-US', { weekday: 'long' });
-      
+
       tasks.push({
         content: `Study: ${week.topics[0] || 'Review'} (${dayName})`,
         description: `Daily study session for ${week.weekLabel}. Focus: ${week.topics.join(', ')}`,
@@ -64,7 +64,7 @@ export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTask
         priority: 2,
         labels: ['study', 'daily'],
       });
-      
+
       // Add practice questions task (weekdays only)
       if (day < 5) {
         tasks.push({
@@ -77,7 +77,7 @@ export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTask
       }
     }
   }
-  
+
   return {
     projectName: 'PANCE Study Plan',
     tasks,
@@ -90,7 +90,7 @@ export function generateStudyTasks(examDate: Date, weeklyPlan: any[]): StudyTask
 export function generateMissedQuestionTasks(missedQuestions: any[]): TodoistTask[] {
   const tasks: TodoistTask[] = [];
   const today = new Date();
-  
+
   // Group missed questions by topic
   const questionsByTopic = new Map<string, any[]>();
   for (const q of missedQuestions) {
@@ -100,13 +100,13 @@ export function generateMissedQuestionTasks(missedQuestions: any[]): TodoistTask
     }
     questionsByTopic.get(topic)!.push(q);
   }
-  
+
   // Create review tasks for each topic
   let dayOffset = 0;
   for (const [topic, questions] of questionsByTopic) {
     const reviewDate = new Date(today);
     reviewDate.setDate(reviewDate.getDate() + dayOffset);
-    
+
     tasks.push({
       content: `Review Missed Questions: ${topic} (${questions.length} questions)`,
       description: `Review and understand the ${questions.length} questions you missed in ${topic}. Focus on understanding the rationale and key concepts.`,
@@ -114,10 +114,10 @@ export function generateMissedQuestionTasks(missedQuestions: any[]): TodoistTask
       priority: 3,
       labels: ['review', 'missed-questions', topic.toLowerCase()],
     });
-    
+
     dayOffset = (dayOffset + 1) % 7; // Spread across the week
   }
-  
+
   return tasks;
 }
 
@@ -127,26 +127,29 @@ export function generateMissedQuestionTasks(missedQuestions: any[]): TodoistTask
  */
 export function generateTodoistCSV(tasks: TodoistTask[]): string {
   const lines: string[] = [];
-  
+
   // Add header
   lines.push('TYPE,CONTENT,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE');
-  
+
   for (const task of tasks) {
     const content = `"${task.content.replace(/"/g, '""')}"`;
     const priority = task.priority || 1;
     const date = task.due_date || '';
-    const labels = task.labels?.map(l => `@${l}`).join(' ') || '';
-    
+    const labels = task.labels?.map((l) => `@${l}`).join(' ') || '';
+
     lines.push(`task,${content} ${labels},${priority},1,,,${date},en,`);
   }
-  
+
   return lines.join('\n');
 }
 
 /**
  * Download Todoist CSV file
  */
-export function downloadTodoistCSV(tasks: TodoistTask[], filename: string = 'panacea-study-plan.csv') {
+export function downloadTodoistCSV(
+  tasks: TodoistTask[],
+  filename: string = 'panacea-study-plan.csv'
+) {
   const csv = generateTodoistCSV(tasks);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -191,14 +194,14 @@ export function getTodoistOAuthUrl(config: TodoistOAuthConfig): string {
   if (typeof window !== 'undefined') {
     sessionStorage.setItem('todoist_oauth_state', state);
   }
-  
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     scope: 'data:read_write',
     state: state,
     response_type: 'code',
   });
-  
+
   return `https://todoist.com/oauth/authorize?${params.toString()}`;
 }
 
@@ -237,10 +240,10 @@ export async function exchangeCodeForToken(
   }
 
   const tokens: TodoistTokens = await response.json();
-  
+
   // Store encrypted tokens securely
   await storeTokensSecurely(tokens);
-  
+
   return tokens;
 }
 
@@ -259,7 +262,7 @@ async function storeTokensSecurely(tokens: TodoistTokens): Promise<void> {
 async function getStoredTokens(): Promise<TodoistTokens | null> {
   const stored = localStorage.getItem('todoist_tokens');
   if (!stored) return null;
-  
+
   try {
     const encryptedTokens = JSON.parse(stored);
     return await decryptTokens(encryptedTokens);
@@ -301,7 +304,9 @@ async function getEncryptionKey(): Promise<string> {
 /**
  * Create or get Todoist project for PANaCEa
  */
-export async function ensureTodoistProject(projectName: string = 'PANCE Study Plan'): Promise<string> {
+export async function ensureTodoistProject(
+  projectName: string = 'PANCE Study Plan'
+): Promise<string> {
   const tokens = await getStoredTokens();
   if (!tokens) {
     throw new Error('No Todoist authentication found');
@@ -309,9 +314,9 @@ export async function ensureTodoistProject(projectName: string = 'PANCE Study Pl
 
   // Get existing projects
   const projects = await getTodoistProjects(tokens.accessToken);
-  
+
   // Check if project already exists
-  const existingProject = projects.find(p => p.name === projectName);
+  const existingProject = projects.find((p) => p.name === projectName);
   if (existingProject) {
     return existingProject.id;
   }
@@ -320,7 +325,7 @@ export async function ensureTodoistProject(projectName: string = 'PANCE Study Pl
   const response = await fetch('https://api.todoist.com/rest/v2/projects', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${tokens.accessToken}`,
+      Authorization: `Bearer ${tokens.accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -343,7 +348,7 @@ export async function ensureTodoistProject(projectName: string = 'PANCE Study Pl
 async function getTodoistProjects(accessToken: string): Promise<TodoistProject[]> {
   const response = await fetch('https://api.todoist.com/rest/v2/projects', {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
@@ -364,39 +369,41 @@ export async function exportTasksToTodoist(tasks: TodoistTask[]): Promise<void> 
   }
 
   const projectId = await ensureTodoistProject();
-  
+
   // Create tasks in batches to avoid rate limits
   const batchSize = 10;
   for (let i = 0; i < tasks.length; i += batchSize) {
     const batch = tasks.slice(i, i + batchSize);
-    
-    await Promise.all(batch.map(async (task) => {
-      const todoistTask = {
-        content: task.content,
-        description: task.description,
-        due_date: task.due_date,
-        priority: task.priority || 1,
-        project_id: projectId,
-        labels: task.labels || [],
-      };
 
-      const response = await fetch('https://api.todoist.com/rest/v2/tasks', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${tokens.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(todoistTask),
-      });
+    await Promise.all(
+      batch.map(async (task) => {
+        const todoistTask = {
+          content: task.content,
+          description: task.description,
+          due_date: task.due_date,
+          priority: task.priority || 1,
+          project_id: projectId,
+          labels: task.labels || [],
+        };
 
-      if (!response.ok) {
-        console.error(`Failed to create task: ${task.content}`, response.statusText);
-      }
-    }));
+        const response = await fetch('https://api.todoist.com/rest/v2/tasks', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(todoistTask),
+        });
+
+        if (!response.ok) {
+          console.error(`Failed to create task: ${task.content}`, response.statusText);
+        }
+      })
+    );
 
     // Rate limiting: wait between batches
     if (i + batchSize < tasks.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 }
@@ -412,7 +419,7 @@ export async function isTodoistConnected(): Promise<boolean> {
   try {
     const response = await fetch('https://api.todoist.com/rest/v2/projects', {
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken}`,
       },
     });
     return response.ok;

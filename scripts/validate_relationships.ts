@@ -41,21 +41,28 @@ async function validateUserReferences() {
   console.log('📋 Validating User references...');
 
   // Check PerformanceRecords
-  const perfRecords = await prisma.performanceRecord.findMany() as any[];
-  
-  const users = await prisma.user.findMany() as any[];
-  const userIds = new Set(users.map(u => u.id));
+  const perfRecords = (await prisma.performanceRecord.findMany()) as any[];
+
+  const users = (await prisma.user.findMany()) as any[];
+  const userIds = new Set(users.map((u) => u.id));
 
   let orphanCount = 0;
   for (const record of perfRecords) {
     if (!userIds.has(record.userId)) {
-      addIssue('PerformanceRecord', record.id, 'userId', 'User', record.userId, 'References non-existent user');
+      addIssue(
+        'PerformanceRecord',
+        record.id,
+        'userId',
+        'User',
+        record.userId,
+        'References non-existent user'
+      );
       orphanCount++;
     }
   }
 
   // Check SRSItems
-  const srsItems = await prisma.sRSItem.findMany() as any[];
+  const srsItems = (await prisma.sRSItem.findMany()) as any[];
 
   for (const item of srsItems) {
     if (!userIds.has(item.userId)) {
@@ -65,7 +72,7 @@ async function validateUserReferences() {
   }
 
   // Check SavedQuestions
-  const savedQuestions = await prisma.savedQuestion.findMany() as any[];
+  const savedQuestions = (await prisma.savedQuestion.findMany()) as any[];
 
   for (const sq of savedQuestions) {
     if (!userIds.has(sq.userId)) {
@@ -75,21 +82,35 @@ async function validateUserReferences() {
   }
 
   // Check QuestionAttempts
-  const attempts = await prisma.questionAttempt.findMany() as any[];
+  const attempts = (await prisma.questionAttempt.findMany()) as any[];
 
   for (const attempt of attempts) {
     if (!userIds.has(attempt.userId)) {
-      addIssue('QuestionAttempt', attempt.id, 'userId', 'User', attempt.userId, 'References non-existent user');
+      addIssue(
+        'QuestionAttempt',
+        attempt.id,
+        'userId',
+        'User',
+        attempt.userId,
+        'References non-existent user'
+      );
       orphanCount++;
     }
   }
 
   // Check UserSRSConfig
-  const srsConfigs = await prisma.userSRSConfig.findMany() as any[];
+  const srsConfigs = (await prisma.userSRSConfig.findMany()) as any[];
 
   for (const config of srsConfigs) {
     if (!userIds.has(config.userId)) {
-      addIssue('UserSRSConfig', config.userId, 'userId', 'User', config.userId, 'References non-existent user');
+      addIssue(
+        'UserSRSConfig',
+        config.userId,
+        'userId',
+        'User',
+        config.userId,
+        'References non-existent user'
+      );
       orphanCount++;
     }
   }
@@ -101,26 +122,42 @@ async function validateConditionReferences() {
   console.log('📋 Validating Condition references...');
 
   // Get all conditions
-  const conditions = await prisma.condition.findMany() as any[];
-  const conditionIds = new Set(conditions.map(c => c.id));
+  const conditions = (await prisma.condition.findMany()) as any[];
+  const conditionIds = new Set(conditions.map((c) => c.id));
 
   // Check PerformanceRecords
-  const perfRecords = await prisma.performanceRecord.findMany() as any[];
+  const perfRecords = (await prisma.performanceRecord.findMany()) as any[];
 
   let orphanCount = 0;
   for (const record of perfRecords) {
     if (record.conditionId && !conditionIds.has(record.conditionId)) {
-      addIssue('PerformanceRecord', record.id, 'conditionId', 'Condition', record.conditionId, 'References non-existent condition', 'warning');
+      addIssue(
+        'PerformanceRecord',
+        record.id,
+        'conditionId',
+        'Condition',
+        record.conditionId,
+        'References non-existent condition',
+        'warning'
+      );
       orphanCount++;
     }
   }
 
   // Check SRSItems
-  const srsItems = await prisma.sRSItem.findMany() as any[];
+  const srsItems = (await prisma.sRSItem.findMany()) as any[];
 
   for (const item of srsItems) {
     if (item.conditionId && !conditionIds.has(item.conditionId)) {
-      addIssue('SRSItem', item.id, 'conditionId', 'Condition', item.conditionId, 'References non-existent condition', 'warning');
+      addIssue(
+        'SRSItem',
+        item.id,
+        'conditionId',
+        'Condition',
+        item.conditionId,
+        'References non-existent condition',
+        'warning'
+      );
       orphanCount++;
     }
   }
@@ -132,14 +169,21 @@ async function validateQuestionReferences() {
   console.log('📋 Validating Question references...');
 
   // Check QuestionAttempts reference valid questions
-  const attempts = await prisma.questionAttempt.findMany() as any[];
+  const attempts = (await prisma.questionAttempt.findMany()) as any[];
 
   // Since questions are dynamically generated, we can't validate against a table
   // But we can check for malformed IDs
   let malformedCount = 0;
   for (const attempt of attempts) {
     if (!attempt.questionId || attempt.questionId.trim() === '') {
-      addIssue('QuestionAttempt', attempt.id, 'questionId', 'Question', attempt.questionId || 'null', 'Empty or null question ID');
+      addIssue(
+        'QuestionAttempt',
+        attempt.id,
+        'questionId',
+        'Question',
+        attempt.questionId || 'null',
+        'Empty or null question ID'
+      );
       malformedCount++;
     }
   }
@@ -150,34 +194,58 @@ async function validateQuestionReferences() {
 async function validateMedicalContentConsistency() {
   console.log('📋 Validating MedicalContent consistency...');
 
-  const medicalContent = await prisma.medicalContent.findMany() as any[];
+  const medicalContent = (await prisma.medicalContent.findMany()) as any[];
 
-  const conditions = await prisma.condition.findMany() as any[];
+  const conditions = (await prisma.condition.findMany()) as any[];
 
   // Create a map of conditionId to condition
-  const conditionMap = new Map(conditions.map(c => [c.id, c]));
+  const conditionMap = new Map(conditions.map((c) => [c.id, c]));
 
   let mismatchCount = 0;
   for (const mc of medicalContent) {
     const condition = conditionMap.get(mc.conditionId);
-    
+
     if (!condition) {
       // MedicalContent references a conditionId that doesn't exist in Condition table
-      addIssue('MedicalContent', mc.id, 'conditionId', 'Condition', mc.conditionId, 'References non-existent condition', 'warning');
+      addIssue(
+        'MedicalContent',
+        mc.id,
+        'conditionId',
+        'Condition',
+        mc.conditionId,
+        'References non-existent condition',
+        'warning'
+      );
       mismatchCount++;
     } else {
       // Check if names match
       const normalizedMcName = mc.condition.toLowerCase().trim();
       const normalizedCondName = condition.name.toLowerCase().trim();
-      
+
       if (normalizedMcName !== normalizedCondName) {
-        addIssue('MedicalContent', mc.id, 'condition', 'Condition', mc.conditionId, `Name mismatch: "${mc.condition}" vs "${condition.name}"`, 'warning');
+        addIssue(
+          'MedicalContent',
+          mc.id,
+          'condition',
+          'Condition',
+          mc.conditionId,
+          `Name mismatch: "${mc.condition}" vs "${condition.name}"`,
+          'warning'
+        );
         mismatchCount++;
       }
 
       // Check if systems match
       if (mc.system !== condition.system) {
-        addIssue('MedicalContent', mc.id, 'system', 'Condition', mc.conditionId, `System mismatch: "${mc.system}" vs "${condition.system}"`, 'warning');
+        addIssue(
+          'MedicalContent',
+          mc.id,
+          'system',
+          'Condition',
+          mc.conditionId,
+          `System mismatch: "${mc.system}" vs "${condition.system}"`,
+          'warning'
+        );
         mismatchCount++;
       }
     }
@@ -189,8 +257,8 @@ async function validateMedicalContentConsistency() {
 async function validateDrugReferences() {
   console.log('📋 Validating Drug references...');
 
-  const drugs = await prisma.drug.findMany() as any[];
-  const drugIds = new Set(drugs.map(d => d.id));
+  const drugs = (await prisma.drug.findMany()) as any[];
+  const drugIds = new Set(drugs.map((d) => d.id));
 
   // Check if any tables reference drugs
   // Currently no direct foreign keys to Drug table in schema
@@ -202,16 +270,23 @@ async function validateDrugReferences() {
 async function validateLabTestReferences() {
   console.log('📋 Validating LabTest references...');
 
-  const labTests = await prisma.labTest.findMany() as any[];
-  const labTestIds = new Set(labTests.map(l => l.id));
+  const labTests = (await prisma.labTest.findMany()) as any[];
+  const labTestIds = new Set(labTests.map((l) => l.id));
 
   // Check LabCase references
-  const labCases = await prisma.labCase.findMany() as any[];
+  const labCases = (await prisma.labCase.findMany()) as any[];
 
   let orphanCount = 0;
   for (const labCase of labCases) {
     if (!labTestIds.has(labCase.labTestId)) {
-      addIssue('LabCase', labCase.id, 'labTestId', 'LabTest', labCase.labTestId, 'References non-existent lab test');
+      addIssue(
+        'LabCase',
+        labCase.id,
+        'labTestId',
+        'LabTest',
+        labCase.labTestId,
+        'References non-existent lab test'
+      );
       orphanCount++;
     }
   }
@@ -223,31 +298,31 @@ async function findOrphanedRecords() {
   console.log('📋 Finding orphaned records...');
 
   // Find Conditions not referenced by MedicalContent
-  const conditions = await prisma.condition.findMany() as any[];
-  const medicalContent = await prisma.medicalContent.findMany() as any[];
-  const referencedConditionIds = new Set(medicalContent.map(mc => mc.conditionId));
+  const conditions = (await prisma.condition.findMany()) as any[];
+  const medicalContent = (await prisma.medicalContent.findMany()) as any[];
+  const referencedConditionIds = new Set(medicalContent.map((mc) => mc.conditionId));
 
-  const orphanedConditions = conditions.filter(c => !referencedConditionIds.has(c.id));
+  const orphanedConditions = conditions.filter((c) => !referencedConditionIds.has(c.id));
   console.log(`   Found ${orphanedConditions.length} conditions without MedicalContent`);
 
   // Find Drugs not referenced by any content
-  const drugs = await prisma.drug.findMany() as any[];
+  const drugs = (await prisma.drug.findMany()) as any[];
   console.log(`   Found ${drugs.length} drugs (no content references to validate)`);
 
   // Find LabTests not referenced by LabCase
-  const labTests = await prisma.labTest.findMany() as any[];
-  const labCases = await prisma.labCase.findMany() as any[];
-  const referencedLabTestIds = new Set(labCases.map(lc => lc.labTestId));
+  const labTests = (await prisma.labTest.findMany()) as any[];
+  const labCases = (await prisma.labCase.findMany()) as any[];
+  const referencedLabTestIds = new Set(labCases.map((lc) => lc.labTestId));
 
-  const orphanedLabTests = labTests.filter(lt => !referencedLabTestIds.has(lt.id));
+  const orphanedLabTests = labTests.filter((lt) => !referencedLabTestIds.has(lt.id));
   console.log(`   Found ${orphanedLabTests.length} lab tests without cases`);
 }
 
 async function generateRelationshipReport() {
   console.log('\n📊 Generating Relationship Report...\n');
 
-  const errorCount = issues.filter(i => i.severity === 'error').length;
-  const warningCount = issues.filter(i => i.severity === 'warning').length;
+  const errorCount = issues.filter((i) => i.severity === 'error').length;
+  const warningCount = issues.filter((i) => i.severity === 'warning').length;
 
   console.log('='.repeat(80));
   console.log('RELATIONSHIP VALIDATION REPORT');
@@ -263,8 +338,9 @@ async function generateRelationshipReport() {
   }
 
   // Group by table and severity
-  const byTable: { [key: string]: { errors: RelationshipIssue[], warnings: RelationshipIssue[] } } = {};
-  
+  const byTable: { [key: string]: { errors: RelationshipIssue[]; warnings: RelationshipIssue[] } } =
+    {};
+
   for (const issue of issues) {
     if (!byTable[issue.table]) {
       byTable[issue.table] = { errors: [], warnings: [] };
@@ -282,11 +358,13 @@ async function generateRelationshipReport() {
 
     console.log(`\n${table}:`);
     console.log('-'.repeat(80));
-    
+
     if (tableIssues.errors.length > 0) {
       console.log(`\n  🔴 ERRORS (${tableIssues.errors.length}):`);
       for (const issue of tableIssues.errors.slice(0, 10)) {
-        console.log(`     - ${issue.recordId.substring(0, 8)}...: ${issue.field} -> ${issue.referencedTable} (${issue.referencedId.substring(0, 8)}...)`);
+        console.log(
+          `     - ${issue.recordId.substring(0, 8)}...: ${issue.field} -> ${issue.referencedTable} (${issue.referencedId.substring(0, 8)}...)`
+        );
         console.log(`       ${issue.issue}`);
       }
       if (tableIssues.errors.length > 10) {
@@ -297,7 +375,9 @@ async function generateRelationshipReport() {
     if (tableIssues.warnings.length > 0) {
       console.log(`\n  🟡 WARNINGS (${tableIssues.warnings.length}):`);
       for (const issue of tableIssues.warnings.slice(0, 10)) {
-        console.log(`     - ${issue.recordId.substring(0, 8)}...: ${issue.field} -> ${issue.referencedTable}`);
+        console.log(
+          `     - ${issue.recordId.substring(0, 8)}...: ${issue.field} -> ${issue.referencedTable}`
+        );
         console.log(`       ${issue.issue}`);
       }
       if (tableIssues.warnings.length > 10) {
@@ -316,12 +396,19 @@ async function generateRelationshipReport() {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportPath = path.join(reportDir, `relationships-report-${timestamp}.json`);
-  
-  fs.writeFileSync(reportPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    summary: { total: issues.length, errors: errorCount, warnings: warningCount },
-    issues: issues
-  }, null, 2));
+
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: { total: issues.length, errors: errorCount, warnings: warningCount },
+        issues: issues,
+      },
+      null,
+      2
+    )
+  );
 
   console.log(`\n📄 Detailed report saved to: ${reportPath}\n`);
 }

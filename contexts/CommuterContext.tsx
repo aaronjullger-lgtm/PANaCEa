@@ -1,10 +1,10 @@
 /**
  * CommuterContext - Global Accessibility Mode
- * 
+ *
  * Provides a voice-first interaction layer for hands-free study.
  * When enabled, activates speech recognition and synthesis across
  * compatible components (Main Session, Patient Encounter).
- * 
+ *
  * Features:
  * - Speech-to-text for answering questions
  * - Text-to-speech for reading questions aloud
@@ -12,7 +12,14 @@
  * - Auto-advance with voice commands
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 // Web Speech API types are defined in types/speech.d.ts
 
@@ -136,7 +143,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
   // Persist commuter mode state
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, String(isCommuterMode));
-    
+
     // Apply high-contrast mode to document
     if (isCommuterMode && settings.highContrastMode) {
       document.documentElement.classList.add('commuter-mode');
@@ -151,7 +158,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
   }, [settings]);
 
   const toggleCommuterMode = useCallback(() => {
-    setIsCommuterMode(prev => !prev);
+    setIsCommuterMode((prev) => !prev);
   }, []);
 
   const enableCommuterMode = useCallback(() => {
@@ -165,28 +172,31 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateSettings = useCallback((updates: Partial<CommuterSettings>) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Speech synthesis
-  const speak = useCallback((text: string, priority = false) => {
-    if (!speechSynthesis || !isCommuterMode || !settings.voiceEnabled) return;
+  const speak = useCallback(
+    (text: string, priority = false) => {
+      if (!speechSynthesis || !isCommuterMode || !settings.voiceEnabled) return;
 
-    if (priority) {
-      speechSynthesis.cancel();
-    }
+      if (priority) {
+        speechSynthesis.cancel();
+      }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = settings.speechRate;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = settings.speechRate;
+      utterance.pitch = 1;
+      utterance.volume = 1;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
 
-    speechSynthesis.speak(utterance);
-  }, [speechSynthesis, isCommuterMode, settings.voiceEnabled, settings.speechRate]);
+      speechSynthesis.speak(utterance);
+    },
+    [speechSynthesis, isCommuterMode, settings.voiceEnabled, settings.speechRate]
+  );
 
   const stopSpeaking = useCallback(() => {
     if (speechSynthesis) {
@@ -236,11 +246,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
     resetTranscript,
   };
 
-  return (
-    <CommuterContext.Provider value={value}>
-      {children}
-    </CommuterContext.Provider>
-  );
+  return <CommuterContext.Provider value={value}>{children}</CommuterContext.Provider>;
 }
 
 export function useCommuter(): CommuterContextType {

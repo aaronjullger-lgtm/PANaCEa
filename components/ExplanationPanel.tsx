@@ -1,6 +1,6 @@
 /**
  * ExplanationPanel Component
- * 
+ *
  * A post-answer rationale panel with Glass/Slate styling that displays:
  * - Core Rationale (3-6 bullets)
  * - Buzzwords & Clues (bolded list)
@@ -12,12 +12,23 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, BookOpen, Lightbulb, AlertCircle, HelpCircle, ExternalLink, MessageCircle } from 'lucide-react';
-import { 
-  compressToBullets, 
-  extractBuzzwords, 
+import {
+  ChevronDown,
+  ChevronUp,
+  ThumbsUp,
+  ThumbsDown,
+  BookOpen,
+  Lightbulb,
+  AlertCircle,
+  HelpCircle,
+  ExternalLink,
+  MessageCircle,
+} from 'lucide-react';
+import {
+  compressToBullets,
+  extractBuzzwords,
   generateMnemonic,
-  highYieldPackage 
+  highYieldPackage,
 } from '../lib/services/explanationCompression';
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
@@ -69,17 +80,17 @@ export interface ExplanationPanelProps {
 /**
  * Glass panel container with correct/incorrect highlighting
  */
-const GlassPanel: React.FC<{ 
-  isCorrect: boolean; 
+const GlassPanel: React.FC<{
+  isCorrect: boolean;
   children: React.ReactNode;
   className?: string;
 }> = ({ isCorrect, children, className = '' }) => {
-  const highlightClass = isCorrect 
-    ? 'bg-green-500/20 border-green-500/30' 
+  const highlightClass = isCorrect
+    ? 'bg-green-500/20 border-green-500/30'
     : 'bg-red-500/20 border-red-500/30';
 
   return (
-    <div 
+    <div
       className={`
         backdrop-blur-md rounded-xl border p-5 shadow-lg
         bg-white/70 dark:bg-slate-800/80 
@@ -96,8 +107,8 @@ const GlassPanel: React.FC<{
 /**
  * Section header with icon
  */
-const SectionHeader: React.FC<{ 
-  icon: React.ReactNode; 
+const SectionHeader: React.FC<{
+  icon: React.ReactNode;
   title: string;
   className?: string;
 }> = ({ icon, title, className = '' }) => (
@@ -110,7 +121,7 @@ const SectionHeader: React.FC<{
 /**
  * Collapsible accordion for differentials
  */
-const DifferentialAccordion: React.FC<{ 
+const DifferentialAccordion: React.FC<{
   differentials: DifferentialItem[];
 }> = ({ differentials }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -122,7 +133,7 @@ const DifferentialAccordion: React.FC<{
   return (
     <div className="space-y-2">
       {differentials.map((diff, index) => (
-        <div 
+        <div
           key={index}
           className="border border-slate-200/60 dark:border-slate-700/60 rounded-lg overflow-hidden bg-white/50 dark:bg-slate-800/50"
         >
@@ -235,10 +246,11 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   }, [explanation, condition]);
 
   const { bullets, buzzwords, mnemonic } = processedContent;
-  
+
   // Load basic science links from condition content if conditionId is provided
-  const [loadedBasicScienceLinks, setLoadedBasicScienceLinks] = useState<BasicScienceLink[]>(basicScienceLinks);
-  
+  const [loadedBasicScienceLinks, setLoadedBasicScienceLinks] =
+    useState<BasicScienceLink[]>(basicScienceLinks);
+
   useEffect(() => {
     if (conditionId && !basicScienceLinks.length) {
       // Load from condition content using top-level import
@@ -248,9 +260,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         const conditionData = getConditionByIdSync(conditionId);
         if (conditionData?.sections?.basicScienceLinks) {
           try {
-            const links = typeof conditionData.sections.basicScienceLinks === 'string' 
-              ? JSON.parse(conditionData.sections.basicScienceLinks)
-              : conditionData.sections.basicScienceLinks;
+            const links =
+              typeof conditionData.sections.basicScienceLinks === 'string'
+                ? JSON.parse(conditionData.sections.basicScienceLinks)
+                : conditionData.sections.basicScienceLinks;
             if (Array.isArray(links)) {
               setLoadedBasicScienceLinks(links);
             }
@@ -265,7 +278,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
   const handleAskTutor = async () => {
     if (!tutorQuestion.trim()) return;
-    
+
     setLoadingTutor(true);
     try {
       const response = await analyzeAnswer({
@@ -303,21 +316,15 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       <GlassPanel isCorrect={isCorrect}>
         {/* Core Rationale Section */}
         <section className="mb-6">
-          <SectionHeader 
-            icon={<Lightbulb className="w-5 h-5" />} 
-            title="Core Rationale" 
-          />
+          <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Core Rationale" />
           <ul className="space-y-2 pl-1">
             {bullets.slice(0, MAX_BULLETS).map((bullet, index) => (
-              <li 
-                key={index} 
+              <li
+                key={index}
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
                 <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0">•</span>
-                <span 
-                  dangerouslySetInnerHTML={{ __html: bullet }}
-                  className="flex-1"
-                />
+                <span dangerouslySetInnerHTML={{ __html: bullet }} className="flex-1" />
               </li>
             ))}
           </ul>
@@ -326,13 +333,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Buzzwords & Clues Section */}
         {buzzwords.length > 0 && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<AlertCircle className="w-5 h-5" />} 
-              title="Buzzwords & Clues" 
-            />
+            <SectionHeader icon={<AlertCircle className="w-5 h-5" />} title="Buzzwords & Clues" />
             <div className="flex flex-wrap gap-2">
               {buzzwords.map((buzzword, index) => (
-                <span 
+                <span
                   key={index}
                   className="px-3 py-1.5 bg-amber-100/80 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-semibold border border-amber-200/60 dark:border-amber-700/40"
                 >
@@ -346,14 +350,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Mnemonic Section */}
         {mnemonic && mnemonic !== '[Mnemonic: None]' && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<HelpCircle className="w-5 h-5" />} 
-              title="Memory Aid" 
-            />
+            <SectionHeader icon={<HelpCircle className="w-5 h-5" />} title="Memory Aid" />
             <div className="p-3 bg-blue-50/80 dark:bg-blue-900/20 rounded-lg border border-blue-200/60 dark:border-blue-700/40">
-              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                {mnemonic}
-              </p>
+              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">{mnemonic}</p>
             </div>
           </section>
         )}
@@ -361,9 +360,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Why the Others Were Wrong Section */}
         {differentials.length > 0 && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<AlertCircle className="w-5 h-5" />} 
-              title="Why the Others Were Wrong" 
+            <SectionHeader
+              icon={<AlertCircle className="w-5 h-5" />}
+              title="Why the Others Were Wrong"
             />
             <DifferentialAccordion differentials={differentials} />
           </section>
@@ -372,21 +371,15 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Clinical Pearls Section */}
         {pearls.length > 0 && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<Lightbulb className="w-5 h-5" />} 
-              title="Clinical Pearls" 
-            />
+            <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Clinical Pearls" />
             <ul className="space-y-2 pl-1">
               {pearls.map((pearl, index) => (
-                <li 
-                  key={index} 
+                <li
+                  key={index}
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
                   <span className="text-amber-500 mt-1.5 flex-shrink-0">💡</span>
-                  <span 
-                    dangerouslySetInnerHTML={{ __html: pearl }}
-                    className="flex-1"
-                  />
+                  <span dangerouslySetInnerHTML={{ __html: pearl }} className="flex-1" />
                 </li>
               ))}
             </ul>
@@ -396,11 +389,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Rationale Section (if different from explanation) */}
         {rationale && rationale !== explanation && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<BookOpen className="w-5 h-5" />} 
-              title="Additional Rationale" 
-            />
-            <div 
+            <SectionHeader icon={<BookOpen className="w-5 h-5" />} title="Additional Rationale" />
+            <div
               className="text-[var(--color-text-secondary)] leading-relaxed"
               dangerouslySetInnerHTML={{ __html: rationale }}
             />
@@ -410,9 +400,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Basic Science Links Section */}
         {loadedBasicScienceLinks.length > 0 && (
           <section className="mb-6">
-            <SectionHeader 
-              icon={<BookOpen className="w-5 h-5" />} 
-              title="Review: Foundational Science" 
+            <SectionHeader
+              icon={<BookOpen className="w-5 h-5" />}
+              title="Review: Foundational Science"
             />
             <div className="space-y-2">
               {loadedBasicScienceLinks.map((link, index) => (
@@ -472,9 +462,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60"
             >
               <div className="space-y-3">
-                <SectionHeader 
-                  icon={<MessageCircle className="w-5 h-5" />} 
-                  title="Ask Your Virtual Tutor" 
+                <SectionHeader
+                  icon={<MessageCircle className="w-5 h-5" />}
+                  title="Ask Your Virtual Tutor"
                 />
                 <div className="flex gap-2">
                   <input

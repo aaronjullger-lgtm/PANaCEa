@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
@@ -14,7 +13,7 @@ async function generateSpecialTests() {
   const conditions = await prisma.condition.findMany({
     // Process all conditions
     include: {
-      specialTests: true,
+      SpecialTest: true,
     },
   });
 
@@ -24,7 +23,7 @@ async function generateSpecialTests() {
   let processedCount = 0;
   for (const condition of conditions) {
     processedCount++;
-    if (condition.specialTests.length > 0) {
+    if (condition.SpecialTest.length > 0) {
       console.log(`Skipping ${condition.name} (already has special tests)`);
       continue;
     }
@@ -51,7 +50,7 @@ async function generateSpecialTests() {
       const result = await model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
-      
+
       if (text.includes('null')) {
         console.log(`No special test for ${condition.name}`);
         continue;
@@ -62,15 +61,15 @@ async function generateSpecialTests() {
         console.error(`Failed to parse JSON for ${condition.name}`);
         continue;
       }
-      
+
       const data = JSON.parse(jsonMatch[0]);
 
-      const specialTest = await prisma.specialTest.upsert({
+      const test = await prisma.specialTest.upsert({
         where: { name: data.name },
         update: {
-          conditions: {
-            connect: { id: condition.id }
-          }
+          Condition: {
+            connect: { id: condition.id },
+          },
         },
         create: {
           name: data.name,
@@ -78,17 +77,16 @@ async function generateSpecialTests() {
           technique: data.technique,
           sensitivity: data.sensitivity,
           specificity: data.specificity,
-          conditions: {
-            connect: { id: condition.id }
-          }
-        }
+          Condition: {
+            connect: { id: condition.id },
+          },
+        },
       });
 
-      console.log(`✅ Linked ${specialTest.name} to ${condition.name}`);
+      console.log(`✅ Linked ${test.name} to ${condition.name}`);
 
       // Rate limiting delay (1s)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error(`Error processing ${condition.name}:`, error);
     }

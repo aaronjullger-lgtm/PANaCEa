@@ -1,11 +1,11 @@
 /**
  * useTelemetry - Passive Engagement Telemetry Hook
- * 
+ *
  * Tracks reading behavior to predict encoding quality:
  * - Scroll depth (0-100%)
  * - Dwell time per content segment
  * - Skimming detection
- * 
+ *
  * Used to adjust initial stability (S₀) for new content.
  * Research: Deeper engagement correlates with better encoding (Kintsch, 1998)
  */
@@ -49,7 +49,7 @@ const SKIMMING_THRESHOLDS = {
 
 /**
  * Calculate engagement score from telemetry
- * 
+ *
  * Factors:
  * - Scroll depth coverage (0-40 points)
  * - Quartile dwell time balance (0-30 points)
@@ -57,33 +57,34 @@ const SKIMMING_THRESHOLDS = {
  */
 function calculateEngagementScore(telemetry: EngagementTelemetry): number {
   let score = 0;
-  
+
   // Scroll depth: 40 points max
   // Full coverage = 40, partial = proportional
   score += (telemetry.scrollDepth / 100) * 40;
-  
+
   // Quartile balance: 30 points max
   // Reward spending time on each section, not just top/bottom
   const avgQuartileDwell = telemetry.quartileDwells.reduce((a, b) => a + b, 0) / 4;
-  const quartileVariance = telemetry.quartileDwells.reduce(
-    (sum, dwell) => sum + Math.pow(dwell - avgQuartileDwell, 2), 0
-  ) / 4;
+  const quartileVariance =
+    telemetry.quartileDwells.reduce(
+      (sum, dwell) => sum + Math.pow(dwell - avgQuartileDwell, 2),
+      0
+    ) / 4;
   const quartileStdDev = Math.sqrt(quartileVariance);
-  const quartileBalanceRatio = avgQuartileDwell > 0 
-    ? Math.max(0, 1 - (quartileStdDev / avgQuartileDwell))
-    : 0;
-  
+  const quartileBalanceRatio =
+    avgQuartileDwell > 0 ? Math.max(0, 1 - quartileStdDev / avgQuartileDwell) : 0;
+
   // Only count quartile balance if they actually spent time
   const minQuartileDwell = Math.min(...telemetry.quartileDwells);
   if (minQuartileDwell > SKIMMING_THRESHOLDS.MIN_QUARTILE_DWELL / 2) {
     score += quartileBalanceRatio * 30;
   }
-  
+
   // Total dwell time: 30 points max
   // Cap at 60 seconds for max points
   const dwellScore = Math.min(telemetry.dwellTimeMs / 60000, 1) * 30;
   score += dwellScore;
-  
+
   // Normalize to 0-1
   return Math.min(1, score / 100);
 }
@@ -93,26 +94,28 @@ function calculateEngagementScore(telemetry: EngagementTelemetry): number {
  */
 function detectSkimming(telemetry: EngagementTelemetry): boolean {
   // Pattern: High scroll depth but low dwell time
-  if (telemetry.scrollDepth > SKIMMING_THRESHOLDS.SCROLL_DEPTH_THRESHOLD &&
-      telemetry.dwellTimeMs < SKIMMING_THRESHOLDS.MIN_TOTAL_DWELL) {
+  if (
+    telemetry.scrollDepth > SKIMMING_THRESHOLDS.SCROLL_DEPTH_THRESHOLD &&
+    telemetry.dwellTimeMs < SKIMMING_THRESHOLDS.MIN_TOTAL_DWELL
+  ) {
     return true;
   }
-  
+
   // Pattern: Most time spent only at top or bottom
   const [q1, q2, q3, q4] = telemetry.quartileDwells;
   const middleDwell = q2 + q3;
   const edgeDwell = q1 + q4;
-  
+
   if (middleDwell < edgeDwell * 0.3 && telemetry.scrollDepth > 50) {
     return true; // Skipped the middle
   }
-  
+
   return false;
 }
 
 /**
  * Calculate S₀ adjustment factor based on engagement
- * 
+ *
  * Returns multiplier for initial stability:
  * - 0.7 for skimming (30% penalty)
  * - 1.0-1.15 for engaged reading (0-15% bonus)
@@ -121,7 +124,7 @@ export function calculateS0Adjustment(telemetry: EngagementTelemetry): number {
   if (telemetry.skimmingDetected) {
     return 0.7; // 30% penalty for skimming
   }
-  
+
   // Scale bonus based on engagement score
   // Score 0.0 = 1.0 multiplier
   // Score 0.5 = 1.075 multiplier
@@ -166,7 +169,7 @@ function createInitialTelemetry(): EngagementTelemetry {
 
 /**
  * Passive engagement telemetry hook
- * 
+ *
  * @param containerRef - Ref to the scrollable container
  * @param contentHeight - Total height of content (for scroll depth calculation)
  */
@@ -176,7 +179,7 @@ export function useTelemetry(
 ): UseTelemetryReturn {
   const [telemetry, setTelemetry] = useState<EngagementTelemetry>(createInitialTelemetry);
   const [isTracking, setIsTracking] = useState(false);
-  
+
   const lastScrollPosition = useRef(0);
   const lastQuartile = useRef(0);
   const quartileStartTime = useRef(Date.now());
@@ -203,22 +206,22 @@ export function useTelemetry(
    */
   const stopTracking = useCallback((): EngagementTelemetry => {
     setIsTracking(false);
-    
+
     const finalTelemetry = { ...telemetry };
     finalTelemetry.endTime = Date.now();
     finalTelemetry.dwellTimeMs = finalTelemetry.endTime - finalTelemetry.startTime;
-    
+
     // Final quartile dwell update
     const currentQuartile = lastQuartile.current;
     if (currentQuartile >= 0 && currentQuartile < 4) {
       const quartileDwell = Date.now() - quartileStartTime.current;
       finalTelemetry.quartileDwells[currentQuartile] += quartileDwell;
     }
-    
+
     // Calculate final metrics
     finalTelemetry.skimmingDetected = detectSkimming(finalTelemetry);
     finalTelemetry.engagementScore = calculateEngagementScore(finalTelemetry);
-    
+
     setTelemetry(finalTelemetry);
     return finalTelemetry;
   }, [telemetry]);
@@ -247,28 +250,26 @@ export function useTelemetry(
     if (!isTracking || !containerRef?.current) return;
 
     const container = containerRef.current;
-    
+
     const handleScroll = () => {
       const scrollTop = container.scrollTop;
       const scrollHeight = contentHeight || container.scrollHeight;
       const clientHeight = container.clientHeight;
-      
+
       // Calculate scroll depth percentage
       const maxScroll = scrollHeight - clientHeight;
-      const newScrollDepth = maxScroll > 0 
-        ? Math.round((scrollTop / maxScroll) * 100) 
-        : 0;
-      
+      const newScrollDepth = maxScroll > 0 ? Math.round((scrollTop / maxScroll) * 100) : 0;
+
       // Calculate current quartile (0-3)
       const newQuartile = Math.min(3, Math.floor(newScrollDepth / 25));
-      
+
       // Update quartile dwell time if quartile changed
       if (newQuartile !== lastQuartile.current) {
         const now = Date.now();
         const prevQuartile = lastQuartile.current;
         const quartileDwell = now - quartileStartTime.current;
-        
-        setTelemetry(prev => {
+
+        setTelemetry((prev) => {
           const newQuartileDwells = [...prev.quartileDwells] as [number, number, number, number];
           if (prevQuartile >= 0 && prevQuartile < 4) {
             newQuartileDwells[prevQuartile] += quartileDwell;
@@ -279,22 +280,22 @@ export function useTelemetry(
             scrollDepth: Math.max(prev.scrollDepth, newScrollDepth),
           };
         });
-        
+
         lastQuartile.current = newQuartile;
         quartileStartTime.current = now;
       } else {
         // Just update max scroll depth
-        setTelemetry(prev => ({
+        setTelemetry((prev) => ({
           ...prev,
           scrollDepth: Math.max(prev.scrollDepth, newScrollDepth),
         }));
       }
-      
+
       lastScrollPosition.current = scrollTop;
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       container.removeEventListener('scroll', handleScroll);
     };
@@ -313,7 +314,7 @@ export function useTelemetry(
     }
 
     dwellInterval.current = setInterval(() => {
-      setTelemetry(prev => ({
+      setTelemetry((prev) => ({
         ...prev,
         dwellTimeMs: Date.now() - prev.startTime,
       }));

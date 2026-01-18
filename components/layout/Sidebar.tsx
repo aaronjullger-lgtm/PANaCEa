@@ -45,9 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">P</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                PANaCEa
-              </h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">PANaCEa</h1>
             </div>
             {onClose && (
               <button

@@ -58,10 +58,10 @@ async function consolidateHierarchy() {
       console.log(`Found parent: ${parent.condition} (${parent.id})`);
 
       // Update parent canonical name
-      await client.query(
-        'UPDATE "MedicalContent" SET "canonicalName" = $1 WHERE id = $2',
-        [parentName, parent.id]
-      );
+      await client.query('UPDATE "MedicalContent" SET "canonicalName" = $1 WHERE id = $2', [
+        parentName,
+        parent.id,
+      ]);
 
       // Helper to link children
       const linkChildren = async (children: string[], type: string) => {

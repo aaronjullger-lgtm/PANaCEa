@@ -1,15 +1,15 @@
 /**
  * Grand Rounds Daily Challenge Mode Component
- * 
+ *
  * REFACTORED: Server-authoritative, one attempt per day.
  * Users compete on a shared set of 5 questions with speed-weighted scoring.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trophy, 
-  Users, 
+import {
+  Trophy,
+  Users,
   Calendar,
   Clock,
   Play,
@@ -21,7 +21,7 @@ import {
   AlertCircle,
   Loader2,
   Timer,
-  Target
+  Target,
 } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -67,22 +67,22 @@ const getTimeUntilNextChallenge = () => {
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   tomorrow.setUTCHours(0, 0, 0, 0);
   const diff = tomorrow.getTime() - now.getTime();
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  
+
   return `${hours}h ${minutes}m ${seconds}s`;
 };
 
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user, isLoaded, isSignedIn } = useUser();
   const { getToken } = useAuth();
-  
+
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [completedStats, setCompletedStats] = useState<CompletedStats | null>(null);
-  
+
   // Quiz state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -91,7 +91,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const [timeElapsedMs, setTimeElapsedMs] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
@@ -113,7 +113,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       const response = await fetch('/api/grand-rounds/today', {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -139,10 +139,13 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       }
     } catch (err) {
       console.error('Error fetching challenge:', err);
-      const isNetworkIssue = err instanceof TypeError || (err instanceof Error && /fetch|network/i.test(err.message));
-      setError(isNetworkIssue 
-        ? 'Unable to connect. Please check your internet connection and try again.'
-        : 'Unable to load challenge. Please try again.');
+      const isNetworkIssue =
+        err instanceof TypeError || (err instanceof Error && /fetch|network/i.test(err.message));
+      setError(
+        isNetworkIssue
+          ? 'Unable to connect. Please check your internet connection and try again.'
+          : 'Unable to load challenge. Please try again.'
+      );
       setViewState('error');
     }
   };
@@ -150,7 +153,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Timer for next challenge countdown (only active when completed)
   useEffect(() => {
     if (viewState !== 'completed') return;
-    
+
     const interval = setInterval(() => {
       setNextChallengeCountdown(getTimeUntilNextChallenge());
     }, 1000);
@@ -182,16 +185,19 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     setSelectedAnswer(null);
   }, []);
 
-  const handleAnswerSelect = useCallback((index: number) => {
-    if (!challengeData) return;
-    setSelectedAnswer(index);
-  }, [challengeData]);
+  const handleAnswerSelect = useCallback(
+    (index: number) => {
+      if (!challengeData) return;
+      setSelectedAnswer(index);
+    },
+    [challengeData]
+  );
 
   const handleNext = useCallback(() => {
     if (!challengeData || selectedAnswer === null) return;
 
     const currentQuestion = challengeData.questions[currentQuestionIndex];
-    
+
     // Save answer
     const updatedAnswers = {
       ...userAnswers,
@@ -201,7 +207,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
     // Move to next question or finish
     if (currentQuestionIndex < challengeData.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
     } else {
       // Last question - submit
@@ -231,7 +237,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           challengeId: challengeData.challengeId,
@@ -249,7 +255,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
       if (result.success) {
         hapticSuccess();
-        
+
         setCompletedStats({
           score: result.score,
           correctCount: result.correctCount,
@@ -258,7 +264,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           percentile: result.percentile,
           ranking: result.ranking,
         });
-        
+
         setViewState('summary');
       } else {
         throw new Error('Submission failed');
@@ -266,7 +272,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     } catch (err) {
       console.error('Error submitting challenge:', err);
       hapticError();
-      setError(err instanceof Error ? err.message : 'Unable to submit your results. Please try again.');
+      setError(
+        err instanceof Error ? err.message : 'Unable to submit your results. Please try again.'
+      );
       setViewState('error');
     } finally {
       setIsSubmitting(false);
@@ -346,7 +354,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 <Crown className="w-16 h-16 text-amber-500 mx-auto" />
               </motion.div>
             )}
-            
+
             <h2 className="text-3xl font-bold text-amber-500">Challenge Complete!</h2>
             <p className="text-[var(--color-text-muted)]">
               You've already completed today's Grand Rounds challenge.
@@ -413,11 +421,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               <Trophy className="w-12 h-12 text-amber-500" />
             </motion.div>
-            
+
             <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
               Grand Rounds Daily Challenge
             </h1>
-            
+
             <p className="text-xl text-[var(--color-text-muted)]">
               Compete globally on today's challenge!
             </p>
@@ -459,8 +467,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-[var(--color-text-muted)]">
-                <strong className="text-amber-500">One Attempt Per Day:</strong> You can only complete this
-                challenge once. New challenges available daily at midnight UTC.
+                <strong className="text-amber-500">One Attempt Per Day:</strong> You can only
+                complete this challenge once. New challenges available daily at midnight UTC.
               </div>
             </div>
           </div>
@@ -511,8 +519,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Timer className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`} />
-                <span className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}>
+                <Timer
+                  className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}
+                />
+                <span
+                  className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}
+                >
                   {formatTime(timeRemaining)}
                 </span>
               </div>
@@ -555,9 +567,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
               )}
 
-              <div className="text-xl font-semibold">
-                {currentQuestion.question}
-              </div>
+              <div className="text-xl font-semibold">{currentQuestion.question}</div>
 
               <div className="space-y-3">
                 {currentQuestion.options?.map((option: string, index: number) => (
@@ -646,12 +656,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 <Trophy className="w-20 h-20 text-amber-500 mx-auto" />
               )}
             </motion.div>
-            
+
             <h2 className="text-3xl font-bold text-amber-500">
               {isTopPercentile ? 'Outstanding Performance!' : 'Challenge Complete!'}
             </h2>
             <p className="text-[var(--color-text-muted)]">
-              {isTopPercentile 
+              {isTopPercentile
                 ? "You're in the top 10% of all participants today!"
                 : "You've completed today's Grand Rounds challenge."}
             </p>

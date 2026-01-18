@@ -33,7 +33,7 @@ function capitalizeFirst(str: string): string {
 
 /**
  * AnswerChoice - A multiple choice answer button with elimination support.
- * 
+ *
  * Features:
  * - Click text to select the answer
  * - Click X icon to eliminate the answer (toggle)
@@ -84,11 +84,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     } else if (isAnswered) {
       // After answering states
       if (isCorrect) {
-        buttonClasses +=
-          ' !bg-green-600 !text-white !border-transparent font-bold shadow-md';
+        buttonClasses += ' !bg-green-600 !text-white !border-transparent font-bold shadow-md';
       } else if (isSelected) {
-        buttonClasses +=
-          ' !bg-red-600 !text-white !border-transparent font-bold shadow-md';
+        buttonClasses += ' !bg-red-600 !text-white !border-transparent font-bold shadow-md';
         animationClass = 'animate-shake';
       } else {
         buttonClasses +=

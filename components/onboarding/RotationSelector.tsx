@@ -5,19 +5,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Heart, 
-  Users, 
-  Baby, 
-  Brain, 
-  Stethoscope, 
+import {
+  Heart,
+  Users,
+  Baby,
+  Brain,
+  Stethoscope,
   Activity,
   Scissors,
   UserCheck,
   Eye,
   Bone,
   Pill,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import type { ClinicalRotation } from '@/types';
 
@@ -49,7 +49,12 @@ const ROTATION_OPTIONS: RotationOption[] = [
   { value: 'Other', label: 'Other', icon: Sparkles },
 ];
 
-export function RotationSelector({ value, onChange, label = 'Current Rotation', className = '' }: RotationSelectorProps) {
+export function RotationSelector({
+  value,
+  onChange,
+  label = 'Current Rotation',
+  className = '',
+}: RotationSelectorProps) {
   return (
     <div className={className}>
       <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-3">
@@ -59,7 +64,7 @@ export function RotationSelector({ value, onChange, label = 'Current Rotation', 
         {ROTATION_OPTIONS.map((option) => {
           const Icon = option.icon;
           const isSelected = value === option.value;
-          
+
           return (
             <motion.button
               key={option.value}
@@ -67,23 +72,28 @@ export function RotationSelector({ value, onChange, label = 'Current Rotation', 
               type="button"
               className={`
                 p-3 rounded-lg border-2 transition-all text-left
-                ${isSelected 
-                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' 
-                  : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-bg-secondary)]'
+                ${
+                  isSelected
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-bg-secondary)]'
                 }
               `}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-2">
-                <Icon 
+                <Icon
                   className={`w-4 h-4 flex-shrink-0 ${
                     isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
-                  }`} 
+                  }`}
                 />
-                <span className={`text-sm font-medium ${
-                  isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'
-                }`}>
+                <span
+                  className={`text-sm font-medium ${
+                    isSelected
+                      ? 'text-[var(--color-text-primary)]'
+                      : 'text-[var(--color-text-muted)]'
+                  }`}
+                >
                   {option.label}
                 </span>
               </div>

@@ -56,68 +56,74 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/aaronjullger-lgtm/PANaCEa.git
    cd PANaCEa
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` and configure:
+
    ```env
    # Clerk Authentication
    VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
    CLERK_SECRET_KEY=sk_test_...
-   
+
    # Google Gemini AI
    GEMINI_API_KEY=your_gemini_api_key
-   
+
    # PostgreSQL Database (REQUIRED)
    DATABASE_URL=postgresql://user:password@host:5432/database
    ```
-   
+
    > ⚠️ **DATABASE_URL is REQUIRED** - PANaCEa uses a database-first architecture
 
 4. **Initialize the database**
+
    ```bash
    npm run db:generate
    npm run migrate:production
    ```
 
 5. **Start the development servers**
-   
+
    **⚠️ CRITICAL**: You must run BOTH frontend and backend servers
-   
+
    ```bash
    npm run dev:all
    ```
-   
+
    This starts:
    - 🔧 Backend (Express) on `http://localhost:3001`
    - ⚛️ Frontend (Vite) on `http://localhost:3000`
-   
+
    <details>
    <summary>Alternative: Run servers separately</summary>
-   
+
    ```bash
    # Terminal 1 - Backend (start first)
    npm run dev:server
-   
-   # Terminal 2 - Frontend  
+
+   # Terminal 2 - Frontend
    npm run dev
    ```
+
    </details>
 
 6. **Open your browser**
-   
+
    Navigate to `http://localhost:3000`
 
 ---
@@ -131,6 +137,7 @@ For production deployment to Cloudflare Pages:
 3. Follow the detailed guide: [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)
 
 📖 **Deployment Resources:**
+
 - [Production Deployment Checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
 - [Database Migration Guide](DATABASE_MIGRATION.md)
 
@@ -138,17 +145,17 @@ For production deployment to Cloudflare Pages:
 
 ## 📜 Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev:all` | Start both frontend and backend (recommended) |
-| `npm run dev:server` | Start backend only |
-| `npm run dev` | Start frontend only |
-| `npm run build` | Build frontend for production |
-| `npm run build:server` | Build backend for production |
-| `npm test` | Run test suite |
-| `npm run db:studio` | Open Prisma Studio (database GUI) |
-| `npm run migrate:production` | Run database migrations |
-| `npm run orchestrate:full` | Run automated content pipeline |
+| Command                      | Description                                   |
+| ---------------------------- | --------------------------------------------- |
+| `npm run dev:all`            | Start both frontend and backend (recommended) |
+| `npm run dev:server`         | Start backend only                            |
+| `npm run dev`                | Start frontend only                           |
+| `npm run build`              | Build frontend for production                 |
+| `npm run build:server`       | Build backend for production                  |
+| `npm test`                   | Run test suite                                |
+| `npm run db:studio`          | Open Prisma Studio (database GUI)             |
+| `npm run migrate:production` | Run database migrations                       |
+| `npm run orchestrate:full`   | Run automated content pipeline                |
 
 ---
 
@@ -176,19 +183,24 @@ PANaCEa/
 ## 🐛 Troubleshooting
 
 ### "Unexpected token '<'" error
+
 **Problem**: Frontend returns HTML instead of JSON for API calls  
 **Solution**: Backend server is not running. Use `npm run dev:all`
 
 ### Database connection errors
+
 **Problem**: Can't connect to PostgreSQL  
 **Solutions**:
+
 - Verify `DATABASE_URL` is set in `.env`
 - Run `npm run db:generate` to sync Prisma client
 - Check database is accessible
 
-### Gemini API errors  
+### Gemini API errors
+
 **Problem**: AI question generation fails  
 **Solutions**:
+
 - Verify `GEMINI_API_KEY` is set correctly
 - Ensure backend server is running on port 3001
 - Check API key validity at [Google AI Studio](https://makersuite.google.com)
@@ -227,7 +239,7 @@ This project is licensed under the MIT License.
 
 - **PANCE Blueprint** - NCCPA exam content outline
 - **Google Gemini** - AI question generation
-- **Clerk** - Authentication infrastructure  
+- **Clerk** - Authentication infrastructure
 - **Supabase/PostgreSQL** - Database hosting
 - **Open FSRS** - Spaced repetition algorithm
 
@@ -242,8 +254,10 @@ This project is licensed under the MIT License.
 </div>
 
 # 3. Verify database connection:
-npm run db:studio  # Opens Prisma Studio - if this works, DB is accessible
-```
+
+npm run db:studio # Opens Prisma Studio - if this works, DB is accessible
+
+````
 
 **Note:** The Vite dev server (port 3000) proxies `/api/*` and `/geminiProxy` requests to the Express backend (port 3001). Both servers must be running for the app to function properly.
 
@@ -289,5 +303,4 @@ PANaCEa features an advanced **Hybrid Content Engine** that solves the latency, 
 ```bash
 # Run the demo to see all features in action
 npx tsx scripts/exampleHybridContentEngine.ts
-```
-
+````

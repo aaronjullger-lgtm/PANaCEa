@@ -13,7 +13,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Querying Guidelines table...\n');
-  
+
   const guidelines = await prisma.guideline.findMany({
     orderBy: { name: 'asc' },
     select: {
@@ -25,12 +25,12 @@ async function main() {
       panceYield: true,
       frequency: true,
       targetPopulation: true,
-      criteria: true
-    }
+      criteria: true,
+    },
   });
-  
+
   console.log(`Found ${guidelines.length} guidelines:\n`);
-  
+
   guidelines.forEach((guideline, index) => {
     console.log(`${index + 1}. ${guideline.name}`);
     console.log(`   Type: ${guideline.type}`);

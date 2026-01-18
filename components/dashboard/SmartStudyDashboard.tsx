@@ -1,14 +1,14 @@
 /**
  * Smart Study Dashboard
- * 
+ *
  * A comprehensive, research-backed study optimization dashboard that integrates:
  * - Desirable Difficulties Engine (Bjork)
  * - Cognitive Load Theory (Sweller)
  * - Circadian Optimization (Schmidt, Walker)
  * - FSRS Spaced Repetition
- * 
+ *
  * This is the "command center" for personalized, efficient learning.
- * 
+ *
  * @module components/dashboard/SmartStudyDashboard
  */
 
@@ -107,9 +107,7 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-purple-500" />
-          <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-            Cognitive Load
-          </h3>
+          <h3 className="font-semibold text-slate-800 dark:text-slate-100">Cognitive Load</h3>
         </div>
         {getBatteryIcon()}
       </div>
@@ -149,18 +147,20 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
       </div>
 
       {/* Status message */}
-      <div className={`mt-4 p-3 rounded-lg text-sm ${
-        load.isOverloaded 
-          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-          : load.optimalBreakTime
-          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-      }`}>
-        {load.isOverloaded 
+      <div
+        className={`mt-4 p-3 rounded-lg text-sm ${
+          load.isOverloaded
+            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+            : load.optimalBreakTime
+              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+        }`}
+      >
+        {load.isOverloaded
           ? 'Take a break! Cognitive overload detected.'
           : load.optimalBreakTime
-          ? 'Perfect time for a 5-10 minute break!'
-          : 'Optimal learning state - keep going!'}
+            ? 'Perfect time for a 5-10 minute break!'
+            : 'Optimal learning state - keep going!'}
       </div>
     </div>
   );
@@ -177,7 +177,7 @@ const ChronotypeCard: React.FC<{ chronotype: ChronotypeProfile }> = ({ chronotyp
     const labels: Record<ChronotypeProfile['type'], string> = {
       'strong-morning': 'Early Bird',
       'moderate-morning': 'Morning Person',
-      'intermediate': 'Flexible Schedule',
+      intermediate: 'Flexible Schedule',
       'moderate-evening': 'Night Owl',
       'strong-evening': 'True Night Owl',
     };
@@ -210,7 +210,8 @@ const ChronotypeCard: React.FC<{ chronotype: ChronotypeProfile }> = ({ chronotyp
         <div className="flex items-center justify-between text-sm">
           <span className="text-white/70">Best Study Window</span>
           <span className="font-medium">
-            {chronotype.optimalStudyWindows[0]?.start}:00 - {chronotype.optimalStudyWindows[0]?.end}:00
+            {chronotype.optimalStudyWindows[0]?.start}:00 - {chronotype.optimalStudyWindows[0]?.end}
+            :00
           </span>
         </div>
       </div>
@@ -238,16 +239,22 @@ const SleepImpactCard: React.FC<{ assessment: SleepImpactAssessment }> = ({ asse
             {assessment.sleepQuality}
           </div>
         </div>
-        <div className={`text-2xl font-bold ${
-          impactPercent >= 90 ? 'text-emerald-500' :
-          impactPercent >= 70 ? 'text-amber-500' : 'text-red-500'
-        }`}>
+        <div
+          className={`text-2xl font-bold ${
+            impactPercent >= 90
+              ? 'text-emerald-500'
+              : impactPercent >= 70
+                ? 'text-amber-500'
+                : 'text-red-500'
+          }`}
+        >
           {impactPercent}%
         </div>
       </div>
 
       <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-        Today's Study Capacity: <span className="font-medium">{assessment.adjustedStudyCapacity} min</span>
+        Today's Study Capacity:{' '}
+        <span className="font-medium">{assessment.adjustedStudyCapacity} min</span>
       </div>
 
       {assessment.recommendations.length > 0 && (
@@ -262,21 +269,26 @@ const SleepImpactCard: React.FC<{ assessment: SleepImpactAssessment }> = ({ asse
 const ExamCountdownCard: React.FC<{ plan: ExamCountdownPlan }> = ({ plan }) => {
   const getPhaseColor = () => {
     switch (plan.phase) {
-      case 'initial-learning': return 'from-blue-500 to-cyan-500';
-      case 'deepening': return 'from-purple-500 to-pink-500';
-      case 'consolidation': return 'from-amber-500 to-orange-500';
-      case 'review': return 'from-emerald-500 to-teal-500';
-      case 'tapering': return 'from-green-500 to-lime-500';
+      case 'initial-learning':
+        return 'from-blue-500 to-cyan-500';
+      case 'deepening':
+        return 'from-purple-500 to-pink-500';
+      case 'consolidation':
+        return 'from-amber-500 to-orange-500';
+      case 'review':
+        return 'from-emerald-500 to-teal-500';
+      case 'tapering':
+        return 'from-green-500 to-lime-500';
     }
   };
 
   const getPhaseLabel = () => {
     const labels: Record<ExamCountdownPlan['phase'], string> = {
       'initial-learning': 'Initial Learning',
-      'deepening': 'Deepening',
-      'consolidation': 'Consolidation',
-      'review': 'Review',
-      'tapering': 'Tapering',
+      deepening: 'Deepening',
+      consolidation: 'Consolidation',
+      review: 'Review',
+      tapering: 'Tapering',
     };
     return labels[plan.phase];
   };
@@ -317,9 +329,7 @@ const DifficultyOptimizer: React.FC<{
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-rose-500" />
-        <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-          Optimal Difficulty
-        </h3>
+        <h3 className="font-semibold text-slate-800 dark:text-slate-100">Optimal Difficulty</h3>
       </div>
 
       {/* Goldilocks zone visualization */}
@@ -341,13 +351,15 @@ const DifficultyOptimizer: React.FC<{
         <span>Too Hard</span>
       </div>
 
-      <div className={`p-3 rounded-lg text-sm ${
-        difficulty.recommendedAdjustment === 'increase'
-          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-          : difficulty.recommendedAdjustment === 'decrease'
-          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-      }`}>
+      <div
+        className={`p-3 rounded-lg text-sm ${
+          difficulty.recommendedAdjustment === 'increase'
+            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+            : difficulty.recommendedAdjustment === 'decrease'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+        }`}
+      >
         {difficulty.explanation}
       </div>
     </div>
@@ -413,8 +425,8 @@ const StartSessionButton: React.FC<{
         <div className="text-left">
           <div className="font-semibold text-lg mb-1">Start Optimized Session</div>
           <div className="text-sm text-white/80">
-            {plan.totalDurationMinutes} min • {plan.blocks.length} blocks • 
-            {' '}{Math.round(plan.estimatedRetentionGain * 100)}% retention boost
+            {plan.totalDurationMinutes} min • {plan.blocks.length} blocks •{' '}
+            {Math.round(plan.estimatedRetentionGain * 100)}% retention boost
           </div>
         </div>
         <Play className="w-8 h-8" />
@@ -463,7 +475,7 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
   const difficulty = useMemo(() => {
     return calculateOptimalDifficulty(mockLearnerProfile, [
       { accuracy: 0.75, responseTimeMs: 40000 },
-      { accuracy: 0.80, responseTimeMs: 35000 },
+      { accuracy: 0.8, responseTimeMs: 35000 },
       { accuracy: 0.72, responseTimeMs: 42000 },
     ]);
   }, []);
@@ -477,11 +489,7 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
   }, []);
 
   const tips = useMemo(() => {
-    return generatePersonalizedTips(
-      chronotype,
-      sleepAssessment,
-      examPlan || undefined
-    );
+    return generatePersonalizedTips(chronotype, sleepAssessment, examPlan || undefined);
   }, [chronotype, sleepAssessment, examPlan]);
 
   const handleStartSession = () => {
@@ -577,10 +585,18 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
           </span>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-500">
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">Bjork (2011) - Desirable Difficulties</span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">Sweller (1988) - Cognitive Load Theory</span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">Walker (2008) - Sleep & Memory</span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">Roediger & Karpicke (2006) - Testing Effect</span>
+          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+            Bjork (2011) - Desirable Difficulties
+          </span>
+          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+            Sweller (1988) - Cognitive Load Theory
+          </span>
+          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+            Walker (2008) - Sleep & Memory
+          </span>
+          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+            Roediger & Karpicke (2006) - Testing Effect
+          </span>
         </div>
       </motion.div>
 

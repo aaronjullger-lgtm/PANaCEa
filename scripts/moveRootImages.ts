@@ -134,7 +134,9 @@ async function upsertMediaAssets(mappings: FileMapping[], dryRun: boolean) {
       });
       console.log(`🖼️  Updated Condition.mediaUrl for ${condition.name}`);
     } else {
-      console.warn(`⚠️  No condition match for ${mapping.filename}; MediaAsset stored without Condition link`);
+      console.warn(
+        `⚠️  No condition match for ${mapping.filename}; MediaAsset stored without Condition link`
+      );
     }
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Comprehensive API Response Types for PANaCEa
- * 
+ *
  * Provides type safety for all API endpoints and responses.
  * Replaces usage of `any` types throughout the application.
  */
@@ -151,11 +151,14 @@ export interface AnalyticsResponse {
   totalQuestions: number;
   correctAnswers: number;
   accuracy: number;
-  systemBreakdown: Record<string, {
-    correct: number;
-    total: number;
-    accuracy: number;
-  }>;
+  systemBreakdown: Record<
+    string,
+    {
+      correct: number;
+      total: number;
+      accuracy: number;
+    }
+  >;
   recentPerformance: PerformanceRecordRequest[];
   weakestSystems: string[];
   strongestSystems: string[];
@@ -285,7 +288,7 @@ export interface ExportResultResponse {
   format: 'oauth' | 'csv';
   taskCount: number;
   downloadUrl?: string; // For CSV exports
-  projectId?: string;   // For OAuth exports
+  projectId?: string; // For OAuth exports
   message: string;
 }
 
@@ -400,15 +403,12 @@ export function isApiSuccess<T>(response: unknown): response is ApiResponse<T> {
 /**
  * Create a standardized success response
  */
-export function createSuccessResponse<T>(
-  data: T,
-  message?: string
-): ApiResponse<T> {
+export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
   return {
     success: true,
     data,
     timestamp: new Date().toISOString(),
-    ...(message && { message })
+    ...(message && { message }),
   };
 }
 
@@ -425,6 +425,6 @@ export function createErrorResponse(
     error,
     code,
     details,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }

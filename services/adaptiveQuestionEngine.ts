@@ -1,6 +1,6 @@
 /**
  * Adaptive Question Engine - Sprint 3
- * 
+ *
  * AI-powered question selection that adapts to learning patterns.
  */
 
@@ -39,11 +39,10 @@ export function calculateAdaptiveState(
 ): AdaptiveState {
   const last10 = recentAttempts.slice(-10);
   const last5 = recentAttempts.slice(-5);
-  
+
   // Calculate recent accuracy
-  const recentAccuracy = last10.length > 0
-    ? last10.filter(a => a.wasCorrect).length / last10.length
-    : 0.5;
+  const recentAccuracy =
+    last10.length > 0 ? last10.filter((a) => a.wasCorrect).length / last10.length : 0.5;
 
   // Count streaks
   let consecutiveCorrect = 0;
@@ -59,16 +58,16 @@ export function calculateAdaptiveState(
   }
 
   // Estimate cognitive load from response times
-  const avgResponseTime = last5.length > 0
-    ? last5.reduce((sum, a) => sum + a.responseTimeMs, 0) / last5.length
-    : 30000;
+  const avgResponseTime =
+    last5.length > 0 ? last5.reduce((sum, a) => sum + a.responseTimeMs, 0) / last5.length : 30000;
   const cognitiveLoad = Math.min(100, avgResponseTime / 600); // 60s = 100% load
 
   // Current difficulty estimate
   const difficultyMap: Record<string, number> = { easy: 25, medium: 50, hard: 75 };
-  const currentDifficulty = last5.length > 0
-    ? last5.reduce((sum, a) => sum + (difficultyMap[a.difficulty] || 50), 0) / last5.length
-    : 50;
+  const currentDifficulty =
+    last5.length > 0
+      ? last5.reduce((sum, a) => sum + (difficultyMap[a.difficulty] || 50), 0) / last5.length
+      : 50;
 
   // Determine adjustment
   let shouldAdjust: AdaptiveState['shouldAdjust'] = 'maintain';
@@ -98,13 +97,13 @@ export function selectOptimalQuestions(
 ): SelectedQuestion[] {
   const selected: SelectedQuestion[] = [];
   const systemAccuracy: Record<string, number> = {};
-  
+
   for (const sys of systemPerformance) {
     systemAccuracy[sys.system.toLowerCase()] = sys.accuracy;
   }
 
   // Score each question
-  const scored = availableQuestions.map(q => {
+  const scored = availableQuestions.map((q) => {
     let score = 50; // Base score
     const sysAcc = systemAccuracy[q.system.toLowerCase()] ?? 0.5;
 
@@ -122,10 +121,10 @@ export function selectOptimalQuestions(
     const diffValue: Record<string, number> = { easy: 25, medium: 50, hard: 75 };
     const qDiff = diffValue[q.difficulty] || 50;
     let targetDiff = adaptiveState.currentDifficulty;
-    
+
     if (adaptiveState.shouldAdjust === 'easier') targetDiff -= 15;
     else if (adaptiveState.shouldAdjust === 'harder') targetDiff += 15;
-    
+
     const diffMatch = 1 - Math.abs(qDiff - targetDiff) / 100;
     score += diffMatch * 20;
 
@@ -144,12 +143,14 @@ export function selectOptimalQuestions(
     }
 
     // Predicted accuracy
-    const predictedAccuracy = sysAcc * (q.difficulty === 'easy' ? 1.2 : q.difficulty === 'hard' ? 0.8 : 1);
+    const predictedAccuracy =
+      sysAcc * (q.difficulty === 'easy' ? 1.2 : q.difficulty === 'hard' ? 0.8 : 1);
 
     // Learning value (higher for challenging but achievable)
-    const learningValue = predictedAccuracy > 0.3 && predictedAccuracy < 0.9
-      ? (1 - Math.abs(predictedAccuracy - 0.7)) * 100
-      : 30;
+    const learningValue =
+      predictedAccuracy > 0.3 && predictedAccuracy < 0.9
+        ? (1 - Math.abs(predictedAccuracy - 0.7)) * 100
+        : 30;
 
     return {
       question: q,
@@ -161,7 +162,7 @@ export function selectOptimalQuestions(
 
   // Sort by score and select top N
   scored.sort((a, b) => b.score - a.score);
-  
+
   for (const item of scored.slice(0, count)) {
     selected.push({
       questionId: item.question.id,
@@ -192,25 +193,70 @@ export function generateSessionPlan(
   goal: 'learn' | 'review' | 'challenge' | 'exam_prep'
 ): { phase: string; durationMinutes: number; focus: string; difficulty: string }[] {
   const plan: { phase: string; durationMinutes: number; focus: string; difficulty: string }[] = [];
-  
+
   // Find weakest and strongest systems
   const sorted = [...systemPerformance].sort((a, b) => a.accuracy - b.accuracy);
   const weakest = sorted[0]?.system || 'General';
   const strongest = sorted[sorted.length - 1]?.system || 'General';
 
   if (goal === 'exam_prep') {
-    plan.push({ phase: 'Warm-up', durationMinutes: Math.round(sessionDurationMinutes * 0.15), focus: strongest, difficulty: 'easy' });
-    plan.push({ phase: 'Weak Area Focus', durationMinutes: Math.round(sessionDurationMinutes * 0.4), focus: weakest, difficulty: 'medium' });
-    plan.push({ phase: 'Mixed Practice', durationMinutes: Math.round(sessionDurationMinutes * 0.3), focus: 'Mixed', difficulty: 'hard' });
-    plan.push({ phase: 'Cool-down Review', durationMinutes: Math.round(sessionDurationMinutes * 0.15), focus: 'Review Mistakes', difficulty: 'medium' });
+    plan.push({
+      phase: 'Warm-up',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.15),
+      focus: strongest,
+      difficulty: 'easy',
+    });
+    plan.push({
+      phase: 'Weak Area Focus',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.4),
+      focus: weakest,
+      difficulty: 'medium',
+    });
+    plan.push({
+      phase: 'Mixed Practice',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.3),
+      focus: 'Mixed',
+      difficulty: 'hard',
+    });
+    plan.push({
+      phase: 'Cool-down Review',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.15),
+      focus: 'Review Mistakes',
+      difficulty: 'medium',
+    });
   } else if (goal === 'challenge') {
-    plan.push({ phase: 'Warm-up', durationMinutes: Math.round(sessionDurationMinutes * 0.2), focus: 'General', difficulty: 'medium' });
-    plan.push({ phase: 'Challenge', durationMinutes: Math.round(sessionDurationMinutes * 0.8), focus: 'All Systems', difficulty: 'hard' });
+    plan.push({
+      phase: 'Warm-up',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.2),
+      focus: 'General',
+      difficulty: 'medium',
+    });
+    plan.push({
+      phase: 'Challenge',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.8),
+      focus: 'All Systems',
+      difficulty: 'hard',
+    });
   } else if (goal === 'review') {
-    plan.push({ phase: 'Spaced Review', durationMinutes: sessionDurationMinutes, focus: 'Due for Review', difficulty: 'adaptive' });
+    plan.push({
+      phase: 'Spaced Review',
+      durationMinutes: sessionDurationMinutes,
+      focus: 'Due for Review',
+      difficulty: 'adaptive',
+    });
   } else {
-    plan.push({ phase: 'Learn', durationMinutes: Math.round(sessionDurationMinutes * 0.7), focus: weakest, difficulty: 'medium' });
-    plan.push({ phase: 'Reinforce', durationMinutes: Math.round(sessionDurationMinutes * 0.3), focus: weakest, difficulty: 'easy' });
+    plan.push({
+      phase: 'Learn',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.7),
+      focus: weakest,
+      difficulty: 'medium',
+    });
+    plan.push({
+      phase: 'Reinforce',
+      durationMinutes: Math.round(sessionDurationMinutes * 0.3),
+      focus: weakest,
+      difficulty: 'easy',
+    });
   }
 
   return plan;

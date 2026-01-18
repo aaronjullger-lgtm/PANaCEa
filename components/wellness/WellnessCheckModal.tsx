@@ -19,7 +19,7 @@ type BreathingPhase = 'inhale' | 'hold' | 'exhale' | 'idle';
 export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   isOpen,
   onClose,
-  reason
+  reason,
 }) => {
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<BreathingPhase>('idle');
@@ -29,7 +29,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   const reasonMessages = {
     rapid_questions: "You've been answering questions rapidly. Great focus!",
     late_night: "You're studying late into the night. Remember to rest!",
-    manual: "Time for a wellness check!"
+    manual: 'Time for a wellness check!',
   };
 
   // 4-7-8 Breathing Technique Timer
@@ -67,8 +67,8 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
       if (!breathingActiveRef.current) return;
 
       // Brief pause before next cycle
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Continue if still breathing
       if (breathingActiveRef.current) {
         breathingCycle();
@@ -83,7 +83,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   }, [isBreathing]);
 
   const runCountdown = (seconds: number): Promise<void> => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       let remaining = seconds;
       const interval = setInterval(() => {
         remaining--;
@@ -112,28 +112,40 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
 
   const getBreathingColor = () => {
     switch (breathingPhase) {
-      case 'inhale': return 'from-blue-400 to-blue-600';
-      case 'hold': return 'from-purple-400 to-purple-600';
-      case 'exhale': return 'from-green-400 to-green-600';
-      default: return 'from-gray-400 to-gray-600';
+      case 'inhale':
+        return 'from-blue-400 to-blue-600';
+      case 'hold':
+        return 'from-purple-400 to-purple-600';
+      case 'exhale':
+        return 'from-green-400 to-green-600';
+      default:
+        return 'from-gray-400 to-gray-600';
     }
   };
 
   const getBreathingScale = () => {
     switch (breathingPhase) {
-      case 'inhale': return 1.4;
-      case 'hold': return 1.4;
-      case 'exhale': return 0.8;
-      default: return 1;
+      case 'inhale':
+        return 1.4;
+      case 'hold':
+        return 1.4;
+      case 'exhale':
+        return 0.8;
+      default:
+        return 1;
     }
   };
 
   const getBreathingInstruction = () => {
     switch (breathingPhase) {
-      case 'inhale': return 'Breathe in slowly...';
-      case 'hold': return 'Hold your breath...';
-      case 'exhale': return 'Breathe out slowly...';
-      default: return 'Ready to begin?';
+      case 'inhale':
+        return 'Breathe in slowly...';
+      case 'hold':
+        return 'Hold your breath...';
+      case 'exhale':
+        return 'Breathe out slowly...';
+      default:
+        return 'Ready to begin?';
     }
   };
 
@@ -168,9 +180,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Wellness Check
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              {reasonMessages[reason]}
-            </p>
+            <p className="text-gray-600 dark:text-gray-300">{reasonMessages[reason]}</p>
           </div>
 
           {/* Wellness Tips */}
@@ -194,13 +204,21 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
               4-7-8 Breathing Timer
             </h3>
-            
+
             {/* Breathing Circle */}
             <div className="flex items-center justify-center mb-4">
               <motion.div
                 animate={{ scale: getBreathingScale() }}
-                transition={{ duration: breathingPhase === 'hold' ? 0.5 : 
-                  breathingPhase === 'inhale' ? 4 : breathingPhase === 'exhale' ? 8 : 0 }}
+                transition={{
+                  duration:
+                    breathingPhase === 'hold'
+                      ? 0.5
+                      : breathingPhase === 'inhale'
+                        ? 4
+                        : breathingPhase === 'exhale'
+                          ? 8
+                          : 0,
+                }}
                 className={`w-32 h-32 rounded-full bg-gradient-to-br ${getBreathingColor()} 
                   flex items-center justify-center shadow-lg`}
               >

@@ -2,11 +2,11 @@
 
 /**
  * Migration Script: Add and Populate relatedSystems
- * 
+ *
  * This script:
  * 1. Applies the relatedSystems schema migration
  * 2. Optionally populates relatedSystems for known multi-system conditions
- * 
+ *
  * Usage:
  *   npm run migrate:related-systems
  */
@@ -18,89 +18,89 @@ dotenv.config();
 
 // Common multi-system conditions and their related systems
 const MULTI_SYSTEM_CONDITIONS = {
-  'Sarcoidosis': {
+  Sarcoidosis: {
     primarySystem: 'PULM',
-    relatedSystems: ['DERM', 'HEENT', 'CV', 'NEURO']
+    relatedSystems: ['DERM', 'HEENT', 'CV', 'NEURO'],
   },
   'Systemic Lupus Erythematosus': {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'RENAL', 'HEME', 'CV', 'NEURO']
+    relatedSystems: ['DERM', 'RENAL', 'HEME', 'CV', 'NEURO'],
   },
-  'SLE': {
+  SLE: {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'RENAL', 'HEME', 'CV', 'NEURO']
+    relatedSystems: ['DERM', 'RENAL', 'HEME', 'CV', 'NEURO'],
   },
-  'Syphilis': {
+  Syphilis: {
     primarySystem: 'ID',
-    relatedSystems: ['DERM', 'NEURO', 'CV']
+    relatedSystems: ['DERM', 'NEURO', 'CV'],
   },
   'HIV/AIDS': {
     primarySystem: 'ID',
-    relatedSystems: ['DERM', 'NEURO', 'GI', 'PULM']
+    relatedSystems: ['DERM', 'NEURO', 'GI', 'PULM'],
   },
-  'Tuberculosis': {
+  Tuberculosis: {
     primarySystem: 'PULM',
-    relatedSystems: ['ID', 'NEURO', 'MSK', 'GU']
+    relatedSystems: ['ID', 'NEURO', 'MSK', 'GU'],
   },
-  'Amyloidosis': {
+  Amyloidosis: {
     primarySystem: 'HEME',
-    relatedSystems: ['CV', 'RENAL', 'GI', 'NEURO']
+    relatedSystems: ['CV', 'RENAL', 'GI', 'NEURO'],
   },
-  'Hemochromatosis': {
+  Hemochromatosis: {
     primarySystem: 'HEME',
-    relatedSystems: ['ENDO', 'CV', 'MSK', 'GI']
+    relatedSystems: ['ENDO', 'CV', 'MSK', 'GI'],
   },
   'Diabetes Mellitus': {
     primarySystem: 'ENDO',
-    relatedSystems: ['CV', 'RENAL', 'NEURO', 'DERM']
+    relatedSystems: ['CV', 'RENAL', 'NEURO', 'DERM'],
   },
-  'Hyperthyroidism': {
+  Hyperthyroidism: {
     primarySystem: 'ENDO',
-    relatedSystems: ['CV', 'NEURO', 'MSK', 'HEENT']
+    relatedSystems: ['CV', 'NEURO', 'MSK', 'HEENT'],
   },
-  'Hypothyroidism': {
+  Hypothyroidism: {
     primarySystem: 'ENDO',
-    relatedSystems: ['CV', 'NEURO', 'DERM', 'GI']
+    relatedSystems: ['CV', 'NEURO', 'DERM', 'GI'],
   },
-  'Scleroderma': {
+  Scleroderma: {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'GI', 'PULM', 'RENAL', 'CV']
+    relatedSystems: ['DERM', 'GI', 'PULM', 'RENAL', 'CV'],
   },
-  'Dermatomyositis': {
+  Dermatomyositis: {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'PULM', 'CV']
+    relatedSystems: ['DERM', 'PULM', 'CV'],
   },
-  'Polymyositis': {
+  Polymyositis: {
     primarySystem: 'MSK',
-    relatedSystems: ['PULM', 'CV']
+    relatedSystems: ['PULM', 'CV'],
   },
   "Wilson's Disease": {
     primarySystem: 'GI',
-    relatedSystems: ['NEURO', 'PSYCH', 'HEENT']
+    relatedSystems: ['NEURO', 'PSYCH', 'HEENT'],
   },
   'Inflammatory Bowel Disease': {
     primarySystem: 'GI',
-    relatedSystems: ['MSK', 'DERM', 'HEENT']
+    relatedSystems: ['MSK', 'DERM', 'HEENT'],
   },
   "Crohn's Disease": {
     primarySystem: 'GI',
-    relatedSystems: ['MSK', 'DERM', 'HEENT']
+    relatedSystems: ['MSK', 'DERM', 'HEENT'],
   },
   'Ulcerative Colitis': {
     primarySystem: 'GI',
-    relatedSystems: ['MSK', 'DERM', 'HEENT']
+    relatedSystems: ['MSK', 'DERM', 'HEENT'],
   },
   'Lyme Disease': {
     primarySystem: 'ID',
-    relatedSystems: ['MSK', 'NEURO', 'CV', 'DERM']
+    relatedSystems: ['MSK', 'NEURO', 'CV', 'DERM'],
   },
-  'Vasculitis': {
+  Vasculitis: {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'RENAL', 'NEURO', 'PULM']
+    relatedSystems: ['DERM', 'RENAL', 'NEURO', 'PULM'],
   },
   'Behcet Disease': {
     primarySystem: 'MSK',
-    relatedSystems: ['DERM', 'HEENT', 'GI', 'NEURO']
+    relatedSystems: ['DERM', 'HEENT', 'GI', 'NEURO'],
   },
 };
 
@@ -159,11 +159,11 @@ async function main() {
           where: {
             condition: {
               contains: conditionName,
-              mode: 'insensitive'
+              mode: 'insensitive',
             },
             // Only update if relatedSystems is empty
-            relatedSystems: { isEmpty: true }
-          }
+            relatedSystems: { isEmpty: true },
+          },
         });
 
         if (conditions.length === 0) {
@@ -175,15 +175,18 @@ async function main() {
           await prisma.medicalContent.update({
             where: { id: condition.id },
             data: {
-              relatedSystems: config.relatedSystems
-            }
+              relatedSystems: config.relatedSystems,
+            },
           });
-          
+
           console.log(`  ✓ Updated: ${condition.condition} (${config.relatedSystems.join(', ')})`);
           updateCount++;
         }
       } catch (error) {
-        console.warn(`  ⚠️  Could not update ${conditionName}:`, error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          `  ⚠️  Could not update ${conditionName}:`,
+          error instanceof Error ? error.message : 'Unknown error'
+        );
       }
     }
 
@@ -192,8 +195,8 @@ async function main() {
     // Show statistics
     const withRelatedSystems = await prisma.medicalContent.count({
       where: {
-        relatedSystems: { isEmpty: false }
-      }
+        relatedSystems: { isEmpty: false },
+      },
     });
 
     console.log('📊 Statistics:');
@@ -205,7 +208,6 @@ async function main() {
     console.log('   - Review conditions with relatedSystems set');
     console.log('   - Add relatedSystems to additional conditions as needed');
     console.log('   - Test multi-system queries with getConditionsBySystem()\n');
-
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);

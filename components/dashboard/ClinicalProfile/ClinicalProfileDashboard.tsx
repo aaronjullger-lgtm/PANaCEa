@@ -24,7 +24,10 @@ const ClinicalProfileDashboard: React.FC = () => {
     return (
       <div className="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 p-4 flex items-center justify-between">
         <span>{error || 'Unable to load profile'}</span>
-        <button onClick={refetch} className="px-3 py-1.5 text-sm font-medium bg-rose-600 text-white rounded-lg shadow hover:bg-rose-700">
+        <button
+          onClick={refetch}
+          className="px-3 py-1.5 text-sm font-medium bg-rose-600 text-white rounded-lg shadow hover:bg-rose-700"
+        >
           Retry
         </button>
       </div>
@@ -35,8 +38,12 @@ const ClinicalProfileDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">Personal Clinical Profile</p>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Strengths, timing, and biases</h2>
+          <p className="text-xs uppercase tracking-wide text-slate-400">
+            Personal Clinical Profile
+          </p>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            Strengths, timing, and biases
+          </h2>
         </div>
         <button
           onClick={refetch}

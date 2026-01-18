@@ -13,7 +13,7 @@ export function useReducedMotion(): boolean {
     if (typeof window === 'undefined') return;
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    
+
     // Set initial value
     setPrefersReducedMotion(mediaQuery.matches);
 
@@ -28,7 +28,7 @@ export function useReducedMotion(): boolean {
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
-    } 
+    }
     // Legacy browsers - uses deprecated addListener/removeListener
     else if ('addListener' in mediaQuery && typeof mediaQuery.addListener === 'function') {
       mediaQuery.addListener(handleChange);
@@ -45,7 +45,7 @@ export function useReducedMotion(): boolean {
 
 /**
  * Get animation configuration that respects reduced motion preference
- * 
+ *
  * @param normalDuration - Duration in seconds for normal animation
  * @param reducedDuration - Duration in seconds for reduced motion (default: 0.01)
  * @returns Duration that respects user preference
@@ -71,15 +71,13 @@ export interface TransitionConfig {
 
 /**
  * Get transition configuration that respects reduced motion preference
- * 
+ *
  * @param normalConfig - Normal transition configuration
  * @returns Transition configuration that respects user preference
  */
-export function useAccessibleTransition<T extends TransitionConfig>(
-  normalConfig: T
-): T {
+export function useAccessibleTransition<T extends TransitionConfig>(normalConfig: T): T {
   const prefersReducedMotion = useReducedMotion();
-  
+
   if (prefersReducedMotion) {
     return {
       ...normalConfig,
@@ -87,6 +85,6 @@ export function useAccessibleTransition<T extends TransitionConfig>(
       ease: 'linear',
     } as T;
   }
-  
+
   return normalConfig;
 }

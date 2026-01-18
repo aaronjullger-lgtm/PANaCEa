@@ -6,7 +6,7 @@ async function main() {
   try {
     const count = await prisma.medicalContent.count();
     console.log(`MedicalContent count: ${count}`);
-    
+
     if (count > 0) {
       const sample = await prisma.medicalContent.findFirst();
       console.log('Sample content:', JSON.stringify(sample, null, 2));

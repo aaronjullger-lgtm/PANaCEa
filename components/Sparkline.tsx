@@ -1,6 +1,6 @@
 /**
  * Sparkline - Lightweight SVG sparkline component
- * 
+ *
  * A minimalist line chart for visualizing trends inline.
  * Perfect for lab values, performance metrics, etc.
  */
@@ -58,7 +58,7 @@ export function Sparkline({
   // Calculate min and max if not provided
   const min = minProp !== undefined ? minProp : Math.min(...data);
   const max = maxProp !== undefined ? maxProp : Math.max(...data);
-  
+
   // Prevent division by zero
   const range = max - min || 1;
 
@@ -128,14 +128,8 @@ export function Sparkline({
         )}
 
         {/* Fill area under the line */}
-        {fillArea && (
-          <path
-            d={areaPathData}
-            fill={effectiveColor}
-            fillOpacity={0.1}
-          />
-        )}
-        
+        {fillArea && <path d={areaPathData} fill={effectiveColor} fillOpacity={0.1} />}
+
         {/* Line */}
         <path
           d={pathData}
@@ -145,18 +139,13 @@ export function Sparkline({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        
+
         {/* Dots at data points */}
-        {showDots && points.map((point, index) => (
-          <circle
-            key={index}
-            cx={point.x}
-            cy={point.y}
-            r={strokeWidth}
-            fill={effectiveColor}
-          />
-        ))}
-        
+        {showDots &&
+          points.map((point, index) => (
+            <circle key={index} cx={point.x} cy={point.y} r={strokeWidth} fill={effectiveColor} />
+          ))}
+
         {/* Highlight last point */}
         {points.length > 0 && (
           <circle
@@ -168,10 +157,13 @@ export function Sparkline({
           />
         )}
       </svg>
-      
+
       {/* Last value label */}
       {showLastValue && data.length > 0 && (
-        <span className={`text-sm font-medium ${semanticColorClass}`} style={{ color: effectiveColor }}>
+        <span
+          className={`text-sm font-medium ${semanticColorClass}`}
+          style={{ color: effectiveColor }}
+        >
           {formatValue(data[data.length - 1])}
         </span>
       )}
@@ -219,17 +211,9 @@ export function SparklineBar({
         const barHeight = ((value - min) / range) * height;
         const x = index * (barWidth + barGap);
         const y = height - barHeight;
-        
+
         return (
-          <rect
-            key={index}
-            x={x}
-            y={y}
-            width={barWidth}
-            height={barHeight}
-            fill={color}
-            rx={1}
-          />
+          <rect key={index} x={x} y={y} width={barWidth} height={barHeight} fill={color} rx={1} />
         );
       })}
     </svg>
@@ -259,7 +243,11 @@ export function TrendIndicator({
   const isPositive = change > 0;
   const isNeutral = change === 0;
 
-  const color = isNeutral ? 'text-slate-500' : isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  const color = isNeutral
+    ? 'text-slate-500'
+    : isPositive
+      ? 'text-green-600 dark:text-green-400'
+      : 'text-red-600 dark:text-red-400';
   const arrow = isNeutral ? '→' : isPositive ? '↑' : '↓';
 
   return (
@@ -268,7 +256,8 @@ export function TrendIndicator({
       <span>{formatValue(current)}</span>
       {showPercentage && !isNeutral && (
         <span className="text-xs">
-          ({percentChange > 0 ? '+' : ''}{percentChange.toFixed(1)}%)
+          ({percentChange > 0 ? '+' : ''}
+          {percentChange.toFixed(1)}%)
         </span>
       )}
     </span>

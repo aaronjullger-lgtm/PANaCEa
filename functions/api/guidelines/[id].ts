@@ -3,96 +3,82 @@
  * GET /api/guidelines/[id] - Get a specific guideline by ID
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const GuidelineByIdSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, 'Guideline ID is required'),
+  }),
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { env, params } = context;
-  const { id } = params;
-
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(GuidelineByIdSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/guidelines/[id]', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    // Authenticate request (optional - guidelines are generally public)
-    const auth = await authenticateRequest(context.request, env.CLERK_SECRET_KEY);
-    if (!auth.authenticated) {
-      return new Response(JSON.stringify({ error: auth.error }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    const { id } = validated.params;
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const guideline = await prisma.guideline.findUnique({
-      where: { id: id as string },
+      where: { id },
       include: {
         Condition: {
           select: {
             id: true,
             name: true,
             system: true,
-            panceYield: true
-          }
-        }
-      }
+            panceYield: true,
+          },
+        },
+      },
     });
-    
+
     if (!guideline) {
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: 'Guideline not found' 
-      }), { 
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+      log.warn('Guideline not found', { id });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Guideline not found',
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
         }
-      });
+      );
     }
-    
-    return new Response(JSON.stringify({
-      success: true,
-      data: guideline
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+
+    log.info('Fetched guideline', { id, name: guideline.name });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: guideline,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       }
-    });
+    );
   } catch (error: any) {
-    console.error(`Error fetching guideline ${id}:`, error);
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: 'Failed to fetch guideline', 
-      details: error.message 
-    }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+    log.error('Error fetching guideline', { error: error.message });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Failed to fetch guideline',
+        details: error.message,
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
       }
-    });
+    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

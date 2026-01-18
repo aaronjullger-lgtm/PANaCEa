@@ -1,6 +1,6 @@
 /**
  * LibraryFilters - Filter controls for Clinical Library
- * 
+ *
  * Features:
  * - System selector (dropdown)
  * - Search input (debounced)

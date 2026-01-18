@@ -1,15 +1,15 @@
 #!/usr/bin/env tsx
 /**
  * Master Database Orchestrator
- * 
+ *
  * Runs the complete "Health & Sync" cycle in the correct order:
  * 1. Handshake (Local → DB): Sync local registries to database
  * 2. Diagnostic: Validate database integrity
  * 3. Auto-Mechanic: Repair data issues
  * 4. Write-Back (DB → Local): Capture AI-generated records back to code
- * 
+ *
  * This ensures bi-directional synchronization and database health.
- * 
+ *
  * Usage: npx tsx scripts/maintenance/orchestrator.ts
  * Or: npm run db:orchestrate (add to package.json)
  */
@@ -35,12 +35,15 @@ const results: TaskResult[] = [];
 /**
  * Run a TypeScript script and capture output
  */
-function runScript(scriptPath: string, args: string[] = []): Promise<{ stdout: string, stderr: string }> {
+function runScript(
+  scriptPath: string,
+  args: string[] = []
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const fullPath = path.join(__dirname, '..', scriptPath);
     const proc = spawn('npx', ['tsx', fullPath, ...args], {
       cwd: path.join(__dirname, '../..'),
-      env: process.env
+      env: process.env,
     });
 
     let stdout = '';
@@ -80,7 +83,7 @@ async function runPhase(
   args: string[] = []
 ): Promise<TaskResult> {
   const startTime = Date.now();
-  
+
   console.log(`\n${'='.repeat(80)}`);
   console.log(`${emoji} Phase: ${name}`);
   console.log(`${'='.repeat(80)}\n`);
@@ -88,28 +91,28 @@ async function runPhase(
   try {
     const { stdout, stderr } = await runScript(scriptPath, args);
     const duration = Date.now() - startTime;
-    
+
     console.log(`\n✅ ${name} completed in ${(duration / 1000).toFixed(2)}s\n`);
-    
+
     return {
       name,
       emoji,
       success: true,
       duration,
-      output: stdout
+      output: stdout,
     };
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    
+
     console.error(`\n❌ ${name} failed after ${(duration / 1000).toFixed(2)}s`);
     if (error.error) console.error(`   Error: ${error.error}`);
-    
+
     return {
       name,
       emoji,
       success: false,
       duration,
-      error: error.error || error.stderr || 'Unknown error'
+      error: error.error || error.stderr || 'Unknown error',
     };
   }
 }
@@ -121,10 +124,10 @@ function printSummary() {
   console.log(`\n\n${'='.repeat(80)}`);
   console.log('ORCHESTRATION SUMMARY');
   console.log(`${'='.repeat(80)}\n`);
-  
+
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
-  const successCount = results.filter(r => r.success).length;
-  const failureCount = results.filter(r => !r.success).length;
+  const successCount = results.filter((r) => r.success).length;
+  const failureCount = results.filter((r) => !r.success).length;
 
   console.log(`⏱️  Total Duration: ${(totalDuration / 1000).toFixed(2)}s`);
   console.log(`✅ Successful Phases: ${successCount}/${results.length}`);
@@ -137,7 +140,7 @@ function printSummary() {
   for (const result of results) {
     const status = result.success ? '✅' : '❌';
     const duration = (result.duration / 1000).toFixed(2);
-    
+
     console.log(`${status} ${result.emoji} ${result.name} (${duration}s)`);
     if (!result.success && result.error) {
       console.log(`   Error: ${result.error.split('\n')[0]}`);
@@ -171,11 +174,7 @@ async function main() {
 
   try {
     // Phase 1: The Handshake (Local → DB)
-    const sync = await runPhase(
-      'The Handshake: Local → Cloud',
-      '🔄',
-      'syncAllRegistries.ts'
-    );
+    const sync = await runPhase('The Handshake: Local → Cloud', '🔄', 'syncAllRegistries.ts');
     results.push(sync);
 
     // Phase 2: The Diagnostic
@@ -219,7 +218,7 @@ async function main() {
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('❌ Fatal error:', error);
   process.exit(1);
 });

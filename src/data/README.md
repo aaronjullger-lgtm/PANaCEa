@@ -48,7 +48,7 @@ console.log(randomCase.labs.CBC); // Complete Blood Count
 console.log(randomCase.labs.LFT); // Liver Function Tests
 
 // Check for abnormal values
-const abnormalLabs = randomCase.labs.BMP.filter(lab => lab.flag !== 'N');
+const abnormalLabs = randomCase.labs.BMP.filter((lab) => lab.flag !== 'N');
 ```
 
 ### Clinical Cases
@@ -65,16 +65,16 @@ const randomCase = cases[Math.floor(Math.random() * cases.length)];
 
 // Access presentation clues by type
 const buzzwords = randomCase.presentationClues
-  .filter(clue => clue.type === 'buzzword')
-  .map(clue => clue.description);
+  .filter((clue) => clue.type === 'buzzword')
+  .map((clue) => clue.description);
 
 const physicalExamFindings = randomCase.presentationClues
-  .filter(clue => clue.type === 'physical_exam')
-  .map(clue => clue.description);
+  .filter((clue) => clue.type === 'physical_exam')
+  .map((clue) => clue.description);
 
 const historyElements = randomCase.presentationClues
-  .filter(clue => clue.type === 'history')
-  .map(clue => clue.description);
+  .filter((clue) => clue.type === 'history')
+  .map((clue) => clue.description);
 ```
 
 ## Data Structure
@@ -98,19 +98,20 @@ const historyElements = randomCase.presentationClues
 
 ```typescript
 {
-  id: string;                      // Unique identifier
-  correctDiagnosis: string;        // The diagnosis
-  vignette: string;                // Detailed patient presentation
+  id: string; // Unique identifier
+  correctDiagnosis: string; // The diagnosis
+  vignette: string; // Detailed patient presentation
   presentationClues: Array<{
     type: 'buzzword' | 'physical_exam' | 'history';
     description: string;
-  }>
+  }>;
 }
 ```
 
 ## Quality Assurance
 
 Both generation scripts ensure:
+
 - Medically accurate content
 - High-yield conditions for PANCE preparation
 - Appropriate complexity for training

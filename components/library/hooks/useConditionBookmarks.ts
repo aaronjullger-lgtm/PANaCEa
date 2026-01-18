@@ -1,6 +1,6 @@
 /**
  * useConditionBookmarks - Manage bookmarked conditions
- * 
+ *
  * Stores bookmarked condition IDs in localStorage for quick access.
  * Useful for marking conditions to review later.
  */
@@ -67,50 +67,52 @@ export function useConditionBookmarks() {
   /**
    * Check if a condition is bookmarked
    */
-  const isBookmarked = useCallback((conditionId: string): boolean => {
-    return bookmarks.some(b => b.id === conditionId);
-  }, [bookmarks]);
+  const isBookmarked = useCallback(
+    (conditionId: string): boolean => {
+      return bookmarks.some((b) => b.id === conditionId);
+    },
+    [bookmarks]
+  );
 
   /**
    * Toggle bookmark status for a condition
    */
-  const toggleBookmark = useCallback((condition: { id: string; condition: string; system?: string }) => {
-    setBookmarks(prev => {
-      const exists = prev.find(b => b.id === condition.id);
-      if (exists) {
-        // Remove bookmark
-        return prev.filter(b => b.id !== condition.id);
-      } else {
-        // Add bookmark
-        return [
-          ...prev,
-          {
-            id: condition.id,
-            condition: condition.condition,
-            system: condition.system,
-            bookmarkedAt: new Date().toISOString(),
-          },
-        ];
-      }
-    });
-  }, []);
+  const toggleBookmark = useCallback(
+    (condition: { id: string; condition: string; system?: string }) => {
+      setBookmarks((prev) => {
+        const exists = prev.find((b) => b.id === condition.id);
+        if (exists) {
+          // Remove bookmark
+          return prev.filter((b) => b.id !== condition.id);
+        } else {
+          // Add bookmark
+          return [
+            ...prev,
+            {
+              id: condition.id,
+              condition: condition.condition,
+              system: condition.system,
+              bookmarkedAt: new Date().toISOString(),
+            },
+          ];
+        }
+      });
+    },
+    []
+  );
 
   /**
    * Add a note to a bookmarked condition
    */
   const addNote = useCallback((conditionId: string, note: string) => {
-    setBookmarks(prev => 
-      prev.map(b => 
-        b.id === conditionId ? { ...b, notes: note } : b
-      )
-    );
+    setBookmarks((prev) => prev.map((b) => (b.id === conditionId ? { ...b, notes: note } : b)));
   }, []);
 
   /**
    * Remove a specific bookmark
    */
   const removeBookmark = useCallback((conditionId: string) => {
-    setBookmarks(prev => prev.filter(b => b.id !== conditionId));
+    setBookmarks((prev) => prev.filter((b) => b.id !== conditionId));
   }, []);
 
   /**

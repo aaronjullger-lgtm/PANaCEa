@@ -17,7 +17,7 @@ export interface UpdateUserProgressInput {
 /**
  * Update or create UserProgress with review history snapshot
  * Should be called after every FSRS review to track stability growth over time
- * 
+ *
  * @param prisma - Prisma client instance
  * @param input - Progress update data
  */
@@ -118,7 +118,7 @@ export async function updateUserProgressWithHistory(
 /**
  * Fetch review history for a user's condition
  * Returns snapshots for visualization
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param conditionId - Condition ID
@@ -162,7 +162,7 @@ export async function getUserReviewHistory(
 /**
  * Get aggregated review history across all conditions for a user
  * Useful for dashboard visualization of overall stability growth
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param days - Number of days to fetch (default 30)
@@ -217,7 +217,7 @@ export async function getConditionFamilyMastery(
   // Get all conditions in family
   const family = await prisma.medicalContent.findMany({
     where: { canonicalName },
-    select: { id: true, condition: true }
+    select: { id: true, condition: true },
   });
 
   if (family.length === 0) {
@@ -228,12 +228,15 @@ export async function getConditionFamilyMastery(
   const progressRecords = await prisma.userProgress.findMany({
     where: {
       userId,
-      conditionId: { in: family.map((c: any) => c.id) }
-    }
+      conditionId: { in: family.map((c: any) => c.id) },
+    },
   });
 
   // Calculate aggregate mastery
-  const totalStability = progressRecords.reduce((sum: number, p: any) => sum + (p.fsrsCard?.stability || 0), 0);
+  const totalStability = progressRecords.reduce(
+    (sum: number, p: any) => sum + (p.fsrsCard?.stability || 0),
+    0
+  );
   const avgStability = progressRecords.length > 0 ? totalStability / progressRecords.length : 0;
 
   // Determine overall mastery level
@@ -247,6 +250,6 @@ export async function getConditionFamilyMastery(
     progressRecordCount: progressRecords.length,
     avgStability,
     overallMastery, // 'high' | 'medium' | 'low'
-    coveragePercentage: Math.round((progressRecords.length / family.length) * 100)
+    coveragePercentage: Math.round((progressRecords.length / family.length) * 100),
   };
 }

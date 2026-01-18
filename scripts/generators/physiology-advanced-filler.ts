@@ -14,7 +14,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -25,7 +28,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -111,14 +114,16 @@ async function main() {
 
   // Find concepts with gaps in these specific fields
   const allConcepts = await prisma.physiologyConcept.findMany();
-  const conceptsWithGaps = allConcepts.filter(c => {
-    return !c.molecularBasis ||
-           !c.signalTransduction ||
-           !c.compareContrast ||
-           !c.curveShifts ||
-           !c.drugEffects ||
-           !c.keyEquations ||
-           !c.labChanges;
+  const conceptsWithGaps = allConcepts.filter((c) => {
+    return (
+      !c.molecularBasis ||
+      !c.signalTransduction ||
+      !c.compareContrast ||
+      !c.curveShifts ||
+      !c.drugEffects ||
+      !c.keyEquations ||
+      !c.labChanges
+    );
   });
 
   console.log(`Found ${conceptsWithGaps.length} concepts with gaps\n`);
@@ -139,7 +144,7 @@ async function main() {
     // Only update fields that are missing
     const updateData: any = { updatedAt: new Date() };
     const updatedFields: string[] = [];
-    
+
     if (!concept.molecularBasis && content.molecularBasis) {
       updateData.molecularBasis = content.molecularBasis;
       updatedFields.push('molecularBasis');

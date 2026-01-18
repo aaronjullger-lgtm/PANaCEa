@@ -1,9 +1,9 @@
 /**
  * Unified Feedback Service
- * 
+ *
  * Provides sensory feedback (haptic + audio) for enhanced user engagement.
  * Consolidates hapticService.ts and adds audio feedback support.
- * 
+ *
  * Usage:
  *   import { feedback } from '@/services/feedbackService';
  *   feedback.correct(); // Triggers haptic + optional sound
@@ -11,7 +11,7 @@
 
 import { triggerHapticFeedback, type HapticFeedbackType } from '@/lib/hapticFeedback';
 
-export type FeedbackEvent = 
+export type FeedbackEvent =
   | 'correct'
   | 'incorrect'
   | 'streak'
@@ -33,7 +33,7 @@ function loadConfig(): FeedbackConfig {
   if (typeof window === 'undefined') {
     return { hapticEnabled: true, soundEnabled: false, soundVolume: 0.5 };
   }
-  
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -42,7 +42,7 @@ function loadConfig(): FeedbackConfig {
   } catch {
     // Ignore parse errors
   }
-  
+
   return getDefaultConfig();
 }
 
@@ -70,43 +70,51 @@ let audioContext: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
-  
+
   if (!audioContext) {
     try {
-      audioContext = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
+      audioContext = new (
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      )();
     } catch {
       console.warn('Web Audio API not supported');
       return null;
     }
   }
-  
+
   return audioContext;
 }
 
 // Generate simple tones for feedback (no external audio files needed)
-function playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) {
+function playTone(
+  frequency: number,
+  duration: number,
+  type: OscillatorType = 'sine',
+  volume: number = 0.3
+) {
   const ctx = getAudioContext();
   if (!ctx) return;
-  
+
   // Resume audio context if suspended (required after user interaction)
   if (ctx.state === 'suspended') {
     ctx.resume();
   }
-  
+
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
-  
+
   oscillator.connect(gainNode);
   gainNode.connect(ctx.destination);
-  
+
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
-  
+
   // Envelope for smoother sound
   gainNode.gain.setValueAtTime(0, ctx.currentTime);
   gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.01);
   gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-  
+
   oscillator.start(ctx.currentTime);
   oscillator.stop(ctx.currentTime + duration);
 }
@@ -129,14 +137,14 @@ const SOUND_PATTERNS: Record<FeedbackEvent, () => void> = {
     playTone(523.25, 0.08, 'sine', 0.15);
     setTimeout(() => playTone(659.25, 0.08, 'sine', 0.15), 60);
     setTimeout(() => playTone(783.99, 0.08, 'sine', 0.15), 120);
-    setTimeout(() => playTone(1046.50, 0.15, 'sine', 0.2), 180);
+    setTimeout(() => playTone(1046.5, 0.15, 'sine', 0.2), 180);
   },
   milestone: () => {
     // Triumphant fanfare
     playTone(523.25, 0.1, 'sine', 0.2);
     setTimeout(() => playTone(659.25, 0.1, 'sine', 0.2), 80);
     setTimeout(() => playTone(783.99, 0.1, 'sine', 0.2), 160);
-    setTimeout(() => playTone(1046.50, 0.3, 'sine', 0.3), 240);
+    setTimeout(() => playTone(1046.5, 0.3, 'sine', 0.3), 240);
   },
   selection: () => {
     playTone(880, 0.05, 'sine', 0.1); // Subtle click
@@ -147,7 +155,7 @@ const SOUND_PATTERNS: Record<FeedbackEvent, () => void> = {
   },
   celebration: () => {
     // Celebratory cascade
-    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.50];
+    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
     notes.forEach((freq, i) => {
       setTimeout(() => playTone(freq, 0.1, 'sine', 0.15), i * 50);
     });
@@ -193,13 +201,27 @@ class FeedbackService {
   }
 
   // Convenience methods
-  correct() { this.trigger('correct'); }
-  incorrect() { this.trigger('incorrect'); }
-  streak() { this.trigger('streak'); }
-  milestone() { this.trigger('milestone'); }
-  selection() { this.trigger('selection'); }
-  warning() { this.trigger('warning'); }
-  celebration() { this.trigger('celebration'); }
+  correct() {
+    this.trigger('correct');
+  }
+  incorrect() {
+    this.trigger('incorrect');
+  }
+  streak() {
+    this.trigger('streak');
+  }
+  milestone() {
+    this.trigger('milestone');
+  }
+  selection() {
+    this.trigger('selection');
+  }
+  warning() {
+    this.trigger('warning');
+  }
+  celebration() {
+    this.trigger('celebration');
+  }
 }
 
 // Export singleton instance

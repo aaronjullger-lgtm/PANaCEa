@@ -1,6 +1,6 @@
 /**
  * Answer Feedback Animation
- * 
+ *
  * Provides professional, smooth feedback animations when answering questions.
  * Subtle visual cues that don't interrupt the learning flow.
  */
@@ -29,32 +29,35 @@ const SuccessRing: React.FC = () => (
 // Streak indicator - subtle toast-style notification
 const StreakIndicator: React.FC<{ streak: number }> = ({ streak }) => {
   if (streak < 3) return null;
-  
+
   const getStreakStyle = () => {
-    if (streak >= 10) return { 
-      bg: 'bg-gradient-to-r from-amber-500 to-orange-500', 
-      text: 'Excellent streak!',
-      glow: 'shadow-amber-500/25'
-    };
-    if (streak >= 7) return { 
-      bg: 'bg-gradient-to-r from-orange-400 to-amber-400', 
-      text: 'Great momentum!',
-      glow: 'shadow-orange-400/25'
-    };
-    if (streak >= 5) return { 
-      bg: 'bg-gradient-to-r from-emerald-400 to-teal-400', 
-      text: 'Nice streak!',
-      glow: 'shadow-emerald-400/25'
-    };
-    return { 
-      bg: 'bg-gradient-to-r from-blue-400 to-cyan-400', 
+    if (streak >= 10)
+      return {
+        bg: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        text: 'Excellent streak!',
+        glow: 'shadow-amber-500/25',
+      };
+    if (streak >= 7)
+      return {
+        bg: 'bg-gradient-to-r from-orange-400 to-amber-400',
+        text: 'Great momentum!',
+        glow: 'shadow-orange-400/25',
+      };
+    if (streak >= 5)
+      return {
+        bg: 'bg-gradient-to-r from-emerald-400 to-teal-400',
+        text: 'Nice streak!',
+        glow: 'shadow-emerald-400/25',
+      };
+    return {
+      bg: 'bg-gradient-to-r from-blue-400 to-cyan-400',
       text: 'Keep going!',
-      glow: 'shadow-blue-400/25'
+      glow: 'shadow-blue-400/25',
     };
   };
-  
+
   const style = getStreakStyle();
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -83,9 +86,9 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
       return () => clearTimeout(timer);
     }
   }, [showFeedback, onAnimationComplete]);
-  
+
   if (!showFeedback || isCorrect === null) return null;
-  
+
   return (
     <AnimatePresence mode="wait">
       {showFeedback && (
@@ -95,9 +98,9 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ 
-              type: 'spring', 
-              damping: 20, 
+            transition={{
+              type: 'spring',
+              damping: 20,
               stiffness: 300,
               duration: 0.3,
             }}
@@ -107,7 +110,7 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
               <div className="relative">
                 {/* Success ring animation */}
                 <SuccessRing />
-                
+
                 {/* Main check icon */}
                 <motion.div
                   initial={{ scale: 0.8 }}
@@ -135,10 +138,10 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
               </motion.div>
             )}
           </motion.div>
-          
+
           {/* Streak indicator - positioned below */}
           {isCorrect && streak >= 3 && (
-            <motion.div 
+            <motion.div
               className="absolute"
               style={{ top: 'calc(50% + 50px)' }}
               initial={{ opacity: 0 }}
@@ -165,27 +168,27 @@ export function useAnswerFeedback() {
     showFeedback: false,
     streak: 0,
   });
-  
+
   const triggerCorrect = useCallback((currentStreak: number = 0) => {
     setFeedbackState({ isCorrect: true, showFeedback: true, streak: currentStreak });
     // Auto-hide after animation
     setTimeout(() => {
-      setFeedbackState(prev => ({ ...prev, showFeedback: false }));
+      setFeedbackState((prev) => ({ ...prev, showFeedback: false }));
     }, 800);
   }, []);
-  
+
   const triggerIncorrect = useCallback(() => {
     setFeedbackState({ isCorrect: false, showFeedback: true, streak: 0 });
     // Auto-hide after animation
     setTimeout(() => {
-      setFeedbackState(prev => ({ ...prev, showFeedback: false }));
+      setFeedbackState((prev) => ({ ...prev, showFeedback: false }));
     }, 600);
   }, []);
-  
+
   const hideFeedback = useCallback(() => {
-    setFeedbackState(prev => ({ ...prev, showFeedback: false }));
+    setFeedbackState((prev) => ({ ...prev, showFeedback: false }));
   }, []);
-  
+
   return {
     ...feedbackState,
     triggerCorrect,

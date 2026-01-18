@@ -5,30 +5,36 @@ This directory contains specialized database maintenance and normalization scrip
 ## Scripts
 
 ### `fix-optional-nulls.ts`
+
 **Purpose:** Normalize inconsistent "empty" states in JSONB columns.
 
 **Problem Solved:**
+
 - Distinguishes between SQL NULL (never processed) and JSON null (processed but empty)
 - Converts both types to sentinel value `"NONE"` for processed records
 - Signals to AI generation scripts to stop asking about these fields
 
 **Affected Fields:**
+
 - `classic_triad`
 - `mnemonic`
 - `guidelines`
 
 **Usage:**
+
 ```bash
 npx ts-node scripts/db/fix-optional-nulls.ts
 ```
 
 **Logic:**
+
 1. Finds records where `clinical_pearls` exists (meaning processed)
 2. Identifies fields with either `Prisma.DbNull` (SQL NULL) or `Prisma.JsonNull` (JSON null)
 3. Updates those fields to `"NONE"`
 4. Provides detailed statistics and verification
 
 **Output Example:**
+
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   SUMMARY REPORT                                          ║
@@ -48,34 +54,40 @@ npx ts-node scripts/db/fix-optional-nulls.ts
 ---
 
 ### `revert-none-to-null.ts`
+
 **Purpose:** Unlock fields for AI regeneration by reverting `"NONE"` back to `null`.
 
 **Problem Solved:**
+
 - Some records were normalized to `"NONE"` but actually have discoverable content
 - Resetting to `null` allows generation scripts to process them again
 - Configurable field selection for selective unlocking
 
 **Affected Fields:**
+
 - `mnemonic` (String) → null
 - `guidelines` (String) → null
 - `classic_triad` (Json) → Prisma.DbNull
 
 **Usage:**
+
 ```bash
 npx ts-node scripts/db/revert-none-to-null.ts
 ```
 
 **Configuration:**
 Edit the `FIELDS_TO_UNLOCK` array in the script to control which fields get reset:
+
 ```typescript
 const FIELDS_TO_UNLOCK: FieldConfig[] = [
-  { name: 'mnemonic', type: 'string' },      // ← Uncomment to unlock
+  { name: 'mnemonic', type: 'string' }, // ← Uncomment to unlock
   // { name: 'guidelines', type: 'string' }, // ← Commented = skip
   { name: 'classic_triad', type: 'json' },
 ];
 ```
 
 **Output Example:**
+
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   UNLOCK SUMMARY                                          ║
@@ -105,20 +117,24 @@ const FIELDS_TO_UNLOCK: FieldConfig[] = [
 Your database contains Postgres native arrays `{""Item A"", ""Item B""}` stored in fields where the frontend expects JSON arrays `["Item A", "Item B"]`. When React tries to `JSON.parse()` a string starting with `{`, it crashes.
 
 **Problems Fixed:**
+
 1. **Postgres Array Syntax** → Converts `{""Item 1"", ""Item 2""}` to `["Item 1", "Item 2"]`
 2. **Escaped Newlines** → Converts literal `\n` to actual newlines `\n`
 3. **CSV Quote Artifacts** → Fixes `"""text"""` → `"text"`
 
 **Affected Fields:**
+
 - **Array Fields:** `symptoms`, `complications`, `riskFactors`, `diagnostics`, `treatment`, `clinical_pearls`, `relatedSystems`, `buzzwords`
 - **Text Fields:** `overview`, `etiology`, `pathophysiology`, `epidemiology`, `vignette`, `patient_education`, and more
 
 **Usage:**
+
 ```bash
 npx ts-node scripts/db/normalize-formatting.ts
 ```
 
 **Features:**
+
 - Cursor-based pagination (handles large datasets efficiently)
 - Transaction-safe batch updates (100 records per batch)
 - Detailed logging of each fix applied
@@ -126,6 +142,7 @@ npx ts-node scripts/db/normalize-formatting.ts
 - Smart detection: Only updates records that actually need changes
 
 **Output Example:**
+
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   NORMALIZATION SUMMARY                                   ║
@@ -147,16 +164,19 @@ npx ts-node scripts/db/normalize-formatting.ts
 **Status:** ✅ **Production-ready** - Rewritten to match actual schema structure
 
 **Affected Fields:**
+
 - **Arrays:** `symptoms`, `complications`, `riskFactors`, `buzzwords`, `relatedSystems`
 - **Text:** `overview`, `etiology`, `pathophysiology`, `diagnostics`, `treatment`, `clinical_pearls`
 - **Sentinels:** `classic_triad`, `mnemonic`, `guidelines`
 
 **Usage:**
+
 ```bash
 npx ts-node scripts/db/normalize-formatting.ts
 ```
 
 **Features:**
+
 - Batch processing (100 records at a time) to avoid memory issues
 - Only updates records that actually changed
 - Detailed logging of each fix applied
@@ -164,6 +184,7 @@ npx ts-node scripts/db/normalize-formatting.ts
 - Safe error handling (continues on individual record errors)
 
 **Output Example:**
+
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   NORMALIZATION SUMMARY                                   ║
@@ -182,6 +203,7 @@ npx ts-node scripts/db/normalize-formatting.ts
 ```
 
 **Technical Details:**
+
 - Uses regex parsing for Postgres array conversion
 - Preserves internal quotes and commas correctly
 - Try/catch blocks prevent script crashes on malformed data

@@ -1,9 +1,9 @@
 /**
  * Global Error Boundary
- * 
+ *
  * Catches all unhandled React errors at the application root level.
  * Provides graceful degradation and recovery options for production.
- * 
+ *
  * Features:
  * - Catches component errors during rendering, lifecycle, and constructors
  * - Reports errors to Sentry for production monitoring
@@ -51,7 +51,7 @@ function persistError(errorId: string, error: Error, errorInfo: ErrorInfo): void
       userAgent: navigator.userAgent,
       url: window.location.href,
     };
-    
+
     // Keep last 5 errors
     const existingErrors = JSON.parse(localStorage.getItem('panacea_error_log') || '[]');
     existingErrors.unshift(errorLog);
@@ -71,8 +71,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
-    return { 
-      hasError: true, 
+    return {
+      hasError: true,
       error,
       errorId: generateErrorId(),
     };
@@ -81,11 +81,11 @@ class GlobalErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Update state with error info
     this.setState({ errorInfo });
-    
+
     // Log to console for development
     console.error('[GlobalErrorBoundary] Caught error:', error);
     console.error('[GlobalErrorBoundary] Component stack:', errorInfo.componentStack);
-    
+
     // Report to Sentry for production monitoring
     try {
       captureError(error, {
@@ -98,12 +98,12 @@ class GlobalErrorBoundary extends Component<Props, State> {
     } catch {
       // Sentry not available, ignore
     }
-    
+
     // Persist for debugging
     if (this.state.errorId) {
       persistError(this.state.errorId, error, errorInfo);
     }
-    
+
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
   }
@@ -133,7 +133,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
   };
 
   private toggleDetails = (): void => {
-    this.setState(prev => ({ showDetails: !prev.showDetails }));
+    this.setState((prev) => ({ showDetails: !prev.showDetails }));
   };
 
   private handleReportBug = (): void => {
@@ -141,14 +141,14 @@ class GlobalErrorBoundary extends Component<Props, State> {
     const subject = encodeURIComponent(`Bug Report: ${error?.name || 'Unknown Error'}`);
     const body = encodeURIComponent(
       `Error ID: ${errorId}\n\n` +
-      `Error: ${error?.message || 'Unknown'}\n\n` +
-      `URL: ${window.location.href}\n\n` +
-      `User Agent: ${navigator.userAgent}\n\n` +
-      `Stack Trace:\n${error?.stack || 'Not available'}\n\n` +
-      `Component Stack:\n${errorInfo?.componentStack || 'Not available'}\n\n` +
-      `Please describe what you were doing when this error occurred:\n\n`
+        `Error: ${error?.message || 'Unknown'}\n\n` +
+        `URL: ${window.location.href}\n\n` +
+        `User Agent: ${navigator.userAgent}\n\n` +
+        `Stack Trace:\n${error?.stack || 'Not available'}\n\n` +
+        `Component Stack:\n${errorInfo?.componentStack || 'Not available'}\n\n` +
+        `Please describe what you were doing when this error occurred:\n\n`
     );
-    
+
     window.open(`mailto:support@panacea-study.com?subject=${subject}&body=${body}`);
   };
 
@@ -172,9 +172,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold">Something went wrong</h1>
-                  <p className="text-red-100 text-sm">
-                    We've encountered an unexpected error
-                  </p>
+                  <p className="text-red-100 text-sm">We've encountered an unexpected error</p>
                 </div>
               </div>
             </div>
@@ -184,9 +182,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
               {/* Error ID for support */}
               {errorId && (
                 <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3 flex items-center justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    Error ID:
-                  </span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Error ID:</span>
                   <code className="text-sm font-mono text-slate-800 dark:text-slate-200 select-all">
                     {errorId}
                   </code>
@@ -195,8 +191,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
 
               {/* Friendly message */}
               <p className="text-slate-600 dark:text-slate-300">
-                We apologize for the inconvenience. This error has been logged and our team will look into it. 
-                You can try one of the following options:
+                We apologize for the inconvenience. This error has been logged and our team will
+                look into it. You can try one of the following options:
               </p>
 
               {/* Action buttons */}
@@ -239,7 +235,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
                     <ChevronDown className="w-4 h-4" />
                   )}
                 </button>
-                
+
                 {showDetails && (
                   <div className="mt-3 space-y-3">
                     {/* Error name and message */}
@@ -280,7 +276,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
             {/* Footer */}
             <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 border-t border-slate-200 dark:border-slate-700">
               <p className="text-xs text-center text-slate-500 dark:text-slate-400">
-                PANaCEa • Your progress has been saved • Last updated: {new Date().toLocaleTimeString()}
+                PANaCEa • Your progress has been saved • Last updated:{' '}
+                {new Date().toLocaleTimeString()}
               </p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 /**
  * UserFriendlyStatsDisplay
- * 
+ *
  * A clean, intuitive display of analytics that regular users can understand.
  * Shows actionable insights without overwhelming with data.
  */
@@ -82,18 +82,24 @@ const StatCard: React.FC<StatCardProps> = ({
       className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4"
     >
       <div className="flex items-start justify-between">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          {icon}
-        </div>
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>{icon}</div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${
-            trend === 'up' ? 'text-emerald-500' :
-            trend === 'down' ? 'text-red-500' :
-            'text-[var(--color-text-muted)]'
-          }`}>
-            {trend === 'up' ? <TrendingUp className="w-3 h-3" /> :
-             trend === 'down' ? <TrendingDown className="w-3 h-3" /> :
-             <Minus className="w-3 h-3" />}
+          <div
+            className={`flex items-center gap-1 text-xs font-medium ${
+              trend === 'up'
+                ? 'text-emerald-500'
+                : trend === 'down'
+                  ? 'text-red-500'
+                  : 'text-[var(--color-text-muted)]'
+            }`}
+          >
+            {trend === 'up' ? (
+              <TrendingUp className="w-3 h-3" />
+            ) : trend === 'down' ? (
+              <TrendingDown className="w-3 h-3" />
+            ) : (
+              <Minus className="w-3 h-3" />
+            )}
             {trendValue}
           </div>
         )}
@@ -101,9 +107,7 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="mt-3">
         <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
         <p className="text-sm text-[var(--color-text-muted)]">{label}</p>
-        {subtext && (
-          <p className="text-xs text-[var(--color-text-secondary)] mt-1">{subtext}</p>
-        )}
+        {subtext && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{subtext}</p>}
       </div>
     </motion.div>
   );
@@ -112,7 +116,7 @@ const StatCard: React.FC<StatCardProps> = ({
 const InsightCard: React.FC<{ insight: string; index: number }> = ({ insight, index }) => {
   const emoji = insight.slice(0, 2);
   const text = insight.slice(2).trim();
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -132,15 +136,18 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
 }) => {
   // Safely handle NaN or invalid values
   const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
-  const safePassProb = isNaN(passProbability) || !isFinite(passProbability) ? 0 : Math.min(100, Math.max(0, passProbability));
-  
+  const safePassProb =
+    isNaN(passProbability) || !isFinite(passProbability)
+      ? 0
+      : Math.min(100, Math.max(0, passProbability));
+
   const getColor = (s: number) => {
     if (s >= 80) return '#10b981'; // green
     if (s >= 65) return '#64748b'; // slate
     if (s >= 50) return '#94a3b8'; // slate
     return '#cbd5e1'; // slate
   };
-  
+
   const getLabel = (s: number) => {
     if (s >= 80) return 'Ready';
     if (s >= 65) return 'Almost Ready';
@@ -155,7 +162,7 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
         <Target className="w-4 h-4" />
         Exam Readiness
       </h3>
-      
+
       <div className="flex items-center gap-6">
         {/* Circular gauge */}
         <div className="relative w-24 h-24">
@@ -178,7 +185,7 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
               strokeLinecap="round"
               strokeDasharray={251.2}
               initial={{ strokeDashoffset: 251.2 }}
-              animate={{ strokeDashoffset: 251.2 - (251.2 * safeScore / 100) }}
+              animate={{ strokeDashoffset: 251.2 - (251.2 * safeScore) / 100 }}
               transition={{ duration: 1, ease: 'easeOut' }}
             />
           </svg>
@@ -187,9 +194,12 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
             <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
           </div>
         </div>
-        
+
         <div className="flex-1">
-          <p className="text-lg font-semibold text-[var(--color-text-primary)]" style={{ color: getColor(safeScore) }}>
+          <p
+            className="text-lg font-semibold text-[var(--color-text-primary)]"
+            style={{ color: getColor(safeScore) }}
+          >
             {getLabel(safeScore)}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
@@ -245,14 +255,22 @@ const SystemStrengthBar: React.FC<{
       <div className="w-10 text-xs font-medium text-right text-[var(--color-text-primary)]">
         {mastery}%
       </div>
-      <div className={`w-4 ${
-        trend === 'improving' ? 'text-emerald-500' :
-        trend === 'declining' ? 'text-red-500' :
-        'text-[var(--color-text-muted)]'
-      }`}>
-        {trend === 'improving' ? <TrendingUp className="w-4 h-4" /> :
-         trend === 'declining' ? <TrendingDown className="w-4 h-4" /> :
-         <Minus className="w-4 h-4" />}
+      <div
+        className={`w-4 ${
+          trend === 'improving'
+            ? 'text-emerald-500'
+            : trend === 'declining'
+              ? 'text-red-500'
+              : 'text-[var(--color-text-muted)]'
+        }`}
+      >
+        {trend === 'improving' ? (
+          <TrendingUp className="w-4 h-4" />
+        ) : trend === 'declining' ? (
+          <TrendingDown className="w-4 h-4" />
+        ) : (
+          <Minus className="w-4 h-4" />
+        )}
       </div>
     </div>
   );
@@ -269,7 +287,7 @@ const RecommendationCard: React.FC<{
   index: number;
 }> = ({ recommendation, index }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   const priorityColors = {
     critical: 'border-slate-500/50 bg-slate-500/5',
     high: 'border-slate-400/50 bg-slate-400/5',
@@ -288,11 +306,15 @@ const RecommendationCard: React.FC<{
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-start gap-3 text-left hover:bg-[var(--color-surface)] transition-colors"
       >
-        <div className={`mt-0.5 ${
-          recommendation.priority === 'critical' ? 'text-slate-300' :
-          recommendation.priority === 'high' ? 'text-slate-400' :
-          'text-slate-500'
-        }`}>
+        <div
+          className={`mt-0.5 ${
+            recommendation.priority === 'critical'
+              ? 'text-slate-300'
+              : recommendation.priority === 'high'
+                ? 'text-slate-400'
+                : 'text-slate-500'
+          }`}
+        >
           <Lightbulb className="w-5 h-5" />
         </div>
         <div className="flex-1">
@@ -303,9 +325,11 @@ const RecommendationCard: React.FC<{
             {recommendation.expectedImpact}
           </p>
         </div>
-        <ChevronRight className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+        <ChevronRight
+          className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${expanded ? 'rotate-90' : ''}`}
+        />
       </button>
-      
+
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -316,12 +340,20 @@ const RecommendationCard: React.FC<{
           >
             <div className="p-4 space-y-3">
               <div>
-                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Research Evidence</p>
-                <p className="text-sm text-[var(--color-text-secondary)]">{recommendation.evidence}</p>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                  Research Evidence
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  {recommendation.evidence}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Action Step</p>
-                <p className="text-sm text-[var(--color-text-primary)] font-medium">{recommendation.actionable}</p>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                  Action Step
+                </p>
+                <p className="text-sm text-[var(--color-text-primary)] font-medium">
+                  {recommendation.actionable}
+                </p>
               </div>
             </div>
           </motion.div>
@@ -393,7 +425,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
           { id: 'overview', label: 'Overview', icon: BarChart2 },
           { id: 'insights', label: 'Insights', icon: Lightbulb },
           { id: 'systems', label: 'Systems', icon: Activity },
-        ].map(tab => (
+        ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
@@ -419,9 +451,9 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             className="space-y-6"
           >
             {/* Readiness Gauge */}
-            <ReadinessGauge 
-              score={readiness.readinessScore} 
-              passProbability={readiness.passProbability} 
+            <ReadinessGauge
+              score={readiness.readinessScore}
+              passProbability={readiness.passProbability}
             />
 
             {/* Key Stats Grid */}
@@ -430,19 +462,37 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 label="Lifetime Accuracy"
                 value={`${stats.accuracyLifetime}%`}
                 icon={<Target className="w-5 h-5" />}
-                trend={stats.accuracyTrend === 'improving' ? 'up' : stats.accuracyTrend === 'declining' ? 'down' : 'stable'}
+                trend={
+                  stats.accuracyTrend === 'improving'
+                    ? 'up'
+                    : stats.accuracyTrend === 'declining'
+                      ? 'down'
+                      : 'stable'
+                }
                 trendValue={`${stats.accuracyChange > 0 ? '+' : ''}${stats.accuracyChange}%`}
-                color={stats.accuracyLifetime >= 70 ? 'green' : stats.accuracyLifetime >= 50 ? 'amber' : 'red'}
+                color={
+                  stats.accuracyLifetime >= 70
+                    ? 'green'
+                    : stats.accuracyLifetime >= 50
+                      ? 'amber'
+                      : 'red'
+                }
               />
-              
+
               <StatCard
                 label="Study Streak"
                 value={stats.studyDaysStreak}
                 subtext="consecutive days"
                 icon={<Flame className="w-5 h-5" />}
-                color={stats.studyDaysStreak >= 7 ? 'green' : stats.studyDaysStreak >= 3 ? 'amber' : 'blue'}
+                color={
+                  stats.studyDaysStreak >= 7
+                    ? 'green'
+                    : stats.studyDaysStreak >= 3
+                      ? 'amber'
+                      : 'blue'
+                }
               />
-              
+
               <StatCard
                 label="Total Questions"
                 value={stats.totalQuestionsLifetime.toLocaleString()}
@@ -450,13 +500,19 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 icon={<BookOpen className="w-5 h-5" />}
                 color="purple"
               />
-              
+
               <StatCard
                 label="Predicted Score"
                 value={readiness.predictedScore}
                 subtext={`${readiness.scoreRange.low}-${readiness.scoreRange.high} range`}
                 icon={<Award className="w-5 h-5" />}
-                color={readiness.predictedScore >= 500 ? 'green' : readiness.predictedScore >= 450 ? 'amber' : 'red'}
+                color={
+                  readiness.predictedScore >= 500
+                    ? 'green'
+                    : readiness.predictedScore >= 450
+                      ? 'amber'
+                      : 'red'
+                }
               />
             </div>
 
@@ -464,19 +520,25 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
                 <Clock className="w-5 h-5 mx-auto text-blue-500 mb-2" />
-                <p className="text-lg font-bold text-[var(--color-text-primary)]">{stats.avgTimePerQuestion}s</p>
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
+                  {stats.avgTimePerQuestion}s
+                </p>
                 <p className="text-xs text-[var(--color-text-muted)]">avg per question</p>
               </div>
-              
+
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
                 <Timer className="w-5 h-5 mx-auto text-amber-500 mb-2" />
-                <p className="text-lg font-bold text-[var(--color-text-primary)]">{stats.totalStudyHours}h</p>
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
+                  {stats.totalStudyHours}h
+                </p>
                 <p className="text-xs text-[var(--color-text-muted)]">total study time</p>
               </div>
-              
+
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
                 <Zap className="w-5 h-5 mx-auto text-purple-500 mb-2" />
-                <p className="text-lg font-bold text-[var(--color-text-primary)]">{stats.questionsPerHour}</p>
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
+                  {stats.questionsPerHour}
+                </p>
                 <p className="text-xs text-[var(--color-text-muted)]">questions/hour</p>
               </div>
             </div>
@@ -503,16 +565,26 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">First Instinct Accuracy</span>
-                    <span className="font-medium text-[var(--color-text-primary)]">{stats.firstInstinctAccuracy}%</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">
+                      First Instinct Accuracy
+                    </span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {stats.firstInstinctAccuracy}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">Answer Changes Help</span>
-                    <span className="font-medium text-[var(--color-text-primary)]">{stats.answerChangeHelpfulness}%</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">
+                      Answer Changes Help
+                    </span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {stats.answerChangeHelpfulness}%
+                    </span>
                   </div>
-                  <div className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'} text-sm flex items-center gap-2`}>
+                  <div
+                    className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'} text-sm flex items-center gap-2`}
+                  >
                     <Lightbulb className="w-4 h-4 flex-shrink-0" />
-                    {stats.shouldTrustFirstInstinct 
+                    {stats.shouldTrustFirstInstinct
                       ? 'Trust your gut - your first answers are usually correct'
                       : 'Take your time - reconsidering helps your score'}
                   </div>
@@ -521,19 +593,29 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
                 <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
-                  {stats.bestStudyTime.includes('AM') || parseInt(stats.bestStudyTime) < 12 
-                    ? <Sun className="w-4 h-4" /> 
-                    : <Moon className="w-4 h-4" />}
+                  {stats.bestStudyTime.includes('AM') || parseInt(stats.bestStudyTime) < 12 ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
                   Optimal Study Time
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">Peak Performance</span>
-                    <span className="font-medium text-[var(--color-text-primary)]">{stats.bestStudyTime}</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">
+                      Peak Performance
+                    </span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {stats.bestStudyTime}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">Fatigue Point</span>
-                    <span className="font-medium text-[var(--color-text-primary)]">{stats.fatiguePoint} questions</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">
+                      Fatigue Point
+                    </span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {stats.fatiguePoint} questions
+                    </span>
                   </div>
                   <div className="p-3 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm flex items-center gap-2">
                     <Coffee className="w-4 h-4" />
@@ -575,7 +657,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Priority Study Areas
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {readiness.priorityAreas.map(area => (
+                  {readiness.priorityAreas.map((area) => (
                     <span
                       key={area}
                       className="px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-sm font-medium"
@@ -595,7 +677,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Strengths to Maintain
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {readiness.strengths.map(strength => (
+                  {readiness.strengths.map((strength) => (
                     <span
                       key={strength}
                       className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium"
@@ -615,14 +697,14 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[var(--color-text-primary)]">
-                    {readiness.recommendedStudyDays === 0 
-                      ? "You're Ready!" 
+                    {readiness.recommendedStudyDays === 0
+                      ? "You're Ready!"
                       : `${readiness.recommendedStudyDays} days`}
                   </p>
                   <p className="text-sm text-[var(--color-text-muted)]">
                     {readiness.recommendedStudyDays === 0
                       ? "You've reached your target readiness level"
-                      : "of focused study recommended before exam"}
+                      : 'of focused study recommended before exam'}
                   </p>
                 </div>
               </div>
@@ -646,7 +728,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Your Strengths ({systems.strengths.length})
                 </h3>
                 <div className="space-y-3">
-                  {systems.strengths.slice(0, 5).map(sys => (
+                  {systems.strengths.slice(0, 5).map((sys) => (
                     <SystemStrengthBar
                       key={sys.system}
                       system={sys.system}
@@ -667,7 +749,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Areas to Improve ({systems.weaknesses.length})
                 </h3>
                 <div className="space-y-3">
-                  {systems.weaknesses.slice(0, 5).map(sys => (
+                  {systems.weaknesses.slice(0, 5).map((sys) => (
                     <SystemStrengthBar
                       key={sys.system}
                       system={sys.system}
@@ -688,7 +770,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Rapidly Improving ({systems.improving.length})
                 </h3>
                 <div className="space-y-3">
-                  {systems.improving.slice(0, 3).map(sys => (
+                  {systems.improving.slice(0, 3).map((sys) => (
                     <SystemStrengthBar
                       key={sys.system}
                       system={sys.system}
@@ -709,7 +791,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   Needs Review ({systems.declining.length})
                 </h3>
                 <div className="space-y-3">
-                  {systems.declining.slice(0, 3).map(sys => (
+                  {systems.declining.slice(0, 3).map((sys) => (
                     <SystemStrengthBar
                       key={sys.system}
                       system={sys.system}

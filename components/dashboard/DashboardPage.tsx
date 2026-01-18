@@ -64,9 +64,7 @@ const QuickStat: React.FC<QuickStatProps> = ({ icon, label, value, color, delay 
     className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm"
   >
     <div className="flex items-center gap-3">
-      <div className={`p-2 ${color} rounded-lg`}>
-        {icon}
-      </div>
+      <div className={`p-2 ${color} rounded-lg`}>{icon}</div>
       <div>
         <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
         <p className="text-xl font-bold text-gray-900 dark:text-white">{value}</p>
@@ -106,11 +104,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <ClinicalSkeleton
-            variant="compact"
-            lines={2}
-            className="w-1/3 mb-4 min-h-[64px]"
-          />
+          <ClinicalSkeleton variant="compact" lines={2} className="w-1/3 mb-4 min-h-[64px]" />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ClinicalSkeleton variant="compact" lines={3} className="min-h-[140px]" />
@@ -159,9 +153,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {getGreeting()}, {user?.firstName || 'Student'}.
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Here's your cognitive command center.
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Here's your cognitive command center.</p>
         </motion.div>
 
         {/* ===== QUICK STATS ROW ===== */}
@@ -259,9 +251,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Daily Practice
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Daily Practice</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
               onClick={() => handleNavigation('/drills/wordle')}

@@ -1,6 +1,6 @@
 /**
  * Clerk Authentication Middleware for Express
- * 
+ *
  * Verifies Clerk JWT tokens and attaches user information to requests.
  * Used to protect API endpoints that require authentication.
  */
@@ -26,13 +26,16 @@ export async function requireAuth(
   next: NextFunction
 ): Promise<void> {
   const debug = process.env.CLERK_AUTH_DEBUG === 'true';
-  
+
   try {
     // Log all request headers (sanitized) for debugging
     if (debug) {
       const headerKeys = Object.keys(req.headers);
       console.log('[Auth Debug] Request headers present:', headerKeys);
-      console.log('[Auth Debug] Authorization header:', req.headers.authorization ? 'PRESENT (redacted)' : 'MISSING');
+      console.log(
+        '[Auth Debug] Authorization header:',
+        req.headers.authorization ? 'PRESENT (redacted)' : 'MISSING'
+      );
     }
 
     const authHeader = req.headers.authorization;
@@ -51,7 +54,10 @@ export async function requireAuth(
 
     if (!authHeader.startsWith('Bearer ')) {
       if (debug) {
-        console.log('[Auth Debug] Invalid authorization header format:', authHeader.substring(0, 20));
+        console.log(
+          '[Auth Debug] Invalid authorization header format:',
+          authHeader.substring(0, 20)
+        );
       }
       res.status(401).json({
         error: 'Unauthorized',
@@ -69,7 +75,9 @@ export async function requireAuth(
     }
 
     if (debug) {
-      console.log('[Auth Debug] Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
+      console.log(
+        '[Auth Debug] Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)'
+      );
       console.log('[Auth Debug] Current server time:', new Date().toISOString());
     }
 
@@ -113,14 +121,15 @@ export async function requireAuth(
     // Provide specific error messages based on error type
     let message = 'Authentication failed';
     let reason = 'unknown-error';
-    
+
     if (error.message) {
       const errorMsg = error.message.toLowerCase();
       if (errorMsg.includes('expired')) {
         message = 'Token has expired. Please sign in again.';
         reason = 'token-expired';
       } else if (errorMsg.includes('not active') || errorMsg.includes('nbf')) {
-        message = 'Token is not yet active. This may be due to clock skew between client and server.';
+        message =
+          'Token is not yet active. This may be due to clock skew between client and server.';
         reason = 'token-not-active-yet';
       } else if (errorMsg.includes('signature')) {
         message = 'Invalid token signature';
@@ -157,14 +166,16 @@ export async function optionalAuth(
   next: NextFunction
 ): Promise<void> {
   const debug = process.env.CLERK_AUTH_DEBUG === 'true';
-  
+
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // No auth provided, continue without auth context
       if (debug) {
-        console.log('[Auth Debug] Optional auth: No valid authorization header, continuing without auth');
+        console.log(
+          '[Auth Debug] Optional auth: No valid authorization header, continuing without auth'
+        );
       }
       next();
       return;
@@ -183,9 +194,11 @@ export async function optionalAuth(
 
     try {
       if (debug) {
-        console.log('[Auth Debug] Optional auth: Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
+        console.log(
+          '[Auth Debug] Optional auth: Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)'
+        );
       }
-      
+
       const verifiedToken = await verifyToken(token, {
         secretKey,
         clockSkewInMs: 60000,
@@ -197,7 +210,10 @@ export async function optionalAuth(
           sessionId: verifiedToken.sid || undefined,
         };
         if (debug) {
-          console.log('[Auth Debug] Optional auth: Token verified successfully for user:', verifiedToken.sub);
+          console.log(
+            '[Auth Debug] Optional auth: Token verified successfully for user:',
+            verifiedToken.sub
+          );
         }
       }
     } catch (error: any) {

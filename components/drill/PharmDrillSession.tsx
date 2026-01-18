@@ -1,6 +1,15 @@
 import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, Beaker, Pill, AlertTriangle, FileQuestion, Syringe, Shuffle, Activity as ActivityIcon } from 'lucide-react';
+import {
+  X,
+  Beaker,
+  Pill,
+  AlertTriangle,
+  FileQuestion,
+  Syringe,
+  Shuffle,
+  Activity as ActivityIcon,
+} from 'lucide-react';
 import { usePharmDrill, type PharmCategory } from '@/hooks/game/use-pharm-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
@@ -179,7 +188,9 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
           </button>
-          <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">Pharmacology Quiz</h1>
+          <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
+            Pharmacology Quiz
+          </h1>
           <div className="w-12 sm:w-16" />
         </header>
 
@@ -245,9 +256,9 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
               tags={[
                 'pharmacology',
                 currentQuestion.type,
-                ...(Array.isArray(currentQuestion.drugClass) 
-                  ? currentQuestion.drugClass 
-                  : [currentQuestion.drugClass])
+                ...(Array.isArray(currentQuestion.drugClass)
+                  ? currentQuestion.drugClass
+                  : [currentQuestion.drugClass]),
               ]}
               onDeepDive={handleDeepDive}
             />
@@ -258,7 +269,11 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
           <div className="max-w-3xl mx-auto">
             <QuestionCard
               question={currentQuestion.question}
-              category={Array.isArray(currentQuestion.drugClass) ? currentQuestion.drugClass[0] : currentQuestion.drugClass}
+              category={
+                Array.isArray(currentQuestion.drugClass)
+                  ? currentQuestion.drugClass[0]
+                  : currentQuestion.drugClass
+              }
               subcategory={currentQuestion.type.replace('_', ' ')}
             />
 
@@ -271,9 +286,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
                   text={option}
                   isSelected={userAnswerIndex === index}
                   isCorrect={
-                    status === 'feedback'
-                      ? index === currentQuestion.correctAnswerIndex
-                      : null
+                    status === 'feedback' ? index === currentQuestion.correctAnswerIndex : null
                   }
                   isAnswered={status === 'feedback'}
                   onSelect={submitAnswer}

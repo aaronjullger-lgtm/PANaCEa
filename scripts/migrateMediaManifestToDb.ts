@@ -1,25 +1,23 @@
 /**
  * Data Migration Script: Media Manifest → Database
- * 
+ *
  * Migrates photo manifest data to the MediaAsset table.
  * Links media to existing Conditions in the database.
- * 
+ *
  * Run with: npx tsx scripts/migrateMediaManifestToDb.ts
  */
 
 import { PrismaClient } from '@prisma/client';
-import { ECG_MANIFEST, DERM_MANIFEST, RADIOLOGY_MANIFEST } from '../data/photoManifest';
+// Legacy import - photoManifest moved to database
+// import { ECG_MANIFEST, DERM_MANIFEST, RADIOLOGY_MANIFEST } from '../data/photoManifest';
 
 const prisma = new PrismaClient();
 
 async function migrateMediaManifest() {
   console.log('🖼️  Migrating Media Manifest...');
 
-  const allManifests = [
-    ...ECG_MANIFEST,
-    ...DERM_MANIFEST,
-    ...RADIOLOGY_MANIFEST
-  ];
+  // Legacy manifests commented out - data now in database
+  const allManifests: any[] = []; // [...ECG_MANIFEST, ...DERM_MANIFEST, ...RADIOLOGY_MANIFEST];
 
   console.log(`Found ${allManifests.length} media entries to migrate.`);
 
@@ -29,20 +27,19 @@ async function migrateMediaManifest() {
 
   // Cache conditions for faster lookup
   const conditions = await prisma.condition.findMany({
-    select: { id: true, name: true }
+    select: { id: true, name: true },
   });
-  
+
   function toSlug(text: string): string {
-    return text.toLowerCase()
+    return text
+      .toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
   }
 
   // Create a lookup map (normalize names for better matching)
   // The DB 'name' is already a slug (e.g., 'atrial_fibrillation')
-  const conditionMap = new Map(
-    conditions.map(c => [toSlug(c.name), c.id])
-  );
+  const conditionMap = new Map(conditions.map((c) => [toSlug(c.name), c.id]));
 
   for (const entry of allManifests) {
     try {
@@ -56,22 +53,24 @@ async function migrateMediaManifest() {
         // Some slugs might have extra info or be slightly different
         // e.g. "Normal Sinus Rhythm (NSR)" -> "normal_sinus_rhythm_nsr"
         // manifest might just say "Normal Sinus Rhythm"
-        const partialMatch = conditions.find(c => c.name.includes(slug) || slug.includes(c.name));
+        const partialMatch = conditions.find((c) => c.name.includes(slug) || slug.includes(c.name));
         if (partialMatch) {
-            conditionId = partialMatch.id;
+          conditionId = partialMatch.id;
         }
       }
 
       if (!conditionId) {
-        console.log(`⚠️  Condition not found for: "${entry.condition}" (slug: ${slug}) - Skipping linkage`);
-        // We can still create the asset, just unlinked, or skip it. 
+        console.log(
+          `⚠️  Condition not found for: "${entry.condition}" (slug: ${slug}) - Skipping linkage`
+        );
+        // We can still create the asset, just unlinked, or skip it.
         // For now, let's skip to avoid orphaned assets unless we want them.
         // Actually, let's create them but leave conditionId null so we can fix later.
       }
 
       for (const imagePath of entry.images) {
         const filename = imagePath.split('/').pop() || imagePath;
-        
+
         await prisma.mediaAsset.create({
           data: {
             conditionId: conditionId || null,
@@ -86,11 +85,11 @@ async function migrateMediaManifest() {
             isClinical: true,
             folder: 'clinical_verified',
             uploadedBy: 'system_migration',
-          }
+          },
         });
       }
 
-      // If no images, we might still want to store the metadata? 
+      // If no images, we might still want to store the metadata?
       // The manifest is mostly about images. If images array is empty, nothing to store in MediaAsset.
       if (entry.images.length === 0) {
         skippedCount++;
@@ -98,7 +97,6 @@ async function migrateMediaManifest() {
         successCount++;
         process.stdout.write('.');
       }
-
     } catch (error) {
       console.error(`\n❌ Failed to migrate media for ${entry.condition}:`, error);
       errorCount++;
@@ -115,7 +113,7 @@ async function migrateMediaManifest() {
 }
 
 migrateMediaManifest()
-  .catch(e => {
+  .catch((e) => {
     console.error(e);
     process.exit(1);
   })

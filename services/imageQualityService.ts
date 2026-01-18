@@ -1,6 +1,6 @@
 /**
  * Image Quality Assessment Service
- * 
+ *
  * Evaluates uploaded medical images for quality, clinical relevance,
  * and suitability for educational use.
  */
@@ -52,7 +52,9 @@ export async function assessImageQuality(
 
   // Check resolution
   if (width < QUALITY_THRESHOLDS.MIN_WIDTH || height < QUALITY_THRESHOLDS.MIN_HEIGHT) {
-    issues.push(`Low resolution: ${width}x${height} (minimum: ${QUALITY_THRESHOLDS.MIN_WIDTH}x${QUALITY_THRESHOLDS.MIN_HEIGHT})`);
+    issues.push(
+      `Low resolution: ${width}x${height} (minimum: ${QUALITY_THRESHOLDS.MIN_WIDTH}x${QUALITY_THRESHOLDS.MIN_HEIGHT})`
+    );
     qualityScore -= 30;
     recommendations.push('Use higher resolution images for better educational value');
   }
@@ -60,7 +62,9 @@ export async function assessImageQuality(
   // Check file size
   const fileSizeMB = size / (1024 * 1024);
   if (fileSizeMB > QUALITY_THRESHOLDS.MAX_FILE_SIZE_MB) {
-    issues.push(`Large file size: ${fileSizeMB.toFixed(2)}MB (maximum: ${QUALITY_THRESHOLDS.MAX_FILE_SIZE_MB}MB)`);
+    issues.push(
+      `Large file size: ${fileSizeMB.toFixed(2)}MB (maximum: ${QUALITY_THRESHOLDS.MAX_FILE_SIZE_MB}MB)`
+    );
     qualityScore -= 10;
     recommendations.push('Compress image to reduce file size while maintaining quality');
   }
@@ -76,7 +80,7 @@ export async function assessImageQuality(
   let aiAnalysis;
   try {
     aiAnalysis = await analyzeImageWithAI(imageBuffer, category);
-    
+
     // Adjust score based on AI analysis
     if (aiAnalysis.diagnosticQuality === 'poor') {
       qualityScore -= 40;
@@ -156,7 +160,7 @@ Example response:
   }
 
   const analysis = JSON.parse(jsonMatch[0]);
-  
+
   return {
     description: analysis.description || 'No description available',
     clinicalFeatures: analysis.clinicalFeatures || [],
@@ -196,10 +200,7 @@ export async function generateThumbnail(
 /**
  * Optimize image for web delivery
  */
-export async function optimizeImage(
-  imageBuffer: Buffer,
-  maxWidth: number = 1920
-): Promise<Buffer> {
+export async function optimizeImage(imageBuffer: Buffer, maxWidth: number = 1920): Promise<Buffer> {
   return sharp(imageBuffer)
     .resize(maxWidth, null, {
       fit: 'inside',

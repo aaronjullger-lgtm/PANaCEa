@@ -1,6 +1,6 @@
 /**
  * Calculator Type System
- * 
+ *
  * Shared types and interfaces for clinical calculators
  */
 
@@ -52,7 +52,7 @@ export interface Calculator {
 /**
  * System classification for tab organization
  */
-export type CalculatorSystem = 
+export type CalculatorSystem =
   | 'cardiac'
   | 'pulmonary'
   | 'vascular'

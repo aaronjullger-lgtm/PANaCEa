@@ -1,15 +1,15 @@
 /**
  * FSRSInsightCard Component
- * 
+ *
  * Shows users their FSRS spaced repetition statistics in a transparent,
  * understandable way. This builds trust in the algorithm and shows progress.
- * 
+ *
  * Features:
  * - Stability growth over time
  * - Difficulty rating per concept
  * - Predicted recall probability
  * - Review history visualization
- * 
+ *
  * @see .clinerules Section 2: FSRS v5 SPACED REPETITION
  */
 
@@ -42,8 +42,10 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
   onReviewNow,
 }) => {
   const isDue = new Date(data.dueDate) <= new Date();
-  const daysUntilDue = Math.ceil((new Date(data.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  
+  const daysUntilDue = Math.ceil(
+    (new Date(data.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
   // Color coding based on retrievability
   const getRetrievabilityColor = (r: number) => {
     if (r >= 0.9) return 'text-green-400';
@@ -69,17 +71,22 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
   const stateBadge = getStateBadge();
 
   // Calculate stability trend
-  const stabilityTrend = data.stabilityHistory.length >= 2
-    ? data.stabilityHistory[data.stabilityHistory.length - 1].stability - 
-      data.stabilityHistory[data.stabilityHistory.length - 2].stability
-    : 0;
+  const stabilityTrend =
+    data.stabilityHistory.length >= 2
+      ? data.stabilityHistory[data.stabilityHistory.length - 1].stability -
+        data.stabilityHistory[data.stabilityHistory.length - 2].stability
+      : 0;
 
   if (compact) {
     return (
-      <div className={`p-4 rounded-xl border ${isDue ? 'border-amber-500/50 bg-amber-500/10' : 'border-slate-700 bg-slate-800'}`}>
+      <div
+        className={`p-4 rounded-xl border ${isDue ? 'border-amber-500/50 bg-amber-500/10' : 'border-slate-700 bg-slate-800'}`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg ${stateBadge.bg} flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 rounded-lg ${stateBadge.bg} flex items-center justify-center`}
+            >
               <Brain className={`w-5 h-5 ${stateBadge.text}`} />
             </div>
             <div>
@@ -93,7 +100,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               </div>
             </div>
           </div>
-          
+
           {isDue && onReviewNow && (
             <button
               onClick={onReviewNow}
@@ -102,32 +109,32 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               Review Now
             </button>
           )}
-          
-          {!isDue && (
-            <span className="text-xs text-slate-400">
-              Due in {daysUntilDue}d
-            </span>
-          )}
+
+          {!isDue && <span className="text-xs text-slate-400">Due in {daysUntilDue}d</span>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`rounded-2xl border ${isDue ? 'border-amber-500/50' : 'border-slate-700'} bg-slate-800 overflow-hidden`}>
+    <div
+      className={`rounded-2xl border ${isDue ? 'border-amber-500/50' : 'border-slate-700'} bg-slate-800 overflow-hidden`}
+    >
       {/* Header */}
       <div className="p-5 border-b border-slate-700">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${stateBadge.bg} ${stateBadge.text}`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${stateBadge.bg} ${stateBadge.text}`}
+              >
                 {stateBadge.label}
               </span>
               <span className="text-xs text-slate-500">{data.system}</span>
             </div>
             <h3 className="text-lg font-semibold text-white">{data.conceptName}</h3>
           </div>
-          
+
           {isDue ? (
             <div className="flex items-center gap-2 text-amber-400">
               <AlertCircle className="w-5 h-5" />
@@ -156,7 +163,8 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
           </p>
           {stabilityTrend !== 0 && (
             <p className={`text-xs ${stabilityTrend > 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {stabilityTrend > 0 ? '+' : ''}{stabilityTrend.toFixed(1)}d from last
+              {stabilityTrend > 0 ? '+' : ''}
+              {stabilityTrend.toFixed(1)}d from last
             </p>
           )}
         </div>
@@ -172,11 +180,13 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
             <span className="text-sm font-normal text-slate-400">/10</span>
           </p>
           <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div 
+            <div
               className={`h-full rounded-full ${
-                data.difficulty <= 3 ? 'bg-green-500' :
-                data.difficulty <= 6 ? 'bg-yellow-500' :
-                'bg-red-500'
+                data.difficulty <= 3
+                  ? 'bg-green-500'
+                  : data.difficulty <= 6
+                    ? 'bg-yellow-500'
+                    : 'bg-red-500'
               }`}
               style={{ width: `${data.difficulty * 10}%` }}
             />
@@ -193,9 +203,13 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
             {Math.round(data.retrievability * 100)}%
           </p>
           <p className="text-xs text-slate-500">
-            {data.retrievability >= 0.9 ? 'Excellent' :
-             data.retrievability >= 0.7 ? 'Good' :
-             data.retrievability >= 0.5 ? 'Fair' : 'Review needed'}
+            {data.retrievability >= 0.9
+              ? 'Excellent'
+              : data.retrievability >= 0.7
+                ? 'Good'
+                : data.retrievability >= 0.5
+                  ? 'Fair'
+                  : 'Review needed'}
           </p>
         </div>
       </div>
@@ -209,7 +223,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
           </p>
           <div className="h-12 flex items-end gap-1">
             {data.stabilityHistory.slice(-10).map((point, idx) => {
-              const maxStability = Math.max(...data.stabilityHistory.map(p => p.stability));
+              const maxStability = Math.max(...data.stabilityHistory.map((p) => p.stability));
               const height = (point.stability / maxStability) * 100;
               return (
                 <div
@@ -248,18 +262,16 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 /**
  * Helper to convert UserProgress data to FSRSCardData
  */
-export function userProgressToFSRSCard(
-  progress: {
-    conditionId: string;
-    conditionName: string;
-    system: string;
-    stability: number;
-    difficulty: number;
-    state: number;
-    dueDate: Date;
-    reviewHistory?: Array<{ date: string; stability: number }>;
-  }
-): FSRSCardData {
+export function userProgressToFSRSCard(progress: {
+  conditionId: string;
+  conditionName: string;
+  system: string;
+  stability: number;
+  difficulty: number;
+  state: number;
+  dueDate: Date;
+  reviewHistory?: Array<{ date: string; stability: number }>;
+}): FSRSCardData {
   const stateMap: Record<number, FSRSCardData['state']> = {
     0: 'new',
     1: 'learning',
@@ -281,13 +293,14 @@ export function userProgressToFSRSCard(
     state: stateMap[progress.state] || 'new',
     dueDate: new Date(progress.dueDate),
     reviewCount: progress.reviewHistory?.length || 0,
-    lastReview: progress.reviewHistory?.length 
+    lastReview: progress.reviewHistory?.length
       ? new Date(progress.reviewHistory[progress.reviewHistory.length - 1].date)
       : undefined,
-    stabilityHistory: progress.reviewHistory?.map(r => ({
-      date: new Date(r.date).toLocaleDateString(),
-      stability: r.stability,
-    })) || [],
+    stabilityHistory:
+      progress.reviewHistory?.map((r) => ({
+        date: new Date(r.date).toLocaleDateString(),
+        stability: r.stability,
+      })) || [],
   };
 }
 

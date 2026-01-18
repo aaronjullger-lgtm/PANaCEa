@@ -22,7 +22,7 @@ const EXAM_FINDINGS = [
   { name: 'Pulsus Paradoxus', system: 'CV', category: 'Palpation' },
   { name: 'Jugular Venous Distension', system: 'CV', category: 'Inspection' },
   { name: 'Peripheral Edema', system: 'CV', category: 'Inspection' },
-  
+
   // Pulmonary
   { name: 'Wheezes', system: 'PULM', category: 'Auscultation' },
   { name: 'Crackles', system: 'PULM', category: 'Auscultation' },
@@ -31,7 +31,7 @@ const EXAM_FINDINGS = [
   { name: 'Dullness to Percussion', system: 'PULM', category: 'Percussion' },
   { name: 'Egophony', system: 'PULM', category: 'Auscultation' },
   { name: 'Tactile Fremitus', system: 'PULM', category: 'Palpation' },
-  
+
   // GI/Abdominal
   { name: 'Murphy Sign', system: 'GI', category: 'Palpation' },
   { name: 'McBurney Point Tenderness', system: 'GI', category: 'Palpation' },
@@ -41,7 +41,7 @@ const EXAM_FINDINGS = [
   { name: 'Splenomegaly', system: 'GI', category: 'Palpation' },
   { name: 'Shifting Dullness', system: 'GI', category: 'Percussion' },
   { name: 'Fluid Wave', system: 'GI', category: 'Palpation' },
-  
+
   // Neurological
   { name: 'Babinski Sign', system: 'NEURO', category: 'Reflex' },
   { name: 'Kernig Sign', system: 'NEURO', category: 'Maneuver' },
@@ -50,7 +50,7 @@ const EXAM_FINDINGS = [
   { name: 'Romberg Test', system: 'NEURO', category: 'Coordination' },
   { name: 'Pupillary Light Reflex', system: 'NEURO', category: 'Cranial Nerve' },
   { name: 'Nystagmus', system: 'NEURO', category: 'Inspection' },
-  
+
   // MSK
   { name: 'Anterior Drawer Test', system: 'MSK', category: 'Special Test' },
   { name: 'Lachman Test', system: 'MSK', category: 'Special Test' },
@@ -60,13 +60,13 @@ const EXAM_FINDINGS = [
   { name: 'Empty Can Test', system: 'MSK', category: 'Special Test' },
   { name: 'Drop Arm Test', system: 'MSK', category: 'Special Test' },
   { name: 'Straight Leg Raise', system: 'MSK', category: 'Special Test' },
-  
+
   // HEENT
   { name: 'Papilledema', system: 'HEENT', category: 'Fundoscopy' },
   { name: 'Cotton Wool Spots', system: 'HEENT', category: 'Fundoscopy' },
   { name: 'Cherry Red Spot', system: 'HEENT', category: 'Fundoscopy' },
   { name: 'Tonsillar Exudate', system: 'HEENT', category: 'Inspection' },
-  
+
   // Skin
   { name: 'Janeway Lesions', system: 'DERM', category: 'Inspection' },
   { name: 'Osler Nodes', system: 'DERM', category: 'Palpation' },
@@ -87,9 +87,11 @@ interface ExamFindingAIResponse {
   mnemonics: string[];
 }
 
-async function generateExamFindingContent(finding: typeof EXAM_FINDINGS[0]): Promise<ExamFindingAIResponse> {
+async function generateExamFindingContent(
+  finding: (typeof EXAM_FINDINGS)[0]
+): Promise<ExamFindingAIResponse> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  
+
   const prompt = `Generate comprehensive physical exam finding information for "${finding.name}" (${finding.category}) for PA/medical student education.
 
 Return a JSON object with EXACTLY these fields:
@@ -112,40 +114,40 @@ Return ONLY valid JSON, no markdown formatting.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   // Parse JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error(`Failed to parse JSON for ${finding.name}`);
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
 async function seedExamFindings() {
   console.log('🩺 Exam Finding Doctor - Generating physical exam findings...\n');
-  
+
   let created = 0;
   let skipped = 0;
   let failed = 0;
-  
+
   for (const finding of EXAM_FINDINGS) {
     try {
       // Check if exists
       const existing = await prisma.physicalExamFinding.findFirst({
-        where: { name: finding.name }
+        where: { name: finding.name },
       });
-      
+
       if (existing) {
         console.log(`⏭️  Skipped ${finding.name} (exists)`);
         skipped++;
         continue;
       }
-      
+
       // Generate content via AI
       console.log(`🔄 Generating content for ${finding.name}...`);
       const content = await generateExamFindingContent(finding);
-      
+
       // Create record - matching Prisma schema field names
       await prisma.physicalExamFinding.create({
         data: {
@@ -164,21 +166,20 @@ async function seedExamFindings() {
           mnemonics: content.mnemonics,
           isHighYield: true,
           panceYield: 3,
-        }
+        },
       });
-      
+
       console.log(`✓ Created ${finding.name}`);
       created++;
-      
+
       // Rate limiting - 2 second delay between API calls
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error(`✗ Failed ${finding.name}:`, error);
       failed++;
     }
   }
-  
+
   console.log('\n📊 Exam Finding Doctor Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Skipped: ${skipped}`);

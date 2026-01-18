@@ -7,6 +7,7 @@ The PANaCEa Media Approval System implements a comprehensive workflow for managi
 ## Key Features
 
 ### 1. **Automated Quality Assessment**
+
 - AI-powered image analysis using Gemini Vision
 - Resolution, format, and size validation
 - Clinical relevance detection
@@ -14,11 +15,13 @@ The PANaCEa Media Approval System implements a comprehensive workflow for managi
 - Auto-approval for high-quality images (score >= 70)
 
 ### 2. **Approval Workflow**
+
 - **Pending State**: Newly uploaded media awaits review
 - **Approved State**: Ready for use in educational content
 - **Rejected State**: Does not meet quality standards
 
 ### 3. **Admin Dashboard**
+
 - Visual interface for reviewing pending media
 - One-click approve/reject actions
 - Detailed quality metrics and AI analysis
@@ -26,6 +29,7 @@ The PANaCEa Media Approval System implements a comprehensive workflow for managi
 - Filtering by category (ECG, Dermatology, Radiology, etc.)
 
 ### 4. **Educational Resource Processing**
+
 - Automatic text extraction from PDFs and PowerPoint slides
 - AI-powered content analysis and summarization
 - Automatic linking to relevant medical conditions
@@ -36,6 +40,7 @@ The PANaCEa Media Approval System implements a comprehensive workflow for managi
 ### Database Schema
 
 #### MediaAsset Model
+
 ```prisma
 model MediaAsset {
   id              String     @id
@@ -43,7 +48,7 @@ model MediaAsset {
   originalUrl     String?
   thumbnailUrl    String?
   type            String     // "ecg" | "imaging" | "labs" | "diagram"
-  
+
   // Quality Control
   approvalStatus  String     @default("pending") // "pending" | "approved" | "rejected"
   qualityScore    Float?     // 0-100
@@ -51,12 +56,12 @@ model MediaAsset {
   approvedBy      String?
   approvedAt      DateTime?
   rejectionReason String?
-  
+
   // Metadata
   tags            String[]
   description     String?
   dimensions      Json?
-  
+
   // Relations
   conditionId     String?
   condition       Condition?
@@ -64,22 +69,23 @@ model MediaAsset {
 ```
 
 #### EducationalResource Model
+
 ```prisma
 model EducationalResource {
   id              String   @id
   title           String
   resourceType    String   // "textbook" | "lecture" | "pdf" | "video"
   fileUrl         String?
-  
+
   // Content
   extractedText   String?
   summary         String?
   keyTopics       String[]
-  
+
   // Quality Control
   approvalStatus  String   @default("pending")
   qualityScore    Float?
-  
+
   // Linkage
   conditionIds    String[]
   systemCodes     String[] // CV, PULM, GI, etc.
@@ -89,15 +95,18 @@ model EducationalResource {
 ### Services
 
 #### 1. Image Quality Service
+
 **Location**: `services/imageQualityService.ts`
 
 **Functions**:
+
 - `assessImageQuality(buffer, category)` - Analyzes image quality
 - `shouldAutoApprove(assessment)` - Determines auto-approval eligibility
 - `generateThumbnail(buffer, maxWidth)` - Creates preview thumbnails
 - `optimizeImage(buffer, maxWidth)` - Optimizes for web delivery
 
 **Quality Thresholds**:
+
 - Minimum width: 800px
 - Minimum height: 600px
 - Maximum file size: 10MB
@@ -105,9 +114,11 @@ model EducationalResource {
 - Supported formats: JPEG, PNG, WebP
 
 #### 2. Media Approval Service
+
 **Location**: `services/mediaApprovalService.ts`
 
 **Functions**:
+
 - `processUploadedMedia(mediaId, buffer, category)` - Processes new uploads
 - `getPendingMedia(options)` - Retrieves media awaiting review
 - `getApprovedMedia(options)` - Retrieves approved media
@@ -117,9 +128,11 @@ model EducationalResource {
 - `getApprovalStats()` - Returns approval statistics
 
 #### 3. Educational Resource Service
+
 **Location**: `services/educationalResourceService.ts`
 
 **Functions**:
+
 - `uploadEducationalResource(options)` - Uploads and processes resources
 - `getResourcesForCondition(conditionId)` - Gets resources for a condition
 - `searchResources(query, filters)` - Searches resource library
@@ -130,9 +143,11 @@ model EducationalResource {
 #### Media Endpoints
 
 ##### POST `/api/media/upload`
+
 Upload a new medical image with quality assessment.
 
 **Request**:
+
 ```json
 {
   "filename": "atrial-fibrillation.jpg",
@@ -145,6 +160,7 @@ Upload a new medical image with quality assessment.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -159,15 +175,18 @@ Upload a new medical image with quality assessment.
 ```
 
 ##### GET `/api/media/pending`
+
 Retrieve media awaiting approval.
 
 **Query Parameters**:
+
 - `category`: Filter by type (ecg, derm, radiology, etc.)
 - `limit`: Number of results (default: 50)
 - `offset`: Pagination offset
 - `includeStats`: Include approval statistics
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -184,9 +203,11 @@ Retrieve media awaiting approval.
 ```
 
 ##### POST `/api/media/approve`
+
 Approve or reject a media asset.
 
 **Request (Approve)**:
+
 ```json
 {
   "action": "approve",
@@ -196,6 +217,7 @@ Approve or reject a media asset.
 ```
 
 **Request (Reject)**:
+
 ```json
 {
   "action": "reject",
@@ -206,6 +228,7 @@ Approve or reject a media asset.
 ```
 
 **Request (Batch Approve)**:
+
 ```json
 {
   "action": "batch-approve",
@@ -215,14 +238,17 @@ Approve or reject a media asset.
 ```
 
 ##### GET `/api/media/stats`
+
 Get approval workflow statistics.
 
 #### Resource Endpoints
 
 ##### POST `/api/resources/upload`
+
 Upload an educational resource (textbook, lecture, PDF).
 
 **Request**:
+
 ```json
 {
   "title": "Cardiology Lecture - Atrial Fibrillation",
@@ -235,14 +261,17 @@ Upload an educational resource (textbook, lecture, PDF).
 ```
 
 ##### GET `/api/resources/search`
+
 Search for educational resources.
 
 **Query Parameters**:
+
 - `q`: Search query (required)
 - `resourceType`: Filter by type
 - `systemCode`: Filter by organ system
 
 ##### GET `/api/resources/condition/:conditionId`
+
 Get resources linked to a specific condition.
 
 ## Frontend Integration
@@ -263,6 +292,7 @@ const photo = await getImageForCondition('Atrial Fibrillation', 'ecg');
 ```
 
 **Key Points**:
+
 - Only `approved` images are returned
 - Only images marked as `isClinical: true` are used
 - Highest quality images are prioritized
@@ -273,6 +303,7 @@ const photo = await getImageForCondition('Atrial Fibrillation', 'ecg');
 **Location**: `components/admin/MediaApprovalDashboard.tsx`
 
 **Features**:
+
 - Grid view of pending media
 - Quality score badges
 - One-click approval/rejection
@@ -281,11 +312,12 @@ const photo = await getImageForCondition('Atrial Fibrillation', 'ecg');
 - Real-time statistics
 
 **Usage**:
+
 ```tsx
 import { MediaApprovalDashboard } from '@/components/admin/MediaApprovalDashboard';
 
 // In admin routes
-<Route path="/admin/media" element={<MediaApprovalDashboard />} />
+<Route path="/admin/media" element={<MediaApprovalDashboard />} />;
 ```
 
 ## Workflow Guide
@@ -337,6 +369,7 @@ import { MediaApprovalDashboard } from '@/components/admin/MediaApprovalDashboar
 ### Automatic Approval Criteria
 
 An image is automatically approved if ALL of the following are met:
+
 - Quality score >= 70
 - No technical issues (resolution, format, size)
 - Marked as clinical by AI
@@ -345,6 +378,7 @@ An image is automatically approved if ALL of the following are met:
 ### Manual Review Triggers
 
 Images require manual review if:
+
 - Quality score < 70
 - Technical issues detected (low resolution, wrong format)
 - AI is uncertain about clinical relevance
@@ -353,6 +387,7 @@ Images require manual review if:
 ### Rejection Reasons
 
 Common rejection reasons:
+
 - Poor image quality (blurry, pixelated)
 - Not clinically relevant
 - Duplicate image
@@ -366,6 +401,7 @@ Common rejection reasons:
 ### Image Optimization
 
 All uploaded images are automatically:
+
 - Resized to max 1920px width (maintaining aspect ratio)
 - Compressed using JPEG quality 85
 - Converted to progressive JPEG for faster loading
@@ -373,6 +409,7 @@ All uploaded images are automatically:
 ### Thumbnail Generation
 
 Thumbnails are generated for:
+
 - Approved images (300px width)
 - Used in grid views and previews
 - Cached for fast loading
@@ -380,6 +417,7 @@ Thumbnails are generated for:
 ### Database Indexes
 
 Optimized queries with indexes on:
+
 - `approvalStatus` - Fast filtering of pending/approved media
 - `qualityScore` - Prioritizing high-quality images
 - `conditionId` - Quick lookup by condition
@@ -432,6 +470,7 @@ Optimized queries with indexes on:
 ### Issue: Images not appearing in photo drill
 
 **Check**:
+
 1. Is image approved? (`approvalStatus = 'approved'`)
 2. Is image marked as clinical? (`isClinical = true`)
 3. Is image linked to correct condition?
@@ -440,6 +479,7 @@ Optimized queries with indexes on:
 ### Issue: Auto-approval not working
 
 **Check**:
+
 1. Quality score >= 70?
 2. No technical issues in assessment?
 3. AI recommendation is "approve"?
@@ -448,6 +488,7 @@ Optimized queries with indexes on:
 ### Issue: Upload failing
 
 **Check**:
+
 1. File size < 10MB?
 2. Supported format (JPEG, PNG, WebP)?
 3. Valid base64 encoding?
@@ -486,10 +527,12 @@ npm install sharp  # Image processing
 ### Supabase Setup
 
 Required storage buckets:
+
 - `medical-images` - For clinical images
 - `educational-resources` - For PDFs, textbooks, lectures
 
 Bucket configuration:
+
 - Public read access
 - Authenticated write access
 - Size limits configured
@@ -527,6 +570,7 @@ await prisma.mediaAsset.updateMany({
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review service logs for errors
 3. Check Supabase dashboard for storage issues
@@ -535,6 +579,7 @@ For issues or questions:
 ## Changelog
 
 ### Version 1.0 (December 2024)
+
 - Initial implementation
 - AI-powered quality assessment
 - Approval workflow

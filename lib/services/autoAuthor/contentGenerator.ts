@@ -1,11 +1,11 @@
 /**
  * Auto-Author Content Generator
- * 
+ *
  * Uses Google Gemini to generate medical condition content.
  * Designed to work in both Node.js (scripts) and Cloudflare Workers (if needed).
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type {
   GeneratedConditionContent,
   GeneratedLabContent,
@@ -14,13 +14,10 @@ import type {
   GeneratedPhysiologyContent,
   ContentGenerationOptions,
   ContentGenerationResult,
-} from "./types";
+} from './types';
 
 // Only use Gemini 2.5 models - these are the only ones that work with the API key
-const GEMINI_MODEL_NAMES = [
-  "gemini-2.5-pro",
-  "gemini-2.5-flash",
-];
+const GEMINI_MODEL_NAMES = ['gemini-2.5-pro', 'gemini-2.5-flash'];
 const DEFAULT_TEMPERATURE = 0.7;
 const MAX_RETRIES = 2;
 
@@ -50,21 +47,22 @@ async function generateTextWithFallback(
     }
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("All Gemini models failed");
+  throw lastError instanceof Error ? lastError : new Error('All Gemini models failed');
 }
 
 /**
  * Clean markdown code fences from AI response
  */
 function stripCodeFences(text: string): string {
-  if (!text) return "";
+  if (!text) return '';
   let cleaned = text.trim();
-  
+
   // Remove ```json or ``` markers
-  cleaned = cleaned.replace(/^```json\s*/gm, "").replace(/^```\s*/gm, "").replace(/```$/gm, "");
-  
+  cleaned = cleaned
+    .replace(/^```json\s*/gm, '')
+    .replace(/^```\s*/gm, '')
+    .replace(/```$/gm, '');
+
   return cleaned.trim();
 }
 
@@ -73,10 +71,10 @@ function stripCodeFences(text: string): string {
  */
 function buildContentPrompt(options: ContentGenerationOptions): string {
   const { conditionName, system, subcategory, includeExtendedFields } = options;
-  
+
   const basePrompt = `You are a medical education expert creating high-yield study content for PA students preparing for the PANCE exam.
 
-Create a comprehensive, clinically accurate study guide entry for: "${conditionName}" (System: ${system}${subcategory ? `, Subcategory: ${subcategory}` : ""}).
+Create a comprehensive, clinically accurate study guide entry for: "${conditionName}" (System: ${system}${subcategory ? `, Subcategory: ${subcategory}` : ''}).
 
 **CRITICAL INSTRUCTIONS:**
 1. Return ONLY a valid JSON object (no markdown, no code blocks, no explanatory text)
@@ -84,7 +82,9 @@ Create a comprehensive, clinically accurate study guide entry for: "${conditionN
 3. Use clinical terminology appropriately
 4. Include specific, actionable information for diagnosis and treatment
 
-${includeExtendedFields ? `
+${
+  includeExtendedFields
+    ? `
 Return this exact JSON structure:
 {
   "overview": "1-3 sentences defining the condition and its clinical significance",
@@ -100,7 +100,8 @@ Return this exact JSON structure:
   "differentialDiagnosis": ["Similar condition 1", "Similar condition 2", "Similar condition 3"],
   "clinicalPearls": ["High-yield pearl 1", "PANCE testable fact 2", "Clinical tip 3"]
 }
-` : `
+`
+    : `
 Return this exact JSON structure:
 {
   "overview": "1-3 sentences defining the condition and its clinical significance",
@@ -110,7 +111,8 @@ Return this exact JSON structure:
   "treatment": "First-line and alternative treatment approaches (2-3 sentences)",
   "clinicalPearls": ["High-yield pearl 1", "PANCE testable fact 2", "Clinical tip 3"]
 }
-`}`;
+`
+}`;
 
   return basePrompt;
 }
@@ -125,15 +127,15 @@ export async function generateConditionContent(
   if (!apiKey) {
     return {
       success: false,
-      error: "API key is required",
+      error: 'API key is required',
     };
   }
 
   try {
     const prompt = buildContentPrompt(options);
-    
+
     let lastError: Error | null = null;
-    
+
     // Retry logic for transient failures
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -142,18 +144,18 @@ export async function generateConditionContent(
           prompt,
           options.temperature || DEFAULT_TEMPERATURE
         );
-        
+
         // Clean response
         const cleanedText = stripCodeFences(text);
-        
+
         // Parse JSON
         const parsed = JSON.parse(cleanedText);
-        
+
         // Validate required fields
         if (!parsed.overview || !parsed.symptoms || !parsed.diagnosis || !parsed.treatment) {
-          throw new Error("Missing required fields in generated content");
+          throw new Error('Missing required fields in generated content');
         }
-        
+
         // Ensure arrays are arrays
         const content: GeneratedConditionContent = {
           overview: parsed.overview,
@@ -168,9 +170,11 @@ export async function generateConditionContent(
           examFindings: Array.isArray(parsed.examFindings) ? parsed.examFindings : [],
           complications: Array.isArray(parsed.complications) ? parsed.complications : [],
           prognosis: parsed.prognosis,
-          differentialDiagnosis: Array.isArray(parsed.differentialDiagnosis) ? parsed.differentialDiagnosis : [],
+          differentialDiagnosis: Array.isArray(parsed.differentialDiagnosis)
+            ? parsed.differentialDiagnosis
+            : [],
         };
-        
+
         return {
           success: true,
           content,
@@ -178,25 +182,24 @@ export async function generateConditionContent(
         };
       } catch (err) {
         lastError = err as Error;
-        
+
         if (attempt < MAX_RETRIES) {
           // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
           console.log(`   Retry attempt ${attempt + 1} for ${options.conditionName}...`);
         }
       }
     }
-    
+
     // All retries failed
     return {
       success: false,
       error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
     };
-    
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Unknown error during content generation",
+      error: error.message || 'Unknown error during content generation',
     };
   }
 }
@@ -210,20 +213,20 @@ export async function batchGenerateContent(
   delayMs: number = 2000
 ): Promise<ContentGenerationResult[]> {
   const results: ContentGenerationResult[] = [];
-  
+
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
     console.log(`   [${i + 1}/${conditions.length}] Generating: ${condition.conditionName}...`);
-    
+
     const result = await generateConditionContent(apiKey, condition);
     results.push(result);
-    
+
     // Rate limiting (except for last item)
     if (i < conditions.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
-  
+
   return results;
 }
 
@@ -242,7 +245,7 @@ export async function generateLabContent(
   if (!apiKey) {
     return {
       success: false,
-      error: "API key is required",
+      error: 'API key is required',
     };
   }
 
@@ -266,33 +269,35 @@ Return this exact JSON structure:
 
   try {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
-        
+
         if (!parsed.description || !parsed.commonAbnormalities || !parsed.indications) {
-          throw new Error("Missing required fields in generated content");
+          throw new Error('Missing required fields in generated content');
         }
-        
+
         const content: GeneratedLabContent = {
           description: parsed.description,
           typicalNormalRange: parsed.typicalNormalRange || null,
-          commonAbnormalities: Array.isArray(parsed.commonAbnormalities) ? parsed.commonAbnormalities : [],
+          commonAbnormalities: Array.isArray(parsed.commonAbnormalities)
+            ? parsed.commonAbnormalities
+            : [],
           indications: Array.isArray(parsed.indications) ? parsed.indications : [],
         };
-        
+
         return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }
       }
     }
-    
+
     return {
       success: false,
       error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
@@ -300,7 +305,7 @@ Return this exact JSON structure:
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Unknown error during content generation",
+      error: error.message || 'Unknown error during content generation',
     };
   }
 }
@@ -320,7 +325,7 @@ export async function generateImagingContent(
   if (!apiKey) {
     return {
       success: false,
-      error: "API key is required",
+      error: 'API key is required',
     };
   }
 
@@ -344,33 +349,33 @@ Return this exact JSON structure:
 
   try {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
-        
+
         if (!parsed.description || !parsed.bestFor || !parsed.limitations) {
-          throw new Error("Missing required fields in generated content");
+          throw new Error('Missing required fields in generated content');
         }
-        
+
         const content: GeneratedImagingContent = {
           description: parsed.description,
           bestFor: Array.isArray(parsed.bestFor) ? parsed.bestFor : [],
           limitations: Array.isArray(parsed.limitations) ? parsed.limitations : [],
           radiationRisk: Boolean(parsed.radiationRisk),
         };
-        
+
         return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }
       }
     }
-    
+
     return {
       success: false,
       error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
@@ -378,7 +383,7 @@ Return this exact JSON structure:
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Unknown error during content generation",
+      error: error.message || 'Unknown error during content generation',
     };
   }
 }
@@ -398,7 +403,7 @@ export async function generateTreatmentContent(
   if (!apiKey) {
     return {
       success: false,
-      error: "API key is required",
+      error: 'API key is required',
     };
   }
 
@@ -422,33 +427,42 @@ Return this exact JSON structure:
 
   try {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
-        
-        if (!parsed.description || !parsed.mechanismOfAction || !parsed.commonIndications || !parsed.seriousSideEffects) {
-          throw new Error("Missing required fields in generated content");
+
+        if (
+          !parsed.description ||
+          !parsed.mechanismOfAction ||
+          !parsed.commonIndications ||
+          !parsed.seriousSideEffects
+        ) {
+          throw new Error('Missing required fields in generated content');
         }
-        
+
         const content: GeneratedTreatmentContent = {
           description: parsed.description,
           mechanismOfAction: parsed.mechanismOfAction,
-          commonIndications: Array.isArray(parsed.commonIndications) ? parsed.commonIndications : [],
-          seriousSideEffects: Array.isArray(parsed.seriousSideEffects) ? parsed.seriousSideEffects : [],
+          commonIndications: Array.isArray(parsed.commonIndications)
+            ? parsed.commonIndications
+            : [],
+          seriousSideEffects: Array.isArray(parsed.seriousSideEffects)
+            ? parsed.seriousSideEffects
+            : [],
         };
-        
+
         return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }
       }
     }
-    
+
     return {
       success: false,
       error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
@@ -456,7 +470,7 @@ Return this exact JSON structure:
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Unknown error during content generation",
+      error: error.message || 'Unknown error during content generation',
     };
   }
 }
@@ -476,7 +490,7 @@ export async function generatePhysiologyContent(
   if (!apiKey) {
     return {
       success: false,
-      error: "API key is required",
+      error: 'API key is required',
     };
   }
 
@@ -499,32 +513,32 @@ Return this exact JSON structure:
 
   try {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
-        
+
         if (!parsed.description || !parsed.mechanism || !parsed.clinicalSignificance) {
-          throw new Error("Missing required fields in generated content");
+          throw new Error('Missing required fields in generated content');
         }
-        
+
         const content: GeneratedPhysiologyContent = {
           description: parsed.description,
           mechanism: parsed.mechanism,
           clinicalSignificance: parsed.clinicalSignificance,
         };
-        
+
         return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }
       }
     }
-    
+
     return {
       success: false,
       error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
@@ -532,7 +546,7 @@ Return this exact JSON structure:
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Unknown error during content generation",
+      error: error.message || 'Unknown error during content generation',
     };
   }
 }

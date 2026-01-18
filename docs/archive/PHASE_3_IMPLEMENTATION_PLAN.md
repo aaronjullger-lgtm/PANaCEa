@@ -14,12 +14,14 @@ Comprehensive plan to complete PANaCEa platform with full functionality, improve
 ## ✅ Phase 3.1: Content Quality & Standardization (COMPLETED)
 
 ### Content Doctor Enhancements
+
 - [x] Add field-specific regeneration flags (`--buzzwords`, `--mnemonics`, `--guidelines`, `--triads`, `--pearls`)
 - [x] Maintain backward compatibility with Phase 1 & 2
 - [x] Support system-specific targeting
 - [x] 100% buzzwords coverage achieved (1,180 conditions)
 
 ### Text Formatting Standardization
+
 - [x] Created `scripts/standardize-formatting.ts`
 - [x] Bold patterns for medical abbreviations and key terms
 - [x] Italic patterns for medications and Latin terms
@@ -28,6 +30,7 @@ Comprehensive plan to complete PANaCEa platform with full functionality, improve
 - [x] Dry-run mode for safe testing
 
 ### Content Adequacy Assessment
+
 - [x] Created `scripts/assess-content-adequacy.ts`
 - [x] Metrics: word counts, item counts, completeness, depth scores
 - [x] Standards derived from top 25% performers
@@ -42,10 +45,12 @@ Comprehensive plan to complete PANaCEa platform with full functionality, improve
 ### Priority 1: Core Medical Databases
 
 #### Drug Database Enhancement
+
 **Current State**: Basic drug registry exists  
 **Target**: Comprehensive pharmacology database
 
 **Tables to Populate**:
+
 - `Drug` - Full medication profiles
   - Generic/brand names
   - Drug class and mechanism
@@ -58,6 +63,7 @@ Comprehensive plan to complete PANaCEa platform with full functionality, improve
   - PANCE yield rating
 
 **Scripts Needed**:
+
 ```bash
 npm run populate:drugs           # Generate comprehensive drug content
 npm run populate:drug-interactions # Map drug-drug interactions
@@ -65,6 +71,7 @@ npm run validate:drugs           # Quality check drug database
 ```
 
 **Implementation**:
+
 1. Create `scripts/populate-drugs.ts` - AI-generated drug monographs
 2. Create `scripts/drug-interactions.ts` - Interaction checker
 3. Update `drugRegistry.ts` with expanded fields
@@ -73,10 +80,12 @@ npm run validate:drugs           # Quality check drug database
 ---
 
 #### Lab Tests & Imaging Database
+
 **Current State**: Basic registry  
 **Target**: Complete diagnostic test database
 
 **Tables to Populate**:
+
 - `LabTest`
   - Test name and aliases
   - Normal ranges (age/gender-specific)
@@ -98,6 +107,7 @@ npm run validate:drugs           # Quality check drug database
   - Image examples
 
 **Scripts Needed**:
+
 ```bash
 npm run populate:labs            # Generate lab test database
 npm run populate:imaging         # Generate imaging database
@@ -108,10 +118,12 @@ npm run link:imaging-conditions  # Associate imaging with conditions
 ---
 
 #### Anatomy & Physiology Database
+
 **Current State**: Basic anatomy registry  
 **Target**: Interactive anatomy with clinical correlations
 
 **Tables to Populate**:
+
 - `AnatomyStructure`
   - Anatomical name (Latin and common)
   - System classification
@@ -124,6 +136,7 @@ npm run link:imaging-conditions  # Associate imaging with conditions
   - 3D model references
 
 **Scripts Needed**:
+
 ```bash
 npm run populate:anatomy         # Generate anatomy content
 npm run link:anatomy-conditions  # Clinical correlations
@@ -138,6 +151,7 @@ npm run populate:physiology      # Physiological processes
 **Target**: Interactive DDx builder with rule-out logic
 
 **Tables to Create**:
+
 - `DifferentialDiagnosis`
   - Presenting symptom/complaint
   - List of possible conditions
@@ -148,12 +162,14 @@ npm run populate:physiology      # Physiological processes
   - Time-sensitive conditions
 
 **Features to Build**:
+
 1. **DDx Generator**: Input symptoms → output ranked differentials
 2. **Rule-Out Logic**: Key tests/findings to exclude conditions
 3. **Bayesian Reasoning**: Update probabilities with new info
 4. **Algorithm Visualizer**: Flowcharts for common presentations
 
 **Scripts Needed**:
+
 ```bash
 npm run generate:ddx-algorithms  # Create diagnostic algorithms
 npm run populate:presentations   # Chief complaint database
@@ -168,6 +184,7 @@ npm run link:symptoms-ddx        # Symptom-diagnosis mapping
 **Target**: Comprehensive guideline library
 
 **Tables to Populate**:
+
 - `ClinicalGuideline`
   - Organization (AHA, ACC, USPSTF, etc.)
   - Publication year
@@ -179,6 +196,7 @@ npm run link:symptoms-ddx        # Symptom-diagnosis mapping
   - PDF/URL links
 
 **Scripts Needed**:
+
 ```bash
 npm run populate:guidelines      # Comprehensive guideline database
 npm run update:guidelines        # Annual guideline updates
@@ -194,13 +212,15 @@ npm run compare:guideline-versions # Track changes over time
 **Goal**: Convert every user-generated AI question into database content
 
 **Architecture**:
+
 ```
-User Request → Gemini API → Question Generated → 
-Save to Database → Quality Check → Approval Queue → 
+User Request → Gemini API → Question Generated →
+Save to Database → Quality Check → Approval Queue →
 Publish to Pool → Analytics
 ```
 
 **Tables to Create**:
+
 - `GeneratedQuestion`
   - Question text and type
   - Condition(s) referenced
@@ -223,7 +243,9 @@ Publish to Pool → Analytics
 **Implementation Steps**:
 
 #### 1. Capture Pipeline
+
 Create `lib/services/questionCaptureService.ts`:
+
 ```typescript
 async function captureGeneratedQuestion(
   questionData: QuestionData,
@@ -238,11 +260,11 @@ async function captureGeneratedQuestion(
 ```
 
 #### 2. Quality Assurance
+
 Create `lib/services/questionQAService.ts`:
+
 ```typescript
-async function assessQuestionQuality(
-  question: Question
-): Promise<QualityAssessment> {
+async function assessQuestionQuality(question: Question): Promise<QualityAssessment> {
   // Check medical accuracy
   // Verify answer correctness
   // Assess difficulty appropriateness
@@ -253,7 +275,9 @@ async function assessQuestionQuality(
 ```
 
 #### 3. Approval Workflow
+
 Create `components/admin/QuestionReviewQueue.tsx`:
+
 - List of pending questions
 - Side-by-side original content view
 - Edit capabilities
@@ -263,11 +287,11 @@ Create `components/admin/QuestionReviewQueue.tsx`:
 - Priority queue (high-quality auto-approved)
 
 #### 4. Publication System
+
 Create `lib/services/questionPublishService.ts`:
+
 ```typescript
-async function publishApprovedQuestions(
-  batchSize: number = 50
-): Promise<PublishResult> {
+async function publishApprovedQuestions(batchSize: number = 50): Promise<PublishResult> {
   // Move approved questions to active pool
   // Update question database
   // Invalidate caches
@@ -284,12 +308,14 @@ async function publishApprovedQuestions(
 **Scheduled Checks**:
 
 #### Hourly Tasks (Extended)
+
 - Review new generated questions
 - Flag low-quality content
 - Check for medical accuracy issues
 - Monitor user feedback/flags
 
 #### Daily Tasks (Extended)
+
 - Quality score recalculation
 - Content freshness check
 - Guideline update detection
@@ -297,6 +323,7 @@ async function publishApprovedQuestions(
 - Usage analytics aggregation
 
 #### Weekly Tasks (Extended)
+
 - Comprehensive quality audit
 - Cross-reference validation
 - Evidence base updates
@@ -306,6 +333,7 @@ async function publishApprovedQuestions(
 **Implementation**:
 
 Create `scripts/automation/questionQualityCheck.ts`:
+
 ```typescript
 async function runQualityChecks(): Promise<QAReport> {
   // Check for outdated information
@@ -318,6 +346,7 @@ async function runQualityChecks(): Promise<QAReport> {
 ```
 
 Create `scripts/automation/contentMaintenance.ts`:
+
 ```typescript
 async function maintainContent(): Promise<MaintenanceReport> {
   // Update outdated guidelines
@@ -415,9 +444,9 @@ async function maintainContent(): Promise<MaintenanceReport> {
 2. **Documentation**: Include JSDoc header with purpose, usage, and examples
 3. **Error Handling**: Try-catch all database operations
 4. **Logging**: Use emojis for visual feedback (✅❌⚠️🔄)
-4. **Dry-run Mode**: Always include `--dry-run` flag option
-5. **Progress Bars**: For long operations, show progress
-6. **Summary Reports**: Always end with statistics and next steps
+5. **Dry-run Mode**: Always include `--dry-run` flag option
+6. **Progress Bars**: For long operations, show progress
+7. **Summary Reports**: Always end with statistics and next steps
 
 ### Database Best Practices
 
@@ -440,24 +469,28 @@ async function maintainContent(): Promise<MaintenanceReport> {
 ## 📊 Success Metrics
 
 ### Content Quality Targets
+
 - [ ] 100% conditions with complete content (all fields)
 - [ ] 95% adequacy score across all conditions
 - [ ] 90% formatting consistency
 - [ ] <5% flagged content rate
 
 ### Database Population Targets
+
 - [ ] 500+ drugs with full monographs
 - [ ] 100+ lab tests with reference ranges
 - [ ] 50+ imaging modalities with examples
 - [ ] 200+ differential diagnosis algorithms
 
 ### User-Generated Content Targets
+
 - [ ] 10,000+ generated questions captured
 - [ ] 80% auto-approval rate (quality threshold)
 - [ ] <24 hour review turnaround
 - [ ] 95% accuracy rate on approved questions
 
 ### Platform Performance Targets
+
 - [ ] <2s page load time
 - [ ] <500ms question generation
 - [ ] 99.9% uptime
@@ -490,12 +523,14 @@ async function maintainContent(): Promise<MaintenanceReport> {
 ## 📚 Resources & Documentation
 
 ### Key Documentation Files
+
 - `MASTER_DOCUMENTATION.md` - Comprehensive platform guide
 - `DATABASE_FIRST_ARCHITECTURE.md` - Database design principles
 - `CONTENT_GENERATION_GUIDE.md` - AI content generation
 - `AUTOMATION_SETUP.md` - Scheduled task configuration
 
 ### External Resources
+
 - [Prisma Docs](https://www.prisma.io/docs)
 - [Google Gemini API](https://ai.google.dev/docs)
 - [Cloudflare Pages](https://developers.cloudflare.com/pages/)
@@ -506,17 +541,20 @@ async function maintainContent(): Promise<MaintenanceReport> {
 ## 🚀 Deployment Strategy
 
 ### Phased Rollout
+
 1. **Alpha** (Internal testing): Content team only
 2. **Beta** (Limited release): 50 pilot users
 3. **Production** (Public release): All users
 
 ### Feature Flags
+
 - Enable/disable user-generated content
 - Toggle AI quality checks
 - Control approval queue visibility
 - Gradual database feature rollout
 
 ### Monitoring
+
 - Cloudflare Analytics
 - Error tracking (Sentry integration TBD)
 - Performance monitoring

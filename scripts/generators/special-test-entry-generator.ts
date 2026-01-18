@@ -13,74 +13,142 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // PANCE-relevant special tests organized by system
 const PANCE_SPECIAL_TESTS = [
   // Orthopedic - Shoulder
-  { name: "Speed Test", category: "Orthopedic - Shoulder", purpose: "Biceps tendinopathy evaluation" },
-  { name: "Yergason Test", category: "Orthopedic - Shoulder", purpose: "Biceps tendon instability" },
-  { name: "O'Brien Test", category: "Orthopedic - Shoulder", purpose: "SLAP lesion evaluation" },
-  { name: "Sulcus Sign", category: "Orthopedic - Shoulder", purpose: "Inferior shoulder instability" },
-  { name: "Apprehension Test (Shoulder)", category: "Orthopedic - Shoulder", purpose: "Anterior shoulder instability" },
-  { name: "Relocation Test", category: "Orthopedic - Shoulder", purpose: "Anterior shoulder instability confirmation" },
-  { name: "Cross-Body Adduction Test", category: "Orthopedic - Shoulder", purpose: "AC joint pathology" },
-  { name: "Lift-Off Test", category: "Orthopedic - Shoulder", purpose: "Subscapularis tear" },
-  { name: "Belly Press Test", category: "Orthopedic - Shoulder", purpose: "Subscapularis function" },
-  { name: "External Rotation Lag Sign", category: "Orthopedic - Shoulder", purpose: "Infraspinatus tear" },
-  
+  {
+    name: 'Speed Test',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Biceps tendinopathy evaluation',
+  },
+  {
+    name: 'Yergason Test',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Biceps tendon instability',
+  },
+  { name: "O'Brien Test", category: 'Orthopedic - Shoulder', purpose: 'SLAP lesion evaluation' },
+  {
+    name: 'Sulcus Sign',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Inferior shoulder instability',
+  },
+  {
+    name: 'Apprehension Test (Shoulder)',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Anterior shoulder instability',
+  },
+  {
+    name: 'Relocation Test',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Anterior shoulder instability confirmation',
+  },
+  {
+    name: 'Cross-Body Adduction Test',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'AC joint pathology',
+  },
+  { name: 'Lift-Off Test', category: 'Orthopedic - Shoulder', purpose: 'Subscapularis tear' },
+  {
+    name: 'Belly Press Test',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Subscapularis function',
+  },
+  {
+    name: 'External Rotation Lag Sign',
+    category: 'Orthopedic - Shoulder',
+    purpose: 'Infraspinatus tear',
+  },
+
   // Orthopedic - Elbow/Wrist/Hand
-  { name: "Cozen Test", category: "Orthopedic - Elbow", purpose: "Lateral epicondylitis (tennis elbow)" },
-  { name: "Mill Test", category: "Orthopedic - Elbow", purpose: "Lateral epicondylitis" },
-  { name: "Golfer's Elbow Test", category: "Orthopedic - Elbow", purpose: "Medial epicondylitis" },
-  { name: "Valgus Stress Test (Elbow)", category: "Orthopedic - Elbow", purpose: "UCL injury" },
-  { name: "Watson Test", category: "Orthopedic - Wrist", purpose: "Scapholunate instability" },
-  { name: "Grind Test", category: "Orthopedic - Hand", purpose: "CMC arthritis of thumb" },
-  { name: "Allen Test", category: "Vascular - Hand", purpose: "Arterial patency of hand" },
-  
+  {
+    name: 'Cozen Test',
+    category: 'Orthopedic - Elbow',
+    purpose: 'Lateral epicondylitis (tennis elbow)',
+  },
+  { name: 'Mill Test', category: 'Orthopedic - Elbow', purpose: 'Lateral epicondylitis' },
+  { name: "Golfer's Elbow Test", category: 'Orthopedic - Elbow', purpose: 'Medial epicondylitis' },
+  { name: 'Valgus Stress Test (Elbow)', category: 'Orthopedic - Elbow', purpose: 'UCL injury' },
+  { name: 'Watson Test', category: 'Orthopedic - Wrist', purpose: 'Scapholunate instability' },
+  { name: 'Grind Test', category: 'Orthopedic - Hand', purpose: 'CMC arthritis of thumb' },
+  { name: 'Allen Test', category: 'Vascular - Hand', purpose: 'Arterial patency of hand' },
+
   // Orthopedic - Hip
-  { name: "Trendelenburg Test", category: "Orthopedic - Hip", purpose: "Hip abductor weakness" },
-  { name: "Ober Test", category: "Orthopedic - Hip", purpose: "IT band tightness" },
-  { name: "FADIR Test", category: "Orthopedic - Hip", purpose: "Femoral acetabular impingement" },
-  { name: "Log Roll Test", category: "Orthopedic - Hip", purpose: "Hip joint pathology" },
-  { name: "Piriformis Test", category: "Orthopedic - Hip", purpose: "Piriformis syndrome" },
-  
+  { name: 'Trendelenburg Test', category: 'Orthopedic - Hip', purpose: 'Hip abductor weakness' },
+  { name: 'Ober Test', category: 'Orthopedic - Hip', purpose: 'IT band tightness' },
+  { name: 'FADIR Test', category: 'Orthopedic - Hip', purpose: 'Femoral acetabular impingement' },
+  { name: 'Log Roll Test', category: 'Orthopedic - Hip', purpose: 'Hip joint pathology' },
+  { name: 'Piriformis Test', category: 'Orthopedic - Hip', purpose: 'Piriformis syndrome' },
+
   // Orthopedic - Knee
-  { name: "Pivot Shift Test", category: "Orthopedic - Knee", purpose: "ACL insufficiency" },
-  { name: "Thessaly Test", category: "Orthopedic - Knee", purpose: "Meniscal pathology" },
-  { name: "Apley Compression Test", category: "Orthopedic - Knee", purpose: "Meniscal tear" },
-  { name: "Apley Distraction Test", category: "Orthopedic - Knee", purpose: "Ligament vs meniscal injury differentiation" },
-  { name: "Patellar Apprehension Test", category: "Orthopedic - Knee", purpose: "Patellar instability" },
-  { name: "Ballottement Test", category: "Orthopedic - Knee", purpose: "Knee effusion" },
-  { name: "Dial Test", category: "Orthopedic - Knee", purpose: "Posterolateral corner injury" },
-  
+  { name: 'Pivot Shift Test', category: 'Orthopedic - Knee', purpose: 'ACL insufficiency' },
+  { name: 'Thessaly Test', category: 'Orthopedic - Knee', purpose: 'Meniscal pathology' },
+  { name: 'Apley Compression Test', category: 'Orthopedic - Knee', purpose: 'Meniscal tear' },
+  {
+    name: 'Apley Distraction Test',
+    category: 'Orthopedic - Knee',
+    purpose: 'Ligament vs meniscal injury differentiation',
+  },
+  {
+    name: 'Patellar Apprehension Test',
+    category: 'Orthopedic - Knee',
+    purpose: 'Patellar instability',
+  },
+  { name: 'Ballottement Test', category: 'Orthopedic - Knee', purpose: 'Knee effusion' },
+  { name: 'Dial Test', category: 'Orthopedic - Knee', purpose: 'Posterolateral corner injury' },
+
   // Orthopedic - Ankle/Foot
-  { name: "Talar Tilt Test", category: "Orthopedic - Ankle", purpose: "CFL injury" },
-  { name: "Squeeze Test (Fibula)", category: "Orthopedic - Ankle", purpose: "Syndesmosis injury" },
-  { name: "External Rotation Stress Test", category: "Orthopedic - Ankle", purpose: "Syndesmosis injury" },
-  { name: "Mulder Click", category: "Orthopedic - Foot", purpose: "Morton neuroma" },
-  
+  { name: 'Talar Tilt Test', category: 'Orthopedic - Ankle', purpose: 'CFL injury' },
+  { name: 'Squeeze Test (Fibula)', category: 'Orthopedic - Ankle', purpose: 'Syndesmosis injury' },
+  {
+    name: 'External Rotation Stress Test',
+    category: 'Orthopedic - Ankle',
+    purpose: 'Syndesmosis injury',
+  },
+  { name: 'Mulder Click', category: 'Orthopedic - Foot', purpose: 'Morton neuroma' },
+
   // Spine
-  { name: "Slump Test", category: "Orthopedic - Spine", purpose: "Neural tension, disc herniation" },
-  { name: "Femoral Nerve Stretch Test", category: "Orthopedic - Spine", purpose: "Upper lumbar radiculopathy" },
-  { name: "Spurling Test", category: "Orthopedic - Spine", purpose: "Cervical radiculopathy" },
-  { name: "Distraction Test", category: "Orthopedic - Spine", purpose: "Cervical radiculopathy" },
-  { name: "Compression Test (Spine)", category: "Orthopedic - Spine", purpose: "Cervical nerve root impingement" },
-  { name: "Gaenslen Test", category: "Orthopedic - Spine", purpose: "SI joint dysfunction" },
-  { name: "Sacral Thrust Test", category: "Orthopedic - Spine", purpose: "SI joint dysfunction" },
-  { name: "Stork Test", category: "Orthopedic - Spine", purpose: "Spondylolisthesis, pars defect" },
-  
+  {
+    name: 'Slump Test',
+    category: 'Orthopedic - Spine',
+    purpose: 'Neural tension, disc herniation',
+  },
+  {
+    name: 'Femoral Nerve Stretch Test',
+    category: 'Orthopedic - Spine',
+    purpose: 'Upper lumbar radiculopathy',
+  },
+  { name: 'Spurling Test', category: 'Orthopedic - Spine', purpose: 'Cervical radiculopathy' },
+  { name: 'Distraction Test', category: 'Orthopedic - Spine', purpose: 'Cervical radiculopathy' },
+  {
+    name: 'Compression Test (Spine)',
+    category: 'Orthopedic - Spine',
+    purpose: 'Cervical nerve root impingement',
+  },
+  { name: 'Gaenslen Test', category: 'Orthopedic - Spine', purpose: 'SI joint dysfunction' },
+  { name: 'Sacral Thrust Test', category: 'Orthopedic - Spine', purpose: 'SI joint dysfunction' },
+  { name: 'Stork Test', category: 'Orthopedic - Spine', purpose: 'Spondylolisthesis, pars defect' },
+
   // Neurological
-  { name: "Spurling Test", category: "Neurological", purpose: "Cervical nerve root compression" },
-  { name: "Adson Test", category: "Vascular - Neurological", purpose: "Thoracic outlet syndrome" },
-  { name: "Roos Test", category: "Vascular - Neurological", purpose: "Thoracic outlet syndrome" },
-  { name: "Wright Test", category: "Vascular - Neurological", purpose: "Thoracic outlet syndrome" },
-  { name: "Tinel Sign (Elbow)", category: "Neurological", purpose: "Cubital tunnel syndrome" },
-  
+  { name: 'Spurling Test', category: 'Neurological', purpose: 'Cervical nerve root compression' },
+  { name: 'Adson Test', category: 'Vascular - Neurological', purpose: 'Thoracic outlet syndrome' },
+  { name: 'Roos Test', category: 'Vascular - Neurological', purpose: 'Thoracic outlet syndrome' },
+  { name: 'Wright Test', category: 'Vascular - Neurological', purpose: 'Thoracic outlet syndrome' },
+  { name: 'Tinel Sign (Elbow)', category: 'Neurological', purpose: 'Cubital tunnel syndrome' },
+
   // Vascular
-  { name: "Ankle-Brachial Index", category: "Vascular", purpose: "Peripheral arterial disease screening" },
-  { name: "Buerger Test", category: "Vascular", purpose: "Arterial insufficiency of lower extremity" },
-  { name: "Homan Sign", category: "Vascular", purpose: "DVT screening (low specificity)" },
-  
+  {
+    name: 'Ankle-Brachial Index',
+    category: 'Vascular',
+    purpose: 'Peripheral arterial disease screening',
+  },
+  {
+    name: 'Buerger Test',
+    category: 'Vascular',
+    purpose: 'Arterial insufficiency of lower extremity',
+  },
+  { name: 'Homan Sign', category: 'Vascular', purpose: 'DVT screening (low specificity)' },
+
   // Vestibular
-  { name: "Dix-Hallpike Test", category: "Vestibular", purpose: "BPPV diagnosis" },
-  { name: "Head Impulse Test", category: "Vestibular", purpose: "Vestibular function" },
-  { name: "HINTS Exam", category: "Vestibular", purpose: "Central vs peripheral vertigo" },
+  { name: 'Dix-Hallpike Test', category: 'Vestibular', purpose: 'BPPV diagnosis' },
+  { name: 'Head Impulse Test', category: 'Vestibular', purpose: 'Vestibular function' },
+  { name: 'HINTS Exam', category: 'Vestibular', purpose: 'Central vs peripheral vertigo' },
 ];
 
 // Schema for Gemini response
@@ -104,7 +172,7 @@ const specialTestSchema = {
     relatedTests: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     alternativeNames: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
   },
-  required: ["description", "technique", "interpretation", "clinicalPearls", "boardYieldFacts"],
+  required: ['description', 'technique', 'interpretation', 'clinicalPearls', 'boardYieldFacts'],
 };
 
 interface SpecialTestData {
@@ -130,7 +198,10 @@ interface SpecialTestData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -153,14 +224,18 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateSpecialTestData(name: string, category: string, purpose: string): Promise<SpecialTestData> {
+async function generateSpecialTestData(
+  name: string,
+  category: string,
+  purpose: string
+): Promise<SpecialTestData> {
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -230,9 +305,7 @@ async function main() {
     const existingNames = new Set(existing.map((t) => t.name.toLowerCase()));
 
     // Filter out tests that already exist
-    const toCreate = PANCE_SPECIAL_TESTS.filter(
-      (t) => !existingNames.has(t.name.toLowerCase())
-    );
+    const toCreate = PANCE_SPECIAL_TESTS.filter((t) => !existingNames.has(t.name.toLowerCase()));
 
     console.log(`Existing: ${existing.length}`);
     console.log(`Missing: ${toCreate.length}`);

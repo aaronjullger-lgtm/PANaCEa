@@ -1,92 +1,49 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-import { CloudflareContext } from '../_shared/types';
+/**
+ * GET /api/questions/flags
+ * Admin endpoint to view question flags for quality review
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { adminEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export const onRequestGet = async (context: CloudflareContext) => {
+const FlagsSchema = z.object({
+  query: z.object({
+    status: z.string().optional(),
+    priority: z.string().optional(),
+  }),
+});
 
-  const { request, env } = context;
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestOptions = withCors();
+
+export const onRequestGet = adminEndpoint(FlagsSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/flags');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Verify auth
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    // Admin check: Verify user has admin role
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || !['ADMIN', 'SUPERADMIN'].includes(user.role)) {
-      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
-        status: 403,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const url = new URL(request.url);
-    const status = url.searchParams.get('status');
-    const priority = url.searchParams.get('priority');
+    const status = validated.query?.status;
+    const priority = validated.query?.priority;
 
     const flags = await prisma.questionFlag.findMany({
       where: {
-        ...(status && { status: status }),
-        ...(priority && { priority: priority }),
+        ...(status && { status }),
+        ...(priority && { priority }),
       },
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
     });
 
-    return new Response(JSON.stringify({ success: true, flags }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    logger.info('Admin fetched question flags', { userId: auth.userId, flagCount: flags.length });
 
+    return { data: { success: true, flags } };
   } catch (error) {
-    console.error('Failed to get flags:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Failed to get flags' 
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    logger.error('Failed to get flags', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    throw new Error('Failed to get flags');
   } finally {
-    if (prisma) {
-      await prisma.$disconnect().catch(() => {});
-    }
+    await safePrismaDisconnect(prisma);
   }
-};
+});

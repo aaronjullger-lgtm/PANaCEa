@@ -17,21 +17,15 @@ export interface GradingResult {
 }
 
 const isTestEnv =
-  typeof process !== 'undefined' &&
-  (process.env.VITEST || process.env.NODE_ENV === 'test');
+  typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
 
-const isDevEnv =
-  typeof process !== 'undefined' &&
-  process.env.NODE_ENV === 'development';
+const isDevEnv = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
 
 /**
  * Call Gemini via the Cloudflare Pages proxy at /geminiProxy
  * and return a structured SOAP grading result.
  */
-export async function gradeSoapNote(
-  userNote: string,
-  caseContext: string
-): Promise<GradingResult> {
+export async function gradeSoapNote(userNote: string, caseContext: string): Promise<GradingResult> {
   const trimmedNote = userNote.trim();
   if (!trimmedNote) {
     throw new Error('SOAP note is empty');
@@ -166,9 +160,7 @@ interface GradingResult {
     // Safety guard: enforce max lengths on feedback arrays
     if (parsed && parsed.feedback) {
       const { feedback } = parsed;
-      feedback.strengths = Array.isArray(feedback.strengths)
-        ? feedback.strengths.slice(0, 5)
-        : [];
+      feedback.strengths = Array.isArray(feedback.strengths) ? feedback.strengths.slice(0, 5) : [];
       feedback.missedConcepts = Array.isArray(feedback.missedConcepts)
         ? feedback.missedConcepts.slice(0, 5)
         : [];

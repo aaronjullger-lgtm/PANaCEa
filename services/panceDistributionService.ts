@@ -1,6 +1,6 @@
 /**
  * PANCE Distribution Service
- * 
+ *
  * Manages accurate PANCE blueprint distribution for main session.
  * Tracks system coverage and ensures questions follow the official PANCE percentages.
  */
@@ -9,21 +9,21 @@ import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from '../src/constan
 
 // Official PANCE Content Blueprint Percentages (2024)
 export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
-  CV: 11,      // Cardiovascular
-  PULM: 9,     // Pulmonary
-  GI: 8,       // GI/Nutrition
-  MSK: 8,      // Musculoskeletal
-  ID: 7,       // Infectious Disease
-  NEURO: 7,    // Neurology
-  PSYCH: 7,    // Psychiatry
-  REPRO: 7,    // Reproductive
-  ENDO: 6,     // Endocrine
-  HEENT: 6,    // HEENT
-  PRO: 6,      // Professional Practice
-  HEME: 5,     // Hematology
-  RENAL: 5,    // Renal
-  DERM: 4,     // Dermatology
-  GU: 4,       // Genitourinary
+  CV: 11, // Cardiovascular
+  PULM: 9, // Pulmonary
+  GI: 8, // GI/Nutrition
+  MSK: 8, // Musculoskeletal
+  ID: 7, // Infectious Disease
+  NEURO: 7, // Neurology
+  PSYCH: 7, // Psychiatry
+  REPRO: 7, // Reproductive
+  ENDO: 6, // Endocrine
+  HEENT: 6, // HEENT
+  PRO: 6, // Professional Practice
+  HEME: 5, // Hematology
+  RENAL: 5, // Renal
+  DERM: 4, // Dermatology
+  GU: 4, // Genitourinary
 };
 
 // PANCE Task Categories
@@ -78,10 +78,10 @@ export function getSessionDistribution(): SessionDistributionState {
 function createFreshState(): SessionDistributionState {
   const systems = Object.keys(PANCE_SYSTEM_PERCENTAGES);
   const tasks = Object.keys(PANCE_TASK_PERCENTAGES);
-  
+
   return {
-    systemCounts: Object.fromEntries(systems.map(s => [s, 0])),
-    taskCounts: Object.fromEntries(tasks.map(t => [t, 0])),
+    systemCounts: Object.fromEntries(systems.map((s) => [s, 0])),
+    taskCounts: Object.fromEntries(tasks.map((t) => [t, 0])),
     totalQuestions: 0,
     startedAt: Date.now(),
     lastUpdated: Date.now(),
@@ -101,18 +101,18 @@ export function saveSessionDistribution(state: SessionDistributionState): void {
  */
 export function recordQuestion(system: string, task?: string): void {
   const state = getSessionDistribution();
-  
+
   // Normalize system code
   const normalizedSystem = normalizeSystemCode(system);
   if (normalizedSystem && state.systemCounts[normalizedSystem] !== undefined) {
     state.systemCounts[normalizedSystem]++;
   }
-  
+
   // Record task if provided
   if (task && state.taskCounts[task] !== undefined) {
     state.taskCounts[task]++;
   }
-  
+
   state.totalQuestions++;
   saveSessionDistribution(state);
 }
@@ -125,55 +125,56 @@ export function normalizeSystemCode(system: string): string | null {
   if (PANCE_SYSTEM_PERCENTAGES[system]) {
     return system;
   }
-  
+
   // Try reverse lookup from full name
-  const code = Object.entries(ABBREVIATION_TO_TOPIC_MAP)
-    .find(([, fullName]) => fullName.toLowerCase() === system.toLowerCase())?.[0];
-  
+  const code = Object.entries(ABBREVIATION_TO_TOPIC_MAP).find(
+    ([, fullName]) => fullName.toLowerCase() === system.toLowerCase()
+  )?.[0];
+
   if (code && PANCE_SYSTEM_PERCENTAGES[code]) {
     return code;
   }
-  
+
   // Common aliases
   const aliases: Record<string, string> = {
-    'cardiovascular': 'CV',
-    'cardio': 'CV',
-    'pulmonary': 'PULM',
-    'pulm': 'PULM',
-    'respiratory': 'PULM',
-    'gastrointestinal': 'GI',
-    'gastro': 'GI',
-    'musculoskeletal': 'MSK',
-    'orthopedic': 'MSK',
-    'infectious': 'ID',
+    cardiovascular: 'CV',
+    cardio: 'CV',
+    pulmonary: 'PULM',
+    pulm: 'PULM',
+    respiratory: 'PULM',
+    gastrointestinal: 'GI',
+    gastro: 'GI',
+    musculoskeletal: 'MSK',
+    orthopedic: 'MSK',
+    infectious: 'ID',
     'infectious disease': 'ID',
-    'neurologic': 'NEURO',
-    'neurology': 'NEURO',
-    'psychiatric': 'PSYCH',
-    'psychiatry': 'PSYCH',
+    neurologic: 'NEURO',
+    neurology: 'NEURO',
+    psychiatric: 'PSYCH',
+    psychiatry: 'PSYCH',
     'mental health': 'PSYCH',
-    'reproductive': 'REPRO',
+    reproductive: 'REPRO',
     'ob/gyn': 'REPRO',
-    'obstetrics': 'REPRO',
-    'gynecology': 'REPRO',
-    'endocrine': 'ENDO',
-    'endocrinology': 'ENDO',
-    'heent': 'HEENT',
-    'ent': 'HEENT',
-    'ophthalmology': 'HEENT',
-    'professional': 'PRO',
+    obstetrics: 'REPRO',
+    gynecology: 'REPRO',
+    endocrine: 'ENDO',
+    endocrinology: 'ENDO',
+    heent: 'HEENT',
+    ent: 'HEENT',
+    ophthalmology: 'HEENT',
+    professional: 'PRO',
     'professional practice': 'PRO',
-    'hematologic': 'HEME',
-    'hematology': 'HEME',
-    'oncology': 'HEME',
-    'renal': 'RENAL',
-    'nephrology': 'RENAL',
-    'dermatologic': 'DERM',
-    'dermatology': 'DERM',
-    'genitourinary': 'GU',
-    'urology': 'GU',
+    hematologic: 'HEME',
+    hematology: 'HEME',
+    oncology: 'HEME',
+    renal: 'RENAL',
+    nephrology: 'RENAL',
+    dermatologic: 'DERM',
+    dermatology: 'DERM',
+    genitourinary: 'GU',
+    urology: 'GU',
   };
-  
+
   return aliases[system.toLowerCase()] || null;
 }
 
@@ -183,17 +184,17 @@ export function normalizeSystemCode(system: string): string | null {
 export function calculateDistributionDrift(): DistributionDrift[] {
   const state = getSessionDistribution();
   const drifts: DistributionDrift[] = [];
-  
+
   if (state.totalQuestions < 5) {
     // Not enough data for meaningful drift calculation
     return [];
   }
-  
+
   for (const [system, targetPercent] of Object.entries(PANCE_SYSTEM_PERCENTAGES)) {
     const actual = state.systemCounts[system] || 0;
     const actualPercent = (actual / state.totalQuestions) * 100;
     const driftPercent = actualPercent - targetPercent;
-    
+
     drifts.push({
       system,
       expected: targetPercent,
@@ -202,7 +203,7 @@ export function calculateDistributionDrift(): DistributionDrift[] {
       needsCorrection: Math.abs(driftPercent) > 5, // >5% drift triggers correction
     });
   }
-  
+
   return drifts.sort((a, b) => a.driftPercent - b.driftPercent);
 }
 
@@ -212,26 +213,26 @@ export function calculateDistributionDrift(): DistributionDrift[] {
  */
 export function getNextRecommendedSystem(): string | null {
   const drifts = calculateDistributionDrift();
-  
+
   // Find most under-represented systems
-  const underRepresented = drifts.filter(d => d.driftPercent < -3);
-  
+  const underRepresented = drifts.filter((d) => d.driftPercent < -3);
+
   if (underRepresented.length === 0) {
     return null; // Distribution is balanced
   }
-  
+
   // Weighted random selection favoring more under-represented systems
-  const weights = underRepresented.map(d => Math.abs(d.driftPercent));
+  const weights = underRepresented.map((d) => Math.abs(d.driftPercent));
   const totalWeight = weights.reduce((a, b) => a + b, 0);
   let random = Math.random() * totalWeight;
-  
+
   for (let i = 0; i < underRepresented.length; i++) {
     random -= weights[i];
     if (random <= 0) {
       return underRepresented[i].system;
     }
   }
-  
+
   return underRepresented[0].system;
 }
 
@@ -241,13 +242,19 @@ export function getNextRecommendedSystem(): string | null {
 export function getSessionSummary(): {
   totalQuestions: number;
   sessionDuration: number;
-  systemBreakdown: Array<{ system: string; name: string; count: number; percent: number; target: number }>;
+  systemBreakdown: Array<{
+    system: string;
+    name: string;
+    count: number;
+    percent: number;
+    target: number;
+  }>;
   questionsPerMinute: number;
   distributionScore: number;
 } {
   const state = getSessionDistribution();
   const sessionDuration = (Date.now() - state.startedAt) / 1000 / 60; // minutes
-  
+
   const systemBreakdown = Object.entries(state.systemCounts)
     .map(([system, count]) => ({
       system,
@@ -257,21 +264,21 @@ export function getSessionSummary(): {
       target: PANCE_SYSTEM_PERCENTAGES[system] || 0,
     }))
     .sort((a, b) => b.count - a.count);
-  
+
   // Calculate distribution score (100 = perfect, lower = more drift)
   const drifts = calculateDistributionDrift();
-  const avgDrift = drifts.length > 0 
-    ? drifts.reduce((sum, d) => sum + Math.abs(d.driftPercent), 0) / drifts.length 
-    : 0;
+  const avgDrift =
+    drifts.length > 0
+      ? drifts.reduce((sum, d) => sum + Math.abs(d.driftPercent), 0) / drifts.length
+      : 0;
   const distributionScore = Math.max(0, Math.round(100 - avgDrift * 2));
-  
+
   return {
     totalQuestions: state.totalQuestions,
     sessionDuration: Math.round(sessionDuration * 10) / 10,
     systemBreakdown,
-    questionsPerMinute: sessionDuration > 0 
-      ? Math.round((state.totalQuestions / sessionDuration) * 10) / 10 
-      : 0,
+    questionsPerMinute:
+      sessionDuration > 0 ? Math.round((state.totalQuestions / sessionDuration) * 10) / 10 : 0,
     distributionScore,
   };
 }
@@ -296,17 +303,17 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
       return recommendedSystem;
     }
   }
-  
+
   // Filter deck to enabled systems
   let deck = [...PANCE_DECK];
   if (enabledSystems && enabledSystems.size > 0) {
-    deck = deck.filter(system => enabledSystems.has(system));
+    deck = deck.filter((system) => enabledSystems.has(system));
   }
-  
+
   if (deck.length === 0) {
     deck = [...PANCE_DECK];
   }
-  
+
   // Shuffle and pick
   const index = Math.floor(Math.random() * deck.length);
   return deck[index];

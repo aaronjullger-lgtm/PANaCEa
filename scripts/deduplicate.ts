@@ -28,17 +28,29 @@ interface DuplicateGroup {
 
 function calculateCompleteness(record: any): number {
   const fields = [
-    'overview', 'pathophysiology', 'etiology', 'epidemiology',
-    'symptoms', 'physicalExam', 'diagnostics', 'differentialDiagnosis',
-    'treatment', 'complications', 'prognosis', 'riskFactors', 'buzzwords'
+    'overview',
+    'pathophysiology',
+    'etiology',
+    'epidemiology',
+    'symptoms',
+    'physicalExam',
+    'diagnostics',
+    'differentialDiagnosis',
+    'treatment',
+    'complications',
+    'prognosis',
+    'riskFactors',
+    'buzzwords',
   ];
 
   let filledFields = 0;
   for (const field of fields) {
     const value = record[field];
-    if (value && 
-        ((typeof value === 'string' && value.trim().length > 50) ||
-         (Array.isArray(value) && value.length > 0))) {
+    if (
+      value &&
+      ((typeof value === 'string' && value.trim().length > 50) ||
+        (Array.isArray(value) && value.length > 0))
+    ) {
       filledFields++;
     }
   }
@@ -69,7 +81,7 @@ function calculateSimilarity(name1: string, name2: string): number {
   // Calculate word overlap
   const words1 = new Set(normalized1.split(' '));
   const words2 = new Set(normalized2.split(' '));
-  const intersection = new Set([...words1].filter(w => words2.has(w)));
+  const intersection = new Set([...words1].filter((w) => words2.has(w)));
   const union = new Set([...words1, ...words2]);
 
   const jaccardSimilarity = intersection.size / union.size;
@@ -98,8 +110,8 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
       complications: true,
       prognosis: true,
       riskFactors: true,
-      buzzwords: true
-    }
+      buzzwords: true,
+    },
   });
 
   console.log(`   Analyzing ${records.length} records...`);
@@ -113,7 +125,7 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
     const group: DuplicateGroup = {
       canonicalName: records[i].condition,
       records: [],
-      similarity: 1.0
+      similarity: 1.0,
     };
 
     const completeness1 = calculateCompleteness(records[i]);
@@ -123,7 +135,7 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
       condition: records[i].condition,
       system: records[i].system,
       status: records[i].status,
-      completeness: completeness1
+      completeness: completeness1,
     });
 
     // Compare with all other records
@@ -141,7 +153,7 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
           condition: records[j].condition,
           system: records[j].system,
           status: records[j].status,
-          completeness: completeness2
+          completeness: completeness2,
         });
         group.similarity = Math.min(group.similarity, similarity);
         processed.add(records[j].id);
@@ -181,9 +193,9 @@ async function mergeRecords(keepId: string, deleteIds: string[], dryRun: boolean
     await prisma.medicalContent.deleteMany({
       where: {
         id: {
-          in: deleteIds
-        }
-      }
+          in: deleteIds,
+        },
+      },
     });
 
     console.log(`   ✅ Merged successfully`);
@@ -208,17 +220,23 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
 
   for (let i = 0; i < Math.min(duplicates.length, 20); i++) {
     const group = duplicates[i];
-    console.log(`\nGroup ${i + 1}: ${group.canonicalName} (${group.records.length} variants, ${(group.similarity * 100).toFixed(0)}% similar)`);
+    console.log(
+      `\nGroup ${i + 1}: ${group.canonicalName} (${group.records.length} variants, ${(group.similarity * 100).toFixed(0)}% similar)`
+    );
     console.log('-'.repeat(80));
-    
+
     for (const record of group.records) {
       const badge = record.completeness > 80 ? '🟢' : record.completeness > 50 ? '🟡' : '🔴';
       console.log(`  ${badge} ${record.condition}`);
-      console.log(`     ID: ${record.id.substring(0, 8)}... | System: ${record.system} | Status: ${record.status} | Complete: ${record.completeness.toFixed(0)}%`);
+      console.log(
+        `     ID: ${record.id.substring(0, 8)}... | System: ${record.system} | Status: ${record.status} | Complete: ${record.completeness.toFixed(0)}%`
+      );
     }
 
     const bestRecord = group.records[0];
-    console.log(`\n  💡 Suggested action: Keep "${bestRecord.condition}" (${bestRecord.completeness.toFixed(0)}% complete)`);
+    console.log(
+      `\n  💡 Suggested action: Keep "${bestRecord.condition}" (${bestRecord.completeness.toFixed(0)}% complete)`
+    );
   }
 
   if (duplicates.length > 20) {
@@ -235,30 +253,41 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportPath = path.join(reportDir, `duplicates-report-${timestamp}.json`);
-  
-  fs.writeFileSync(reportPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    summary: {
-      totalGroups: duplicates.length,
-      totalDuplicates: duplicates.reduce((sum, g) => sum + g.records.length - 1, 0)
-    },
-    groups: duplicates
-  }, null, 2));
+
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalGroups: duplicates.length,
+          totalDuplicates: duplicates.reduce((sum, g) => sum + g.records.length - 1, 0),
+        },
+        groups: duplicates,
+      },
+      null,
+      2
+    )
+  );
 
   console.log(`📄 Detailed report saved to: ${reportPath}\n`);
 
   // Generate merge script
   const mergeScriptPath = path.join(reportDir, `merge-duplicates-${timestamp}.sh`);
-  let mergeScript = '#!/bin/bash\n# Auto-generated merge script\n# Review carefully before executing!\n\n';
-  
+  let mergeScript =
+    '#!/bin/bash\n# Auto-generated merge script\n# Review carefully before executing!\n\n';
+
   for (let i = 0; i < duplicates.length; i++) {
     const group = duplicates[i];
     const keepId = group.records[0].id;
-    const deleteIds = group.records.slice(1).map(r => r.id);
-    
+    const deleteIds = group.records.slice(1).map((r) => r.id);
+
     mergeScript += `# Group ${i + 1}: ${group.canonicalName}\n`;
     mergeScript += `# Keep: ${group.records[0].condition} (${group.records[0].completeness.toFixed(0)}% complete)\n`;
-    mergeScript += `# Delete: ${group.records.slice(1).map(r => r.condition).join(', ')}\n`;
+    mergeScript += `# Delete: ${group.records
+      .slice(1)
+      .map((r) => r.condition)
+      .join(', ')}\n`;
     mergeScript += `# npx tsx scripts/deduplicate.ts --merge --keep=${keepId} --delete=${deleteIds.join(',')}\n\n`;
   }
 
@@ -270,8 +299,8 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
 async function main() {
   const args = process.argv.slice(2);
   const merge = args.includes('--merge');
-  const keepArg = args.find(arg => arg.startsWith('--keep='));
-  const deleteArg = args.find(arg => arg.startsWith('--delete='));
+  const keepArg = args.find((arg) => arg.startsWith('--keep='));
+  const deleteArg = args.find((arg) => arg.startsWith('--delete='));
   const dryRun = args.includes('--dry-run') || !merge;
 
   console.log('🔍 Starting Deduplication Check...\n');

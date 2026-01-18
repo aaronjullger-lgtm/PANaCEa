@@ -1,57 +1,87 @@
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, QuestionFeedbackSchema } from '../_shared/schemas';
-import type { CloudflareEnv, CloudflareContext } from '../_shared/types';
+/**
+ * Feedback Submission Endpoint
+ * POST /api/feedback/submit
+ *
+ * Allows authenticated users to submit feedback about questions
+ *
+ * Security: authenticatedEndpoint with Zod validation
+ */
 
-export const onRequestPost = async (context: CloudflareContext<CloudflareEnv>) => {
-  const { env, request } = context;
-  const auth = await authenticateRequest(request, env);
-  if (!auth?.user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-  // Validate request body with Zod schema
-  const validation = await validateRequest(request, QuestionFeedbackSchema);
-  if (!validation.success) {
-    return (validation as { success: false; response: Response }).response;
-  }
+// ============================================================================
+// SCHEMAS
+// ============================================================================
 
-  const { questionId, flagType, description, questionText, topic, system } = validation.data;
+const FeedbackSubmitSchema = z.object({
+  body: z.object({
+    questionId: z.string().min(1),
+    flagType: z.enum(['incorrect_fact', 'unclear_question', 'typo', 'outdated', 'other']),
+    description: z.string().min(1).max(2000),
+    questionText: z.string().optional(),
+    topic: z.string().optional(),
+    system: z.string().optional(),
+  }),
+});
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+// ============================================================================
+// OPTIONS HANDLER
+// ============================================================================
 
-  try {
-    const feedback = await prisma.feedback.create({
-      data: {
-        userId: auth.user.id,
-        questionId,
-        type: flagType,
-        description,
-        status: 'new',
-        priority: flagType === 'incorrect_fact' ? 'high' : 'medium',
-        context: {
-          questionText,
-          topic,
-          system,
+export const onRequestOptions = withCors();
+
+// ============================================================================
+// POST HANDLER
+// ============================================================================
+
+export const onRequestPost = authenticatedEndpoint(
+  FeedbackSubmitSchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/feedback/submit', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const { questionId, flagType, description, questionText, topic, system } = validated.body;
+
+      const feedback = await prisma.feedback.create({
+        data: {
+          userId: auth.userId,
+          questionId,
+          type: flagType,
+          description,
+          status: 'new',
+          priority: flagType === 'incorrect_fact' ? 'high' : 'medium',
+          context: {
+            questionText,
+            topic,
+            system,
+          },
         },
-      },
-    });
+      });
 
-    return new Response(JSON.stringify({ success: true, feedbackId: feedback.id }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return new Response(JSON.stringify({ error: 'Feedback submission failed', details: errorMessage }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } finally {
-    await prisma.$disconnect();
+      log.info('Feedback submitted successfully', { feedbackId: feedback.id });
+
+      return {
+        status: 201,
+        data: { success: true, feedbackId: feedback.id },
+      };
+    } catch (error) {
+      log.error('Error submitting feedback', error);
+      return {
+        status: 500,
+        error: 'Feedback submission failed',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-};
+);

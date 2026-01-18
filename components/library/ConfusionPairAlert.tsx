@@ -1,6 +1,6 @@
 /**
  * ConfusionPairAlert - Shows user's personal confusion patterns
- * 
+ *
  * Displays a warning when viewing a condition the user frequently confuses,
  * with distinguishing features from the database.
  */
@@ -9,7 +9,13 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X, ArrowLeftRight, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import { fetchConfusionPairs, type ConfusionPair, getSeverityColor, getSeverityBgColor, generateComparison } from '@/services/ddxService';
+import {
+  fetchConfusionPairs,
+  type ConfusionPair,
+  getSeverityColor,
+  getSeverityBgColor,
+  generateComparison,
+} from '@/services/ddxService';
 
 interface ConfusionPairAlertProps {
   /** Current condition being viewed */
@@ -36,27 +42,28 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
 
   useEffect(() => {
     if (!isSignedIn || (!conditionId && !conditionName)) return;
-    
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const token = await getToken();
         if (!token) return;
-        
+
         const data = await fetchConfusionPairs(token, {
           conditionId,
           limit: 5,
           minCount: 2,
         });
-        
+
         // Filter to only include pairs involving the current condition
         const relevantPairs = data.confusionPairs.filter(
-          p => p.realConditionData?.id === conditionId ||
-               p.mistakenConditionData?.id === conditionId ||
-               p.realCondition.toLowerCase().includes(conditionName?.toLowerCase() || '') ||
-               p.mistakenFor.toLowerCase().includes(conditionName?.toLowerCase() || '')
+          (p) =>
+            p.realConditionData?.id === conditionId ||
+            p.mistakenConditionData?.id === conditionId ||
+            p.realCondition.toLowerCase().includes(conditionName?.toLowerCase() || '') ||
+            p.mistakenFor.toLowerCase().includes(conditionName?.toLowerCase() || '')
         );
-        
+
         setConfusionData(relevantPairs);
       } catch (error) {
         console.error('Failed to fetch confusion pairs:', error);
@@ -120,7 +127,9 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
         </span>
         {onCompare && topPair.mistakenConditionData && (
           <button
-            onClick={() => onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)}
+            onClick={() =>
+              onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)
+            }
             className="ml-auto text-xs text-[var(--color-accent)] hover:underline"
           >
             Compare
@@ -174,13 +183,11 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 {topPair.realCondition}
               </p>
-              <p className="text-[10px] text-green-500 uppercase tracking-wide mt-0.5">
-                Correct
-              </p>
+              <p className="text-[10px] text-green-500 uppercase tracking-wide mt-0.5">Correct</p>
             </div>
-            
+
             <ArrowLeftRight className="w-6 h-6 text-[var(--color-text-muted)]" />
-            
+
             <div className="text-center flex-1">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 {topPair.mistakenFor}
@@ -206,9 +213,10 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
                   <Lightbulb className="w-3 h-3" />
                   Key Differences
                 </div>
-                
+
                 {/* Classic Patient */}
-                {topPair.keyDifferences.classicPatient?.real !== topPair.keyDifferences.classicPatient?.mistaken && (
+                {topPair.keyDifferences.classicPatient?.real !==
+                  topPair.keyDifferences.classicPatient?.mistaken && (
                   <DifferenceRow
                     label="Classic Patient"
                     valueA={topPair.keyDifferences.classicPatient?.real}
@@ -217,9 +225,10 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
                     labelB={topPair.mistakenFor}
                   />
                 )}
-                
+
                 {/* Gold Standard Dx */}
-                {topPair.keyDifferences.goldStandardDx?.real !== topPair.keyDifferences.goldStandardDx?.mistaken && (
+                {topPair.keyDifferences.goldStandardDx?.real !==
+                  topPair.keyDifferences.goldStandardDx?.mistaken && (
                   <DifferenceRow
                     label="Gold Standard Dx"
                     valueA={topPair.keyDifferences.goldStandardDx?.real}
@@ -228,9 +237,10 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
                     labelB={topPair.mistakenFor}
                   />
                 )}
-                
+
                 {/* First Line Rx */}
-                {topPair.keyDifferences.firstLineRx?.real !== topPair.keyDifferences.firstLineRx?.mistaken && (
+                {topPair.keyDifferences.firstLineRx?.real !==
+                  topPair.keyDifferences.firstLineRx?.mistaken && (
                   <DifferenceRow
                     label="First-Line Rx"
                     valueA={topPair.keyDifferences.firstLineRx?.real}
@@ -260,7 +270,9 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
         {onCompare && topPair.realConditionData && topPair.mistakenConditionData && (
           <div className="px-4 py-3 border-t border-[var(--color-border)]/50 flex gap-2">
             <button
-              onClick={() => onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)}
+              onClick={() =>
+                onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)
+              }
               className="flex-1 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Compare Side-by-Side
@@ -292,7 +304,7 @@ const DifferenceRow: React.FC<{
   labelB: string;
 }> = ({ label, valueA, valueB, labelA, labelB }) => {
   if (!valueA && !valueB) return null;
-  
+
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">

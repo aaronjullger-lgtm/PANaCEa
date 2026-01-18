@@ -6,23 +6,24 @@ This migration adds Row Level Security policies to ensure users can only access 
 
 ## Tables with RLS Enabled
 
-| Table | Policy | Description |
-|-------|--------|-------------|
-| `User` | Own data only | Users can read/update their own profile |
-| `UserQuestionHistory` | Own data only | Question history is private |
-| `QuestionAttempt` | Own data only | Attempt records are private |
-| `SRSItem` | Own data only | Spaced repetition data is private |
-| `PerformanceRecord` | Own data only | Performance stats are private |
-| `StudySession` | Own data only | Session data is private |
-| `UserAchievement` | Own data only | Achievements are private |
-| `Bookmark` | Own data only | Bookmarks are private |
-| `SyncQueue` | Own data only | Sync queue is private |
-| `QuestionFlag` | Create own, admins see all | Users can report, admins review |
-| `StudyGroupMember` | Own memberships | Users see their own group memberships |
+| Table                 | Policy                     | Description                             |
+| --------------------- | -------------------------- | --------------------------------------- |
+| `User`                | Own data only              | Users can read/update their own profile |
+| `UserQuestionHistory` | Own data only              | Question history is private             |
+| `QuestionAttempt`     | Own data only              | Attempt records are private             |
+| `SRSItem`             | Own data only              | Spaced repetition data is private       |
+| `PerformanceRecord`   | Own data only              | Performance stats are private           |
+| `StudySession`        | Own data only              | Session data is private                 |
+| `UserAchievement`     | Own data only              | Achievements are private                |
+| `Bookmark`            | Own data only              | Bookmarks are private                   |
+| `SyncQueue`           | Own data only              | Sync queue is private                   |
+| `QuestionFlag`        | Create own, admins see all | Users can report, admins review         |
+| `StudyGroupMember`    | Own memberships            | Users see their own group memberships   |
 
 ## Public Content Tables (No RLS)
 
 These tables contain shared educational content accessible to all users:
+
 - `MedicalContent`
 - `Condition`
 - `Drug`
@@ -55,9 +56,9 @@ For these policies to work correctly with Clerk authentication:
 const supabase = createClient(url, anonKey, {
   global: {
     headers: {
-      Authorization: `Bearer ${userJwt}`
-    }
-  }
+      Authorization: `Bearer ${userJwt}`,
+    },
+  },
 });
 
 // For admin/system operations (bypasses RLS)

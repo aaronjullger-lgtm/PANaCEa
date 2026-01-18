@@ -1,14 +1,14 @@
 /**
  * Clinical Pearl Service
- * 
+ *
  * Task 112: The "Pearl" Harvester
  * - Extract clinical pearls from question explanations
  * - Store pearls in a separate table
  * - Provide "Daily Pearl" and "Review My Pearls" features
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { prisma } from "../lib/prisma";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { prisma } from '../lib/prisma';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
@@ -20,7 +20,7 @@ function getAIModel() {
   }
   if (!aiModel) {
     const genAI = new GoogleGenerativeAI(API_KEY);
-    aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    aiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
   return aiModel;
 }
@@ -43,7 +43,7 @@ export async function extractPearlFromExplanation(
 ): Promise<ExtractedPearl | null> {
   const model = getAIModel();
   if (!model) {
-    console.warn("AI model not available for pearl extraction");
+    console.warn('AI model not available for pearl extraction');
     return null;
   }
 
@@ -68,7 +68,7 @@ The pearl should be:
 
     const result = await model.generateContent(prompt);
     const response = result.response.text();
-    const sanitized = response.replace(/```json|```/g, "").trim();
+    const sanitized = response.replace(/```json|```/g, '').trim();
 
     try {
       const parsed = JSON.parse(sanitized);
@@ -78,11 +78,11 @@ The pearl should be:
         tags: parsed.tags || [],
       };
     } catch {
-      console.error("Failed to parse pearl extraction response");
+      console.error('Failed to parse pearl extraction response');
       return null;
     }
   } catch (error) {
-    console.error("Error extracting pearl:", error);
+    console.error('Error extracting pearl:', error);
     return null;
   }
 }
@@ -107,7 +107,7 @@ export async function createClinicalPearl(
   });
 
   if (!extracted) {
-    throw new Error("Failed to extract pearl from explanation");
+    throw new Error('Failed to extract pearl from explanation');
   }
 
   // Save to database
@@ -138,10 +138,10 @@ export async function extractPearlsFromQuestions(questionIds: string[]) {
     try {
       // In a real implementation, you'd fetch the question data
       // For now, this is a placeholder
-      const explanation = "Sample explanation for demonstration";
+      const explanation = 'Sample explanation for demonstration';
 
       const pearl = await createClinicalPearl(questionId, explanation, {
-        extractedBy: "batch_processor",
+        extractedBy: 'batch_processor',
       });
 
       results.push({ questionId, pearlId: pearl.id, success: true });
@@ -167,7 +167,7 @@ export async function getDailyPearl(userId?: string) {
       where: { userId },
       select: { questionId: true },
       take: 100, // Recent questions
-      orderBy: { lastSeenAt: "desc" },
+      orderBy: { lastSeenAt: 'desc' },
     });
 
     const questionIds = userHistory.map((h) => h.questionId);
@@ -221,7 +221,7 @@ export async function getUserPearls(userId: string, limit: number = 20) {
   const userHistory = await prisma.userQuestionSeen.findMany({
     where: { userId },
     select: { questionId: true },
-    orderBy: { lastSeenAt: "desc" },
+    orderBy: { lastSeenAt: 'desc' },
   });
 
   const questionIds = userHistory.map((h) => h.questionId);
@@ -235,7 +235,7 @@ export async function getUserPearls(userId: string, limit: number = 20) {
     where: {
       questionId: { in: questionIds },
     },
-    orderBy: { extractedAt: "desc" },
+    orderBy: { extractedAt: 'desc' },
     take: limit,
   });
 
@@ -317,7 +317,7 @@ export async function getUserFavoritePearls(userId: string) {
       userId,
       markedUseful: true,
     },
-    orderBy: { viewedAt: "desc" },
+    orderBy: { viewedAt: 'desc' },
   });
 
   const pearlIds = userPearls.map((up) => up.pearlId);
@@ -375,14 +375,14 @@ export async function searchPearls(query: {
 
   if (query.keywords) {
     where.OR = [
-      { pearlText: { contains: query.keywords, mode: "insensitive" } },
-      { fullExplanation: { contains: query.keywords, mode: "insensitive" } },
+      { pearlText: { contains: query.keywords, mode: 'insensitive' } },
+      { fullExplanation: { contains: query.keywords, mode: 'insensitive' } },
     ];
   }
 
   const pearls = await prisma.clinicalPearl.findMany({
     where,
-    orderBy: [{ usefulVotes: "desc" }, { viewCount: "desc" }],
+    orderBy: [{ usefulVotes: 'desc' }, { viewCount: 'desc' }],
     take: query.limit || 20,
   });
 
@@ -396,15 +396,15 @@ export async function getPearlStats() {
   const [total, byCategory, bySystem, topPearls] = await Promise.all([
     prisma.clinicalPearl.count(),
     prisma.clinicalPearl.groupBy({
-      by: ["category"],
+      by: ['category'],
       _count: true,
     }),
     prisma.clinicalPearl.groupBy({
-      by: ["system"],
+      by: ['system'],
       _count: true,
     }),
     prisma.clinicalPearl.findMany({
-      orderBy: { usefulVotes: "desc" },
+      orderBy: { usefulVotes: 'desc' },
       take: 10,
       select: {
         id: true,
@@ -432,9 +432,7 @@ export async function getPearlOfTheDay(date?: Date) {
   const today = date || new Date();
   // Calculate day of year: use January 1st as start (month 0, day 1)
   const startOfYear = new Date(today.getFullYear(), 0, 1);
-  const dayOfYear = Math.floor(
-    (today.getTime() - startOfYear.getTime()) / 86400000
-  );
+  const dayOfYear = Math.floor((today.getTime() - startOfYear.getTime()) / 86400000);
 
   const count = await prisma.clinicalPearl.count();
   if (count === 0) return null;
@@ -443,7 +441,7 @@ export async function getPearlOfTheDay(date?: Date) {
 
   const pearl = await prisma.clinicalPearl.findFirst({
     skip,
-    orderBy: { usefulVotes: "desc" },
+    orderBy: { usefulVotes: 'desc' },
   });
 
   return pearl;

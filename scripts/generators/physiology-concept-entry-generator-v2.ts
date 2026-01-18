@@ -13,46 +13,58 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // PANCE-relevant physiology concepts
 const PANCE_PHYSIOLOGY_CONCEPTS = [
-  { name: "Starling Forces", category: "Fluid Dynamics", system: "Cardiovascular" },
-  { name: "Cardiac Action Potential", category: "Electrophysiology", system: "Cardiovascular" },
-  { name: "Pacemaker Cells", category: "Electrophysiology", system: "Cardiovascular" },
-  { name: "Baroreceptor Reflex", category: "Autonomic Regulation", system: "Cardiovascular" },
-  { name: "Frank-Starling Mechanism", category: "Cardiac Mechanics", system: "Cardiovascular" },
-  { name: "Preload and Afterload", category: "Cardiac Mechanics", system: "Cardiovascular" },
-  { name: "Cardiac Output Determinants", category: "Cardiac Mechanics", system: "Cardiovascular" },
-  { name: "Oxygen-Hemoglobin Dissociation Curve", category: "Gas Exchange", system: "Pulmonary" },
-  { name: "Ventilation-Perfusion Matching", category: "Gas Exchange", system: "Pulmonary" },
-  { name: "Pulmonary Compliance", category: "Respiratory Mechanics", system: "Pulmonary" },
-  { name: "Surfactant Function", category: "Respiratory Mechanics", system: "Pulmonary" },
-  { name: "Hypoxic Pulmonary Vasoconstriction", category: "Pulmonary Circulation", system: "Pulmonary" },
-  { name: "Glomerular Filtration", category: "Renal Physiology", system: "Genitourinary" },
-  { name: "Countercurrent Multiplier", category: "Renal Physiology", system: "Genitourinary" },
-  { name: "Renin-Angiotensin-Aldosterone System", category: "Endocrine Regulation", system: "Genitourinary" },
-  { name: "ADH and Water Balance", category: "Fluid Balance", system: "Genitourinary" },
-  { name: "Acid-Base Compensation", category: "Acid-Base", system: "Pulmonary" },
-  { name: "Henderson-Hasselbalch Equation", category: "Acid-Base", system: "Pulmonary" },
-  { name: "Anion Gap Calculation", category: "Acid-Base", system: "Pulmonary" },
-  { name: "Osmolality Regulation", category: "Fluid Balance", system: "Genitourinary" },
-  { name: "Sodium Balance", category: "Electrolyte Physiology", system: "Genitourinary" },
-  { name: "Potassium Balance", category: "Electrolyte Physiology", system: "Genitourinary" },
-  { name: "Calcium Homeostasis", category: "Electrolyte Physiology", system: "Endocrine" },
-  { name: "Thyroid Hormone Axis", category: "Endocrine Regulation", system: "Endocrine" },
-  { name: "Cortisol Regulation", category: "Endocrine Regulation", system: "Endocrine" },
-  { name: "Insulin and Glucose Homeostasis", category: "Metabolism", system: "Endocrine" },
-  { name: "Growth Hormone Axis", category: "Endocrine Regulation", system: "Endocrine" },
-  { name: "Menstrual Cycle Physiology", category: "Reproductive Physiology", system: "Reproductive" },
-  { name: "Spermatogenesis", category: "Reproductive Physiology", system: "Reproductive" },
-  { name: "Gastric Acid Secretion", category: "GI Physiology", system: "Gastrointestinal" },
-  { name: "Bile Formation and Secretion", category: "GI Physiology", system: "Gastrointestinal" },
-  { name: "Intestinal Absorption", category: "GI Physiology", system: "Gastrointestinal" },
-  { name: "Neuromuscular Junction", category: "Neuromuscular", system: "Neurological" },
-  { name: "Muscle Contraction", category: "Neuromuscular", system: "Musculoskeletal" },
-  { name: "Pain Pathway", category: "Sensory Physiology", system: "Neurological" },
-  { name: "Coagulation Cascade", category: "Hemostasis", system: "Hematologic" },
-  { name: "Fibrinolysis", category: "Hemostasis", system: "Hematologic" },
-  { name: "Immune Response - Innate", category: "Immunology", system: "Immunology" },
-  { name: "Immune Response - Adaptive", category: "Immunology", system: "Immunology" },
-  { name: "Inflammation Cascade", category: "Immunology", system: "Immunology" },
+  { name: 'Starling Forces', category: 'Fluid Dynamics', system: 'Cardiovascular' },
+  { name: 'Cardiac Action Potential', category: 'Electrophysiology', system: 'Cardiovascular' },
+  { name: 'Pacemaker Cells', category: 'Electrophysiology', system: 'Cardiovascular' },
+  { name: 'Baroreceptor Reflex', category: 'Autonomic Regulation', system: 'Cardiovascular' },
+  { name: 'Frank-Starling Mechanism', category: 'Cardiac Mechanics', system: 'Cardiovascular' },
+  { name: 'Preload and Afterload', category: 'Cardiac Mechanics', system: 'Cardiovascular' },
+  { name: 'Cardiac Output Determinants', category: 'Cardiac Mechanics', system: 'Cardiovascular' },
+  { name: 'Oxygen-Hemoglobin Dissociation Curve', category: 'Gas Exchange', system: 'Pulmonary' },
+  { name: 'Ventilation-Perfusion Matching', category: 'Gas Exchange', system: 'Pulmonary' },
+  { name: 'Pulmonary Compliance', category: 'Respiratory Mechanics', system: 'Pulmonary' },
+  { name: 'Surfactant Function', category: 'Respiratory Mechanics', system: 'Pulmonary' },
+  {
+    name: 'Hypoxic Pulmonary Vasoconstriction',
+    category: 'Pulmonary Circulation',
+    system: 'Pulmonary',
+  },
+  { name: 'Glomerular Filtration', category: 'Renal Physiology', system: 'Genitourinary' },
+  { name: 'Countercurrent Multiplier', category: 'Renal Physiology', system: 'Genitourinary' },
+  {
+    name: 'Renin-Angiotensin-Aldosterone System',
+    category: 'Endocrine Regulation',
+    system: 'Genitourinary',
+  },
+  { name: 'ADH and Water Balance', category: 'Fluid Balance', system: 'Genitourinary' },
+  { name: 'Acid-Base Compensation', category: 'Acid-Base', system: 'Pulmonary' },
+  { name: 'Henderson-Hasselbalch Equation', category: 'Acid-Base', system: 'Pulmonary' },
+  { name: 'Anion Gap Calculation', category: 'Acid-Base', system: 'Pulmonary' },
+  { name: 'Osmolality Regulation', category: 'Fluid Balance', system: 'Genitourinary' },
+  { name: 'Sodium Balance', category: 'Electrolyte Physiology', system: 'Genitourinary' },
+  { name: 'Potassium Balance', category: 'Electrolyte Physiology', system: 'Genitourinary' },
+  { name: 'Calcium Homeostasis', category: 'Electrolyte Physiology', system: 'Endocrine' },
+  { name: 'Thyroid Hormone Axis', category: 'Endocrine Regulation', system: 'Endocrine' },
+  { name: 'Cortisol Regulation', category: 'Endocrine Regulation', system: 'Endocrine' },
+  { name: 'Insulin and Glucose Homeostasis', category: 'Metabolism', system: 'Endocrine' },
+  { name: 'Growth Hormone Axis', category: 'Endocrine Regulation', system: 'Endocrine' },
+  {
+    name: 'Menstrual Cycle Physiology',
+    category: 'Reproductive Physiology',
+    system: 'Reproductive',
+  },
+  { name: 'Spermatogenesis', category: 'Reproductive Physiology', system: 'Reproductive' },
+  { name: 'Gastric Acid Secretion', category: 'GI Physiology', system: 'Gastrointestinal' },
+  { name: 'Bile Formation and Secretion', category: 'GI Physiology', system: 'Gastrointestinal' },
+  { name: 'Intestinal Absorption', category: 'GI Physiology', system: 'Gastrointestinal' },
+  { name: 'Neuromuscular Junction', category: 'Neuromuscular', system: 'Neurological' },
+  { name: 'Muscle Contraction', category: 'Neuromuscular', system: 'Musculoskeletal' },
+  { name: 'Pain Pathway', category: 'Sensory Physiology', system: 'Neurological' },
+  { name: 'Coagulation Cascade', category: 'Hemostasis', system: 'Hematologic' },
+  { name: 'Fibrinolysis', category: 'Hemostasis', system: 'Hematologic' },
+  { name: 'Immune Response - Innate', category: 'Immunology', system: 'Immunology' },
+  { name: 'Immune Response - Adaptive', category: 'Immunology', system: 'Immunology' },
+  { name: 'Inflammation Cascade', category: 'Immunology', system: 'Immunology' },
 ];
 
 interface PhysiologyConceptData {
@@ -94,7 +106,10 @@ interface PhysiologyConceptData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -117,15 +132,19 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generatePhysiologyConceptData(name: string, category: string, system: string): Promise<PhysiologyConceptData> {
+async function generatePhysiologyConceptData(
+  name: string,
+  category: string,
+  system: string
+): Promise<PhysiologyConceptData> {
   await rateLimiter.acquire();
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -165,12 +184,12 @@ Return as JSON.`;
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -237,7 +256,11 @@ async function main() {
       console.log(`Processing [${i + 1}/${missing.length}]: ${concept.name}`);
 
       try {
-        const data = await generatePhysiologyConceptData(concept.name, concept.category, concept.system);
+        const data = await generatePhysiologyConceptData(
+          concept.name,
+          concept.category,
+          concept.system
+        );
 
         await prisma.physiologyConcept.create({
           data: {

@@ -19,26 +19,27 @@ This implementation completes **USER_DATA Sprint C** and begins **UNIFIED_ANALYT
 **Purpose**: Track per-user confusion patterns (vs global ConfusionPair)
 
 **Schema**: `UserConfusionPattern` table
+
 ```prisma
 model UserConfusionPattern {
   id                  String   @id
   userId              String
-  
+
   // Confusion pair
   conditionA          String   // Real condition
   conditionB          String   // Mistaken for
   conditionAId        String?
   conditionBId        String?
-  
+
   // Tracking
   occurrences         Int      @default(1)
   lastOccurrence      DateTime
-  
+
   // Resolution
   wasResolved         Boolean  @default(false)
   resolvedAt          DateTime?
   resolutionMethod    String?  // 'practice' | 'study_guide' | 'time'
-  
+
   // Triggers
   questionIds         String[] // Questions that caused confusion
   severityScore       Float?   // 0-1 based on frequency & recency
@@ -47,11 +48,13 @@ model UserConfusionPattern {
 ```
 
 **Indexes**:
+
 - `userId + wasResolved` - Quick lookup of unresolved confusions
 - `userId + severityScore` - Priority sorting
 - `conditionA`, `conditionB` - Condition-based queries
 
 **Use Cases**:
+
 - Personalized DDx drill generation
 - Confusion-specific study guides
 - Track when confusions are resolved
@@ -64,10 +67,11 @@ model UserConfusionPattern {
 **Purpose**: Enrich StudySession with environmental context
 
 **New Fields Added to `StudySession`**:
+
 ```prisma
 model StudySession {
   // ... existing fields ...
-  
+
   // Context fields (Step 7)
   screenSize          String?  // "1920x1080"
   connectionType      String?  // 'wifi' | 'cellular' | 'unknown'
@@ -78,6 +82,7 @@ model StudySession {
 ```
 
 **Context Detection**:
+
 - **screenSize**: From window.screen.width × window.screen.height
 - **connectionType**: From navigator.connection.effectiveType
 - **likelyContext**: Inferred from:
@@ -88,6 +93,7 @@ model StudySession {
 - **wasInterrupted**: Auto-set if gaps > 5 minutes detected
 
 **Use Cases**:
+
 - Device-specific difficulty adjustment
 - Context-aware scheduling (don't schedule long sessions for commute context)
 - Analyze performance by environment
@@ -100,35 +106,36 @@ model StudySession {
 **Purpose**: Store hourly performance patterns for time-of-day optimization
 
 **Schema**: `UserCircadianProfile` table
+
 ```prisma
 model UserCircadianProfile {
   id                  String   @id
   userId              String   @unique
-  
+
   // Hourly data (0-23)
   hourlyAccuracy      Json     // {"0": 0.75, "1": 0.80, ... "23": 0.82}
   hourlyAttempts      Json     // {"0": 15, "1": 20, ... "23": 45}
   hourlyAvgTime       Json?    // Average response time by hour
-  
+
   // Peak performance
   peakHours           Int[]    // [9, 10, 11, 14, 15]
   avoidHours          Int[]    // [3, 4, 5]
   optimalStudyWindow  String?  // "09:00-11:00, 19:00-21:00"
-  
+
   // Chronotype
   chronotype          String?  // 'morning' | 'afternoon' | 'evening' | 'night' | 'variable'
   chronotypeConfidence Float?  // 0-1
-  
+
   // Day patterns
   studyDaysOfWeek     Int[]    // [1, 2, 3, 4, 5] (Mon-Fri)
   weekdayAccuracy     Float?
   weekendAccuracy     Float?
-  
+
   // Volume
   avgDailyMinutes     Int?
   avgDailyQuestions   Int?
   mostProductiveDay   Int?     // 0-6
-  
+
   dataPoints          Int      // Total attempts analyzed
   lastAnalyzed        DateTime
   // ...
@@ -136,6 +143,7 @@ model UserCircadianProfile {
 ```
 
 **Analysis Algorithm**:
+
 1. Group all QuestionAttempts by hour of day
 2. Calculate accuracy, attempt count, avg time per hour
 3. Identify peak hours (top 20% accuracy with min 10 attempts)
@@ -148,6 +156,7 @@ model UserCircadianProfile {
    - Variable: No clear pattern
 
 **Use Cases**:
+
 - Smart scheduling: Schedule difficult reviews during peak hours
 - Avoid scheduling during avoid hours
 - Chronotype-based study plan generation
@@ -163,12 +172,13 @@ model UserCircadianProfile {
 **Purpose**: Aggregated session-level analytics (computed post-session)
 
 **Schema**: `SessionAnalytics` table
+
 ```prisma
 model SessionAnalytics {
   id                    String   @id
   userId                String
   sessionId             String   @unique  // 1:1 with StudySession
-  
+
   // Performance curve
   accuracyQ1            Float?   // First quarter
   accuracyQ2            Float?   // Second quarter
@@ -176,27 +186,27 @@ model SessionAnalytics {
   accuracyQ4            Float?   // Fourth quarter
   accuracyTrend         String?  // 'improving' | 'stable' | 'declining'
   fatiguePointIndex     Int?     // Question index where accuracy drops
-  
+
   // Timing metrics
   avgResponseTime       Int?
   responseTimeVariance  Float?
   responseTimeTrend     String?  // 'speeding_up' | 'stable' | 'slowing_down'
   totalDurationMinutes  Float?
-  
+
   // Metacognition (JOL)
   sessionBrierScore     Float?   // 0-1, lower is better
   calibrationState      String?  // 'overconfident' | 'underconfident' | 'calibrated'
   overconfidenceBias    Float?   // -1 to 1
-  
+
   // Flow state
   flowStateMinutes      Float?   // Time in optimal challenge zone
   interruptionCount     Int
   wasCompleted          Boolean
-  
+
   // Distribution
   systemDistribution    Json?    // {"CV": 5, "PULM": 3}
   difficultyDistribution Json?   // {"easy": 3, "medium": 5, "hard": 2}
-  
+
   computedAt            DateTime
   // ...
 }
@@ -205,6 +215,7 @@ model SessionAnalytics {
 **Computation Logic**:
 
 **Performance Curve**:
+
 ```typescript
 // Split session into quarters
 const quarter = Math.ceil(totalQuestions / 4);
@@ -214,7 +225,7 @@ const Q3 = attempts.slice(quarter * 2, quarter * 3);
 const Q4 = attempts.slice(quarter * 3);
 
 // Calculate accuracy for each
-accuracyQ1 = Q1.filter(a => a.wasCorrect).length / Q1.length;
+accuracyQ1 = Q1.filter((a) => a.wasCorrect).length / Q1.length;
 // ... Q2, Q3, Q4
 
 // Determine trend
@@ -226,7 +237,7 @@ else accuracyTrend = 'stable';
 let bestAccuracy = 1.0;
 for (let i = 0; i < attempts.length - 5; i++) {
   const window = attempts.slice(i, i + 5);
-  const windowAccuracy = window.filter(a => a.wasCorrect).length / 5;
+  const windowAccuracy = window.filter((a) => a.wasCorrect).length / 5;
   if (windowAccuracy < bestAccuracy * 0.7) {
     fatiguePointIndex = i;
     break;
@@ -235,11 +246,12 @@ for (let i = 0; i < attempts.length - 5; i++) {
 ```
 
 **Metacognition (Brier Score)**:
+
 ```typescript
 // If confidence data available
 const brierScores = attempts
-  .filter(a => a.confidenceLevel)
-  .map(a => {
+  .filter((a) => a.confidenceLevel)
+  .map((a) => {
     const predicted = a.confidenceLevel / 5; // Normalize to 0-1
     const actual = a.wasCorrect ? 1 : 0;
     return Math.pow(predicted - actual, 2);
@@ -248,8 +260,9 @@ const brierScores = attempts
 sessionBrierScore = brierScores.reduce((sum, s) => sum + s, 0) / brierScores.length;
 
 // Calibration state
-const avgConfidence = attempts.reduce((sum, a) => sum + (a.confidenceLevel || 3), 0) / attempts.length / 5;
-const actualAccuracy = attempts.filter(a => a.wasCorrect).length / attempts.length;
+const avgConfidence =
+  attempts.reduce((sum, a) => sum + (a.confidenceLevel || 3), 0) / attempts.length / 5;
+const actualAccuracy = attempts.filter((a) => a.wasCorrect).length / attempts.length;
 overconfidenceBias = avgConfidence - actualAccuracy;
 
 if (overconfidenceBias > 0.15) calibrationState = 'overconfident';
@@ -258,6 +271,7 @@ else calibrationState = 'calibrated';
 ```
 
 **Use Cases**:
+
 - Fast dashboard loading (pre-computed metrics)
 - Session comparison over time
 - Fatigue detection and optimal session length
@@ -271,27 +285,28 @@ else calibrationState = 'calibrated';
 **Purpose**: Per-user FSRS parameter optimization
 
 **Schema**: `PersonalizedFSRSParams` table
+
 ```prisma
 model PersonalizedFSRSParams {
   id                    String   @id
   userId                String   @unique
-  
+
   // Optimized w[] array (19 parameters)
   w                     Json     // [0.4, 0.6, 2.4, 5.8, ...]
-  
+
   // Optimization metadata
   sampleSize            Int?     // Reviews used (min 100 recommended)
   lastOptimizedAt       DateTime?
   improvementOverDefault Float?  // % Brier score reduction
   optimizationIterations Int?
-  
+
   // Per-system adjustments
   systemModifiers       Json?    // {"CV": {"stabilityMult": 1.1}}
-  
+
   // Validation
   validationBrierScore  Float?   // Score on holdout set
   parameterBounds       Json?    // Constraints used
-  
+
   createdAt             DateTime
   updatedAt             DateTime
   // ...
@@ -299,54 +314,58 @@ model PersonalizedFSRSParams {
 ```
 
 **Optimization Algorithm** (adapted from FSRS-rs):
+
 ```typescript
 async function optimizeFSRSParams(userId: string): Promise<void> {
   // 1. Gather review history (min 100 reviews)
   const reviews = await prisma.userProgress.findMany({
     where: { userId },
-    include: { reviewHistory: true }
+    include: { reviewHistory: true },
   });
-  
+
   if (reviews.length < 100) {
     console.log('Insufficient data for optimization');
     return;
   }
-  
+
   // 2. Split into train/test (80/20)
   const trainSize = Math.floor(reviews.length * 0.8);
   const trainSet = reviews.slice(0, trainSize);
   const testSet = reviews.slice(trainSize);
-  
+
   // 3. Initialize with default FSRS parameters
-  let w = [0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61];
-  
+  let w = [
+    0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29,
+    2.61,
+  ];
+
   // 4. Gradient descent optimization
   const learningRate = 0.01;
   const iterations = 1000;
-  
+
   for (let i = 0; i < iterations; i++) {
     // Compute Brier score loss
     let totalLoss = 0;
     const gradients = new Array(w.length).fill(0);
-    
+
     for (const review of trainSet) {
       const predicted = fsrsSchedule(review, w).retrievability;
       const actual = review.reviewHistory[review.reviewHistory.length - 1].rating > 2 ? 1 : 0;
-      
+
       const loss = Math.pow(predicted - actual, 2);
       totalLoss += loss;
-      
+
       // Compute gradients (numerical approximation)
       for (let j = 0; j < w.length; j++) {
         const epsilon = 0.0001;
         w[j] += epsilon;
         const predPlus = fsrsSchedule(review, w).retrievability;
         w[j] -= epsilon;
-        
-        gradients[j] += 2 * (predicted - actual) * (predPlus - predicted) / epsilon;
+
+        gradients[j] += (2 * (predicted - actual) * (predPlus - predicted)) / epsilon;
       }
     }
-    
+
     // Update parameters
     for (let j = 0; j < w.length; j++) {
       w[j] -= learningRate * (gradients[j] / trainSet.length);
@@ -354,7 +373,7 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
       w[j] = Math.max(0.1, Math.min(10, w[j]));
     }
   }
-  
+
   // 5. Validate on test set
   let testLoss = 0;
   for (const review of testSet) {
@@ -363,11 +382,12 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
     testLoss += Math.pow(predicted - actual, 2);
   }
   const validationBrierScore = testLoss / testSet.length;
-  
+
   // 6. Compute improvement over default
   const defaultBrierScore = computeBrierScore(testSet, DEFAULT_W);
-  const improvementOverDefault = ((defaultBrierScore - validationBrierScore) / defaultBrierScore) * 100;
-  
+  const improvementOverDefault =
+    ((defaultBrierScore - validationBrierScore) / defaultBrierScore) * 100;
+
   // 7. Save optimized parameters
   await prisma.personalizedFSRSParams.upsert({
     where: { userId },
@@ -393,12 +413,14 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
 ```
 
 **When to Re-Optimize**:
+
 - Every 100 new reviews
 - Every 30 days (minimum)
 - When user performance significantly changes (>15% accuracy shift)
 - On user request
 
 **Use Cases**:
+
 - Better interval predictions than default FSRS
 - Adapt to individual memory characteristics
 - System-specific adjustments (some users better with cardio, etc.)
@@ -486,12 +508,14 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
 ## Testing Checklist
 
 ### Database:
+
 - [x] Migrations applied successfully
 - [x] Prisma client regenerated
 - [ ] All foreign keys working
 - [ ] Unique constraints tested
 
 ### APIs:
+
 - [ ] Behavior metrics POST/GET endpoints
 - [ ] Goals CRUD endpoints
 - [ ] Session analytics computation
@@ -499,6 +523,7 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
 - [ ] FSRS optimization trigger
 
 ### Client:
+
 - [ ] Implicit metrics collection working
 - [ ] Preferences sync from localStorage
 - [ ] Session context detection
@@ -518,6 +543,7 @@ async function optimizeFSRSParams(userId: string): Promise<void> {
 **Sprint C + UNIFIED Sprint 1 Complete!** 🎉
 
 **Total Implementation This Session:**
+
 - **8 database tables** created/modified
 - **4 migrations** applied successfully
 - **~2,700 lines** of production code written

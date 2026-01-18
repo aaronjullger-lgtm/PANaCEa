@@ -42,19 +42,21 @@ async function auditFile(filePath: string): Promise<AuditResult> {
   const content = await fs.readFile(filePath, 'utf-8');
 
   const usesPrisma = /prisma\./.test(content);
-  
+
   // Recognize both direct $disconnect() and safePrismaDisconnect wrapper
-  const hasDisconnect = /prisma\.\$disconnect\(\)/.test(content) || /safePrismaDisconnect\s*\(/.test(content);
-  
+  const hasDisconnect =
+    /prisma\.\$disconnect\(\)/.test(content) || /safePrismaDisconnect\s*\(/.test(content);
+
   // Check if in finally block (either pattern)
-  const hasTryFinally = 
+  const hasTryFinally =
     /finally\s*\{[\s\S]*prisma\.\$disconnect\(\)/.test(content) ||
     /finally\s*\{[\s\S]*safePrismaDisconnect\s*\(/.test(content);
 
   // Utility modules that export functions (not API endpoints) shouldn't be flagged
   // They receive prisma as a parameter and caller handles cleanup
-  const isUtilityModule = /export\s+(async\s+)?function\s+\w+\s*\([^)]*prisma/.test(content) &&
-                          !/onRequest(Get|Post|Put|Delete|Patch)/.test(content);
+  const isUtilityModule =
+    /export\s+(async\s+)?function\s+\w+\s*\([^)]*prisma/.test(content) &&
+    !/onRequest(Get|Post|Put|Delete|Patch)/.test(content);
 
   let status: AuditResult['status'] = 'PASS';
 
@@ -72,7 +74,7 @@ async function auditFile(filePath: string): Promise<AuditResult> {
     usesPrisma,
     hasDisconnect,
     hasTryFinally,
-    status
+    status,
   };
 }
 
@@ -96,9 +98,9 @@ async function main() {
   }
 
   // Group results
-  const passing = results.filter(r => r.status === 'PASS');
-  const missingDisconnect = results.filter(r => r.status === 'FAIL_MISSING_DISCONNECT');
-  const missingTryFinally = results.filter(r => r.status === 'FAIL_MISSING_TRY_FINALLY');
+  const passing = results.filter((r) => r.status === 'PASS');
+  const missingDisconnect = results.filter((r) => r.status === 'FAIL_MISSING_DISCONNECT');
+  const missingTryFinally = results.filter((r) => r.status === 'FAIL_MISSING_TRY_FINALLY');
 
   console.log(`📊 Audit Results:`);
   console.log(`✅ PASS: ${passing.length} files`);
@@ -107,7 +109,7 @@ async function main() {
 
   if (missingDisconnect.length > 0) {
     console.log('🚨 CRITICAL: Files missing prisma.$disconnect():');
-    missingDisconnect.forEach(result => {
+    missingDisconnect.forEach((result) => {
       console.log(`  - ${path.relative(process.cwd(), result.file)}`);
     });
     console.log('');
@@ -115,7 +117,7 @@ async function main() {
 
   if (missingTryFinally.length > 0) {
     console.log('⚠️  WARNING: Files with disconnect not in finally block:');
-    missingTryFinally.forEach(result => {
+    missingTryFinally.forEach((result) => {
       console.log(`  - ${path.relative(process.cwd(), result.file)}`);
     });
     console.log('');
@@ -123,7 +125,7 @@ async function main() {
 
   if (passing.length > 0) {
     console.log('✅ Properly implemented files:');
-    passing.slice(0, 5).forEach(result => {
+    passing.slice(0, 5).forEach((result) => {
       console.log(`  - ${path.relative(process.cwd(), result.file)}`);
     });
     if (passing.length > 5) {

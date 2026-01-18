@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Settings, 
-  BarChart3, 
-  Sun, 
-  Moon, 
-  Trash2, 
+import {
+  X,
+  Settings,
+  BarChart3,
+  Sun,
+  Moon,
+  Trash2,
   Download,
   Upload,
   TrendingUp,
@@ -33,7 +33,13 @@ import {
   Eye,
   Building2,
 } from 'lucide-react';
-import type { PerformanceRecord, SystemCode, UserProfile, ClinicalRotation, YearInProgram } from '@/types';
+import type {
+  PerformanceRecord,
+  SystemCode,
+  UserProfile,
+  ClinicalRotation,
+  YearInProgram,
+} from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
@@ -41,11 +47,11 @@ import { RotationSelector } from './onboarding/RotationSelector';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
 import type { WidgetId } from './ProgressDashboard';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
-import { 
-  calculateAccuracy, 
-  calculateStreaks, 
-  loadWidgetPreferences as loadWidgetPrefs, 
-  saveWidgetPreferences as saveWidgetPrefs 
+import {
+  calculateAccuracy,
+  calculateStreaks,
+  loadWidgetPreferences as loadWidgetPrefs,
+  saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
 import ActivityHeatmap from './analytics/ActivityHeatmap';
 import DecisionTimeAnalysis from './analytics/DecisionTimeAnalysis';
@@ -163,8 +169,8 @@ export const ANALYTICS_PALETTES: AnalyticsPaletteConfig[] = [
 ];
 
 // Get default enabled widgets
-const getDefaultWidgets = (): WidgetId[] => 
-  DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
+const getDefaultWidgets = (): WidgetId[] =>
+  DEFAULT_WIDGET_CONFIG.filter((w) => w.enabled).map((w) => w.id);
 
 /**
  * AccessibilitySettings - Commuter Mode / Voice-First Configuration
@@ -189,12 +195,7 @@ const AccessibilitySettings: React.FC = () => {
     );
   }
 
-  const { 
-    isCommuterMode, 
-    settings, 
-    toggleCommuterMode, 
-    updateSettings 
-  } = commuterContext;
+  const { isCommuterMode, settings, toggleCommuterMode, updateSettings } = commuterContext;
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
@@ -203,18 +204,20 @@ const AccessibilitySettings: React.FC = () => {
         <h3 className="font-medium text-[var(--color-text-primary)]">Accessibility - Voice Mode</h3>
       </div>
       <p className="text-xs text-[var(--color-text-muted)] mb-4">
-        Enable hands-free study with voice commands and text-to-speech. 
-        Perfect for commuting or when you need larger touch targets.
+        Enable hands-free study with voice commands and text-to-speech. Perfect for commuting or
+        when you need larger touch targets.
       </p>
 
       {/* Main Toggle */}
       <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer mb-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            isCommuterMode 
-              ? 'bg-sage-500 text-white' 
-              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
-          }`}>
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              isCommuterMode
+                ? 'bg-sage-500 text-white'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+            }`}
+          >
             <Headphones className="w-5 h-5" />
           </div>
           <div>
@@ -300,8 +303,8 @@ const AccessibilitySettings: React.FC = () => {
 
       <div className="mt-3 p-3 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg">
         <p className="text-xs text-sage-900 dark:text-sage-300">
-          Voice mode works with Main Session and Patient Encounter modes. 
-          Say "A", "B", "C", or "D" to select answers.
+          Voice mode works with Main Session and Patient Encounter modes. Say "A", "B", "C", or "D"
+          to select answers.
         </p>
       </div>
     </div>
@@ -332,12 +335,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [exportStatus, setExportStatus] = useState<'csv' | 'json' | null>(null);
-  
+
   // Widget preferences state
-  const [localEnabledWidgets, setLocalEnabledWidgets] = useState<WidgetId[]>(() => 
+  const [localEnabledWidgets, setLocalEnabledWidgets] = useState<WidgetId[]>(() =>
     loadWidgetPrefs<WidgetId>(getDefaultWidgets())
   );
-  
+
   // System selection state - Load from localStorage
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
     const saved = localStorage.getItem('panceai_enabled_systems');
@@ -350,13 +353,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     }
     return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
   });
-  
+
   // Analytics color palette state - Load from localStorage
   const [analyticsPalette, setAnalyticsPalette] = useState<AnalyticsPalette>(() => {
     const saved = localStorage.getItem('panceai_analytics_palette');
     return (saved as AnalyticsPalette) || 'default';
   });
-  
+
   // Clinical Fidelity Mode settings - Load from localStorage
   const [clinicalFidelitySettings, setClinicalFidelitySettings] = useState(() => {
     const saved = localStorage.getItem('panceai_clinical_fidelity');
@@ -368,7 +371,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           emrInterface: false,
           writeOrders: false,
           rawLabValues: false,
-          multimediaAuscultation: false
+          multimediaAuscultation: false,
         };
       }
     }
@@ -376,10 +379,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       emrInterface: false,
       writeOrders: false,
       rawLabValues: false,
-      multimediaAuscultation: false
+      multimediaAuscultation: false,
     };
   });
-  
+
   // Mini Modes selection - Load from localStorage
   const [enabledMiniModes, setEnabledMiniModes] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('panceai_enabled_mini_modes');
@@ -399,15 +402,15 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     return loadUserProfile() || { hasCompletedOnboarding: false };
   });
-  
+
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
-  
+
   const handleToggleWidget = (widgetId: WidgetId) => {
     const newWidgets = enabledWidgets.includes(widgetId)
-      ? enabledWidgets.filter(w => w !== widgetId)
+      ? enabledWidgets.filter((w) => w !== widgetId)
       : [...enabledWidgets, widgetId];
-    
+
     if (onUpdateWidgets) {
       onUpdateWidgets(newWidgets);
     } else {
@@ -415,7 +418,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       saveWidgetPrefs(newWidgets);
     }
   };
-  
+
   const handleResetWidgets = () => {
     const defaults = getDefaultWidgets();
     if (onUpdateWidgets) {
@@ -425,9 +428,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       saveWidgetPrefs(defaults);
     }
   };
-  
+
   const handleToggleSystem = (system: SystemCode) => {
-    setEnabledSystems(prev => {
+    setEnabledSystems((prev) => {
       const next = new Set(prev);
       if (next.has(system)) {
         next.delete(system);
@@ -439,28 +442,28 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       return next;
     });
   };
-  
+
   const handleEnableAllSystems = () => {
     const allSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
     setEnabledSystems(allSystems);
     localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(allSystems)));
   };
-  
+
   const handleDisableAllSystems = () => {
     setEnabledSystems(new Set());
     localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
   };
-  
+
   const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
-    setClinicalFidelitySettings(prev => {
+    setClinicalFidelitySettings((prev) => {
       const updated = { ...prev, [setting]: !prev[setting] };
       localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
       return updated;
     });
   };
-  
+
   const handleToggleMiniMode = (modeId: string) => {
-    setEnabledMiniModes(prev => {
+    setEnabledMiniModes((prev) => {
       const next = new Set(prev);
       if (next.has(modeId)) {
         next.delete(modeId);
@@ -471,34 +474,52 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       return next;
     });
   };
-  
+
   const handleEnableAllMiniModes = () => {
     const allModes = new Set(ALL_MINI_MODES);
     setEnabledMiniModes(allModes);
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(allModes)));
   };
-  
+
   const handleDisableAllMiniModes = () => {
     setEnabledMiniModes(new Set());
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify([]));
   };
-  
+
   const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
     setAnalyticsPalette(palette);
     localStorage.setItem('panceai_analytics_palette', palette);
     // Apply palette colors to CSS variables for charts/visualizations
-    const paletteConfig = ANALYTICS_PALETTES.find(p => p.id === palette);
+    const paletteConfig = ANALYTICS_PALETTES.find((p) => p.id === palette);
     if (paletteConfig) {
-      document.documentElement.style.setProperty('--analytics-primary', paletteConfig.colors.primary);
-      document.documentElement.style.setProperty('--analytics-secondary', paletteConfig.colors.secondary);
-      document.documentElement.style.setProperty('--analytics-tertiary', paletteConfig.colors.tertiary);
-      document.documentElement.style.setProperty('--analytics-quaternary', paletteConfig.colors.quaternary);
-      document.documentElement.style.setProperty('--analytics-success', paletteConfig.colors.success);
-      document.documentElement.style.setProperty('--analytics-warning', paletteConfig.colors.warning);
+      document.documentElement.style.setProperty(
+        '--analytics-primary',
+        paletteConfig.colors.primary
+      );
+      document.documentElement.style.setProperty(
+        '--analytics-secondary',
+        paletteConfig.colors.secondary
+      );
+      document.documentElement.style.setProperty(
+        '--analytics-tertiary',
+        paletteConfig.colors.tertiary
+      );
+      document.documentElement.style.setProperty(
+        '--analytics-quaternary',
+        paletteConfig.colors.quaternary
+      );
+      document.documentElement.style.setProperty(
+        '--analytics-success',
+        paletteConfig.colors.success
+      );
+      document.documentElement.style.setProperty(
+        '--analytics-warning',
+        paletteConfig.colors.warning
+      );
       document.documentElement.style.setProperty('--analytics-error', paletteConfig.colors.error);
     }
   };
-  
+
   // Apply analytics palette on mount
   useEffect(() => {
     handleSetAnalyticsPalette(analyticsPalette);
@@ -511,7 +532,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       const originalOverflow = document.body.style.overflow;
       // Lock body scroll
       document.body.style.overflow = 'hidden';
-      
+
       // Cleanup: Restore original overflow on unmount or when modal closes
       return () => {
         document.body.style.overflow = originalOverflow || 'unset';
@@ -539,14 +560,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const updated = updateUserProfile({ currentRotation });
     setUserProfile(updated);
   };
-  
+
   // Export handlers
   const handleExportCSV = () => {
     exportUserAnalytics(performanceData, 'csv');
     setExportStatus('csv');
     setTimeout(() => setExportStatus(null), 2000);
   };
-  
+
   const handleExportJSON = () => {
     exportUserAnalytics(performanceData, 'json');
     setExportStatus('json');
@@ -566,7 +587,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         todayCorrect: 0,
         weekQuestions: 0,
         weekCorrect: 0,
-        systemBreakdown: [] as Array<{ system: string; label: string; correct: number; total: number; accuracy: number }>,
+        systemBreakdown: [] as Array<{
+          system: string;
+          label: string;
+          correct: number;
+          total: number;
+          accuracy: number;
+        }>,
         recentTrend: 0,
         studyDays: 0,
         avgQuestionsPerDay: 0,
@@ -667,8 +694,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     for (let i = Math.max(0, totalQuestions - 100); i < totalQuestions; i += sessionSize) {
       const sessionEnd = Math.min(i + sessionSize, totalQuestions);
       const sessionData = performanceData.slice(i, sessionEnd);
-      const sessionCorrect = sessionData.filter(r => r.isCorrect).length;
-      const sessionAccuracy = sessionData.length > 0 ? (sessionCorrect / sessionData.length) * 100 : 0;
+      const sessionCorrect = sessionData.filter((r) => r.isCorrect).length;
+      const sessionAccuracy =
+        sessionData.length > 0 ? (sessionCorrect / sessionData.length) * 100 : 0;
       recentSessionAccuracies.push(sessionAccuracy);
     }
 
@@ -706,19 +734,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}
       >
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)] dark:border-slate-700"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
@@ -735,7 +763,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100">
-                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : activeTab === 'activity' ? 'Activity' : 'Settings'}
+                {activeTab === 'stats'
+                  ? 'Statistics'
+                  : activeTab === 'preferences'
+                    ? 'Dashboard Preferences'
+                    : activeTab === 'activity'
+                      ? 'Activity'
+                      : 'Settings'}
               </h2>
             </div>
             <button
@@ -816,23 +850,36 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Motivational Message - Low Stakes Approach */}
                 <div className="card-premium-glass p-4 rounded-xl">
                   <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-100 leading-relaxed">
-                    <strong className="text-[var(--color-text-primary)] dark:text-slate-100">Focus on your current form.</strong> Your recent effort matters more than past mistakes—every session is a fresh opportunity to improve.
+                    <strong className="text-[var(--color-text-primary)] dark:text-slate-100">
+                      Focus on your current form.
+                    </strong>{' '}
+                    Your recent effort matters more than past mistakes—every session is a fresh
+                    opportunity to improve.
                   </p>
                 </div>
 
                 {/* Priority: Current Form Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Recent Trend with Sparkline - Most Important */}
-                  <div className={`rounded-xl p-4 ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
+                  <div
+                    className={`rounded-xl p-4 ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && <Flame className="w-5 h-5 text-amber-900" />}
+                        {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && (
+                          <Flame className="w-5 h-5 text-amber-900" />
+                        )}
                         <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                          {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'Hot Streak!' : 'Recent Form'}
+                          {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD
+                            ? 'Hot Streak!'
+                            : 'Recent Form'}
                         </span>
                       </div>
-                      <div className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
-                        {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
+                      <div
+                        className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}
+                      >
+                        {stats.recentTrend >= 0 ? '+' : ''}
+                        {stats.recentTrend}%
                       </div>
                     </div>
                     {stats.recentSessionAccuracies.length > 0 ? (
@@ -855,24 +902,36 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Current Streak */}
-                  <div className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <Award className="absolute top-2 right-2 w-4 h-4 text-amber-900" />}
+                  <div
+                    className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}
+                  >
+                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && (
+                      <Award className="absolute top-2 right-2 w-4 h-4 text-amber-900" />
+                    )}
                     <div className="flex items-center justify-center gap-1 mb-2">
-                      <Zap className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`} />
-                      <span className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-[var(--color-text-muted)]'}`}>
-                        {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'Exceptional!' : 'Active Streak'}
+                      <Zap
+                        className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}
+                      />
+                      <span
+                        className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-[var(--color-text-muted)]'}`}
+                      >
+                        {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD
+                          ? 'Exceptional!'
+                          : 'Active Streak'}
                       </span>
                     </div>
-                    <div className={`text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}>
+                    <div
+                      className={`text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}
+                    >
                       {stats.currentStreak}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mt-1">
                       questions in a row
                     </div>
                   </div>
-                  
+
                   {/* Overall Accuracy with Radial Progress */}
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 flex flex-col items-center justify-center">
                     <RadialProgress
@@ -885,7 +944,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     />
                   </div>
                 </div>
-                
+
                 {/* De-emphasized: Lifetime Stats */}
                 {showAdvanced && (
                   <div className="grid grid-cols-2 gap-2 sm:gap-4 opacity-60">
@@ -907,37 +966,41 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
                 )}
 
-
-
                 {/* Today & Week */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-                      <span className="text-sm font-medium text-[var(--color-text-primary)]">Today</span>
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                        Today
+                      </span>
                     </div>
                     <div className="text-xl font-bold text-[var(--color-text-primary)]">
                       {stats.todayCorrect}/{stats.todayQuestions}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)]">
-                      {stats.todayQuestions > 0 
-                        ? Math.round((stats.todayCorrect / stats.todayQuestions) * 100) 
-                        : 0}% accuracy
+                      {stats.todayQuestions > 0
+                        ? Math.round((stats.todayCorrect / stats.todayQuestions) * 100)
+                        : 0}
+                      % accuracy
                     </div>
                   </div>
 
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
-                      <span className="text-sm font-medium text-[var(--color-text-primary)]">This Week</span>
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                        This Week
+                      </span>
                     </div>
                     <div className="text-xl font-bold text-[var(--color-text-primary)]">
                       {stats.weekCorrect}/{stats.weekQuestions}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)]">
-                      {stats.weekQuestions > 0 
-                        ? Math.round((stats.weekCorrect / stats.weekQuestions) * 100) 
-                        : 0}% accuracy
+                      {stats.weekQuestions > 0
+                        ? Math.round((stats.weekCorrect / stats.weekQuestions) * 100)
+                        : 0}
+                      % accuracy
                     </div>
                   </div>
                 </div>
@@ -949,16 +1012,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       Performance by System
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {stats.systemBreakdown.map(sys => (
+                      {stats.systemBreakdown.map((sys) => (
                         <div key={sys.system} className="flex items-center gap-3">
                           <div className="w-16 text-xs font-medium text-[var(--color-text-muted)]">
                             {sys.system}
                           </div>
                           <div className="flex-1 h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className={`h-full rounded-full ${
-                                sys.accuracy >= 80 ? 'bg-green-500' :
-                                sys.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                sys.accuracy >= 80
+                                  ? 'bg-green-500'
+                                  : sys.accuracy >= 60
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-500'
                               }`}
                               style={{ width: `${sys.accuracy}%` }}
                             />
@@ -974,13 +1040,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
-                
+
                 {/* Decision Time Analysis */}
-                <DecisionTimeAnalysis 
-                  performanceData={performanceData}
-                  theme={theme}
-                />
-                
+                <DecisionTimeAnalysis performanceData={performanceData} theme={theme} />
+
                 {/* Toggle for Lifetime Stats */}
                 <div className="flex justify-center">
                   <button
@@ -1012,10 +1075,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
-                  <ActivityHeatmap 
-                    performanceData={performanceData}
-                    weeks={13}
-                  />
+                  <ActivityHeatmap performanceData={performanceData} weeks={13} />
                 </div>
 
                 {/* Activity Summary */}
@@ -1024,8 +1084,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     Activity Overview
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)]">
-                    Click any day to view detailed statistics including questions answered, accuracy, 
-                    average time per question, and weakest system for that day.
+                    Click any day to view detailed statistics including questions answered,
+                    accuracy, average time per question, and weakest system for that day.
                   </p>
                 </div>
               </div>
@@ -1037,18 +1097,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   onToggleWidget={handleToggleWidget}
                   onResetToDefaults={handleResetWidgets}
                 />
-                
+
                 {/* Weakness Cheatsheet Export */}
-                <WeaknessCheatsheetExporter
-                  performanceData={performanceData}
-                  theme={theme}
-                />
+                <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
 
                 {/* Export Data Section */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Download className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Export Your Data</h3>
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Export Your Data
+                    </h3>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)] mb-4">
                     Download your performance data in CSV or JSON format.
@@ -1061,8 +1120,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         performanceData.length === 0
                           ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
                           : exportStatus === 'csv'
-                          ? 'bg-green-500/20 text-green-500'
-                          : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
+                            ? 'bg-green-500/20 text-green-500'
+                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
                       }`}
                     >
                       {exportStatus === 'csv' ? (
@@ -1079,8 +1138,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         performanceData.length === 0
                           ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
                           : exportStatus === 'json'
-                          ? 'bg-green-500/20 text-green-500'
-                          : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
+                            ? 'bg-green-500/20 text-green-500'
+                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
                       }`}
                     >
                       {exportStatus === 'json' ? (
@@ -1105,7 +1164,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
                 />
-                
+
                 {/* Divider */}
                 <div className="border-t border-[var(--color-border)] pt-4">
                   <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
@@ -1117,13 +1176,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-medium text-[var(--color-text-primary)]">Study Systems</h3>
+                      <h3 className="font-medium text-[var(--color-text-primary)]">
+                        Study Systems
+                      </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        Select which systems you want to study. Questions will only be generated from enabled systems.
+                        Select which systems you want to study. Questions will only be generated
+                        from enabled systems.
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllSystems}
@@ -1138,9 +1200,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       Disable All
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map(system => (
+                    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => (
                       <button
                         key={system}
                         onClick={() => handleToggleSystem(system)}
@@ -1152,22 +1214,26 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       >
                         <div className="font-semibold">{system}</div>
                         <div className="text-xs opacity-75 truncate">
-                          {ABBREVIATION_TO_TOPIC_MAP[system].replace(' System', '').replace('Psychiatry/Behavioral Science', 'Psychiatry')}
+                          {ABBREVIATION_TO_TOPIC_MAP[system]
+                            .replace(' System', '')
+                            .replace('Psychiatry/Behavioral Science', 'Psychiatry')}
                         </div>
                       </button>
                     ))}
                   </div>
-                  
+
                   {enabledSystems.size === 0 && (
                     <div className="mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
                       <p className="text-xs text-amber-900 dark:text-amber-300">
-                        <strong>Warning:</strong> No systems enabled. Please enable at least one system to generate questions.
+                        <strong>Warning:</strong> No systems enabled. Please enable at least one
+                        system to generate questions.
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="mt-3 text-xs text-[var(--color-text-muted)]">
-                    {enabledSystems.size} of {Object.keys(ABBREVIATION_TO_TOPIC_MAP).length} systems enabled
+                    {enabledSystems.size} of {Object.keys(ABBREVIATION_TO_TOPIC_MAP).length} systems
+                    enabled
                   </div>
                 </div>
 
@@ -1177,11 +1243,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     <div>
                       <h3 className="font-medium text-[var(--color-text-primary)]">Mini Modes</h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        Select which mini training modes appear in your menu. The main PANCE adaptive system is always available.
+                        Select which mini training modes appear in your menu. The main PANCE
+                        adaptive system is always available.
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllMiniModes}
@@ -1196,18 +1263,20 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       Disable All
                     </button>
                   </div>
-                  
+
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {/* Visual Modes */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Visual Drills</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Visual Drills
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { id: 'ecg_drill', label: 'ECG', desc: 'Rhythm strips' },
                           { id: 'derm_drill', label: 'Derm', desc: 'Skin lesions' },
                           { id: 'imaging_drill', label: 'Imaging', desc: 'X-ray/CT/MRI' },
-                          { id: 'mini_lab', label: 'Mini Lab', desc: 'Lab results' }
-                        ].map(mode => (
+                          { id: 'mini_lab', label: 'Mini Lab', desc: 'Lab results' },
+                        ].map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1226,14 +1295,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* Recall Modes */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Recall Modes</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Recall Modes
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { id: 'rapid_recall', label: 'Rapid Recall', desc: 'Buzzwords' },
                           { id: 'ddx_compare', label: 'DDx Compare', desc: 'Side-by-side' },
                           { id: 'guideline_drill', label: 'Guidelines', desc: 'Scoring systems' },
-                          { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' }
-                        ].map(mode => (
+                          { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' },
+                        ].map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1252,12 +1323,18 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* Pharmacology Modes */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Pharmacology</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Pharmacology
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { id: 'first_line_treatment', label: 'First Line', desc: 'Go-to treatments' },
-                          { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' }
-                        ].map(mode => (
+                          {
+                            id: 'first_line_treatment',
+                            label: 'First Line',
+                            desc: 'Go-to treatments',
+                          },
+                          { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' },
+                        ].map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1276,13 +1353,23 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* Clinical Simulation Modes */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Clinical Simulation</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Clinical Simulation
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { id: 'fluid_electrolyte', label: 'Hydro-Mode', desc: 'Fluid/lytes calc' },
+                          {
+                            id: 'fluid_electrolyte',
+                            label: 'Hydro-Mode',
+                            desc: 'Fluid/lytes calc',
+                          },
                           { id: 'antibiotic_mode', label: 'Bug-Drug', desc: 'Antibiotic choice' },
-                          { id: 'patient_encounter', label: 'Virtual OSCE', desc: 'Patient interview' }
-                        ].map(mode => (
+                          {
+                            id: 'patient_encounter',
+                            label: 'Virtual OSCE',
+                            desc: 'Patient interview',
+                          },
+                        ].map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1301,13 +1388,15 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* Engagement Modes (Phase 7) */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Engagement Modes</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Engagement Modes
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
                           { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
-                          { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' }
-                        ].map(mode => (
+                          { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' },
+                        ].map((mode) => (
                           <div
                             key={mode.id}
                             className={`p-2 rounded-lg text-left text-xs cursor-not-allowed ${
@@ -1323,14 +1412,15 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 text-xs text-[var(--color-text-muted)]">
                     {enabledMiniModes.size} mini modes enabled
                   </div>
 
                   <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <p className="text-xs text-green-900 dark:text-green-300">
-                      Your main adaptive PANCE question system is always available regardless of these settings.
+                      Your main adaptive PANCE question system is always available regardless of
+                      these settings.
                     </p>
                   </div>
                 </div>
@@ -1341,16 +1431,20 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Keyboard Shortcuts */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Keyboard Shortcuts</h3>
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Keyboard Shortcuts
+                    </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       Use these shortcuts to navigate faster during quizzes and study sessions.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {/* Quiz Shortcuts */}
                     <div>
-                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Quiz Mode</h4>
+                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        Quiz Mode
+                      </h4>
                       <div className="space-y-1">
                         {[
                           { keys: ['A'], description: 'Select answer option A' },
@@ -1361,11 +1455,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           { keys: ['Enter'], description: 'Proceed to next question' },
                           { keys: ['Esc'], description: 'Return to dashboard' },
                         ].map((shortcut, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors">
-                            <span className="text-sm text-[var(--color-text-secondary)]">{shortcut.description}</span>
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors"
+                          >
+                            <span className="text-sm text-[var(--color-text-secondary)]">
+                              {shortcut.description}
+                            </span>
                             <div className="flex items-center gap-1">
                               {shortcut.keys.map((key, keyIdx) => (
-                                <kbd key={keyIdx} className="px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-md min-w-[28px] text-center">
+                                <kbd
+                                  key={keyIdx}
+                                  className="px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-md min-w-[28px] text-center"
+                                >
                                   {key}
                                 </kbd>
                               ))}
@@ -1377,14 +1479,24 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* General Shortcuts */}
                     <div>
-                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">General</h4>
+                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                        General
+                      </h4>
                       <div className="space-y-1">
                         {[
-                          { keys: ['⌘/Ctrl', 'K'], description: 'Open command palette (quick navigation)' },
+                          {
+                            keys: ['⌘/Ctrl', 'K'],
+                            description: 'Open command palette (quick navigation)',
+                          },
                           { keys: ['⌘/Ctrl', '/'], description: 'Open keyboard shortcuts' },
                         ].map((shortcut, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors">
-                            <span className="text-sm text-[var(--color-text-secondary)]">{shortcut.description}</span>
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors"
+                          >
+                            <span className="text-sm text-[var(--color-text-secondary)]">
+                              {shortcut.description}
+                            </span>
                             <div className="flex items-center gap-1">
                               {shortcut.keys.map((key, keyIdx) => (
                                 <React.Fragment key={keyIdx}>
@@ -1392,7 +1504,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     {key}
                                   </kbd>
                                   {keyIdx < shortcut.keys.length - 1 && (
-                                    <span className="text-[var(--color-text-muted)] text-xs">+</span>
+                                    <span className="text-[var(--color-text-muted)] text-xs">
+                                      +
+                                    </span>
                                   )}
                                 </React.Fragment>
                               ))}
@@ -1407,12 +1521,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Clinical Fidelity Mode */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Clinical Fidelity Mode</h3>
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Clinical Fidelity Mode
+                    </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       Enable realistic clinical simulation features for more authentic practice.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* EMR Interface Toggle */}
                     <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
@@ -1421,7 +1537,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           Simulated EMR Interface
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                          Display vignettes in tabbed hospital chart format (HPI, Vitals, Labs, Imaging)
+                          Display vignettes in tabbed hospital chart format (HPI, Vitals, Labs,
+                          Imaging)
                         </div>
                       </div>
                       <input
@@ -1439,7 +1556,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           "Write Orders" Input
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                          Type orders instead of selecting from multiple choice (tests active recall)
+                          Type orders instead of selecting from multiple choice (tests active
+                          recall)
                         </div>
                       </div>
                       <input
@@ -1457,7 +1575,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           Raw Lab Value Interpretation
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                          Show raw lab panels without interpretation hints (e.g., "Na: 128" instead of "hyponatremia")
+                          Show raw lab panels without interpretation hints (e.g., "Na: 128" instead
+                          of "hyponatremia")
                         </div>
                       </div>
                       <input
@@ -1475,7 +1594,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           Multimedia Auscultation
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                          Include audio clips for heart sounds (murmurs) and lung sounds (crackles/wheezes)
+                          Include audio clips for heart sounds (murmurs) and lung sounds
+                          (crackles/wheezes)
                         </div>
                       </div>
                       <input
@@ -1489,7 +1609,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-xs text-blue-900 dark:text-blue-300">
-                      [i] <strong>Note:</strong> Clinical Fidelity features are optional enhancements designed for advanced learners who want more realistic practice.
+                      [i] <strong>Note:</strong> Clinical Fidelity features are optional
+                      enhancements designed for advanced learners who want more realistic practice.
                     </p>
                   </div>
                 </div>
@@ -1497,12 +1618,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Institutional Features (Phase 9 - B2B) */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border-2 border-dashed border-[var(--color-border)]">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Institutional Features</h3>
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Institutional Features
+                    </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       Features for PA programs and educational institutions (Coming Soon)
                     </p>
                   </div>
-                  
+
                   <div className="space-y-3 opacity-60">
                     {/* Program Director Dashboard */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
@@ -1515,7 +1638,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             Program Director Dashboard
                           </div>
                           <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                            Class-wide analytics: "Class of 2025 is in the 90th percentile for Pharm"
+                            Class-wide analytics: "Class of 2025 is in the 90th percentile for
+                            Pharm"
                           </div>
                         </div>
                       </div>
@@ -1558,14 +1682,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                     <p className="text-xs text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4" /> <strong>For Institutions:</strong> Contact us to enable these features for your PA program.
+                      <Building2 className="w-4 h-4" /> <strong>For Institutions:</strong> Contact
+                      us to enable these features for your PA program.
                     </p>
                   </div>
                 </div>
 
                 {/* Data Management */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                  <h3 className="font-medium text-[var(--color-text-primary)] mb-4">Data Management</h3>
+                  <h3 className="font-medium text-[var(--color-text-primary)] mb-4">
+                    Data Management
+                  </h3>
                   <div className="space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div>
@@ -1605,8 +1732,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           missedQuestionsCount === 0
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
                             : confirmClear === 'missed'
-                            ? 'bg-red-600 text-white'
-                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-red-600 text-white'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" />
@@ -1630,8 +1757,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           flaggedQuestionsCount === 0
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
                             : confirmClear === 'flagged'
-                            ? 'bg-red-600 text-white'
-                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-red-600 text-white'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" />
@@ -1654,7 +1781,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
                     )}
                   </button>
-                  
+
                   <AnimatePresence>
                     {showAdvanced && (
                       <motion.div

@@ -1,39 +1,77 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+/**
+ * First Line Treatments Endpoint
+ * GET /api/first-line
+ *
+ * Retrieves first-line treatments, optionally filtered by category
+ * Public endpoint - no authentication required
+ *
+ * Security: publicEndpoint with Zod validation
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const category = url.searchParams.get('category');
-  const where = category ? { category: String(category) } : {};
+// ============================================================================
+// SCHEMAS
+// ============================================================================
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+const FirstLineQuerySchema = z.object({
+  query: z.object({
+    category: z.string().optional(),
+  }),
+});
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+// ============================================================================
+// OPTIONS HANDLER
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+// ============================================================================
+// GET HANDLER
+// ============================================================================
+
+export const onRequestGet = publicEndpoint(FirstLineQuerySchema, async ({ env, validated }) => {
+  const log = createEndpointLogger('/api/first-line');
+  let prisma: EdgePrismaClient | null = null;
 
   try {
+    if (!env.DATABASE_URL) {
+      return {
+        status: 500,
+        error: 'Database not configured',
+      };
+    }
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const { category } = validated.query;
+    const where = category ? { category: String(category) } : {};
+
     const treatments = await prisma.firstLineTreatment.findMany({
       where,
-      orderBy: { condition: 'asc' }
+      orderBy: { condition: 'asc' },
     });
-    
-    return new Response(JSON.stringify(treatments), {
-      headers: { 'Content-Type': 'application/json' }
+
+    log.info('First line treatments fetched', {
+      count: treatments.length,
+      category: category || 'all',
     });
-  } catch (error: any) {
-    console.error('Error fetching first line treatments:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch first line treatments', details: error.message }), { 
+
+    return { data: treatments };
+  } catch (error) {
+    log.error('Error fetching first line treatments', error);
+    return {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+      error: 'Failed to fetch first line treatments',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

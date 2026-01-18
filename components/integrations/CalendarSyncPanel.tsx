@@ -1,13 +1,16 @@
 /**
  * Calendar Sync Panel Component
- * 
+ *
  * Allows users to input their exam date and generate a personalized study plan
  * that can be synced to Google Calendar, Outlook, or Apple Calendar.
  */
 
 import React, { useState } from 'react';
 import { Calendar, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { generateAndDownloadStudyPlan, type StudyPlan } from '../../lib/services/calendarSyncService';
+import {
+  generateAndDownloadStudyPlan,
+  type StudyPlan,
+} from '../../lib/services/calendarSyncService';
 
 interface CalendarSyncPanelProps {
   userExamDate?: Date;
@@ -43,7 +46,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
     try {
       const selectedDate = new Date(examDate);
       selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
-      
+
       const result = generateAndDownloadStudyPlan(selectedDate);
 
       if (result.success) {
@@ -52,7 +55,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
           message: `Study plan generated! ${result.eventCount} events added to calendar file.`,
           plan: result.plan,
         });
-        
+
         // Notify parent component about the exam date
         if (onExamDateSaved) {
           onExamDateSaved(selectedDate);
@@ -87,14 +90,12 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-4">
         <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Life Scheduler
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Life Scheduler</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Set your exam date and we'll create a personalized study plan with daily blocks
-        that sync directly to your Google Calendar, Outlook, or Apple Calendar.
+        Set your exam date and we'll create a personalized study plan with daily blocks that sync
+        directly to your Google Calendar, Outlook, or Apple Calendar.
       </p>
 
       {/* Exam Date Input */}
@@ -109,7 +110,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
           min={new Date().toISOString().split('T')[0]}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-        
+
         {weeksUntilExam && (
           <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <Clock className="w-4 h-4" />
@@ -178,13 +179,11 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
                     {week.weekLabel}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {week.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
-                    {week.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {week.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{' '}
+                    - {week.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {week.topics.join(', ')}
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{week.topics.join(', ')}</p>
               </div>
             ))}
           </div>

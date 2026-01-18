@@ -9,7 +9,7 @@ interface SystemBadgeProps {
 
 /**
  * SystemBadge - Displays organ system with icon and color coding
- * 
+ *
  * Dark sportsbook aesthetic with deep colored backgrounds and icons.
  * Each system has a unique color scheme for quick visual recognition.
  */
@@ -19,7 +19,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
   size = 'md',
 }) => {
   const config = getSystemConfig(system);
-  
+
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs gap-1',
     md: 'px-3 py-1 text-sm gap-1.5',
@@ -56,13 +56,16 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
 function getSystemConfig(system: string) {
   const systemUpper = system.toUpperCase();
 
-  const configs: Record<string, {
-    label: string;
-    icon: typeof Heart;
-    bgClass: string;
-    textClass: string;
-    borderClass: string;
-  }> = {
+  const configs: Record<
+    string,
+    {
+      label: string;
+      icon: typeof Heart;
+      bgClass: string;
+      textClass: string;
+      borderClass: string;
+    }
+  > = {
     CV: {
       label: 'Cardiovascular',
       icon: Heart,
@@ -149,13 +152,15 @@ function getSystemConfig(system: string) {
     },
   };
 
-  return configs[systemUpper] || {
-    label: system,
-    icon: Activity,
-    bgClass: 'bg-slate-800/40',
-    textClass: 'text-slate-300',
-    borderClass: 'border-slate-600/50',
-  };
+  return (
+    configs[systemUpper] || {
+      label: system,
+      icon: Activity,
+      bgClass: 'bg-slate-800/40',
+      textClass: 'text-slate-300',
+      borderClass: 'border-slate-600/50',
+    }
+  );
 }
 
 export default SystemBadge;

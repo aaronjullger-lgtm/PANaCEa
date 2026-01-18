@@ -1,42 +1,50 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
+import {
+  authenticatedEndpoint,
+  publicEndpoint,
+  withMiddleware,
+  withAuth,
+  withValidation,
+  withCors,
+  withErrorHandling,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { updateTimingAggregates } from '../../../lib/services/userStatisticsService';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
 }
 
-export const onRequestOptions = handleCorsOptions;
+// Define Zod schemas for request validation
+const SessionCreateSchema = z.object({
+  sessionType: z.string().optional(),
+  systemsTargeted: z.array(z.string()).optional(),
+  mode: z.string().optional(),
+  focus: z.string().optional(),
+  difficulty: z.string().optional(),
+});
 
-type SessionCreatePayload = {
-  sessionType?: string;
-  systemsTargeted?: string[];
-  mode?: string;
-  focus?: string;
-  difficulty?: string;
-};
+const SessionUpdateSchema = z.object({
+  sessionId: z.string().uuid(),
+  action: z.enum(['end', 'update']).optional(),
+  questionsAnswered: z.number().int().min(0).optional(),
+  correctAnswers: z.number().int().min(0).optional(),
+  totalTimeMs: z.number().int().min(0).optional(),
+  systemsTargeted: z.array(z.string()).optional(),
+  sessionType: z.string().optional(),
+});
 
-type SessionUpdatePayload = {
-  sessionId?: string;
-  action?: string;
-  questionsAnswered?: number;
-  correctAnswers?: number;
-  totalTimeMs?: number;
-  systemsTargeted?: string[];
-  sessionType?: string;
-};
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(SessionCreateSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/session');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) return createErrorResponse('Unauthorized', 401);
-
-    const body = (await request.json()) as SessionCreatePayload | null;
-    const { sessionType, systemsTargeted = [], mode, focus, difficulty } = body || {};
+    const { sessionType, systemsTargeted = [], mode, focus, difficulty } = validated;
 
     const session = await prisma.studySession.create({
       data: {
@@ -50,33 +58,43 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
       },
     });
 
-    return createSuccessResponse({ sessionId: session.id }, 201);
+    return {
+      data: { sessionId: session.id },
+      status: 201,
+    };
   } catch (error) {
-    console.error('[user/session] Failed to start session', error);
-    return createErrorResponse('Failed to start session', 500);
+    logger.error('Failed to start session', error);
+    return {
+      status: 500,
+      error: 'Failed to start session',
+    };
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});
 
-export const onRequestPatch = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/session');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) return createErrorResponse('Unauthorized', 401);
-
-    const body = (await request.json()) as SessionUpdatePayload | null;
-    const { sessionId, action, questionsAnswered, correctAnswers, totalTimeMs, systemsTargeted, sessionType } = body || {};
-
-    if (!sessionId || typeof sessionId !== 'string') {
-      return createErrorResponse('sessionId is required', 400);
-    }
+    const {
+      sessionId,
+      action,
+      questionsAnswered,
+      correctAnswers,
+      totalTimeMs,
+      systemsTargeted,
+      sessionType,
+    } = validated;
 
     const session = await prisma.studySession.findUnique({ where: { id: sessionId } });
     if (!session || session.userId !== auth.userId) {
-      return createErrorResponse('Session not found', 404);
+      return {
+        status: 404,
+        error: 'Session not found',
+      };
     }
 
     const data: Record<string, any> = {};
@@ -92,12 +110,18 @@ export const onRequestPatch = async (context: { request: Request; env: Env }) =>
     if (typeof correctAnswers === 'number') {
       data.correctAnswers = correctAnswers;
     }
-    if (typeof questionsAnswered === 'number' && typeof correctAnswers === 'number' && questionsAnswered > 0) {
+    if (
+      typeof questionsAnswered === 'number' &&
+      typeof correctAnswers === 'number' &&
+      questionsAnswered > 0
+    ) {
       data.accuracy = correctAnswers / questionsAnswered;
     }
     if (typeof totalTimeMs === 'number') {
       data.totalTimeMs = totalTimeMs;
-      data.avgTimePerQuestion = questionsAnswered ? Math.round(totalTimeMs / Math.max(questionsAnswered, 1)) : session.avgTimePerQuestion;
+      data.avgTimePerQuestion = questionsAnswered
+        ? Math.round(totalTimeMs / Math.max(questionsAnswered, 1))
+        : session.avgTimePerQuestion;
     }
 
     if (action === 'end') {
@@ -106,7 +130,9 @@ export const onRequestPatch = async (context: { request: Request; env: Env }) =>
       if (!data.totalTimeMs) {
         const duration = endedAt.getTime() - new Date(session.startedAt).getTime();
         data.totalTimeMs = duration > 0 ? duration : 0;
-        data.avgTimePerQuestion = questionsAnswered ? Math.round(data.totalTimeMs / Math.max(questionsAnswered, 1)) : data.avgTimePerQuestion;
+        data.avgTimePerQuestion = questionsAnswered
+          ? Math.round(data.totalTimeMs / Math.max(questionsAnswered, 1))
+          : data.avgTimePerQuestion;
       }
     }
 
@@ -115,13 +141,21 @@ export const onRequestPatch = async (context: { request: Request; env: Env }) =>
       data,
     });
 
-    await updateTimingAggregates(prisma as any, auth.userId, { refreshAvgSessionLength: true, refreshPeakHours: true });
+    await updateTimingAggregates(prisma as any, auth.userId, {
+      refreshAvgSessionLength: true,
+      refreshPeakHours: true,
+    });
 
-    return createSuccessResponse({ sessionId: updated.id, endedAt: updated.endedAt });
+    return {
+      data: { sessionId: updated.id, endedAt: updated.endedAt },
+    };
   } catch (error) {
-    console.error('[user/session] Failed to update session', error);
-    return createErrorResponse('Failed to update session', 500);
+    logger.error('Failed to update session', error);
+    return {
+      status: 500,
+      error: 'Failed to update session',
+    };
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

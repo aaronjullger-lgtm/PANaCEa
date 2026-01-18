@@ -1,116 +1,137 @@
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
-import { authenticateRequest, handleCorsOptions } from '../../../_shared/auth';
-import type { CloudflareContext } from '../../../_shared/types';
-import { isAdmin, type UserRole } from '../../../_shared/rbac';
+/**
+ * Admin Condition Parent Update API
+ * Updates parent relationship for medical content hierarchy
+ *
+ * @security adminEndpoint - Requires admin role
+ * @pattern Middleware Pattern (Sprint 4)
+ */
+
 import { z } from 'zod';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
+import {
+  adminEndpoint,
+  withCors,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../../../_shared/middleware';
+import { logger } from '../../../_shared/secureLogger';
+import { isAdmin, type UserRole } from '../../../_shared/rbac';
+
+// ============================================================================
+// VALIDATION SCHEMAS
+// ============================================================================
 
 const UpdateParentSchema = z.object({
-        parentId: z.string().nullable().optional(),
-    relationshipType: z.enum(['subtype', 'complication', 'manifestation', 'variant']).optional(),
+  params: z.object({
+    id: z.string().uuid('Condition ID must be a valid UUID'),
+  }),
+  body: z.object({
+    parentId: z.string().uuid('Parent ID must be a valid UUID').nullable().optional(),
+    relationshipType: z
+      .enum(['subtype', 'complication', 'manifestation', 'variant'])
+      .optional(),
+  }),
 });
 
-export const onRequestOptions = handleCorsOptions;
+type UpdateParentInput = z.infer<typeof UpdateParentSchema>;
 
-const CORS_HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'PATCH, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// ============================================================================
+// API HANDLER
+// ============================================================================
 
-export const onRequestPatch = async (context: CloudflareContext) => {
-    const id = context.params?.id;
-    if (!id) {
-        return new Response(JSON.stringify({ error: 'Condition ID is required' }), {
-            status: 400,
-            headers: CORS_HEADERS,
-        });
+export const onRequestOptions = withCors();
+
+export const onRequestPatch = adminEndpoint(
+  UpdateParentSchema,
+  async (
+    context: AuthenticatedContext & ValidatedContext<UpdateParentInput>
+  ) => {
+    const { env, auth, validated, params } = context;
+
+    // Get condition ID from path params (Cloudflare provides this)
+    const conditionId = params?.id || validated.params?.id;
+    if (!conditionId) {
+      return { status: 400, error: 'Condition ID is required' };
     }
 
-    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+    const prisma = createEdgePrismaClient(env);
 
     try {
-        prisma = createEdgePrismaClient(context.env);
+      // Verify admin role
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { role: true },
+      });
 
-        const auth = await authenticateRequest(context.request as any, context.env as any);
-        if (!auth?.userId) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-                status: 401,
-                headers: CORS_HEADERS,
-            });
-        }
+      if (!user || !isAdmin(user.role as UserRole)) {
+        logger.warn('Non-admin user attempted condition parent update', {
+          userId: auth.userId,
+          conditionId,
+        });
+        return { status: 403, error: 'Admin access required' };
+      }
 
-        // Admin-only endpoint
-        const user = await prisma.user.findUnique({
-            where: { clerkId: auth.userId },
-            select: { role: true },
+      const { parentId, relationshipType } = validated.body;
+
+      // Verify condition exists
+      const condition = await prisma.medicalContent.findUnique({
+        where: { id: conditionId },
+      });
+
+      if (!condition) {
+        return { status: 404, error: 'Condition not found' };
+      }
+
+      // If setting a parentId, check if parent exists
+      let canonicalName: string | null = (condition as any).canonicalName;
+
+      if (typeof parentId === 'string' && parentId) {
+        const parent = await prisma.medicalContent.findUnique({
+          where: { id: parentId },
         });
 
-        if (!user || !isAdmin(user.role as UserRole)) {
-            return new Response(JSON.stringify({ error: 'Admin access required' }), {
-                status: 403,
-                headers: CORS_HEADERS,
-            });
+        if (!parent) {
+          return { status: 404, error: 'Parent condition not found' };
         }
 
-        const data = await context.request.json();
-        const result = UpdateParentSchema.safeParse(data);
-        if (!result.success) {
-            return new Response(
-                JSON.stringify({ error: 'Invalid input', details: result.error.flatten() }),
-                { status: 400, headers: CORS_HEADERS }
-            );
-        }
+        canonicalName = (parent as any).canonicalName || parent.condition;
+      }
 
-        const { parentId, relationshipType } = result.data;
+      if (parentId === null) {
+        canonicalName = null;
+      }
 
-        const condition = await prisma.medicalContent.findUnique({ where: { id } });
-        if (!condition) {
-            return new Response(JSON.stringify({ error: 'Condition not found' }), {
-                status: 404,
-                headers: CORS_HEADERS,
-            });
-        }
+      // Update condition
+      const updated = await prisma.medicalContent.update({
+        where: { id: conditionId },
+        data: {
+          parentId: parentId === undefined ? undefined : parentId,
+          relationshipType,
+          canonicalName,
+        },
+      });
 
-        // If setting a parentId, check if parent exists
-        let canonicalName: string | null = (condition as any).canonicalName;
+      logger.info('Condition parent updated', {
+        conditionId,
+        parentId,
+        relationshipType,
+        adminUserId: auth.userId,
+      });
 
-        if (typeof parentId === 'string' && parentId) {
-            const parent = await prisma.medicalContent.findUnique({ where: { id: parentId } });
-            if (!parent) {
-                return new Response(JSON.stringify({ error: 'Parent condition not found' }), {
-                    status: 404,
-                    headers: CORS_HEADERS,
-                });
-            }
-
-            canonicalName = (parent as any).canonicalName || parent.condition;
-        }
-
-        if (parentId === null) {
-            canonicalName = null;
-        }
-
-        const updated = await prisma.medicalContent.update({
-            where: { id },
-            data: {
-                parentId: parentId === undefined ? undefined : parentId,
-                relationshipType,
-                canonicalName,
-            },
-        });
-
-        return new Response(JSON.stringify({ success: true, condition: updated }), {
-            status: 200,
-            headers: CORS_HEADERS,
-        });
-    } catch (error) {
-        console.error('Error updating parent relationship:', error);
-        return new Response(JSON.stringify({ error: 'Failed to update relationship' }), {
-            status: 500,
-            headers: CORS_HEADERS,
-        });
+      return {
+        data: {
+          success: true,
+          condition: {
+            id: updated.id,
+            condition: updated.condition,
+            parentId: updated.parentId,
+            relationshipType: updated.relationshipType,
+            canonicalName: (updated as any).canonicalName,
+          },
+        },
+      };
     } finally {
-        await safePrismaDisconnect(prisma);
+      await safePrismaDisconnect(prisma);
     }
-};
+  }
+);

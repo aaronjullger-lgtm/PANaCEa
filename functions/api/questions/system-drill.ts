@@ -1,42 +1,32 @@
 /**
  * POST /api/questions/system-drill
- * 
+ *
  * Generate system-specific question for System Drill mode
  * Filters questions by PANCE system code
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
-import { CloudflareContext } from '../_shared/types';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export const onRequestOptions = handleCorsOptions;
+const SystemDrillSchema = z.object({
+  body: z.object({
+    system: z.string().min(1),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    subcategory: z.string().optional(),
+  }),
+});
 
-export const onRequestPost = async (context: CloudflareContext) => {
-  // Authenticate user
-  const env = context.env as any;
-  const authResult = await authenticateRequest(context.request, env);
-  if (!authResult) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
+export const onRequestOptions = withCors();
 
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/system-drill');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const body = await context.request.json();
-    const { system, difficulty, subcategory } = body;
-
-    if (!system) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required parameter: system' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        }
-      );
-    }
+    const { system, difficulty, subcategory } = validated.body;
 
     // Build where clause for question query
     const where: any = {
@@ -59,17 +49,20 @@ export const onRequestPost = async (context: CloudflareContext) => {
     const totalCount = await prisma.question.count({ where });
 
     if (totalCount === 0) {
-      return new Response(
-        JSON.stringify({
+      logger.info('No questions found for system', { 
+        system, 
+        subcategory, 
+        userId: auth.userId 
+      });
+
+      return {
+        data: {
           error: 'No questions found for this system',
           system,
           subcategory,
-        }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        }
-      );
+        },
+        status: 404,
+      };
     }
 
     // Select random question using skip
@@ -97,35 +90,26 @@ export const onRequestPost = async (context: CloudflareContext) => {
     });
 
     if (!question) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to retrieve question' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        }
-      );
+      logger.error('Failed to retrieve question', { userId: auth.userId });
+      throw new Error('Failed to retrieve question');
     }
 
-    return new Response(JSON.stringify(question), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+    logger.info('System drill question retrieved', {
+      userId: auth.userId,
+      questionId: question.id,
+      system: question.system,
     });
+
+    return {
+      data: question,
+    };
   } catch (error) {
-    console.error('[system-drill] Error generating question:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to generate system drill question',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      }
-    );
+    logger.error('Error generating system drill question', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to generate system drill question');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

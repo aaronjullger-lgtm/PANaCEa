@@ -1,38 +1,42 @@
-import { createErrorResponse, createSuccessResponse, handleCorsOptions } from '../../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const ContrastiveSetsSchema = z.object({
+  query: z.object({
+    symptom: z.string().optional(),
+    system: z.string().optional(),
+    highYield: z.enum(['true', 'false']).optional(),
+  }),
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestGet = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestGet = authenticatedEndpoint(ContrastiveSetsSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/drills/contrastive/sets');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const url = new URL(request.url);
-    const symptom = url.searchParams.get('symptom');
-    const system = url.searchParams.get('system');
-    const highYield = url.searchParams.get('highYield') === 'true';
+    const { symptom, system, highYield } = validated.query;
 
     const where: any = {};
     if (symptom) where.symptom = symptom;
     if (system) where.system = system;
-    if (highYield) where.highYield = highYield;
+    if (highYield === 'true') where.highYield = true;
 
     const sets = await prisma.contrastiveSet.findMany({
       where,
       orderBy: { symptom: 'asc' },
     });
 
-    return createSuccessResponse({ sets, total: sets.length });
+    logger.info(`Fetched ${sets.length} contrastive sets`, { userId: auth.userId, symptom, system, highYield });
+    return { data: { sets, total: sets.length } };
   } catch (error) {
-    console.error('[contrastive/sets] Failed to fetch sets', error);
-    return createErrorResponse('Failed to fetch contrastive sets', 500);
+    logger.error('Failed to fetch contrastive sets', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to fetch contrastive sets');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

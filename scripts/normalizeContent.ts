@@ -1,7 +1,10 @@
-
 import * as fs from 'fs';
 import * as path from 'path';
-import { CONDITION_REGISTRY, findConditionMeta, buildConditionDefinition } from '../config/conditionRegistry';
+import {
+  CONDITION_REGISTRY,
+  findConditionMeta,
+  buildConditionDefinition,
+} from '../config/conditionRegistry';
 
 const RAW_PATH = path.join(process.cwd(), 'data', 'conditionContent.json');
 const CLEAN_PATH = path.join(process.cwd(), 'data', 'conditionContent.clean.json');
@@ -20,22 +23,22 @@ const TARGET_KEYS = [
   'differential_diagnosis',
   'risk_factors',
   'complications',
-  'buzzwords'
+  'buzzwords',
 ];
 
 // Key Mappings (Messy -> Clean)
 const KEY_MAP: Record<string, string> = {
-  'examFindings': 'physical_exam',
-  'physicalExamFindings': 'physical_exam',
-  'physicalExam': 'physical_exam',
-  'exam': 'physical_exam',
-  'etiologyPathophysiology': 'pathophysiology',
-  'differentialDiagnosis': 'differential_diagnosis',
-  'differential': 'differential_diagnosis',
-  'riskFactors': 'risk_factors',
-  'management': 'treatment',
-  'treatmentManagement': 'treatment',
-  'clinicalPresentation': 'symptoms', // Often overlaps
+  examFindings: 'physical_exam',
+  physicalExamFindings: 'physical_exam',
+  physicalExam: 'physical_exam',
+  exam: 'physical_exam',
+  etiologyPathophysiology: 'pathophysiology',
+  differentialDiagnosis: 'differential_diagnosis',
+  differential: 'differential_diagnosis',
+  riskFactors: 'risk_factors',
+  management: 'treatment',
+  treatmentManagement: 'treatment',
+  clinicalPresentation: 'symptoms', // Often overlaps
 };
 
 interface CleanContent {
@@ -80,7 +83,7 @@ async function main() {
       mergedData.set(id, {
         conditionId: id,
         conditionName: name,
-        content: {}
+        content: {},
       });
     }
     return mergedData.get(id);
@@ -91,10 +94,10 @@ async function main() {
     for (const [key, value] of Object.entries(newContent)) {
       // Normalize key
       let cleanKey = KEY_MAP[key] || key;
-      
-      // If key is not in target keys, keep it but maybe warn? 
+
+      // If key is not in target keys, keep it but maybe warn?
       // For now, we keep everything but prioritize target keys structure.
-      
+
       // Merge logic
       if (!entry.content[cleanKey]) {
         entry.content[cleanKey] = value;
@@ -105,7 +108,7 @@ async function main() {
         } else if (typeof entry.content[cleanKey] === 'string' && typeof value === 'string') {
           entry.content[cleanKey] += '\n\n' + value;
         } else if (typeof entry.content[cleanKey] === 'object' && typeof value === 'object') {
-             entry.content[cleanKey] = { ...entry.content[cleanKey], ...value };
+          entry.content[cleanKey] = { ...entry.content[cleanKey], ...value };
         }
       }
     }
@@ -113,20 +116,24 @@ async function main() {
 
   // 1. Iterate and Normalize
   console.log(`🔄 Processing ${json.length} raw entries...`);
-  
+
   for (const item of json) {
     let conditionName: string | undefined;
     let contentToMerge: any = {};
 
     // Detect Type C: {"rosacea": {...}}
     const keys = Object.keys(item);
-    if (keys.length === 1 && typeof item[keys[0]] === 'object' && !['conditionId', 'condition', 'topic', 'content'].includes(keys[0])) {
+    if (
+      keys.length === 1 &&
+      typeof item[keys[0]] === 'object' &&
+      !['conditionId', 'condition', 'topic', 'content'].includes(keys[0])
+    ) {
       conditionName = keys[0];
       contentToMerge = item[conditionName];
     } else {
       // Type A, B, D
       conditionName = item.condition || item.topic || item.name || item.conditionName;
-      
+
       if (item.content) {
         // Type D or standard
         contentToMerge = item.content;
@@ -134,11 +141,11 @@ async function main() {
         // Type A/B (flat or section-based)
         // If "section" key exists, this is a fragment
         if (item.section && item.text) {
-             contentToMerge = { [item.section]: item.text };
+          contentToMerge = { [item.section]: item.text };
         } else {
-             // Assume flat object is content, excluding metadata keys
-             const { condition, topic, name, conditionId, section, ...rest } = item;
-             contentToMerge = rest;
+          // Assume flat object is content, excluding metadata keys
+          const { condition, topic, name, conditionId, section, ...rest } = item;
+          contentToMerge = rest;
         }
       }
     }
@@ -152,7 +159,7 @@ async function main() {
 
     const def = buildConditionDefinition(meta);
     const entry = getEntry(def.id, meta.condition);
-    
+
     mergeContent(entry, contentToMerge);
   }
 
@@ -162,10 +169,13 @@ async function main() {
 
   for (const entry of mergedData.values()) {
     const missing: string[] = [];
-    
+
     // Check for required keys
     for (const key of TARGET_KEYS) {
-      if (!entry.content[key] || (Array.isArray(entry.content[key]) && entry.content[key].length === 0)) {
+      if (
+        !entry.content[key] ||
+        (Array.isArray(entry.content[key]) && entry.content[key].length === 0)
+      ) {
         missing.push(key);
       }
     }
@@ -179,7 +189,7 @@ async function main() {
       conditionId: entry.conditionId,
       conditionName: entry.conditionName,
       content: entry.content,
-      missingSections: missing
+      missingSections: missing,
     });
   }
 

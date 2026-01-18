@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 /**
  * Cleanup Old Jobs Script
- * 
+ *
  * Removes completed and failed jobs older than the retention period
  * to prevent database bloat.
- * 
+ *
  * Usage:
  *   tsx scripts/cleanupJobs.ts [--retention-days 30]
- * 
+ *
  * Scheduled via cron:
  *   0 4 * * 0 cd /opt/PANaCEa && npx tsx scripts/cleanupJobs.ts
  */
@@ -109,7 +109,7 @@ async function cleanupOldJobs(options: CleanupOptions): Promise<void> {
 
     if (options.dryRun) {
       console.log('[DRY RUN] Would delete these jobs (not actually deleting)');
-      
+
       // Show sample of jobs that would be deleted
       const sampleJobs = await prisma.backgroundJob.findMany({
         where: {
@@ -128,9 +128,10 @@ async function cleanupOldJobs(options: CleanupOptions): Promise<void> {
 
       console.log('Sample jobs (first 5):');
       sampleJobs.forEach((job, i) => {
-        console.log(`  ${i + 1}. [${job.jobType}] ${job.status} - ${job.completedAt?.toLocaleString()}`);
+        console.log(
+          `  ${i + 1}. [${job.jobType}] ${job.status} - ${job.completedAt?.toLocaleString()}`
+        );
       });
-
     } else {
       // Actually delete the jobs
       const result = await prisma.backgroundJob.deleteMany({
@@ -155,7 +156,6 @@ async function cleanupOldJobs(options: CleanupOptions): Promise<void> {
     console.log(`  Processing: ${processing}`);
     console.log(`  Historical: ${remaining}`);
     console.log(`  Total:      ${pending + processing + remaining}\n`);
-
   } catch (error: any) {
     console.error('[ERROR] Cleanup failed:', error.message);
     throw error;
@@ -171,7 +171,7 @@ async function cleanupOldJobs(options: CleanupOptions): Promise<void> {
  */
 async function main() {
   const options = parseArgs();
-  
+
   try {
     await cleanupOldJobs(options);
     process.exit(0);

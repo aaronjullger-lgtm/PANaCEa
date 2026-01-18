@@ -1,12 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
  * Buzzword Cleanup - Remove non-pathognomonic buzzwords
- * 
+ *
  * Evaluates existing buzzwords and removes ones that are:
  * - Too generic (could apply to many conditions)
  * - Lab values without specific patterns
  * - Common symptoms like "fever", "pain", "fatigue"
- * 
+ *
  * Usage:
  *   npx tsx scripts/generators/buzzword-cleanup.ts --dry-run    # Preview deletions
  *   npx tsx scripts/generators/buzzword-cleanup.ts              # Actually delete
@@ -24,21 +24,24 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
-  constructor(private capacity: number, private refillRate: number) {
+
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -138,7 +141,7 @@ async function evaluateBuzzwordsWithAI(
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json',
-    }
+    },
   });
 
   const prompt = `You are a PANCE exam expert evaluating buzzwords for pathognomonic specificity.
@@ -163,13 +166,17 @@ Return JSON array:
 ]
 
 Evaluate these buzzwords:
-${JSON.stringify(buzzwords.map(b => ({ buzzword: b.buzzword, condition: b.condition })), null, 2)}`;
+${JSON.stringify(
+  buzzwords.map((b) => ({ buzzword: b.buzzword, condition: b.condition })),
+  null,
+  2
+)}`;
 
   await rateLimiter.acquire();
-  
+
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -181,76 +188,87 @@ ${JSON.stringify(buzzwords.map(b => ({ buzzword: b.buzzword, condition: b.condit
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  
+
   console.log('╔════════════════════════════════════════════════════════════════╗');
   console.log('║           🧹 BUZZWORD CLEANUP - Remove Non-Pathognomonic       ║');
   console.log('╠════════════════════════════════════════════════════════════════╣');
-  console.log(`║  Mode: ${dryRun ? 'DRY RUN (no deletions)' : 'LIVE (will delete)'}${' '.repeat(dryRun ? 35 : 40)}║`);
+  console.log(
+    `║  Mode: ${dryRun ? 'DRY RUN (no deletions)' : 'LIVE (will delete)'}${' '.repeat(dryRun ? 35 : 40)}║`
+  );
   console.log('╚════════════════════════════════════════════════════════════════╝');
-  
+
   try {
     // Get all buzzwords
     const allBuzzwords = await prisma.buzzword.findMany({
       orderBy: { condition: 'asc' },
     });
-    
+
     console.log(`\n📊 Total buzzwords to evaluate: ${allBuzzwords.length}`);
-    
+
     const toDelete: string[] = [];
     const toKeep: string[] = [];
     const needsAIEval: typeof allBuzzwords = [];
-    
+
     // Phase 1: Pattern-based filtering
     console.log('\n🔍 Phase 1: Pattern-based filtering...\n');
-    
+
     for (const bw of allBuzzwords) {
       // Check if definitely bad
-      const isBad = DEFINITELY_BAD_PATTERNS.some(p => p.test(bw.buzzword));
+      const isBad = DEFINITELY_BAD_PATTERNS.some((p) => p.test(bw.buzzword));
       if (isBad) {
         toDelete.push(bw.id);
         console.log(`  ❌ DELETE (pattern): "${bw.buzzword}" → ${bw.condition}`);
         continue;
       }
-      
+
       // Check if definitely good
-      const isGood = DEFINITELY_GOOD_PATTERNS.some(p => p.test(bw.buzzword));
+      const isGood = DEFINITELY_GOOD_PATTERNS.some((p) => p.test(bw.buzzword));
       if (isGood) {
         toKeep.push(bw.id);
         console.log(`  ✅ KEEP (pattern): "${bw.buzzword}" → ${bw.condition}`);
         continue;
       }
-      
+
       // Needs AI evaluation
       needsAIEval.push(bw);
     }
-    
-    console.log(`\n  Pattern results: ${toDelete.length} to delete, ${toKeep.length} to keep, ${needsAIEval.length} need AI eval`);
-    
+
+    console.log(
+      `\n  Pattern results: ${toDelete.length} to delete, ${toKeep.length} to keep, ${needsAIEval.length} need AI eval`
+    );
+
     // Phase 2: AI evaluation for uncertain ones
     console.log('\n🤖 Phase 2: AI evaluation...\n');
-    
+
     const batchSize = 30;
     for (let i = 0; i < needsAIEval.length; i += batchSize) {
       const batch = needsAIEval.slice(i, i + batchSize);
-      console.log(`  Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(needsAIEval.length / batchSize)}...`);
-      
+      console.log(
+        `  Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(needsAIEval.length / batchSize)}...`
+      );
+
       try {
         const evaluations = await evaluateBuzzwordsWithAI(batch);
-        
+
         for (const evaluation of evaluations) {
-          const original = batch.find(b => 
-            b.buzzword.toLowerCase() === evaluation.buzzword.toLowerCase() &&
-            b.condition === evaluation.condition
+          const original = batch.find(
+            (b) =>
+              b.buzzword.toLowerCase() === evaluation.buzzword.toLowerCase() &&
+              b.condition === evaluation.condition
           );
-          
+
           if (!original) continue;
-          
+
           if (evaluation.keep) {
             toKeep.push(original.id);
-            console.log(`    ✅ KEEP: "${evaluation.buzzword}" → ${evaluation.condition} (${evaluation.reason})`);
+            console.log(
+              `    ✅ KEEP: "${evaluation.buzzword}" → ${evaluation.condition} (${evaluation.reason})`
+            );
           } else {
             toDelete.push(original.id);
-            console.log(`    ❌ DELETE: "${evaluation.buzzword}" → ${evaluation.condition} (${evaluation.reason})`);
+            console.log(
+              `    ❌ DELETE: "${evaluation.buzzword}" → ${evaluation.condition} (${evaluation.reason})`
+            );
           }
         }
       } catch (e) {
@@ -260,20 +278,20 @@ async function main() {
           toKeep.push(bw.id);
         }
       }
-      
+
       // Rate limit between batches
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    
+
     // Phase 3: Execute deletions
     console.log('\n📊 Summary:');
     console.log(`  To keep: ${toKeep.length}`);
     console.log(`  To delete: ${toDelete.length}`);
-    
+
     if (toDelete.length > 0) {
       if (dryRun) {
         console.log('\n  [DRY RUN] Would delete these buzzwords:');
-        const toDeleteBuzzwords = allBuzzwords.filter(b => toDelete.includes(b.id));
+        const toDeleteBuzzwords = allBuzzwords.filter((b) => toDelete.includes(b.id));
         for (const bw of toDeleteBuzzwords.slice(0, 20)) {
           console.log(`    - "${bw.buzzword}" → ${bw.condition}`);
         }
@@ -288,11 +306,10 @@ async function main() {
         console.log(`  Deleted ${deleted.count} buzzwords`);
       }
     }
-    
+
     // Final count
     const finalCount = await prisma.buzzword.count();
     console.log(`\n✅ Final buzzword count: ${finalCount}`);
-    
   } finally {
     await prisma.$disconnect();
   }

@@ -1,6 +1,6 @@
 /**
  * TrendSparkline Component
- * 
+ *
  * Small sparkline chart showing performance trends over recent sessions.
  * Designed for embedding in stat cards to show "Recent Form" visually.
  */
@@ -121,9 +121,10 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
     const pathD = buildPath(points);
 
     // Create filled area path
-    const fillPathD = points.length > 0
-      ? `${pathD} L ${points[points.length - 1].x},${height} L ${points[0].x},${height} Z`
-      : '';
+    const fillPathD =
+      points.length > 0
+        ? `${pathD} L ${points[points.length - 1].x},${height} L ${points[0].x},${height} Z`
+        : '';
 
     // Calculate trend (compare last 3 points average to first 3 points average)
     const recentAvg = data.slice(-3).reduce((sum, v) => sum + v, 0) / Math.min(3, data.length);
@@ -153,10 +154,10 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
 
   if (!data || data.length === 0) {
     return (
-      <div 
+      <div
         className={`inline-flex items-center gap-2 ${className}`}
         role="img"
-        aria-label={ariaLabel || "No trend data available"}
+        aria-label={ariaLabel || 'No trend data available'}
       >
         <div
           className="bg-[var(--color-bg-secondary)] rounded-md flex items-center justify-center border-2 border-dashed border-[var(--color-border-muted)]"
@@ -171,10 +172,12 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
   return (
-    <div 
+    <div
       className={`inline-flex items-center gap-3 ${className}`}
       role="img"
-      aria-label={ariaLabel || `Performance trend: ${trend}, current value ${latestValue.toFixed(0)}%`}
+      aria-label={
+        ariaLabel || `Performance trend: ${trend}, current value ${latestValue.toFixed(0)}%`
+      }
     >
       {/* Sparkline SVG */}
       <div className="relative">
@@ -211,7 +214,15 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
           {/* Endpoint dot */}
           <motion.circle
             cx={width - 4}
-            cy={data.length > 0 ? height - 4 - ((latestValue - Math.min(...data)) / (Math.max(...data) - Math.min(...data) || 1)) * (height - 8) : height / 2}
+            cy={
+              data.length > 0
+                ? height -
+                  4 -
+                  ((latestValue - Math.min(...data)) /
+                    (Math.max(...data) - Math.min(...data) || 1)) *
+                    (height - 8)
+                : height / 2
+            }
             r={3}
             fill={colors.line}
             initial={{ scale: 0 }}
@@ -224,25 +235,21 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
       {/* Stats */}
       <div className="flex flex-col gap-0.5">
         {label && (
-          <span className="text-xs text-[var(--color-text-muted)] font-medium">
-            {label}
-          </span>
+          <span className="text-xs text-[var(--color-text-muted)] font-medium">{label}</span>
         )}
-        
+
         {showValue && (
           <div className="flex items-center gap-1.5">
-            <span className={`text-lg font-bold ${colors.text}`}>
-              {Math.round(latestValue)}%
-            </span>
-            
+            <span className={`text-lg font-bold ${colors.text}`}>{Math.round(latestValue)}%</span>
+
             {showTrend && (
               <TrendIcon
                 className={`w-4 h-4 ${
                   trend === 'up'
                     ? 'text-green-500'
                     : trend === 'down'
-                    ? 'text-red-500'
-                    : 'text-gray-400'
+                      ? 'text-red-500'
+                      : 'text-gray-400'
                 }`}
               />
             )}
@@ -256,7 +263,9 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
 /**
  * Compact variant for inline display
  */
-export const TrendSparklineCompact: React.FC<Omit<TrendSparklineProps, 'width' | 'height' | 'showValue'>> = (props) => {
+export const TrendSparklineCompact: React.FC<
+  Omit<TrendSparklineProps, 'width' | 'height' | 'showValue'>
+> = (props) => {
   return <TrendSparkline {...props} width={80} height={30} showValue={false} />;
 };
 

@@ -1,6 +1,6 @@
 /**
  * RecentConditionsPanel - Displays recently viewed conditions
- * 
+ *
  * Shows last 10 viewed conditions for quick access
  */
 
@@ -52,9 +52,7 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
     return (
       <div className="px-3 py-4 text-center">
         <Clock className="w-8 h-8 mx-auto text-[var(--color-text-muted)] opacity-50 mb-2" />
-        <p className="text-xs text-[var(--color-text-muted)]">
-          No recently viewed conditions
-        </p>
+        <p className="text-xs text-[var(--color-text-muted)]">No recently viewed conditions</p>
       </div>
     );
   }
@@ -97,16 +95,12 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
                   {condition.condition}
                 </p>
                 <p className="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1">
-                  {condition.system && (
-                    <span className="truncate">{condition.system}</span>
-                  )}
+                  {condition.system && <span className="truncate">{condition.system}</span>}
                   {condition.system && condition.viewedAt && <span>•</span>}
-                  <span>
-                    {formatRelativeTime(condition.viewedAt)}
-                  </span>
+                  <span>{formatRelativeTime(condition.viewedAt)}</span>
                 </p>
               </div>
-              
+
               {/* Remove button */}
               <button
                 onClick={(e) => {

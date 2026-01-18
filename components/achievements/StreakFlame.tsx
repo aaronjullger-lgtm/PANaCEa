@@ -108,9 +108,7 @@ export function StreakFlame({
               className={`absolute inset-0 flex items-center justify-center font-bold ${textSizes[size]}`}
               style={{
                 color: isActiveToday ? '#ffffff' : flameColor,
-                textShadow: isActiveToday
-                  ? '0 1px 2px rgba(0, 0, 0, 0.8)'
-                  : 'none',
+                textShadow: isActiveToday ? '0 1px 2px rgba(0, 0, 0, 0.8)' : 'none',
               }}
             >
               {streak}

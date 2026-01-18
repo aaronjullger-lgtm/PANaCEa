@@ -1,13 +1,13 @@
 #!/usr/bin/env npx tsx
 /**
  * First-Line Treatment Doctor - PANCE Treatment Generator
- * 
- * Generates first-line treatments for conditions - the "what do you do first" 
+ *
+ * Generates first-line treatments for conditions - the "what do you do first"
  * question type that's extremely high-yield for PANCE/PANRE.
- * 
+ *
  * FirstLineTreatment Schema:
  *   id, condition (string), treatment (string), category (string), createdAt, updatedAt
- * 
+ *
  * Usage:
  *   npx tsx scripts/generators/first-line-treatment-doctor.ts --dry-run    # Preview
  *   npx tsx scripts/generators/first-line-treatment-doctor.ts              # Generate
@@ -29,7 +29,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -37,16 +37,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -57,7 +57,7 @@ class TokenBucket {
 const rateLimiter = new TokenBucket(5, 0.5);
 
 // Treatment categories
-type TreatmentCategory = 
+type TreatmentCategory =
   | 'Pharmacological'
   | 'Surgical'
   | 'Procedural'
@@ -68,28 +68,43 @@ type TreatmentCategory =
   | 'Preventive';
 
 // Known first-line treatments (high-yield, board-tested)
-const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: TreatmentCategory }>> = {
+const KNOWN_FIRST_LINE: Record<
+  string,
+  Array<{ treatment: string; category: TreatmentCategory }>
+> = {
   // CARDIOLOGY
   'Acute Coronary Syndrome': [
     { treatment: 'Aspirin 325mg', category: 'Pharmacological' },
-    { treatment: 'Dual antiplatelet therapy (Aspirin + P2Y12 inhibitor)', category: 'Pharmacological' },
+    {
+      treatment: 'Dual antiplatelet therapy (Aspirin + P2Y12 inhibitor)',
+      category: 'Pharmacological',
+    },
   ],
-  'STEMI': [
+  STEMI: [
     { treatment: 'Primary PCI (within 90 minutes door-to-balloon)', category: 'Procedural' },
     { treatment: 'Fibrinolytics (if PCI unavailable within 120 min)', category: 'Pharmacological' },
   ],
-  'NSTEMI': [
-    { treatment: 'Anticoagulation + early invasive strategy (cath within 24-72h)', category: 'Procedural' },
+  NSTEMI: [
+    {
+      treatment: 'Anticoagulation + early invasive strategy (cath within 24-72h)',
+      category: 'Procedural',
+    },
   ],
   'Unstable Angina': [
-    { treatment: 'Anticoagulation + risk stratification for intervention', category: 'Pharmacological' },
+    {
+      treatment: 'Anticoagulation + risk stratification for intervention',
+      category: 'Pharmacological',
+    },
   ],
   'Stable Angina': [
     { treatment: 'Beta-blocker or calcium channel blocker', category: 'Pharmacological' },
     { treatment: 'Sublingual nitroglycerin PRN', category: 'Pharmacological' },
   ],
   'Atrial Fibrillation': [
-    { treatment: 'Rate control with beta-blocker or calcium channel blocker', category: 'Pharmacological' },
+    {
+      treatment: 'Rate control with beta-blocker or calcium channel blocker',
+      category: 'Pharmacological',
+    },
     { treatment: 'Anticoagulation based on CHA2DS2-VASc score', category: 'Pharmacological' },
   ],
   'Atrial Flutter': [
@@ -100,9 +115,7 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Vagal maneuvers (Valsalva, carotid massage)', category: 'Procedural' },
     { treatment: 'Adenosine 6mg IV push (can repeat 12mg)', category: 'Pharmacological' },
   ],
-  'Ventricular Tachycardia (Stable)': [
-    { treatment: 'Amiodarone IV', category: 'Pharmacological' },
-  ],
+  'Ventricular Tachycardia (Stable)': [{ treatment: 'Amiodarone IV', category: 'Pharmacological' }],
   'Ventricular Tachycardia (Unstable)': [
     { treatment: 'Synchronized cardioversion', category: 'Emergency' },
   ],
@@ -110,7 +123,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Defibrillation + CPR + Epinephrine', category: 'Emergency' },
   ],
   'Heart Failure (HFrEF)': [
-    { treatment: 'GDMT: ACE-I/ARB/ARNI + Beta-blocker + MRA + SGLT2i', category: 'Pharmacological' },
+    {
+      treatment: 'GDMT: ACE-I/ARB/ARNI + Beta-blocker + MRA + SGLT2i',
+      category: 'Pharmacological',
+    },
     { treatment: 'Loop diuretic for volume overload', category: 'Pharmacological' },
   ],
   'Heart Failure (HFpEF)': [
@@ -118,7 +134,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'SGLT2 inhibitor', category: 'Pharmacological' },
   ],
   'Hypertensive Emergency': [
-    { treatment: 'IV antihypertensive (nicardipine, labetalol, nitroprusside)', category: 'Emergency' },
+    {
+      treatment: 'IV antihypertensive (nicardipine, labetalol, nitroprusside)',
+      category: 'Emergency',
+    },
   ],
   'Hypertensive Urgency': [
     { treatment: 'Oral antihypertensive (restart or intensify)', category: 'Pharmacological' },
@@ -131,16 +150,12 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'IV beta-blocker to lower HR <60 and SBP <120', category: 'Emergency' },
     { treatment: 'Emergent surgical repair (Type A)', category: 'Surgical' },
   ],
-  'Cardiac Tamponade': [
-    { treatment: 'Pericardiocentesis', category: 'Emergency' },
-  ],
-  'Pericarditis': [
-    { treatment: 'NSAIDs + Colchicine', category: 'Pharmacological' },
-  ],
+  'Cardiac Tamponade': [{ treatment: 'Pericardiocentesis', category: 'Emergency' }],
+  Pericarditis: [{ treatment: 'NSAIDs + Colchicine', category: 'Pharmacological' }],
   'Infective Endocarditis': [
     { treatment: 'Empiric IV antibiotics (vanc + ceftriaxone)', category: 'Pharmacological' },
   ],
-  
+
   // PULMONOLOGY
   'Asthma (Acute Exacerbation)': [
     { treatment: 'Short-acting beta-agonist (albuterol)', category: 'Pharmacological' },
@@ -151,7 +166,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'LABA added to ICS for moderate-severe', category: 'Pharmacological' },
   ],
   'COPD (Acute Exacerbation)': [
-    { treatment: 'Short-acting bronchodilators (albuterol + ipratropium)', category: 'Pharmacological' },
+    {
+      treatment: 'Short-acting bronchodilators (albuterol + ipratropium)',
+      category: 'Pharmacological',
+    },
     { treatment: 'Systemic corticosteroids x 5 days', category: 'Pharmacological' },
     { treatment: 'Antibiotics if purulent sputum', category: 'Pharmacological' },
   ],
@@ -160,11 +178,20 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'ICS added for frequent exacerbations', category: 'Pharmacological' },
   ],
   'Community-Acquired Pneumonia': [
-    { treatment: 'Outpatient: Amoxicillin or doxycycline or macrolide', category: 'Pharmacological' },
-    { treatment: 'Inpatient: Beta-lactam + macrolide OR respiratory FQ', category: 'Pharmacological' },
+    {
+      treatment: 'Outpatient: Amoxicillin or doxycycline or macrolide',
+      category: 'Pharmacological',
+    },
+    {
+      treatment: 'Inpatient: Beta-lactam + macrolide OR respiratory FQ',
+      category: 'Pharmacological',
+    },
   ],
   'Hospital-Acquired Pneumonia': [
-    { treatment: 'Anti-pseudomonal coverage (piperacillin-tazobactam)', category: 'Pharmacological' },
+    {
+      treatment: 'Anti-pseudomonal coverage (piperacillin-tazobactam)',
+      category: 'Pharmacological',
+    },
     { treatment: 'MRSA coverage if risk factors (vancomycin)', category: 'Pharmacological' },
   ],
   'Pulmonary Embolism': [
@@ -182,9 +209,9 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Pleural Effusion': [
     { treatment: 'Thoracentesis (diagnostic and/or therapeutic)', category: 'Procedural' },
   ],
-  
+
   // GASTROENTEROLOGY
-  'GERD': [
+  GERD: [
     { treatment: 'Proton pump inhibitor (omeprazole, etc.)', category: 'Pharmacological' },
     { treatment: 'Lifestyle modifications', category: 'Behavioral' },
   ],
@@ -192,7 +219,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'PPI + H. pylori eradication if positive', category: 'Pharmacological' },
   ],
   'H. pylori Infection': [
-    { treatment: 'Triple therapy: PPI + clarithromycin + amoxicillin x 14 days', category: 'Pharmacological' },
+    {
+      treatment: 'Triple therapy: PPI + clarithromycin + amoxicillin x 14 days',
+      category: 'Pharmacological',
+    },
   ],
   'Acute Pancreatitis': [
     { treatment: 'Aggressive IV fluid resuscitation', category: 'Supportive' },
@@ -202,12 +232,8 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Cholecystectomy (within 72 hours preferred)', category: 'Surgical' },
     { treatment: 'IV antibiotics if infection', category: 'Pharmacological' },
   ],
-  'Choledocholithiasis': [
-    { treatment: 'ERCP for stone removal', category: 'Procedural' },
-  ],
-  'Acute Appendicitis': [
-    { treatment: 'Appendectomy', category: 'Surgical' },
-  ],
+  Choledocholithiasis: [{ treatment: 'ERCP for stone removal', category: 'Procedural' }],
+  'Acute Appendicitis': [{ treatment: 'Appendectomy', category: 'Surgical' }],
   'Small Bowel Obstruction': [
     { treatment: 'NPO, NG tube decompression, IV fluids', category: 'Supportive' },
     { treatment: 'Surgery if signs of strangulation or no improvement', category: 'Surgical' },
@@ -231,14 +257,14 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Oral or IV corticosteroids', category: 'Pharmacological' },
     { treatment: '5-ASA (mesalamine) for mild-moderate', category: 'Pharmacological' },
   ],
-  'Crohn\'s Disease (Acute Flare)': [
+  "Crohn's Disease (Acute Flare)": [
     { treatment: 'Corticosteroids for moderate-severe', category: 'Pharmacological' },
     { treatment: 'Biologics (anti-TNF) for steroid-refractory', category: 'Pharmacological' },
   ],
   'Clostridioides difficile Infection': [
     { treatment: 'Fidaxomicin or oral vancomycin', category: 'Pharmacological' },
   ],
-  
+
   // ENDOCRINOLOGY
   'Diabetic Ketoacidosis': [
     { treatment: 'IV fluids (NS initially) + IV insulin + K+ replacement', category: 'Emergency' },
@@ -250,81 +276,93 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Metformin (first-line for most patients)', category: 'Pharmacological' },
     { treatment: 'SGLT2i or GLP-1 RA if CVD or CKD', category: 'Pharmacological' },
   ],
-  'Type 1 Diabetes': [
-    { treatment: 'Basal-bolus insulin regimen', category: 'Pharmacological' },
-  ],
-  'Hypothyroidism': [
-    { treatment: 'Levothyroxine', category: 'Pharmacological' },
-  ],
-  'Hyperthyroidism (Graves\' Disease)': [
+  'Type 1 Diabetes': [{ treatment: 'Basal-bolus insulin regimen', category: 'Pharmacological' }],
+  Hypothyroidism: [{ treatment: 'Levothyroxine', category: 'Pharmacological' }],
+  "Hyperthyroidism (Graves' Disease)": [
     { treatment: 'Methimazole (PTU if pregnant in 1st trimester)', category: 'Pharmacological' },
     { treatment: 'Beta-blocker for symptom control', category: 'Pharmacological' },
   ],
   'Thyroid Storm': [
-    { treatment: 'Beta-blocker + PTU + iodine (1h after PTU) + corticosteroids', category: 'Emergency' },
+    {
+      treatment: 'Beta-blocker + PTU + iodine (1h after PTU) + corticosteroids',
+      category: 'Emergency',
+    },
   ],
-  'Myxedema Coma': [
-    { treatment: 'IV levothyroxine + IV hydrocortisone', category: 'Emergency' },
-  ],
+  'Myxedema Coma': [{ treatment: 'IV levothyroxine + IV hydrocortisone', category: 'Emergency' }],
   'Adrenal Crisis': [
     { treatment: 'IV hydrocortisone 100mg bolus + aggressive IV fluids', category: 'Emergency' },
   ],
-  'Addison\'s Disease': [
+  "Addison's Disease": [
     { treatment: 'Hydrocortisone + fludrocortisone replacement', category: 'Pharmacological' },
   ],
-  'Cushing\'s Syndrome': [
-    { treatment: 'Surgical resection of tumor (pituitary, adrenal, ectopic)', category: 'Surgical' },
+  "Cushing's Syndrome": [
+    {
+      treatment: 'Surgical resection of tumor (pituitary, adrenal, ectopic)',
+      category: 'Surgical',
+    },
   ],
-  'Hypercalcemia': [
-    { treatment: 'IV saline hydration + loop diuretic (after hydration)', category: 'Pharmacological' },
+  Hypercalcemia: [
+    {
+      treatment: 'IV saline hydration + loop diuretic (after hydration)',
+      category: 'Pharmacological',
+    },
     { treatment: 'Bisphosphonate if malignancy-related', category: 'Pharmacological' },
   ],
   'Primary Hyperparathyroidism': [
     { treatment: 'Parathyroidectomy (surgical)', category: 'Surgical' },
   ],
-  'Pheochromocytoma': [
+  Pheochromocytoma: [
     { treatment: 'Alpha-blockade BEFORE beta-blockade', category: 'Pharmacological' },
     { treatment: 'Surgical resection', category: 'Surgical' },
   ],
-  
+
   // INFECTIOUS DISEASE
   'Bacterial Meningitis': [
     { treatment: 'Empiric: Vancomycin + ceftriaxone + dexamethasone', category: 'Emergency' },
   ],
-  'Viral Meningitis': [
-    { treatment: 'Supportive care', category: 'Supportive' },
-  ],
-  'Sepsis': [
-    { treatment: 'IV fluids (30 mL/kg crystalloid) + broad-spectrum antibiotics within 1 hour', category: 'Emergency' },
+  'Viral Meningitis': [{ treatment: 'Supportive care', category: 'Supportive' }],
+  Sepsis: [
+    {
+      treatment: 'IV fluids (30 mL/kg crystalloid) + broad-spectrum antibiotics within 1 hour',
+      category: 'Emergency',
+    },
   ],
   'Septic Shock': [
-    { treatment: 'Fluids + antibiotics + vasopressors (norepinephrine first-line)', category: 'Emergency' },
+    {
+      treatment: 'Fluids + antibiotics + vasopressors (norepinephrine first-line)',
+      category: 'Emergency',
+    },
   ],
-  'Cellulitis': [
+  Cellulitis: [
     { treatment: 'Cephalexin or dicloxacillin (non-purulent)', category: 'Pharmacological' },
     { treatment: 'TMP-SMX or doxycycline (purulent/MRSA risk)', category: 'Pharmacological' },
   ],
   'Necrotizing Fasciitis': [
-    { treatment: 'Emergent surgical debridement + broad-spectrum IV antibiotics', category: 'Emergency' },
+    {
+      treatment: 'Emergent surgical debridement + broad-spectrum IV antibiotics',
+      category: 'Emergency',
+    },
   ],
   'Urinary Tract Infection (Uncomplicated)': [
     { treatment: 'Nitrofurantoin x 5 days or TMP-SMX x 3 days', category: 'Pharmacological' },
   ],
-  'Pyelonephritis': [
-    { treatment: 'Fluoroquinolone or ceftriaxone', category: 'Pharmacological' },
-  ],
+  Pyelonephritis: [{ treatment: 'Fluoroquinolone or ceftriaxone', category: 'Pharmacological' }],
   'HIV (Initial Treatment)': [
-    { treatment: 'Two NRTIs + integrase inhibitor (bictegravir/TAF/FTC preferred)', category: 'Pharmacological' },
+    {
+      treatment: 'Two NRTIs + integrase inhibitor (bictegravir/TAF/FTC preferred)',
+      category: 'Pharmacological',
+    },
   ],
   'Tuberculosis (Active)': [
-    { treatment: 'RIPE therapy x 2 months, then INH + rifampin x 4 months', category: 'Pharmacological' },
+    {
+      treatment: 'RIPE therapy x 2 months, then INH + rifampin x 4 months',
+      category: 'Pharmacological',
+    },
   ],
   'Latent TB': [
     { treatment: 'INH x 9 months or rifampin x 4 months', category: 'Pharmacological' },
   ],
-  'Influenza': [
-    { treatment: 'Oseltamivir (Tamiflu) within 48 hours', category: 'Pharmacological' },
-  ],
+  Influenza: [{ treatment: 'Oseltamivir (Tamiflu) within 48 hours', category: 'Pharmacological' }],
   'COVID-19 (Mild)': [
     { treatment: 'Supportive care ± Paxlovid if high risk', category: 'Pharmacological' },
   ],
@@ -334,13 +372,19 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Herpes Zoster': [
     { treatment: 'Valacyclovir or acyclovir within 72 hours', category: 'Pharmacological' },
   ],
-  
+
   // NEUROLOGY
   'Acute Ischemic Stroke': [
-    { treatment: 'IV tPA (within 4.5 hours) or thrombectomy (within 24h for LVO)', category: 'Emergency' },
+    {
+      treatment: 'IV tPA (within 4.5 hours) or thrombectomy (within 24h for LVO)',
+      category: 'Emergency',
+    },
   ],
-  'TIA': [
-    { treatment: 'Antiplatelet therapy (aspirin or dual antiplatelet if high risk)', category: 'Pharmacological' },
+  TIA: [
+    {
+      treatment: 'Antiplatelet therapy (aspirin or dual antiplatelet if high risk)',
+      category: 'Pharmacological',
+    },
     { treatment: 'Statin therapy', category: 'Pharmacological' },
   ],
   'Intracerebral Hemorrhage': [
@@ -348,7 +392,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Reverse anticoagulation if applicable', category: 'Emergency' },
   ],
   'Subarachnoid Hemorrhage': [
-    { treatment: 'Nimodipine (prevent vasospasm) + secure aneurysm (coil/clip)', category: 'Emergency' },
+    {
+      treatment: 'Nimodipine (prevent vasospasm) + secure aneurysm (coil/clip)',
+      category: 'Emergency',
+    },
   ],
   'Status Epilepticus': [
     { treatment: 'Benzodiazepine (lorazepam IV or midazolam IM)', category: 'Emergency' },
@@ -368,21 +415,20 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'IV methylprednisolone x 3-5 days', category: 'Pharmacological' },
   ],
   'Multiple Sclerosis (Maintenance)': [
-    { treatment: 'Disease-modifying therapy (interferon, glatiramer, or newer agents)', category: 'Pharmacological' },
+    {
+      treatment: 'Disease-modifying therapy (interferon, glatiramer, or newer agents)',
+      category: 'Pharmacological',
+    },
   ],
-  'Parkinson\'s Disease': [
-    { treatment: 'Carbidopa-levodopa', category: 'Pharmacological' },
-  ],
-  'Guillain-Barré Syndrome': [
-    { treatment: 'IVIG or plasmapheresis', category: 'Pharmacological' },
-  ],
+  "Parkinson's Disease": [{ treatment: 'Carbidopa-levodopa', category: 'Pharmacological' }],
+  'Guillain-Barré Syndrome': [{ treatment: 'IVIG or plasmapheresis', category: 'Pharmacological' }],
   'Myasthenia Gravis (Crisis)': [
     { treatment: 'IVIG or plasmapheresis + ICU monitoring', category: 'Emergency' },
   ],
   'Myasthenia Gravis (Maintenance)': [
     { treatment: 'Pyridostigmine (acetylcholinesterase inhibitor)', category: 'Pharmacological' },
   ],
-  
+
   // PSYCHIATRY
   'Major Depressive Disorder': [
     { treatment: 'SSRI (sertraline, escitalopram)', category: 'Pharmacological' },
@@ -395,27 +441,27 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'SSRI (long-term) ± benzodiazepine (short-term)', category: 'Pharmacological' },
   ],
   'Bipolar Disorder (Acute Mania)': [
-    { treatment: 'Mood stabilizer (lithium, valproate) + antipsychotic', category: 'Pharmacological' },
+    {
+      treatment: 'Mood stabilizer (lithium, valproate) + antipsychotic',
+      category: 'Pharmacological',
+    },
   ],
   'Bipolar Disorder (Maintenance)': [
     { treatment: 'Mood stabilizer (lithium, valproate, lamotrigine)', category: 'Pharmacological' },
   ],
-  'Schizophrenia': [
-    { treatment: 'Second-generation antipsychotic (risperidone, olanzapine)', category: 'Pharmacological' },
+  Schizophrenia: [
+    {
+      treatment: 'Second-generation antipsychotic (risperidone, olanzapine)',
+      category: 'Pharmacological',
+    },
   ],
-  'PTSD': [
+  PTSD: [
     { treatment: 'Trauma-focused CBT or EMDR', category: 'Behavioral' },
     { treatment: 'SSRI (sertraline, paroxetine)', category: 'Pharmacological' },
   ],
-  'OCD': [
-    { treatment: 'SSRI (higher doses) + ERP therapy', category: 'Pharmacological' },
-  ],
-  'ADHD': [
-    { treatment: 'Stimulant (methylphenidate or amphetamine)', category: 'Pharmacological' },
-  ],
-  'Alcohol Use Disorder': [
-    { treatment: 'Naltrexone or acamprosate', category: 'Pharmacological' },
-  ],
+  OCD: [{ treatment: 'SSRI (higher doses) + ERP therapy', category: 'Pharmacological' }],
+  ADHD: [{ treatment: 'Stimulant (methylphenidate or amphetamine)', category: 'Pharmacological' }],
+  'Alcohol Use Disorder': [{ treatment: 'Naltrexone or acamprosate', category: 'Pharmacological' }],
   'Opioid Use Disorder': [
     { treatment: 'Buprenorphine or methadone maintenance', category: 'Pharmacological' },
   ],
@@ -423,37 +469,35 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Benzodiazepine (chlordiazepoxide, lorazepam)', category: 'Pharmacological' },
     { treatment: 'Thiamine before glucose', category: 'Pharmacological' },
   ],
-  'Opioid Overdose': [
-    { treatment: 'Naloxone (Narcan)', category: 'Emergency' },
-  ],
-  
+  'Opioid Overdose': [{ treatment: 'Naloxone (Narcan)', category: 'Emergency' }],
+
   // HEMATOLOGY/ONCOLOGY
-  'Iron Deficiency Anemia': [
-    { treatment: 'Oral ferrous sulfate', category: 'Pharmacological' },
-  ],
+  'Iron Deficiency Anemia': [{ treatment: 'Oral ferrous sulfate', category: 'Pharmacological' }],
   'Vitamin B12 Deficiency': [
     { treatment: 'IM cyanocobalamin or high-dose oral', category: 'Pharmacological' },
   ],
-  'Folate Deficiency': [
-    { treatment: 'Oral folic acid', category: 'Pharmacological' },
-  ],
+  'Folate Deficiency': [{ treatment: 'Oral folic acid', category: 'Pharmacological' }],
   'Sickle Cell Crisis': [
     { treatment: 'IV fluids + opioid pain management + oxygen if hypoxic', category: 'Supportive' },
   ],
   'Acute Hemolytic Transfusion Reaction': [
-    { treatment: 'Stop transfusion immediately + IV fluids + supportive care', category: 'Emergency' },
+    {
+      treatment: 'Stop transfusion immediately + IV fluids + supportive care',
+      category: 'Emergency',
+    },
   ],
   'Heparin-Induced Thrombocytopenia': [
-    { treatment: 'Stop all heparin + start non-heparin anticoagulant (argatroban)', category: 'Emergency' },
+    {
+      treatment: 'Stop all heparin + start non-heparin anticoagulant (argatroban)',
+      category: 'Emergency',
+    },
   ],
   'Immune Thrombocytopenic Purpura': [
     { treatment: 'Corticosteroids (prednisone)', category: 'Pharmacological' },
     { treatment: 'IVIG if severe bleeding', category: 'Emergency' },
   ],
-  'TTP': [
-    { treatment: 'Plasma exchange + corticosteroids', category: 'Emergency' },
-  ],
-  'DVT': [
+  TTP: [{ treatment: 'Plasma exchange + corticosteroids', category: 'Emergency' }],
+  DVT: [
     { treatment: 'Anticoagulation (DOAC preferred for provoked)', category: 'Pharmacological' },
   ],
   'Pulmonary Embolism (Stable)': [
@@ -462,7 +506,7 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Warfarin Overdose (Bleeding)': [
     { treatment: 'Vitamin K + 4-factor PCC or FFP', category: 'Emergency' },
   ],
-  
+
   // MUSCULOSKELETAL
   'Gout (Acute)': [
     { treatment: 'NSAIDs or colchicine or corticosteroids', category: 'Pharmacological' },
@@ -476,20 +520,21 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Rheumatoid Arthritis': [
     { treatment: 'Methotrexate (first-line DMARD)', category: 'Pharmacological' },
   ],
-  'Osteoarthritis': [
+  Osteoarthritis: [
     { treatment: 'Acetaminophen or topical NSAIDs', category: 'Pharmacological' },
     { treatment: 'Exercise and weight loss', category: 'Behavioral' },
   ],
-  'Osteoporosis': [
+  Osteoporosis: [
     { treatment: 'Bisphosphonate (alendronate) + calcium/vitamin D', category: 'Pharmacological' },
   ],
-  'Compartment Syndrome': [
-    { treatment: 'Emergent fasciotomy', category: 'Emergency' },
-  ],
+  'Compartment Syndrome': [{ treatment: 'Emergent fasciotomy', category: 'Emergency' }],
   'Open Fracture': [
-    { treatment: 'IV antibiotics + tetanus + irrigation/debridement + fixation', category: 'Emergency' },
+    {
+      treatment: 'IV antibiotics + tetanus + irrigation/debridement + fixation',
+      category: 'Emergency',
+    },
   ],
-  
+
   // DERMATOLOGY
   'Atopic Dermatitis': [
     { treatment: 'Emollients + topical corticosteroids', category: 'Pharmacological' },
@@ -498,7 +543,10 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Topical corticosteroids + vitamin D analogs', category: 'Pharmacological' },
   ],
   'Psoriasis (Moderate-Severe)': [
-    { treatment: 'Phototherapy or systemic agents (methotrexate, biologics)', category: 'Pharmacological' },
+    {
+      treatment: 'Phototherapy or systemic agents (methotrexate, biologics)',
+      category: 'Pharmacological',
+    },
   ],
   'Acne Vulgaris (Mild)': [
     { treatment: 'Topical retinoid + benzoyl peroxide', category: 'Pharmacological' },
@@ -507,15 +555,16 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
     { treatment: 'Oral antibiotics (doxycycline) + topicals', category: 'Pharmacological' },
   ],
   'Stevens-Johnson Syndrome': [
-    { treatment: 'Stop offending drug + supportive care + burn unit if severe', category: 'Emergency' },
+    {
+      treatment: 'Stop offending drug + supportive care + burn unit if severe',
+      category: 'Emergency',
+    },
   ],
   'Urticaria (Acute)': [
     { treatment: 'Second-generation antihistamine', category: 'Pharmacological' },
   ],
-  'Anaphylaxis': [
-    { treatment: 'Epinephrine IM (anterolateral thigh)', category: 'Emergency' },
-  ],
-  
+  Anaphylaxis: [{ treatment: 'Epinephrine IM (anterolateral thigh)', category: 'Emergency' }],
+
   // OB/GYN
   'Preeclampsia (Mild)': [
     { treatment: 'Expectant management + close monitoring', category: 'Observation' },
@@ -523,16 +572,15 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Preeclampsia (Severe)': [
     { treatment: 'Magnesium sulfate + delivery (if ≥34 weeks)', category: 'Emergency' },
   ],
-  'Eclampsia': [
-    { treatment: 'Magnesium sulfate + delivery', category: 'Emergency' },
-  ],
+  Eclampsia: [{ treatment: 'Magnesium sulfate + delivery', category: 'Emergency' }],
   'Ectopic Pregnancy': [
-    { treatment: 'Methotrexate (if stable, <3.5cm, no cardiac activity)', category: 'Pharmacological' },
+    {
+      treatment: 'Methotrexate (if stable, <3.5cm, no cardiac activity)',
+      category: 'Pharmacological',
+    },
     { treatment: 'Surgery (if unstable or methotrexate contraindicated)', category: 'Surgical' },
   ],
-  'Postpartum Hemorrhage': [
-    { treatment: 'Uterine massage + oxytocin', category: 'Emergency' },
-  ],
+  'Postpartum Hemorrhage': [{ treatment: 'Uterine massage + oxytocin', category: 'Emergency' }],
   'Bacterial Vaginosis': [
     { treatment: 'Metronidazole (oral or vaginal)', category: 'Pharmacological' },
   ],
@@ -542,12 +590,12 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Pelvic Inflammatory Disease': [
     { treatment: 'Ceftriaxone + doxycycline ± metronidazole', category: 'Pharmacological' },
   ],
-  'Endometriosis': [
+  Endometriosis: [
     { treatment: 'NSAIDs + hormonal therapy (OCPs, progestins)', category: 'Pharmacological' },
   ],
-  
+
   // UROLOGY
-  'BPH': [
+  BPH: [
     { treatment: 'Alpha-blocker (tamsulosin)', category: 'Pharmacological' },
     { treatment: 'Add 5-alpha reductase inhibitor if large prostate', category: 'Pharmacological' },
   ],
@@ -557,14 +605,17 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Testicular Torsion': [
     { treatment: 'Emergent surgical detorsion (within 6 hours)', category: 'Emergency' },
   ],
-  'Epididymitis': [
+  Epididymitis: [
     { treatment: 'Ceftriaxone + doxycycline (if STI suspected)', category: 'Pharmacological' },
     { treatment: 'Fluoroquinolone (if non-STI)', category: 'Pharmacological' },
   ],
-  'Nephrolithiasis': [
-    { treatment: 'Hydration + NSAIDs + alpha-blocker (tamsulosin) for MET', category: 'Pharmacological' },
+  Nephrolithiasis: [
+    {
+      treatment: 'Hydration + NSAIDs + alpha-blocker (tamsulosin) for MET',
+      category: 'Pharmacological',
+    },
   ],
-  
+
   // PEDIATRICS
   'Neonatal Jaundice': [
     { treatment: 'Phototherapy (based on bilirubin nomogram)', category: 'Procedural' },
@@ -572,20 +623,18 @@ const KNOWN_FIRST_LINE: Record<string, Array<{ treatment: string; category: Trea
   'Kawasaki Disease': [
     { treatment: 'IVIG + high-dose aspirin (then low-dose)', category: 'Pharmacological' },
   ],
-  'Croup': [
+  Croup: [
     { treatment: 'Dexamethasone (single dose)', category: 'Pharmacological' },
     { treatment: 'Nebulized epinephrine if severe', category: 'Emergency' },
   ],
-  'Bronchiolitis': [
+  Bronchiolitis: [
     { treatment: 'Supportive care (hydration, suctioning, oxygen)', category: 'Supportive' },
   ],
   'Febrile Seizure (Simple)': [
     { treatment: 'Reassurance and parent education', category: 'Observation' },
   ],
-  'Pyloric Stenosis': [
-    { treatment: 'Pyloromyotomy', category: 'Surgical' },
-  ],
-  'Intussusception': [
+  'Pyloric Stenosis': [{ treatment: 'Pyloromyotomy', category: 'Surgical' }],
+  Intussusception: [
     { treatment: 'Air or contrast enema reduction', category: 'Procedural' },
     { treatment: 'Surgery if unsuccessful or peritonitis', category: 'Surgical' },
   ],
@@ -611,15 +660,15 @@ async function generateAITreatments(
   conditions: { name: string; system: string; content: any }[]
 ): Promise<TreatmentCandidate[]> {
   const ai = getAI();
-  const model = ai.getGenerativeModel({ 
+  const model = ai.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json',
-    }
+    },
   });
 
-  const conditionList = conditions.map(c => ({
+  const conditionList = conditions.map((c) => ({
     name: c.name,
     system: c.system,
     treatment: c.content?.treatment,
@@ -659,18 +708,18 @@ Conditions:
 ${JSON.stringify(conditionList, null, 2)}`;
 
   await rateLimiter.acquire();
-  
+
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   try {
     const parsed = JSON.parse(text);
     const candidates: TreatmentCandidate[] = [];
-    
+
     for (const item of parsed) {
-      const condition = conditions.find(c => c.name === item.conditionName);
+      const condition = conditions.find((c) => c.name === item.conditionName);
       if (!condition) continue;
-      
+
       for (const t of item.treatments || []) {
         candidates.push({
           condition: condition.name,
@@ -680,7 +729,7 @@ ${JSON.stringify(conditionList, null, 2)}`;
         });
       }
     }
-    
+
     return candidates;
   } catch (e) {
     console.error('Failed to parse AI response:', text.substring(0, 500));
@@ -693,7 +742,7 @@ ${JSON.stringify(conditionList, null, 2)}`;
  */
 function getKnownTreatments(): TreatmentCandidate[] {
   const candidates: TreatmentCandidate[] = [];
-  
+
   for (const [condition, treatments] of Object.entries(KNOWN_FIRST_LINE)) {
     for (const t of treatments) {
       candidates.push({
@@ -704,7 +753,7 @@ function getKnownTreatments(): TreatmentCandidate[] {
       });
     }
   }
-  
+
   return candidates;
 }
 
@@ -726,38 +775,38 @@ async function treatmentExists(condition: string, treatment: string): Promise<bo
  */
 async function analyzeState() {
   console.log('\n📊 Analyzing Current State\n');
-  
+
   const treatmentCount = await prisma.firstLineTreatment.count();
   const conditionCount = await prisma.condition.count();
-  
+
   const byCategory = await prisma.firstLineTreatment.groupBy({
     by: ['category'],
     _count: true,
     orderBy: { _count: { category: 'desc' } },
   });
-  
+
   const uniqueConditions = await prisma.firstLineTreatment.groupBy({
     by: ['condition'],
     _count: true,
   });
-  
+
   console.log(`  Total First-Line Treatments: ${treatmentCount}`);
   console.log(`  Unique Conditions with Treatments: ${uniqueConditions.length}`);
   console.log(`  Total Conditions in DB: ${conditionCount}`);
   console.log(`  Coverage: ${((uniqueConditions.length / conditionCount) * 100).toFixed(1)}%`);
-  
+
   if (byCategory.length > 0) {
     console.log('\n  Treatments by Category:');
     for (const c of byCategory) {
       console.log(`    ${c.category}: ${c._count}`);
     }
   }
-  
+
   const samples = await prisma.firstLineTreatment.findMany({
     take: 10,
     orderBy: { createdAt: 'desc' },
   });
-  
+
   if (samples.length > 0) {
     console.log('\n  Recent Treatments:');
     for (const s of samples) {
@@ -771,23 +820,27 @@ async function analyzeState() {
  */
 async function insertKnownTreatments(dryRun: boolean) {
   console.log('\n🔍 Inserting Known First-Line Treatments\n');
-  
+
   const known = getKnownTreatments();
-  console.log(`  Found ${known.length} known first-line treatments for ${Object.keys(KNOWN_FIRST_LINE).length} conditions`);
-  
+  console.log(
+    `  Found ${known.length} known first-line treatments for ${Object.keys(KNOWN_FIRST_LINE).length} conditions`
+  );
+
   let inserted = 0;
   let skipped = 0;
-  
+
   for (const candidate of known) {
     const exists = await treatmentExists(candidate.condition, candidate.treatment);
-    
+
     if (exists) {
       skipped++;
       continue;
     }
-    
+
     if (dryRun) {
-      console.log(`  [DRY RUN] Would insert: ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`);
+      console.log(
+        `  [DRY RUN] Would insert: ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`
+      );
       inserted++;
     } else {
       await prisma.firstLineTreatment.create({
@@ -803,7 +856,7 @@ async function insertKnownTreatments(dryRun: boolean) {
       inserted++;
     }
   }
-  
+
   console.log(`\n  Summary: ${inserted} inserted, ${skipped} already existed`);
 }
 
@@ -812,13 +865,13 @@ async function insertKnownTreatments(dryRun: boolean) {
  */
 async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: number) {
   console.log('\n🤖 Generating AI First-Line Treatments\n');
-  
+
   // Get conditions that already have treatments
   const conditionsWithTreatments = await prisma.firstLineTreatment.groupBy({
     by: ['condition'],
   });
-  const coveredNames = new Set(conditionsWithTreatments.map(c => c.condition.toLowerCase()));
-  
+  const coveredNames = new Set(conditionsWithTreatments.map((c) => c.condition.toLowerCase()));
+
   // Get all conditions from MedicalContent
   const allConditions = await prisma.medicalContent.findMany({
     select: {
@@ -828,26 +881,28 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
       prognosis: true,
     },
   });
-  
+
   const uncoveredConditions = allConditions.filter(
-    c => !coveredNames.has(c.condition.toLowerCase())
+    (c) => !coveredNames.has(c.condition.toLowerCase())
   );
-  
+
   console.log(`  Conditions without first-line treatments: ${uncoveredConditions.length}`);
-  
+
   if (uncoveredConditions.length === 0) {
     console.log('  All conditions have first-line treatments!');
     return;
   }
-  
+
   let totalInserted = 0;
   let totalSkipped = 0;
-  
+
   for (let i = 0; i < uncoveredConditions.length; i += batchSize) {
     const batch = uncoveredConditions.slice(i, i + batchSize);
-    console.log(`\n  Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uncoveredConditions.length / batchSize)} (${batch.length} conditions)...`);
-    
-    const conditionsForAI = batch.map(c => ({
+    console.log(
+      `\n  Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uncoveredConditions.length / batchSize)} (${batch.length} conditions)...`
+    );
+
+    const conditionsForAI = batch.map((c) => ({
       name: c.condition,
       system: c.system,
       content: {
@@ -855,21 +910,23 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
         prognosis: c.prognosis,
       },
     }));
-    
+
     try {
       const candidates = await generateAITreatments(conditionsForAI);
       console.log(`    AI generated ${candidates.length} treatment candidates`);
-      
+
       for (const candidate of candidates) {
         const exists = await treatmentExists(candidate.condition, candidate.treatment);
-        
+
         if (exists) {
           totalSkipped++;
           continue;
         }
-        
+
         if (dryRun) {
-          console.log(`    [DRY RUN] ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`);
+          console.log(
+            `    [DRY RUN] ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`
+          );
           totalInserted++;
         } else {
           await prisma.firstLineTreatment.create({
@@ -888,12 +945,12 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
     } catch (e: any) {
       console.error(`    ❌ Error processing batch:`, e.message || e);
     }
-    
+
     if (i + batchSize < uncoveredConditions.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
-  
+
   console.log(`\n  Summary: ${totalInserted} inserted, ${totalSkipped} skipped`);
 }
 
@@ -905,36 +962,41 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const analyzeOnly = args.includes('--analyze');
   const knownOnly = args.includes('--known-only');
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : 20;
-  
+
   console.log('╔════════════════════════════════════════════════════════════════╗');
   console.log('║      💊 FIRST-LINE TREATMENT DOCTOR - Board-Style Generator    ║');
   console.log('╠════════════════════════════════════════════════════════════════╣');
-  const modeText = dryRun ? 'DRY RUN (no changes)' : analyzeOnly ? 'ANALYZE ONLY' : 'LIVE (will make changes)';
+  const modeText = dryRun
+    ? 'DRY RUN (no changes)'
+    : analyzeOnly
+      ? 'ANALYZE ONLY'
+      : 'LIVE (will make changes)';
   console.log(`║  Mode: ${modeText.padEnd(55)}║`);
   console.log(`║  Batch Size: ${batchSize.toString().padEnd(50)}║`);
-  console.log(`║  AI Generation: ${knownOnly ? 'DISABLED (known only)' : 'ENABLED'}${' '.repeat(knownOnly ? 33 : 42)}║`);
+  console.log(
+    `║  AI Generation: ${knownOnly ? 'DISABLED (known only)' : 'ENABLED'}${' '.repeat(knownOnly ? 33 : 42)}║`
+  );
   console.log('╚════════════════════════════════════════════════════════════════╝');
-  
+
   try {
     await analyzeState();
-    
+
     if (analyzeOnly) {
       return;
     }
-    
+
     await insertKnownTreatments(dryRun);
-    
+
     if (!knownOnly) {
       await generateAITreatmentsForConditions(dryRun, batchSize);
     }
-    
+
     console.log('\n📈 FINAL STATE:');
     await analyzeState();
-    
+
     console.log('\n✨ First-Line Treatment Doctor complete!');
-    
   } finally {
     await prisma.$disconnect();
   }

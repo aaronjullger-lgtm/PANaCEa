@@ -59,6 +59,7 @@ npx prisma migrate dev --name phase_3_5_features
 ```
 
 This will:
+
 1. Create a new migration file in `prisma/migrations/`
 2. Apply the migration to your development database
 3. Regenerate Prisma Client
@@ -73,6 +74,7 @@ npx prisma migrate deploy
 ```
 
 **Important:** Never use `migrate dev` in production! It can:
+
 - Reset your database
 - Cause data loss
 - Create destructive migrations
@@ -86,6 +88,7 @@ npx prisma migrate status
 ```
 
 Output example:
+
 ```
 Database schema is up to date!
 
@@ -109,6 +112,7 @@ prisma/
 ```
 
 Each migration folder contains:
+
 - `migration.sql` - The SQL commands to run
 - Timestamp and descriptive name
 
@@ -152,15 +156,17 @@ npx prisma migrate status  # Check migration status
 For migrations that require data transformation:
 
 1. Create empty migration:
+
    ```bash
    npx prisma migrate dev --create-only --name custom_data_migration
    ```
 
 2. Edit `migration.sql` to add data transformation logic:
+
    ```sql
    -- Auto-generated schema changes
    ALTER TABLE "User" ADD COLUMN "role" TEXT NOT NULL DEFAULT 'user';
-   
+
    -- Custom data migration
    UPDATE "User" SET "role" = 'admin' WHERE "email" LIKE '%@admin.com';
    ```
@@ -291,20 +297,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '18'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run migrations
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      
+
       - name: Deploy application
         run: npm run deploy
 ```
@@ -312,16 +318,19 @@ jobs:
 ## Multiple Environments
 
 ### Development
+
 ```env
 DATABASE_URL="postgresql://dev:dev@localhost:5432/panacea_dev"
 ```
 
 ### Staging
+
 ```env
 DATABASE_URL="postgresql://stage:stage@staging.example.com:5432/panacea_staging"
 ```
 
 ### Production
+
 ```env
 DATABASE_URL="postgresql://prod:prod@prod.example.com:5432/panacea_prod"
 ```

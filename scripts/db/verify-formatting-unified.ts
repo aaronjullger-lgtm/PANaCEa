@@ -2,7 +2,7 @@
 /**
  * UNIFIED FORMATTING VERIFICATION
  * Verifies that MedicalContent and Drug tables have proper formatting
- * 
+ *
  * Usage:
  *   npx tsx scripts/db/verify-formatting-unified.ts [options]
  *   --sample=N    Check N random records from each table (default: 10)
@@ -51,11 +51,11 @@ async function verifyMedicalContent(sampleSize: number, checkAll: boolean) {
   for (const record of samples) {
     for (const [field, value] of Object.entries(record)) {
       if (field === 'conditionId' || !value) continue;
-      
+
       // Check if value is expected type based on schema
       // relatedSystems, buzzwords = String[]
       // classic_triad, clinical_pearls, synonyms, differentials, age_demographic = Json
-      
+
       if (field === 'relatedSystems' || field === 'buzzwords') {
         // Should be actual JS arrays
         if (Array.isArray(value)) {
@@ -106,7 +106,7 @@ async function verifyMedicalContent(sampleSize: number, checkAll: boolean) {
 
   if (errorExamples.length > 0) {
     console.log('\n   Error examples:');
-    errorExamples.slice(0, 5).forEach(e => console.log(`      • ${e}`));
+    errorExamples.slice(0, 5).forEach((e) => console.log(`      • ${e}`));
     if (errorExamples.length > 5) {
       console.log(`      ... and ${errorExamples.length - 5} more`);
     }
@@ -161,7 +161,7 @@ async function verifyDrugs(sampleSize: number, checkAll: boolean) {
   for (const record of samples) {
     for (const [field, value] of Object.entries(record)) {
       if (field === 'genericName' || !value) continue;
-      
+
       // Drug arrays should be actual JS arrays, not JSON strings
       if (Array.isArray(value)) {
         successes++;
@@ -193,7 +193,7 @@ async function verifyDrugs(sampleSize: number, checkAll: boolean) {
 
   if (errorExamples.length > 0) {
     console.log('\n   Error examples:');
-    errorExamples.slice(0, 5).forEach(e => console.log(`      • ${e}`));
+    errorExamples.slice(0, 5).forEach((e) => console.log(`      • ${e}`));
     if (errorExamples.length > 5) {
       console.log(`      ... and ${errorExamples.length - 5} more`);
     }
@@ -205,7 +205,7 @@ async function verifyDrugs(sampleSize: number, checkAll: boolean) {
 async function main() {
   const args = process.argv.slice(2);
   const checkAll = args.includes('--all');
-  const sampleArg = args.find(a => a.startsWith('--sample='));
+  const sampleArg = args.find((a) => a.startsWith('--sample='));
   const sampleSize = sampleArg ? parseInt(sampleArg.split('=')[1]) : 10;
 
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
@@ -239,7 +239,6 @@ async function main() {
       console.log(`⚠️  ${totalFailures} fields need formatting fixes`);
       console.log('   Run: npx tsx scripts/db/normalize-formatting-unified.ts\n');
     }
-
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     throw error;

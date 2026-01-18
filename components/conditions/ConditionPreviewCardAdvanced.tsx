@@ -1,6 +1,6 @@
 /**
  * ConditionPreviewCardAdvanced
- * 
+ *
  * Enhanced version with additional features:
  * - PANCE Yield indicator (High/Medium/Low)
  * - Quick action buttons (Drill, Bookmark, Share)
@@ -39,19 +39,22 @@ function getPanceYieldBadge(yield_level?: number): {
     case 3:
       return {
         label: 'High Yield',
-        color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700',
+        color:
+          'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700',
         icon: <Sparkles className="w-3 h-3" />,
       };
     case 2:
       return {
         label: 'Medium',
-        color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700',
+        color:
+          'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700',
         icon: <Target className="w-3 h-3" />,
       };
     case 1:
       return {
         label: 'Low Yield',
-        color: 'bg-slate-100 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700',
+        color:
+          'bg-slate-100 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700',
         icon: <Target className="w-3 h-3" />,
       };
     default:
@@ -72,10 +75,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
   const accent = getSystemAccent(condition.system);
   const yieldBadge = getPanceYieldBadge(content?.pance_yield);
 
-  const handleActionClick = (
-    e: React.MouseEvent,
-    action: (condition: ConditionMeta) => void
-  ) => {
+  const handleActionClick = (e: React.MouseEvent, action: (condition: ConditionMeta) => void) => {
     e.stopPropagation(); // Prevent card click
     action(condition);
   };
@@ -111,23 +111,23 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
                 {condition.condition}
               </h3>
-              
+
               {yieldBadge && (
-                <span className={`
+                <span
+                  className={`
                   inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-semibold
                   ${yieldBadge.color}
                   flex-shrink-0
-                `}>
+                `}
+                >
                   {yieldBadge.icon}
                   <span className="hidden sm:inline">{yieldBadge.label}</span>
                 </span>
               )}
             </div>
-            
-            <p className={`text-xs font-medium ${accent.text}`}>
-              {condition.subcategory}
-            </p>
-            
+
+            <p className={`text-xs font-medium ${accent.text}`}>{condition.subcategory}</p>
+
             {/* Related Systems */}
             {condition.relatedSystems && condition.relatedSystems.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">

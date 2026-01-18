@@ -12,22 +12,19 @@ interface LoadingProgressProps {
   duration?: number;
 }
 
-export const LoadingProgress: React.FC<LoadingProgressProps> = ({ 
-  isLoading, 
-  duration = 2000 
-}) => {
+export const LoadingProgress: React.FC<LoadingProgressProps> = ({ isLoading, duration = 2000 }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (isLoading) {
       setProgress(0);
-      
+
       // Simulate progress that reaches 90% then slows down
       const interval = setInterval(() => {
         setProgress((prev) => {
           // Fast progress to 90%
           if (prev < 90) {
-            return prev + (90 / (duration / 50));
+            return prev + 90 / (duration / 50);
           }
           // Slow progress from 90% to 95%
           if (prev < 95) {

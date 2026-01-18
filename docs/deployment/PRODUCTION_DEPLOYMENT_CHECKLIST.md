@@ -67,16 +67,21 @@ Use this checklist to ensure a smooth deployment to production.
 Go to **Settings** → **Environment variables** and add:
 
 #### Required Variables
+
 - [ ] **`DATABASE_URL`**
+
   ```
   postgresql://user:pass@host:6543/db?pgbouncer=true
   ```
+
   OR for Prisma Accelerate:
+
   ```
   prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY
   ```
 
 - [ ] **`CLERK_SECRET_KEY`**
+
   ```
   sk_live_xxxxx (or sk_test_xxxxx for testing)
   ```
@@ -87,6 +92,7 @@ Go to **Settings** → **Environment variables** and add:
   ```
 
 #### Optional but Recommended
+
 - [ ] **`VITE_APP_URL`** - Your production domain
 - [ ] **`NODE_ENV`** - Set to `production`
 
@@ -122,7 +128,6 @@ Go to **Settings** → **Environment variables** and add:
 - [ ] **Check Cloudflare Pages logs** for errors
   - Go to Pages project > **View build** > **Functions**
   - Look for any 500 errors or exceptions
-  
 - [ ] **Check browser console** for frontend errors
   - Open browser DevTools > Console
   - Look for red errors
@@ -143,14 +148,17 @@ Go to **Settings** → **Environment variables** and add:
 ### Issue: "The table public.User does not exist"
 
 **Solution:** Database migration wasn't applied. Run:
+
 ```bash
 npm run migrate:production
 ```
+
 See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for details.
 
 ### Issue: "Unauthorized" or 401 errors
 
 **Solution:** Clerk keys mismatch or incorrect configuration.
+
 1. Verify both `CLERK_SECRET_KEY` and `VITE_CLERK_PUBLISHABLE_KEY` are from the same Clerk app
 2. Check both are for the same environment (test vs live)
 3. Redeploy after fixing environment variables
@@ -158,6 +166,7 @@ See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for details.
 ### Issue: Questions not generating
 
 **Solution:**
+
 1. Verify `GEMINI_API_KEY` is set in Cloudflare Pages
 2. Check API key has available quota
 3. Check Cloudflare Functions logs for detailed errors
@@ -165,6 +174,7 @@ See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for details.
 ### Issue: Data not syncing
 
 **Solution:**
+
 1. Verify `DATABASE_URL` is correctly set
 2. Check Cloudflare Functions logs for database connection errors
 3. Ensure connection pooling is enabled (`?pgbouncer=true`)
@@ -173,6 +183,7 @@ See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for details.
 ### Issue: Build fails
 
 **Solution:**
+
 1. Check build logs in Cloudflare Pages
 2. Ensure `package.json` is correct
 3. Verify Node.js version compatibility
@@ -215,6 +226,7 @@ If you encounter issues:
 ## Deployment Complete! 🎉
 
 Once all checkboxes are marked:
+
 - ✅ Your database is set up and migrated
 - ✅ Your application is deployed to Cloudflare Pages
 - ✅ Authentication is working
@@ -222,6 +234,7 @@ Once all checkboxes are marked:
 - ✅ Users can start using PANaCEa!
 
 Remember to:
+
 - Monitor logs for the first few days
 - Gather user feedback
 - Iterate and improve

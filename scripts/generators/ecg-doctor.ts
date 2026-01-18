@@ -24,7 +24,11 @@ const ECG_PATTERNS = [
   { name: 'Long QT Syndrome', category: 'Conduction', isEmergency: false },
 ];
 
-async function generateECGContent(pattern: { name: string; category: string; isEmergency: boolean }) {
+async function generateECGContent(pattern: {
+  name: string;
+  category: string;
+  isEmergency: boolean;
+}) {
   const prompt = `You are a cardiology educator. For ECG pattern "${pattern.name}", provide PANCE-focused content.
 
 Return ONLY valid JSON:
@@ -49,7 +53,10 @@ Return ONLY valid JSON:
 }`;
 
   const result = await model.generateContent(prompt);
-  const text = result.response.text().replace(/```json\n?|\n?```/g, '').trim();
+  const text = result.response
+    .text()
+    .replace(/```json\n?|\n?```/g, '')
+    .trim();
   return JSON.parse(text);
 }
 
@@ -74,13 +81,13 @@ async function seedECGPatterns(dryRun = false) {
             category: pattern.category,
             isEmergency: pattern.isEmergency,
             isHighYield: true,
-            ...content
-          }
+            ...content,
+          },
         });
         console.log(`    ✓ Created ${pattern.name}`);
       }
 
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
     } catch (err) {
       console.error(`    ✗ Failed: ${pattern.name}`, err);
     }

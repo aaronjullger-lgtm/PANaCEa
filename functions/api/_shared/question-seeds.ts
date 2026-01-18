@@ -42,7 +42,7 @@ export async function assembleQuestionFromSeed(prisma: any, seedId: string) {
   });
 
   if (!seed) {
-    throw new Error("Question seed not found");
+    throw new Error('Question seed not found');
   }
 
   // Parse variables
@@ -61,7 +61,7 @@ export async function assembleQuestionFromSeed(prisma: any, seedId: string) {
   let questionText = seed.template;
   for (const [key, value] of Object.entries(selectedVariables)) {
     // Replace all occurrences of {{variableName}} with the selected value
-    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, "g");
+    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
     questionText = questionText.replace(placeholder, String(value));
   }
 
@@ -134,7 +134,7 @@ export async function getSeedStats(prisma: any) {
     by: ['system'],
     _count: { id: true },
   });
-  
+
   return {
     total,
     bySystem: bySystem.reduce((acc: any, curr: any) => {

@@ -1,6 +1,6 @@
 /**
  * Role-Based Access Control utilities for API endpoints
- * 
+ *
  * Role Hierarchy (Phase 3 - Professional CMS Workflow):
  * - user: Regular learners (no CMS access)
  * - viewer: Audit-only access to CMS (read only)

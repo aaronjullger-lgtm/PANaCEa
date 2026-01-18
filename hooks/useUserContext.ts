@@ -1,6 +1,6 @@
 /**
  * useUserContext Hook
- * 
+ *
  * React hook for user context awareness (PANCE vs PANRE user)
  * Provides career-stage-aware functionality throughout the app
  * Reactively updates when context changes (including from Settings)
@@ -30,7 +30,7 @@ function getSnapshot() {
 
 function notifyListeners() {
   currentContext = getUserContext();
-  listeners.forEach(listener => listener());
+  listeners.forEach((listener) => listener());
 }
 
 // Listen to storage events for cross-tab sync
@@ -44,7 +44,7 @@ if (typeof window !== 'undefined') {
 
 export function useUserContext() {
   const { user, isLoaded } = useUser();
-  
+
   // Use useSyncExternalStore for reactive updates
   const context = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
@@ -55,16 +55,19 @@ export function useUserContext() {
     }
   }, [isLoaded, user]);
 
-  const updateCareerStage = useCallback((stage: CareerStage) => {
-    const newContext = {
-      ...context,
-      careerStage: stage,
-      isPANCEUser: stage === 'student',
-      isPANREUser: stage === 'practicing',
-    };
-    setUserContext(newContext);
-    notifyListeners(); // Immediately notify all listeners
-  }, [context]);
+  const updateCareerStage = useCallback(
+    (stage: CareerStage) => {
+      const newContext = {
+        ...context,
+        careerStage: stage,
+        isPANCEUser: stage === 'student',
+        isPANREUser: stage === 'practicing',
+      };
+      setUserContext(newContext);
+      notifyListeners(); // Immediately notify all listeners
+    },
+    [context]
+  );
 
   return {
     ...context,

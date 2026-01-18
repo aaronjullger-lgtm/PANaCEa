@@ -29,6 +29,7 @@ This document describes how to deploy this application on Cloudflare Pages.
 ⚠️ **IMPORTANT:** Before deploying to Cloudflare Pages, you **must** set up your database schema first.
 
 If you skip this step, you'll see errors like:
+
 ```
 The table `public.User` does not exist in the current database.
 ```
@@ -38,6 +39,7 @@ The table `public.User` does not exist in the current database.
 Follow the detailed guide in [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) to set up your production database.
 
 **Quick Start:**
+
 ```bash
 # 1. Set your production DATABASE_URL in .env
 DATABASE_URL="postgresql://your-production-db-connection-string"
@@ -84,7 +86,6 @@ These variables must be set for **both Production and Preview** environments as 
 
 - **Variable name**: `GEMINI_API_KEY`
   - **Value**: Your Google Gemini API key
-  
 - **Variable name**: `DATABASE_URL`
   - **Value**: Your database connection string
   - **Format Options**:
@@ -95,7 +96,6 @@ These variables must be set for **both Production and Preview** environments as 
       - Works with Supabase, Neon, or any PostgreSQL provider
       - Use connection pooling (?pgbouncer=true) for better performance
   - **Note**: When using Prisma Accelerate extension with `prisma://` URL, you get automatic edge compatibility
-  
 - **Variable name**: `CLERK_SECRET_KEY`
   - **Value**: Your Clerk authentication secret key (starts with `sk_test_` or `sk_live_`)
   - **Get from**: https://dashboard.clerk.com → Your Application → API Keys
@@ -121,6 +121,7 @@ These variables must be set for **both Production and Preview** environments as 
 7. After adding all variables, trigger a new deployment for changes to take effect
 
 **Important Notes:**
+
 - Variables prefixed with `VITE_` (like `VITE_CLERK_PUBLISHABLE_KEY`) are embedded at **build time**
 - You must set them in Cloudflare Pages, not just in GitHub secrets
 - After adding or changing `VITE_*` variables, redeploy to rebuild the app with new values
@@ -139,6 +140,7 @@ Cloudflare Pages Functions run on Edge Runtime, which doesn't support the standa
 - **Database**: Compatible with any PostgreSQL provider (Supabase, Neon, etc.)
 
 **Setup:**
+
 1. The edge-compatible Prisma client is created via `functions/api/_shared/prisma-edge.ts`
 2. All Cloudflare Functions use `createEdgePrismaClient(env.DATABASE_URL)` instead of `new PrismaClient()`
 3. The DATABASE_URL can be:
@@ -149,7 +151,8 @@ Cloudflare Pages Functions run on Edge Runtime, which doesn't support the standa
      - Works but without Accelerate features
      - Use connection pooling for better performance
 
-**Important:** 
+**Important:**
+
 - If you add new Cloudflare Functions that need database access, always use `createEdgePrismaClient()` from `functions/api/_shared/prisma-edge.ts` instead of instantiating `PrismaClient` directly.
 - The error "the URL must start with the protocol prisma://" indicates you're using Accelerate extension but haven't configured a Prisma Accelerate URL. Either:
   1. Set up Prisma Accelerate and use `prisma://` URL, OR
@@ -168,12 +171,14 @@ Cloudflare Pages automatically deploys any TypeScript/JavaScript files in the `/
 ### Function Interface
 
 Cloudflare Pages functions export handler functions named by the HTTP method:
+
 - `onRequestPost` - handles POST requests
 - `onRequestGet` - handles GET requests
 - `onRequestOptions` - handles OPTIONS requests (for CORS preflight)
 - `onRequest` - handles all HTTP methods
 
 The function receives a context object with:
+
 ```typescript
 {
   request: Request,  // Standard Fetch API Request
@@ -203,18 +208,21 @@ After deployment:
 The application now uses Tailwind CSS v4 with PostCSS instead of the CDN version.
 
 ### Files Added/Modified:
+
 - `tailwind.config.js` - Tailwind configuration with content paths
 - `postcss.config.js` - PostCSS configuration with Tailwind plugin
 - `index.css` - Added Tailwind directives (`@tailwind base/components/utilities`)
 - `index.html` - Removed CDN script tag
 
 ### Build Process:
+
 1. Vite processes `index.css` through PostCSS
 2. PostCSS runs the `@tailwindcss/postcss` plugin
 3. Tailwind scans content files and generates utility classes
 4. Final CSS is bundled and minified into `dist/assets/index-*.css`
 
 This approach:
+
 - ✅ Eliminates the production CDN warning
 - ✅ Reduces bundle size (only used utilities are included)
 - ✅ Enables custom Tailwind configurations
@@ -229,6 +237,7 @@ This approach:
 **Cause:** `VITE_CLERK_PUBLISHABLE_KEY` is not set in Cloudflare Pages environment variables
 
 **Solution:**
+
 1. Go to Cloudflare Dashboard → Your Pages Project → Settings → Environment Variables
 2. Add variable:
    - Name: `VITE_CLERK_PUBLISHABLE_KEY`
@@ -238,54 +247,61 @@ This approach:
 4. Trigger a new deployment (Cloudflare will rebuild with the new environment variable)
 
 **Why this happens:**
+
 - Vite embeds `VITE_*` variables into the client bundle at **build time**
 - Having the key in GitHub secrets alone is not enough - it must be in Cloudflare Pages
 - After adding the variable, you **must redeploy** for it to take effect
 
 **Verification:**
+
 - After deployment, the app should load without the Clerk error
 - Check browser console - you should see Clerk initialized messages
 - You should be able to sign in/sign up
 
 ### Error: "GEMINI_API_KEY environment variable is not set"
+
 - Make sure you've set the `GEMINI_API_KEY` environment variable in Cloudflare Pages
 - Redeploy after setting the environment variable
 
 ### Error: 404 on /geminiProxy
+
 - Verify the `/functions/geminiProxy.ts` file is in your repository
 - Check Cloudflare Pages deployment logs for function deployment status
 - Ensure the build was successful
 - Cloudflare Pages automatically detects functions - no manual route configuration needed
 
 ### Questions not generating
+
 - Check browser console for errors
 - Verify your Gemini API key is valid and has quota available
 - Check Cloudflare Pages function logs for errors
 - Verify the function is calling the correct Gemini API endpoint
 
 ### Tailwind styles not working
+
 - Ensure `npm install` was run to install Tailwind dependencies
 - Check that `postcss.config.js` and `tailwind.config.js` exist
 - Verify `index.css` contains the Tailwind directives
 - Run `npm run build` and check for PostCSS errors
 
 ### Authentication errors (401 Unauthorized)
+
 - Verify both `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are from the **same** Clerk application
 - Check that both keys are for the same environment (both test or both live)
 - Mismatched keys will cause token verification failures
 
 ## Cloudflare Pages Functions Key Features
 
-| Feature | Implementation |
-|---------|----------------|
-| Functions location | `/functions/` directory |
-| Function export | `export async function onRequestPost(context)` for POST requests |
-| Environment vars | Accessed via `context.env` |
-| Endpoint path | `/functionName` (based on file name) |
-| Request/Response | Standard Fetch API |
-| Runtime | Cloudflare Workers with `nodejs_compat` flag |
-| API Client | Must use Fetch API for external calls |
-| CSS Processing | Configured via PostCSS |
+| Feature            | Implementation                                                   |
+| ------------------ | ---------------------------------------------------------------- |
+| Functions location | `/functions/` directory                                          |
+| Function export    | `export async function onRequestPost(context)` for POST requests |
+| Environment vars   | Accessed via `context.env`                                       |
+| Endpoint path      | `/functionName` (based on file name)                             |
+| Request/Response   | Standard Fetch API                                               |
+| Runtime            | Cloudflare Workers with `nodejs_compat` flag                     |
+| API Client         | Must use Fetch API for external calls                            |
+| CSS Processing     | Configured via PostCSS                                           |
 
 ## Additional Resources
 

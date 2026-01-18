@@ -1,7 +1,7 @@
 /**
  * API: Get audit logs
  * GET /api/admin/audit/logs
- * 
+ *
  * Query parameters:
  * - contentId: Filter by content ID
  * - userId: Filter by user ID
@@ -12,10 +12,16 @@
  * - offset: Pagination offset
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+  type Env,
+} from '../../_shared/auth';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { exportAuditLogsToCsv } from '../../../../lib/services/cms/auditLogger';
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -34,7 +40,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { role: true }
+      select: { role: true },
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
@@ -56,7 +62,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     if (contentId) where.contentId = contentId;
     if (userId) where.changedBy = userId;
     if (changeType) where.changeType = changeType;
-    
+
     if (startDate || endDate) {
       where.changedAt = {};
       if (startDate) where.changedAt.gte = new Date(startDate);
@@ -101,6 +107,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     console.error('Error fetching audit logs:', error);
     return createErrorResponse('Failed to fetch audit logs', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

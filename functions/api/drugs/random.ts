@@ -1,45 +1,49 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+/**
+ * Random Drugs API
+ * GET /api/drugs/random?count=10
+ * 
+ * Public endpoint for random drug flashcards/quizzes
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const count = Number(url.searchParams.get('count')) || 10;
+const RandomDrugsSchema = z.object({
+  query: z.object({
+    count: z.string().optional().transform(val => val ? parseInt(val, 10) : 10),
+  }),
+});
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+export const onRequestOptions = withCors();
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+export const onRequestGet = publicEndpoint(RandomDrugsSchema, async (context) => {
+  const { env, validated } = context;
+  const logger = createEndpointLogger('/api/drugs/random');
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
   try {
+    const count = Math.min(validated.query.count || 10, 50); // Cap at 50
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     // Use raw SQL for random selection for better performance
     const drugs = await prisma.$queryRaw`SELECT * FROM "Drug" ORDER BY RANDOM() LIMIT ${count}`;
-    
-    return new Response(JSON.stringify(drugs), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+
+    logger.info('Random drugs fetched', {
+      requestedCount: validated.query.count,
+      actualCount: Array.isArray(drugs) ? drugs.length : 0,
     });
-  } catch (error: any) {
-    console.error('Error fetching random drugs:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch random drugs', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+
+    return { data: drugs };
+  } catch (error) {
+    logger.error('Random drugs error', {
+      error: error instanceof Error ? error.message : String(error),
+      count: validated.query.count,
     });
+    throw new Error('Failed to fetch random drugs');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

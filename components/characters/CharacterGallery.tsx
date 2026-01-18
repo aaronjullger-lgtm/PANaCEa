@@ -1,15 +1,15 @@
 /**
  * Character Gallery Component (Inline version for tabs)
- * 
+ *
  * Displays the organ-themed character collection inline within a tab
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles, 
-  Lock, 
-  Trophy, 
+import {
+  Sparkles,
+  Lock,
+  Trophy,
   Star,
   ChevronDown,
   ChevronUp,
@@ -52,10 +52,7 @@ interface CharacterGalleryProps {
 type ViewMode = 'grid' | 'list';
 type FilterMode = 'all' | 'unlocked' | 'locked' | 'base' | 'special';
 
-const CharacterGallery: React.FC<CharacterGalleryProps> = ({
-  performanceData,
-  currentStreak,
-}) => {
+const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, currentStreak }) => {
   const [progress, setProgress] = useState<UserOrganProgress>(() => loadOrganProgress());
   const [customization, setCustomization] = useState(() => loadCharacterCustomization());
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | 'SPECIAL' | null>(null);
@@ -81,7 +78,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
       setProgress(unlockedProgress);
       saveOrganProgress(unlockedProgress);
       setNewUnlocks({ variants: newVariants, accessories: newAccessories });
-      
+
       // Clear notification after 5 seconds with cleanup
       const timeoutId = setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
       return () => clearTimeout(timeoutId);
@@ -103,22 +100,22 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
 
     switch (filterMode) {
       case 'unlocked':
-        characters = characters.filter(char => {
+        characters = characters.filter((char) => {
           const variants = getVariantsForSystem(char.system);
-          return variants.some(v => progress.unlockedVariants.has(v.id) && !v.isBase);
+          return variants.some((v) => progress.unlockedVariants.has(v.id) && !v.isBase);
         });
         break;
       case 'locked':
-        characters = characters.filter(char => {
+        characters = characters.filter((char) => {
           const variants = getVariantsForSystem(char.system);
-          return variants.some(v => !progress.unlockedVariants.has(v.id));
+          return variants.some((v) => !progress.unlockedVariants.has(v.id));
         });
         break;
       case 'base':
-        characters = characters.filter(char => char.system !== 'SPECIAL');
+        characters = characters.filter((char) => char.system !== 'SPECIAL');
         break;
       case 'special':
-        characters = characters.filter(char => char.system === 'SPECIAL');
+        characters = characters.filter((char) => char.system === 'SPECIAL');
         break;
     }
 
@@ -158,7 +155,8 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
             {stats.percentage}%
           </div>
           <div className="text-xs text-[var(--color-text-muted)]">
-            {stats.variantsUnlocked + stats.accessoriesUnlocked}/{stats.totalVariants + stats.totalAccessories}
+            {stats.variantsUnlocked + stats.accessoriesUnlocked}/
+            {stats.totalVariants + stats.totalAccessories}
           </div>
         </div>
 
@@ -194,11 +192,12 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
             <div className="text-xs text-[var(--color-text-muted)]">Locked</div>
           </div>
           <div className="text-xl font-bold text-[var(--color-text-primary)]">
-            {stats.totalVariants + stats.totalAccessories - stats.variantsUnlocked - stats.accessoriesUnlocked}
+            {stats.totalVariants +
+              stats.totalAccessories -
+              stats.variantsUnlocked -
+              stats.accessoriesUnlocked}
           </div>
-          <div className="text-xs text-[var(--color-text-muted)]">
-            Keep studying!
-          </div>
+          <div className="text-xs text-[var(--color-text-muted)]">Keep studying!</div>
         </div>
       </div>
 
@@ -211,9 +210,9 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
               Collect Organ Characters!
             </h4>
             <p className="text-sm text-[var(--color-text-muted)]">
-              Study different body systems to unlock unique character variants. 
-              Each system has special versions like "Pneumothorax Lungs" or "Boot-Shaped Heart". 
-              Earn accessories through streaks and achievements!
+              Study different body systems to unlock unique character variants. Each system has
+              special versions like "Pneumothorax Lungs" or "Boot-Shaped Heart". Earn accessories
+              through streaks and achievements!
             </p>
           </div>
         </div>
@@ -268,7 +267,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
             className="overflow-hidden"
           >
             <div className="flex flex-wrap gap-2">
-              {(['all', 'unlocked', 'locked', 'base', 'special'] as FilterMode[]).map(filter => (
+              {(['all', 'unlocked', 'locked', 'base', 'special'] as FilterMode[]).map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setFilterMode(filter)}
@@ -290,12 +289,13 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
       <div>
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {filteredCharacters.map(character => {
+            {filteredCharacters.map((character) => {
               const variants = getVariantsForSystem(character.system);
-              const unlockedVariants = variants.filter(v => progress.unlockedVariants.has(v.id));
-              const completion = variants.length > 0 
-                ? Math.round((unlockedVariants.length / variants.length) * 100)
-                : 0;
+              const unlockedVariants = variants.filter((v) => progress.unlockedVariants.has(v.id));
+              const completion =
+                variants.length > 0
+                  ? Math.round((unlockedVariants.length / variants.length) * 100)
+                  : 0;
 
               return (
                 <CharacterCard
@@ -311,12 +311,13 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredCharacters.map(character => {
+            {filteredCharacters.map((character) => {
               const variants = getVariantsForSystem(character.system);
-              const unlockedVariants = variants.filter(v => progress.unlockedVariants.has(v.id));
-              const completion = variants.length > 0 
-                ? Math.round((unlockedVariants.length / variants.length) * 100)
-                : 0;
+              const unlockedVariants = variants.filter((v) => progress.unlockedVariants.has(v.id));
+              const completion =
+                variants.length > 0
+                  ? Math.round((unlockedVariants.length / variants.length) * 100)
+                  : 0;
 
               return (
                 <button

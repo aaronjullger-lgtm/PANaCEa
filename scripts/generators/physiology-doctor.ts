@@ -20,47 +20,51 @@ const PHYSIOLOGY_CONCEPTS = [
   { name: 'Baroreceptor Reflex', system: 'CV', category: 'Autonomic Regulation' },
   { name: 'Cardiac Output Regulation', system: 'CV', category: 'Hemodynamics' },
   { name: 'Venous Return', system: 'CV', category: 'Hemodynamics' },
-  
+
   // Pulmonary
   { name: 'Ventilation-Perfusion Matching', system: 'PULM', category: 'Gas Exchange' },
   { name: 'Oxygen-Hemoglobin Dissociation Curve', system: 'PULM', category: 'Gas Transport' },
   { name: 'Surfactant Function', system: 'PULM', category: 'Lung Mechanics' },
   { name: 'Respiratory Drive', system: 'PULM', category: 'Neural Control' },
   { name: 'Dead Space Ventilation', system: 'PULM', category: 'Gas Exchange' },
-  
+
   // Renal
   { name: 'Glomerular Filtration', system: 'RENAL', category: 'Filtration' },
-  { name: 'Renin-Angiotensin-Aldosterone System', system: 'RENAL', category: 'Hormonal Regulation' },
+  {
+    name: 'Renin-Angiotensin-Aldosterone System',
+    system: 'RENAL',
+    category: 'Hormonal Regulation',
+  },
   { name: 'Countercurrent Multiplier', system: 'RENAL', category: 'Concentration' },
   { name: 'Tubular Reabsorption', system: 'RENAL', category: 'Transport' },
   { name: 'Acid-Base Regulation', system: 'RENAL', category: 'Homeostasis' },
-  
+
   // Endocrine
   { name: 'Hypothalamic-Pituitary Axis', system: 'ENDO', category: 'Hormonal Regulation' },
   { name: 'Insulin and Glucagon Balance', system: 'ENDO', category: 'Glucose Metabolism' },
   { name: 'Thyroid Hormone Regulation', system: 'ENDO', category: 'Metabolic Control' },
   { name: 'Cortisol Secretion Pattern', system: 'ENDO', category: 'Stress Response' },
   { name: 'Calcium Homeostasis', system: 'ENDO', category: 'Mineral Balance' },
-  
+
   // GI
   { name: 'Gastric Acid Secretion', system: 'GI', category: 'Secretion' },
   { name: 'Bile Production and Flow', system: 'GI', category: 'Hepatobiliary' },
   { name: 'Intestinal Absorption', system: 'GI', category: 'Absorption' },
   { name: 'Gastric Motility', system: 'GI', category: 'Motility' },
   { name: 'Enterohepatic Circulation', system: 'GI', category: 'Hepatobiliary' },
-  
+
   // Neuro
   { name: 'Action Potential Propagation', system: 'NEURO', category: 'Neurophysiology' },
   { name: 'Neuromuscular Junction Transmission', system: 'NEURO', category: 'Synaptic' },
   { name: 'Cerebral Autoregulation', system: 'NEURO', category: 'Cerebrovascular' },
   { name: 'Pain Pathway', system: 'NEURO', category: 'Sensory' },
   { name: 'Autonomic Nervous System', system: 'NEURO', category: 'Autonomic' },
-  
+
   // Heme
   { name: 'Hemostasis Cascade', system: 'HEME', category: 'Coagulation' },
   { name: 'Erythropoiesis', system: 'HEME', category: 'Hematopoiesis' },
   { name: 'Iron Metabolism', system: 'HEME', category: 'Mineral Transport' },
-  
+
   // Immune
   { name: 'Inflammatory Response', system: 'ID', category: 'Innate Immunity' },
   { name: 'Antibody-Mediated Immunity', system: 'ID', category: 'Adaptive Immunity' },
@@ -80,9 +84,11 @@ interface PhysiologyAIResponse {
   mnemonics: string[];
 }
 
-async function generatePhysiologyContent(concept: typeof PHYSIOLOGY_CONCEPTS[0]): Promise<PhysiologyAIResponse> {
+async function generatePhysiologyContent(
+  concept: (typeof PHYSIOLOGY_CONCEPTS)[0]
+): Promise<PhysiologyAIResponse> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  
+
   const prompt = `Generate comprehensive physiological information for "${concept.name}" (${concept.category}) for PA/medical student education.
 
 Return a JSON object with EXACTLY these fields:
@@ -104,40 +110,40 @@ Return ONLY valid JSON, no markdown formatting.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   // Parse JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error(`Failed to parse JSON for ${concept.name}`);
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
 async function seedPhysiologyConcepts() {
   console.log('⚡ Physiology Doctor - Generating physiological concepts...\n');
-  
+
   let created = 0;
   let skipped = 0;
   let failed = 0;
-  
+
   for (const concept of PHYSIOLOGY_CONCEPTS) {
     try {
       // Check if exists
       const existing = await prisma.physiologyConcept.findFirst({
-        where: { name: concept.name }
+        where: { name: concept.name },
       });
-      
+
       if (existing) {
         console.log(`⏭️  Skipped ${concept.name} (exists)`);
         skipped++;
         continue;
       }
-      
+
       // Generate content via AI
       console.log(`🔄 Generating content for ${concept.name}...`);
       const content = await generatePhysiologyContent(concept);
-      
+
       // Create record - matching Prisma schema field names
       await prisma.physiologyConcept.create({
         data: {
@@ -156,21 +162,20 @@ async function seedPhysiologyConcepts() {
           mnemonics: content.mnemonics,
           isHighYield: true,
           panceYield: 3,
-        }
+        },
       });
-      
+
       console.log(`✓ Created ${concept.name}`);
       created++;
-      
+
       // Rate limiting - 2 second delay between API calls
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error(`✗ Failed ${concept.name}:`, error);
       failed++;
     }
   }
-  
+
   console.log('\n📊 Physiology Doctor Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Skipped: ${skipped}`);

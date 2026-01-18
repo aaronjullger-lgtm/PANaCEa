@@ -1,9 +1,9 @@
 /**
  * SystemTriageHeatmap.tsx
- * 
+ *
  * A "Clinical Triage" visualization that replaces the unreadable 14-point
  * spider chart with an instant-triage view.
- * 
+ *
  * Features:
  * - Tile size = NCCPA Blueprint weight (Cardio largest at 11%)
  * - Color = Performance status (Red/Yellow/Green/Blue)
@@ -49,14 +49,17 @@ interface TriageCell {
 // =============================================================================
 
 // Clinical Triage Color Scheme
-const STATUS_CONFIG: Record<TriageStatus, {
-  bg: string;
-  border: string;
-  text: string;
-  label: string;
-  emoji: string;
-  pulse: boolean;
-}> = {
+const STATUS_CONFIG: Record<
+  TriageStatus,
+  {
+    bg: string;
+    border: string;
+    text: string;
+    label: string;
+    emoji: string;
+    pulse: boolean;
+  }
+> = {
   critical: {
     bg: 'bg-red-500/20 dark:bg-red-500/30',
     border: 'border-red-500',
@@ -93,20 +96,20 @@ const STATUS_CONFIG: Record<TriageStatus, {
 
 // System display names mapping
 const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
-  'CV': 'Cardiovascular',
-  'PULM': 'Pulmonary',
-  'GI': 'Gastrointestinal',
-  'MSK': 'Musculoskeletal',
-  'HEENT': 'HEENT',
-  'REPRO': 'Reproductive',
-  'NEURO': 'Neurological',
-  'PSYCH': 'Psychiatry',
-  'ENDO': 'Endocrine',
-  'DERM': 'Dermatology',
-  'GU': 'Genitourinary',
-  'HEME': 'Hematology',
-  'ID': 'Infectious Disease',
-  'RENAL': 'Renal',
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  MSK: 'Musculoskeletal',
+  HEENT: 'HEENT',
+  REPRO: 'Reproductive',
+  NEURO: 'Neurological',
+  PSYCH: 'Psychiatry',
+  ENDO: 'Endocrine',
+  DERM: 'Dermatology',
+  GU: 'Genitourinary',
+  HEME: 'Hematology',
+  ID: 'Infectious Disease',
+  RENAL: 'Renal',
 };
 
 // =============================================================================
@@ -122,32 +125,32 @@ function getTriageStatus(accuracy: number): TriageStatus {
 
 function getTileSize(weight: number): string {
   // Map weight to relative tile size
-  if (weight >= 0.10) return 'col-span-2 row-span-2'; // XL (Cardio)
-  if (weight >= 0.08) return 'col-span-2';            // L (Pulm, GI, MSK, HEENT, Repro)
-  if (weight >= 0.06) return 'col-span-1';            // M (Neuro, Psych, Endo)
-  return 'col-span-1';                                 // S/XS (Derm, GU, Heme, ID, Renal)
+  if (weight >= 0.1) return 'col-span-2 row-span-2'; // XL (Cardio)
+  if (weight >= 0.08) return 'col-span-2'; // L (Pulm, GI, MSK, HEENT, Repro)
+  if (weight >= 0.06) return 'col-span-1'; // M (Neuro, Psych, Endo)
+  return 'col-span-1'; // S/XS (Derm, GU, Heme, ID, Renal)
 }
 
 // =============================================================================
 // PILL LIST COMPONENT
 // =============================================================================
 
-function TriagePillList({ 
-  cells, 
-  onSystemClick 
-}: { 
+function TriagePillList({
+  cells,
+  onSystemClick,
+}: {
   cells: TriageCell[];
   onSystemClick?: (system: string) => void;
 }) {
   // Sort by accuracy (worst first)
   const sortedCells = [...cells].sort((a, b) => a.accuracy - b.accuracy);
-  
+
   return (
     <div className="space-y-2">
       <AnimatePresence mode="popLayout">
         {sortedCells.map((cell, index) => {
           const config = STATUS_CONFIG[cell.status];
-          
+
           return (
             <motion.button
               key={cell.system}
@@ -165,27 +168,30 @@ function TriagePillList({
             >
               {/* Status Emoji */}
               <span className="text-lg">{config.emoji}</span>
-              
+
               {/* System Name */}
               <span className="flex-1 text-left font-medium text-slate-900 dark:text-white">
                 {cell.displayName}
               </span>
-              
+
               {/* Accuracy */}
               <span className={cn('font-bold tabular-nums', config.text)}>
                 {cell.accuracy.toFixed(0)}%
               </span>
-              
+
               {/* Progress Bar */}
               <div className="w-20 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${cell.accuracy}%` }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className={cn('h-full rounded-full', config.bg.replace('/20', '').replace('/30', ''))}
+                  className={cn(
+                    'h-full rounded-full',
+                    config.bg.replace('/20', '').replace('/30', '')
+                  )}
                 />
               </div>
-              
+
               {/* Blueprint Weight */}
               <span className="text-xs text-slate-500 dark:text-slate-400 w-10 text-right">
                 {(cell.weight * 100).toFixed(0)}%
@@ -202,16 +208,10 @@ function TriagePillList({
 // HEATMAP TILE COMPONENT
 // =============================================================================
 
-function TriageTile({ 
-  cell, 
-  onClick 
-}: { 
-  cell: TriageCell;
-  onClick?: () => void;
-}) {
+function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void }) {
   const config = STATUS_CONFIG[cell.status];
   const sizeClass = getTileSize(cell.weight);
-  
+
   return (
     <motion.button
       onClick={onClick}
@@ -230,17 +230,15 @@ function TriageTile({
       <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
         {cell.displayName}
       </div>
-      
+
       {/* Blueprint Weight */}
       <div className="text-[10px] text-slate-500 dark:text-slate-400">
         {(cell.weight * 100).toFixed(0)}% of exam
       </div>
-      
+
       {/* Accuracy - Hero Number */}
-      <div className={cn('text-2xl font-black mt-1', config.text)}>
-        {cell.accuracy.toFixed(0)}%
-      </div>
-      
+      <div className={cn('text-2xl font-black mt-1', config.text)}>{cell.accuracy.toFixed(0)}%</div>
+
       {/* Progress Bar */}
       <div className="w-full h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mt-2 overflow-hidden">
         <motion.div
@@ -250,12 +248,10 @@ function TriageTile({
           className={cn('h-full rounded-full', config.bg.replace('/20', '').replace('/30', ''))}
         />
       </div>
-      
+
       {/* Status Label */}
-      <div className={cn('text-[10px] mt-1', config.text)}>
-        {config.label}
-      </div>
-      
+      <div className={cn('text-[10px] mt-1', config.text)}>{config.label}</div>
+
       {/* Question Count Badge */}
       {cell.total > 0 && (
         <div className="absolute top-2 right-2 text-[9px] bg-white/80 dark:bg-slate-800/80 rounded px-1.5 py-0.5 text-slate-600 dark:text-slate-300">
@@ -279,19 +275,29 @@ export function SystemTriageHeatmap({
   // Transform data into triage cells
   const cells = useMemo<TriageCell[]>(() => {
     const result: TriageCell[] = [];
-    
+
     // Use NCCPA Blueprint weights
     const blueprintWeights = NCCPA_BLUEPRINT || {
-      'CV': 0.11, 'PULM': 0.09, 'GI': 0.09, 'MSK': 0.09,
-      'HEENT': 0.08, 'REPRO': 0.08, 'NEURO': 0.07, 'PSYCH': 0.07,
-      'ENDO': 0.06, 'DERM': 0.05, 'GU': 0.05, 'HEME': 0.04,
-      'ID': 0.04, 'RENAL': 0.04,
+      CV: 0.11,
+      PULM: 0.09,
+      GI: 0.09,
+      MSK: 0.09,
+      HEENT: 0.08,
+      REPRO: 0.08,
+      NEURO: 0.07,
+      PSYCH: 0.07,
+      ENDO: 0.06,
+      DERM: 0.05,
+      GU: 0.05,
+      HEME: 0.04,
+      ID: 0.04,
+      RENAL: 0.04,
     };
-    
+
     for (const [system, weight] of Object.entries(blueprintWeights)) {
       const stats = systemStats[system] || { total: 0, correct: 0, accuracy: 0 };
       const accuracy = stats.total > 0 ? stats.accuracy : 0;
-      
+
       result.push({
         system,
         displayName: SYSTEM_DISPLAY_NAMES[system] || system,
@@ -301,19 +307,22 @@ export function SystemTriageHeatmap({
         total: stats.total,
       });
     }
-    
+
     // Sort by weight for heatmap (largest first)
     return result.sort((a, b) => b.weight - a.weight);
   }, [systemStats]);
-  
+
   // Count by status for summary
   const statusCounts = useMemo(() => {
-    return cells.reduce((acc, cell) => {
-      acc[cell.status] = (acc[cell.status] || 0) + 1;
-      return acc;
-    }, {} as Record<TriageStatus, number>);
+    return cells.reduce(
+      (acc, cell) => {
+        acc[cell.status] = (acc[cell.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<TriageStatus, number>
+    );
   }, [cells]);
-  
+
   if (variant === 'pillList') {
     return (
       <div className={cn('', className)}>
@@ -337,12 +346,12 @@ export function SystemTriageHeatmap({
             )}
           </div>
         </div>
-        
+
         <TriagePillList cells={cells} onSystemClick={onSystemClick} />
       </div>
     );
   }
-  
+
   return (
     <div className={cn('', className)}>
       {/* Summary Header */}
@@ -352,39 +361,27 @@ export function SystemTriageHeatmap({
         </h3>
         <div className="flex gap-3 text-xs">
           {statusCounts.critical > 0 && (
-            <span className="text-red-500 font-medium">
-              🔴 {statusCounts.critical} Critical
-            </span>
+            <span className="text-red-500 font-medium">🔴 {statusCounts.critical} Critical</span>
           )}
           {statusCounts.at_risk > 0 && (
-            <span className="text-amber-500 font-medium">
-              🟡 {statusCounts.at_risk} At Risk
-            </span>
+            <span className="text-amber-500 font-medium">🟡 {statusCounts.at_risk} At Risk</span>
           )}
           {statusCounts.stable > 0 && (
-            <span className="text-green-500 font-medium">
-              🟢 {statusCounts.stable} Stable
-            </span>
+            <span className="text-green-500 font-medium">🟢 {statusCounts.stable} Stable</span>
           )}
           {statusCounts.mastered > 0 && (
-            <span className="text-sky-500 font-medium">
-              🔵 {statusCounts.mastered} Mastered
-            </span>
+            <span className="text-sky-500 font-medium">🔵 {statusCounts.mastered} Mastered</span>
           )}
         </div>
       </div>
-      
+
       {/* Heatmap Grid */}
       <div className="grid grid-cols-4 gap-2 auto-rows-fr">
         {cells.map((cell) => (
-          <TriageTile
-            key={cell.system}
-            cell={cell}
-            onClick={() => onSystemClick?.(cell.system)}
-          />
+          <TriageTile key={cell.system} cell={cell} onClick={() => onSystemClick?.(cell.system)} />
         ))}
       </div>
-      
+
       {/* Legend */}
       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
         <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">

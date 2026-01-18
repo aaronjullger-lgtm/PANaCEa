@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { FSRSCard, FSRS, Rating, FSRSState, defaultParameters } from '../../lib/fsrs';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
@@ -68,12 +79,12 @@ const SrsDashboard = () => {
 
     const stabilityDistribution = Array(10).fill(0);
 
-    srsData.forEach(card => {
+    srsData.forEach((card) => {
       if (card.state === FSRSState.Review) {
         totalRecalls++;
         // Simplified retention: assume if it's in review, it was recalled successfully at least once
         if (card.lapses === 0) successfulRecalls++;
-        
+
         totalStability += card.stability;
 
         const dueDate = new Date(card.last_review.getTime() + card.scheduled_days * 86400000);
@@ -91,7 +102,7 @@ const SrsDashboard = () => {
       avgStability: srsData.length > 0 ? totalStability / srsData.length : 0,
       upcomingReviews,
       stabilityDistribution: stabilityDistribution.map((count, index) => ({
-        name: `${index * 10}-${(index + 1) * 10 -1}`,
+        name: `${index * 10}-${(index + 1) * 10 - 1}`,
         count,
       })),
     };
@@ -129,15 +140,15 @@ const SrsDashboard = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      
+
       {/* FSRS Insight Card - Per-Topic Drilldown */}
       <div className="mt-6">
         <h3 className="text-lg font-bold mb-4">Topic Deep Dive</h3>
-        <FSRSInsightCard 
+        <FSRSInsightCard
           data={{
-            conceptName: "Cardiovascular",
-            conditionId: "cv-demo",
-            system: "Cardiovascular",
+            conceptName: 'Cardiovascular',
+            conditionId: 'cv-demo',
+            system: 'Cardiovascular',
             stability: analytics.avgStability || 7.0,
             difficulty: 5.0,
             retrievability: (analytics.retentionRate || 85) / 100,
@@ -146,10 +157,22 @@ const SrsDashboard = () => {
             reviewCount: 5,
             lastReview: new Date(Date.now() - 3 * 86400000),
             stabilityHistory: [
-              { date: new Date(Date.now() - 14 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.3 },
-              { date: new Date(Date.now() - 10 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.5 },
-              { date: new Date(Date.now() - 7 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.65 },
-              { date: new Date(Date.now() - 3 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.85 },
+              {
+                date: new Date(Date.now() - 14 * 86400000).toLocaleDateString(),
+                stability: (analytics.avgStability || 7) * 0.3,
+              },
+              {
+                date: new Date(Date.now() - 10 * 86400000).toLocaleDateString(),
+                stability: (analytics.avgStability || 7) * 0.5,
+              },
+              {
+                date: new Date(Date.now() - 7 * 86400000).toLocaleDateString(),
+                stability: (analytics.avgStability || 7) * 0.65,
+              },
+              {
+                date: new Date(Date.now() - 3 * 86400000).toLocaleDateString(),
+                stability: (analytics.avgStability || 7) * 0.85,
+              },
               { date: new Date().toLocaleDateString(), stability: analytics.avgStability || 7 },
             ],
           }}

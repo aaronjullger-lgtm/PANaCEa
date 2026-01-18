@@ -21,7 +21,7 @@ class TokenBucket {
   async consume(): Promise<void> {
     this.refill();
     while (this.tokens < 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       this.refill();
     }
     this.tokens--;
@@ -63,8 +63,10 @@ async function generateContentForCondition(
   system: string,
   fieldsToFill: ContentToFill
 ): Promise<any> {
-  const fieldsNeeded = Object.keys(fieldsToFill).filter(k => fieldsToFill[k as keyof ContentToFill]);
-  
+  const fieldsNeeded = Object.keys(fieldsToFill).filter(
+    (k) => fieldsToFill[k as keyof ContentToFill]
+  );
+
   const prompt = `You are a medical content expert creating board-relevant content for PANCE/PANRE preparation.
 
 Condition: ${conditionName}
@@ -99,7 +101,7 @@ Be specific, accurate, and board-relevant. For JSON fields (clinical_pearls, dif
 
   const result = await model.generateContent(prompt);
   const responseText = result.response.text();
-  
+
   // Extract JSON from response
   const jsonMatch = responseText.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
@@ -107,7 +109,7 @@ Be specific, accurate, and board-relevant. For JSON fields (clinical_pearls, dif
   }
 
   const content = JSON.parse(jsonMatch[0]);
-  
+
   // Convert JSON field strings back to proper JSON if needed
   if (content.clinical_pearls && typeof content.clinical_pearls === 'string') {
     content.clinical_pearls = JSON.parse(content.clinical_pearls);
@@ -125,8 +127,8 @@ Be specific, accurate, and board-relevant. For JSON fields (clinical_pearls, dif
 async function fillMedicalContent() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const batchSize = parseInt(args.find(a => a.startsWith('--batch='))?.split('=')[1] || '10');
-  const skip = parseInt(args.find(a => a.startsWith('--skip='))?.split('=')[1] || '0');
+  const batchSize = parseInt(args.find((a) => a.startsWith('--batch='))?.split('=')[1] || '10');
+  const skip = parseInt(args.find((a) => a.startsWith('--skip='))?.split('=')[1] || '0');
 
   console.log('🏥 MedicalContent Comprehensive Filler');
   console.log('========================================');
@@ -220,13 +222,17 @@ async function fillMedicalContent() {
           best_initial_test: !record.best_initial_test || record.best_initial_test.trim() === '',
         };
 
-        const needsFilling = Object.values(fieldsToFill).some(v => v);
+        const needsFilling = Object.values(fieldsToFill).some((v) => v);
         if (!needsFilling) {
           continue;
         }
 
         console.log(`📋 Filling: ${record.condition}`);
-        console.log(`   Fields: ${Object.keys(fieldsToFill).filter(k => fieldsToFill[k as keyof ContentToFill]).join(', ')}`);
+        console.log(
+          `   Fields: ${Object.keys(fieldsToFill)
+            .filter((k) => fieldsToFill[k as keyof ContentToFill])
+            .join(', ')}`
+        );
 
         if (dryRun) {
           console.log('   [DRY RUN - Skipping actual generation]');
@@ -255,9 +261,11 @@ async function fillMedicalContent() {
 
         console.log(`   ✅ Updated successfully\n`);
         successCount++;
-
       } catch (error) {
-        console.error(`   ❌ Error filling ${record.condition}:`, error instanceof Error ? error.message : String(error));
+        console.error(
+          `   ❌ Error filling ${record.condition}:`,
+          error instanceof Error ? error.message : String(error)
+        );
         failCount++;
       }
     }
@@ -267,7 +275,6 @@ async function fillMedicalContent() {
     console.log(`  ✅ Success: ${successCount}`);
     console.log(`  ❌ Failed: ${failCount}`);
     console.log(`  📊 Total: ${records.length}`);
-
   } catch (error) {
     console.error('❌ Fatal error:', error);
   } finally {

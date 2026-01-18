@@ -68,8 +68,12 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-4 h-4 text-amber-500" />
         <div>
-          <p className="text-sm font-semibold text-[var(--color-text-primary)]">Top Confusion Pairs</p>
-          <p className="text-xs text-[var(--color-text-muted)]">Most common wrong selections you make</p>
+          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+            Top Confusion Pairs
+          </p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Most common wrong selections you make
+          </p>
         </div>
       </div>
 
@@ -80,12 +84,12 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
         </div>
       )}
 
-      {error && (
-        <p className="text-xs text-red-500">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-500">{error}</p>}
 
       {!isLoading && !error && rankedPairs.length === 0 && (
-        <p className="text-xs text-[var(--color-text-muted)]">No confusion patterns detected yet.</p>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          No confusion patterns detected yet.
+        </p>
       )}
 
       {!isLoading && rankedPairs.length > 0 && (
@@ -99,13 +103,20 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
                 <ArrowRightLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
                 <div>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                    {pair.correctCondition} <span className="text-[10px] text-green-500 ml-1">correct</span>
+                    {pair.correctCondition}{' '}
+                    <span className="text-[10px] text-green-500 ml-1">correct</span>
                   </p>
                   <p className="text-xs text-[var(--color-text-secondary)]">
-                    confused for <span className="font-medium text-[var(--color-text-primary)]">{pair.selectedCondition}</span>
+                    confused for{' '}
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {pair.selectedCondition}
+                    </span>
                   </p>
                   <p className="text-[10px] text-[var(--color-text-muted)]">
-                    {pair.count}x • {pair.lastOccurred ? new Date(pair.lastOccurred).toLocaleDateString() : 'recent'}
+                    {pair.count}x •{' '}
+                    {pair.lastOccurred
+                      ? new Date(pair.lastOccurred).toLocaleDateString()
+                      : 'recent'}
                   </p>
                 </div>
               </div>

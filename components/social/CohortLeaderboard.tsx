@@ -1,13 +1,13 @@
 /**
  * Cohort Leaderboard Component
  * Sprint 8: Social & Gamification - Weekly rankings within study groups
- * 
+ *
  * Shows user rankings with animated transitions, highlighting improvements
  * and celebrating top performers.
  */
 
-import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy,
   Medal,
@@ -22,8 +22,8 @@ import {
   ChevronUp,
   ChevronDown,
   Star,
-} from "lucide-react";
-import type { LeaderboardEntry } from "../../services/studyGroupService";
+} from 'lucide-react';
+import type { LeaderboardEntry } from '../../services/studyGroupService';
 
 // =============================================================================
 // TYPES
@@ -33,7 +33,7 @@ export interface CohortLeaderboardProps {
   entries: LeaderboardEntry[];
   currentUserId?: string;
   groupName?: string;
-  timeFrame?: "daily" | "weekly" | "monthly" | "all-time";
+  timeFrame?: 'daily' | 'weekly' | 'monthly' | 'all-time';
   onTimeFrameChange?: (timeFrame: string) => void;
   onUserClick?: (userId: string) => void;
   showPodium?: boolean;
@@ -47,30 +47,30 @@ export interface CohortLeaderboardProps {
 
 const RANK_COLORS = {
   1: {
-    bg: "bg-yellow-100 dark:bg-yellow-900/30",
-    border: "border-yellow-400",
-    text: "text-yellow-700 dark:text-yellow-400",
+    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+    border: 'border-yellow-400',
+    text: 'text-yellow-700 dark:text-yellow-400',
     icon: Crown,
   },
   2: {
-    bg: "bg-slate-100 dark:bg-slate-700/30",
-    border: "border-slate-400",
-    text: "text-slate-600 dark:text-slate-300",
+    bg: 'bg-slate-100 dark:bg-slate-700/30',
+    border: 'border-slate-400',
+    text: 'text-slate-600 dark:text-slate-300',
     icon: Medal,
   },
   3: {
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    border: "border-amber-400",
-    text: "text-amber-700 dark:text-amber-400",
+    bg: 'bg-amber-100 dark:bg-amber-900/30',
+    border: 'border-amber-400',
+    text: 'text-amber-700 dark:text-amber-400',
     icon: Award,
   },
 };
 
 const TIME_FRAMES = [
-  { value: "daily", label: "Today" },
-  { value: "weekly", label: "This Week" },
-  { value: "monthly", label: "This Month" },
-  { value: "all-time", label: "All Time" },
+  { value: 'daily', label: 'Today' },
+  { value: 'weekly', label: 'This Week' },
+  { value: 'monthly', label: 'This Month' },
+  { value: 'all-time', label: 'All Time' },
 ];
 
 // =============================================================================
@@ -81,7 +81,7 @@ export function CohortLeaderboard({
   entries,
   currentUserId,
   groupName,
-  timeFrame = "weekly",
+  timeFrame = 'weekly',
   onTimeFrameChange,
   onUserClick,
   showPodium = true,
@@ -93,7 +93,7 @@ export function CohortLeaderboard({
   // Get current user's position
   const currentUserRank = useMemo(() => {
     if (!currentUserId) return null;
-    const entry = entries.find(e => e.userId === currentUserId);
+    const entry = entries.find((e) => e.userId === currentUserId);
     return entry?.rank || null;
   }, [entries, currentUserId]);
 
@@ -123,7 +123,7 @@ export function CohortLeaderboard({
           ))}
         </div>
         <div className="space-y-2">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-16 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
           ))}
         </div>
@@ -152,7 +152,7 @@ export function CohortLeaderboard({
         <div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            {groupName ? `${groupName} Leaderboard` : "Leaderboard"}
+            {groupName ? `${groupName} Leaderboard` : 'Leaderboard'}
           </h3>
           {currentUserRank && (
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -164,15 +164,16 @@ export function CohortLeaderboard({
         {/* Time frame selector */}
         {onTimeFrameChange && (
           <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-            {TIME_FRAMES.map(tf => (
+            {TIME_FRAMES.map((tf) => (
               <button
                 key={tf.value}
                 onClick={() => onTimeFrameChange(tf.value)}
                 className={`
                   px-3 py-1 text-xs font-medium rounded-md transition-colors
-                  ${timeFrame === tf.value
-                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ${
+                    timeFrame === tf.value
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }
                 `}
               >
@@ -193,7 +194,7 @@ export function CohortLeaderboard({
             currentUserId={currentUserId}
             onClick={() => onUserClick?.(podium[1].userId)}
           />
-          
+
           {/* 1st Place */}
           <PodiumSpot
             entry={podium[0]}
@@ -201,7 +202,7 @@ export function CohortLeaderboard({
             currentUserId={currentUserId}
             onClick={() => onUserClick?.(podium[0].userId)}
           />
-          
+
           {/* 3rd Place */}
           <PodiumSpot
             entry={podium[2]}
@@ -227,32 +228,36 @@ export function CohortLeaderboard({
               transition={{ delay: index * 0.05 }}
               className={`
                 relative rounded-xl border-2 transition-all cursor-pointer
-                ${isCurrentUser
-                  ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600"
-                  : rankConfig
-                    ? `${rankConfig.bg} ${rankConfig.border}`
-                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                ${
+                  isCurrentUser
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600'
+                    : rankConfig
+                      ? `${rankConfig.bg} ${rankConfig.border}`
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                 }
-                ${isExpanded ? "ring-2 ring-indigo-500" : ""}
+                ${isExpanded ? 'ring-2 ring-indigo-500' : ''}
               `}
               onClick={() => {
                 setExpandedUserId(isExpanded ? null : entry.userId);
                 onUserClick?.(entry.userId);
               }}
             >
-              <div className={`flex items-center gap-4 ${compact ? "p-3" : "p-4"}`}>
+              <div className={`flex items-center gap-4 ${compact ? 'p-3' : 'p-4'}`}>
                 {/* Rank */}
-                <div className={`
+                <div
+                  className={`
                   flex items-center justify-center font-bold
-                  ${compact ? "w-8 h-8 text-sm" : "w-10 h-10 text-lg"}
+                  ${compact ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-lg'}
                   rounded-full
-                  ${rankConfig
-                    ? `${rankConfig.bg} ${rankConfig.text}`
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                  ${
+                    rankConfig
+                      ? `${rankConfig.bg} ${rankConfig.text}`
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                   }
-                `}>
+                `}
+                >
                   {entry.rank <= 3 && rankConfig ? (
-                    <rankConfig.icon className={compact ? "h-4 w-4" : "h-5 w-5"} />
+                    <rankConfig.icon className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
                   ) : (
                     entry.rank
                   )}
@@ -265,23 +270,29 @@ export function CohortLeaderboard({
                       <img
                         src={entry.avatarUrl}
                         alt={entry.displayName}
-                        className={`rounded-full ${compact ? "h-6 w-6" : "h-8 w-8"}`}
+                        className={`rounded-full ${compact ? 'h-6 w-6' : 'h-8 w-8'}`}
                       />
                     ) : (
-                      <div className={`
+                      <div
+                        className={`
                         rounded-full bg-slate-200 dark:bg-slate-600
                         flex items-center justify-center
-                        ${compact ? "h-6 w-6 text-xs" : "h-8 w-8 text-sm"}
-                      `}>
+                        ${compact ? 'h-6 w-6 text-xs' : 'h-8 w-8 text-sm'}
+                      `}
+                      >
                         {entry.displayName[0].toUpperCase()}
                       </div>
                     )}
                     <div className="truncate">
-                      <span className={`font-medium text-slate-900 dark:text-white ${compact ? "text-sm" : ""}`}>
+                      <span
+                        className={`font-medium text-slate-900 dark:text-white ${compact ? 'text-sm' : ''}`}
+                      >
                         {entry.displayName}
                       </span>
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">(You)</span>
+                        <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">
+                          (You)
+                        </span>
                       )}
                     </div>
                   </div>
@@ -290,16 +301,18 @@ export function CohortLeaderboard({
                 {/* Stats */}
                 <div className="flex items-center gap-4">
                   {/* Trend */}
-                  <div className={`flex items-center gap-1 ${
-                    entry.trend === "up"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : entry.trend === "down"
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-slate-400"
-                  }`}>
-                    {entry.trend === "up" && <ChevronUp className="h-4 w-4" />}
-                    {entry.trend === "down" && <ChevronDown className="h-4 w-4" />}
-                    {entry.trend === "stable" && <Minus className="h-4 w-4" />}
+                  <div
+                    className={`flex items-center gap-1 ${
+                      entry.trend === 'up'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : entry.trend === 'down'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-slate-400'
+                    }`}
+                  >
+                    {entry.trend === 'up' && <ChevronUp className="h-4 w-4" />}
+                    {entry.trend === 'down' && <ChevronDown className="h-4 w-4" />}
+                    {entry.trend === 'stable' && <Minus className="h-4 w-4" />}
                   </div>
 
                   {/* Streak */}
@@ -312,12 +325,12 @@ export function CohortLeaderboard({
 
                   {/* Score */}
                   <div className="text-right">
-                    <p className={`font-bold text-slate-900 dark:text-white ${compact ? "text-sm" : "text-lg"}`}>
+                    <p
+                      className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-lg'}`}
+                    >
                       {entry.score.toLocaleString()}
                     </p>
-                    {!compact && (
-                      <p className="text-xs text-slate-500">pts</p>
-                    )}
+                    {!compact && <p className="text-xs text-slate-500">pts</p>}
                   </div>
                 </div>
               </div>
@@ -327,7 +340,7 @@ export function CohortLeaderboard({
                 {isExpanded && !compact && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
+                    animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
@@ -346,9 +359,7 @@ export function CohortLeaderboard({
                           <p className="text-xs text-slate-500">Accuracy</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-orange-500">
-                            {entry.streak}
-                          </p>
+                          <p className="text-2xl font-bold text-orange-500">{entry.streak}</p>
                           <p className="text-xs text-slate-500">Day Streak</p>
                         </div>
                       </div>
@@ -388,7 +399,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
       onClick={onClick}
       className={`
         flex flex-col items-center cursor-pointer
-        ${position === 1 ? "order-2" : position === 2 ? "order-1" : "order-3"}
+        ${position === 1 ? 'order-2' : position === 2 ? 'order-1' : 'order-3'}
       `}
     >
       {/* Avatar with crown for #1 */}
@@ -397,47 +408,49 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
+            transition={{ delay: 0.5, type: 'spring' }}
             className="absolute -top-4 left-1/2 -translate-x-1/2"
           >
             <Crown className="h-6 w-6 text-yellow-500 fill-yellow-400" />
           </motion.div>
         )}
-        
+
         {entry.avatarUrl ? (
           <img
             src={entry.avatarUrl}
             alt={entry.displayName}
             className={`
               rounded-full border-4 ${config.border}
-              ${position === 1 ? "h-16 w-16" : "h-12 w-12"}
-              ${isCurrentUser ? "ring-2 ring-indigo-500 ring-offset-2" : ""}
+              ${position === 1 ? 'h-16 w-16' : 'h-12 w-12'}
+              ${isCurrentUser ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
             `}
           />
         ) : (
-          <div className={`
+          <div
+            className={`
             rounded-full flex items-center justify-center font-bold
             ${config.bg} ${config.text} border-4 ${config.border}
-            ${position === 1 ? "h-16 w-16 text-xl" : "h-12 w-12 text-lg"}
-            ${isCurrentUser ? "ring-2 ring-indigo-500 ring-offset-2" : ""}
-          `}>
+            ${position === 1 ? 'h-16 w-16 text-xl' : 'h-12 w-12 text-lg'}
+            ${isCurrentUser ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
+          `}
+          >
             {entry.displayName[0].toUpperCase()}
           </div>
         )}
       </div>
 
       {/* Name */}
-      <p className={`
+      <p
+        className={`
         font-medium text-slate-900 dark:text-white truncate max-w-[80px]
-        ${position === 1 ? "text-sm" : "text-xs"}
-      `}>
+        ${position === 1 ? 'text-sm' : 'text-xs'}
+      `}
+      >
         {entry.displayName}
       </p>
 
       {/* Score */}
-      <p className={`text-xs ${config.text} font-bold`}>
-        {entry.score.toLocaleString()}
-      </p>
+      <p className={`text-xs ${config.text} font-bold`}>{entry.score.toLocaleString()}</p>
 
       {/* Podium */}
       <div
@@ -447,9 +460,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
         `}
         style={{ height: heights[position] }}
       >
-        <span className={`text-4xl font-black ${config.text}`}>
-          {position}
-        </span>
+        <span className={`text-4xl font-black ${config.text}`}>{position}</span>
       </div>
     </motion.div>
   );

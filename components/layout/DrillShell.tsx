@@ -5,46 +5,46 @@ import { ArrowLeft, X } from 'lucide-react';
 export interface DrillShellProps {
   /** Title of the drill mode displayed in header */
   title: string;
-  
+
   /** Optional subtitle/breadcrumb (e.g., "Visual Diagnosis > ECG") */
   subtitle?: string;
-  
+
   /** Optional right-side action slot (e.g., Settings icon, Timer component) */
   rightAction?: React.ReactNode;
-  
+
   /** Exit handler - navigates back to dashboard */
   onExit: () => void;
-  
+
   /** Main content area */
   children: React.ReactNode;
-  
-  /** 
+
+  /**
    * If true, content takes full width without max-width constraints.
    * Use for immersive modes like Photo Drill.
    * @default false
    */
   fullWidth?: boolean;
-  
+
   /**
    * If true, removes padding to allow content to touch edges.
    * Use with fullWidth for truly immersive experiences.
    * @default false
    */
   noPadding?: boolean;
-  
+
   /**
    * If true, uses fixed positioning to fill entire viewport.
    * Use for full-screen drill modes that need to escape normal document flow.
    * @default false
    */
   fullScreen?: boolean;
-  
+
   /**
    * Background color override for special modes (e.g., dark mode for imaging)
    * @default undefined (uses theme default)
    */
   backgroundColor?: string;
-  
+
   /**
    * Custom class name for the content wrapper
    */
@@ -53,14 +53,14 @@ export interface DrillShellProps {
 
 /**
  * DrillShell - Standardized layout wrapper for all drill modes
- * 
+ *
  * Provides:
  * - Consistent glass header with back button and title
  * - Optional subtitle/breadcrumb area
  * - Optional right action slot (settings, timer, etc.)
  * - Responsive container with configurable width
  * - Full-screen mode for immersive experiences
- * 
+ *
  * @example
  * // Standard drill with max-width container
  * <DrillShell
@@ -70,7 +70,7 @@ export interface DrillShellProps {
  * >
  *   <DrillContent />
  * </DrillShell>
- * 
+ *
  * @example
  * // Full-width immersive drill
  * <DrillShell
@@ -104,10 +104,14 @@ export const DrillShell: React.FC<DrillShellProps> = ({
   const bgColor = backgroundColor || 'bg-[var(--color-bg-primary)]';
 
   return (
-    <div className={`${containerClasses} ${bgColor} text-[var(--color-text-primary)] transition-colors duration-300`}>
+    <div
+      className={`${containerClasses} ${bgColor} text-[var(--color-text-primary)] transition-colors duration-300`}
+    >
       {/* Premium Glass Header - Matches App.tsx styling */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-        <div className={`${fullWidth ? 'w-full' : 'max-w-5xl mx-auto'} px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2`}>
+        <div
+          className={`${fullWidth ? 'w-full' : 'max-w-5xl mx-auto'} px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2`}
+        >
           {/* Left: Back Button */}
           <motion.button
             onClick={onExit}
@@ -133,9 +137,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
           </div>
 
           {/* Right: Optional Action Slot */}
-          <div className="flex items-center gap-2">
-            {rightAction}
-          </div>
+          <div className="flex items-center gap-2">{rightAction}</div>
         </div>
       </header>
 

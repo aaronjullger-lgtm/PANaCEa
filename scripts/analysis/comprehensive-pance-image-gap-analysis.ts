@@ -1,12 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
  * COMPREHENSIVE PANCE Image Gap Analysis
- * 
+ *
  * Analyzes ALL conditions in the database against:
  * 1. NCCPA PANCE Blueprint weights (2024)
  * 2. Visual presentation importance
  * 3. Current image coverage
- * 
+ *
  * Generates prioritized acquisition list for medical education images
  */
 
@@ -16,82 +16,196 @@ const prisma = new PrismaClient();
 
 // NCCPA PANCE Blueprint 2024 - System Weights
 const PANCE_BLUEPRINT_WEIGHTS = {
-  'CV': { weight: 16, name: 'Cardiovascular System', visual_importance: 'HIGH' },
-  'PULM': { weight: 12, name: 'Pulmonary System', visual_importance: 'MEDIUM' },
-  'GI': { weight: 10, name: 'Gastrointestinal/Nutritional', visual_importance: 'HIGH' },
-  'MSK': { weight: 10, name: 'Musculoskeletal', visual_importance: 'HIGH' },
-  'HEENT': { weight: 9, name: 'Eyes, Ears, Nose, Throat', visual_importance: 'CRITICAL' },
-  'REPRO': { weight: 8, name: 'Reproductive System', visual_importance: 'MEDIUM' },
-  'NEURO': { weight: 6, name: 'Neurologic System', visual_importance: 'HIGH' },
-  'PSYCH': { weight: 6, name: 'Psychiatry/Behavioral', visual_importance: 'LOW' },
-  'ENDO': { weight: 6, name: 'Endocrine System', visual_importance: 'MEDIUM' },
-  'GU': { weight: 6, name: 'Genitourinary System', visual_importance: 'MEDIUM' },
-  'DERM': { weight: 5, name: 'Dermatologic System', visual_importance: 'CRITICAL' },
-  'HEME': { weight: 3, name: 'Hematologic System', visual_importance: 'HIGH' },
-  'ID': { weight: 3, name: 'Infectious Disease', visual_importance: 'HIGH' },
-  'RENAL': { weight: 3, name: 'Renal System', visual_importance: 'MEDIUM' },
-  'OTHER': { weight: 3, name: 'Other/Pediatrics', visual_importance: 'MEDIUM' },
-  'PEDS': { weight: 2, name: 'Pediatrics', visual_importance: 'MEDIUM' },
-  'OB': { weight: 2, name: 'Obstetrics', visual_importance: 'MEDIUM' }
+  CV: { weight: 16, name: 'Cardiovascular System', visual_importance: 'HIGH' },
+  PULM: { weight: 12, name: 'Pulmonary System', visual_importance: 'MEDIUM' },
+  GI: { weight: 10, name: 'Gastrointestinal/Nutritional', visual_importance: 'HIGH' },
+  MSK: { weight: 10, name: 'Musculoskeletal', visual_importance: 'HIGH' },
+  HEENT: { weight: 9, name: 'Eyes, Ears, Nose, Throat', visual_importance: 'CRITICAL' },
+  REPRO: { weight: 8, name: 'Reproductive System', visual_importance: 'MEDIUM' },
+  NEURO: { weight: 6, name: 'Neurologic System', visual_importance: 'HIGH' },
+  PSYCH: { weight: 6, name: 'Psychiatry/Behavioral', visual_importance: 'LOW' },
+  ENDO: { weight: 6, name: 'Endocrine System', visual_importance: 'MEDIUM' },
+  GU: { weight: 6, name: 'Genitourinary System', visual_importance: 'MEDIUM' },
+  DERM: { weight: 5, name: 'Dermatologic System', visual_importance: 'CRITICAL' },
+  HEME: { weight: 3, name: 'Hematologic System', visual_importance: 'HIGH' },
+  ID: { weight: 3, name: 'Infectious Disease', visual_importance: 'HIGH' },
+  RENAL: { weight: 3, name: 'Renal System', visual_importance: 'MEDIUM' },
+  OTHER: { weight: 3, name: 'Other/Pediatrics', visual_importance: 'MEDIUM' },
+  PEDS: { weight: 2, name: 'Pediatrics', visual_importance: 'MEDIUM' },
+  OB: { weight: 2, name: 'Obstetrics', visual_importance: 'MEDIUM' },
 };
 
 // Conditions that REQUIRE visual recognition for diagnosis
 const VISUALLY_CRITICAL_CONDITIONS = new Set([
   // DERM - ALL dermatologic conditions are visual
-  'psoriasis', 'melanoma', 'basal_cell', 'squamous_cell', 'actinic_keratosis',
-  'seborrheic_keratosis', 'tinea', 'candidiasis', 'scabies', 'impetigo',
-  'cellulitis', 'erythema_multiforme', 'stevens_johnson', 'pemphigus',
-  'bullous_pemphigoid', 'dermatitis', 'eczema', 'urticaria', 'angioedema',
-  'vitiligo', 'acanthosis', 'rosacea', 'acne', 'alopecia', 'herpes',
-  'varicella', 'shingles', 'measles', 'scarlet_fever', 'erythema_nodosum',
-  'erythema_migrans', 'lichen_planus', 'pityriasis',
-  
+  'psoriasis',
+  'melanoma',
+  'basal_cell',
+  'squamous_cell',
+  'actinic_keratosis',
+  'seborrheic_keratosis',
+  'tinea',
+  'candidiasis',
+  'scabies',
+  'impetigo',
+  'cellulitis',
+  'erythema_multiforme',
+  'stevens_johnson',
+  'pemphigus',
+  'bullous_pemphigoid',
+  'dermatitis',
+  'eczema',
+  'urticaria',
+  'angioedema',
+  'vitiligo',
+  'acanthosis',
+  'rosacea',
+  'acne',
+  'alopecia',
+  'herpes',
+  'varicella',
+  'shingles',
+  'measles',
+  'scarlet_fever',
+  'erythema_nodosum',
+  'erythema_migrans',
+  'lichen_planus',
+  'pityriasis',
+
   // HEENT - Eyes
-  'diabetic_retinopathy', 'hypertensive_retinopathy', 'glaucoma', 'cataract',
-  'retinal_detachment', 'macular_degeneration', 'papilledema', 'conjunctivitis',
-  'keratitis', 'corneal_ulcer', 'corneal_foreign_body', 'hyphema', 'hypopyon',
-  'pterygium', 'pinguecula', 'blepharitis', 'chalazion', 'hordeolum', 'stye',
-  'orbital_cellulitis', 'periorbital_cellulitis', 'subconjunctival_hemorrhage',
-  
+  'diabetic_retinopathy',
+  'hypertensive_retinopathy',
+  'glaucoma',
+  'cataract',
+  'retinal_detachment',
+  'macular_degeneration',
+  'papilledema',
+  'conjunctivitis',
+  'keratitis',
+  'corneal_ulcer',
+  'corneal_foreign_body',
+  'hyphema',
+  'hypopyon',
+  'pterygium',
+  'pinguecula',
+  'blepharitis',
+  'chalazion',
+  'hordeolum',
+  'stye',
+  'orbital_cellulitis',
+  'periorbital_cellulitis',
+  'subconjunctival_hemorrhage',
+
   // HEENT - Ear
-  'otitis_externa', 'otitis_media', 'mastoiditis', 'cholesteatoma',
-  'tympanic_membrane_perforation', 'auricular_hematoma',
-  
+  'otitis_externa',
+  'otitis_media',
+  'mastoiditis',
+  'cholesteatoma',
+  'tympanic_membrane_perforation',
+  'auricular_hematoma',
+
   // HEENT - Oral
-  'thrush', 'leukoplakia', 'aphthous', 'gingivitis', 'geographic_tongue',
-  'black_hairy_tongue', 'oral_candidiasis', 'herpes_labialis',
-  
+  'thrush',
+  'leukoplakia',
+  'aphthous',
+  'gingivitis',
+  'geographic_tongue',
+  'black_hairy_tongue',
+  'oral_candidiasis',
+  'herpes_labialis',
+
   // MSK - Fractures & imaging
-  'fracture', 'dislocation', 'osteomyelitis', 'osteosarcoma', 'ewing_sarcoma',
-  'gout', 'pseudogout', 'rheumatoid', 'osteoarthritis', 'ankylosing',
-  'dupuytren', 'ganglion', 'carpal_tunnel', 'scoliosis', 'kyphosis',
-  
+  'fracture',
+  'dislocation',
+  'osteomyelitis',
+  'osteosarcoma',
+  'ewing_sarcoma',
+  'gout',
+  'pseudogout',
+  'rheumatoid',
+  'osteoarthritis',
+  'ankylosing',
+  'dupuytren',
+  'ganglion',
+  'carpal_tunnel',
+  'scoliosis',
+  'kyphosis',
+
   // CV - ECG patterns & imaging
-  'atrial_fibrillation', 'atrial_flutter', 'stemi', 'bundle_branch_block',
-  'av_block', 'wpw', 'brugada', 'pericarditis', 'aortic_dissection',
-  'dvt', 'pulmonary_embolism', 'endocarditis', 'cardiomegaly',
-  
+  'atrial_fibrillation',
+  'atrial_flutter',
+  'stemi',
+  'bundle_branch_block',
+  'av_block',
+  'wpw',
+  'brugada',
+  'pericarditis',
+  'aortic_dissection',
+  'dvt',
+  'pulmonary_embolism',
+  'endocarditis',
+  'cardiomegaly',
+
   // NEURO - Imaging & physical findings
-  'stroke', 'hemorrhage', 'epidural', 'subdural', 'subarachnoid',
-  'brain_tumor', 'hydrocephalus', 'multiple_sclerosis', 'bell_palsy',
-  'horner', 'myasthenia', 'parkinson', 'meningitis', 'encephalitis',
-  
+  'stroke',
+  'hemorrhage',
+  'epidural',
+  'subdural',
+  'subarachnoid',
+  'brain_tumor',
+  'hydrocephalus',
+  'multiple_sclerosis',
+  'bell_palsy',
+  'horner',
+  'myasthenia',
+  'parkinson',
+  'meningitis',
+  'encephalitis',
+
   // GI - Imaging
-  'intussusception', 'volvulus', 'bowel_obstruction', 'appendicitis',
-  'diverticulitis', 'cholelithiasis', 'cholecystitis', 'pancreatitis',
-  'cirrhosis', 'ascites', 'varices', 'hemorrhoid', 'anal_fissure',
-  
+  'intussusception',
+  'volvulus',
+  'bowel_obstruction',
+  'appendicitis',
+  'diverticulitis',
+  'cholelithiasis',
+  'cholecystitis',
+  'pancreatitis',
+  'cirrhosis',
+  'ascites',
+  'varices',
+  'hemorrhoid',
+  'anal_fissure',
+
   // HEME - Blood smear
-  'sickle_cell', 'thalassemia', 'spherocytosis', 'leukemia', 'lymphoma',
-  'multiple_myeloma', 'g6pd', 'iron_deficiency', 'b12_deficiency',
-  
+  'sickle_cell',
+  'thalassemia',
+  'spherocytosis',
+  'leukemia',
+  'lymphoma',
+  'multiple_myeloma',
+  'g6pd',
+  'iron_deficiency',
+  'b12_deficiency',
+
   // ID - Rashes & manifestations
-  'lyme', 'rocky_mountain', 'meningococcemia', 'necrotizing_fasciitis',
-  'gas_gangrene', 'tetanus', 'botulism',
-  
+  'lyme',
+  'rocky_mountain',
+  'meningococcemia',
+  'necrotizing_fasciitis',
+  'gas_gangrene',
+  'tetanus',
+  'botulism',
+
   // PEDS/Genetic - Dysmorphic features
-  'down_syndrome', 'turner', 'klinefelter', 'marfan', 'neurofibromatosis',
-  'fetal_alcohol', 'kawasaki', 'henoch_schonlein'
+  'down_syndrome',
+  'turner',
+  'klinefelter',
+  'marfan',
+  'neurofibromatosis',
+  'fetal_alcohol',
+  'kawasaki',
+  'henoch_schonlein',
 ]);
 
 // High-yield PANCE conditions that MUST have images
@@ -137,7 +251,7 @@ const HIGH_YIELD_PANCE_CONDITIONS = new Set([
   'ID__viral__varicella_chickenpox',
   'ID__viral__herpes_zoster_shingles',
   'ID__viral__measles',
-  'ID__tickborne__lyme_disease'
+  'ID__tickborne__lyme_disease',
 ]);
 
 interface ConditionAnalysis {
@@ -177,25 +291,25 @@ function calculatePriorityScore(
   isVisuallyCritical: boolean
 ): number {
   let score = 0;
-  
+
   // Base score from PANCE weight (0-16)
   score += panceWeight * 10;
-  
+
   // Visual importance multiplier
   const visualMultiplier = {
-    'CRITICAL': 50,
-    'HIGH': 30,
-    'MEDIUM': 15,
-    'LOW': 5
+    CRITICAL: 50,
+    HIGH: 30,
+    MEDIUM: 15,
+    LOW: 5,
   };
   score += visualMultiplier[visualImportance as keyof typeof visualMultiplier] || 10;
-  
+
   // High-yield bonus
   if (isHighYield) score += 100;
-  
+
   // Visually critical bonus
   if (isVisuallyCritical) score += 75;
-  
+
   // Penalty for existing images (diminishing returns)
   if (imageCount > 0) {
     score -= Math.min(imageCount * 10, 50);
@@ -203,53 +317,81 @@ function calculatePriorityScore(
     // Bonus for NO images
     score += 50;
   }
-  
+
   return score;
 }
 
-function determineImageSource(id: string, visualImportance: string, isVisuallyCritical: boolean): string {
+function determineImageSource(
+  id: string,
+  visualImportance: string,
+  isVisuallyCritical: boolean
+): string {
   const system = getSystemFromId(id);
-  
+
   // ECG patterns
-  if (id.includes('ecg__') || id.includes('_ecg') || id.includes('fibrillation') || 
-      id.includes('flutter') || id.includes('block') || id.includes('rhythm')) {
+  if (
+    id.includes('ecg__') ||
+    id.includes('_ecg') ||
+    id.includes('fibrillation') ||
+    id.includes('flutter') ||
+    id.includes('block') ||
+    id.includes('rhythm')
+  ) {
     return 'ECG_DATABASE';
   }
-  
+
   // Radiology/imaging
-  if (id.includes('fracture') || id.includes('hematoma') || id.includes('hemorrhage') ||
-      id.includes('stroke') || id.includes('tumor') || id.includes('pneumonia') ||
-      id.includes('abscess') || id.includes('obstruction') || id.includes('dissection')) {
+  if (
+    id.includes('fracture') ||
+    id.includes('hematoma') ||
+    id.includes('hemorrhage') ||
+    id.includes('stroke') ||
+    id.includes('tumor') ||
+    id.includes('pneumonia') ||
+    id.includes('abscess') ||
+    id.includes('obstruction') ||
+    id.includes('dissection')
+  ) {
     return 'RADIOLOGY_ATLAS';
   }
-  
+
   // Blood smears
-  if (system === 'HEME' || id.includes('anemia') || id.includes('leukemia') || 
-      id.includes('lymphoma') || id.includes('myeloma')) {
+  if (
+    system === 'HEME' ||
+    id.includes('anemia') ||
+    id.includes('leukemia') ||
+    id.includes('lymphoma') ||
+    id.includes('myeloma')
+  ) {
     return 'PATHOLOGY_SLIDES';
   }
-  
+
   // Dermatology
   if (system === 'DERM' || isVisuallyCritical) {
     return 'DERMNET_NZ';
   }
-  
+
   // Ophthalmology
-  if (id.includes('eye__') || id.includes('retina') || id.includes('cornea') ||
-      id.includes('glaucoma') || id.includes('cataract')) {
+  if (
+    id.includes('eye__') ||
+    id.includes('retina') ||
+    id.includes('cornea') ||
+    id.includes('glaucoma') ||
+    id.includes('cataract')
+  ) {
     return 'OPHTHO_ATLAS';
   }
-  
+
   // Otoscopy
   if (id.includes('ear__') || id.includes('otitis') || id.includes('tympanic')) {
     return 'OTOSCOPY_DATABASE';
   }
-  
+
   // Fundoscopy
   if (id.includes('retinopathy') || id.includes('papilledema')) {
     return 'FUNDOSCOPY_ATLAS';
   }
-  
+
   return 'MEDICAL_ATLAS';
 }
 
@@ -291,9 +433,9 @@ async function main() {
   const conditions = await prisma.condition.findMany({
     include: {
       _count: {
-        select: { MediaAsset: true }
-      }
-    }
+        select: { MediaAsset: true },
+      },
+    },
   });
 
   console.log(`📊 Total Conditions in Database: ${conditions.length}\n`);
@@ -302,13 +444,14 @@ async function main() {
 
   for (const condition of conditions) {
     const system = getSystemFromId(condition.id);
-    const blueprintData = PANCE_BLUEPRINT_WEIGHTS[system as keyof typeof PANCE_BLUEPRINT_WEIGHTS] 
-      || { weight: 1, name: 'Unknown', visual_importance: 'MEDIUM' };
-    
+    const blueprintData = PANCE_BLUEPRINT_WEIGHTS[
+      system as keyof typeof PANCE_BLUEPRINT_WEIGHTS
+    ] || { weight: 1, name: 'Unknown', visual_importance: 'MEDIUM' };
+
     const imageCount = condition._count.MediaAsset;
     const isHighYield = HIGH_YIELD_PANCE_CONDITIONS.has(condition.id);
     const isVisuallyCritical = isConditionVisuallyCritical(condition.id, condition.name);
-    
+
     const priorityScore = calculatePriorityScore(
       blueprintData.weight,
       blueprintData.visual_importance,
@@ -328,10 +471,17 @@ async function main() {
       isVisuallyCritical,
       priorityScore,
       recommendation: generateRecommendation(
-        imageCount, isHighYield, isVisuallyCritical, 
-        blueprintData.visual_importance, blueprintData.weight
+        imageCount,
+        isHighYield,
+        isVisuallyCritical,
+        blueprintData.visual_importance,
+        blueprintData.weight
       ),
-      imageSource: determineImageSource(condition.id, blueprintData.visual_importance, isVisuallyCritical)
+      imageSource: determineImageSource(
+        condition.id,
+        blueprintData.visual_importance,
+        isVisuallyCritical
+      ),
     });
   }
 
@@ -339,10 +489,10 @@ async function main() {
   analysis.sort((a, b) => b.priorityScore - a.priorityScore);
 
   // Summary statistics
-  const noImages = analysis.filter(a => a.imageCount === 0);
-  const fewImages = analysis.filter(a => a.imageCount > 0 && a.imageCount < 3);
-  const adequate = analysis.filter(a => a.imageCount >= 3 && a.imageCount < 5);
-  const good = analysis.filter(a => a.imageCount >= 5);
+  const noImages = analysis.filter((a) => a.imageCount === 0);
+  const fewImages = analysis.filter((a) => a.imageCount > 0 && a.imageCount < 3);
+  const adequate = analysis.filter((a) => a.imageCount >= 3 && a.imageCount < 5);
+  const good = analysis.filter((a) => a.imageCount >= 5);
 
   console.log('═══════════════════════════════════════════════════════════════════');
   console.log('                       COVERAGE SUMMARY');
@@ -352,7 +502,9 @@ async function main() {
   console.log(`🔵 Adequate (3-4):       ${adequate.length} conditions`);
   console.log(`🟢 Good (5+):            ${good.length} conditions`);
   console.log(`📊 TOTAL:                ${analysis.length} conditions`);
-  console.log(`📷 Coverage Rate:        ${((good.length + adequate.length) / analysis.length * 100).toFixed(1)}%\n`);
+  console.log(
+    `📷 Coverage Rate:        ${(((good.length + adequate.length) / analysis.length) * 100).toFixed(1)}%\n`
+  );
 
   // Group by system and show gaps
   console.log('═══════════════════════════════════════════════════════════════════');
@@ -376,17 +528,19 @@ async function main() {
 
   for (const system of sortedSystems) {
     const items = systemGroups[system];
-    const noImg = items.filter(i => i.imageCount === 0).length;
+    const noImg = items.filter((i) => i.imageCount === 0).length;
     const total = items.length;
-    const coverage = ((total - noImg) / total * 100).toFixed(0);
+    const coverage = (((total - noImg) / total) * 100).toFixed(0);
     const blueprintData = PANCE_BLUEPRINT_WEIGHTS[system as keyof typeof PANCE_BLUEPRINT_WEIGHTS];
-    
-    console.log(`\n📋 ${system} - ${blueprintData?.name || 'Unknown'} (${blueprintData?.weight || 0}% PANCE)`);
+
+    console.log(
+      `\n📋 ${system} - ${blueprintData?.name || 'Unknown'} (${blueprintData?.weight || 0}% PANCE)`
+    );
     console.log(`   Coverage: ${coverage}% (${total - noImg}/${total} conditions have images)`);
     console.log(`   Missing: ${noImg} conditions need images`);
-    
+
     // Show top 5 priority gaps for each system
-    const systemGaps = items.filter(i => i.imageCount === 0).slice(0, 5);
+    const systemGaps = items.filter((i) => i.imageCount === 0).slice(0, 5);
     if (systemGaps.length > 0) {
       console.log('   Top Priority Gaps:');
       for (const gap of systemGaps) {
@@ -401,16 +555,18 @@ async function main() {
   console.log('            🚨 CRITICAL: HIGH-YIELD CONDITIONS MISSING IMAGES');
   console.log('═══════════════════════════════════════════════════════════════════\n');
 
-  const criticalGaps = analysis.filter(a => 
-    a.imageCount === 0 && (a.isHighYield || a.isVisuallyCritical || a.panceWeight >= 10)
-  ).slice(0, 50);
+  const criticalGaps = analysis
+    .filter(
+      (a) => a.imageCount === 0 && (a.isHighYield || a.isVisuallyCritical || a.panceWeight >= 10)
+    )
+    .slice(0, 50);
 
   for (const gap of criticalGaps) {
     const markers = [];
     if (gap.isHighYield) markers.push('🎯HY');
     if (gap.isVisuallyCritical) markers.push('👁️VIS');
     if (gap.panceWeight >= 10) markers.push(`📊${gap.panceWeight}%`);
-    
+
     console.log(`${markers.join(' ')} | ${gap.name}`);
     console.log(`   ID: ${gap.id}`);
     console.log(`   Source: ${gap.imageSource}`);
@@ -432,22 +588,22 @@ async function main() {
 
   const sourcePriority = [
     'DERMNET_NZ',
-    'ECG_DATABASE', 
+    'ECG_DATABASE',
     'RADIOLOGY_ATLAS',
     'OPHTHO_ATLAS',
     'OTOSCOPY_DATABASE',
     'PATHOLOGY_SLIDES',
     'FUNDOSCOPY_ATLAS',
-    'MEDICAL_ATLAS'
+    'MEDICAL_ATLAS',
   ];
 
   for (const source of sourcePriority) {
     const items = sourceGroups[source];
     if (!items || items.length === 0) continue;
-    
+
     console.log(`\n📦 ${source} - ${items.length} conditions needed`);
     console.log('─'.repeat(60));
-    
+
     // Show all conditions for this source (up to 20)
     const topItems = items.slice(0, 20);
     for (const item of topItems) {
@@ -468,28 +624,28 @@ async function main() {
       fewImages: fewImages.length,
       adequate: adequate.length,
       good: good.length,
-      coverageRate: ((good.length + adequate.length) / analysis.length * 100).toFixed(1) + '%'
+      coverageRate: (((good.length + adequate.length) / analysis.length) * 100).toFixed(1) + '%',
     },
-    criticalGaps: criticalGaps.map(g => ({
+    criticalGaps: criticalGaps.map((g) => ({
       id: g.id,
       name: g.name,
       system: g.system,
       source: g.imageSource,
       isHighYield: g.isHighYield,
       isVisuallyCritical: g.isVisuallyCritical,
-      panceWeight: g.panceWeight
+      panceWeight: g.panceWeight,
     })),
-    allGaps: noImages.map(g => ({
+    allGaps: noImages.map((g) => ({
       id: g.id,
       name: g.name,
       system: g.system,
       source: g.imageSource,
-      priorityScore: g.priorityScore
+      priorityScore: g.priorityScore,
     })),
     bySource: Object.fromEntries(
       Object.entries(sourceGroups).map(([source, items]) => [
         source,
-        items.map(i => ({ id: i.id, name: i.name }))
+        items.map((i) => ({ id: i.id, name: i.name })),
       ])
     ),
     bySystem: Object.fromEntries(
@@ -497,17 +653,20 @@ async function main() {
         system,
         {
           total: items.length,
-          withImages: items.filter(i => i.imageCount > 0).length,
-          missing: items.filter(i => i.imageCount === 0).map(i => ({ id: i.id, name: i.name }))
-        }
+          withImages: items.filter((i) => i.imageCount > 0).length,
+          missing: items.filter((i) => i.imageCount === 0).map((i) => ({ id: i.id, name: i.name })),
+        },
       ])
-    )
+    ),
   };
 
   // Write JSON export
   const fs = await import('fs');
-  const exportPath = '/Users/aaronullger/Documents/GitHub/StudyPANaCEa/data/exports/pance-image-gap-analysis.json';
-  await fs.promises.mkdir('/Users/aaronullger/Documents/GitHub/StudyPANaCEa/data/exports', { recursive: true });
+  const exportPath =
+    '/Users/aaronullger/Documents/GitHub/StudyPANaCEa/data/exports/pance-image-gap-analysis.json';
+  await fs.promises.mkdir('/Users/aaronullger/Documents/GitHub/StudyPANaCEa/data/exports', {
+    recursive: true,
+  });
   await fs.promises.writeFile(exportPath, JSON.stringify(exportData, null, 2));
   console.log(`\n✅ Full analysis exported to: ${exportPath}`);
 
@@ -518,8 +677,8 @@ async function main() {
   console.log(`
 📊 Database Status:
    • Total Conditions: ${analysis.length}
-   • Conditions WITH Images: ${analysis.length - noImages.length} (${((analysis.length - noImages.length) / analysis.length * 100).toFixed(1)}%)
-   • Conditions WITHOUT Images: ${noImages.length} (${(noImages.length / analysis.length * 100).toFixed(1)}%)
+   • Conditions WITH Images: ${analysis.length - noImages.length} (${(((analysis.length - noImages.length) / analysis.length) * 100).toFixed(1)}%)
+   • Conditions WITHOUT Images: ${noImages.length} (${((noImages.length / analysis.length) * 100).toFixed(1)}%)
 
 🎯 High-Priority Gaps:
    • Critical/High-Yield Missing: ${criticalGaps.length}

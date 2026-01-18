@@ -16,7 +16,7 @@ import {
   Brain,
   Activity,
   ArrowLeft,
-  FileText
+  FileText,
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -75,7 +75,7 @@ type ViewLevel = 'dashboard' | 'system' | 'subcategory';
 const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   performanceData,
   onStartSession,
-  theme = 'dark'
+  theme = 'dark',
 }) => {
   const [viewLevel, setViewLevel] = useState<ViewLevel>('dashboard');
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
@@ -87,7 +87,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     const statsMap = new Map<SystemCode, SystemStats>();
 
     // Initialize all systems
-    Object.keys(ABBREVIATION_TO_TOPIC_MAP).forEach(sys => {
+    Object.keys(ABBREVIATION_TO_TOPIC_MAP).forEach((sys) => {
       const system = sys as SystemCode;
       statsMap.set(system, {
         system,
@@ -98,14 +98,14 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         avgDecisionTimeMs: 0,
         decisionTimeTrend: 0,
         retentionScore: 0,
-        subcategories: []
+        subcategories: [],
       });
     });
 
     // Group by system, subcategory, condition
     const subcategoryMap = new Map<string, Map<string, ConditionStats>>();
 
-    performanceData.forEach(record => {
+    performanceData.forEach((record) => {
       if (!record.system) return;
 
       const system = record.system as SystemCode;
@@ -127,7 +127,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
           accuracy: 0,
           retentionScore: Math.random() * 40 + 60, // Mock FSRS score 60-100
           avgDecisionTimeMs: 0,
-          trend: 'stable'
+          trend: 'stable',
         });
       }
 
@@ -141,16 +141,17 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     subcategoryMap.forEach((conditions, key) => {
       const [system, subcategory] = key.split('|');
       const conditionArray = Array.from(conditions.values());
-      
+
       const totalQ = conditionArray.reduce((sum, c) => sum + c.totalQuestions, 0);
       const correctA = conditionArray.reduce((sum, c) => sum + c.correctAnswers, 0);
 
       // Calculate condition-level metrics
-      conditionArray.forEach(cond => {
-        cond.accuracy = cond.totalQuestions > 0 
-          ? Math.round((cond.correctAnswers / cond.totalQuestions) * 100) 
-          : 0;
-        
+      conditionArray.forEach((cond) => {
+        cond.accuracy =
+          cond.totalQuestions > 0
+            ? Math.round((cond.correctAnswers / cond.totalQuestions) * 100)
+            : 0;
+
         // Determine trend (mock logic based on accuracy)
         if (cond.accuracy >= 80) cond.trend = 'improving';
         else if (cond.accuracy < 60) cond.trend = 'declining';
@@ -168,12 +169,12 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         accuracy: totalQ > 0 ? Math.round((correctA / totalQ) * 100) : 0,
         conditions: conditionArray.sort((a, b) => b.totalQuestions - a.totalQuestions),
         avgDecisionTimeMs: 0,
-        lastPracticed: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+        lastPracticed: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
       });
     });
 
     // Aggregate to system level
-    performanceData.forEach(record => {
+    performanceData.forEach((record) => {
       if (!record.system) return;
       const system = record.system as SystemCode;
       const stats = statsMap.get(system)!;
@@ -184,9 +185,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
     // Calculate final system metrics
     statsMap.forEach((stats, system) => {
-      stats.accuracy = stats.totalQuestions > 0 
-        ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100) 
-        : 0;
+      stats.accuracy =
+        stats.totalQuestions > 0
+          ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100)
+          : 0;
 
       // Gather subcategories for this system
       const subcats: SubcategoryStats[] = [];
@@ -198,38 +200,41 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
       stats.subcategories = subcats.sort((a, b) => b.totalQuestions - a.totalQuestions);
 
       // Mock retention score (weighted average of conditions)
-      const allConditions = subcats.flatMap(s => s.conditions);
-      stats.retentionScore = allConditions.length > 0
-        ? Math.round(allConditions.reduce((sum, c) => sum + c.retentionScore, 0) / allConditions.length)
-        : 0;
+      const allConditions = subcats.flatMap((s) => s.conditions);
+      stats.retentionScore =
+        allConditions.length > 0
+          ? Math.round(
+              allConditions.reduce((sum, c) => sum + c.retentionScore, 0) / allConditions.length
+            )
+          : 0;
 
       // Mock decision time trend (-20 to +20 ms/question change)
       stats.decisionTimeTrend = Math.random() * 40 - 20;
       stats.avgDecisionTimeMs = 45000 + Math.random() * 30000; // 45-75 seconds
     });
 
-    return Array.from(statsMap.values()).filter(s => s.totalQuestions > 0);
+    return Array.from(statsMap.values()).filter((s) => s.totalQuestions > 0);
   }, [performanceData]);
 
   // Calculate High-Yield Gaps (Top 3)
   const highYieldGaps = useMemo(() => {
     const gaps: HighYieldGap[] = [];
-    
-    systemStats.forEach(sys => {
-      sys.subcategories.forEach(subcat => {
+
+    systemStats.forEach((sys) => {
+      sys.subcategories.forEach((subcat) => {
         // Mock exam weight (0.5 - 2.5, higher for CV, PULM, GI)
         let examWeight = 1.0;
         if (['CV', 'PULM', 'GI', 'NEURO'].includes(sys.system)) examWeight = 2.0;
         if (['DERM', 'HEENT', 'PSYCH'].includes(sys.system)) examWeight = 0.7;
 
         const gapScore = examWeight * (100 - subcat.accuracy);
-        
+
         gaps.push({
           system: sys.system,
           subcategory: subcat.name,
           accuracy: subcat.accuracy,
           examWeight,
-          gapScore
+          gapScore,
         });
       });
     });
@@ -258,9 +263,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ') + ' Z';
 
     // Generate grid circles
-    const gridCircles = [0.25, 0.5, 0.75, 1.0].map(factor => ({
+    const gridCircles = [0.25, 0.5, 0.75, 1.0].map((factor) => ({
       radius: maxRadius * factor,
-      label: `${factor * 100}%`
+      label: `${factor * 100}%`,
     }));
 
     // Generate axis lines and labels
@@ -278,7 +283,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         y2: endY,
         labelX,
         labelY,
-        system: sys.system
+        system: sys.system,
       };
     });
 
@@ -307,13 +312,14 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     setSelectedSubcategory(null);
   };
 
-  const currentSystemStats = selectedSystem 
-    ? systemStats.find(s => s.system === selectedSystem) 
+  const currentSystemStats = selectedSystem
+    ? systemStats.find((s) => s.system === selectedSystem)
     : null;
 
-  const currentSubcategoryStats = currentSystemStats && selectedSubcategory
-    ? currentSystemStats.subcategories.find(s => s.name === selectedSubcategory)
-    : null;
+  const currentSubcategoryStats =
+    currentSystemStats && selectedSubcategory
+      ? currentSystemStats.subcategories.find((s) => s.name === selectedSubcategory)
+      : null;
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
@@ -509,7 +515,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
             {/* System List (Alternative View) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {systemStats.map(sys => (
+              {systemStats.map((sys) => (
                 <button
                   key={sys.system}
                   onClick={() => handleSystemClick(sys.system)}
@@ -524,9 +530,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[var(--color-text-muted)] mb-2">
                     <span>{sys.totalQuestions} questions</span>
-                    <span className="font-medium text-[var(--color-accent)]">
-                      {sys.accuracy}%
-                    </span>
+                    <span className="font-medium text-[var(--color-accent)]">{sys.accuracy}%</span>
                   </div>
                   <div className="w-full h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                     <div
@@ -605,9 +609,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                   {currentSystemStats.subcategories.length}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  Subcategories covered
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)]">Subcategories covered</div>
               </div>
             </div>
 
@@ -627,7 +629,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
               <h3 className="font-semibold text-[var(--color-text-primary)]">
                 Subcategories ({currentSystemStats.subcategories.length})
               </h3>
-              {currentSystemStats.subcategories.map(subcat => (
+              {currentSystemStats.subcategories.map((subcat) => (
                 <button
                   key={subcat.name}
                   onClick={() => handleSubcategoryClick(subcat.name)}
@@ -644,7 +646,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         {subcat.lastPracticed && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {Math.round((Date.now() - subcat.lastPracticed.getTime()) / (1000 * 60 * 60 * 24))}d ago
+                            {Math.round(
+                              (Date.now() - subcat.lastPracticed.getTime()) / (1000 * 60 * 60 * 24)
+                            )}
+                            d ago
                           </span>
                         )}
                       </div>
@@ -665,8 +670,8 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         subcat.accuracy >= 80
                           ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                           : subcat.accuracy >= 60
-                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                          : 'bg-gradient-to-r from-orange-500 to-red-500'
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                            : 'bg-gradient-to-r from-orange-500 to-red-500'
                       }`}
                       style={{ width: `${subcat.accuracy}%` }}
                     />
@@ -697,7 +702,8 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   {currentSubcategoryStats.accuracy}%
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">
-                  {currentSubcategoryStats.correctAnswers}/{currentSubcategoryStats.totalQuestions} correct
+                  {currentSubcategoryStats.correctAnswers}/{currentSubcategoryStats.totalQuestions}{' '}
+                  correct
                 </div>
               </div>
 
@@ -709,9 +715,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                   {currentSubcategoryStats.conditions.length}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  Conditions tracked
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)]">Conditions tracked</div>
               </div>
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
@@ -724,9 +728,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     ? `${Math.round((Date.now() - currentSubcategoryStats.lastPracticed.getTime()) / (1000 * 60 * 60 * 24))}d`
                     : 'N/A'}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  Days ago
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)]">Days ago</div>
               </div>
             </div>
 
@@ -757,7 +759,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                       Conditions ({currentSubcategoryStats.conditions.length})
                     </h3>
-                    
+
                     {currentSubcategoryStats.conditions.length === 0 ? (
                       /* Empty State */
                       <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -781,7 +783,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                             condition: condition.name,
                             aliases: [],
                           };
-                          
+
                           // Use the polished ConditionPreviewCard
                           return (
                             <ConditionPreviewCard
@@ -858,20 +860,25 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-2 mb-2">
                           <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Accuracy</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Accuracy
+                          </span>
                         </div>
                         <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {selectedCondition.accuracy}%
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions} correct
+                          {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions}{' '}
+                          correct
                         </div>
                       </div>
 
                       <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-2 mb-2">
                           <BarChart3 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Attempts</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Attempts
+                          </span>
                         </div>
                         <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {selectedCondition.totalQuestions}
@@ -884,7 +891,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-2 mb-2">
                           <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Retention</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Retention
+                          </span>
                         </div>
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                           {selectedCondition.retentionScore}%
@@ -897,7 +906,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Avg Time</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Avg Time
+                          </span>
                         </div>
                         <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {(selectedCondition.avgDecisionTimeMs / 1000).toFixed(1)}s
@@ -917,8 +928,12 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       {/* Accuracy Progress */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">Accuracy Rate</span>
-                          <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedCondition.accuracy}%</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            Accuracy Rate
+                          </span>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">
+                            {selectedCondition.accuracy}%
+                          </span>
                         </div>
                         <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <motion.div
@@ -929,21 +944,26 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                               selectedCondition.accuracy >= 80
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                                 : selectedCondition.accuracy >= 60
-                                ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                                : 'bg-gradient-to-r from-orange-500 to-red-500'
+                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                                  : 'bg-gradient-to-r from-orange-500 to-red-500'
                             }`}
                           />
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {selectedCondition.correctAnswers} out of {selectedCondition.totalQuestions} questions answered correctly
+                          {selectedCondition.correctAnswers} out of{' '}
+                          {selectedCondition.totalQuestions} questions answered correctly
                         </p>
                       </div>
 
                       {/* Retention Progress */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">Retention Strength</span>
-                          <span className="font-semibold text-purple-600 dark:text-purple-400">{selectedCondition.retentionScore}%</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            Retention Strength
+                          </span>
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">
+                            {selectedCondition.retentionScore}%
+                          </span>
                         </div>
                         <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <motion.div
@@ -971,14 +991,19 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                               Next Review Scheduled
                             </h4>
                             <p className="text-sm text-blue-700 dark:text-blue-400">
-                              Due in {Math.round((selectedCondition.nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
+                              Due in{' '}
+                              {Math.round(
+                                (selectedCondition.nextDue.getTime() - Date.now()) /
+                                  (1000 * 60 * 60 * 24)
+                              )}{' '}
+                              days
                             </p>
                             <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
-                              {selectedCondition.nextDue.toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
+                              {selectedCondition.nextDue.toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
                               })}
                             </p>
                           </div>
@@ -993,13 +1018,13 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         Study Recommendation
                       </h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                        {selectedCondition.accuracy < 60 
-                          ? "This condition needs more practice. Consider reviewing the material and attempting more questions."
+                        {selectedCondition.accuracy < 60
+                          ? 'This condition needs more practice. Consider reviewing the material and attempting more questions.'
                           : selectedCondition.accuracy < 80
-                          ? "You're making good progress! A few more practice sessions will solidify this knowledge."
-                          : selectedCondition.retentionScore < 70
-                          ? "Strong accuracy! Focus on retention by spacing out your review sessions."
-                          : "Excellent mastery! Maintain your knowledge with periodic reviews."}
+                            ? "You're making good progress! A few more practice sessions will solidify this knowledge."
+                            : selectedCondition.retentionScore < 70
+                              ? 'Strong accuracy! Focus on retention by spacing out your review sessions.'
+                              : 'Excellent mastery! Maintain your knowledge with periodic reviews.'}
                       </p>
                     </div>
                   </motion.div>

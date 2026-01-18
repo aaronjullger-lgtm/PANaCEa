@@ -7,11 +7,7 @@ interface NeuralLinkLogProps {
   adjustment: 'tighten' | 'loosen';
 }
 
-const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
-  lastTuned,
-  reason,
-  adjustment,
-}) => {
+const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({ lastTuned, reason, adjustment }) => {
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
@@ -90,9 +86,7 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
               CORTEX OPTIMIZATION ENGINE: ONLINE
             </h3>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-            v2.1.4
-          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">v2.1.4</div>
         </div>
       </div>
 
@@ -109,8 +103,8 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
                 line.includes('[DONE]')
                   ? 'text-blue-600 dark:text-cyan-400'
                   : line.includes('[TIGHTENING]') || line.includes('[LOOSENING]')
-                  ? 'text-amber-500 dark:text-amber-400'
-                  : 'text-slate-600 dark:text-slate-400'
+                    ? 'text-amber-500 dark:text-amber-400'
+                    : 'text-slate-600 dark:text-slate-400'
               }`}
             >
               <span className="text-blue-500 dark:text-cyan-400">$</span>
@@ -174,17 +168,19 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
               {lastTuned.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
             <span className="text-slate-600 dark:text-slate-400">Adjustment:</span>
-            <span className={`font-semibold ${
-              adjustment === 'tighten' ? 'text-orange-400' : 'text-blue-400'
-            }`}>
+            <span
+              className={`font-semibold ${
+                adjustment === 'tighten' ? 'text-orange-400' : 'text-blue-400'
+              }`}
+            >
               {adjustment === 'tighten' ? '↑ Tighten' : '↓ Loosen'}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-blue-500 dark:bg-cyan-400 rounded-full animate-pulse"></div>
             <span className="text-slate-600 dark:text-slate-400">Next Optimization:</span>

@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 /**
  * Master Sync Script - Sync All Registries to Database
- * 
+ *
  * This script syncs ALL registry files to their respective database tables.
  * Runs all individual sync scripts in sequence.
- * 
+ *
  * Usage: tsx scripts/syncAllRegistries.ts
  * Or: npm run sync:all-registries
- * 
+ *
  * This is typically run:
  * - After initial setup
  * - After adding new entries to any registry
@@ -16,7 +16,12 @@
 
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
-import { closeRegistrySync, formatSummary, syncConditions, syncDrugs } from '../lib/services/sync/registrySync';
+import {
+  closeRegistrySync,
+  formatSummary,
+  syncConditions,
+  syncDrugs,
+} from '../lib/services/sync/registrySync';
 
 // Load environment variables
 config();
@@ -38,16 +43,19 @@ const results: SyncResult[] = [];
 /**
  * Run a sync script and capture result
  */
-async function runSync(registryName: string, syncFunction: () => Promise<string | void>): Promise<void> {
+async function runSync(
+  registryName: string,
+  syncFunction: () => Promise<string | void>
+): Promise<void> {
   const startTime = Date.now();
-  
+
   try {
     console.log(`\n${'='.repeat(60)}`);
     console.log(`Starting: ${registryName}`);
     console.log('='.repeat(60));
-    
+
     const summary = (await syncFunction()) || undefined;
-    
+
     const duration = Date.now() - startTime;
     results.push({
       registry: registryName,
@@ -55,7 +63,7 @@ async function runSync(registryName: string, syncFunction: () => Promise<string 
       duration,
       summary,
     });
-    
+
     console.log(`\n✅ ${registryName} completed in ${(duration / 1000).toFixed(2)}s`);
     if (summary) {
       console.log(`   → ${summary}`);
@@ -68,7 +76,7 @@ async function runSync(registryName: string, syncFunction: () => Promise<string 
       error: error.message,
       duration,
     });
-    
+
     console.error(`\n❌ ${registryName} failed: ${error.message}`);
   }
 }
@@ -78,7 +86,7 @@ async function runSync(registryName: string, syncFunction: () => Promise<string 
  */
 async function main() {
   const overallStart = Date.now();
-  
+
   // Import and run all sync scripts
   try {
     // Core medical entities
@@ -91,10 +99,10 @@ async function main() {
       const stats = await syncDrugs();
       return formatSummary('Drugs', stats);
     });
-    
+
     const { syncAllTests } = await import('./syncSpecialTestTable');
     await runSync('Special Tests', syncAllTests);
-    
+
     const { syncAllAnatomy } = await import('./syncAnatomyTable');
     await runSync('Anatomy', syncAllAnatomy);
 
@@ -112,7 +120,7 @@ async function main() {
 
     const { syncAllTreatments } = await import('./syncTreatmentTable');
     await runSync('Treatments', syncAllTreatments);
-    
+
     // Note: Additional sync scripts need to be created for:
     // - Lab Tests
     // - Imaging Studies
@@ -124,20 +132,20 @@ async function main() {
     // - Scoring Systems
     // - Abbreviations
     // - Differentials
-    
+
     console.log(`\n\n${'═'.repeat(60)}`);
     console.log('║    Master Sync Summary');
     console.log('═'.repeat(60) + '\n');
-    
+
     const totalDuration = Date.now() - overallStart;
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
     console.log(`⏱️  Total Duration: ${(totalDuration / 1000).toFixed(2)}s`);
     console.log(`📊 Total Registries: ${results.length}`);
     console.log(`✅ Successful: ${successful}`);
     console.log(`❌ Failed: ${failed}\n`);
-    
+
     // Print individual results
     console.log('Registry Results:');
     results.forEach((result, index) => {
@@ -151,9 +159,9 @@ async function main() {
         console.log(`     Error: ${result.error}`);
       }
     });
-    
+
     console.log('\n' + '═'.repeat(60));
-    
+
     if (failed > 0) {
       console.log('\n⚠️  Some registries failed to sync. Check errors above.');
       console.log('   You can re-run individual syncs with:');
@@ -169,7 +177,7 @@ async function main() {
       await closeRegistrySync();
       process.exit(1);
     }
-      await closeRegistrySync();
+    await closeRegistrySync();
   } catch (error: any) {
     console.error('\n❌ Fatal error during master sync:', error);
     process.exit(1);

@@ -1,6 +1,6 @@
 /**
  * DayCellPopover Component
- * 
+ *
  * Mini summary panel that appears when clicking a day cell in the activity heatmap.
  * Shows detailed statistics for the selected day.
  */
@@ -42,11 +42,11 @@ function formatTime(ms: number): string {
  */
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'short', 
-    month: 'short', 
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
   });
 }
 
@@ -66,7 +66,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
           top: position ? `${position.y}px` : '50%',
           transform: position ? 'translateY(-100%) translateX(-50%)' : 'translate(-50%, -50%)',
           minWidth: '280px',
-          maxWidth: '340px'
+          maxWidth: '340px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -75,9 +75,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
           <div className="text-sm font-bold text-[var(--color-text-primary)]">
             {formatDate(data.date)}
           </div>
-          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Day Activity Summary
-          </div>
+          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">Day Activity Summary</div>
         </div>
 
         {/* Content */}
@@ -105,10 +103,15 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
             </div>
             <div className="flex-1">
               <div className="text-xs text-[var(--color-text-muted)]">Accuracy</div>
-              <div className={`text-lg font-bold ${
-                data.accuracy >= 80 ? 'text-emerald-500' :
-                data.accuracy >= 60 ? 'text-yellow-500' : 'text-red-500'
-              }`}>
+              <div
+                className={`text-lg font-bold ${
+                  data.accuracy >= 80
+                    ? 'text-emerald-500'
+                    : data.accuracy >= 60
+                      ? 'text-yellow-500'
+                      : 'text-red-500'
+                }`}
+              >
                 {data.accuracy}%
               </div>
             </div>
@@ -157,7 +160,12 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
           aria-label="Close"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </motion.div>

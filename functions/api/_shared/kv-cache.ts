@@ -1,9 +1,9 @@
 /**
  * Cloudflare KV Cache Service
- * 
+ *
  * Provides caching layer for hot-path data using Cloudflare KV.
  * Reduces database load for frequently accessed medical content.
- * 
+ *
  * Hot paths cached:
  * - High-yield condition data
  * - System-specific content lists
@@ -22,9 +22,21 @@ type KVNamespace = {
   get(key: string, type: 'json'): Promise<any | null>;
   get(key: string, type: 'arrayBuffer'): Promise<ArrayBuffer | null>;
   get(key: string, type: 'stream'): Promise<ReadableStream | null>;
-  put(key: string, value: string | ArrayBuffer | ReadableStream, options?: { expirationTtl?: number; expiration?: number; metadata?: any }): Promise<void>;
+  put(
+    key: string,
+    value: string | ArrayBuffer | ReadableStream,
+    options?: { expirationTtl?: number; expiration?: number; metadata?: any }
+  ): Promise<void>;
   delete(key: string): Promise<void>;
-  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{ keys: Array<{ name: string; expiration?: number; metadata?: any }>; list_complete: boolean; cursor?: string }>;
+  list(options?: {
+    prefix?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
+    keys: Array<{ name: string; expiration?: number; metadata?: any }>;
+    list_complete: boolean;
+    cursor?: string;
+  }>;
 };
 
 interface CloudflareEnv {
@@ -111,11 +123,9 @@ export async function invalidatePrefix(env: CloudflareEnv, prefix: string): Prom
   try {
     // List all keys with prefix
     const list = await env.CACHE.list({ prefix });
-    
+
     // Delete each key
-    await Promise.all(
-      list.keys.map(({ name }) => env.CACHE!.delete(name))
-    );
+    await Promise.all(list.keys.map(({ name }) => env.CACHE!.delete(name)));
   } catch (error) {
     console.error('[KV Cache] Error invalidating prefix:', error);
   }
@@ -206,27 +216,41 @@ export async function warmCache(env: CloudflareEnv, prisma: any): Promise<void> 
       where: { isHighYield: true, status: 'published' },
       select: { conditionId: true, title: true, system: true },
     });
-    
+
     await getOrSet(env, CACHE_KEYS.HIGH_YIELD, async () => highYieldConditions, {
       ttl: LONG_TTL,
     });
 
     // Cache system lists
-    const systems = ['CV', 'RESP', 'GI', 'NEURO', 'ENDO', 'DERM', 'MSK', 'PSYCH', 'ID', 'GU', 'HEME', 'IMMUNO', 'REPRO', 'EYE_ENT'];
-    
+    const systems = [
+      'CV',
+      'RESP',
+      'GI',
+      'NEURO',
+      'ENDO',
+      'DERM',
+      'MSK',
+      'PSYCH',
+      'ID',
+      'GU',
+      'HEME',
+      'IMMUNO',
+      'REPRO',
+      'EYE_ENT',
+    ];
+
     for (const system of systems) {
       const conditions = await prisma.medicalContent.findMany({
-        where: { 
-          OR: [
-            { system },
-            { relatedSystems: { has: system } }
-          ],
-          status: 'published'
+        where: {
+          OR: [{ system }, { relatedSystems: { has: system } }],
+          status: 'published',
         },
         select: { conditionId: true },
       });
-      
-      await getOrSet(env, CACHE_KEYS.SYSTEM_CONDITIONS + system, 
+
+      await getOrSet(
+        env,
+        CACHE_KEYS.SYSTEM_CONDITIONS + system,
         async () => conditions.map((c: any) => c.conditionId),
         { ttl: LONG_TTL }
       );

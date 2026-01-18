@@ -1,9 +1,9 @@
 /**
  * driftCalculator.ts
- * 
+ *
  * Calculates the "Drift Vector" - a projection of how knowledge will decay
  * over time without review. Uses FSRS retrievability decay formula.
- * 
+ *
  * Formula: R(t) = exp(-t/S)
  * Where:
  * - R(t) = Retrievability at time t (0.0 to 1.0)
@@ -17,26 +17,26 @@
 
 export interface FSRSCardData {
   conditionId: string;
-  stability: number;        // FSRS stability (S)
-  retrievability: number;   // Current R
+  stability: number; // FSRS stability (S)
+  retrievability: number; // Current R
   lastReviewedAt: Date | string;
   system?: string;
   blueprintWeight?: number;
 }
 
 export interface DriftProjection {
-  day: number;              // Days from now
-  retrievability: number;   // Expected average R
+  day: number; // Days from now
+  retrievability: number; // Expected average R
   predictedAccuracy: number; // Mapped to accuracy percentage
-  predictedScore: number;    // PANCE score (200-800)
+  predictedScore: number; // PANCE score (200-800)
 }
 
 export interface DriftVector {
   currentScore: number;
   projectedScoreDay7: number;
   projectedScoreDay14: number;
-  dailyDecayRate: number;    // Points/day
-  daysUntilDanger: number;   // Days until score drops below 350
+  dailyDecayRate: number; // Points/day
+  daysUntilDanger: number; // Days until score drops below 350
   urgency: 'low' | 'medium' | 'high' | 'critical';
   projections: DriftProjection[];
 }
@@ -72,10 +72,7 @@ const SCORE_MAX = 800;
  * Calculate retrievability at a given time using FSRS decay formula
  * R(t) = exp(-t/S)
  */
-export function calculateRetrievability(
-  daysSinceReview: number,
-  stability: number
-): number {
+export function calculateRetrievability(daysSinceReview: number, stability: number): number {
   if (stability <= 0) stability = DEFAULT_STABILITY;
   return Math.exp(-daysSinceReview / stability);
 }
@@ -90,29 +87,28 @@ export function calculateAggregateRetrievability(
   useWeights: boolean = false
 ): number {
   if (cards.length === 0) return 0;
-  
+
   let weightedSumR = 0;
   let totalWeight = 0;
-  
+
   for (const card of cards) {
-    const lastReview = typeof card.lastReviewedAt === 'string' 
-      ? new Date(card.lastReviewedAt) 
-      : card.lastReviewedAt;
-    
-    const daysSinceReview = (targetDate.getTime() - lastReview.getTime()) 
-      / (1000 * 60 * 60 * 24);
-    
+    const lastReview =
+      typeof card.lastReviewedAt === 'string' ? new Date(card.lastReviewedAt) : card.lastReviewedAt;
+
+    const daysSinceReview = (targetDate.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
+
     // Use current R if date is in past, calculate decay if future
-    const retrievability = daysSinceReview >= 0
-      ? calculateRetrievability(daysSinceReview, card.stability)
-      : card.retrievability;
-    
-    const weight = useWeights ? (card.blueprintWeight || 1) : 1;
-    
+    const retrievability =
+      daysSinceReview >= 0
+        ? calculateRetrievability(daysSinceReview, card.stability)
+        : card.retrievability;
+
+    const weight = useWeights ? card.blueprintWeight || 1 : 1;
+
     weightedSumR += retrievability * weight;
     totalWeight += weight;
   }
-  
+
   return totalWeight > 0 ? weightedSumR / totalWeight : 0;
 }
 
@@ -152,13 +148,13 @@ export function calculateDriftProjections(
 ): DriftProjection[] {
   const projections: DriftProjection[] = [];
   const now = new Date();
-  
+
   for (let day = 0; day <= daysAhead; day++) {
     const targetDate = new Date(now.getTime() + day * 24 * 60 * 60 * 1000);
     const avgR = calculateAggregateRetrievability(cards, targetDate, true);
     const predictedAccuracy = retrievabilityToAccuracy(avgR);
     const predictedScore = accuracyToScore(predictedAccuracy);
-    
+
     projections.push({
       day,
       retrievability: avgR,
@@ -166,7 +162,7 @@ export function calculateDriftProjections(
       predictedScore,
     });
   }
-  
+
   return projections;
 }
 
@@ -175,7 +171,7 @@ export function calculateDriftProjections(
  */
 export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
   const projections = calculateDriftProjections(cards, 14);
-  
+
   if (projections.length === 0) {
     return {
       currentScore: SCORE_MIN,
@@ -187,15 +183,15 @@ export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
       projections: [],
     };
   }
-  
+
   const current = projections[0];
   const day7 = projections[7] || projections[projections.length - 1];
   const day14 = projections[14] || projections[projections.length - 1];
-  
+
   // Calculate decay rate
   const decayDay7 = current.predictedScore - day7.predictedScore;
   const dailyDecayRate = Math.round((decayDay7 / 7) * 10) / 10;
-  
+
   // Find when score crosses passing threshold
   let daysUntilDanger = Infinity;
   for (const p of projections) {
@@ -204,7 +200,7 @@ export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
       break;
     }
   }
-  
+
   // Determine urgency level
   let urgency: DriftVector['urgency'] = 'low';
   if (current.predictedScore < PASSING_SCORE) {
@@ -216,7 +212,7 @@ export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
   } else if (daysUntilDanger <= 14) {
     urgency = 'medium';
   }
-  
+
   return {
     currentScore: current.predictedScore,
     projectedScoreDay7: day7.predictedScore,
@@ -238,7 +234,7 @@ export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
 export function calculateSystemDrift(cards: FSRSCardData[]): SystemDrift[] {
   const now = new Date();
   const day7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  
+
   // Group cards by system
   const systemCards: Record<string, FSRSCardData[]> = {};
   for (const card of cards) {
@@ -246,24 +242,25 @@ export function calculateSystemDrift(cards: FSRSCardData[]): SystemDrift[] {
     if (!systemCards[system]) systemCards[system] = [];
     systemCards[system].push(card);
   }
-  
+
   const results: SystemDrift[] = [];
-  
+
   for (const [system, sysCards] of Object.entries(systemCards)) {
     const currentR = calculateAggregateRetrievability(sysCards, now);
     const projectedR7 = calculateAggregateRetrievability(sysCards, day7);
     const decayRate = (currentR - projectedR7) / 7;
-    
+
     // Count cards that will drop below 0.9 R (due for review)
-    const cardsAtRisk = sysCards.filter(card => {
-      const lastReview = typeof card.lastReviewedAt === 'string'
-        ? new Date(card.lastReviewedAt)
-        : card.lastReviewedAt;
+    const cardsAtRisk = sysCards.filter((card) => {
+      const lastReview =
+        typeof card.lastReviewedAt === 'string'
+          ? new Date(card.lastReviewedAt)
+          : card.lastReviewedAt;
       const daysSince = (day7.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
       const futureR = calculateRetrievability(daysSince, card.stability);
       return futureR < 0.9;
     }).length;
-    
+
     results.push({
       system,
       currentR,
@@ -272,7 +269,7 @@ export function calculateSystemDrift(cards: FSRSCardData[]): SystemDrift[] {
       cardsAtRisk,
     });
   }
-  
+
   // Sort by decay rate (fastest decaying first)
   return results.sort((a, b) => b.decayRate - a.decayRate);
 }
@@ -291,16 +288,16 @@ export function getDriftMessage(drift: DriftVector): string {
     }
     return `⚠️ URGENT: Your score will drop below passing in ${drift.daysUntilDanger} day${drift.daysUntilDanger !== 1 ? 's' : ''}!`;
   }
-  
+
   if (drift.urgency === 'high') {
     return `Your knowledge is decaying at ${drift.dailyDecayRate} pts/day. Study today to prevent drop.`;
   }
-  
+
   if (drift.urgency === 'medium') {
     const drop = drift.currentScore - drift.projectedScoreDay7;
     return `Projected ${drop} point drop in 7 days without review.`;
   }
-  
+
   return `Your knowledge is stable. Keep up the consistent reviews!`;
 }
 
@@ -309,10 +306,14 @@ export function getDriftMessage(drift: DriftVector): string {
  */
 export function getDriftStatusLabel(drift: DriftVector): string {
   switch (drift.urgency) {
-    case 'critical': return '🔴 Critical';
-    case 'high': return '🟠 At Risk';
-    case 'medium': return '🟡 Watch';
-    case 'low': return '🟢 Stable';
+    case 'critical':
+      return '🔴 Critical';
+    case 'high':
+      return '🟠 At Risk';
+    case 'medium':
+      return '🟡 Watch';
+    case 'low':
+      return '🟢 Stable';
   }
 }
 
@@ -323,7 +324,7 @@ export function getDriftStatusLabel(drift: DriftVector): string {
 export interface SessionImpact {
   scoreDelta: number;
   memoriesStabilized: number;
-  decayPrevented: number;  // Percentage
+  decayPrevented: number; // Percentage
   projectionImprovement: number; // Days of buffer added
 }
 
@@ -338,33 +339,31 @@ export function calculateSessionImpact(
 ): SessionImpact {
   const driftBefore = calculateDriftVector(cardsBefore);
   const driftAfter = calculateDriftVector(cardsAfter);
-  
+
   const scoreDelta = driftAfter.currentScore - driftBefore.currentScore;
-  
+
   // Count stabilized memories (cards with increased stability)
   let memoriesStabilized = 0;
   for (const cardId of reviewedCardIds) {
-    const before = cardsBefore.find(c => c.conditionId === cardId);
-    const after = cardsAfter.find(c => c.conditionId === cardId);
+    const before = cardsBefore.find((c) => c.conditionId === cardId);
+    const after = cardsAfter.find((c) => c.conditionId === cardId);
     if (before && after && after.stability > before.stability) {
       memoriesStabilized++;
     }
   }
-  
+
   // Calculate decay prevented
   // Compare day7 projections before and after
   const decayBeforeDay7 = driftBefore.currentScore - driftBefore.projectedScoreDay7;
   const decayAfterDay7 = driftAfter.currentScore - driftAfter.projectedScoreDay7;
   const decayPrevented = Math.max(0, decayBeforeDay7 - decayAfterDay7);
-  const decayPreventedPct = decayBeforeDay7 > 0 
-    ? (decayPrevented / decayBeforeDay7) * 100 
-    : 0;
-  
+  const decayPreventedPct = decayBeforeDay7 > 0 ? (decayPrevented / decayBeforeDay7) * 100 : 0;
+
   // Calculate projection improvement (days of buffer added)
   const daysBefore = driftBefore.daysUntilDanger;
   const daysAfter = driftAfter.daysUntilDanger;
   const projectionImprovement = Math.max(0, daysAfter - daysBefore);
-  
+
   return {
     scoreDelta,
     memoriesStabilized,

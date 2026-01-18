@@ -22,7 +22,7 @@
 
 - [x] 1.3 Apply middleware to unprotected admin endpoints
   - Secure `/api/media/pending` endpoint with admin middleware
-  - Secure `/api/media/approve` endpoint with admin middleware  
+  - Secure `/api/media/approve` endpoint with admin middleware
   - Secure `/api/media/stats` endpoint with admin middleware
   - _Requirements: 3.1, 3.2, 3.5_
 
@@ -47,7 +47,7 @@
   - _Requirements: 1.1, 1.2_
 
 - [x] 2.2 Fix Gemini service type definitions
-  - Replace `any` types in `services/geminiService.ts` 
+  - Replace `any` types in `services/geminiService.ts`
   - Create interfaces for patient simulator cases and responses
   - Add proper typing for AI model responses
   - _Requirements: 1.1, 1.2_

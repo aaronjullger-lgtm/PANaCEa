@@ -1,13 +1,13 @@
 /**
  * Interactive Anatomy Diagram Component
  * Sprint 9: Multimodal Content Expansion - Labeled anatomy diagrams
- * 
+ *
  * Interactive SVG-based anatomy viewer with clickable labels,
  * zoom controls, and quiz mode for anatomy identification.
  */
 
-import React, { useState, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ZoomIn,
   ZoomOut,
@@ -22,7 +22,7 @@ import {
   Maximize2,
   Minimize2,
   HelpCircle,
-} from "lucide-react";
+} from 'lucide-react';
 
 // =============================================================================
 // TYPES
@@ -49,12 +49,12 @@ export interface AnatomyDiagram {
   region: string;
   labels: AnatomyLabel[];
   layers?: string[];
-  difficulty: "basic" | "intermediate" | "advanced";
+  difficulty: 'basic' | 'intermediate' | 'advanced';
 }
 
 export interface InteractiveDiagramProps {
   diagram: AnatomyDiagram;
-  mode?: "explore" | "quiz";
+  mode?: 'explore' | 'quiz';
   onQuizComplete?: (results: QuizResults) => void;
   showLabels?: boolean;
   initialZoom?: number;
@@ -81,7 +81,7 @@ interface QuizResults {
 
 export function InteractiveDiagram({
   diagram,
-  mode = "explore",
+  mode = 'explore',
   onQuizComplete,
   showLabels: initialShowLabels = true,
   initialZoom = 1,
@@ -93,14 +93,14 @@ export function InteractiveDiagram({
   const [showLabels, setShowLabels] = useState(initialShowLabels);
   const [selectedLabel, setSelectedLabel] = useState<AnatomyLabel | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
-  const [activeLayer, setActiveLayer] = useState<string>("all");
+  const [activeLayer, setActiveLayer] = useState<string>('all');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Quiz state
   const [quizState, setQuizState] = useState<{
     currentLabelIndex: number;
     shuffledLabels: AnatomyLabel[];
-    results: QuizResults["results"];
+    results: QuizResults['results'];
     startTime: number;
     showFeedback: boolean;
     lastClickPosition?: { x: number; y: number };
@@ -113,8 +113,8 @@ export function InteractiveDiagram({
 
   // Filtered labels by layer
   const visibleLabels = useMemo(() => {
-    if (activeLayer === "all") return diagram.labels;
-    return diagram.labels.filter(l => l.layer === activeLayer);
+    if (activeLayer === 'all') return diagram.labels;
+    return diagram.labels.filter((l) => l.layer === activeLayer);
   }, [diagram.labels, activeLayer]);
 
   // Zoom controls
@@ -127,27 +127,27 @@ export function InteractiveDiagram({
 
   // Pan controls
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (mode === "quiz" && quizState && !quizState.showFeedback) {
+    if (mode === 'quiz' && quizState && !quizState.showFeedback) {
       // Quiz mode: handle click as answer
       handleQuizClick(e);
       return;
     }
-    
+
     isDragging.current = true;
     lastPos.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging.current) return;
-    
+
     const dx = e.clientX - lastPos.current.x;
     const dy = e.clientY - lastPos.current.y;
-    
-    setPan(prev => ({
+
+    setPan((prev) => ({
       x: prev.x + dx,
       y: prev.y + dy,
     }));
-    
+
     lastPos.current = { x: e.clientX, y: e.clientY };
   }, []);
 
@@ -177,8 +177,7 @@ export function InteractiveDiagram({
 
     const currentLabel = quizState.shuffledLabels[quizState.currentLabelIndex];
     const distance = Math.sqrt(
-      Math.pow(clickX - currentLabel.position.x, 2) +
-      Math.pow(clickY - currentLabel.position.y, 2)
+      Math.pow(clickX - currentLabel.position.x, 2) + Math.pow(clickY - currentLabel.position.y, 2)
     );
 
     // Within 8% of the target is considered correct
@@ -206,7 +205,7 @@ export function InteractiveDiagram({
 
     if (nextIndex >= quizState.shuffledLabels.length) {
       // Quiz complete
-      const correct = quizState.results.filter(r => r.isCorrect).length;
+      const correct = quizState.results.filter((r) => r.isCorrect).length;
       const timeSpent = Date.now() - quizState.startTime;
 
       onQuizComplete?.({
@@ -238,34 +237,30 @@ export function InteractiveDiagram({
   }
 
   return (
-    <div className={`${isFullscreen ? "fixed inset-0 z-50 bg-slate-900 p-4" : ""}`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-slate-900 p-4' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-            {diagram.name}
-          </h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">{diagram.name}</h3>
           <p className="text-sm text-slate-500">
             {diagram.region} • {visibleLabels.length} structures
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {mode === "explore" && (
+          {mode === 'explore' && (
             <button
               onClick={() => setShowLabels(!showLabels)}
               className={`p-2 rounded-lg ${
-                showLabels
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "bg-slate-100 text-slate-600"
+                showLabels ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'
               }`}
-              title={showLabels ? "Hide Labels" : "Show Labels"}
+              title={showLabels ? 'Hide Labels' : 'Show Labels'}
             >
               {showLabels ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
             </button>
           )}
-          
-          {mode === "quiz" && !quizState && (
+
+          {mode === 'quiz' && !quizState && (
             <button
               onClick={startQuiz}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -273,7 +268,7 @@ export function InteractiveDiagram({
               Start Quiz
             </button>
           )}
-          
+
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -292,13 +287,16 @@ export function InteractiveDiagram({
                 Question {quizState.currentLabelIndex + 1} of {quizState.shuffledLabels.length}
               </p>
               <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                Click on the: <span className="text-indigo-600">{quizState.shuffledLabels[quizState.currentLabelIndex].name}</span>
+                Click on the:{' '}
+                <span className="text-indigo-600">
+                  {quizState.shuffledLabels[quizState.currentLabelIndex].name}
+                </span>
               </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-500">Score</p>
               <p className="text-2xl font-bold text-indigo-600">
-                {quizState.results.filter(r => r.isCorrect).length}/{quizState.currentLabelIndex}
+                {quizState.results.filter((r) => r.isCorrect).length}/{quizState.currentLabelIndex}
               </p>
             </div>
           </div>
@@ -311,7 +309,7 @@ export function InteractiveDiagram({
           ref={containerRef}
           className={`
             relative flex-1 aspect-video bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden
-            ${mode === "quiz" && quizState && !quizState.showFeedback ? "cursor-crosshair" : "cursor-move"}
+            ${mode === 'quiz' && quizState && !quizState.showFeedback ? 'cursor-crosshair' : 'cursor-move'}
           `}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -323,7 +321,7 @@ export function InteractiveDiagram({
             className="absolute inset-0 transition-transform"
             style={{
               transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-              transformOrigin: "center center",
+              transformOrigin: 'center center',
             }}
           >
             <img
@@ -334,56 +332,55 @@ export function InteractiveDiagram({
             />
 
             {/* Labels */}
-            {showLabels && visibleLabels.map(label => (
-              <motion.div
-                key={label.id}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`
-                  absolute transform -translate-x-1/2 -translate-y-1/2
-                  ${hoveredLabel === label.id || selectedLabel?.id === label.id
-                    ? "z-20"
-                    : "z-10"
-                  }
-                `}
-                style={{
-                  left: `${label.position.x}%`,
-                  top: `${label.position.y}%`,
-                }}
-                onMouseEnter={() => setHoveredLabel(label.id)}
-                onMouseLeave={() => setHoveredLabel(null)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedLabel(selectedLabel?.id === label.id ? null : label);
-                }}
-              >
-                {/* Pin */}
-                <div
+            {showLabels &&
+              visibleLabels.map((label) => (
+                <motion.div
+                  key={label.id}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                   className={`
+                  absolute transform -translate-x-1/2 -translate-y-1/2
+                  ${hoveredLabel === label.id || selectedLabel?.id === label.id ? 'z-20' : 'z-10'}
+                `}
+                  style={{
+                    left: `${label.position.x}%`,
+                    top: `${label.position.y}%`,
+                  }}
+                  onMouseEnter={() => setHoveredLabel(label.id)}
+                  onMouseLeave={() => setHoveredLabel(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedLabel(selectedLabel?.id === label.id ? null : label);
+                  }}
+                >
+                  {/* Pin */}
+                  <div
+                    className={`
                     w-4 h-4 rounded-full cursor-pointer transition-all
-                    ${hoveredLabel === label.id || selectedLabel?.id === label.id
-                      ? "bg-indigo-600 scale-150 shadow-lg"
-                      : "bg-red-500 hover:bg-red-600"
+                    ${
+                      hoveredLabel === label.id || selectedLabel?.id === label.id
+                        ? 'bg-indigo-600 scale-150 shadow-lg'
+                        : 'bg-red-500 hover:bg-red-600'
                     }
                   `}
-                />
-                
-                {/* Label tooltip */}
-                <AnimatePresence>
-                  {(hoveredLabel === label.id || selectedLabel?.id === label.id) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg whitespace-nowrap shadow-lg"
-                    >
-                      {label.name}
-                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-slate-900" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
+                  />
+
+                  {/* Label tooltip */}
+                  <AnimatePresence>
+                    {(hoveredLabel === label.id || selectedLabel?.id === label.id) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg whitespace-nowrap shadow-lg"
+                      >
+                        {label.name}
+                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-slate-900" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
 
             {/* Quiz feedback markers */}
             {quizState?.showFeedback && quizState.lastClickPosition && (
@@ -393,9 +390,10 @@ export function InteractiveDiagram({
                   className={`
                     absolute w-6 h-6 rounded-full transform -translate-x-1/2 -translate-y-1/2
                     flex items-center justify-center
-                    ${quizState.results[quizState.results.length - 1].isCorrect
-                      ? "bg-emerald-500"
-                      : "bg-red-500"
+                    ${
+                      quizState.results[quizState.results.length - 1].isCorrect
+                        ? 'bg-emerald-500'
+                        : 'bg-red-500'
                     }
                   `}
                   style={{
@@ -409,7 +407,7 @@ export function InteractiveDiagram({
                     <XCircle className="h-4 w-4 text-white" />
                   )}
                 </div>
-                
+
                 {/* Correct position if wrong */}
                 {!quizState.results[quizState.results.length - 1].isCorrect && (
                   <div
@@ -465,8 +463,8 @@ export function InteractiveDiagram({
                   <div>
                     <p className="font-medium text-slate-900 dark:text-white">
                       {quizState.results[quizState.results.length - 1].isCorrect
-                        ? "Correct!"
-                        : "Not quite..."}
+                        ? 'Correct!'
+                        : 'Not quite...'}
                     </p>
                     <p className="text-sm text-slate-500">
                       {quizState.shuffledLabels[quizState.currentLabelIndex].name}
@@ -477,9 +475,13 @@ export function InteractiveDiagram({
                   onClick={nextQuizQuestion}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
                 >
-                  {quizState.currentLabelIndex + 1 < quizState.shuffledLabels.length
-                    ? <>Next <ChevronRight className="h-4 w-4" /></>
-                    : "View Results"}
+                  {quizState.currentLabelIndex + 1 < quizState.shuffledLabels.length ? (
+                    <>
+                      Next <ChevronRight className="h-4 w-4" />
+                    </>
+                  ) : (
+                    'View Results'
+                  )}
                 </button>
               </div>
             </div>
@@ -487,7 +489,7 @@ export function InteractiveDiagram({
         </div>
 
         {/* Sidebar - Label Details */}
-        {mode === "explore" && (
+        {mode === 'explore' && (
           <div className="w-80 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 max-h-[600px] overflow-y-auto">
             {/* Layer filter */}
             {diagram.layers && diagram.layers.length > 0 && (
@@ -500,23 +502,23 @@ export function InteractiveDiagram({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setActiveLayer("all")}
+                    onClick={() => setActiveLayer('all')}
                     className={`px-3 py-1 text-xs rounded-full ${
-                      activeLayer === "all"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                      activeLayer === 'all'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     All
                   </button>
-                  {diagram.layers.map(layer => (
+                  {diagram.layers.map((layer) => (
                     <button
                       key={layer}
                       onClick={() => setActiveLayer(layer)}
                       className={`px-3 py-1 text-xs rounded-full ${
                         activeLayer === layer
-                          ? "bg-indigo-600 text-white"
-                          : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                       }`}
                     >
                       {layer}
@@ -577,9 +579,7 @@ export function InteractiveDiagram({
             ) : (
               <div className="text-center py-8">
                 <HelpCircle className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">
-                  Click on a label pin to view details
-                </p>
+                <p className="text-sm text-slate-500">Click on a label pin to view details</p>
               </div>
             )}
 
@@ -589,15 +589,16 @@ export function InteractiveDiagram({
                 All Structures ({visibleLabels.length})
               </h4>
               <div className="space-y-1 max-h-64 overflow-y-auto">
-                {visibleLabels.map(label => (
+                {visibleLabels.map((label) => (
                   <button
                     key={label.id}
                     onClick={() => setSelectedLabel(label)}
                     className={`
                       w-full px-3 py-2 text-left text-sm rounded-lg transition-colors
-                      ${selectedLabel?.id === label.id
-                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                      ${
+                        selectedLabel?.id === label.id
+                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                          : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                       }
                     `}
                   >

@@ -1,19 +1,19 @@
 /**
  * ExplanationPanel Component
- * 
- * A comprehensive UI component for delivering ultra-concise, high-yield 
- * post-question rationales. Focuses on actionable learning, brevity, 
+ *
+ * A comprehensive UI component for delivering ultra-concise, high-yield
+ * post-question rationales. Focuses on actionable learning, brevity,
  * buzzwords, and diagnostic clues.
- * 
+ *
  * VISUAL CONSTRAINTS: PANaCEa branding (dark slate, medical blue, white text, gold accents)
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  BookOpen, 
+import {
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
   Lightbulb,
   ThumbsUp,
   ThumbsDown,
@@ -56,23 +56,23 @@ function getAdaptiveHint(
   correctAnswer: string
 ): string | null {
   if (isCorrect) return null;
-  
+
   const userLower = userAnswer.toLowerCase();
   const correctLower = correctAnswer.toLowerCase();
-  
+
   // Provide hints based on common patterns with word boundary checks
   if (/\bitis\b/.test(userLower) && /\bosis\b/.test(correctLower)) {
     return 'Tip: "-itis" means inflammation, while "-osis" refers to a condition or process.';
   }
-  
+
   if (/\bhyper/.test(userLower) && /\bhypo/.test(correctLower)) {
     return 'Tip: "hyper-" means high/above, "hypo-" means low/below.';
   }
-  
+
   if (/\bacute\b/.test(userLower) && /\bchronic\b/.test(correctLower)) {
     return 'Tip: Acute (sudden, short-term) vs Chronic (gradual, long-term).';
   }
-  
+
   return null;
 }
 
@@ -131,7 +131,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
   // Calculate reading time
   const readingTimeMinutes = useMemo(() => calculateReadingTime(rationale), [rationale]);
-  
+
   // Get adaptive hint if user answered incorrectly
   const adaptiveHint = useMemo(
     () => getAdaptiveHint(isCorrect, userAnswer, correctAnswer),
@@ -159,12 +159,15 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   }, [isCorrect, questionId, condition, conditionSlug, userAnswer, correctAnswer]);
 
   // Handle reaction button click
-  const handleReaction = useCallback((reaction: 'helpful' | 'not_helpful') => {
-    setUserReaction(reaction);
-    if (questionId) {
-      storeUserReaction(questionId, reaction);
-    }
-  }, [questionId]);
+  const handleReaction = useCallback(
+    (reaction: 'helpful' | 'not_helpful') => {
+      setUserReaction(reaction);
+      if (questionId) {
+        storeUserReaction(questionId, reaction);
+      }
+    },
+    [questionId]
+  );
 
   // Handle view condition click
   const handleViewCondition = useCallback(() => {
@@ -200,10 +203,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.3, staggerChildren: 0.1 }
+      transition: { duration: 0.3, staggerChildren: 0.1 },
     },
   };
 
@@ -226,26 +229,24 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)` }}
     >
       {/* Result Header */}
-      <div className={`px-5 py-3 border-b border-[var(--color-border)] ${
-        isCorrect 
-          ? 'bg-green-50 dark:bg-green-900/20' 
-          : 'bg-red-50 dark:bg-red-900/20'
-      }`}>
+      <div
+        className={`px-5 py-3 border-b border-[var(--color-border)] ${
+          isCorrect ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
+        }`}
+      >
         <div className="flex items-center justify-between">
-          <span className={`font-bold text-lg flex items-center gap-2 ${
-            isCorrect 
-              ? 'text-green-700 dark:text-green-400' 
-              : 'text-red-700 dark:text-red-400'
-          }`}>
+          <span
+            className={`font-bold text-lg flex items-center gap-2 ${
+              isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+            }`}
+          >
             {isCorrect ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
             {isCorrect ? 'Correct' : 'Incorrect'}
           </span>
           <span className="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
             <span>{condition}</span>
             {readingTimeMinutes > 0 && (
-              <span className="text-xs opacity-70">
-                · {readingTimeMinutes} min read
-              </span>
+              <span className="text-xs opacity-70">· {readingTimeMinutes} min read</span>
             )}
           </span>
         </div>
@@ -269,8 +270,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           </h3>
           <ul className="space-y-2 pl-1">
             {coreRationale.map((point, index) => (
-              <li 
-                key={index} 
+              <li
+                key={index}
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
                 <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">-</span>
@@ -297,11 +298,13 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             <GraduationCap className="w-4 h-4 text-purple-500" />
             Memory Hook / Mnemonic
           </h3>
-          <p className={`px-3 py-2 rounded-lg border ${
-            mnemonic === '[Mnemonic not available]'
-              ? 'text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-              : 'text-[var(--color-text-secondary)] bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
-          }`}>
+          <p
+            className={`px-3 py-2 rounded-lg border ${
+              mnemonic === '[Mnemonic not available]'
+                ? 'text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
+                : 'text-[var(--color-text-secondary)] bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+            }`}
+          >
             {mnemonic}
           </p>
         </motion.section>
@@ -314,8 +317,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             </h3>
             <ul className="space-y-2 pl-1">
               {differentials.map((diff, index) => (
-                <li 
-                  key={index} 
+                <li
+                  key={index}
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
                   <span className="text-blue-500 mt-1.5 flex-shrink-0 font-bold">›</span>
@@ -341,7 +344,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               )}
               Why other answers were wrong
             </button>
-            
+
             <AnimatePresence>
               {showWrongAnswers && (
                 <motion.div
@@ -354,9 +357,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                 >
                   {options.map((option, index) => {
                     if (index === correctAnswerIndex) return null;
-                    
+
                     const isUserChoice = index === userAnswerIndex;
-                    
+
                     return (
                       <div
                         key={index}
@@ -366,11 +369,13 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                             : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
                         }`}
                       >
-                        <span className={`font-medium ${
-                          isUserChoice 
-                            ? 'text-red-700 dark:text-red-400' 
-                            : 'text-[var(--color-text-secondary)]'
-                        }`}>
+                        <span
+                          className={`font-medium ${
+                            isUserChoice
+                              ? 'text-red-700 dark:text-red-400'
+                              : 'text-[var(--color-text-secondary)]'
+                          }`}
+                        >
                           {index + 1}. {option}
                         </span>
                         {isUserChoice && (
@@ -381,7 +386,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                       </div>
                     );
                   })}
-                  
+
                   {/* Highlight correct answer */}
                   <div className="px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                     <span className="font-medium text-green-700 dark:text-green-400">
@@ -398,7 +403,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         )}
 
         {/* Action Buttons */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="flex flex-wrap gap-3 pt-3 border-t border-[var(--color-border)]"
         >
@@ -428,7 +433,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         </motion.div>
 
         {/* Reaction Buttons */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="flex items-center gap-4 pt-3 border-t border-[var(--color-border)]"
         >

@@ -69,15 +69,17 @@ PANaCEa is a medical education platform built with:
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Set up environment variables:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` with your keys:
    - `VITE_CLERK_PUBLISHABLE_KEY` - Frontend authentication
    - `CLERK_SECRET_KEY` - Backend authentication
@@ -85,15 +87,17 @@ PANaCEa is a medical education platform built with:
    - `DATABASE_URL` - **REQUIRED** for database-driven content
 
 4. Generate Prisma Client:
+
    ```bash
    npm run db:generate
    ```
 
 5. Start BOTH development servers (required):
+
    ```bash
    npm run dev:all
    ```
-   
+
    **Important:** The app requires both frontend (port 3000) and backend (port 3001) servers to be running.
    Running only `npm run dev` will cause API errors because the backend won't be available.
 
@@ -164,6 +168,7 @@ The application uses a **database-first architecture** that requires both fronte
 - **Backend (Express)**: Port 3001 - API endpoints & database queries
 
 **Development (both servers) - RECOMMENDED:**
+
 ```bash
 npm run dev:all
 ```
@@ -171,17 +176,20 @@ npm run dev:all
 This command starts both servers concurrently. Use this for normal development.
 
 **Frontend only (limited functionality):**
+
 ```bash
 npm run dev
 ```
 
 **WARNING**: Running frontend only will cause errors:
+
 - API requests to `/api/content/all` will fail
-- Database queries won't work  
+- Database queries won't work
 - You'll see "SyntaxError: Unexpected token '<'" when parsing JSON
 - This is because the backend server isn't running to handle API requests
 
 **Backend only (for API development):**
+
 ```bash
 npm run dev:server
 ```
@@ -189,14 +197,17 @@ npm run dev:server
 ### Troubleshooting Common Issues
 
 **Error: "Unexpected token '<' in JSON"**
+
 - **Cause**: Frontend trying to parse HTML instead of JSON from API
 - **Solution**: Start backend server with `npm run dev:all`
 
 **Error: "Failed to fetch from /api/content/all"**
+
 - **Cause**: Backend server not running
 - **Solution**: Use `npm run dev:all` instead of `npm run dev`
 
 **Server starts but shows "Database unavailable"**
+
 - **Cause**: DATABASE_URL not configured or database not accessible
 - **Solution**: Check `.env` file has valid DATABASE_URL
 
@@ -249,6 +260,7 @@ npm run test:coverage
 - Mock external dependencies
 
 Example:
+
 ```typescript
 import { describe, it, expect } from 'vitest';
 import { myFunction } from './myModule';
@@ -257,10 +269,10 @@ describe('myFunction', () => {
   it('should return expected result', () => {
     // Arrange
     const input = 'test';
-    
+
     // Act
     const result = myFunction(input);
-    
+
     // Assert
     expect(result).toBe('expected');
   });
@@ -335,21 +347,25 @@ npm run build:server
 ### Common Issues
 
 **Issue: Backend not starting**
+
 - Check if port 3001 is available
 - Verify environment variables are set
 - Check for syntax errors in server.ts
 
 **Issue: Frontend can't connect to backend**
+
 - Ensure backend is running on port 3001
 - Check proxy configuration in vite.config.ts
 - Verify CORS settings in server.ts
 
 **Issue: Build failing**
+
 - Clear cache: `rm -rf node_modules dist && npm install`
 - Check for TypeScript errors
 - Verify all dependencies are installed
 
 **Issue: Tests failing**
+
 - Update snapshots if UI changed
 - Check for async timing issues
 - Verify mocks are correct

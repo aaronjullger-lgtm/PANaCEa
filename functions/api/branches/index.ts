@@ -1,113 +1,85 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-import { validateRequired } from '../_shared/validation';
-import { createBranch, listBranches } from '../_shared/content-branching';
+/**
+ * API: GET/POST /api/branches
+ *
+ * List and create content branches for version control.
+ * AUTHENTICATED endpoint - requires valid auth token.
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { listBranches, createBranch } from '../_shared/content-branching';
+import { z } from 'zod';
 
-export const onRequestGet = async (context) => {
+// Schema for GET request (query params)
+const ListBranchesSchema = z.object({
+  query: z.object({
+    includeArchived: z.enum(['true', 'false']).optional(),
+  }),
+});
 
-  const { request, env } = context;
+// Schema for POST request (body)
+const CreateBranchSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, 'Branch name is required'),
+    description: z.string().optional(),
+    baseBranch: z.string().optional(),
+    createdBy: z.string().min(1, 'Creator ID is required'),
+  }),
+});
 
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(ListBranchesSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/branches', auth.userId);
+  
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ success: true, branches: [] }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    log.warn('Database not configured, returning empty branches');
+    return { success: true, branches: [] };
   }
 
-  const prisma = createEdgePrismaClient(env);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const includeArchived = validated.query.includeArchived === 'true';
 
-    const url = new URL(request.url);
-    const includeArchived = url.searchParams.get('includeArchived') === 'true';
+    log.info('Listing branches', { includeArchived });
 
     const branches = await listBranches(prisma, includeArchived);
 
-    return new Response(JSON.stringify({ success: true, branches }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    log.info('Branches listed successfully', { count: branches.length });
 
+    return { success: true, branches };
   } catch (error) {
-    console.error('Failed to list branches:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Failed to list branches' 
-    }), {
+    log.error('Failed to list branches', error);
+    return {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: 'Failed to list branches',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});
 
-export const onRequestPost = async (context) => {
-
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(CreateBranchSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/branches', auth.userId);
 
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Database not configured' 
-    }), {
+    log.warn('Database not configured');
+    return {
       status: 503,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: 'Database not configured',
+    };
   }
 
-  const prisma = createEdgePrismaClient(env);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const { name, description, baseBranch, createdBy } = validated.body;
 
-    const body = await request.json();
-    const missing = validateRequired(body, ['name', 'createdBy']);
-    if (missing.length > 0) {
-      return new Response(JSON.stringify({ 
-        error: 'Validation failed', 
-        missing 
-      }), {
-        status: 400,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const { name, description, baseBranch, createdBy } = body;
+    log.info('Creating branch', { name, baseBranch, createdBy });
 
     const branchId = await createBranch(prisma, {
       name,
@@ -116,26 +88,16 @@ export const onRequestPost = async (context) => {
       createdBy,
     });
 
-    return new Response(JSON.stringify({ success: true, branchId }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    log.info('Branch created successfully', { branchId, name });
 
+    return { success: true, branchId };
   } catch (error) {
-    console.error('Failed to create branch:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message || 'Failed to create branch' 
-    }), {
+    log.error('Failed to create branch', error);
+    return {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: error instanceof Error ? error.message : 'Failed to create branch',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

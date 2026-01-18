@@ -116,9 +116,9 @@ describe('Offline Sync', () => {
         },
       ];
 
-      const pending = ops.filter(op => op.status === 'pending').length;
-      const synced = ops.filter(op => op.status === 'synced').length;
-      const failed = ops.filter(op => op.status === 'failed').length;
+      const pending = ops.filter((op) => op.status === 'pending').length;
+      const synced = ops.filter((op) => op.status === 'synced').length;
+      const failed = ops.filter((op) => op.status === 'failed').length;
 
       expect(pending).toBe(1);
       expect(synced).toBe(1);
@@ -132,7 +132,7 @@ describe('Offline Sync', () => {
       const startTime = Date.now();
       const delay = 500;
 
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
       const endTime = Date.now();
       const elapsed = endTime - startTime;

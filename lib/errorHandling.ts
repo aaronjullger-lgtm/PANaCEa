@@ -1,6 +1,6 @@
 /**
  * Unified Error Handling for PANaCEa
- * 
+ *
  * Provides:
  * - AppError class for throwing typed errors with HTTP status codes
  * - createErrorResponse for consistent API error responses
@@ -26,7 +26,7 @@ export class AppError extends Error {
   ) {
     super(message);
     this.name = 'AppError';
-    
+
     // Maintains proper stack trace for where error was thrown (V8 only)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, AppError);
@@ -79,11 +79,11 @@ export class ConflictError extends AppError {
 /**
  * Creates a standardized error Response for Cloudflare Functions
  * Logs the error and returns a consistent JSON error response
- * 
+ *
  * @param error - The error object (AppError, Error, or unknown)
  * @param defaultMessage - Fallback message for non-AppError errors
  * @returns Response object with error details
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -103,16 +103,16 @@ export function createErrorResponse(
   const message = isAppError ? error.message : defaultMessage;
   const code = isAppError ? error.code : 'INTERNAL_ERROR';
   const details = isAppError ? error.details : undefined;
-  
+
   // Log the error with appropriate level
   if (status >= 500) {
     logger.error('API Error:', { error: error instanceof Error ? error.message : String(error) });
   } else if (status >= 400) {
     logger.warn('Client Error:', { message, code, status });
   }
-  
+
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
       success: false,
       error: message,
       code,
@@ -130,15 +130,12 @@ export function createErrorResponse(
 
 /**
  * Creates a success Response for Cloudflare Functions
- * 
+ *
  * @param data - Response data
  * @param status - HTTP status code (default 200)
  * @returns Response object with success: true and data
  */
-export function createSuccessResponse<T>(
-  data: T,
-  status: number = 200
-): Response {
+export function createSuccessResponse<T>(data: T, status: number = 200): Response {
   return new Response(
     JSON.stringify({
       success: true,

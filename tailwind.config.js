@@ -1,22 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./index.tsx",
-    "./App.tsx",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./hooks/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './index.tsx',
+    './App.tsx',
+    './src/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './pages/**/*.{js,ts,jsx,tsx}',
+    './hooks/**/*.{js,ts,jsx,tsx}',
   ],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
         // Medical "Clinical" Palette
-        'clinical-navy': '#0F172A',      // Deep Royal Navy for dark mode backgrounds
-        'clinical-white': '#F8FAFC',     // Sanitarium White for light mode
-        'clinical-blue': '#0284C7',      // Cerulean Blue for primary actions
+        'clinical-navy': '#0F172A', // Deep Royal Navy for dark mode backgrounds
+        'clinical-white': '#F8FAFC', // Sanitarium White for light mode
+        'clinical-blue': '#0284C7', // Cerulean Blue for primary actions
         'clinical-slate': {
           50: '#F8FAFC',
           100: '#F1F5F9',
@@ -29,13 +29,13 @@ export default {
           800: '#1E293B',
           900: '#0F172A',
         },
-        
+
         // ============================================
         // MUTED SEMANTIC PALETTE - Professional Tones
         // ============================================
-        
+
         // Sage - Toolkit Hub (calming, medical green)
-        'sage': {
+        sage: {
           50: '#F6F7F5',
           100: '#E8EBE5',
           200: '#D4DAD0',
@@ -47,7 +47,7 @@ export default {
           800: '#404A3B',
           900: '#363E33',
         },
-        
+
         // Slate-Teal - Command Center (professional, trustworthy)
         'slate-teal': {
           50: '#F4F7F7',
@@ -61,7 +61,7 @@ export default {
           800: '#394D4D',
           900: '#324242',
         },
-        
+
         // Dusty Rose - Visual Diagnostics (warm, approachable)
         'dusty-rose': {
           50: '#FAF7F7',
@@ -75,7 +75,7 @@ export default {
           800: '#614747',
           900: '#533E3E',
         },
-        
+
         // Steel Blue - Question Practice (focused, clinical)
         'steel-blue': {
           50: '#F5F7F9',
@@ -89,7 +89,7 @@ export default {
           800: '#444F60',
           900: '#3B4452',
         },
-        
+
         // Muted Amber - Specialty Drills (warm, engaging)
         'muted-amber': {
           50: '#FAF9F5',
@@ -103,7 +103,7 @@ export default {
           800: '#6B5840',
           900: '#5A4A38',
         },
-        
+
         // Deep Plum - Clinical Simulation (sophisticated, medical)
         'deep-plum': {
           50: '#F9F7F9',
@@ -117,29 +117,29 @@ export default {
           800: '#594859',
           900: '#4C3E4C',
         },
-        
+
         // ============================================
         // STORMY SLATE - Design System Tokens
         // ============================================
         surface: {
-          primary: '#0f172a',          // Slate 900 (Deep Navy)
-          secondary: '#1e293b',        // Slate 800
+          primary: '#0f172a', // Slate 900 (Deep Navy)
+          secondary: '#1e293b', // Slate 800
           glass: 'rgba(30, 41, 59, 0.5)', // Slate 800 @ 50%
           elevated: 'rgba(51, 65, 85, 0.6)', // Slate 700 @ 60%
         },
         action: {
-          primary: '#f8fafc',          // Slate 50 (White - high contrast CTA)
-          secondary: '#334155',        // Slate 700
-          'primary-hover': '#e2e8f0',  // Slate 200
+          primary: '#f8fafc', // Slate 50 (White - high contrast CTA)
+          secondary: '#334155', // Slate 700
+          'primary-hover': '#e2e8f0', // Slate 200
           'secondary-hover': '#475569', // Slate 600
         },
         data: {
-          pass: '#14b8a6',             // Teal 500 - success/passing
-          fail: '#ef4444',             // Red 500 - failure/errors
-          provisional: '#f59e0b',      // Amber 500 - building/uncertain
-          neutral: '#64748b',          // Slate 500 - baseline
+          pass: '#14b8a6', // Teal 500 - success/passing
+          fail: '#ef4444', // Red 500 - failure/errors
+          provisional: '#f59e0b', // Amber 500 - building/uncertain
+          neutral: '#64748b', // Slate 500 - baseline
         },
-        
+
         // Semantic Design System
         background: 'var(--background)',
         foreground: 'var(--foreground)',
@@ -157,10 +157,10 @@ export default {
         'text-primary': 'var(--color-text-primary)',
         'text-secondary': 'var(--color-text-secondary)',
         'text-muted': 'var(--color-text-muted)',
-        'accent': 'var(--color-accent)',
+        accent: 'var(--color-accent)',
         'accent-hover': 'var(--color-accent-hover)',
       },
     },
   },
   plugins: [],
-}
+};

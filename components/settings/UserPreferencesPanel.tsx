@@ -7,10 +7,7 @@ interface UserPreferencesPanelProps {
   onUpdate: (preferences: UserPreferences) => void;
 }
 
-const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
-  preferences,
-  onUpdate,
-}) => {
+const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({ preferences, onUpdate }) => {
   const handleUnitSystemChange = (unitSystem: UnitSystem) => {
     onUpdate({ ...preferences, unitSystem });
   };
@@ -27,9 +24,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
         <Settings className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Learning Preferences
-        </h3>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Learning Preferences</h3>
       </div>
 
       {/* Unit System */}
@@ -37,15 +32,13 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
         <div className="flex items-start gap-3 mb-3">
           <Beaker className="w-5 h-5 mt-1 text-blue-600" />
           <div className="flex-1">
-            <h4 className="font-semibold text-slate-900 dark:text-white">
-              Laboratory Units
-            </h4>
+            <h4 className="font-semibold text-slate-900 dark:text-white">Laboratory Units</h4>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Choose between US standard and international (SI) units for lab values
             </p>
           </div>
         </div>
-        
+
         <div className="flex gap-2 mt-3">
           <button
             onClick={() => handleUnitSystemChange('us')}
@@ -59,9 +52,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             `}
           >
             US Standard
-            <span className="block text-xs mt-1 opacity-80">
-              mg/dL, g/dL
-            </span>
+            <span className="block text-xs mt-1 opacity-80">mg/dL, g/dL</span>
           </button>
           <button
             onClick={() => handleUnitSystemChange('si')}
@@ -75,9 +66,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             `}
           >
             SI Units
-            <span className="block text-xs mt-1 opacity-80">
-              mmol/L, g/L
-            </span>
+            <span className="block text-xs mt-1 opacity-80">mmol/L, g/L</span>
           </button>
         </div>
 
@@ -96,15 +85,13 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
         <div className="flex items-start gap-3 mb-3">
           <Globe className="w-5 h-5 mt-1 text-green-600" />
           <div className="flex-1">
-            <h4 className="font-semibold text-slate-900 dark:text-white">
-              Drug Naming Convention
-            </h4>
+            <h4 className="font-semibold text-slate-900 dark:text-white">Drug Naming Convention</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Select regional drug names (e.g., Acetaminophen vs Paracetamol)
             </p>
           </div>
         </div>
-        
+
         <div className="space-y-2 mt-3">
           <button
             onClick={() => handleDrugNamingChange('us')}
@@ -118,9 +105,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             `}
           >
             <div>United States (USAN)</div>
-            <div className="text-xs mt-1 opacity-80">
-              Acetaminophen, Albuterol, Epinephrine
-            </div>
+            <div className="text-xs mt-1 opacity-80">Acetaminophen, Albuterol, Epinephrine</div>
           </button>
           <button
             onClick={() => handleDrugNamingChange('uk')}
@@ -134,9 +119,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             `}
           >
             <div>United Kingdom (BAN)</div>
-            <div className="text-xs mt-1 opacity-80">
-              Paracetamol, Salbutamol, Adrenaline
-            </div>
+            <div className="text-xs mt-1 opacity-80">Paracetamol, Salbutamol, Adrenaline</div>
           </button>
           <button
             onClick={() => handleDrugNamingChange('global')}
@@ -150,9 +133,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             `}
           >
             <div>International (INN)</div>
-            <div className="text-xs mt-1 opacity-80">
-              WHO recommended names
-            </div>
+            <div className="text-xs mt-1 opacity-80">WHO recommended names</div>
           </button>
         </div>
       </div>
@@ -179,7 +160,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Sync study progress and exam countdown to Apple Watch or compatible smart watches
             </p>
-            
+
             {preferences.enableSmartWatchSync && (
               <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded text-xs">
                 <p className="font-semibold text-purple-900 dark:text-purple-200 mb-1">
@@ -200,7 +181,10 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
         <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
           <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <span><span className="font-semibold">Tip:</span> Your preferences are saved locally and apply to all study modes and questions.</span>
+          <span>
+            <span className="font-semibold">Tip:</span> Your preferences are saved locally and apply
+            to all study modes and questions.
+          </span>
         </p>
       </div>
     </div>

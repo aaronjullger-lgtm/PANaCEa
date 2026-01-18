@@ -1,6 +1,6 @@
 /**
  * Trello Integration Service
- * 
+ *
  * Allows users to export their study plan to Trello boards.
  * Creates a Kanban-style board with lists for each study phase.
  */
@@ -31,7 +31,7 @@ export interface TrelloBoardExport {
  */
 export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoardExport {
   const lists: TrelloList[] = [];
-  
+
   // List 1: Exam Overview
   lists.push({
     name: '🎯 Exam Overview',
@@ -39,11 +39,11 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
     cards: [
       {
         name: 'PANCE Exam Date',
-        desc: `Your PANCE exam is scheduled for ${examDate.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
+        desc: `Your PANCE exam is scheduled for ${examDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
         })}\n\nGood luck with your preparation!`,
         due: examDate.toISOString(),
         labels: ['red'],
@@ -51,44 +51,48 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
       },
       {
         name: 'Study Plan Summary',
-        desc: `**Total Weeks:** ${weeklyPlan.length}\n\n**Topics to Cover:**\n${weeklyPlan.map(w => `• Week ${w.weekNumber}: ${w.topics.join(', ')}`).join('\n')}\n\n**Strategy:**\n- Daily study sessions (2 hours)\n- Practice questions (1 hour)\n- Weekly review sessions\n- Final 2 weeks: intensive review`,
+        desc: `**Total Weeks:** ${weeklyPlan.length}\n\n**Topics to Cover:**\n${weeklyPlan.map((w) => `• Week ${w.weekNumber}: ${w.topics.join(', ')}`).join('\n')}\n\n**Strategy:**\n- Daily study sessions (2 hours)\n- Practice questions (1 hour)\n- Weekly review sessions\n- Final 2 weeks: intensive review`,
         pos: 1,
       },
     ],
   });
-  
+
   // List 2: To Do (Upcoming weeks)
-  const upcomingWeeks = weeklyPlan.filter(w => new Date(w.startDate) > new Date());
+  const upcomingWeeks = weeklyPlan.filter((w) => new Date(w.startDate) > new Date());
   lists.push({
     name: '📚 To Do',
     pos: 1,
     cards: upcomingWeeks.slice(0, 4).map((week, idx) => ({
       name: `${week.weekLabel}: ${week.topics.join(', ')}`,
-      desc: `**Focus Areas:**\n${week.topics.map(t => `• ${t}`).join('\n')}\n\n**Timeline:**\n• Start: ${new Date(week.startDate).toLocaleDateString()}\n• End: ${new Date(week.endDate).toLocaleDateString()}\n\n**Description:**\n${week.description}`,
+      desc: `**Focus Areas:**\n${week.topics.map((t) => `• ${t}`).join('\n')}\n\n**Timeline:**\n• Start: ${new Date(week.startDate).toLocaleDateString()}\n• End: ${new Date(week.endDate).toLocaleDateString()}\n\n**Description:**\n${week.description}`,
       due: new Date(week.endDate).toISOString(),
       labels: ['blue'],
       pos: idx,
     })),
   });
-  
+
   // List 3: In Progress (Current week)
-  const currentWeek = weeklyPlan.find(w => {
+  const currentWeek = weeklyPlan.find((w) => {
     const now = new Date();
     return new Date(w.startDate) <= now && new Date(w.endDate) >= now;
   });
-  
+
   lists.push({
     name: '⚡ In Progress',
     pos: 2,
-    cards: currentWeek ? [{
-      name: `${currentWeek.weekLabel}: ${currentWeek.topics.join(', ')}`,
-      desc: `**Currently Studying:**\n${currentWeek.topics.map(t => `• ${t}`).join('\n')}\n\n**This Week's Goals:**\n☐ Complete 100+ practice questions\n☐ Review weak areas\n☐ Study 2 hours daily\n☐ Weekend comprehensive review\n\n**Notes:**\nAdd your notes and progress here!`,
-      due: new Date(currentWeek.endDate).toISOString(),
-      labels: ['yellow'],
-      pos: 0,
-    }] : [],
+    cards: currentWeek
+      ? [
+          {
+            name: `${currentWeek.weekLabel}: ${currentWeek.topics.join(', ')}`,
+            desc: `**Currently Studying:**\n${currentWeek.topics.map((t) => `• ${t}`).join('\n')}\n\n**This Week's Goals:**\n☐ Complete 100+ practice questions\n☐ Review weak areas\n☐ Study 2 hours daily\n☐ Weekend comprehensive review\n\n**Notes:**\nAdd your notes and progress here!`,
+            due: new Date(currentWeek.endDate).toISOString(),
+            labels: ['yellow'],
+            pos: 0,
+          },
+        ]
+      : [],
   });
-  
+
   // List 4: Weak Areas to Review
   lists.push({
     name: '🔴 Weak Areas',
@@ -101,20 +105,20 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
       },
     ],
   });
-  
+
   // List 5: Completed
-  const completedWeeks = weeklyPlan.filter(w => new Date(w.endDate) < new Date());
+  const completedWeeks = weeklyPlan.filter((w) => new Date(w.endDate) < new Date());
   lists.push({
     name: '✅ Completed',
     pos: 4,
     cards: completedWeeks.map((week, idx) => ({
       name: `${week.weekLabel}: ${week.topics.join(', ')}`,
-      desc: `**Completed!**\n\n${week.topics.map(t => `✓ ${t}`).join('\n')}`,
+      desc: `**Completed!**\n\n${week.topics.map((t) => `✓ ${t}`).join('\n')}`,
       pos: idx,
       labels: ['green'],
     })),
   });
-  
+
   // List 6: Resources & References
   lists.push({
     name: '📖 Resources',
@@ -127,7 +131,7 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
       },
     ],
   });
-  
+
   return {
     name: 'PANCE Study Plan',
     desc: 'My personalized PANCE study schedule generated by PANaCEa',
@@ -175,14 +179,17 @@ export function generateTrelloJSON(board: TrelloBoardExport): string {
     })),
     labels: board.labels || [],
   };
-  
+
   return JSON.stringify(trelloBoard, null, 2);
 }
 
 /**
  * Download Trello JSON file
  */
-export function downloadTrelloJSON(board: TrelloBoardExport, filename: string = 'panacea-study-board.json') {
+export function downloadTrelloJSON(
+  board: TrelloBoardExport,
+  filename: string = 'panacea-study-board.json'
+) {
   const json = generateTrelloJSON(board);
   const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);

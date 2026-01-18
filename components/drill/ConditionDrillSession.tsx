@@ -2,7 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 'lucide-react';
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
-import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
+import MiniDrillLayout, {
+  QuestionCard,
+  AnswerOption,
+  FeedbackPanel,
+  CategoryCard,
+} from './MiniDrillLayout';
 import { QuestionSkeleton } from '../loading/SkeletonLoader';
 import MetacognitionPromptModal from './MetacognitionPromptModal';
 
@@ -161,12 +166,18 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // =========================================================================
   // METACOGNITION MODAL (shown as overlay on top of feedback)
   // =========================================================================
-  const showMetacognitionModal = status === 'metacognition' && metacognitionPrompt?.shouldShow && currentQuestion;
+  const showMetacognitionModal =
+    status === 'metacognition' && metacognitionPrompt?.shouldShow && currentQuestion;
 
   // =========================================================================
   // PLAYING / FEEDBACK / COACHING / METACOGNITION VIEW
   // =========================================================================
-  if (status === 'playing' || status === 'feedback' || status === 'coaching' || status === 'metacognition') {
+  if (
+    status === 'playing' ||
+    status === 'feedback' ||
+    status === 'coaching' ||
+    status === 'metacognition'
+  ) {
     // Show smooth skeleton while fetching questions
     if (isLoading) {
       return (
@@ -226,7 +237,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             onDismiss={dismissMetacognition}
           />
         )}
-        
+
         <MiniDrillLayout
           title="Condition Drill"
           score={score}
@@ -247,82 +258,82 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             ) : undefined
           }
         >
-        {currentQuestion && (
-          <div className="max-w-3xl mx-auto">
-            <QuestionCard
-              question={currentQuestion.question}
-              category={currentQuestion.system}
-              subcategory={currentQuestion.type}
-            />
+          {currentQuestion && (
+            <div className="max-w-3xl mx-auto">
+              <QuestionCard
+                question={currentQuestion.question}
+                category={currentQuestion.system}
+                subcategory={currentQuestion.type}
+              />
 
-            {/* Coach's Corner - Socratic Hint UI */}
-            {status === 'coaching' && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 rounded-xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-6 shadow-lg"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
-                    <Lightbulb className="w-5 h-5 text-white" />
+              {/* Coach's Corner - Socratic Hint UI */}
+              {status === 'coaching' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 rounded-xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-6 shadow-lg"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                      <Lightbulb className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
+                        Coach's Corner
+                      </h3>
+                      {isLoadingHint ? (
+                        <div className="flex items-center gap-3 text-amber-700 dark:text-amber-300">
+                          <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-sm italic">Thinking about your answer...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-amber-900 dark:text-amber-100 mb-4 leading-relaxed">
+                            {socraticHint}
+                          </p>
+                          <button
+                            onClick={retryAfterHint}
+                            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
+                          >
+                            Try Again
+                          </button>
+                          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                            <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>
+                              Getting it right after this hint will award 50% points (0.5 score)
+                            </span>
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
-                      Coach's Corner
-                    </h3>
-                    {isLoadingHint ? (
-                      <div className="flex items-center gap-3 text-amber-700 dark:text-amber-300">
-                        <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm italic">Thinking about your answer...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-amber-900 dark:text-amber-100 mb-4 leading-relaxed">
-                          {socraticHint}
-                        </p>
-                        <button
-                          onClick={retryAfterHint}
-                          className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
-                        >
-                          Try Again
-                        </button>
-                        <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                          <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Getting it right after this hint will award 50% points (0.5 score)</span>
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Answer Options */}
-            <div className="space-y-2 sm:space-y-3 relative">
-              {/* Submitting overlay */}
-              {isSubmitting && (
-                <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-                  <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
+                </motion.div>
               )}
-              {currentQuestion.options.map((option, index) => (
-                <AnswerOption
-                  key={index}
-                  index={index}
-                  text={option}
-                  isSelected={userAnswerIndex === index}
-                  isCorrect={
-                    status === 'feedback'
-                      ? index === currentQuestion.correctAnswerIndex
-                      : null
-                  }
-                  isAnswered={status === 'feedback'}
-                  onSelect={isSubmitting ? () => {} : handleAnswerSelect}
-                />
-              ))}
+
+              {/* Answer Options */}
+              <div className="space-y-2 sm:space-y-3 relative">
+                {/* Submitting overlay */}
+                {isSubmitting && (
+                  <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+                    <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                {currentQuestion.options.map((option, index) => (
+                  <AnswerOption
+                    key={index}
+                    index={index}
+                    text={option}
+                    isSelected={userAnswerIndex === index}
+                    isCorrect={
+                      status === 'feedback' ? index === currentQuestion.correctAnswerIndex : null
+                    }
+                    isAnswered={status === 'feedback'}
+                    onSelect={isSubmitting ? () => {} : handleAnswerSelect}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </MiniDrillLayout>
       </>
     );

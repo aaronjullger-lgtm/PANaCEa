@@ -18,9 +18,9 @@ vi.mock('@supabase/supabase-js', () => ({
 describe('createSupabaseClientWithTokenGetter', () => {
   it('should create a Supabase client with custom fetch', () => {
     const mockGetToken = vi.fn().mockResolvedValue('test-token');
-    
+
     const client = createSupabaseClientWithTokenGetter(mockGetToken);
-    
+
     expect(client).toBeDefined();
     expect(client.from).toBeDefined();
     expect((client as any)._config).toBeDefined();
@@ -29,10 +29,10 @@ describe('createSupabaseClientWithTokenGetter', () => {
 
   it('should configure auth settings correctly', () => {
     const mockGetToken = vi.fn();
-    
+
     const client = createSupabaseClientWithTokenGetter(mockGetToken);
     const config = (client as any)._config;
-    
+
     expect(config.auth.persistSession).toBe(false);
     expect(config.auth.autoRefreshToken).toBe(false);
     expect(config.auth.detectSessionInUrl).toBe(false);
@@ -48,11 +48,11 @@ describe('validateSupabaseConfig', () => {
       ...((import.meta as any).env || {}),
     };
     delete (globalThis as any).__TEST_VITE_ENV__.VITE_SUPABASE_URL;
-    
+
     let result = validateSupabaseConfig();
     expect(result.valid).toBe(false);
     expect(result.message).toContain('VITE_SUPABASE_URL');
-    
+
     // Restore
     (globalThis as any).__TEST_VITE_ENV__ = originalEnv;
   });

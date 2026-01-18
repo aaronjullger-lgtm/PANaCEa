@@ -1,30 +1,45 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
+import {
+  authenticatedEndpoint,
+  withCors,
+  withValidation,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
 }
 
-export const onRequestOptions = handleCorsOptions;
+// Define Zod schema for query parameter validation
+const RecommendationListSchema = z.object({
+  query: z.object({
+    status: z.enum(['pending', 'completed', 'dismissed']).optional(),
+  }).optional(),
+});
 
-export const onRequestGet = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(RecommendationListSchema, async (context) => {
+  const { request, env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/recommendations/list');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) return createErrorResponse('Unauthorized', 401);
-
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
       select: { id: true },
     });
 
-    if (!user) return createErrorResponse('User not found', 404);
+    if (!user) {
+      return {
+        status: 404,
+        error: 'User not found',
+      };
+    }
 
-    const url = new URL(request.url);
-    const status = url.searchParams.get('status') || 'pending';
+    const status = validated.query?.status || 'pending';
 
     const recommendations = await prisma.studyRecommendation.findMany({
       where: {
@@ -38,17 +53,16 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     });
 
     // Return just the recommendations array for simpler frontend handling
-    return createSuccessResponse(recommendations);
+    return {
+      data: recommendations,
+    };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('[recommendations/list] Failed to fetch recommendations', {
-      message: errorMessage,
-      stack: errorStack,
-      name: error instanceof Error ? error.name : typeof error
-    });
-    return createErrorResponse(`Failed to fetch recommendations: ${errorMessage}`, 500);
+    logger.error('Failed to fetch recommendations', error);
+    return {
+      status: 500,
+      error: 'Failed to fetch recommendations',
+    };
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

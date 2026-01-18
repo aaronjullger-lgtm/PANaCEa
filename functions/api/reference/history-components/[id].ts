@@ -1,73 +1,69 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
  * GET /api/reference/history-components/:id
  * Fetch a single history component by ID
+ *
+ * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
  */
-export async function onRequestGet(context: any) {
-  const { request, env, params } = context;
-  const { id } = params;
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
+
+const HistoryComponentByIdSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid history component ID format'),
+  }),
+});
+
+// ============================================================================
+// ENDPOINT HANDLERS
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(
+  HistoryComponentByIdSchema,
+  async ({ env, auth, validated, params }) => {
+    const log = createEndpointLogger('/api/reference/history-components/[id]', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const id = validated?.params?.id || params?.id;
+
+      if (!id) {
+        log.warn('Missing history component ID');
+        return { status: 400, error: 'History component ID is required' };
       }
-    });
-  }
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+      log.info('Fetching history component', { id });
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    const result = await prisma.historyComponent.findUnique({
-      where: { id }
-    });
-    
-    if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'History component not found' }), { 
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      const result = await prisma.historyComponent.findUnique({
+        where: { id },
       });
+
+      if (!result) {
+        log.warn('History component not found', { id });
+        return { status: 404, error: 'History component not found' };
+      }
+
+      log.info('History component fetched successfully', { id });
+      return { data: { success: true, data: result } };
+    } catch (error) {
+      log.error('Failed to fetch history component', error);
+      return { status: 500, error: 'Failed to fetch history component' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error: any) {
-    console.error('Error fetching history component:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch history component', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

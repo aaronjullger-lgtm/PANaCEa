@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   BookOpen,
-  Stethoscope
+  Stethoscope,
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -55,11 +55,7 @@ interface StudyRecommendation {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const CommandCenter: React.FC<CommandCenterProps> = ({
-  performanceData,
-  onNavigate,
-  userId,
-}) => {
+const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNavigate, userId }) => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     favoriteDrills: [],
     recentDrills: [],
@@ -94,9 +90,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
   // Calculate today's question count
   const todayQuestionCount = useMemo(() => {
     const today = new Date().toDateString();
-    return performanceData.filter(
-      (r) => new Date(r.timestamp).toDateString() === today
-    ).length;
+    return performanceData.filter((r) => new Date(r.timestamp).toDateString() === today).length;
   }, [performanceData]);
 
   // Calculate current streak
@@ -117,21 +111,27 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
       return daysDiff > 7 && daysDiff <= 14;
     });
 
-    const currentAccuracy = last7Days.length > 0
-      ? (last7Days.filter((r) => r.isCorrect).length / last7Days.length) * 100
-      : 0;
+    const currentAccuracy =
+      last7Days.length > 0
+        ? (last7Days.filter((r) => r.isCorrect).length / last7Days.length) * 100
+        : 0;
 
-    const previousAccuracy = previous7Days.length > 0
-      ? (previous7Days.filter((r) => r.isCorrect).length / previous7Days.length) * 100
-      : 0;
+    const previousAccuracy =
+      previous7Days.length > 0
+        ? (previous7Days.filter((r) => r.isCorrect).length / previous7Days.length) * 100
+        : 0;
 
-    const currentAvgTime = last7Days.length > 0
-      ? last7Days.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / last7Days.length / 1000
-      : 0;
+    const currentAvgTime =
+      last7Days.length > 0
+        ? last7Days.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / last7Days.length / 1000
+        : 0;
 
-    const previousAvgTime = previous7Days.length > 0
-      ? previous7Days.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / previous7Days.length / 1000
-      : 0;
+    const previousAvgTime =
+      previous7Days.length > 0
+        ? previous7Days.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) /
+          previous7Days.length /
+          1000
+        : 0;
 
     const accuracyDelta = currentAccuracy - previousAccuracy;
     const timeDelta = currentAvgTime - previousAvgTime;
@@ -192,14 +192,17 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     }
 
     // Low-performing systems
-    const systemStats = performanceData.reduce((acc, r) => {
-      if (!acc[r.system]) {
-        acc[r.system] = { correct: 0, total: 0 };
-      }
-      acc[r.system].total++;
-      if (r.isCorrect) acc[r.system].correct++;
-      return acc;
-    }, {} as Record<string, { correct: number; total: number }>);
+    const systemStats = performanceData.reduce(
+      (acc, r) => {
+        if (!acc[r.system]) {
+          acc[r.system] = { correct: 0, total: 0 };
+        }
+        acc[r.system].total++;
+        if (r.isCorrect) acc[r.system].correct++;
+        return acc;
+      },
+      {} as Record<string, { correct: number; total: number }>
+    );
 
     const weakSystems = Object.entries(systemStats)
       .filter(([_, stats]) => stats.total >= 5 && stats.correct / stats.total < 0.6)
@@ -268,7 +271,14 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
-  }, [srsDueCount, flaggedCount, todayQuestionCount, currentStreak, performanceData, userPreferences]);
+  }, [
+    srsDueCount,
+    flaggedCount,
+    todayQuestionCount,
+    currentStreak,
+    performanceData,
+    userPreferences,
+  ]);
 
   // Favorite drills (top 3)
   const favoriteDrills = [
@@ -290,7 +300,11 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
             Command Center
           </h1>
           <p className="text-lg text-[var(--color-text-muted)]">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+            })}
           </p>
         </motion.div>
 
@@ -308,7 +322,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    {React.createElement(recommendations[0].icon, { className: "w-6 h-6" })}
+                    {React.createElement(recommendations[0].icon, { className: 'w-6 h-6' })}
                     <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
                       Recommended Now
                     </span>
@@ -353,7 +367,9 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
               <span className="text-sm text-[var(--color-text-muted)]">Current Streak</span>
               <Flame className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="text-3xl font-bold text-[var(--color-text-primary)]">{currentStreak}</div>
+            <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              {currentStreak}
+            </div>
             <div className="text-xs text-[var(--color-text-muted)] mt-1">days</div>
           </motion.div>
 
@@ -387,7 +403,9 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
               <AlertCircle className="w-5 h-5 text-yellow-500" />
             </div>
-            <div className="text-3xl font-bold text-[var(--color-text-primary)]">{flaggedCount}</div>
+            <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              {flaggedCount}
+            </div>
             <div className="text-xs text-[var(--color-text-muted)] mt-1">for review</div>
           </motion.div>
         </div>
@@ -413,7 +431,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                   </div>
                   <h3 className="text-2xl font-bold mb-2">Grand Rounds</h3>
                   <p className="text-white/90 mb-4">
-                    Complex multi-system case with expert commentary. Complete once per day for bonus XP.
+                    Complex multi-system case with expert commentary. Complete once per day for
+                    bonus XP.
                   </p>
                   <button
                     onClick={() => onNavigate('grand_rounds')}
@@ -446,8 +465,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                         rec.priority === 'high'
                           ? 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'
                           : rec.priority === 'medium'
-                          ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400'
-                          : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400'
+                            : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                       }`}
                     >
                       <rec.icon className="w-5 h-5" />
@@ -486,8 +505,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                         {delta.metric === 'Avg Decision Time'
                           ? `${delta.current.toFixed(1)}s`
                           : delta.metric === 'Questions/Day'
-                          ? delta.current.toFixed(1)
-                          : `${delta.current.toFixed(1)}%`}
+                            ? delta.current.toFixed(1)
+                            : `${delta.current.toFixed(1)}%`}
                       </div>
                     </div>
                     <div
@@ -495,8 +514,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                         delta.trend === 'up'
                           ? 'text-green-600 dark:text-green-400'
                           : delta.trend === 'down'
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-[var(--color-text-muted)]'
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-[var(--color-text-muted)]'
                       }`}
                     >
                       {delta.trend === 'up' ? (

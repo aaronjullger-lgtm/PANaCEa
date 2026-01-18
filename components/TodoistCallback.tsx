@@ -37,12 +37,11 @@ export default function TodoistCallback() {
       try {
         await exchangeCodeForToken(code, state, TODOIST_CONFIG);
         setStatus('success');
-        
+
         // Redirect back to the main app after a short delay
         setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
-        
+          window.location.href = '/';
+        }, 2000);
       } catch (error) {
         console.error('OAuth callback error:', error);
         setStatus('error');
@@ -90,11 +89,9 @@ export default function TodoistCallback() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Connection Failed
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {errorMessage}
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{errorMessage}</p>
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
                 Return to App

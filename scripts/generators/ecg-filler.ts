@@ -1,15 +1,15 @@
 #!/usr/bin/env npx tsx
 /**
  * ECG Pattern Filler - Fill empty fields in ECGPattern table
- * 
+ *
  * Updates existing ECGPattern records to fill empty fields with AI-generated content.
  * Also creates ECGConditionLink entries to link patterns to conditions with example images.
- * 
+ *
  * Fields to fill:
  *   - displayName, subcategory, qtInterval, hemodynamicEffect, cardioversion, pacing, referral
  *   - aliases[], associatedConditions[], commonMistakes[], mnemonics[], distinguishingFeatures
  *   - exampleImageUrls[], annotatedImageUrls[]
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ecg-filler.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ecg-filler.ts --update-existing
@@ -28,7 +28,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -36,16 +36,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -64,14 +64,14 @@ interface ECGFillContent {
   cardioversion: string;
   pacing: string;
   referral: string;
-  
-  // Array fields  
+
+  // Array fields
   aliases: string[];
   associatedConditions: string[];
   boardYieldFacts: string[];
   commonMistakes: string[];
   mnemonics: string[];
-  
+
   // JSON field
   distinguishingFeatures: Record<string, string>;
 }
@@ -81,18 +81,18 @@ async function generateECGContent(pattern: any): Promise<ECGFillContent> {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not set');
   }
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
+  const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
-  
+
   await rateLimiter.acquire();
-  
+
   const prompt = `Generate comprehensive clinical content for the ECG pattern "${pattern.name}" for PANCE/PA education.
 
 Current info:
@@ -136,12 +136,12 @@ Return ONLY valid JSON.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error(`Failed to parse JSON for ${pattern.name}`);
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -166,10 +166,10 @@ function needsUpdate(record: any): boolean {
     !record.associatedConditions || record.associatedConditions.length === 0,
     !record.boardYieldFacts || record.boardYieldFacts.length === 0,
     !record.commonMistakes || record.commonMistakes.length === 0,
-    !record.distinguishingFeatures
+    !record.distinguishingFeatures,
   ];
-  
-  return emptyFields.some(empty => empty);
+
+  return emptyFields.some((empty) => empty);
 }
 
 async function updateECGPattern(id: string, content: ECGFillContent): Promise<void> {
@@ -184,46 +184,49 @@ async function updateECGPattern(id: string, content: ECGFillContent): Promise<vo
       pacing: content.pacing,
       referral: content.referral,
       aliases: ensureArray(content.aliases, 'No aliases'),
-      associatedConditions: ensureArray(content.associatedConditions, 'Various clinical conditions'),
+      associatedConditions: ensureArray(
+        content.associatedConditions,
+        'Various clinical conditions'
+      ),
       boardYieldFacts: ensureArray(content.boardYieldFacts, 'Review diagnostic criteria'),
       commonMistakes: ensureArray(content.commonMistakes, 'Carefully review rhythm strip'),
       mnemonics: content.mnemonics || [],
-      distinguishingFeatures: content.distinguishingFeatures || {}
-    }
+      distinguishingFeatures: content.distinguishingFeatures || {},
+    },
   });
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : undefined;
-  
+
   console.log('💓 ECG Pattern Filler - Fill Empty Fields');
   console.log(`   Mode: ${dryRun ? 'DRY RUN' : 'UPDATE'}`);
   if (batchSize) console.log(`   Batch size: ${batchSize}`);
   console.log('');
-  
+
   const allPatterns = await prisma.eCGPattern.findMany();
   console.log(`📊 Found ${allPatterns.length} ECG patterns\n`);
-  
+
   let updated = 0;
   let skipped = 0;
   let failed = 0;
   let processed = 0;
-  
+
   for (const pattern of allPatterns) {
     if (batchSize && processed >= batchSize) {
       console.log(`\n⏸️  Batch limit reached (${batchSize})`);
       break;
     }
-    
+
     if (!needsUpdate(pattern)) {
       console.log(`  ⏭️  Skipped: ${pattern.name} (already complete)`);
       skipped++;
       continue;
     }
-    
+
     try {
       if (dryRun) {
         console.log(`  📝 Would update: ${pattern.name}`);
@@ -241,14 +244,14 @@ async function main() {
       failed++;
     }
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log('📊 ECG Pattern Filler Summary:');
   console.log(`   Updated: ${updated}`);
   console.log(`   Skipped: ${skipped}`);
   console.log(`   Failed:  ${failed}`);
   console.log(`   Total processed: ${processed}`);
-  
+
   await prisma.$disconnect();
 }
 

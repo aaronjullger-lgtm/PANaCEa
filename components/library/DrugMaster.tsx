@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Pill, 
+import {
+  X,
+  Pill,
   AlertTriangle,
-  Lightbulb, 
+  Lightbulb,
   Beaker,
   Clock,
   Users,
@@ -106,8 +106,12 @@ const TextField: React.FC<{ label: string; value?: string | null }> = ({ label, 
   if (!value) return null;
   return (
     <div className="space-y-1">
-      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">{label}</h5>
-      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-line">{value}</p>
+      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">
+        {label}
+      </h5>
+      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-line">
+        {value}
+      </p>
     </div>
   );
 };
@@ -117,7 +121,9 @@ const MarkdownField: React.FC<{ label: string; value?: string | null }> = ({ lab
   if (!value) return null;
   return (
     <div className="space-y-1">
-      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">{label}</h5>
+      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">
+        {label}
+      </h5>
       <div className="text-sm text-[var(--color-text-primary)] prose prose-invert prose-sm max-w-none">
         <ReactMarkdown>{value}</ReactMarkdown>
       </div>
@@ -126,13 +132,13 @@ const MarkdownField: React.FC<{ label: string; value?: string | null }> = ({ lab
 };
 
 // Helper component for list fields
-const ListField: React.FC<{ label: string; value: string[]; color?: string }> = ({ 
-  label, 
-  value, 
-  color = 'blue' 
+const ListField: React.FC<{ label: string; value: string[]; color?: string }> = ({
+  label,
+  value,
+  color = 'blue',
 }) => {
   if (!value || value.length === 0) return null;
-  
+
   const colorClasses = {
     blue: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     emerald: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
@@ -140,10 +146,12 @@ const ListField: React.FC<{ label: string; value: string[]; color?: string }> = 
     amber: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
     purple: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
   };
-  
+
   return (
     <div className="space-y-2">
-      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">{label}</h5>
+      <h5 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">
+        {label}
+      </h5>
       <div className="flex flex-wrap gap-2">
         {value.map((item, idx) => (
           <span
@@ -168,7 +176,7 @@ const Section: React.FC<{
   const [isOpen, setIsOpen] = React.useState(false);
 
   // Check if section has any content
-  const hasContent = React.Children.toArray(children).some(child => child !== null);
+  const hasContent = React.Children.toArray(children).some((child) => child !== null);
   if (!hasContent) return null;
 
   return (
@@ -181,11 +189,13 @@ const Section: React.FC<{
           <Icon className={`w-5 h-5 ${accentColor}`} />
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
         </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <svg
+            className="w-5 h-5 text-[var(--color-text-secondary)]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </motion.div>
@@ -216,8 +226,8 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
   const brandText = drug.brandName ? ` (${drug.brandName})` : '';
 
   // Process related conditions by relationship type
-  const firstLineConditions = drug.DrugConditionLink?.filter(link => link.isFirstLine) || [];
-  const alternativeConditions = drug.DrugConditionLink?.filter(link => !link.isFirstLine) || [];
+  const firstLineConditions = drug.DrugConditionLink?.filter((link) => link.isFirstLine) || [];
+  const alternativeConditions = drug.DrugConditionLink?.filter((link) => !link.isFirstLine) || [];
 
   return (
     <AnimatePresence>
@@ -245,11 +255,13 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                   <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold text-[var(--color-text-primary)] truncate">
                       {displayName}
-                      <span className="text-lg font-normal text-[var(--color-text-secondary)]">{brandText}</span>
+                      <span className="text-lg font-normal text-[var(--color-text-secondary)]">
+                        {brandText}
+                      </span>
                     </h2>
                   </div>
                 </div>
-                
+
                 {/* Drug classes */}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {drug.drugClass.map((cls, idx) => (
@@ -281,7 +293,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                   )}
                 </div>
               </div>
-              
+
               {/* Close button */}
               <button
                 onClick={onClose}
@@ -295,25 +307,32 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
 
           {/* Scrollable content */}
           <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-6 space-y-6">
-            
             {/* Quick Facts Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {drug.mechanismOfAction && (
                 <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Beaker className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Mechanism</span>
+                    <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">
+                      Mechanism
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{drug.mechanismOfAction}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {drug.mechanismOfAction}
+                  </p>
                 </div>
               )}
               {drug.dosing && (
                 <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Droplet className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Dosing</span>
+                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                      Dosing
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{drug.dosing}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {drug.dosing}
+                  </p>
                 </div>
               )}
             </div>
@@ -326,7 +345,9 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
             {/* Related Conditions */}
             {firstLineConditions.length > 0 && (
               <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
-                <h5 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-3">First-Line for Conditions</h5>
+                <h5 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-3">
+                  First-Line for Conditions
+                </h5>
                 <div className="flex flex-wrap gap-2">
                   {firstLineConditions.map((link) => (
                     <span
@@ -346,11 +367,16 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
-                  <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">Clinical Pearls</h4>
+                  <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">
+                    Clinical Pearls
+                  </h4>
                 </div>
                 <ul className="space-y-2">
                   {drug.clinicalPearls.map((pearl, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                    >
                       <span className="text-[var(--color-accent)] mt-1">•</span>
                       <span>{pearl}</span>
                     </li>
@@ -364,11 +390,16 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-500/15 to-yellow-600/10 border border-yellow-500/30">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-yellow-400" />
-                  <h4 className="text-sm font-semibold text-yellow-400 uppercase tracking-wide">Board Yield Facts</h4>
+                  <h4 className="text-sm font-semibold text-yellow-400 uppercase tracking-wide">
+                    Board Yield Facts
+                  </h4>
                 </div>
                 <ul className="space-y-2">
                   {drug.boardYieldFacts.map((fact, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                    >
                       <span className="text-yellow-400 mt-1">★</span>
                       <span>{fact}</span>
                     </li>
@@ -382,10 +413,15 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/30">
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-5 h-5 text-violet-400" />
-                  <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">Memory Aids</h4>
+                  <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">
+                    Memory Aids
+                  </h4>
                 </div>
                 {drug.mnemonics.map((mnemonic, idx) => (
-                  <p key={idx} className="text-base font-bold text-[var(--color-text-primary)] font-mono tracking-wide mb-2">
+                  <p
+                    key={idx}
+                    className="text-base font-bold text-[var(--color-text-primary)] font-mono tracking-wide mb-2"
+                  >
                     {mnemonic}
                   </p>
                 ))}
@@ -397,11 +433,16 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-600/15 border-2 border-rose-500/50">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5 text-rose-300" />
-                  <h4 className="text-sm font-semibold text-rose-300 uppercase tracking-wide">⚠️ Black Box Warnings</h4>
+                  <h4 className="text-sm font-semibold text-rose-300 uppercase tracking-wide">
+                    ⚠️ Black Box Warnings
+                  </h4>
                 </div>
                 <ul className="space-y-2">
                   {drug.blackBoxWarnings.map((warning, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-rose-100 font-medium">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-rose-100 font-medium"
+                    >
                       <span className="text-rose-400 mt-1">⚠</span>
                       <span>{warning}</span>
                     </li>
@@ -412,9 +453,12 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
 
             {/* Expandable Sections */}
             <div className="space-y-4 pt-2">
-              
               {/* Section 1: Pharmacology */}
-              <Section title="Pharmacology & Pharmacokinetics" icon={Beaker} accentColor="text-blue-400">
+              <Section
+                title="Pharmacology & Pharmacokinetics"
+                icon={Beaker}
+                accentColor="text-blue-400"
+              >
                 <TextField label="Absorption" value={drug.absorption} />
                 <TextField label="Distribution" value={drug.distribution} />
                 <TextField label="Metabolism" value={drug.metabolism} />
@@ -427,11 +471,23 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               </Section>
 
               {/* Section 2: Administration */}
-              <Section title="Administration & Dosing" icon={Droplet} accentColor="text-emerald-400">
-                <ListField label="Routes of Administration" value={drug.routesOfAdmin} color="emerald" />
+              <Section
+                title="Administration & Dosing"
+                icon={Droplet}
+                accentColor="text-emerald-400"
+              >
+                <ListField
+                  label="Routes of Administration"
+                  value={drug.routesOfAdmin}
+                  color="emerald"
+                />
                 <ListField label="Available Formulations" value={drug.formulations} color="blue" />
                 <TextField label="Administration Tips" value={drug.administrationTips} />
-                <ListField label="Monitoring Parameters" value={drug.monitoringParams} color="amber" />
+                <ListField
+                  label="Monitoring Parameters"
+                  value={drug.monitoringParams}
+                  color="amber"
+                />
               </Section>
 
               {/* Section 3: Safety & Adverse Effects */}
@@ -441,8 +497,15 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 <ListField label="Food Interactions" value={drug.foodInteractions} color="purple" />
                 <ListField label="Contraindications" value={drug.contraindications} color="rose" />
                 <TextField label="Toxicity" value={drug.toxicity} />
-                <TextField label="Antidote / Reversal Agent" value={drug.antidote || drug.reversalAgent} />
-                <ListField label="Risk Mitigation Strategies" value={drug.riskStrategies} color="blue" />
+                <TextField
+                  label="Antidote / Reversal Agent"
+                  value={drug.antidote || drug.reversalAgent}
+                />
+                <ListField
+                  label="Risk Mitigation Strategies"
+                  value={drug.riskStrategies}
+                  color="blue"
+                />
               </Section>
 
               {/* Section 4: Special Populations */}
@@ -453,7 +516,9 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                     <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Heart className="w-4 h-4 text-purple-400" />
-                        <h5 className="text-xs font-semibold text-purple-400 uppercase">Pregnancy</h5>
+                        <h5 className="text-xs font-semibold text-purple-400 uppercase">
+                          Pregnancy
+                        </h5>
                       </div>
                       {drug.pregnancyCategory && (
                         <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
@@ -461,11 +526,13 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                         </p>
                       )}
                       {drug.pregnancyNotes && (
-                        <p className="text-sm text-[var(--color-text-primary)]">{drug.pregnancyNotes}</p>
+                        <p className="text-sm text-[var(--color-text-primary)]">
+                          {drug.pregnancyNotes}
+                        </p>
                       )}
                     </div>
                   )}
-                  
+
                   {/* Lactation */}
                   {(drug.lactationSafety || drug.lactationNotes) && (
                     <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
@@ -479,35 +546,41 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                         </p>
                       )}
                       {drug.lactationNotes && (
-                        <p className="text-sm text-[var(--color-text-primary)]">{drug.lactationNotes}</p>
+                        <p className="text-sm text-[var(--color-text-primary)]">
+                          {drug.lactationNotes}
+                        </p>
                       )}
                     </div>
                   )}
-                  
+
                   {/* Pediatric */}
                   {(drug.pediatricDosing || drug.pediatricNotes) && (
                     <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Baby className="w-4 h-4 text-emerald-400" />
-                        <h5 className="text-xs font-semibold text-emerald-400 uppercase">Pediatric</h5>
+                        <h5 className="text-xs font-semibold text-emerald-400 uppercase">
+                          Pediatric
+                        </h5>
                       </div>
                       <TextField label="Dosing" value={drug.pediatricDosing} />
                       <TextField label="Notes" value={drug.pediatricNotes} />
                     </div>
                   )}
-                  
+
                   {/* Geriatric */}
                   {(drug.geriatricDosing || drug.geriatricNotes) && (
                     <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="w-4 h-4 text-amber-400" />
-                        <h5 className="text-xs font-semibold text-amber-400 uppercase">Geriatric</h5>
+                        <h5 className="text-xs font-semibold text-amber-400 uppercase">
+                          Geriatric
+                        </h5>
                       </div>
                       <TextField label="Dosing" value={drug.geriatricDosing} />
                       <TextField label="Notes" value={drug.geriatricNotes} />
                     </div>
                   )}
-                  
+
                   {/* Renal / Hepatic */}
                   <TextField label="Renal Dosing Adjustments" value={drug.renalDosing} />
                   <TextField label="Hepatic Dosing Adjustments" value={drug.hepaticDosing} />
@@ -519,10 +592,15 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 <Section title="Test-Taking Strategy" icon={FileText} accentColor="text-yellow-400">
                   {drug.testQuestionTips.length > 0 && (
                     <div className="space-y-2">
-                      <h5 className="text-xs font-semibold text-yellow-400 uppercase tracking-wide">Question Tips</h5>
+                      <h5 className="text-xs font-semibold text-yellow-400 uppercase tracking-wide">
+                        Question Tips
+                      </h5>
                       <ul className="space-y-2">
                         {drug.testQuestionTips.map((tip, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                          >
                             <span className="text-yellow-400 mt-1">💡</span>
                             <span>{tip}</span>
                           </li>
@@ -532,10 +610,15 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                   )}
                   {drug.commonMistakes.length > 0 && (
                     <div className="space-y-2">
-                      <h5 className="text-xs font-semibold text-rose-400 uppercase tracking-wide">Common Mistakes to Avoid</h5>
+                      <h5 className="text-xs font-semibold text-rose-400 uppercase tracking-wide">
+                        Common Mistakes to Avoid
+                      </h5>
                       <ul className="space-y-2">
                         {drug.commonMistakes.map((mistake, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                          >
                             <span className="text-rose-400 mt-1">⚠</span>
                             <span>{mistake}</span>
                           </li>

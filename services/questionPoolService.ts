@@ -1,6 +1,6 @@
 /**
  * Question Pool Service
- * 
+ *
  * Database-first question management with pre-generation.
  * - Serves questions from pre-generated pool
  * - Triggers background generation when pool runs low
@@ -11,8 +11,8 @@
 import { prisma } from '@/lib/prisma';
 
 // Thresholds for question pool management
-const POOL_LOW_THRESHOLD = 20;  // When to trigger background generation
-const POOL_REFILL_COUNT = 50;   // How many questions to generate at once
+const POOL_LOW_THRESHOLD = 20; // When to trigger background generation
+const POOL_REFILL_COUNT = 50; // How many questions to generate at once
 const DEFAULT_FETCH_COUNT = 10; // Default questions per request
 
 export interface PoolQuestion {
@@ -98,7 +98,7 @@ async function getFromPreGeneratedPool(
     where: { userId },
     select: { questionId: true },
   });
-  const seenIds = new Set(seenQuestionIds.map(q => q.questionId));
+  const seenIds = new Set(seenQuestionIds.map((q) => q.questionId));
 
   // Build where clause for pre-generated questions
   // Do NOT filter by usedAt - questions remain available to all users
@@ -130,7 +130,7 @@ async function getFromPreGeneratedPool(
 
   for (const q of preGenQuestions) {
     if (availableQuestions.length >= count) break;
-    
+
     // Skip if user has seen this question
     if (seenIds.has(q.id)) continue;
 
@@ -154,7 +154,7 @@ async function getFromPreGeneratedPool(
   // This enables multi-tenant pooling where each user gets fresh questions
   if (toMarkUsed.length > 0) {
     await prisma.userQuestionSeen.createMany({
-      data: toMarkUsed.map(questionId => ({
+      data: toMarkUsed.map((questionId) => ({
         userId,
         questionId,
         questionType: 'pre_generated',
@@ -190,7 +190,7 @@ async function getFromMainTable(
     where: { userId },
     select: { questionId: true },
   });
-  const seenIds = new Set(seenQuestionIds.map(q => q.questionId));
+  const seenIds = new Set(seenQuestionIds.map((q) => q.questionId));
 
   // Build where clause
   const where: any = {};
@@ -237,12 +237,12 @@ async function getFromMainTable(
       id: q.id,
       vignette: q.vignette || undefined,
       question: q.question,
-      options: Array.isArray(q.options) ? q.options as string[] : [],
+      options: Array.isArray(q.options) ? (q.options as string[]) : [],
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
       system: q.system,
       difficulty: q.difficulty || 'medium',
-      tags: q.tags as string[] || [],
+      tags: (q.tags as string[]) || [],
     });
     toRecord.push(q.id);
   }
@@ -250,7 +250,7 @@ async function getFromMainTable(
   // Record in user history
   if (toRecord.length > 0) {
     await prisma.userQuestionSeen.createMany({
-      data: toRecord.map(questionId => ({
+      data: toRecord.map((questionId) => ({
         userId,
         questionId,
         questionType: 'question',
@@ -271,10 +271,7 @@ async function getFromMainTable(
  * Check pool status and trigger background generation if needed
  * Now counts ALL questions (not just unused) since questions are no longer "consumed"
  */
-async function checkAndTriggerGeneration(
-  system?: string,
-  category?: string
-): Promise<void> {
+async function checkAndTriggerGeneration(system?: string, category?: string): Promise<void> {
   // Count all questions (not filtered by usedAt since we no longer mark questions as used)
   const where: any = {};
   if (system) where.system = system;
@@ -295,7 +292,9 @@ async function checkAndTriggerGeneration(
           count: POOL_REFILL_COUNT,
         }),
       });
-      console.log(`[QuestionPool] Triggered generation: system=${system}, category=${category}, count=${POOL_REFILL_COUNT}`);
+      console.log(
+        `[QuestionPool] Triggered generation: system=${system}, category=${category}, count=${POOL_REFILL_COUNT}`
+      );
     } catch (error) {
       console.error('[QuestionPool] Failed to trigger generation:', error);
     }
@@ -323,18 +322,33 @@ export async function getPoolStatus(system?: string): Promise<PoolStatus> {
  * Get pool status for all systems
  */
 export async function getAllPoolStatus(): Promise<Record<string, PoolStatus>> {
-  const systems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
-  
+  const systems = [
+    'CV',
+    'PULM',
+    'GI',
+    'NEURO',
+    'MSK',
+    'DERM',
+    'HEME',
+    'ENDO',
+    'HEENT',
+    'RENAL',
+    'REPRO',
+    'PSYCH',
+    'ID',
+    'GU',
+  ];
+
   const stats: Record<string, PoolStatus> = {};
-  
+
   for (const system of systems) {
     stats[system] = await getPoolStatus(system);
   }
-  
+
   // Add total
   const total = await getPoolStatus();
   stats['ALL'] = total;
-  
+
   return stats;
 }
 
@@ -396,7 +410,7 @@ export async function seedQuestionBatch(
     };
   }>
 ): Promise<number> {
-  const records = questions.map(q => ({
+  const records = questions.map((q) => ({
     id: `pregen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     questionType: q.metadata.questionType,
     system: q.metadata.system,

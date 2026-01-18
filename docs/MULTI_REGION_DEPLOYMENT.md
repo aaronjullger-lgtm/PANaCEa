@@ -100,11 +100,11 @@ If using Neon (recommended for simplicity):
 // In your .env files
 
 // Primary write connection
-DATABASE_URL="postgresql://user:pass@ep-primary.neon.tech/dbname"
+DATABASE_URL = 'postgresql://user:pass@ep-primary.neon.tech/dbname';
 
 // Read replicas (automatically provided by Neon)
-DATABASE_READ_REPLICA_US_WEST="postgresql://user:pass@ep-west.neon.tech/dbname"
-DATABASE_READ_REPLICA_US_EAST="postgresql://user:pass@ep-east.neon.tech/dbname"
+DATABASE_READ_REPLICA_US_WEST = 'postgresql://user:pass@ep-west.neon.tech/dbname';
+DATABASE_READ_REPLICA_US_EAST = 'postgresql://user:pass@ep-east.neon.tech/dbname';
 ```
 
 ## Application Configuration
@@ -312,7 +312,7 @@ services:
       - AWS_REGION=us-west-2
       - PORT=3001
     ports:
-      - "3001:3001"
+      - '3001:3001'
     networks:
       - panacea-network
 
@@ -324,7 +324,7 @@ services:
       - AWS_REGION=us-east-1
       - PORT=3001
     ports:
-      - "3002:3001"
+      - '3002:3001'
     networks:
       - panacea-network
 
@@ -333,7 +333,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
       - app-west
       - app-east
@@ -360,12 +360,12 @@ export async function getReplicationLag(): Promise<number> {
     const primary = await prismaWrite.$queryRaw<[{ lsn: string }]>`
       SELECT pg_current_wal_lsn() as lsn;
     `;
-    
+
     // Query replica
     const replica = await prismaRead.$queryRaw<[{ lsn: string }]>`
       SELECT pg_last_wal_receive_lsn() as lsn;
     `;
-    
+
     // Calculate lag (simplified - use proper LSN comparison in production)
     return 0; // Return lag in bytes or milliseconds
   } catch (error) {
@@ -384,13 +384,13 @@ app.get('/health', async (req, res) => {
   try {
     // Check primary database
     await prismaWrite.$queryRaw`SELECT 1`;
-    
+
     // Check read replica
     await prismaRead.$queryRaw`SELECT 1`;
-    
+
     // Check replication lag
     const lag = await getReplicationLag();
-    
+
     res.json({
       status: 'healthy',
       database: {
@@ -427,7 +427,7 @@ export const prismaWrite = new PrismaClient({
   connection: {
     pool: {
       max: 10, // Maximum connections
-      min: 2,  // Minimum connections
+      min: 2, // Minimum connections
       idle: 10000, // Idle timeout (ms)
     },
   },
@@ -456,9 +456,7 @@ const stats = await prismaRead.performanceRecord.groupBy({
 If a read replica fails, fall back to primary:
 
 ```typescript
-export async function getWithFailover<T>(
-  query: () => Promise<T>
-): Promise<T> {
+export async function getWithFailover<T>(query: () => Promise<T>): Promise<T> {
   try {
     return await query();
   } catch (error) {
@@ -567,12 +565,15 @@ curl -H "CF-IPCountry: US-NY" https://api.panacea.app/health
 ### Common Issues
 
 **Issue**: High replication lag
+
 - **Solution**: Check network latency, increase WAL segments, optimize queries
 
 **Issue**: Connection pool exhaustion
+
 - **Solution**: Increase pool size, implement connection retry logic
 
 **Issue**: Geographic routing not working
+
 - **Solution**: Verify DNS propagation, check Route 53 configuration
 
 ## References

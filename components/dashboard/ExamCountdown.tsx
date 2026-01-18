@@ -28,10 +28,10 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
       today.setHours(0, 0, 0, 0);
       const exam = new Date(examDate);
       exam.setHours(0, 0, 0, 0);
-      
+
       const diffTime = exam.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       setDaysUntil(diffDays);
     };
 
@@ -110,14 +110,12 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
     >
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent)]/5 rounded-full blur-3xl" />
-      
+
       <div className="relative">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Calendar className={`w-5 h-5 ${urgencyColor}`} />
-            <span className="text-sm text-[var(--color-text-muted)]">
-              PANCE/PANRE Exam
-            </span>
+            <span className="text-sm text-[var(--color-text-muted)]">PANCE/PANRE Exam</span>
           </div>
           <div className="flex items-center gap-1">
             {onSetDate && (
@@ -146,9 +144,7 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
             <div className={`text-4xl font-bold ${urgencyColor}`}>
               {daysUntil !== null && daysUntil >= 0 ? daysUntil : '—'}
             </div>
-            <div className="text-sm text-[var(--color-text-muted)] mt-1">
-              {getMessage()}
-            </div>
+            <div className="text-sm text-[var(--color-text-muted)] mt-1">{getMessage()}</div>
           </div>
 
           {daysUntil !== null && daysUntil > 0 && (
@@ -172,9 +168,7 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
               animate={{ width: `${Math.max(0, 100 - (daysUntil / 90) * 100)}%` }}
               transition={{ duration: 1, delay: 0.5 }}
               className={`h-full ${
-                daysUntil <= 14 ? 'bg-red-500' :
-                daysUntil <= 30 ? 'bg-orange-500' :
-                'bg-yellow-500'
+                daysUntil <= 14 ? 'bg-red-500' : daysUntil <= 30 ? 'bg-orange-500' : 'bg-yellow-500'
               }`}
             />
           </div>
@@ -201,10 +195,10 @@ export function ExamCountdownBadge({ examDate }: { examDate: Date | null }) {
       today.setHours(0, 0, 0, 0);
       const exam = new Date(examDate);
       exam.setHours(0, 0, 0, 0);
-      
+
       const diffTime = exam.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       setDaysUntil(diffDays);
     };
 

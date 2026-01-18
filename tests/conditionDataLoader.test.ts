@@ -55,21 +55,19 @@ describe('Condition Data Loader - Database First', () => {
     });
 
     it('should try case-insensitive search if exact match not found', async () => {
-      (prisma.medicalContent.findFirst as any)
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          id: 'uuid-1',
-          conditionId: 'CV__ecg__atrial_fibrillation',
-          system: 'CV',
-          subcategory: 'ECG',
-          condition: 'Atrial Fibrillation',
-          relatedSystems: [],
-          content: {
-            overview: 'Irregular heart rhythm',
-          },
-          status: 'published',
-        });
-      
+      (prisma.medicalContent.findFirst as any).mockResolvedValueOnce(null).mockResolvedValueOnce({
+        id: 'uuid-1',
+        conditionId: 'CV__ecg__atrial_fibrillation',
+        system: 'CV',
+        subcategory: 'ECG',
+        condition: 'Atrial Fibrillation',
+        relatedSystems: [],
+        content: {
+          overview: 'Irregular heart rhythm',
+        },
+        status: 'published',
+      });
+
       const result = await loadConditionData('Atrial Fibrillation');
 
       expect(result).not.toBeNull();
@@ -165,10 +163,7 @@ describe('Condition Data Loader - Database First', () => {
       expect(prisma.medicalContent.findMany).toHaveBeenCalledWith({
         where: {
           status: 'published',
-          OR: [
-            { system: 'CV' },
-            { relatedSystems: { has: 'CV' } },
-          ],
+          OR: [{ system: 'CV' }, { relatedSystems: { has: 'CV' } }],
         },
         select: { conditionId: true },
       });

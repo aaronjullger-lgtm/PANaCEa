@@ -1,9 +1,9 @@
 /**
  * Wells' DVT Criteria Calculator
- * 
+ *
  * Estimates probability of deep vein thrombosis (DVT).
  * Helps guide D-dimer and ultrasound ordering.
- * 
+ *
  * Score interpretation:
  * - ≤0: Low probability (~5% DVT prevalence)
  * - 1-2: Moderate probability (~17% prevalence)
@@ -43,23 +43,28 @@ export const WellsDVTCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       return {
         score,
         interpretation: 'Low Probability',
-        recommendation: 'D-dimer recommended. If negative, DVT excluded. If positive, obtain compression ultrasound.',
+        recommendation:
+          'D-dimer recommended. If negative, DVT excluded. If positive, obtain compression ultrasound.',
         riskLevel: 'low',
-        details: 'DVT prevalence ~5%. Negative D-dimer safely rules out DVT without need for imaging.',
+        details:
+          'DVT prevalence ~5%. Negative D-dimer safely rules out DVT without need for imaging.',
       };
     } else if (score <= 2) {
       return {
         score,
         interpretation: 'Moderate Probability',
-        recommendation: 'D-dimer or compression ultrasound. Consider clinical judgment and patient risk factors.',
+        recommendation:
+          'D-dimer or compression ultrasound. Consider clinical judgment and patient risk factors.',
         riskLevel: 'moderate',
-        details: 'DVT prevalence ~17%. D-dimer may still be useful, but lower threshold for imaging.',
+        details:
+          'DVT prevalence ~17%. D-dimer may still be useful, but lower threshold for imaging.',
       };
     } else {
       return {
         score,
         interpretation: 'High Probability',
-        recommendation: 'Compression ultrasound recommended. Consider empiric anticoagulation pending results if high clinical suspicion.',
+        recommendation:
+          'Compression ultrasound recommended. Consider empiric anticoagulation pending results if high clinical suspicion.',
         riskLevel: 'high',
         details: 'DVT prevalence ~53%. Skip D-dimer and proceed directly to imaging.',
       };

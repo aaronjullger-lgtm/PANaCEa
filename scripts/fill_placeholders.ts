@@ -1,28 +1,27 @@
-
-import fs from "fs";
-import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from 'fs';
+import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 // Load env vars explicitly
 dotenv.config();
 
-console.log("Script started: Filling placeholders (Retry)");
+console.log('Script started: Filling placeholders (Retry)');
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-pro";
-const OUTPUT_FILE = path.resolve("conditionContent.generated.json");
+const MODEL_NAME = 'gemini-2.5-pro';
+const OUTPUT_FILE = path.resolve('conditionContent.generated.json');
 const DELAY_BETWEEN_REQUESTS = 5000; // 5 seconds to be very safe
 
 // ======================================================
 // API KEY
 // ======================================================
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error('[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required');
   process.exit(1);
 }
 
@@ -63,10 +62,13 @@ async function generateContent(conditionName: string, system: string) {
     const result = await model.generateContent(prompt);
     const response = result.response;
     let text = response.text();
-    
+
     // Clean up markdown code blocks if present
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    
+    text = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     return JSON.parse(text);
   } catch (error: any) {
     console.error(`Failed to generate content for ${conditionName}:`);
@@ -80,42 +82,44 @@ async function run() {
   // Load existing content
   let contentData: any[] = [];
   if (fs.existsSync(OUTPUT_FILE)) {
-    const raw = fs.readFileSync(OUTPUT_FILE, "utf8");
+    const raw = fs.readFileSync(OUTPUT_FILE, 'utf8');
     contentData = JSON.parse(raw);
   } else {
-    console.error("Content file not found!");
+    console.error('Content file not found!');
     process.exit(1);
   }
 
   // Find items with placeholder content
-  const pendingItems = contentData.filter(item => item.overview === "Content pending generation.");
-  
+  const pendingItems = contentData.filter(
+    (item) => item.overview === 'Content pending generation.'
+  );
+
   console.log(`Found ${pendingItems.length} items with pending content.`);
 
   let successCount = 0;
 
   for (const item of pendingItems) {
     // Extract system from ID (e.g. "CV__...")
-    const system = item.conditionId.split("__")[0] || "General";
-    
+    const system = item.conditionId.split('__')[0] || 'General';
+
     console.log(`Generating content for: ${item.condition} (${system})...`);
-    
+
     const generated = await generateContent(item.condition, system);
-    
+
     if (generated) {
       // Update the item in place
       Object.assign(item, generated);
-      
+
       successCount++;
-      
+
       // Save incrementally
       fs.writeFileSync(OUTPUT_FILE, JSON.stringify(contentData, null, 2));
-      
+
       // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
     } else {
-        console.log("Skipping due to error, waiting 10s before next...");
-        await new Promise(resolve => setTimeout(resolve, 10000));
+      console.log('Skipping due to error, waiting 10s before next...');
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     }
   }
 

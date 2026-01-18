@@ -13,101 +13,129 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // PANCE-relevant differential diagnosis presentations
 const PANCE_DIFFERENTIAL_DIAGNOSES = [
   // Chief Complaints - Cardiovascular
-  { name: "Chest Pain", category: "Cardiovascular", context: "Acute chest pain differential" },
-  { name: "Palpitations", category: "Cardiovascular", context: "Awareness of heartbeat" },
-  { name: "Syncope", category: "Cardiovascular", context: "Transient loss of consciousness" },
-  { name: "Lower Extremity Edema", category: "Cardiovascular", context: "Bilateral leg swelling" },
-  { name: "Dyspnea on Exertion", category: "Cardiovascular", context: "Shortness of breath with activity" },
-  
+  { name: 'Chest Pain', category: 'Cardiovascular', context: 'Acute chest pain differential' },
+  { name: 'Palpitations', category: 'Cardiovascular', context: 'Awareness of heartbeat' },
+  { name: 'Syncope', category: 'Cardiovascular', context: 'Transient loss of consciousness' },
+  { name: 'Lower Extremity Edema', category: 'Cardiovascular', context: 'Bilateral leg swelling' },
+  {
+    name: 'Dyspnea on Exertion',
+    category: 'Cardiovascular',
+    context: 'Shortness of breath with activity',
+  },
+
   // Chief Complaints - Pulmonary
-  { name: "Acute Dyspnea", category: "Pulmonary", context: "Sudden shortness of breath" },
-  { name: "Chronic Cough", category: "Pulmonary", context: "Cough > 8 weeks" },
-  { name: "Hemoptysis", category: "Pulmonary", context: "Coughing up blood" },
-  { name: "Wheezing", category: "Pulmonary", context: "High-pitched breath sounds" },
-  { name: "Pleuritic Chest Pain", category: "Pulmonary", context: "Sharp, positional chest pain" },
-  
+  { name: 'Acute Dyspnea', category: 'Pulmonary', context: 'Sudden shortness of breath' },
+  { name: 'Chronic Cough', category: 'Pulmonary', context: 'Cough > 8 weeks' },
+  { name: 'Hemoptysis', category: 'Pulmonary', context: 'Coughing up blood' },
+  { name: 'Wheezing', category: 'Pulmonary', context: 'High-pitched breath sounds' },
+  { name: 'Pleuritic Chest Pain', category: 'Pulmonary', context: 'Sharp, positional chest pain' },
+
   // Chief Complaints - GI
-  { name: "Acute Abdominal Pain", category: "GI", context: "Sudden onset abdominal pain" },
-  { name: "Right Upper Quadrant Pain", category: "GI", context: "RUQ pain differential" },
-  { name: "Right Lower Quadrant Pain", category: "GI", context: "RLQ pain differential" },
-  { name: "Left Lower Quadrant Pain", category: "GI", context: "LLQ pain differential" },
-  { name: "Epigastric Pain", category: "GI", context: "Upper central abdominal pain" },
-  { name: "Nausea and Vomiting", category: "GI", context: "N/V differential" },
-  { name: "Acute Diarrhea", category: "GI", context: "Diarrhea < 2 weeks" },
-  { name: "Chronic Diarrhea", category: "GI", context: "Diarrhea > 4 weeks" },
-  { name: "Melena", category: "GI", context: "Black tarry stools" },
-  { name: "Hematochezia", category: "GI", context: "Bright red blood per rectum" },
-  { name: "Jaundice", category: "GI", context: "Yellow discoloration of skin/sclera" },
-  { name: "Dysphagia", category: "GI", context: "Difficulty swallowing" },
-  
+  { name: 'Acute Abdominal Pain', category: 'GI', context: 'Sudden onset abdominal pain' },
+  { name: 'Right Upper Quadrant Pain', category: 'GI', context: 'RUQ pain differential' },
+  { name: 'Right Lower Quadrant Pain', category: 'GI', context: 'RLQ pain differential' },
+  { name: 'Left Lower Quadrant Pain', category: 'GI', context: 'LLQ pain differential' },
+  { name: 'Epigastric Pain', category: 'GI', context: 'Upper central abdominal pain' },
+  { name: 'Nausea and Vomiting', category: 'GI', context: 'N/V differential' },
+  { name: 'Acute Diarrhea', category: 'GI', context: 'Diarrhea < 2 weeks' },
+  { name: 'Chronic Diarrhea', category: 'GI', context: 'Diarrhea > 4 weeks' },
+  { name: 'Melena', category: 'GI', context: 'Black tarry stools' },
+  { name: 'Hematochezia', category: 'GI', context: 'Bright red blood per rectum' },
+  { name: 'Jaundice', category: 'GI', context: 'Yellow discoloration of skin/sclera' },
+  { name: 'Dysphagia', category: 'GI', context: 'Difficulty swallowing' },
+
   // Chief Complaints - Neurological
-  { name: "Headache", category: "Neurological", context: "Acute and chronic headache differential" },
-  { name: "Acute Altered Mental Status", category: "Neurological", context: "Sudden confusion, delirium" },
-  { name: "Dizziness", category: "Neurological", context: "Vertigo vs lightheadedness vs disequilibrium" },
-  { name: "Weakness", category: "Neurological", context: "Focal vs generalized weakness" },
-  { name: "Seizure", category: "Neurological", context: "New onset seizure differential" },
-  { name: "Numbness and Tingling", category: "Neurological", context: "Paresthesias differential" },
-  { name: "Tremor", category: "Neurological", context: "Involuntary rhythmic movement" },
-  { name: "Ataxia", category: "Neurological", context: "Coordination and gait problems" },
-  
+  {
+    name: 'Headache',
+    category: 'Neurological',
+    context: 'Acute and chronic headache differential',
+  },
+  {
+    name: 'Acute Altered Mental Status',
+    category: 'Neurological',
+    context: 'Sudden confusion, delirium',
+  },
+  {
+    name: 'Dizziness',
+    category: 'Neurological',
+    context: 'Vertigo vs lightheadedness vs disequilibrium',
+  },
+  { name: 'Weakness', category: 'Neurological', context: 'Focal vs generalized weakness' },
+  { name: 'Seizure', category: 'Neurological', context: 'New onset seizure differential' },
+  { name: 'Numbness and Tingling', category: 'Neurological', context: 'Paresthesias differential' },
+  { name: 'Tremor', category: 'Neurological', context: 'Involuntary rhythmic movement' },
+  { name: 'Ataxia', category: 'Neurological', context: 'Coordination and gait problems' },
+
   // Chief Complaints - Musculoskeletal
-  { name: "Low Back Pain", category: "Musculoskeletal", context: "Acute and chronic LBP differential" },
-  { name: "Neck Pain", category: "Musculoskeletal", context: "Cervical pain differential" },
-  { name: "Shoulder Pain", category: "Musculoskeletal", context: "Shoulder pain differential" },
-  { name: "Knee Pain", category: "Musculoskeletal", context: "Knee pain differential" },
-  { name: "Hip Pain", category: "Musculoskeletal", context: "Hip pain differential" },
-  { name: "Monoarticular Joint Pain", category: "Musculoskeletal", context: "Single joint arthritis" },
-  { name: "Polyarticular Joint Pain", category: "Musculoskeletal", context: "Multiple joint arthritis" },
-  
+  {
+    name: 'Low Back Pain',
+    category: 'Musculoskeletal',
+    context: 'Acute and chronic LBP differential',
+  },
+  { name: 'Neck Pain', category: 'Musculoskeletal', context: 'Cervical pain differential' },
+  { name: 'Shoulder Pain', category: 'Musculoskeletal', context: 'Shoulder pain differential' },
+  { name: 'Knee Pain', category: 'Musculoskeletal', context: 'Knee pain differential' },
+  { name: 'Hip Pain', category: 'Musculoskeletal', context: 'Hip pain differential' },
+  {
+    name: 'Monoarticular Joint Pain',
+    category: 'Musculoskeletal',
+    context: 'Single joint arthritis',
+  },
+  {
+    name: 'Polyarticular Joint Pain',
+    category: 'Musculoskeletal',
+    context: 'Multiple joint arthritis',
+  },
+
   // Chief Complaints - Genitourinary
-  { name: "Dysuria", category: "GU", context: "Painful urination" },
-  { name: "Hematuria", category: "GU", context: "Blood in urine" },
-  { name: "Flank Pain", category: "GU", context: "Lateral back pain" },
-  { name: "Scrotal Pain", category: "GU", context: "Testicular pain differential" },
-  { name: "Pelvic Pain", category: "GU", context: "Female pelvic pain" },
-  { name: "Vaginal Bleeding", category: "GU", context: "Abnormal uterine bleeding" },
-  { name: "Urinary Retention", category: "GU", context: "Inability to void" },
-  
+  { name: 'Dysuria', category: 'GU', context: 'Painful urination' },
+  { name: 'Hematuria', category: 'GU', context: 'Blood in urine' },
+  { name: 'Flank Pain', category: 'GU', context: 'Lateral back pain' },
+  { name: 'Scrotal Pain', category: 'GU', context: 'Testicular pain differential' },
+  { name: 'Pelvic Pain', category: 'GU', context: 'Female pelvic pain' },
+  { name: 'Vaginal Bleeding', category: 'GU', context: 'Abnormal uterine bleeding' },
+  { name: 'Urinary Retention', category: 'GU', context: 'Inability to void' },
+
   // Chief Complaints - Dermatologic
-  { name: "Rash", category: "Dermatologic", context: "Generalized rash differential" },
-  { name: "Pruritus", category: "Dermatologic", context: "Itching without rash" },
-  { name: "Skin Lesion", category: "Dermatologic", context: "Single skin lesion differential" },
-  { name: "Hair Loss", category: "Dermatologic", context: "Alopecia differential" },
-  
+  { name: 'Rash', category: 'Dermatologic', context: 'Generalized rash differential' },
+  { name: 'Pruritus', category: 'Dermatologic', context: 'Itching without rash' },
+  { name: 'Skin Lesion', category: 'Dermatologic', context: 'Single skin lesion differential' },
+  { name: 'Hair Loss', category: 'Dermatologic', context: 'Alopecia differential' },
+
   // Chief Complaints - ENT
-  { name: "Sore Throat", category: "ENT", context: "Pharyngitis differential" },
-  { name: "Ear Pain", category: "ENT", context: "Otalgia differential" },
-  { name: "Hearing Loss", category: "ENT", context: "Sudden vs gradual hearing loss" },
-  { name: "Epistaxis", category: "ENT", context: "Nosebleed differential" },
-  { name: "Hoarseness", category: "ENT", context: "Voice changes differential" },
-  
+  { name: 'Sore Throat', category: 'ENT', context: 'Pharyngitis differential' },
+  { name: 'Ear Pain', category: 'ENT', context: 'Otalgia differential' },
+  { name: 'Hearing Loss', category: 'ENT', context: 'Sudden vs gradual hearing loss' },
+  { name: 'Epistaxis', category: 'ENT', context: 'Nosebleed differential' },
+  { name: 'Hoarseness', category: 'ENT', context: 'Voice changes differential' },
+
   // Chief Complaints - Ophthalmologic
-  { name: "Red Eye", category: "Ophthalmologic", context: "Conjunctival injection differential" },
-  { name: "Vision Loss", category: "Ophthalmologic", context: "Acute vs chronic vision loss" },
-  { name: "Eye Pain", category: "Ophthalmologic", context: "Ocular pain differential" },
-  { name: "Double Vision", category: "Ophthalmologic", context: "Diplopia differential" },
-  
+  { name: 'Red Eye', category: 'Ophthalmologic', context: 'Conjunctival injection differential' },
+  { name: 'Vision Loss', category: 'Ophthalmologic', context: 'Acute vs chronic vision loss' },
+  { name: 'Eye Pain', category: 'Ophthalmologic', context: 'Ocular pain differential' },
+  { name: 'Double Vision', category: 'Ophthalmologic', context: 'Diplopia differential' },
+
   // Chief Complaints - Psychiatric
-  { name: "Anxiety", category: "Psychiatric", context: "Anxiety disorder differential" },
-  { name: "Depression", category: "Psychiatric", context: "Depressed mood differential" },
-  { name: "Insomnia", category: "Psychiatric", context: "Sleep disturbance differential" },
-  
+  { name: 'Anxiety', category: 'Psychiatric', context: 'Anxiety disorder differential' },
+  { name: 'Depression', category: 'Psychiatric', context: 'Depressed mood differential' },
+  { name: 'Insomnia', category: 'Psychiatric', context: 'Sleep disturbance differential' },
+
   // Chief Complaints - Systemic
-  { name: "Fever of Unknown Origin", category: "Systemic", context: "Prolonged unexplained fever" },
-  { name: "Fatigue", category: "Systemic", context: "Chronic fatigue differential" },
-  { name: "Weight Loss", category: "Systemic", context: "Unintentional weight loss" },
-  { name: "Lymphadenopathy", category: "Systemic", context: "Enlarged lymph nodes" },
-  { name: "Night Sweats", category: "Systemic", context: "Drenching night sweats" },
-  
+  { name: 'Fever of Unknown Origin', category: 'Systemic', context: 'Prolonged unexplained fever' },
+  { name: 'Fatigue', category: 'Systemic', context: 'Chronic fatigue differential' },
+  { name: 'Weight Loss', category: 'Systemic', context: 'Unintentional weight loss' },
+  { name: 'Lymphadenopathy', category: 'Systemic', context: 'Enlarged lymph nodes' },
+  { name: 'Night Sweats', category: 'Systemic', context: 'Drenching night sweats' },
+
   // Abnormal Findings
-  { name: "Anemia", category: "Hematologic", context: "Low hemoglobin differential" },
-  { name: "Thrombocytopenia", category: "Hematologic", context: "Low platelet count" },
-  { name: "Leukocytosis", category: "Hematologic", context: "Elevated WBC count" },
-  { name: "Elevated Liver Enzymes", category: "GI", context: "Transaminitis differential" },
-  { name: "Hyponatremia", category: "Endocrine", context: "Low sodium differential" },
-  { name: "Hyperkalemia", category: "Endocrine", context: "High potassium differential" },
-  { name: "Hypercalcemia", category: "Endocrine", context: "Elevated calcium differential" },
-  { name: "Proteinuria", category: "Renal", context: "Protein in urine differential" },
+  { name: 'Anemia', category: 'Hematologic', context: 'Low hemoglobin differential' },
+  { name: 'Thrombocytopenia', category: 'Hematologic', context: 'Low platelet count' },
+  { name: 'Leukocytosis', category: 'Hematologic', context: 'Elevated WBC count' },
+  { name: 'Elevated Liver Enzymes', category: 'GI', context: 'Transaminitis differential' },
+  { name: 'Hyponatremia', category: 'Endocrine', context: 'Low sodium differential' },
+  { name: 'Hyperkalemia', category: 'Endocrine', context: 'High potassium differential' },
+  { name: 'Hypercalcemia', category: 'Endocrine', context: 'Elevated calcium differential' },
+  { name: 'Proteinuria', category: 'Renal', context: 'Protein in urine differential' },
 ];
 
 // Schema for Gemini response
@@ -127,7 +155,14 @@ const differentialSchema = {
     boardYieldFacts: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     mnemonics: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
   },
-  required: ["description", "commonCauses", "lifeThreatening", "redFlags", "clinicalPearls", "boardYieldFacts"],
+  required: [
+    'description',
+    'commonCauses',
+    'lifeThreatening',
+    'redFlags',
+    'clinicalPearls',
+    'boardYieldFacts',
+  ],
 };
 
 interface DifferentialData {
@@ -149,7 +184,10 @@ interface DifferentialData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -180,10 +218,10 @@ async function generateDifferentialData(
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 

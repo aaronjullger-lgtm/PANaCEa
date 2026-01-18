@@ -1,12 +1,12 @@
 /**
  * Adaptive Difficulty Utility
- * 
+ *
  * Sprint B - Step 4: Determine question difficulty based on user performance
- * 
+ *
  * Uses:
  * - QuestionAttempt table for recent accuracy per system
  * - UserProgress.fsrsCard JSON for FSRS stability metric
- * 
+ *
  * Logic:
  * - Low skill (accuracy < 50% OR stability < 2): Serve "easy" questions
  * - High skill (accuracy > 80% AND stability > 10): Serve "hard" questions
@@ -43,7 +43,7 @@ const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 /**
  * Get user's recent performance for a specific system
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param system - System code (e.g., 'CV', 'PULM', 'GI')
@@ -59,7 +59,7 @@ export async function getUserPerformanceBySystem(
   // Check cache
   const cacheKey = `${userId}:${system}:${lookbackDays}`;
   const cached = performanceCache.get(cacheKey);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.data;
   }
@@ -82,14 +82,14 @@ export async function getUserPerformanceBySystem(
     });
 
     const totalAttempts = attempts.length;
-    const correctAttempts = attempts.filter(a => a.wasCorrect).length;
+    const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
     const accuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 50; // Default to 50% if no data
 
     // 2. Get FSRS stability from UserProgress for conditions in this system
-    const conditionIds = [...new Set(attempts.map(a => a.conditionId).filter(Boolean))];
-    
+    const conditionIds = [...new Set(attempts.map((a) => a.conditionId).filter(Boolean))];
+
     let avgStability = 5.0; // Default to medium stability if no data
-    
+
     if (conditionIds.length > 0) {
       const progressRecords = await prisma.userProgress.findMany({
         where: {
@@ -102,7 +102,7 @@ export async function getUserPerformanceBySystem(
       });
 
       const stabilities = progressRecords
-        .map(p => {
+        .map((p) => {
           try {
             const card = p.fsrsCard as FSRSCard;
             return card.stability || 5.0;
@@ -110,7 +110,7 @@ export async function getUserPerformanceBySystem(
             return 5.0;
           }
         })
-        .filter(s => s > 0);
+        .filter((s) => s > 0);
 
       if (stabilities.length > 0) {
         avgStability = stabilities.reduce((sum, s) => sum + s, 0) / stabilities.length;
@@ -118,7 +118,11 @@ export async function getUserPerformanceBySystem(
     }
 
     // 3. Determine recommended difficulty
-    const recommendedDifficulty = calculateRecommendedDifficulty(accuracy, avgStability, totalAttempts);
+    const recommendedDifficulty = calculateRecommendedDifficulty(
+      accuracy,
+      avgStability,
+      totalAttempts
+    );
 
     const performance: UserPerformance = {
       accuracy,
@@ -136,7 +140,7 @@ export async function getUserPerformanceBySystem(
     return performance;
   } catch (error) {
     console.error('[AdaptiveDifficulty] Failed to get user performance:', error);
-    
+
     // Return safe defaults on error
     return {
       accuracy: 50,
@@ -149,13 +153,13 @@ export async function getUserPerformanceBySystem(
 
 /**
  * Calculate recommended difficulty based on accuracy and FSRS stability
- * 
+ *
  * Rules:
  * - New learners (< 5 attempts): Start with "easy"
  * - Low skill (accuracy < 50% OR stability < 2): "easy"
  * - High skill (accuracy > 80% AND stability > 10): "hard"
  * - Medium skill: "medium"
- * 
+ *
  * @param accuracy - Percentage correct (0-100)
  * @param stability - FSRS stability metric
  * @param totalAttempts - Total number of attempts in lookback period
@@ -188,7 +192,7 @@ function calculateRecommendedDifficulty(
 /**
  * Get recommended difficulty for multiple systems
  * Useful for session planning across multiple systems
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param systems - Array of system codes
@@ -220,7 +224,7 @@ export async function getRecommendedDifficultiesBySystem(
 
 /**
  * Get overall user skill level (useful for UI display)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param lookbackDays - How many days to look back
@@ -254,14 +258,14 @@ export async function getUserOverallSkillLevel(
     });
 
     const totalAttempts = attempts.length;
-    const correctAttempts = attempts.filter(a => a.wasCorrect).length;
+    const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
     const overallAccuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 50;
 
     // Get overall FSRS stability
-    const conditionIds = [...new Set(attempts.map(a => a.conditionId).filter(Boolean))];
-    
+    const conditionIds = [...new Set(attempts.map((a) => a.conditionId).filter(Boolean))];
+
     let avgStability = 5.0;
-    
+
     if (conditionIds.length > 0) {
       const progressRecords = await prisma.userProgress.findMany({
         where: {
@@ -274,7 +278,7 @@ export async function getUserOverallSkillLevel(
       });
 
       const stabilities = progressRecords
-        .map(p => {
+        .map((p) => {
           try {
             const card = p.fsrsCard as FSRSCard;
             return card.stability || 5.0;
@@ -282,7 +286,7 @@ export async function getUserOverallSkillLevel(
             return 5.0;
           }
         })
-        .filter(s => s > 0);
+        .filter((s) => s > 0);
 
       if (stabilities.length > 0) {
         avgStability = stabilities.reduce((sum, s) => sum + s, 0) / stabilities.length;
@@ -291,7 +295,7 @@ export async function getUserOverallSkillLevel(
 
     // Determine skill level
     let skillLevel: 'beginner' | 'intermediate' | 'advanced';
-    
+
     if (totalAttempts < 20) {
       skillLevel = 'beginner';
     } else if (overallAccuracy < 65 || avgStability < 5) {
@@ -302,7 +306,11 @@ export async function getUserOverallSkillLevel(
       skillLevel = 'advanced';
     }
 
-    const recommendedDifficulty = calculateRecommendedDifficulty(overallAccuracy, avgStability, totalAttempts);
+    const recommendedDifficulty = calculateRecommendedDifficulty(
+      overallAccuracy,
+      avgStability,
+      totalAttempts
+    );
 
     return {
       skillLevel,
@@ -313,7 +321,7 @@ export async function getUserOverallSkillLevel(
     };
   } catch (error) {
     console.error('[AdaptiveDifficulty] Failed to get overall skill level:', error);
-    
+
     return {
       skillLevel: 'beginner',
       overallAccuracy: 50,
@@ -327,7 +335,7 @@ export async function getUserOverallSkillLevel(
 /**
  * Clear the performance cache for a specific user
  * Call this after new question attempts are recorded
- * 
+ *
  * @param userId - User ID to clear cache for
  */
 export function clearPerformanceCache(userId?: string): void {

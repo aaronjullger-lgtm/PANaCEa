@@ -1,141 +1,154 @@
 /**
  * API: GET /api/anatomy/models
- * 
+ *
  * Fetch anatomy 3D models with filtering and pagination.
  * Supports filtering by system, status, and high-yield flag.
+ *
+ * PUBLIC endpoint - anatomy models are educational curriculum content
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { publicEndpoint } from '../_shared/middleware';
+import { withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-interface CloudflareEnv {
-  DATABASE_URL: string;
-}
+const AnatomyModelsSchema = z.object({
+  query: z.object({
+    system: z.string().optional(),
+    status: z.string().default('approved'),
+    highYield: z.enum(['true', 'false']).optional(),
+    limit: z.string().optional(),
+    offset: z.string().optional(),
+  }),
+});
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
-export async function onRequestGet(context: { request: Request; env: CloudflareEnv }): Promise<Response> {
-  const { request, env } = context;
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = publicEndpoint(AnatomyModelsSchema, async ({ env, validated }) => {
+  const log = createEndpointLogger('/api/anatomy/models');
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const url = new URL(request.url);
-    const system = url.searchParams.get('system');
-    const status = url.searchParams.get('status') || 'approved';
-    const highYieldOnly = url.searchParams.get('highYield') === 'true';
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Build where clause
-    const where: any = {
-      status,
-    };
+    const { system, status, highYield, limit: limitStr, offset: offsetStr } = validated.query;
+    const highYieldOnly = highYield === 'true';
+    const limit = Math.min(parseInt(limitStr || '20'), 100);
+    const offset = parseInt(offsetStr || '0');
 
-    if (system) {
-      where.system = system.toUpperCase();
-    }
+    log.info('Fetching anatomy models', { system, status, highYieldOnly, limit, offset });
 
-    if (highYieldOnly) {
-      where.isHighYield = true;
-    }
+    // Build where conditions for raw query
+    const upperSystem = system?.toUpperCase();
 
-    // Fetch models
-    const [models, total] = await Promise.all([
-      prisma.$queryRaw`
+    // Fetch models with dynamic conditions
+    let modelsQuery: any[];
+    let totalQuery: any[];
+
+    if (system && highYieldOnly) {
+      modelsQuery = await prisma.$queryRaw`
         SELECT 
-          id,
-          name,
-          "displayName",
-          description,
-          system,
-          "fileUrl",
-          "thumbnailUrl",
-          format,
-          "fileSize",
-          "isCompressed",
-          structures,
-          "clinicalPearls",
-          "clinicalRelevance",
-          "cameraPosition",
-          "cameraTarget",
-          "defaultZoom",
-          "sourceName",
-          "sourceUrl",
-          license,
-          "isHighYield",
-          "panceYield",
-          status,
-          "createdAt"
+          id, name, "displayName", description, system, "fileUrl", "thumbnailUrl",
+          format, "fileSize", "isCompressed", structures, "clinicalPearls",
+          "clinicalRelevance", "cameraPosition", "cameraTarget", "defaultZoom",
+          "sourceName", "sourceUrl", license, "isHighYield", "panceYield", status, "createdAt"
+        FROM "Anatomy3DModel"
+        WHERE status = ${status} AND system = ${upperSystem} AND "isHighYield" = true
+        ORDER BY "panceYield" DESC NULLS LAST, name ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      totalQuery = await prisma.$queryRaw`
+        SELECT COUNT(*)::int as count FROM "Anatomy3DModel" 
+        WHERE status = ${status} AND system = ${upperSystem} AND "isHighYield" = true
+      `;
+    } else if (system) {
+      modelsQuery = await prisma.$queryRaw`
+        SELECT 
+          id, name, "displayName", description, system, "fileUrl", "thumbnailUrl",
+          format, "fileSize", "isCompressed", structures, "clinicalPearls",
+          "clinicalRelevance", "cameraPosition", "cameraTarget", "defaultZoom",
+          "sourceName", "sourceUrl", license, "isHighYield", "panceYield", status, "createdAt"
+        FROM "Anatomy3DModel"
+        WHERE status = ${status} AND system = ${upperSystem}
+        ORDER BY "panceYield" DESC NULLS LAST, name ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      totalQuery = await prisma.$queryRaw`
+        SELECT COUNT(*)::int as count FROM "Anatomy3DModel" 
+        WHERE status = ${status} AND system = ${upperSystem}
+      `;
+    } else if (highYieldOnly) {
+      modelsQuery = await prisma.$queryRaw`
+        SELECT 
+          id, name, "displayName", description, system, "fileUrl", "thumbnailUrl",
+          format, "fileSize", "isCompressed", structures, "clinicalPearls",
+          "clinicalRelevance", "cameraPosition", "cameraTarget", "defaultZoom",
+          "sourceName", "sourceUrl", license, "isHighYield", "panceYield", status, "createdAt"
+        FROM "Anatomy3DModel"
+        WHERE status = ${status} AND "isHighYield" = true
+        ORDER BY "panceYield" DESC NULLS LAST, name ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      totalQuery = await prisma.$queryRaw`
+        SELECT COUNT(*)::int as count FROM "Anatomy3DModel" 
+        WHERE status = ${status} AND "isHighYield" = true
+      `;
+    } else {
+      modelsQuery = await prisma.$queryRaw`
+        SELECT 
+          id, name, "displayName", description, system, "fileUrl", "thumbnailUrl",
+          format, "fileSize", "isCompressed", structures, "clinicalPearls",
+          "clinicalRelevance", "cameraPosition", "cameraTarget", "defaultZoom",
+          "sourceName", "sourceUrl", license, "isHighYield", "panceYield", status, "createdAt"
         FROM "Anatomy3DModel"
         WHERE status = ${status}
-        ${system ? `AND system = ${system.toUpperCase()}` : ''}
-        ${highYieldOnly ? `AND "isHighYield" = true` : ''}
         ORDER BY "panceYield" DESC NULLS LAST, name ASC
-        LIMIT ${limit}
-        OFFSET ${offset}
-      ` as any[],
-      prisma.$queryRaw`
-        SELECT COUNT(*)::int as count 
-        FROM "Anatomy3DModel" 
-        WHERE status = ${status}
-        ${system ? `AND system = ${system.toUpperCase()}` : ''}
-        ${highYieldOnly ? `AND "isHighYield" = true` : ''}
-      ` as any[],
-    ]);
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      totalQuery = await prisma.$queryRaw`
+        SELECT COUNT(*)::int as count FROM "Anatomy3DModel" WHERE status = ${status}
+      `;
+    }
 
     // Get available systems for filtering
-    const systemCounts = await prisma.$queryRaw`
+    const systemCounts = (await prisma.$queryRaw`
       SELECT system, COUNT(*)::int as count
       FROM "Anatomy3DModel"
       WHERE status = 'approved'
       GROUP BY system
       ORDER BY count DESC
-    ` as any[];
+    `) as any[];
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          models,
-          pagination: {
-            total: total[0]?.count || 0,
-            limit,
-            offset,
-            hasMore: offset + models.length < (total[0]?.count || 0),
-          },
-          filters: {
-            systems: systemCounts,
-          },
+    const total = (totalQuery as any[])[0]?.count || 0;
+
+    log.info('Anatomy models fetched successfully', { 
+      count: modelsQuery.length, 
+      total 
+    });
+
+    return {
+      success: true,
+      data: {
+        models: modelsQuery,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + modelsQuery.length < total,
         },
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+        filters: {
+          systems: systemCounts,
         },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error fetching anatomy models:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Failed to fetch anatomy models',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    log.error('Error fetching anatomy models', error);
+    return {
+      status: 500,
+      error: 'Failed to fetch anatomy models',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

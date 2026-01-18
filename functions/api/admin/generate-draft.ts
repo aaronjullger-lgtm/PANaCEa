@@ -1,20 +1,24 @@
 /**
  * API: Generate AI draft content
  * POST /api/admin/generate-draft
- * 
+ *
  * Generates AI-drafted medical content and saves it to the database with status='draft'
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { canEditContent, type UserRole } from '../_shared/rbac';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
-interface GenerateDraftRequest {
-  conditionName: string;
-  system: string;
-  subcategory?: string;
-}
+const GenerateDraftSchema = z.object({
+  body: z.object({
+    conditionName: z.string().min(1),
+    system: z.string().min(1),
+    subcategory: z.string().optional(),
+  }),
+});
 
 /**
  * Utility function to clean AI-generated JSON responses
@@ -27,37 +31,32 @@ function cleanAIJsonResponse(text: string): string {
     .trim();
 }
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
+export const onRequestPost = authenticatedEndpoint(GenerateDraftSchema, async (context) => {
+  const { env, auth, validated, request } = context;
+  const logger = createEndpointLogger('/api/admin/generate-draft');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
-      where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true }
+      where: { clerkId: auth.userId },
+      select: { id: true, role: true },
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      logger.warn('Insufficient permissions for content generation', {
+        userId: auth.userId,
+        role: user?.role,
+      });
+
+      return {
+        data: { error: 'Forbidden: Insufficient permissions' },
+        status: 403,
+      };
     }
 
-    const body: GenerateDraftRequest = await request.json();
-    const { conditionName, system, subcategory } = body;
-
-    // Validate required fields
-    if (!conditionName || !system) {
-      return createErrorResponse('Missing required fields: conditionName and system are required', 400);
-    }
+    const { conditionName, system, subcategory } = validated.body;
 
     // Generate conditionId
     const conditionId = `${system}__${subcategory || 'general'}__${conditionName
@@ -70,13 +69,19 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     });
 
     if (existing) {
-      return createErrorResponse('Content with this condition already exists', 409);
+      logger.info('Content already exists', { conditionId, userId: user.id });
+
+      return {
+        data: { error: 'Content with this condition already exists' },
+        status: 409,
+      };
     }
 
     // Initialize Gemini AI
-    const apiKey = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
+    const apiKey = env.GEMINI_API_KEY || (env as any).GOOGLE_API_KEY;
     if (!apiKey) {
-      return createErrorResponse('AI service not configured', 500);
+      logger.error('AI service not configured', { userId: user.id });
+      throw new Error('AI service not configured');
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -115,14 +120,16 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
     try {
       aiContent = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      return createErrorResponse('Failed to parse AI-generated content', 500);
+      logger.error('Failed to parse AI response', {
+        error: parseError instanceof Error ? parseError.message : String(parseError),
+        userId: user.id,
+      });
+      throw new Error('Failed to parse AI-generated content');
     }
 
     // Get client IP and user agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Create draft in database
@@ -169,14 +176,26 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
       },
     });
 
-    return createSuccessResponse({
-      message: 'Draft content generated successfully',
-      content: newContent,
-    }, 201);
-  } catch (error: any) {
-    console.error('Error generating draft content:', error);
-    return createErrorResponse(error.message || 'Failed to generate draft content', 500);
+    logger.info('Draft content generated successfully', {
+      userId: user.id,
+      conditionId,
+      contentId: newContent.id,
+    });
+
+    return {
+      data: {
+        message: 'Draft content generated successfully',
+        content: newContent,
+      },
+      status: 201,
+    };
+  } catch (error) {
+    logger.error('Error generating draft content', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to generate draft content');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

@@ -26,19 +26,19 @@ const MEDICAL_VOCABULARY: MedicalTerm[] = [
   { english: 'Cough', spanish: 'Tos', category: 'Symptoms' },
   { english: 'Dizziness', spanish: 'Mareo', category: 'Symptoms' },
   { english: 'Fatigue', spanish: 'Fatiga', category: 'Symptoms' },
-  
+
   { english: 'Heart', spanish: 'Corazón', category: 'Anatomy' },
   { english: 'Lung', spanish: 'Pulmón', category: 'Anatomy' },
   { english: 'Liver', spanish: 'Hígado', category: 'Anatomy' },
   { english: 'Kidney', spanish: 'Riñón', category: 'Anatomy' },
   { english: 'Brain', spanish: 'Cerebro', category: 'Anatomy' },
   { english: 'Stomach', spanish: 'Estómago', category: 'Anatomy' },
-  
+
   { english: 'Blood pressure', spanish: 'Presión arterial', category: 'Vitals' },
   { english: 'Heart rate', spanish: 'Frecuencia cardíaca', category: 'Vitals' },
   { english: 'Temperature', spanish: 'Temperatura', category: 'Vitals' },
   { english: 'Pulse', spanish: 'Pulso', category: 'Vitals' },
-  
+
   { english: 'Diabetes', spanish: 'Diabetes', category: 'Conditions' },
   { english: 'Hypertension', spanish: 'Hipertensión', category: 'Conditions' },
   { english: 'Asthma', spanish: 'Asma', category: 'Conditions' },
@@ -53,13 +53,13 @@ const MEDICAL_VOCABULARY: MedicalTerm[] = [
  */
 export function translateToSpanish(text: string): string {
   let translated = text;
-  
+
   // Replace common medical terms
-  MEDICAL_VOCABULARY.forEach(term => {
+  MEDICAL_VOCABULARY.forEach((term) => {
     const regex = new RegExp(term.english, 'gi');
     translated = translated.replace(regex, `${term.spanish} (${term.english})`);
   });
-  
+
   return translated;
 }
 
@@ -70,20 +70,20 @@ export function getSpanishQuestion(question: Question, mode: SpanishMode): Quest
   if (mode === 'english') {
     return question;
   }
-  
+
   const spanishVignette = translateToSpanish(question.question);
-  
+
   if (mode === 'spanish') {
     return {
       ...question,
-      question: spanishVignette
+      question: spanishVignette,
     };
   }
-  
+
   // Side-by-side mode
   return {
     ...question,
-    question: `[English]\n${question.question}\n\n[Spanish]\n${spanishVignette}`
+    question: `[English]\n${question.question}\n\n[Spanish]\n${spanishVignette}`,
   };
 }
 
@@ -94,14 +94,14 @@ export function getMedicalVocabulary(category?: string): MedicalTerm[] {
   if (!category) {
     return MEDICAL_VOCABULARY;
   }
-  return MEDICAL_VOCABULARY.filter(term => term.category === category);
+  return MEDICAL_VOCABULARY.filter((term) => term.category === category);
 }
 
 /**
  * Get all vocabulary categories
  */
 export function getVocabularyCategories(): string[] {
-  return Array.from(new Set(MEDICAL_VOCABULARY.map(term => term.category)));
+  return Array.from(new Set(MEDICAL_VOCABULARY.map((term) => term.category)));
 }
 
 /**
@@ -109,9 +109,10 @@ export function getVocabularyCategories(): string[] {
  */
 export function searchMedicalVocabulary(query: string): MedicalTerm[] {
   const lowerQuery = query.toLowerCase();
-  return MEDICAL_VOCABULARY.filter(term => 
-    term.english.toLowerCase().includes(lowerQuery) ||
-    term.spanish.toLowerCase().includes(lowerQuery)
+  return MEDICAL_VOCABULARY.filter(
+    (term) =>
+      term.english.toLowerCase().includes(lowerQuery) ||
+      term.spanish.toLowerCase().includes(lowerQuery)
   );
 }
 
@@ -127,12 +128,12 @@ export function getRandomMedicalTerm(): MedicalTerm {
  */
 export function extractMedicalTerms(vignette: string): MedicalTerm[] {
   const foundTerms: MedicalTerm[] = [];
-  
-  MEDICAL_VOCABULARY.forEach(term => {
+
+  MEDICAL_VOCABULARY.forEach((term) => {
     if (vignette.toLowerCase().includes(term.english.toLowerCase())) {
       foundTerms.push(term);
     }
   });
-  
+
   return foundTerms;
 }

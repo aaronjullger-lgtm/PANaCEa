@@ -1,24 +1,24 @@
 /**
  * EmptyState Component
- * 
+ *
  * Reusable empty state UI for when data is not available.
  * Provides consistent UX across the application with contextual messaging.
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Inbox, 
-  Search, 
-  FileQuestion, 
-  Brain, 
+import {
+  Inbox,
+  Search,
+  FileQuestion,
+  Brain,
   Trophy,
   BookOpen,
   Sparkles,
-  type LucideIcon 
+  type LucideIcon,
 } from 'lucide-react';
 
-export type EmptyStateVariant = 
+export type EmptyStateVariant =
   | 'default'
   | 'search'
   | 'quiz'
@@ -55,7 +55,10 @@ interface EmptyStateProps {
   compact?: boolean;
 }
 
-const VARIANT_CONFIG: Record<EmptyStateVariant, { icon: LucideIcon; defaultTitle: string; defaultDescription: string }> = {
+const VARIANT_CONFIG: Record<
+  EmptyStateVariant,
+  { icon: LucideIcon; defaultTitle: string; defaultDescription: string }
+> = {
   default: {
     icon: Inbox,
     defaultTitle: 'Nothing here yet',
@@ -110,56 +113,67 @@ export function EmptyState({
   const displayDescription = description || config.defaultDescription;
 
   const content = (
-    <div className={`flex flex-col items-center justify-center text-center ${compact ? 'py-6 px-4' : 'py-12 px-6'} ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center text-center ${compact ? 'py-6 px-4' : 'py-12 px-6'} ${className}`}
+    >
       {/* Icon */}
       <div className={`${compact ? 'mb-3' : 'mb-4'}`}>
-        <div className={`
+        <div
+          className={`
           ${compact ? 'w-12 h-12' : 'w-16 h-16'} 
           rounded-full 
           bg-[var(--color-bg-tertiary)] 
           flex items-center justify-center
-        `}>
-          <IconComponent 
+        `}
+        >
+          <IconComponent
             className={`
               ${compact ? 'w-6 h-6' : 'w-8 h-8'} 
               text-[var(--color-text-tertiary)]
-            `} 
+            `}
           />
         </div>
       </div>
 
       {/* Text */}
-      <h3 className={`
+      <h3
+        className={`
         ${compact ? 'text-base' : 'text-lg'} 
         font-semibold 
         text-[var(--color-text-primary)] 
         mb-1
-      `}>
+      `}
+      >
         {displayTitle}
       </h3>
-      
+
       {displayDescription && (
-        <p className={`
+        <p
+          className={`
           ${compact ? 'text-sm' : 'text-base'} 
           text-[var(--color-text-secondary)] 
           max-w-sm 
           ${compact ? 'mb-3' : 'mb-4'}
-        `}>
+        `}
+        >
           {displayDescription}
         </p>
       )}
 
       {/* Actions */}
       {(action || secondaryAction) && (
-        <div className={`flex flex-col sm:flex-row items-center gap-3 ${compact ? 'mt-2' : 'mt-4'}`}>
+        <div
+          className={`flex flex-col sm:flex-row items-center gap-3 ${compact ? 'mt-2' : 'mt-4'}`}
+        >
           {action && (
             <button
               onClick={action.onClick}
               className={`
                 px-4 py-2 rounded-lg font-medium transition-colors
-                ${action.variant === 'secondary'
-                  ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'
-                  : 'bg-[var(--color-brand-primary)] text-white hover:opacity-90'
+                ${
+                  action.variant === 'secondary'
+                    ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'
+                    : 'bg-[var(--color-brand-primary)] text-white hover:opacity-90'
                 }
               `}
             >
@@ -206,7 +220,7 @@ export const EmptyStates = {
       {...props}
     />
   ),
-  
+
   NoSearchResults: (props?: Partial<EmptyStateProps>) => (
     <EmptyState
       variant="search"
@@ -215,7 +229,7 @@ export const EmptyStates = {
       {...props}
     />
   ),
-  
+
   NoQuestions: (onStartQuiz?: () => void, props?: Partial<EmptyStateProps>) => (
     <EmptyState
       variant="quiz"
@@ -225,7 +239,7 @@ export const EmptyStates = {
       {...props}
     />
   ),
-  
+
   NoAchievements: (props?: Partial<EmptyStateProps>) => (
     <EmptyState
       variant="achievement"
@@ -234,7 +248,7 @@ export const EmptyStates = {
       {...props}
     />
   ),
-  
+
   NoStats: (onStartLearning?: () => void, props?: Partial<EmptyStateProps>) => (
     <EmptyState
       variant="getting-started"

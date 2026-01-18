@@ -9,20 +9,18 @@ import { MODE_REGISTRY } from '../config/training-modes';
 describe('TrainingMenu Component Logic', () => {
   describe('Mode Registry Filtering', () => {
     it('should have exactly one core_adaptive mode', () => {
-      const coreModes = MODE_REGISTRY.filter(
-        (mode) => mode.id === 'core_adaptive'
-      );
+      const coreModes = MODE_REGISTRY.filter((mode) => mode.id === 'core_adaptive');
       expect(coreModes).toHaveLength(1);
     });
 
     it('should filter visual_diagnostics modes for drill modes grid', () => {
       const drillModes = MODE_REGISTRY.filter((mode) => mode.category === 'visual_diagnostics');
-      
+
       // Should only include visual_diagnostics category modes
       drillModes.forEach((mode) => {
         expect(mode.category).toBe('visual_diagnostics');
       });
-      
+
       // Should have at least a few visual modes
       expect(drillModes.length).toBeGreaterThanOrEqual(2);
     });
@@ -41,12 +39,33 @@ describe('TrainingMenu Component Logic', () => {
   describe('Icon Mapping', () => {
     // Icon names used in MODE_REGISTRY (expanded for new modes including Phase 7, 8, 38, 40)
     const expectedIconNames = [
-      'Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList',
-      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker', 'Droplets', 'MessageSquare',
-      'Siren', 'Calendar', 'Trophy', 'Clock', 'Headphones', 'GraduationCap',
-      'Hash', 'Wind', 'AlertTriangle', 'PillBottle'
+      'Brain',
+      'Image',
+      'Zap',
+      'GitCompare',
+      'FileText',
+      'Flame',
+      'ClipboardList',
+      'Activity',
+      'Scan',
+      'FileCheck',
+      'Layers',
+      'Pill',
+      'Beaker',
+      'Droplets',
+      'MessageSquare',
+      'Siren',
+      'Calendar',
+      'Trophy',
+      'Clock',
+      'Headphones',
+      'GraduationCap',
+      'Hash',
+      'Wind',
+      'AlertTriangle',
+      'PillBottle',
     ];
-    
+
     it('should have valid icon names for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {
         expect(expectedIconNames).toContain(mode.iconName);
@@ -63,10 +82,23 @@ describe('TrainingMenu Component Logic', () => {
 
   describe('Theme Background Mapping', () => {
     const validThemes = [
-      'stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald',
-      'rose', 'pink', 'violet', 'cyan', 'purple', 'orange', 'indigo', 'green'
+      'stone',
+      'slate',
+      'amber',
+      'blue',
+      'teal',
+      'red',
+      'emerald',
+      'rose',
+      'pink',
+      'violet',
+      'cyan',
+      'purple',
+      'orange',
+      'indigo',
+      'green',
     ];
-    
+
     it('should have valid theme values for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {
         expect(validThemes).toContain(mode.theme);
@@ -122,7 +154,7 @@ describe('TrainingMenu Component Logic', () => {
     it('should correctly identify modes that are coming soon', () => {
       const comingSoonModes = MODE_REGISTRY.filter((mode) => mode.isComingSoon === true);
       const availableModes = MODE_REGISTRY.filter((mode) => !mode.isComingSoon);
-      
+
       // Currently all modes are implemented and available
       // This test ensures the filtering logic works correctly
       expect(availableModes.length + comingSoonModes.length).toBe(MODE_REGISTRY.length);
@@ -131,17 +163,15 @@ describe('TrainingMenu Component Logic', () => {
     it('should handle optional isComingSoon property', () => {
       MODE_REGISTRY.forEach((mode) => {
         // isComingSoon is optional, so it can be undefined or boolean
-        expect(
-          mode.isComingSoon === undefined || typeof mode.isComingSoon === 'boolean'
-        ).toBe(true);
+        expect(mode.isComingSoon === undefined || typeof mode.isComingSoon === 'boolean').toBe(
+          true
+        );
       });
     });
   });
 
   describe('Core Adaptive Mode', () => {
-    const coreMode = MODE_REGISTRY.find(
-      (mode) => mode.id === 'core_adaptive'
-    );
+    const coreMode = MODE_REGISTRY.find((mode) => mode.id === 'core_adaptive');
 
     it('should have core adaptive mode in registry', () => {
       expect(coreMode).toBeDefined();

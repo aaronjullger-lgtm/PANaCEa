@@ -13,66 +13,222 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // PANCE-relevant ECG patterns
 const PANCE_ECG_PATTERNS = [
   // Arrhythmias
-  { name: "Atrial Flutter", category: "Arrhythmias", clinicalContext: "Regular narrow complex tachycardia with sawtooth pattern" },
-  { name: "Atrial Fibrillation", category: "Arrhythmias", clinicalContext: "Irregularly irregular rhythm, absent P waves" },
-  { name: "Multifocal Atrial Tachycardia", category: "Arrhythmias", clinicalContext: "3+ P wave morphologies, COPD association" },
-  { name: "Supraventricular Tachycardia", category: "Arrhythmias", clinicalContext: "Regular narrow complex tachycardia" },
-  { name: "AVNRT", category: "Arrhythmias", clinicalContext: "AV nodal reentrant tachycardia" },
-  { name: "WPW Pattern", category: "Arrhythmias", clinicalContext: "Short PR, delta wave, pre-excitation" },
-  { name: "Ventricular Tachycardia", category: "Arrhythmias", clinicalContext: "Wide complex tachycardia" },
-  { name: "Torsades de Pointes", category: "Arrhythmias", clinicalContext: "Polymorphic VT with twisting QRS" },
-  { name: "Ventricular Fibrillation", category: "Arrhythmias", clinicalContext: "Chaotic, no organized rhythm" },
-  { name: "Sick Sinus Syndrome", category: "Arrhythmias", clinicalContext: "Bradycardia-tachycardia syndrome" },
-  { name: "Junctional Rhythm", category: "Arrhythmias", clinicalContext: "Narrow QRS with absent/inverted P waves" },
-  
+  {
+    name: 'Atrial Flutter',
+    category: 'Arrhythmias',
+    clinicalContext: 'Regular narrow complex tachycardia with sawtooth pattern',
+  },
+  {
+    name: 'Atrial Fibrillation',
+    category: 'Arrhythmias',
+    clinicalContext: 'Irregularly irregular rhythm, absent P waves',
+  },
+  {
+    name: 'Multifocal Atrial Tachycardia',
+    category: 'Arrhythmias',
+    clinicalContext: '3+ P wave morphologies, COPD association',
+  },
+  {
+    name: 'Supraventricular Tachycardia',
+    category: 'Arrhythmias',
+    clinicalContext: 'Regular narrow complex tachycardia',
+  },
+  { name: 'AVNRT', category: 'Arrhythmias', clinicalContext: 'AV nodal reentrant tachycardia' },
+  {
+    name: 'WPW Pattern',
+    category: 'Arrhythmias',
+    clinicalContext: 'Short PR, delta wave, pre-excitation',
+  },
+  {
+    name: 'Ventricular Tachycardia',
+    category: 'Arrhythmias',
+    clinicalContext: 'Wide complex tachycardia',
+  },
+  {
+    name: 'Torsades de Pointes',
+    category: 'Arrhythmias',
+    clinicalContext: 'Polymorphic VT with twisting QRS',
+  },
+  {
+    name: 'Ventricular Fibrillation',
+    category: 'Arrhythmias',
+    clinicalContext: 'Chaotic, no organized rhythm',
+  },
+  {
+    name: 'Sick Sinus Syndrome',
+    category: 'Arrhythmias',
+    clinicalContext: 'Bradycardia-tachycardia syndrome',
+  },
+  {
+    name: 'Junctional Rhythm',
+    category: 'Arrhythmias',
+    clinicalContext: 'Narrow QRS with absent/inverted P waves',
+  },
+
   // Conduction Abnormalities
-  { name: "First Degree AV Block", category: "Conduction", clinicalContext: "PR interval > 200ms" },
-  { name: "Second Degree AV Block Type I", category: "Conduction", clinicalContext: "Wenckebach - progressive PR prolongation" },
-  { name: "Second Degree AV Block Type II", category: "Conduction", clinicalContext: "Mobitz II - sudden dropped beats" },
-  { name: "Third Degree AV Block", category: "Conduction", clinicalContext: "Complete heart block - AV dissociation" },
-  { name: "Right Bundle Branch Block", category: "Conduction", clinicalContext: "RSR' in V1, wide QRS" },
-  { name: "Left Bundle Branch Block", category: "Conduction", clinicalContext: "Wide QRS, notched R in lateral leads" },
-  { name: "Left Anterior Fascicular Block", category: "Conduction", clinicalContext: "Left axis deviation" },
-  { name: "Left Posterior Fascicular Block", category: "Conduction", clinicalContext: "Right axis deviation" },
-  { name: "Bifascicular Block", category: "Conduction", clinicalContext: "RBBB + LAFB or LPFB" },
-  { name: "Trifascicular Block", category: "Conduction", clinicalContext: "Bifascicular + 1st degree AV block" },
-  
+  { name: 'First Degree AV Block', category: 'Conduction', clinicalContext: 'PR interval > 200ms' },
+  {
+    name: 'Second Degree AV Block Type I',
+    category: 'Conduction',
+    clinicalContext: 'Wenckebach - progressive PR prolongation',
+  },
+  {
+    name: 'Second Degree AV Block Type II',
+    category: 'Conduction',
+    clinicalContext: 'Mobitz II - sudden dropped beats',
+  },
+  {
+    name: 'Third Degree AV Block',
+    category: 'Conduction',
+    clinicalContext: 'Complete heart block - AV dissociation',
+  },
+  {
+    name: 'Right Bundle Branch Block',
+    category: 'Conduction',
+    clinicalContext: "RSR' in V1, wide QRS",
+  },
+  {
+    name: 'Left Bundle Branch Block',
+    category: 'Conduction',
+    clinicalContext: 'Wide QRS, notched R in lateral leads',
+  },
+  {
+    name: 'Left Anterior Fascicular Block',
+    category: 'Conduction',
+    clinicalContext: 'Left axis deviation',
+  },
+  {
+    name: 'Left Posterior Fascicular Block',
+    category: 'Conduction',
+    clinicalContext: 'Right axis deviation',
+  },
+  { name: 'Bifascicular Block', category: 'Conduction', clinicalContext: 'RBBB + LAFB or LPFB' },
+  {
+    name: 'Trifascicular Block',
+    category: 'Conduction',
+    clinicalContext: 'Bifascicular + 1st degree AV block',
+  },
+
   // Ischemia/Infarction
-  { name: "Anterior STEMI", category: "Ischemia", clinicalContext: "ST elevation V1-V4, LAD occlusion" },
-  { name: "Inferior STEMI", category: "Ischemia", clinicalContext: "ST elevation II, III, aVF, RCA/LCx occlusion" },
-  { name: "Lateral STEMI", category: "Ischemia", clinicalContext: "ST elevation I, aVL, V5-V6" },
-  { name: "Posterior STEMI", category: "Ischemia", clinicalContext: "ST depression V1-V3, tall R waves" },
-  { name: "Right Ventricular MI", category: "Ischemia", clinicalContext: "ST elevation V4R, inferior MI association" },
-  { name: "NSTEMI", category: "Ischemia", clinicalContext: "ST depression, T wave inversions" },
-  { name: "Wellens Syndrome", category: "Ischemia", clinicalContext: "Biphasic/deeply inverted T waves V2-V3" },
-  { name: "de Winter T Waves", category: "Ischemia", clinicalContext: "ST depression + hyperacute T waves" },
-  { name: "Sgarbossa Criteria", category: "Ischemia", clinicalContext: "STEMI diagnosis in LBBB" },
-  
+  {
+    name: 'Anterior STEMI',
+    category: 'Ischemia',
+    clinicalContext: 'ST elevation V1-V4, LAD occlusion',
+  },
+  {
+    name: 'Inferior STEMI',
+    category: 'Ischemia',
+    clinicalContext: 'ST elevation II, III, aVF, RCA/LCx occlusion',
+  },
+  { name: 'Lateral STEMI', category: 'Ischemia', clinicalContext: 'ST elevation I, aVL, V5-V6' },
+  {
+    name: 'Posterior STEMI',
+    category: 'Ischemia',
+    clinicalContext: 'ST depression V1-V3, tall R waves',
+  },
+  {
+    name: 'Right Ventricular MI',
+    category: 'Ischemia',
+    clinicalContext: 'ST elevation V4R, inferior MI association',
+  },
+  { name: 'NSTEMI', category: 'Ischemia', clinicalContext: 'ST depression, T wave inversions' },
+  {
+    name: 'Wellens Syndrome',
+    category: 'Ischemia',
+    clinicalContext: 'Biphasic/deeply inverted T waves V2-V3',
+  },
+  {
+    name: 'de Winter T Waves',
+    category: 'Ischemia',
+    clinicalContext: 'ST depression + hyperacute T waves',
+  },
+  { name: 'Sgarbossa Criteria', category: 'Ischemia', clinicalContext: 'STEMI diagnosis in LBBB' },
+
   // Chamber Abnormalities
-  { name: "Left Ventricular Hypertrophy", category: "Hypertrophy", clinicalContext: "High voltage, strain pattern" },
-  { name: "Right Ventricular Hypertrophy", category: "Hypertrophy", clinicalContext: "Right axis, tall R in V1" },
-  { name: "Left Atrial Enlargement", category: "Hypertrophy", clinicalContext: "P mitrale, notched P waves" },
-  { name: "Right Atrial Enlargement", category: "Hypertrophy", clinicalContext: "P pulmonale, tall peaked P waves" },
-  { name: "Biventricular Hypertrophy", category: "Hypertrophy", clinicalContext: "Combined LVH + RVH criteria" },
-  
+  {
+    name: 'Left Ventricular Hypertrophy',
+    category: 'Hypertrophy',
+    clinicalContext: 'High voltage, strain pattern',
+  },
+  {
+    name: 'Right Ventricular Hypertrophy',
+    category: 'Hypertrophy',
+    clinicalContext: 'Right axis, tall R in V1',
+  },
+  {
+    name: 'Left Atrial Enlargement',
+    category: 'Hypertrophy',
+    clinicalContext: 'P mitrale, notched P waves',
+  },
+  {
+    name: 'Right Atrial Enlargement',
+    category: 'Hypertrophy',
+    clinicalContext: 'P pulmonale, tall peaked P waves',
+  },
+  {
+    name: 'Biventricular Hypertrophy',
+    category: 'Hypertrophy',
+    clinicalContext: 'Combined LVH + RVH criteria',
+  },
+
   // Electrolyte Abnormalities
-  { name: "Hyperkalemia", category: "Electrolyte", clinicalContext: "Peaked T waves, widened QRS, sine wave" },
-  { name: "Hypokalemia", category: "Electrolyte", clinicalContext: "U waves, flattened T waves, ST depression" },
-  { name: "Hypercalcemia", category: "Electrolyte", clinicalContext: "Shortened QT interval" },
-  { name: "Hypocalcemia", category: "Electrolyte", clinicalContext: "Prolonged QT interval" },
-  { name: "Hypomagnesemia", category: "Electrolyte", clinicalContext: "Similar to hypokalemia, U waves" },
-  
+  {
+    name: 'Hyperkalemia',
+    category: 'Electrolyte',
+    clinicalContext: 'Peaked T waves, widened QRS, sine wave',
+  },
+  {
+    name: 'Hypokalemia',
+    category: 'Electrolyte',
+    clinicalContext: 'U waves, flattened T waves, ST depression',
+  },
+  { name: 'Hypercalcemia', category: 'Electrolyte', clinicalContext: 'Shortened QT interval' },
+  { name: 'Hypocalcemia', category: 'Electrolyte', clinicalContext: 'Prolonged QT interval' },
+  {
+    name: 'Hypomagnesemia',
+    category: 'Electrolyte',
+    clinicalContext: 'Similar to hypokalemia, U waves',
+  },
+
   // Other Patterns
-  { name: "Pericarditis", category: "Other", clinicalContext: "Diffuse ST elevation, PR depression" },
-  { name: "Brugada Pattern", category: "Other", clinicalContext: "Coved ST elevation V1-V2" },
-  { name: "Long QT Syndrome", category: "Other", clinicalContext: "Prolonged QTc > 470ms male, >480ms female" },
-  { name: "Short QT Syndrome", category: "Other", clinicalContext: "QTc < 330ms" },
-  { name: "Early Repolarization", category: "Other", clinicalContext: "J point elevation, benign vs malignant" },
-  { name: "Digoxin Effect", category: "Drug Effect", clinicalContext: "Scooped ST depression, short QT" },
-  { name: "Digitalis Toxicity", category: "Drug Effect", clinicalContext: "Arrhythmias, bidirectional VT" },
-  { name: "Pulmonary Embolism", category: "Other", clinicalContext: "S1Q3T3, sinus tachycardia, RBBB" },
-  { name: "Hypothermia", category: "Other", clinicalContext: "Osborn (J) waves, bradycardia" },
-  { name: "Takotsubo Cardiomyopathy", category: "Other", clinicalContext: "Deep T wave inversions, QT prolongation" },
+  {
+    name: 'Pericarditis',
+    category: 'Other',
+    clinicalContext: 'Diffuse ST elevation, PR depression',
+  },
+  { name: 'Brugada Pattern', category: 'Other', clinicalContext: 'Coved ST elevation V1-V2' },
+  {
+    name: 'Long QT Syndrome',
+    category: 'Other',
+    clinicalContext: 'Prolonged QTc > 470ms male, >480ms female',
+  },
+  { name: 'Short QT Syndrome', category: 'Other', clinicalContext: 'QTc < 330ms' },
+  {
+    name: 'Early Repolarization',
+    category: 'Other',
+    clinicalContext: 'J point elevation, benign vs malignant',
+  },
+  {
+    name: 'Digoxin Effect',
+    category: 'Drug Effect',
+    clinicalContext: 'Scooped ST depression, short QT',
+  },
+  {
+    name: 'Digitalis Toxicity',
+    category: 'Drug Effect',
+    clinicalContext: 'Arrhythmias, bidirectional VT',
+  },
+  {
+    name: 'Pulmonary Embolism',
+    category: 'Other',
+    clinicalContext: 'S1Q3T3, sinus tachycardia, RBBB',
+  },
+  { name: 'Hypothermia', category: 'Other', clinicalContext: 'Osborn (J) waves, bradycardia' },
+  {
+    name: 'Takotsubo Cardiomyopathy',
+    category: 'Other',
+    clinicalContext: 'Deep T wave inversions, QT prolongation',
+  },
 ];
 
 // Schema for Gemini response
@@ -97,7 +253,13 @@ const ecgPatternSchema = {
     boardYieldFacts: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     mnemonics: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
   },
-  required: ["description", "diagnosticCriteria", "keyFeatures", "clinicalPearls", "boardYieldFacts"],
+  required: [
+    'description',
+    'diagnosticCriteria',
+    'keyFeatures',
+    'clinicalPearls',
+    'boardYieldFacts',
+  ],
 };
 
 interface ECGPatternData {
@@ -124,7 +286,10 @@ interface ECGPatternData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -147,14 +312,18 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateECGPatternData(name: string, category: string, clinicalContext: string): Promise<ECGPatternData> {
+async function generateECGPatternData(
+  name: string,
+  category: string,
+  clinicalContext: string
+): Promise<ECGPatternData> {
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -223,9 +392,7 @@ async function main() {
     const existingNames = new Set(existing.map((p) => p.name.toLowerCase()));
 
     // Filter out patterns that already exist
-    const toCreate = PANCE_ECG_PATTERNS.filter(
-      (p) => !existingNames.has(p.name.toLowerCase())
-    );
+    const toCreate = PANCE_ECG_PATTERNS.filter((p) => !existingNames.has(p.name.toLowerCase()));
 
     console.log(`Existing: ${existing.length}`);
     console.log(`Missing: ${toCreate.length}`);
@@ -244,7 +411,11 @@ async function main() {
       console.log(`Processing [${i + 1}/${toCreate.length}]: ${pattern.name}`);
 
       try {
-        const data = await generateECGPatternData(pattern.name, pattern.category, pattern.clinicalContext);
+        const data = await generateECGPatternData(
+          pattern.name,
+          pattern.category,
+          pattern.clinicalContext
+        );
 
         await prisma.eCGPattern.create({
           data: {

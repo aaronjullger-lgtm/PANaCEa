@@ -1,36 +1,71 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+/**
+ * First Line Treatment Categories Endpoint
+ * GET /api/first-line/categories
+ *
+ * Retrieves all unique categories for first-line treatments
+ * Public endpoint - no authentication required
+ *
+ * Security: publicEndpoint with Zod validation
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export async function onRequestGet(context: any) {
-  const { env } = context;
-  
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+// ============================================================================
+// SCHEMAS
+// ============================================================================
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+const CategoriesQuerySchema = z.object({
+  query: z.object({}),
+});
+
+// ============================================================================
+// OPTIONS HANDLER
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+// ============================================================================
+// GET HANDLER
+// ============================================================================
+
+export const onRequestGet = publicEndpoint(CategoriesQuerySchema, async ({ env }) => {
+  const log = createEndpointLogger('/api/first-line/categories');
+  let prisma: EdgePrismaClient | null = null;
 
   try {
+    if (!env.DATABASE_URL) {
+      return {
+        status: 500,
+        error: 'Database not configured',
+      };
+    }
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     const categories = await prisma.firstLineTreatment.groupBy({
       by: ['category'],
-      orderBy: { category: 'asc' }
+      orderBy: { category: 'asc' },
     });
-    
-    return new Response(JSON.stringify(categories.map(c => c.category)), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  } catch (error: any) {
-    console.error('Error fetching first line categories:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch categories', details: error.message }), { 
+
+    const categoryList = categories.map((c) => c.category);
+
+    log.info('First line categories fetched', { count: categoryList.length });
+
+    return { data: categoryList };
+  } catch (error) {
+    log.error('Error fetching first line categories', error);
+    return {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+      error: 'Failed to fetch categories',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

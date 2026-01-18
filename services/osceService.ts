@@ -35,12 +35,12 @@ export async function getRandomEncounterCase(token?: string | null): Promise<any
     const response = await fetch('/api/osce/cases/random', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    
+
     if (!response.ok) {
       console.error('Failed to fetch case:', response.statusText);
       return null;
     }
-    
+
     return await parseJsonResponse(response);
   } catch (error) {
     console.error('Error fetching random case:', error);
@@ -51,7 +51,10 @@ export async function getRandomEncounterCase(token?: string | null): Promise<any
 /**
  * Create or get active session
  */
-export async function startOSCESession(caseId: string, token?: string | null): Promise<OSCESession | null> {
+export async function startOSCESession(
+  caseId: string,
+  token?: string | null
+): Promise<OSCESession | null> {
   try {
     const response = await fetch('/api/osce/session', {
       method: 'POST',
@@ -59,11 +62,11 @@ export async function startOSCESession(caseId: string, token?: string | null): P
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ caseId })
+      body: JSON.stringify({ caseId }),
     });
-    
+
     if (!response.ok) return null;
-    
+
     const data = await parseJsonResponse(response);
     return data?.session ?? null;
   } catch (error) {
@@ -75,7 +78,11 @@ export async function startOSCESession(caseId: string, token?: string | null): P
 /**
  * Save chat history (append new messages)
  */
-export async function saveOSCEChat(sessionId: string, messages: any[], token?: string | null): Promise<boolean> {
+export async function saveOSCEChat(
+  sessionId: string,
+  messages: any[],
+  token?: string | null
+): Promise<boolean> {
   try {
     const response = await fetch('/api/osce/chat', {
       method: 'POST',
@@ -83,9 +90,9 @@ export async function saveOSCEChat(sessionId: string, messages: any[], token?: s
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ sessionId, messages })
+      body: JSON.stringify({ sessionId, messages }),
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Error saving OSCE chat:', error);
@@ -97,8 +104,8 @@ export async function saveOSCEChat(sessionId: string, messages: any[], token?: s
  * Complete session
  */
 export async function completeOSCESession(
-  sessionId: string, 
-  diagnosis: string, 
+  sessionId: string,
+  diagnosis: string,
   treatmentPlan: string,
   token?: string | null
 ): Promise<boolean> {
@@ -109,9 +116,9 @@ export async function completeOSCESession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ sessionId, diagnosis, treatmentPlan })
+      body: JSON.stringify({ sessionId, diagnosis, treatmentPlan }),
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Error completing OSCE session:', error);
@@ -130,8 +137,8 @@ export function generateSessionId(): string {
  * Save a single chat message to the session history
  */
 export async function saveChatMessage(
-  sessionId: string, 
-  role: 'user' | 'patient', 
+  sessionId: string,
+  role: 'user' | 'patient',
   content: string,
   token?: string | null
 ): Promise<boolean> {
@@ -142,14 +149,14 @@ export async function saveChatMessage(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ 
-        sessionId, 
+      body: JSON.stringify({
+        sessionId,
         userId: 'current', // Will be replaced by server with actual userId from auth
-        role, 
-        message: content 
-      })
+        role,
+        message: content,
+      }),
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Error saving chat message:', error);
@@ -160,7 +167,10 @@ export async function saveChatMessage(
 /**
  * Retrieve session chat history
  */
-export async function getSessionHistory(sessionId: string, token?: string | null): Promise<Array<{
+export async function getSessionHistory(
+  sessionId: string,
+  token?: string | null
+): Promise<Array<{
   id: string;
   role: 'user' | 'patient';
   message: string;
@@ -171,9 +181,9 @@ export async function getSessionHistory(sessionId: string, token?: string | null
     const response = await fetch(`/api/osce/history?sessionId=${encodeURIComponent(sessionId)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    
+
     if (!response.ok) return null;
-    
+
     const data = await response.json();
     return data.history || [];
   } catch (error) {
@@ -191,7 +201,7 @@ export async function clearSession(sessionId: string, token?: string | null): Pr
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Error clearing session:', error);
@@ -207,17 +217,17 @@ export function calculateEncounterScore(
   patientCase: PatientEncounterCase
 ): { efficiency: number; thoroughness: number; overall: number } {
   // Calculate thoroughness: percentage of essential questions asked
-  const essentialAsked = questions.filter(q => q.relevance === 'essential').length;
+  const essentialAsked = questions.filter((q) => q.relevance === 'essential').length;
   const totalEssential = patientCase.essentialQuestions?.length || 1;
   const thoroughness = Math.min(100, (essentialAsked / totalEssential) * 100);
-  
+
   // Calculate efficiency: penalize for unnecessary questions
-  const unnecessaryAsked = questions.filter(q => q.relevance === 'unnecessary').length;
+  const unnecessaryAsked = questions.filter((q) => q.relevance === 'unnecessary').length;
   const totalQuestions = questions.length || 1;
   const efficiency = Math.max(0, 100 - (unnecessaryAsked / totalQuestions) * 50);
-  
+
   // Overall score is weighted average
-  const overall = (thoroughness * 0.6) + (efficiency * 0.4);
-  
+  const overall = thoroughness * 0.6 + efficiency * 0.4;
+
   return { efficiency, thoroughness, overall };
 }

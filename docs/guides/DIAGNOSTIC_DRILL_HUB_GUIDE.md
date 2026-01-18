@@ -7,7 +7,9 @@ The Diagnostic Drill Hub system provides a unified interface for all skill-based
 ## Components Created
 
 ### 1. `DrillShell.tsx`
+
 Standardized wrapper for all drill modes providing:
+
 - Consistent breadcrumb navigation
 - Clear exit/back buttons
 - Optional header content (scores, streaks)
@@ -15,7 +17,9 @@ Standardized wrapper for all drill modes providing:
 - "Back to Hub" functionality
 
 ### 2. `DiagnosticDrillHub.tsx`
+
 Main hub interface with:
+
 - 2 categorized sections:
   - **Clinical Diagnosis Modes**: Interpretation-based drills (OSCE, Hydro, Mini-Labs, ECG, Radiology, Code Blue, DDx Compare, Ventilator)
   - **Quick-Fire Drills**: Rapid recall drills (Buzzword Mode, Derm Photos, Bug-Drug Mastery, First-Line, Daily Term, Polypharmacy)
@@ -25,6 +29,7 @@ Main hub interface with:
 - Responsive grid layout
 
 **Key Organization Principles:**
+
 - **Clinical Diagnosis** = Anything requiring interpretation (labs, ECGs, radiology, patient workups)
 - **Quick-Fire** = Rapid recall and recognition (buzzwords, terminology, simple photo ID)
 - **Grand Rounds** is separate (designed for daily challenges, not in this hub)
@@ -42,19 +47,22 @@ import DiagnosticDrillHub from './components/DiagnosticDrillHub';
 import DrillShell from './components/drill/DrillShell';
 
 // In your App component's view logic:
-{view === 'diagnostic_hub' && (
-  <DiagnosticDrillHub
-    onNavigateToDrill={(drillId) => {
-      setView(drillId);
-    }}
-    onClose={() => setView('menu')}
-  />
-)}
+{
+  view === 'diagnostic_hub' && (
+    <DiagnosticDrillHub
+      onNavigateToDrill={(drillId) => {
+        setView(drillId);
+      }}
+      onClose={() => setView('menu')}
+    />
+  );
+}
 ```
 
 ### Step 2: Wrap Existing Drill Modes with DrillShell
 
 #### Example: Photo Drill
+
 ```tsx
 // Before:
 <PhotoDrillSession onExit={() => setView("menu")} />
@@ -71,6 +79,7 @@ import DrillShell from './components/drill/DrillShell';
 ```
 
 #### Example: Radiology Photos
+
 ```tsx
 <DrillShell
   title="Radiology Photos"
@@ -83,6 +92,7 @@ import DrillShell from './components/drill/DrillShell';
 ```
 
 #### Example: Buzzword Mode
+
 ```tsx
 <DrillShell
   title="Buzzword Mode"
@@ -96,6 +106,7 @@ import DrillShell from './components/drill/DrillShell';
 ```
 
 #### Example: Lab Interpretation
+
 ```tsx
 <DrillShell
   title="Lab Interpretation"
@@ -112,6 +123,7 @@ import DrillShell from './components/drill/DrillShell';
 For drills that already have their own full-screen layout (like `PhotoDrillSession`), you have two options:
 
 #### Option A: Keep Full-Screen Layout, Use DrillShell for Breadcrumb Only
+
 ```tsx
 <DrillShell
   title="Photo Drill"
@@ -126,7 +138,8 @@ For drills that already have their own full-screen layout (like `PhotoDrillSessi
 ```
 
 #### Option B: Remove Internal Navigation, Let DrillShell Handle It
-```tsx
+
+````tsx
 // Update PhotoDrillSession to accept hideHeader prop
 interface PhotoDrillSessionProps {
   onExit?: () => void;
@@ -180,7 +193,7 @@ const drillRouteMap: Record<string, string> = {
   code_blue: 'code_blue',
   ddx_compare: 'ddx_compare',
   ventilator: 'ventilator_mode',
-  
+
   // Quick-Fire Drills
   buzzword_mode: 'rapid_recall',
   derm_photo: 'derm_drill',
@@ -200,19 +213,19 @@ onNavigateToDrill={(drillId) => {
   }
 }}
 ```rand_rounds: 'grand_rounds',
-  
+
   // Visual Diagnostics
   photo_drill: 'photo_drill',
   ecg_challenge: 'ecg_drill',
   radiology_scroll: 'radiology_scroll',
   derm_drill: 'derm_drill',
-  
+
   // High-Yield Recall
   rapid_recall: 'rapid_recall',
   pharmacology: 'pharmacology_drill',
   first_line: 'first_line_drill',
   guidelines: 'guidelines_drill',
-  
+
   // Labs
   mini_labs: 'mini_labs',
 };
@@ -223,46 +236,48 @@ onNavigateToDrill={(drillId) => {
   if (route) {
 ## No-Stuck Navigation Flow
 
-```
+````
+
 Dashboard
-  └─ Diagnostic Drill Hub
-       ├─ Clinical Diagnosis Modes (Interpretation-based)
-       │    ├─ Virtual OSCE
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ Hydro Mode
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ Mini-Labs
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ ECG Interpretation
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ Radiology Interpretation
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ Code Blue
-       │    │    └─ [Back to Hub] ✓
-       │    ├─ DDx Compare
-       │    │    └─ [Back to Hub] ✓
-       │    └─ Ventilator Mode
-       │         └─ [Back to Hub] ✓
-       │
-       └─ Quick-Fire Drills (Rapid Recall)
-            ├─ Buzzword Mode
-            │    └─ [Back to Hub] ✓
-            ├─ Derm Photos
-            │    └─ [Back to Hub] ✓
-            ├─ Bug-Drug Mastery
-            │    └─ [Back to Hub] ✓
-            ├─ First-Line Treatments
-            │    └─ [Back to Hub] ✓
-            ├─ Daily Term
-            │    └─ [Back to Hub] ✓
-            └─ Polypharmacy
-                 └─ [Back to Hub] ✓
+└─ Diagnostic Drill Hub
+├─ Clinical Diagnosis Modes (Interpretation-based)
+│ ├─ Virtual OSCE
+│ │ └─ [Back to Hub] ✓
+│ ├─ Hydro Mode
+│ │ └─ [Back to Hub] ✓
+│ ├─ Mini-Labs
+│ │ └─ [Back to Hub] ✓
+│ ├─ ECG Interpretation
+│ │ └─ [Back to Hub] ✓
+│ ├─ Radiology Interpretation
+│ │ └─ [Back to Hub] ✓
+│ ├─ Code Blue
+│ │ └─ [Back to Hub] ✓
+│ ├─ DDx Compare
+│ │ └─ [Back to Hub] ✓
+│ └─ Ventilator Mode
+│ └─ [Back to Hub] ✓
+│
+└─ Quick-Fire Drills (Rapid Recall)
+├─ Buzzword Mode
+│ └─ [Back to Hub] ✓
+├─ Derm Photos
+│ └─ [Back to Hub] ✓
+├─ Bug-Drug Mastery
+│ └─ [Back to Hub] ✓
+├─ First-Line Treatments
+│ └─ [Back to Hub] ✓
+├─ Daily Term
+│ └─ [Back to Hub] ✓
+└─ Polypharmacy
+└─ [Back to Hub] ✓
 
 Separate from Hub:
-  ├─ Grand Rounds (Daily Challenges)
-  ├─ Guidelines (Toolkit - Calculator)
-  └─ Radiology Scroll (Toolkit - Reference)
-```
+├─ Grand Rounds (Daily Challenges)
+├─ Guidelines (Toolkit - Calculator)
+└─ Radiology Scroll (Toolkit - Reference)
+
+````
 
 Every drill mode has:
 1. Breadcrumb showing current location
@@ -352,8 +367,8 @@ To fully integrate the Diagnostic Drill Hub into PANaCEa:
     onBackToHub={() => setView('diagnostic_hub')}
     onBack={() => setView('diagnostic_hub')}
   >
-    <PhotoDrillSession 
-      onExit={() => setView('diagnostic_hub')} 
+    <PhotoDrillSession
+      onExit={() => setView('diagnostic_hub')}
       filterType="imaging"
     />
   </DrillShell>
@@ -362,26 +377,30 @@ To fully integrate the Diagnostic Drill Hub into PANaCEa:
   </div>
   <ChevronRight className="w-5 h-5 ml-auto group-hover:translate-x-1 transition-transform" />
 </button>
-```
+````
 
 ### Complete Example: Wrapping Photo Drill
+
 ```tsx
 // In App.tsx
-{view === 'photo_drill' && (
-  <DrillShell
-    title="Photo Drill"
-    breadcrumb={['Diagnostic Drills', 'Visual Diagnostics', 'Photo Drill']}
-    onBackToHub={() => setView('diagnostic_hub')}
-    onBack={() => setView('diagnostic_hub')}
-  >
-    <PhotoDrillSession onExit={() => setView('diagnostic_hub')} />
-  </DrillShell>
-)}
+{
+  view === 'photo_drill' && (
+    <DrillShell
+      title="Photo Drill"
+      breadcrumb={['Diagnostic Drills', 'Visual Diagnostics', 'Photo Drill']}
+      onBackToHub={() => setView('diagnostic_hub')}
+      onBack={() => setView('diagnostic_hub')}
+    >
+      <PhotoDrillSession onExit={() => setView('diagnostic_hub')} />
+    </DrillShell>
+  );
+}
 ```
 
 ## Support
 
 For questions or issues with the Diagnostic Drill Hub:
+
 1. Check this guide for integration patterns
 2. Review `DrillShell.tsx` and `DiagnosticDrillHub.tsx` source code
 3. Test navigation flow with console logging

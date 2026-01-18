@@ -1,7 +1,7 @@
 /**
  * Exam Service - Simulated PANCE/PANRE-LA Exam Management
  * Sprint 5: Core exam simulation logic
- * 
+ *
  * Handles:
  * - Exam session creation and management
  * - Blueprint-weighted question selection
@@ -9,7 +9,7 @@
  * - Score calculation and reporting
  */
 
-import type { Question, Condition } from "@prisma/client";
+import type { Question, Condition } from '@prisma/client';
 
 // =============================================================================
 // TYPES
@@ -44,7 +44,7 @@ export interface ExamAttempt {
   score?: number;
   percentCorrect?: number;
   systemScores?: Record<string, number>;
-  passStatus?: "passed" | "failed" | "pending";
+  passStatus?: 'passed' | 'failed' | 'pending';
 }
 
 export interface ExamAnswer {
@@ -68,7 +68,7 @@ export interface BlockTime {
   timeUsedSeconds: number;
 }
 
-export type ExamStatus = "in_progress" | "paused" | "completed" | "abandoned" | "timed_out";
+export type ExamStatus = 'in_progress' | 'paused' | 'completed' | 'abandoned' | 'timed_out';
 
 export interface ExamQuestion extends Question {
   blockNumber: number;
@@ -79,7 +79,7 @@ export interface ExamQuestion extends Question {
 export interface ScoreReport {
   overallScore: number;
   percentCorrect: number;
-  passStatus: "passed" | "failed";
+  passStatus: 'passed' | 'failed';
   systemBreakdown: SystemScore[];
   totalQuestions: number;
   correctAnswers: number;
@@ -100,7 +100,7 @@ export interface SystemScore {
   questionsAttempted: number;
   questionsCorrect: number;
   blueprintWeight: number;
-  performanceLevel: "strong" | "adequate" | "needs_improvement";
+  performanceLevel: 'strong' | 'adequate' | 'needs_improvement';
 }
 
 export interface BlockScore {
@@ -115,22 +115,22 @@ export interface BlockScore {
 // =============================================================================
 
 export const NCCPA_BLUEPRINT_WEIGHTS: Record<string, { weight: number; displayName: string }> = {
-  cardiovascular: { weight: 11, displayName: "Cardiovascular" },
-  pulmonary: { weight: 9, displayName: "Pulmonary" },
-  gastrointestinal: { weight: 9, displayName: "Gastrointestinal / Nutritional" },
-  musculoskeletal: { weight: 9, displayName: "Musculoskeletal" },
-  heent: { weight: 8, displayName: "EENT (Eyes, Ears, Nose, Throat)" },
-  reproductive: { weight: 8, displayName: "Reproductive" },
-  neurological: { weight: 7, displayName: "Neurologic System" },
-  psychiatry: { weight: 7, displayName: "Psychiatry / Behavioral" },
-  endocrine: { weight: 6, displayName: "Endocrine" },
-  dermatology: { weight: 5, displayName: "Dermatologic" },
-  genitourinary: { weight: 5, displayName: "Genitourinary" },
-  hematology: { weight: 4, displayName: "Hematologic" },
-  infectious_disease: { weight: 4, displayName: "Infectious Diseases" },
-  nephrology: { weight: 4, displayName: "Renal" },
-  emergency_medicine: { weight: 2, displayName: "Emergency Medicine" },
-  professional_practice: { weight: 2, displayName: "Professional Practice" },
+  cardiovascular: { weight: 11, displayName: 'Cardiovascular' },
+  pulmonary: { weight: 9, displayName: 'Pulmonary' },
+  gastrointestinal: { weight: 9, displayName: 'Gastrointestinal / Nutritional' },
+  musculoskeletal: { weight: 9, displayName: 'Musculoskeletal' },
+  heent: { weight: 8, displayName: 'EENT (Eyes, Ears, Nose, Throat)' },
+  reproductive: { weight: 8, displayName: 'Reproductive' },
+  neurological: { weight: 7, displayName: 'Neurologic System' },
+  psychiatry: { weight: 7, displayName: 'Psychiatry / Behavioral' },
+  endocrine: { weight: 6, displayName: 'Endocrine' },
+  dermatology: { weight: 5, displayName: 'Dermatologic' },
+  genitourinary: { weight: 5, displayName: 'Genitourinary' },
+  hematology: { weight: 4, displayName: 'Hematologic' },
+  infectious_disease: { weight: 4, displayName: 'Infectious Diseases' },
+  nephrology: { weight: 4, displayName: 'Renal' },
+  emergency_medicine: { weight: 2, displayName: 'Emergency Medicine' },
+  professional_practice: { weight: 2, displayName: 'Professional Practice' },
 };
 
 // =============================================================================
@@ -155,9 +155,8 @@ export class ExamService {
     // Adjust for rounding errors - add/remove from largest systems
     const diff = totalQuestions - assigned;
     if (diff !== 0) {
-      const sortedSystems = Object.entries(distribution)
-        .sort((a, b) => b[1] - a[1]);
-      
+      const sortedSystems = Object.entries(distribution).sort((a, b) => b[1] - a[1]);
+
       for (let i = 0; i < Math.abs(diff); i++) {
         const systemIndex = i % sortedSystems.length;
         distribution[sortedSystems[systemIndex][0]] += diff > 0 ? 1 : -1;
@@ -181,7 +180,7 @@ export class ExamService {
     // Group available questions by system
     const bySystem: Record<string, Question[]> = {};
     for (const q of availableQuestions) {
-      const system = (q as any).organSystem?.toLowerCase().replace(/\s+/g, "_") || "other";
+      const system = (q as any).organSystem?.toLowerCase().replace(/\s+/g, '_') || 'other';
       if (!bySystem[system]) bySystem[system] = [];
       bySystem[system].push(q);
     }
@@ -190,7 +189,7 @@ export class ExamService {
     for (const [system, count] of Object.entries(distribution)) {
       const pool = bySystem[system] || [];
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      
+
       for (let i = 0; i < count && i < shuffled.length; i++) {
         if (!usedIds.has(shuffled[i].id)) {
           selected.push(shuffled[i]);
@@ -201,9 +200,9 @@ export class ExamService {
 
     // If we don't have enough, fill from any system
     if (selected.length < totalNeeded) {
-      const allAvailable = availableQuestions.filter(q => !usedIds.has(q.id));
+      const allAvailable = availableQuestions.filter((q) => !usedIds.has(q.id));
       const shuffled = [...allAvailable].sort(() => Math.random() - 0.5);
-      
+
       for (const q of shuffled) {
         if (selected.length >= totalNeeded) break;
         selected.push(q);
@@ -223,12 +222,12 @@ export class ExamService {
     questionsPerBlock: number
   ): ExamQuestion[][] {
     const blocks: ExamQuestion[][] = [];
-    
+
     for (let b = 0; b < blocksCount; b++) {
       const blockQuestions: ExamQuestion[] = [];
       const start = b * questionsPerBlock;
       const end = Math.min(start + questionsPerBlock, questions.length);
-      
+
       for (let q = start; q < end; q++) {
         blockQuestions.push({
           ...questions[q],
@@ -236,7 +235,7 @@ export class ExamService {
           questionNumber: q - start + 1,
         });
       }
-      
+
       blocks.push(blockQuestions);
     }
 
@@ -246,12 +245,9 @@ export class ExamService {
   /**
    * Calculate time remaining for current block
    */
-  static calculateBlockTimeRemaining(
-    blockStartedAt: Date,
-    timePerBlockMinutes: number
-  ): number {
+  static calculateBlockTimeRemaining(blockStartedAt: Date, timePerBlockMinutes: number): number {
     const elapsed = Date.now() - blockStartedAt.getTime();
-    const remaining = (timePerBlockMinutes * 60 * 1000) - elapsed;
+    const remaining = timePerBlockMinutes * 60 * 1000 - elapsed;
     return Math.max(0, Math.floor(remaining / 1000));
   }
 
@@ -263,8 +259,8 @@ export class ExamService {
     totalTimeMinutes: number,
     pausedSeconds: number = 0
   ): number {
-    const elapsed = Date.now() - examStartedAt.getTime() - (pausedSeconds * 1000);
-    const remaining = (totalTimeMinutes * 60 * 1000) - elapsed;
+    const elapsed = Date.now() - examStartedAt.getTime() - pausedSeconds * 1000;
+    const remaining = totalTimeMinutes * 60 * 1000 - elapsed;
     return Math.max(0, Math.floor(remaining / 1000));
   }
 
@@ -274,7 +270,7 @@ export class ExamService {
    */
   static calculateScaledScore(percentCorrect: number): number {
     // Linear scaling: 0% = 200, 100% = 800
-    const scaledScore = 200 + (percentCorrect * 6);
+    const scaledScore = 200 + percentCorrect * 6;
     return Math.round(scaledScore);
   }
 
@@ -287,21 +283,19 @@ export class ExamService {
     totalTimeSeconds: number
   ): ScoreReport {
     const totalQuestions = answers.length;
-    const answered = answers.filter(a => a.selectedAnswer);
-    const correct = answers.filter(a => a.isCorrect);
-    const flagged = answers.filter(a => a.isFlagged);
+    const answered = answers.filter((a) => a.selectedAnswer);
+    const correct = answers.filter((a) => a.isCorrect);
+    const flagged = answers.filter((a) => a.isFlagged);
 
-    const percentCorrect = totalQuestions > 0 
-      ? (correct.length / totalQuestions) * 100 
-      : 0;
-    
+    const percentCorrect = totalQuestions > 0 ? (correct.length / totalQuestions) * 100 : 0;
+
     const scaledScore = this.calculateScaledScore(percentCorrect);
-    const passStatus = scaledScore >= config.passingScore ? "passed" : "failed";
+    const passStatus = scaledScore >= config.passingScore ? 'passed' : 'failed';
 
     // Calculate system breakdown
     const systemStats: Record<string, { correct: number; total: number }> = {};
     for (const answer of answers) {
-      const system = answer.organSystem || "other";
+      const system = answer.organSystem || 'other';
       if (!systemStats[system]) {
         systemStats[system] = { correct: 0, total: 0 };
       }
@@ -313,11 +307,11 @@ export class ExamService {
       .map(([system, stats]) => {
         const pct = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
         const blueprintWeight = NCCPA_BLUEPRINT_WEIGHTS[system]?.weight || 0;
-        
-        let performanceLevel: "strong" | "adequate" | "needs_improvement";
-        if (pct >= 75) performanceLevel = "strong";
-        else if (pct >= 60) performanceLevel = "adequate";
-        else performanceLevel = "needs_improvement";
+
+        let performanceLevel: 'strong' | 'adequate' | 'needs_improvement';
+        if (pct >= 75) performanceLevel = 'strong';
+        else if (pct >= 60) performanceLevel = 'adequate';
+        else performanceLevel = 'needs_improvement';
 
         return {
           system,
@@ -353,14 +347,14 @@ export class ExamService {
 
     // Identify strengths and weaknesses
     const strengths = systemBreakdown
-      .filter(s => s.performanceLevel === "strong")
+      .filter((s) => s.performanceLevel === 'strong')
       .slice(0, 3)
-      .map(s => s.displayName);
+      .map((s) => s.displayName);
 
     const weaknesses = systemBreakdown
-      .filter(s => s.performanceLevel === "needs_improvement")
+      .filter((s) => s.performanceLevel === 'needs_improvement')
       .slice(0, 3)
-      .map(s => s.displayName);
+      .map((s) => s.displayName);
 
     return {
       overallScore: scaledScore,
@@ -384,14 +378,14 @@ export class ExamService {
    * Check if user can resume an exam
    */
   static canResumeExam(attempt: ExamAttempt): boolean {
-    if (attempt.status === "completed" || attempt.status === "abandoned") {
+    if (attempt.status === 'completed' || attempt.status === 'abandoned') {
       return false;
     }
 
     // Allow resume within 24 hours
-    const hoursSinceLastActive = 
+    const hoursSinceLastActive =
       (Date.now() - new Date(attempt.lastActiveAt).getTime()) / (1000 * 60 * 60);
-    
+
     return hoursSinceLastActive < 24;
   }
 
@@ -401,7 +395,7 @@ export class ExamService {
   static formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
   /**
@@ -411,7 +405,7 @@ export class ExamService {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 }
 

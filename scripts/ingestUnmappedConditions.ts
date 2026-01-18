@@ -24,22 +24,22 @@ const FALLBACK_SYSTEM: SystemCode = 'OTHER';
 
 // Manual system mapping for each unmapped entry
 const SYSTEM_MAP: Record<string, SystemCode> = {
-  'Acute_Angle_Closure_Glaucoma': 'HEENT',
-  'Avascular_Necrosis__AVN_': 'MSK',
-  'Central_Retinal_Vein_Occlusion__CRVO_': 'HEENT',
-  'Chronic_Lymphocytic_Leukemia__CLL_': 'HEME',
-  'Crohn_s': 'GI',
-  'Deep_Vein_Thrombosis__DVT_': 'CV',
-  'Ethylene_Glycol_Poisoning': 'RENAL',
-  'Herpes_Zoster__Shingles__Varicella': 'ID',
+  Acute_Angle_Closure_Glaucoma: 'HEENT',
+  Avascular_Necrosis__AVN_: 'MSK',
+  Central_Retinal_Vein_Occlusion__CRVO_: 'HEENT',
+  Chronic_Lymphocytic_Leukemia__CLL_: 'HEME',
+  Crohn_s: 'GI',
+  Deep_Vein_Thrombosis__DVT_: 'CV',
+  Ethylene_Glycol_Poisoning: 'RENAL',
+  Herpes_Zoster__Shingles__Varicella: 'ID',
   'Hyperkalemia_Electrolyte-Volume': 'RENAL',
-  'Legg_Calve_Perthes': 'MSK',
-  'Normal_Pressure_Hydrocephalus__NPH_': 'NEURO',
-  'Normal_Sinus_Rhythm_EKG': 'CV',
-  'Normal_Sinus_Rhythm_Pituitary': 'CV',
-  'Pneumonia_Oxygen_Therapy': 'PULM',
-  'Psoriasis_Vulva_and_Vaginal': 'DERM',
-  'Second_Degree_AV_Block_Mobitz_I__Wenckebach_': 'CV',
+  Legg_Calve_Perthes: 'MSK',
+  Normal_Pressure_Hydrocephalus__NPH_: 'NEURO',
+  Normal_Sinus_Rhythm_EKG: 'CV',
+  Normal_Sinus_Rhythm_Pituitary: 'CV',
+  Pneumonia_Oxygen_Therapy: 'PULM',
+  Psoriasis_Vulva_and_Vaginal: 'DERM',
+  Second_Degree_AV_Block_Mobitz_I__Wenckebach_: 'CV',
 };
 
 function normalizeName(raw: string): string {
@@ -73,10 +73,7 @@ async function conditionExists(id: string, name: string, system: SystemCode) {
       OR: [
         { id },
         {
-          AND: [
-            { name: { equals: name, mode: 'insensitive' } },
-            { system },
-          ],
+          AND: [{ name: { equals: name, mode: 'insensitive' } }, { system }],
         },
       ],
     },
@@ -87,7 +84,11 @@ async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const lines = await readUnmappedConditions();
 
-  const summary = { created: 0, skipped: 0, planned: [] as Array<{ id: string; name: string; system: SystemCode }> };
+  const summary = {
+    created: 0,
+    skipped: 0,
+    planned: [] as Array<{ id: string; name: string; system: SystemCode }>,
+  };
 
   for (const raw of lines) {
     const name = normalizeName(raw);

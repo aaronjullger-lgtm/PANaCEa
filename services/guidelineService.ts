@@ -28,7 +28,7 @@ export const guidelineService = {
   getGuidelineById: async (id: string): Promise<Guideline | null> => {
     // Check cache first
     if (guidelineCache) {
-      return guidelineCache.find(g => g.id === id) || null;
+      return guidelineCache.find((g) => g.id === id) || null;
     }
 
     try {
@@ -39,5 +39,5 @@ export const guidelineService = {
       console.error(`Error fetching guideline ${id}:`, error);
       return null;
     }
-  }
+  },
 };

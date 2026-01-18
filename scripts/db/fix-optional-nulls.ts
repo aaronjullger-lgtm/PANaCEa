@@ -1,24 +1,24 @@
 /**
  * Database Normalization Script: Fix Optional Nulls
- * 
+ *
  * PURPOSE:
  * Converts inconsistent "empty" states in JSONB columns to the sentinel value "NONE".
  * This signals to AI generation scripts: "We checked, nothing exists here, stop asking."
- * 
+ *
  * PROBLEM:
  * We have two types of "empty" that are semantically different:
  * 1. SQL NULL (Prisma.DbNull) - Field never processed/checked
  * 2. JSON null (Prisma.JsonNull) - Field was processed but found empty
- * 
+ *
  * SOLUTION:
  * For records where `clinical_pearls` exists (meaning processed/generated),
  * convert BOTH types of null in optional fields to the explicit string "NONE".
- * 
+ *
  * FIELDS AFFECTED:
  * - classic_triad
  * - mnemonic
  * - guidelines
- * 
+ *
  * USAGE:
  * npx ts-node scripts/db/fix-optional-nulls.ts
  */
@@ -51,7 +51,7 @@ async function fixNullsInJsonField(fieldName: string): Promise<NullFixStats> {
 
   // STEP 1: Fix SQL NULLs (Prisma.DbNull) for JSONB fields
   console.log(`\n📊 Checking for SQL NULL in ${fieldName}...`);
-  
+
   const sqlNullQuery: any = {
     clinical_pearls: { not: Prisma.DbNull }, // Pearls exist (processed)
     [fieldName]: { equals: Prisma.DbNull }, // Field is SQL NULL
@@ -67,7 +67,7 @@ async function fixNullsInJsonField(fieldName: string): Promise<NullFixStats> {
     const sqlNullUpdate = await prisma.medicalContent.updateMany({
       where: sqlNullQuery,
       data: {
-        [fieldName]: "NONE", // Set to sentinel value
+        [fieldName]: 'NONE', // Set to sentinel value
       },
     });
     sqlNullsFixed = sqlNullUpdate.count;
@@ -76,7 +76,7 @@ async function fixNullsInJsonField(fieldName: string): Promise<NullFixStats> {
 
   // STEP 2: Fix JSON nulls (Prisma.JsonNull) for JSONB fields
   console.log(`\n📊 Checking for JSON null in ${fieldName}...`);
-  
+
   const jsonNullQuery: any = {
     clinical_pearls: { not: Prisma.DbNull }, // Pearls exist (processed)
     [fieldName]: { equals: Prisma.JsonNull }, // Field is JSON null
@@ -92,7 +92,7 @@ async function fixNullsInJsonField(fieldName: string): Promise<NullFixStats> {
     const jsonNullUpdate = await prisma.medicalContent.updateMany({
       where: jsonNullQuery,
       data: {
-        [fieldName]: "NONE", // Set to sentinel value
+        [fieldName]: 'NONE', // Set to sentinel value
       },
     });
     jsonNullsFixed = jsonNullUpdate.count;
@@ -100,7 +100,7 @@ async function fixNullsInJsonField(fieldName: string): Promise<NullFixStats> {
   }
 
   const total = sqlNullsFixed + jsonNullsFixed;
-  
+
   return {
     field: fieldName,
     sqlNullsFixed,
@@ -120,7 +120,7 @@ async function fixNullsInStringField(fieldName: string): Promise<NullFixStats> {
 
   // String fields only have regular NULL (not JSON null)
   console.log(`\n📊 Checking for NULL in ${fieldName}...`);
-  
+
   const nullQuery: any = {
     clinical_pearls: { not: Prisma.DbNull }, // Pearls exist (processed)
     [fieldName]: null, // Field is NULL
@@ -136,7 +136,7 @@ async function fixNullsInStringField(fieldName: string): Promise<NullFixStats> {
     const nullUpdate = await prisma.medicalContent.updateMany({
       where: nullQuery,
       data: {
-        [fieldName]: "NONE", // Set to sentinel value
+        [fieldName]: 'NONE', // Set to sentinel value
       },
     });
     nullsFixed = nullUpdate.count;
@@ -178,11 +178,12 @@ async function fixOptionalNulls() {
       { name: 'mnemonic', type: 'string' },
       { name: 'guidelines', type: 'string' },
     ];
-    
+
     for (const field of fieldsToFix) {
-      const fieldStats = field.type === 'json' 
-        ? await fixNullsInJsonField(field.name)
-        : await fixNullsInStringField(field.name);
+      const fieldStats =
+        field.type === 'json'
+          ? await fixNullsInJsonField(field.name)
+          : await fixNullsInStringField(field.name);
       stats.push(fieldStats);
     }
 
@@ -199,7 +200,7 @@ async function fixOptionalNulls() {
     console.log('│ Field           │ SQL NULLs   │ JSON nulls   │ Total     │');
     console.log('├─────────────────┼─────────────┼──────────────┼───────────┤');
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       console.log(
         `│ ${stat.field.padEnd(15)} │ ${String(stat.sqlNullsFixed).padStart(11)} │ ${String(stat.jsonNullsFixed).padStart(12)} │ ${String(stat.total).padStart(9)} │`
       );
@@ -215,9 +216,9 @@ async function fixOptionalNulls() {
     console.log('└─────────────────┴─────────────┴──────────────┴───────────┘');
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    
+
     console.log(`\n⏱️  Completed in ${duration}s`);
-    
+
     if (grandTotal > 0) {
       console.log(`\n✅ Successfully normalized ${grandTotal} null values to "NONE"`);
       console.log('   AI scripts will now skip these fields instead of repeatedly checking.');
@@ -229,7 +230,7 @@ async function fixOptionalNulls() {
     console.log('\n🔍 Verification:');
     for (const field of fieldsToFix) {
       let remaining = 0;
-      
+
       if (field.type === 'json') {
         const remainingSqlNulls = await prisma.medicalContent.count({
           where: {
@@ -237,14 +238,14 @@ async function fixOptionalNulls() {
             [field.name]: { equals: Prisma.DbNull },
           },
         });
-        
+
         const remainingJsonNulls = await prisma.medicalContent.count({
           where: {
             clinical_pearls: { not: Prisma.DbNull },
             [field.name]: { equals: Prisma.JsonNull },
           },
         });
-        
+
         remaining = remainingSqlNulls + remainingJsonNulls;
       } else {
         // String field
@@ -255,11 +256,10 @@ async function fixOptionalNulls() {
           },
         });
       }
-      
+
       const status = remaining === 0 ? '✅' : '⚠️';
       console.log(`   ${status} ${field.name}: ${remaining} nulls remaining`);
     }
-
   } catch (error) {
     console.error('\n❌ Error during normalization:', error);
     throw error;

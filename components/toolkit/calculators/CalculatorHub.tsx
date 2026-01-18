@@ -1,6 +1,6 @@
 /**
  * CalculatorHub - Modern calculator organization with system-based tabs
- * 
+ *
  * Refactored from ToolkitHub.tsx monolith.
  * Features:
  * - Tab switcher by organ system (Cardiac, Pulmonary, Vascular, Renal)
@@ -107,7 +107,12 @@ const CALCULATOR_CATEGORIES: Array<{
   calculatorIds: string[];
 }> = [
   { id: 'cardiac', label: 'Cardiac', icon: Heart, calculatorIds: ['chads2vasc'] },
-  { id: 'pulmonary', label: 'Pulmonary', icon: Wind, calculatorIds: ['curb65', 'wells_pe', 'perc'] },
+  {
+    id: 'pulmonary',
+    label: 'Pulmonary',
+    icon: Wind,
+    calculatorIds: ['curb65', 'wells_pe', 'perc'],
+  },
   { id: 'vascular', label: 'Vascular', icon: Activity, calculatorIds: ['wells_dvt'] },
   { id: 'renal', label: 'Renal/Labs', icon: Droplet, calculatorIds: ['gfr', 'anion_gap'] },
   { id: 'pediatric', label: 'Pediatric', icon: Baby, calculatorIds: ['pediatric_dosing'] },
@@ -127,11 +132,12 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((calc) =>
-        calc.name.toLowerCase().includes(query) ||
-        calc.description.toLowerCase().includes(query) ||
-        calc.synonyms?.some((s) => s.toLowerCase().includes(query)) ||
-        calc.formula?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (calc) =>
+          calc.name.toLowerCase().includes(query) ||
+          calc.description.toLowerCase().includes(query) ||
+          calc.synonyms?.some((s) => s.toLowerCase().includes(query)) ||
+          calc.formula?.toLowerCase().includes(query)
       );
     }
 
@@ -163,11 +169,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
   };
 
   if (selectedCalculator) {
-    return (
-      <div className="min-h-screen bg-slate-950 p-4 md:p-6">
-        {renderCalculator()}
-      </div>
-    );
+    return <div className="min-h-screen bg-slate-950 p-4 md:p-6">{renderCalculator()}</div>;
   }
 
   return (

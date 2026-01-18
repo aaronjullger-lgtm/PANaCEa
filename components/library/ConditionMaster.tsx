@@ -1,6 +1,6 @@
 /**
  * ConditionMaster - Hierarchical detail panel for MedicalContent
- * 
+ *
  * REDESIGNED with proper section organization:
  * - Essentials (Classic Patient, Epidemiology, Etiology, Risk Factors)
  * - Pathophysiology (Mechanism)
@@ -13,7 +13,19 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { X, Info, Stethoscope, ClipboardList, Activity, Pill, FlaskConical, AlertTriangle, BookOpen, Lightbulb, Target } from 'lucide-react';
+import {
+  X,
+  Info,
+  Stethoscope,
+  ClipboardList,
+  Activity,
+  Pill,
+  FlaskConical,
+  AlertTriangle,
+  BookOpen,
+  Lightbulb,
+  Target,
+} from 'lucide-react';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
@@ -36,16 +48,18 @@ const getValue = (data: AnyRecord, keys: string[]): unknown => {
   return undefined;
 };
 
-const Section: React.FC<{ 
-  title: string; 
-  icon: React.ElementType; 
+const Section: React.FC<{
+  title: string;
+  icon: React.ElementType;
   children: React.ReactNode;
   accentColor?: string;
 }> = ({ title, icon: Icon, children, accentColor }) => (
   <div className="border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)]/30">
     <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border)]">
       <Icon className={`w-4 h-4 ${accentColor || 'text-[var(--color-accent)]'}`} />
-      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">{title}</h3>
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+        {title}
+      </h3>
     </div>
     <div className="p-4 space-y-4">{children}</div>
   </div>
@@ -56,7 +70,9 @@ const TextField: React.FC<{ label: string; value: unknown }> = ({ label, value }
   if (!text) return null;
   return (
     <div>
-      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</h4>
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+        {label}
+      </h4>
       <ContentFieldRenderer value={text} />
     </div>
   );
@@ -79,7 +95,9 @@ const MarkdownField: React.FC<{ label: string; value: unknown }> = ({ label, val
     .replace(/<\/?i>/gi, '*');
   return (
     <div>
-      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</h4>
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+        {label}
+      </h4>
       <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)]">
         <ReactMarkdown>{cleanText}</ReactMarkdown>
       </div>
@@ -92,26 +110,35 @@ const ListField: React.FC<{ label: string; value: unknown }> = ({ label, value }
   if (!items.length) return null;
   return (
     <div>
-      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</h4>
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+        {label}
+      </h4>
       <ContentFieldRenderer value={items} variant="clinical" />
     </div>
   );
 };
 
-const PillListField: React.FC<{ label: string; value: unknown; color?: string }> = ({ label, value, color = 'accent' }) => {
+const PillListField: React.FC<{ label: string; value: unknown; color?: string }> = ({
+  label,
+  value,
+  color = 'accent',
+}) => {
   const items = parseListField(value);
   if (!items.length) return null;
-  
+
   const colorClasses = {
-    accent: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
+    accent:
+      'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
     rose: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
     blue: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     amber: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   };
-  
+
   return (
     <div>
-      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">{label}</h4>
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+        {label}
+      </h4>
       <div className="flex flex-wrap gap-2">
         {items.map((item, idx) => (
           <span
@@ -189,34 +216,45 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            
             {/* Quick Facts Hero Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {goldStandard && (
                 <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Gold Standard Dx</span>
+                    <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+                      Gold Standard Dx
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{goldStandard}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {goldStandard}
+                  </p>
                 </div>
               )}
               {firstLineRx && (
                 <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Pill className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">First-Line Rx</span>
+                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                      First-Line Rx
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{firstLineRx}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {firstLineRx}
+                  </p>
                 </div>
               )}
               {bestInitialTest && (
                 <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
                   <div className="flex items-center gap-2 mb-2">
                     <FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />
-                    <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide">Best Initial Test</span>
+                    <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide">
+                      Best Initial Test
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{bestInitialTest}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {bestInitialTest}
+                  </p>
                 </div>
               )}
             </div>
@@ -227,8 +265,12 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
                 <div className="flex items-start gap-3">
                   <BookOpen className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-1">Classic Patient</h4>
-                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed italic">"{classicPatient}"</p>
+                    <h4 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-1">
+                      Classic Patient
+                    </h4>
+                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed italic">
+                      "{classicPatient}"
+                    </p>
                   </div>
                 </div>
               </div>
@@ -244,11 +286,16 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
-                  <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">Clinical Pearls</h4>
+                  <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">
+                    Clinical Pearls
+                  </h4>
                 </div>
                 <ul className="space-y-2">
                   {clinicalPearls.map((pearl, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
+                    >
                       <span className="text-[var(--color-accent)] mt-1">•</span>
                       <span>{pearl}</span>
                     </li>
@@ -261,12 +308,22 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
             {mnemonic && (
               <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="w-5 h-5 text-violet-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
-                  <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">Memory Aid / Mnemonic</h4>
+                  <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">
+                    Memory Aid / Mnemonic
+                  </h4>
                 </div>
-                <p className="text-base font-bold text-[var(--color-text-primary)] font-mono tracking-wide">{mnemonic}</p>
+                <p className="text-base font-bold text-[var(--color-text-primary)] font-mono tracking-wide">
+                  {mnemonic}
+                </p>
               </div>
             )}
 
@@ -275,7 +332,9 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/10 to-rose-600/5 border border-rose-500/30">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5 text-rose-400" />
-                  <h4 className="text-sm font-semibold text-rose-400 uppercase tracking-wide">Classic Triad</h4>
+                  <h4 className="text-sm font-semibold text-rose-400 uppercase tracking-wide">
+                    Classic Triad
+                  </h4>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {classicTriad.map((item, idx) => (
@@ -292,20 +351,30 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
 
             {/* Differential Diagnosis */}
             {differentialDx.length > 0 && (
-              <PillListField label="Differential Diagnosis" value={differentialDx.slice(0, 8)} color="blue" />
+              <PillListField
+                label="Differential Diagnosis"
+                value={differentialDx.slice(0, 8)}
+                color="blue"
+              />
             )}
 
             {/* Expandable Sections - Properly organized */}
             <div className="space-y-4 pt-2">
-              
               {/* Section 1: Clinical Presentation */}
               <Section title="Clinical Presentation" icon={Stethoscope} accentColor="text-blue-400">
                 <TextField label="Symptoms" value={normalized.symptoms} />
-                <TextField label="Physical Exam" value={getValue(normalized, ['physicalExam', 'physical_exam', 'signs'])} />
+                <TextField
+                  label="Physical Exam"
+                  value={getValue(normalized, ['physicalExam', 'physical_exam', 'signs'])}
+                />
               </Section>
 
               {/* Section 2: Workup & Diagnostics */}
-              <Section title="Workup & Diagnostics" icon={FlaskConical} accentColor="text-amber-400">
+              <Section
+                title="Workup & Diagnostics"
+                icon={FlaskConical}
+                accentColor="text-amber-400"
+              >
                 <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
                 <TextField label="Labs" value={getValue(normalized, ['labs'])} />
                 <TextField label="Imaging" value={getValue(normalized, ['imaging'])} />
@@ -314,11 +383,18 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               {/* Section 3: Treatment */}
               <Section title="Treatment" icon={Pill} accentColor="text-emerald-400">
                 <MarkdownField label="Treatment Approach" value={normalized.treatment} />
-                <TextField label="Patient Education" value={getValue(normalized, ['patient_education'])} />
+                <TextField
+                  label="Patient Education"
+                  value={getValue(normalized, ['patient_education'])}
+                />
               </Section>
 
               {/* Section 4: Outcomes & Prognosis */}
-              <Section title="Outcomes & Prognosis" icon={AlertTriangle} accentColor="text-rose-400">
+              <Section
+                title="Outcomes & Prognosis"
+                icon={AlertTriangle}
+                accentColor="text-rose-400"
+              >
                 <TextField label="Complications" value={normalized.complications} />
                 <TextField label="Prognosis" value={normalized.prognosis} />
                 <TextField label="Disposition" value={getValue(normalized, ['disposition'])} />
@@ -329,11 +405,13 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               <Section title="Background & Etiology" icon={Info} accentColor="text-purple-400">
                 <TextField label="Epidemiology" value={normalized.epidemiology} />
                 <TextField label="Etiology" value={normalized.etiology} />
-                <TextField label="Risk Factors" value={getValue(normalized, ['riskFactors', 'risk_factors'])} />
+                <TextField
+                  label="Risk Factors"
+                  value={getValue(normalized, ['riskFactors', 'risk_factors'])}
+                />
                 <MarkdownField label="Pathophysiology" value={normalized.pathophysiology} />
                 <ListField label="Related Systems" value={normalized.relatedSystems} />
               </Section>
-              
             </div>
           </div>
         </motion.div>

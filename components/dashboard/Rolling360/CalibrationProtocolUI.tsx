@@ -1,10 +1,10 @@
 /**
  * CalibrationProtocolUI.tsx
- * 
+ *
  * The "Clinical Calibration Protocol" UI for new users (0-60 questions).
  * Turns the cold start into a "Medical Workup" where the user unlocks
  * diagnostic insights about their own brain.
- * 
+ *
  * Stepper UI:
  * - Step 1 (0-10 qs): Baseline Establishment
  * - Step 2 (10-30 qs): Latency Analysis Unlocked
@@ -23,7 +23,11 @@ import { StartSessionButton } from '../../ui/SemanticButton';
 
 const LockClosedIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -35,7 +39,11 @@ const LockOpenIcon = ({ className }: { className?: string }) => (
 
 const ClockIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -47,19 +55,31 @@ const BrainIcon = ({ className }: { className?: string }) => (
 
 const ExclamationCircleIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const PlayIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const SparklesIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -146,12 +166,12 @@ function getCalibrationMetrics(stats: Rolling360Stats): {
       primaryErrorSystem: stats.calibrationMetrics.primaryErrorSystem,
     };
   }
-  
+
   // Fallback: Calculate locally from stats (legacy behavior)
   const total = stats.totalInWindow;
   return {
     avgResponseTimeMs: null, // No local fallback available
-    confidenceAlignment: null, // No local fallback available  
+    confidenceAlignment: null, // No local fallback available
     primaryErrorSystem: total >= 50 ? stats.weakestSystems[0] || null : null,
   };
 }
@@ -161,18 +181,18 @@ function getCalibrationMetrics(stats: Rolling360Stats): {
 // =============================================================================
 
 interface StepCardProps {
-  step: typeof CALIBRATION_STEPS[0];
+  step: (typeof CALIBRATION_STEPS)[0];
   currentQuestions: number;
   metrics: ReturnType<typeof getCalibrationMetrics>;
 }
 
 function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
   const isUnlocked = currentQuestions >= step.threshold;
-  const isActive = currentQuestions >= (step.threshold - 20) && !isUnlocked;
-  const progress = Math.min(100, ((currentQuestions / step.threshold) * 100));
-  
+  const isActive = currentQuestions >= step.threshold - 20 && !isUnlocked;
+  const progress = Math.min(100, (currentQuestions / step.threshold) * 100);
+
   const Icon = step.icon;
-  
+
   // Get unlocked metric value
   let metricDisplay: React.ReactNode = null;
   if (isUnlocked && step.unlockedMetric) {
@@ -200,8 +220,8 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
         isUnlocked
           ? 'bg-teal-500/10 border-teal-500/30'
           : isActive
-          ? 'bg-slate-700/50 border-amber-500/30'
-          : 'bg-slate-800/30 border-slate-700/30 opacity-60'
+            ? 'bg-slate-700/50 border-amber-500/30'
+            : 'bg-slate-800/30 border-slate-700/30 opacity-60'
       }`}
     >
       {/* Lock/Unlock indicator */}
@@ -215,9 +235,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
 
       {/* Step header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-lg ${
-          isUnlocked ? 'bg-teal-500/20' : 'bg-slate-700/50'
-        }`}>
+        <div className={`p-2 rounded-lg ${isUnlocked ? 'bg-teal-500/20' : 'bg-slate-700/50'}`}>
           <Icon className={`w-5 h-5 ${isUnlocked ? 'text-teal-400' : 'text-slate-400'}`} />
         </div>
         <div>
@@ -265,17 +283,17 @@ interface CalibrationProtocolUIProps {
   isStarting: boolean;
 }
 
-export function CalibrationProtocolUI({ 
-  stats, 
-  onStartSession, 
-  isStarting 
+export function CalibrationProtocolUI({
+  stats,
+  onStartSession,
+  isStarting,
 }: CalibrationProtocolUIProps) {
   const totalQuestions = stats.totalInWindow;
   const currentStep = getCurrentStep(totalQuestions);
   const questionsToNext = getQuestionsToNextUnlock(totalQuestions);
   const nextUnlock = getNextUnlockName(totalQuestions);
   const metrics = getCalibrationMetrics(stats);
-  
+
   const progressPercent = (totalQuestions / CALIBRATION_TARGET) * 100;
 
   return (
@@ -298,9 +316,7 @@ export function CalibrationProtocolUI({
           <span className="text-2xl text-slate-500">/</span>
           <span className="text-2xl text-slate-400">{CALIBRATION_TARGET}</span>
         </div>
-        <p className="text-sm text-slate-400 mt-2">
-          Questions to Full Prediction
-        </p>
+        <p className="text-sm text-slate-400 mt-2">Questions to Full Prediction</p>
       </div>
 
       {/* Overall progress bar */}
@@ -334,9 +350,8 @@ export function CalibrationProtocolUI({
       {/* Next unlock teaser */}
       <div className="bg-slate-700/30 border border-slate-700/50 rounded-xl p-4 text-center">
         <p className="text-sm text-slate-400">
-          <span className="text-amber-400 font-semibold">{questionsToNext} questions</span>
-          {' '}until you unlock{' '}
-          <span className="text-white font-medium">{nextUnlock}</span>
+          <span className="text-amber-400 font-semibold">{questionsToNext} questions</span> until
+          you unlock <span className="text-white font-medium">{nextUnlock}</span>
         </p>
       </div>
 

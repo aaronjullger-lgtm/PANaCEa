@@ -1,13 +1,13 @@
 // components/TopicDetailModal.tsx
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import type { TopicStats, PerformanceRecord } from "../types";
-import { ABBREVIATION_TO_TOPIC_MAP } from "../src/constants";
+import type { TopicStats, PerformanceRecord } from '../types';
+import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
 
 interface TopicDetailModalProps {
-  topicStats: TopicStats;                    // system-level stats from heatmap
-  performanceData: PerformanceRecord[];      // full history
+  topicStats: TopicStats; // system-level stats from heatmap
+  performanceData: PerformanceRecord[]; // full history
   onClose: () => void;
   onStartSession: (topicAbbr: string) => void;
 }
@@ -20,8 +20,8 @@ interface SubcategoryStat {
 }
 
 interface ConditionStat {
-  key: string;        // conditionId or name
-  name: string;       // human-readable condition name
+  key: string; // conditionId or name
+  name: string; // human-readable condition name
   subcategory: string;
   correct: number;
   total: number;
@@ -37,18 +37,16 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
 
   const systemCode = topicStats.topic; // e.g. "NEURO"
-  const systemLabel =
-    ABBREVIATION_TO_TOPIC_MAP[systemCode] || `${systemCode} System`;
+  const systemLabel = ABBREVIATION_TO_TOPIC_MAP[systemCode] || `${systemCode} System`;
 
   // PANCE-level ALL-sessions, filtered to this system
   const { subcategoryStats, conditionStats, systemTotals } = useMemo(() => {
     const filtered = performanceData.filter((r) => {
       // PANCE-level ALL sessions only
-      if (r.focus !== "all") return false;
+      if (r.focus !== 'all') return false;
 
       // Match by system if present; fall back to topic for older records
-      const matchesSystem =
-        (r.system && r.system === systemCode) || r.topic === systemCode;
+      const matchesSystem = (r.system && r.system === systemCode) || r.topic === systemCode;
 
       return matchesSystem;
     });
@@ -56,10 +54,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
     let systemCorrect = 0;
     let systemTotal = 0;
 
-    const subMap = new Map<
-      string,
-      { correct: number; total: number }
-    >();
+    const subMap = new Map<string, { correct: number; total: number }>();
     const condMap = new Map<
       string,
       { name: string; subcategory: string; correct: number; total: number }
@@ -69,7 +64,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
       systemTotal += 1;
       if (rec.isCorrect) systemCorrect += 1;
 
-      const sub = rec.subcategory || "Uncategorized";
+      const sub = rec.subcategory || 'Uncategorized';
 
       // Subcategory buckets
       const subEntry = subMap.get(sub) || { correct: 0, total: 0 };
@@ -78,24 +73,21 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
       subMap.set(sub, subEntry);
 
       // Condition buckets (skip if we have no condition)
-      const condName = rec.condition || "Unspecified condition";
+      const condName = rec.condition || 'Unspecified condition';
       const condKey = rec.conditionId || condName;
 
-      const condEntry =
-        condMap.get(condKey) || {
-          name: condName,
-          subcategory: sub,
-          correct: 0,
-          total: 0,
-        };
+      const condEntry = condMap.get(condKey) || {
+        name: condName,
+        subcategory: sub,
+        correct: 0,
+        total: 0,
+      };
       condEntry.total += 1;
       if (rec.isCorrect) condEntry.correct += 1;
       condMap.set(condKey, condEntry);
     }
 
-    const subcategoryStats: SubcategoryStat[] = Array.from(
-      subMap.entries()
-    )
+    const subcategoryStats: SubcategoryStat[] = Array.from(subMap.entries())
       .map(([name, { correct, total }]) => ({
         name,
         correct,
@@ -104,9 +96,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
       }))
       .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
 
-    const conditionStats: ConditionStat[] = Array.from(
-      condMap.entries()
-    )
+    const conditionStats: ConditionStat[] = Array.from(condMap.entries())
       .map(([key, { name, subcategory, correct, total }]) => ({
         key,
         name,
@@ -129,13 +119,12 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
   }, [performanceData, systemCode]);
 
   const getBarColor = (score: number) => {
-    if (score < 50) return "bg-red-500";
-    if (score < 80) return "bg-yellow-500";
-    return "bg-green-600";
+    if (score < 50) return 'bg-red-500';
+    if (score < 80) return 'bg-yellow-500';
+    return 'bg-green-600';
   };
 
-  const displayedSystemScore =
-    systemTotals.total > 0 ? systemTotals.score : topicStats.score;
+  const displayedSystemScore = systemTotals.total > 0 ? systemTotals.score : topicStats.score;
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-4">
@@ -150,9 +139,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
         </button>
 
         {/* Header */}
-        <h2 className="text-xl font-bold text-[#3D1B0E] mb-2 text-center">
-          {systemLabel}
-        </h2>
+        <h2 className="text-xl font-bold text-[#3D1B0E] mb-2 text-center">{systemLabel}</h2>
 
         {/* System score */}
         <div className="text-center mb-4">
@@ -161,20 +148,16 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
           </div>
           <p className="text-sm text-slate-500 mt-1">
             Based on {systemTotals.total || topicStats.total} questions (
-            {systemTotals.correct || topicStats.correct}/
-            {systemTotals.total || topicStats.total})
+            {systemTotals.correct || topicStats.correct}/{systemTotals.total || topicStats.total})
           </p>
         </div>
 
         {/* Subcategories */}
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">
-            Subcategory mastery
-          </h3>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Subcategory mastery</h3>
           {subcategoryStats.length === 0 ? (
             <p className="text-xs text-slate-500">
-              No detailed data yet for this system. Answer a few more questions
-              and come back.
+              No detailed data yet for this system. Answer a few more questions and come back.
             </p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -182,20 +165,16 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                 <button
                   key={sub.name}
                   onClick={() =>
-                    setActiveSubcategory(
-                      activeSubcategory === sub.name ? null : sub.name
-                    )
+                    setActiveSubcategory(activeSubcategory === sub.name ? null : sub.name)
                   }
                   className={`w-full text-left p-2 rounded-md border ${
                     activeSubcategory === sub.name
-                      ? "border-[#3D1B0E] bg-[#f4ece9]"
-                      : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                      ? 'border-[#3D1B0E] bg-[#f4ece9]'
+                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
                   } transition-colors`}
                 >
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="font-semibold text-slate-700">
-                      {sub.name}
-                    </span>
+                    <span className="font-semibold text-slate-700">{sub.name}</span>
                     <span className="text-slate-600">
                       {sub.score.toFixed(0)}% ({sub.correct}/{sub.total})
                     </span>
@@ -216,30 +195,22 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
         {activeSubcategory && (
           <div className="mt-4 border-t border-slate-200 pt-3">
             <h3 className="text-sm font-semibold text-slate-700 mb-2">
-              Conditions in{" "}
-              <span className="underline">{activeSubcategory}</span>
+              Conditions in <span className="underline">{activeSubcategory}</span>
             </h3>
             <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
               {conditionStats
                 .filter((c) => c.subcategory === activeSubcategory)
                 .map((c) => (
-                  <div
-                    key={c.key}
-                    className="p-2 bg-slate-50 rounded-md border border-slate-200"
-                  >
+                  <div key={c.key} className="p-2 bg-slate-50 rounded-md border border-slate-200">
                     <div className="flex justify-between items-center text-xs mb-1">
-                      <span className="font-medium text-slate-700">
-                        {c.name}
-                      </span>
+                      <span className="font-medium text-slate-700">{c.name}</span>
                       <span className="text-slate-600">
                         {c.score.toFixed(0)}% ({c.correct}/{c.total})
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
                       <div
-                        className={`h-1.5 rounded-full ${getBarColor(
-                          c.score
-                        )}`}
+                        className={`h-1.5 rounded-full ${getBarColor(c.score)}`}
                         style={{ width: `${c.score}%` }}
                       />
                     </div>

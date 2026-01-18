@@ -51,10 +51,10 @@ describe('ActivityHeatmap', () => {
     expect(mockData).toHaveLength(3);
     expect(mockData[0].isCorrect).toBe(true);
     expect(mockData[1].isCorrect).toBe(false);
-    
+
     // Group by date
     const dateMap = new Map<string, number>();
-    mockData.forEach(record => {
+    mockData.forEach((record) => {
       const date = new Date(record.timestamp).toISOString().split('T')[0];
       dateMap.set(date, (dateMap.get(date) || 0) + 1);
     });
@@ -100,7 +100,7 @@ describe('ActivityHeatmap', () => {
       },
     ];
 
-    const correct = mockData.filter(r => r.isCorrect).length;
+    const correct = mockData.filter((r) => r.isCorrect).length;
     const total = mockData.length;
     const accuracy = Math.round((correct / total) * 100);
 
@@ -109,12 +109,12 @@ describe('ActivityHeatmap', () => {
 
   it('should handle empty performance data', () => {
     const mockData: PerformanceRecord[] = [];
-    
+
     expect(mockData).toHaveLength(0);
-    
+
     // Should not throw when processing empty data
     const dateMap = new Map<string, number>();
-    mockData.forEach(record => {
+    mockData.forEach((record) => {
       const date = new Date(record.timestamp).toISOString().split('T')[0];
       dateMap.set(date, (dateMap.get(date) || 0) + 1);
     });

@@ -1,9 +1,9 @@
 /**
  * Media Upload API Endpoint
- * 
+ *
  * Handles medical image uploads to Supabase Storage.
  * Creates MediaAsset records with pending approval status.
- * 
+ *
  * POST /api/admin/media/upload
  * - Form data with 'file' field
  * - category: 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams'
@@ -12,8 +12,12 @@
  * - distractors: JSON string array of wrong answers
  */
 
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../_shared/auth';
 
 interface Env {
   DATABASE_URL: string;
@@ -68,7 +72,10 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     }
 
     if (!category || !VALID_CATEGORIES.includes(category)) {
-      return createErrorResponse(`Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}`, 400);
+      return createErrorResponse(
+        `Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}`,
+        400
+      );
     }
 
     // Validate file type
@@ -103,13 +110,13 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
 
     // Upload to Supabase Storage
     const fileBuffer = await file.arrayBuffer();
-    
+
     const uploadResponse = await fetch(
       `${context.env.SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${storagePath}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
           'Content-Type': file.type,
           'x-upsert': 'true',
         },
@@ -127,7 +134,12 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     const publicUrl = `${context.env.SUPABASE_URL}/storage/v1/object/public/${MEDIA_BUCKET}/${storagePath}`;
 
     // Parse tags
-    const tagArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const tagArray = tags
+      ? tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
 
     // Create MediaAsset record
     const mediaAsset = await prisma.mediaAsset.create({
@@ -163,12 +175,9 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     });
   } catch (error) {
     console.error('Media upload error:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Upload failed',
-      500
-    );
+    return createErrorResponse(error instanceof Error ? error.message : 'Upload failed', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
 
@@ -244,6 +253,6 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     console.error('Media list error:', error);
     return createErrorResponse('Failed to list media', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };

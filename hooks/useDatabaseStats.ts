@@ -1,6 +1,6 @@
 /**
  * Database Statistics Hook
- * 
+ *
  * Fetches user statistics from the database (QuestionAttempt table).
  * This provides server-side analytics separate from localStorage-based stats.
  */
@@ -86,37 +86,40 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
   const [error, setError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<number | null>(null);
 
-  const fetchStats = useCallback(async (force = false) => {
-    if (!isSignedIn) {
-      setStats(null);
-      return;
-    }
-
-    // Check cache
-    if (!force && lastFetched && Date.now() - lastFetched < CACHE_DURATION && stats) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const token = await getToken();
-      const result = await getUserStats(token);
-      
-      if (result) {
-        setStats(result as DatabaseStats);
-        setLastFetched(Date.now());
-      } else {
-        setError('Failed to fetch stats');
+  const fetchStats = useCallback(
+    async (force = false) => {
+      if (!isSignedIn) {
+        setStats(null);
+        return;
       }
-    } catch (err) {
-      console.error('[useDatabaseStats] Error fetching stats:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isSignedIn, getToken, lastFetched, stats]);
+
+      // Check cache
+      if (!force && lastFetched && Date.now() - lastFetched < CACHE_DURATION && stats) {
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const token = await getToken();
+        const result = await getUserStats(token);
+
+        if (result) {
+          setStats(result as DatabaseStats);
+          setLastFetched(Date.now());
+        } else {
+          setError('Failed to fetch stats');
+        }
+      } catch (err) {
+        console.error('[useDatabaseStats] Error fetching stats:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isSignedIn, getToken, lastFetched, stats]
+  );
 
   // Initial fetch when user signs in
   useEffect(() => {

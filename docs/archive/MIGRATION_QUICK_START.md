@@ -3,6 +3,7 @@
 ## The Problem
 
 You deployed to Cloudflare Pages and see this error:
+
 ```
 Error: The table `public.User` does not exist in the current database.
 ```
@@ -12,11 +13,13 @@ Error: The table `public.User` does not exist in the current database.
 ### Step 1: Set Up Your Database Connection
 
 Create a `.env` file locally:
+
 ```bash
 DATABASE_URL="postgresql://your-production-database-url"
 ```
 
 **Where to get your database URL:**
+
 - **Supabase:** Dashboard → Settings → Database → Connection String (Direct)
 - **Neon:** Dashboard → Connection Details → Connection String
 - **Other:** Your PostgreSQL provider's connection string
@@ -34,6 +37,7 @@ npm run migrate:production
 ```
 
 The script will:
+
 1. ✅ Check your database connection
 2. ✅ Show what tables exist vs. what's missing
 3. ✅ Ask for confirmation
@@ -41,13 +45,14 @@ The script will:
 5. ✅ Verify everything worked
 
 **Expected output:**
+
 ```
 ✅ Database connection successful
 📊 Database Status:
    - Total tables found: 0
    - User table exists: ❌
    - Missing tables: 40
-   
+
 Do you want to proceed with the migration? (yes/no): yes
 
 🚀 Applying database migration...
@@ -74,6 +79,7 @@ GEMINI_API_KEY = your-gemini-key
 ### Step 4: Verify It Works
 
 Visit your deployed site and test:
+
 - ✅ Sign up for an account
 - ✅ Sign in
 - ✅ Answer a practice question
@@ -110,6 +116,7 @@ A: Not required for local development. The app can use mock data locally.
 
 **Q: What if the migration fails?**
 A: Check the troubleshooting section in DATABASE_MIGRATION.md. Common issues:
+
 - Wrong DATABASE_URL
 - Insufficient permissions
 - Database not accepting connections
@@ -150,12 +157,14 @@ A: Check the troubleshooting section in DATABASE_MIGRATION.md. Common issues:
 The migration creates **40+ tables** including:
 
 ### Core Tables
+
 - **User** - Authentication and profiles
 - **PerformanceRecord** - Quiz results
 - **SRSItem** - Spaced repetition data
 - **SavedQuestion** - Flagged questions
 
 ### Content Tables
+
 - **Condition** - Medical conditions
 - **MediaAsset** - Images and diagrams
 - **MedicalContent** - CMS content

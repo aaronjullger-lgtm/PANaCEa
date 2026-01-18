@@ -1,9 +1,9 @@
 /**
  * ConditionPreviewCard
- * 
+ *
  * A polished, high-density preview card for medical conditions.
  * Intelligently renders content with proper formatting and visual hierarchy.
- * 
+ *
  * Features:
  * - Intelligent content rendering (pills for short items, blocks for long)
  * - RichText rendering for markdown bold/italic
@@ -51,7 +51,10 @@ interface ContentItem {
  * Intelligently extract and categorize content items
  * Short items (<30 chars) → pills, Long items → blocks
  */
-function extractContentItems(content: MedicalContentData | undefined, maxItems: number = 5): ContentItem[] {
+function extractContentItems(
+  content: MedicalContentData | undefined,
+  maxItems: number = 5
+): ContentItem[] {
   if (!content) return [];
 
   const items: ContentItem[] = [];
@@ -110,14 +113,17 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
 }) => {
   // Memoize content extraction to avoid re-computation on every render
   const contentItems = useMemo(() => extractContentItems(content, 5), [content]);
-  
+
   const accent = useMemo(() => getSystemAccent(condition.system), [condition.system]);
 
   // Memoize pills and blocks separation
-  const { pills, blocks } = useMemo(() => ({
-    pills: contentItems.filter((item) => item.type === 'pill'),
-    blocks: contentItems.filter((item) => item.type === 'block'),
-  }), [contentItems]);
+  const { pills, blocks } = useMemo(
+    () => ({
+      pills: contentItems.filter((item) => item.type === 'pill'),
+      blocks: contentItems.filter((item) => item.type === 'block'),
+    }),
+    [contentItems]
+  );
 
   return (
     <motion.button
@@ -158,7 +164,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
               <Sparkles className="w-3 h-3" />
               {condition.subcategory}
             </span>
-            
+
             {/* System badge if different from subcategory */}
             {condition.system && (
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">

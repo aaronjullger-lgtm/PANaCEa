@@ -1,6 +1,6 @@
 /**
  * Batch Question Generator
- * 
+ *
  * Generates questions in batches for the question pool.
  * Called by poolMonitorService when pool levels drop.
  */
@@ -35,62 +35,64 @@ export async function generateBatchForSystem(
   count: number = 25
 ): Promise<{ generated: number; failed: number; questions: any[] }> {
   console.log(`[BatchGen] Starting batch generation for ${system}, count=${count}`);
-  
+
   // Get conditions for this system from MedicalContent
   const conditions = await prisma.medicalContent.findMany({
     where: { system },
-    select: { id: true, conditionId: true, name: true, content: true },
+    select: { id: true, conditionId: true, condition: true, content: true },
     take: Math.min(count * 2, 50), // Get more than needed for variety
   });
-  
+
   if (conditions.length === 0) {
     console.log(`[BatchGen] No conditions found for ${system}`);
     return { generated: 0, failed: 0, questions: [] };
   }
-  
+
   let generated = 0;
   let failed = 0;
   const questions: any[] = [];
-  
+
   // Shuffle conditions for variety
   const shuffled = conditions.sort(() => Math.random() - 0.5);
-  
+
   for (let i = 0; i < count && i < shuffled.length; i++) {
     const condition = shuffled[i];
-    
+
     try {
       const question = await generateQuestionForCondition(condition, system);
-      
+
       if (question) {
         // Save directly to PreGeneratedQuestion pool
         const saved = await prisma.preGeneratedQuestion.create({
           data: {
-            question: question.question,
-            options: question.options,
-            correctIndex: question.correctIndex,
-            explanation: question.explanation,
+            questionData: {
+              question: question.question,
+              options: question.options,
+              correctIndex: question.correctIndex,
+              explanation: question.explanation,
+              tags: question.tags,
+            } as any,
             system: system,
             conditionId: condition.conditionId,
             difficulty: question.difficulty,
             questionType: question.questionType,
-            tags: question.tags,
             generatedAt: new Date(),
           },
         });
-        
+
         questions.push(saved);
         generated++;
-        console.log(`  ✓ Generated question for ${condition.name}`);
+        console.log(`  ✓ Generated question for ${condition.condition}`);
       }
-      
+
       // Rate limit
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     } catch (err) {
-      console.error(`  ✗ Failed for ${condition.name}:`, err);
+      console.error(`  ✗ Failed for ${condition.condition}:`, err);
       failed++;
     }
   }
-  
+
   console.log(`[BatchGen] Complete: ${generated} generated, ${failed} failed`);
   return { generated, failed, questions };
 }
@@ -103,7 +105,7 @@ async function generateQuestionForCondition(
   system: string
 ): Promise<GeneratedQuestion | null> {
   const content = condition.content as any;
-  
+
   const prompt = `You are a PANCE exam question writer. Create a high-quality MCQ for "${condition.name}".
 
 Context:
@@ -124,9 +126,12 @@ Generate a clinical vignette question. Return ONLY valid JSON:
 
   try {
     const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?|\n?```/g, '').trim();
+    const text = result.response
+      .text()
+      .replace(/```json\n?|\n?```/g, '')
+      .trim();
     const parsed = JSON.parse(text);
-    
+
     return {
       ...parsed,
       system,
@@ -148,21 +153,21 @@ export async function generateForAllLowSystems(threshold: number = 50): Promise<
   // Get pool levels
   const { checkPoolLevels } = await import('./poolMonitorService');
   const poolStatus = await checkPoolLevels();
-  
-  const lowSystems = poolStatus.filter(s => s.unused < threshold);
-  
+
+  const lowSystems = poolStatus.filter((s) => s.unused < threshold);
+
   let totalGenerated = 0;
   let totalFailed = 0;
-  
+
   for (const systemStatus of lowSystems) {
     const needed = threshold - systemStatus.unused;
     console.log(`\n[BatchGen] ${systemStatus.system} needs ${needed} questions`);
-    
+
     const result = await generateBatchForSystem(systemStatus.system, needed);
     totalGenerated += result.generated;
     totalFailed += result.failed;
   }
-  
+
   return {
     systemsProcessed: lowSystems.length,
     totalGenerated,
@@ -173,16 +178,18 @@ export async function generateForAllLowSystems(threshold: number = 50): Promise<
 // CLI
 if (require.main === module) {
   const args = process.argv.slice(2);
-  const system = args.find(a => a.startsWith('--system='))?.split('=')[1];
-  const count = parseInt(args.find(a => a.startsWith('--count='))?.split('=')[1] || '10');
-  
+  const system = args.find((a) => a.startsWith('--system='))?.split('=')[1];
+  const count = parseInt(args.find((a) => a.startsWith('--count='))?.split('=')[1] || '10');
+
   (async () => {
     if (system) {
       await generateBatchForSystem(system, count);
     } else {
       console.log('Running batch generation for all low systems...');
       const result = await generateForAllLowSystems();
-      console.log(`\nComplete: ${result.totalGenerated} generated across ${result.systemsProcessed} systems`);
+      console.log(
+        `\nComplete: ${result.totalGenerated} generated across ${result.systemsProcessed} systems`
+      );
     }
     process.exit(0);
   })();

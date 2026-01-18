@@ -1,82 +1,49 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
  * GET /api/drills/smart-review
  * Fetch SRS items due for review with context
  */
-export const onRequestGet = async (context) => {
 
-  const { request, env } = context;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-  const clerkId = await verifyAuthToken(request, env);
-  if (!clerkId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+const SmartReviewSchema = z.object({});
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+export const onRequestOptions = withCors();
 
+export const onRequestGet = authenticatedEndpoint(SmartReviewSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/drills/smart-review');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
-      where: { clerkId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet.',
-      }), {
+      return {
+        data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
         status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      };
     }
 
     const userId = user.id;
     const now = new Date();
 
-    // Fetch SRS items due today
     const srsItems = await prisma.sRSItem.findMany({
-      where: {
-        userId,
-        dueDate: { lte: now },
-      },
-      orderBy: [
-        { dueDate: 'asc' }, // Most overdue first
-        { difficulty: 'desc' }, // Hard cards prioritized
-      ],
-      take: 20, // Daily review cap
+      where: { userId, dueDate: { lte: now } },
+      orderBy: [{ dueDate: 'asc' }, { difficulty: 'desc' }],
+      take: 20,
     });
 
-    // Map to frontend-friendly format with reason badges
     const reviewItems = srsItems.map((item) => {
       const overdueDays = Math.floor(
         (now.getTime() - new Date(item.dueDate).getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // Determine reason badge
       let reason = 'due';
       if (overdueDays > 7) reason = 'overdue';
       else if (item.difficulty > 0.5) reason = 'hard';
@@ -93,42 +60,26 @@ export const onRequestGet = async (context) => {
       };
     });
 
-    // Aggregate stats
     const totalDue = reviewItems.length;
     const hardCount = reviewItems.filter((i) => i.reason === 'hard').length;
     const overdueCount = reviewItems.filter((i) => i.reason === 'overdue').length;
     const newCount = reviewItems.filter((i) => i.reason === 'new').length;
 
-    return new Response(
-      JSON.stringify({
+    logger.info('Fetched smart review items', { userId: auth.userId, totalDue });
+
+    return {
+      data: {
         items: reviewItems,
-        stats: {
-          totalDue,
-          hardCount,
-          overdueCount,
-          newCount,
-        },
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error('smart-review GET error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch review items', details: error?.message }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+        stats: { totalDue, hardCount, overdueCount, newCount },
+      },
+    };
+  } catch (error) {
+    logger.error('smart-review error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch review items');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

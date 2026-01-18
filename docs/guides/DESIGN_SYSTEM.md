@@ -13,34 +13,34 @@ The foundation is a comprehensive set of semantic CSS variables defined in `:roo
 ```css
 :root {
   /* Main backgrounds */
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  
+  --background: #ffffff;
+  --foreground: #0f172a;
+
   /* Card/Container system */
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
   /* Primary brand color */
-  --primary: #0284C7;
-  --primary-foreground: #FFFFFF;
-  
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+
   /* Muted/Secondary */
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
   /* Border */
-  --border: #E2E8F0;
+  --border: #e2e8f0;
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F1F5F9;
-  --card: #1E293B;
-  --card-foreground: #F1F5F9;
-  --primary: #0EA5E9;
-  --primary-foreground: #FFFFFF;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --primary: #0ea5e9;
+  --primary-foreground: #ffffff;
   --muted: #334155;
-  --muted-foreground: #94A3B8;
+  --muted-foreground: #94a3b8;
   --border: #475569;
 }
 ```
@@ -69,6 +69,7 @@ colors: {
 Components use semantic Tailwind classes instead of hardcoded colors:
 
 **❌ Before (hardcoded):**
+
 ```tsx
 <div className="bg-white text-gray-900 dark:bg-slate-900 dark:text-gray-100">
   <p className="text-gray-600 dark:text-gray-400">Subtitle</p>
@@ -76,6 +77,7 @@ Components use semantic Tailwind classes instead of hardcoded colors:
 ```
 
 **✅ After (semantic):**
+
 ```tsx
 <div className="bg-background text-foreground">
   <p className="text-muted-foreground">Subtitle</p>
@@ -86,31 +88,32 @@ Components use semantic Tailwind classes instead of hardcoded colors:
 
 ### Backgrounds
 
-| Token | Usage | Light Mode | Dark Mode |
-|-------|-------|------------|-----------|
-| `bg-background` | Main app background | `#FFFFFF` | `#0F172A` |
-| `bg-card` | Cards, panels, elevated surfaces | `#FFFFFF` | `#1E293B` |
-| `bg-muted` | Subtle backgrounds, disabled states | `#F1F5F9` | `#334155` |
+| Token           | Usage                               | Light Mode | Dark Mode |
+| --------------- | ----------------------------------- | ---------- | --------- |
+| `bg-background` | Main app background                 | `#FFFFFF`  | `#0F172A` |
+| `bg-card`       | Cards, panels, elevated surfaces    | `#FFFFFF`  | `#1E293B` |
+| `bg-muted`      | Subtle backgrounds, disabled states | `#F1F5F9`  | `#334155` |
 
 ### Text
 
-| Token | Usage | Light Mode | Dark Mode |
-|-------|-------|------------|-----------|
-| `text-foreground` | Primary text | `#0F172A` | `#F1F5F9` |
-| `text-card-foreground` | Text on cards | `#0F172A` | `#F1F5F9` |
-| `text-muted-foreground` | Secondary text, labels, placeholders | `#64748B` | `#94A3B8` |
-| `text-primary` | Accent text, links | `#0284C7` | `#0EA5E9` |
-| `text-primary-foreground` | Text on primary backgrounds | `#FFFFFF` | `#FFFFFF` |
+| Token                     | Usage                                | Light Mode | Dark Mode |
+| ------------------------- | ------------------------------------ | ---------- | --------- |
+| `text-foreground`         | Primary text                         | `#0F172A`  | `#F1F5F9` |
+| `text-card-foreground`    | Text on cards                        | `#0F172A`  | `#F1F5F9` |
+| `text-muted-foreground`   | Secondary text, labels, placeholders | `#64748B`  | `#94A3B8` |
+| `text-primary`            | Accent text, links                   | `#0284C7`  | `#0EA5E9` |
+| `text-primary-foreground` | Text on primary backgrounds          | `#FFFFFF`  | `#FFFFFF` |
 
 ### Borders
 
-| Token | Usage | Light Mode | Dark Mode |
-|-------|-------|------------|-----------|
-| `border-border` | Dividers, card borders | `#E2E8F0` | `#475569` |
+| Token           | Usage                  | Light Mode | Dark Mode |
+| --------------- | ---------------------- | ---------- | --------- |
+| `border-border` | Dividers, card borders | `#E2E8F0`  | `#475569` |
 
 ## Common Patterns
 
 ### Card Layout
+
 ```tsx
 <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
   <h3 className="text-card-foreground font-bold mb-2">Card Title</h3>
@@ -119,6 +122,7 @@ Components use semantic Tailwind classes instead of hardcoded colors:
 ```
 
 ### Primary Button
+
 ```tsx
 <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg">
   Action
@@ -126,6 +130,7 @@ Components use semantic Tailwind classes instead of hardcoded colors:
 ```
 
 ### Muted Background Section
+
 ```tsx
 <div className="bg-muted border border-border rounded-lg p-4">
   <p className="text-muted-foreground">Less prominent content</p>
@@ -133,10 +138,9 @@ Components use semantic Tailwind classes instead of hardcoded colors:
 ```
 
 ### Transparent Overlays
+
 ```tsx
-<div className="bg-card/50 backdrop-blur-sm border border-border/50">
-  Glass morphism effect
-</div>
+<div className="bg-card/50 backdrop-blur-sm border border-border/50">Glass morphism effect</div>
 ```
 
 ## Legacy Compatibility
@@ -145,9 +149,9 @@ For backward compatibility, the old `--color-*` variables are maintained:
 
 ```css
 /* Legacy (still supported) */
---color-bg-primary: #FFFFFF;
---color-text-primary: #0F172A;
---color-accent: #0284C7;
+--color-bg-primary: #ffffff;
+--color-text-primary: #0f172a;
+--color-accent: #0284c7;
 ```
 
 These map to the same values as semantic variables, so existing components continue to work. **New code should use semantic tokens.**
@@ -176,23 +180,26 @@ For success/error states, use Tailwind's native color scales with appropriate da
 ## Migration Guide
 
 ### Step 1: Identify Hardcoded Colors
+
 Search for patterns like:
+
 - `bg-white`, `bg-gray-*`, `bg-slate-*`
 - `text-black`, `text-gray-*`, `text-slate-*`
 - `border-gray-*`, `border-slate-*`
 
 ### Step 2: Replace with Semantic Tokens
 
-| Old Pattern | New Pattern |
-|-------------|-------------|
-| `bg-white dark:bg-slate-900` | `bg-background` |
-| `bg-white dark:bg-slate-800` | `bg-card` |
-| `bg-gray-100 dark:bg-slate-700` | `bg-muted` |
-| `text-gray-900 dark:text-white` | `text-foreground` |
-| `text-gray-600 dark:text-gray-400` | `text-muted-foreground` |
-| `border-gray-200 dark:border-slate-700` | `border-border` |
+| Old Pattern                             | New Pattern             |
+| --------------------------------------- | ----------------------- |
+| `bg-white dark:bg-slate-900`            | `bg-background`         |
+| `bg-white dark:bg-slate-800`            | `bg-card`               |
+| `bg-gray-100 dark:bg-slate-700`         | `bg-muted`              |
+| `text-gray-900 dark:text-white`         | `text-foreground`       |
+| `text-gray-600 dark:text-gray-400`      | `text-muted-foreground` |
+| `border-gray-200 dark:border-slate-700` | `border-border`         |
 
 ### Step 3: Test Both Themes
+
 1. Toggle dark mode using system/app theme switcher
 2. Verify no color flicker or contrast issues
 3. Check all interactive states (hover, active, disabled)
@@ -203,7 +210,7 @@ Search for patterns like:
 ✅ **Semantic naming**: `text-muted-foreground` is clearer than `text-gray-600 dark:text-gray-400`  
 ✅ **Centralized control**: Change theme colors in one place (`index.css`)  
 ✅ **Type safety**: Tailwind autocomplete suggests semantic tokens  
-✅ **Performance**: No runtime class switching, CSS variables resolve instantly  
+✅ **Performance**: No runtime class switching, CSS variables resolve instantly
 
 ## Examples in Codebase
 

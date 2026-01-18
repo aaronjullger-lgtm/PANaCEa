@@ -1,15 +1,15 @@
 /**
  * No-Repeat Logic Service
- * 
+ *
  * Task 109: "Infinite" No-Repeat Logic
  * - Track every question a user has seen
  * - Fetch questions excluding user history
  * - Only trigger AI generation as fallback when no unseen questions exist
  */
 
-import { prisma } from "../lib/prisma";
-import { generateSingleQuestion } from "../lib/questionGenerator";
-import { saveToStaging, runAdequacyCheck, promoteToLive } from "./stagingQuestionService";
+import { prisma } from '../lib/prisma';
+import { generateSingleQuestion } from '../lib/questionGenerator';
+import { saveToStaging, runAdequacyCheck, promoteToLive } from './stagingQuestionService';
 
 interface QuestionFilter {
   system?: string;
@@ -62,7 +62,10 @@ export async function recordQuestionSeen(
 /**
  * Get list of question IDs the user has already seen
  */
-export async function getUserSeenQuestions(userId: string, filter?: QuestionFilter): Promise<string[]> {
+export async function getUserSeenQuestions(
+  userId: string,
+  filter?: QuestionFilter
+): Promise<string[]> {
   const where: any = { userId };
 
   if (filter?.system) {
@@ -120,8 +123,8 @@ export async function fetchUnseenQuestions(
     },
     take: limit,
     orderBy: [
-      { usedAt: "asc" }, // Prioritize never-used questions
-      { generatedAt: "desc" }, // Then newer questions
+      { usedAt: 'asc' }, // Prioritize never-used questions
+      { generatedAt: 'desc' }, // Then newer questions
     ],
   });
 
@@ -144,7 +147,7 @@ export async function getQuestionsWithNoRepeat(
   if (unseenQuestions.length >= limit) {
     return {
       questions: unseenQuestions,
-      source: "database",
+      source: 'database',
       generated: 0,
     };
   }
@@ -167,13 +170,13 @@ export async function getQuestionsWithNoRepeat(
         },
       },
       take: limit,
-      orderBy: { generatedAt: "desc" },
+      orderBy: { generatedAt: 'desc' },
     });
 
     if (additionalQuestions.length > 0) {
       return {
         questions: additionalQuestions,
-        source: "database",
+        source: 'database',
         generated: 0,
       };
     }
@@ -186,7 +189,7 @@ export async function getQuestionsWithNoRepeat(
   // For now, we return what we have and indicate that generation is needed
   return {
     questions: unseenQuestions,
-    source: "database_and_generation_needed",
+    source: 'database_and_generation_needed',
     generated: 0,
     needsGeneration: true,
     generationNeeded: limit - unseenQuestions.length,
@@ -202,14 +205,14 @@ export async function generateQuestionsForFilter(
   count: number = 5
 ): Promise<any[]> {
   if (!filter.conditionId) {
-    throw new Error("Cannot generate questions without conditionId");
+    throw new Error('Cannot generate questions without conditionId');
   }
 
-  const { loadConditionData } = await import("./conditionDataLoader");
-  
+  const { loadConditionData } = await import('./conditionDataLoader');
+
   // Load condition data
   const conditionData = await loadConditionData(filter.conditionId);
-  
+
   if (!conditionData) {
     throw new Error(`Condition data not found for: ${filter.conditionId}`);
   }
@@ -221,19 +224,23 @@ export async function generateQuestionsForFilter(
       // Generate question using existing generator
       // Transform loaded data to match ConditionData interface
       const transformedCondition = {
-        condition: conditionData.name,
+        condition: conditionData.condition,
         sections: {
           overview: conditionData.content.overview || '',
           etiology: conditionData.content.etiologyPathophysiology || '',
           clinicalPresentation: conditionData.content.clinicalPresentation || '',
           diagnostics: conditionData.content.diagnostics?.notes || '',
-          treatment: (conditionData.content.treatment || conditionData.content.management || []).join('\n'),
-        }
+          treatment: (
+            conditionData.content.treatment ||
+            conditionData.content.management ||
+            []
+          ).join('\n'),
+        },
       };
-      
+
       const question = await generateSingleQuestion(
         transformedCondition,
-        (filter.questionType as any) || "mcq"
+        (filter.questionType as any) || 'mcq'
       );
 
       if (question) {
@@ -241,7 +248,7 @@ export async function generateQuestionsForFilter(
         const staged = await saveToStaging({
           ...question,
           system: filter.system || conditionData.system,
-          difficulty: filter.difficulty || "medium",
+          difficulty: filter.difficulty || 'medium',
         });
 
         // Run adequacy check
@@ -254,7 +261,7 @@ export async function generateQuestionsForFilter(
         }
       }
     } catch (error) {
-      console.error("Error generating question:", error);
+      console.error('Error generating question:', error);
     }
   }
 
@@ -287,7 +294,7 @@ export async function getRepositoryStats() {
     prisma.preGeneratedQuestion.count(),
     prisma.preGeneratedQuestion.count({ where: { usedAt: null } }),
     prisma.preGeneratedQuestion.groupBy({
-      by: ["system"],
+      by: ['system'],
       _count: true,
     }),
   ]);
@@ -299,7 +306,7 @@ export async function getRepositoryStats() {
     message:
       totalQuestions > 0
         ? `Building asset value: ${totalQuestions} vetted questions in the Golden Repository`
-        : "Start building your Golden Repository by generating questions",
+        : 'Start building your Golden Repository by generating questions',
   };
 }
 

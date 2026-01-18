@@ -1,28 +1,28 @@
 /**
  * Behavioral Confidence Calibration
- * 
- * Automatically tracks how well behavioral signals (time, answer changes, 
+ *
+ * Automatically tracks how well behavioral signals (time, answer changes,
  * elimination usage) correlate with actual performance.
- * 
+ *
  * NO manual input required - confidence is inferred from behavior.
  * Key for PANCE success: understanding your testing patterns.
  */
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
-  RefreshCw, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  RefreshCw,
   Minus as MinusIcon,
-  ChevronDown, 
+  ChevronDown,
   ChevronUp,
   Brain,
   Zap,
   HelpCircle,
 } from 'lucide-react';
-import { 
+import {
   InferredConfidence,
   BehavioralConfidenceRecord,
   calculateBehavioralCalibration,
@@ -43,33 +43,33 @@ export const ConfidenceBadge: React.FC<{
   size?: 'sm' | 'md';
 }> = ({ confidence, score, size = 'sm' }) => {
   const config = {
-    high: { 
-      label: 'Confident', 
+    high: {
+      label: 'Confident',
       icon: Zap,
-      bg: 'bg-emerald-100 dark:bg-emerald-900/30', 
+      bg: 'bg-emerald-100 dark:bg-emerald-900/30',
       text: 'text-emerald-700 dark:text-emerald-400',
       border: 'border-emerald-200 dark:border-emerald-800',
     },
-    medium: { 
-      label: 'Uncertain', 
+    medium: {
+      label: 'Uncertain',
       icon: HelpCircle,
-      bg: 'bg-amber-100 dark:bg-amber-900/30', 
+      bg: 'bg-amber-100 dark:bg-amber-900/30',
       text: 'text-amber-700 dark:text-amber-400',
       border: 'border-amber-200 dark:border-amber-800',
     },
-    low: { 
-      label: 'Hesitant', 
+    low: {
+      label: 'Hesitant',
       icon: Clock,
-      bg: 'bg-slate-100 dark:bg-slate-800', 
+      bg: 'bg-slate-100 dark:bg-slate-800',
       text: 'text-slate-600 dark:text-slate-400',
       border: 'border-slate-200 dark:border-slate-700',
     },
   }[confidence];
-  
+
   const Icon = config.icon;
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm';
   const iconSize = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
-  
+
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
@@ -94,7 +94,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
     return { ...calibration, total: records.length };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
-  
+
   if (stats.total < 5) {
     return (
       <div className="text-xs text-slate-500 italic">
@@ -102,7 +102,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
       </div>
     );
   }
-  
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
@@ -118,11 +118,15 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
             </span>
           </div>
           {stats.calibrationScore !== null && (
-            <div className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-              stats.calibrationScore >= 65 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-              stats.calibrationScore >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-            }`}>
+            <div
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                stats.calibrationScore >= 65
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                  : stats.calibrationScore >= 40
+                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              }`}
+            >
               {stats.calibrationScore}%
             </div>
           )}
@@ -133,7 +137,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
           <ChevronDown className="w-4 h-4 text-slate-400" />
         )}
       </button>
-      
+
       {/* Expanded content */}
       <AnimatePresence>
         {isExpanded && (
@@ -155,7 +159,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                 color="emerald"
                 description="Answered quickly without changing"
               />
-              
+
               {/* Medium Confidence (some deliberation) */}
               <BehaviorRow
                 label="Deliberate"
@@ -166,7 +170,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                 color="amber"
                 description="Took time or made small changes"
               />
-              
+
               {/* Low Confidence (struggled) */}
               <BehaviorRow
                 label="Struggled"
@@ -177,12 +181,12 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                 color="slate"
                 description="Multiple changes or very slow"
               />
-              
+
               {/* AI Insights */}
               {stats.insights.length > 0 && (
                 <div className="pt-2 space-y-1">
                   {stats.insights.map((insight, i) => (
-                    <div 
+                    <div
                       key={i}
                       className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400"
                     >
@@ -192,7 +196,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                   ))}
                 </div>
               )}
-              
+
               {/* Footer explanation */}
               <div className="pt-2 text-xs text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700">
                 Based on your response time, answer changes, and elimination usage
@@ -220,20 +224,20 @@ const BehaviorRow: React.FC<{
     amber: 'bg-amber-500',
     slate: 'bg-slate-400',
   };
-  
+
   const iconColors = {
     emerald: 'text-emerald-600 dark:text-emerald-400',
     amber: 'text-amber-600 dark:text-amber-400',
     slate: 'text-slate-500 dark:text-slate-400',
   };
-  
+
   const status = (() => {
     if (accuracy === null || count < 3) return null;
     if (accuracy >= expected.min && accuracy <= expected.max) return 'calibrated';
     if (accuracy > expected.max) return 'better';
     return 'worse';
   })();
-  
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -244,12 +248,17 @@ const BehaviorRow: React.FC<{
         </div>
         <div className="flex items-center gap-2">
           {accuracy !== null ? (
-            <span className={`text-sm font-medium ${
-              status === 'calibrated' ? 'text-emerald-600 dark:text-emerald-400' :
-              status === 'better' ? 'text-blue-600 dark:text-blue-400' :
-              status === 'worse' ? 'text-amber-600 dark:text-amber-400' :
-              'text-slate-600 dark:text-slate-400'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                status === 'calibrated'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : status === 'better'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : status === 'worse'
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-slate-600 dark:text-slate-400'
+              }`}
+            >
               {accuracy}% correct
             </span>
           ) : (
@@ -257,7 +266,7 @@ const BehaviorRow: React.FC<{
           )}
         </div>
       </div>
-      
+
       {/* Progress bar */}
       {accuracy !== null && (
         <div className="flex items-center gap-2">
@@ -271,7 +280,7 @@ const BehaviorRow: React.FC<{
           </div>
         </div>
       )}
-      
+
       <div className="text-xs text-slate-400">{description}</div>
     </div>
   );
@@ -281,7 +290,7 @@ const BehaviorRow: React.FC<{
 export function useBehavioralTracking() {
   const getRecords = () => getBehavioralRecords();
   const getCalibration = () => calculateBehavioralCalibration();
-  
+
   return {
     getRecords,
     getCalibration,

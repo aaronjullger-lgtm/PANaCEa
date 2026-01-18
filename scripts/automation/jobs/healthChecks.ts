@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * Health Check Jobs
- * 
+ *
  * Infrastructure and system health monitoring:
  * - Database connectivity and pool status
  * - External API availability
  * - SSL certificate expiry
  * - Error rate monitoring
  * - Synthetic smoke tests
- * 
+ *
  * These jobs are called by hourly/daily/weekly tasks
  */
 
@@ -58,7 +58,7 @@ export async function checkDatabasePerformance(): Promise<HealthCheckResult> {
     // Run a typical query to check performance
     const count = await prisma.medicalContent.count();
     const duration = Date.now() - start;
-    
+
     if (duration > 5000) {
       return {
         name: 'Database Performance',
@@ -68,7 +68,7 @@ export async function checkDatabasePerformance(): Promise<HealthCheckResult> {
         details: { contentCount: count },
       };
     }
-    
+
     return {
       name: 'Database Performance',
       status: 'pass',
@@ -96,7 +96,7 @@ export async function checkDatabasePerformance(): Promise<HealthCheckResult> {
 export async function checkGeminiAPI(): Promise<HealthCheckResult> {
   const start = Date.now();
   const apiKey = process.env.GEMINI_API_KEY;
-  
+
   if (!apiKey) {
     return {
       name: 'Gemini API Configuration',
@@ -105,13 +105,13 @@ export async function checkGeminiAPI(): Promise<HealthCheckResult> {
       duration: Date.now() - start,
     };
   }
-  
+
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
       { method: 'GET' }
     );
-    
+
     if (response.ok) {
       return {
         name: 'Gemini API',
@@ -120,7 +120,7 @@ export async function checkGeminiAPI(): Promise<HealthCheckResult> {
         duration: Date.now() - start,
       };
     }
-    
+
     return {
       name: 'Gemini API',
       status: 'fail',
@@ -142,12 +142,12 @@ export async function checkGeminiAPI(): Promise<HealthCheckResult> {
  */
 export async function checkClerkAuth(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   try {
     const response = await fetch('https://api.clerk.com/health', {
       method: 'GET',
     });
-    
+
     return {
       name: 'Clerk Auth',
       status: response.ok ? 'pass' : 'warning',
@@ -170,7 +170,7 @@ export async function checkClerkAuth(): Promise<HealthCheckResult> {
 export async function checkSupabaseStorage(): Promise<HealthCheckResult> {
   const start = Date.now();
   const supabaseUrl = process.env.SUPABASE_URL;
-  
+
   if (!supabaseUrl) {
     return {
       name: 'Supabase Storage',
@@ -179,12 +179,12 @@ export async function checkSupabaseStorage(): Promise<HealthCheckResult> {
       duration: Date.now() - start,
     };
   }
-  
+
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/`, {
       method: 'HEAD',
     });
-    
+
     return {
       name: 'Supabase Storage',
       status: response.ok ? 'pass' : 'warning',
@@ -210,25 +210,25 @@ export async function checkSupabaseStorage(): Promise<HealthCheckResult> {
  */
 export async function checkErrorRates(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
+
     const failedJobs = await prisma.backgroundJob.count({
       where: {
         status: 'failed',
         updatedAt: { gte: oneHourAgo },
       },
     });
-    
+
     const totalJobs = await prisma.backgroundJob.count({
       where: {
         updatedAt: { gte: oneHourAgo },
       },
     });
-    
+
     const errorRate = totalJobs > 0 ? (failedJobs / totalJobs) * 100 : 0;
-    
+
     if (errorRate > 10) {
       return {
         name: 'Error Rate',
@@ -238,7 +238,7 @@ export async function checkErrorRates(): Promise<HealthCheckResult> {
         details: { failedJobs, totalJobs, errorRate },
       };
     }
-    
+
     if (errorRate > 5) {
       return {
         name: 'Error Rate',
@@ -248,7 +248,7 @@ export async function checkErrorRates(): Promise<HealthCheckResult> {
         details: { failedJobs, totalJobs, errorRate },
       };
     }
-    
+
     return {
       name: 'Error Rate',
       status: 'pass',
@@ -271,21 +271,21 @@ export async function checkErrorRates(): Promise<HealthCheckResult> {
  */
 export async function checkFlaggedQuestions(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   try {
     const pendingFlags = await prisma.questionFlag.count({
       where: {
         status: 'pending',
       },
     });
-    
+
     const highPriorityFlags = await prisma.questionFlag.count({
       where: {
         status: 'pending',
         priority: 'high',
       },
     });
-    
+
     if (highPriorityFlags > 0) {
       return {
         name: 'Flagged Questions',
@@ -295,7 +295,7 @@ export async function checkFlaggedQuestions(): Promise<HealthCheckResult> {
         details: { pendingFlags, highPriorityFlags },
       };
     }
-    
+
     return {
       name: 'Flagged Questions',
       status: 'pass',
@@ -322,12 +322,12 @@ export async function checkFlaggedQuestions(): Promise<HealthCheckResult> {
  */
 export async function checkContentAvailability(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   try {
     const publishedCount = await prisma.medicalContent.count({
       where: { status: 'published' },
     });
-    
+
     if (publishedCount === 0) {
       return {
         name: 'Content Availability',
@@ -336,7 +336,7 @@ export async function checkContentAvailability(): Promise<HealthCheckResult> {
         duration: Date.now() - start,
       };
     }
-    
+
     if (publishedCount < 500) {
       return {
         name: 'Content Availability',
@@ -346,7 +346,7 @@ export async function checkContentAvailability(): Promise<HealthCheckResult> {
         details: { publishedCount },
       };
     }
-    
+
     return {
       name: 'Content Availability',
       status: 'pass',
@@ -369,7 +369,7 @@ export async function checkContentAvailability(): Promise<HealthCheckResult> {
  */
 export async function checkQuestionPool(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   try {
     const questionCount = await prisma.question.count();
     const preGeneratedCount = await prisma.preGeneratedQuestion.count({
@@ -377,7 +377,7 @@ export async function checkQuestionPool(): Promise<HealthCheckResult> {
         usedAt: null,
       },
     });
-    
+
     if (questionCount + preGeneratedCount < 100) {
       return {
         name: 'Question Pool',
@@ -387,7 +387,7 @@ export async function checkQuestionPool(): Promise<HealthCheckResult> {
         details: { questionCount, preGeneratedCount },
       };
     }
-    
+
     return {
       name: 'Question Pool',
       status: 'pass',
@@ -415,18 +415,18 @@ export async function checkQuestionPool(): Promise<HealthCheckResult> {
 export async function runSmokeTest(): Promise<HealthCheckResult> {
   const start = Date.now();
   const errors: string[] = [];
-  
+
   try {
     // Test 1: Fetch medical content
     const content = await prisma.medicalContent.findFirst({
       where: { status: 'published' },
     });
     if (!content) errors.push('No published content found');
-    
+
     // Test 2: Fetch questions
     const question = await prisma.question.findFirst();
     if (!question) errors.push('No questions found');
-    
+
     // Test 3: Check system groupings
     const systems = await prisma.medicalContent.groupBy({
       by: ['system'],
@@ -434,10 +434,10 @@ export async function runSmokeTest(): Promise<HealthCheckResult> {
       _count: true,
     });
     if (systems.length < 5) errors.push(`Only ${systems.length} systems found`);
-    
+
     // Test 4: Check recent user activity (if any users exist)
     const userCount = await prisma.user.count();
-    
+
     if (errors.length > 0) {
       return {
         name: 'Smoke Test',
@@ -447,7 +447,7 @@ export async function runSmokeTest(): Promise<HealthCheckResult> {
         details: { errors, userCount, systemCount: systems.length },
       };
     }
-    
+
     return {
       name: 'Smoke Test',
       status: 'pass',
@@ -475,13 +475,13 @@ export async function runSmokeTest(): Promise<HealthCheckResult> {
 export async function checkSSLExpiry(): Promise<HealthCheckResult> {
   const start = Date.now();
   const productionUrl = process.env.PRODUCTION_URL || 'https://studypanacea.com';
-  
+
   try {
     // Simple HTTPS connection test
     const response = await fetch(productionUrl, {
       method: 'HEAD',
     });
-    
+
     return {
       name: 'SSL Certificate',
       status: response.ok ? 'pass' : 'warning',
@@ -499,7 +499,7 @@ export async function checkSSLExpiry(): Promise<HealthCheckResult> {
         duration: Date.now() - start,
       };
     }
-    
+
     return {
       name: 'SSL Certificate',
       status: 'warning',
@@ -518,15 +518,15 @@ export async function checkSSLExpiry(): Promise<HealthCheckResult> {
  */
 export async function runHourlyHealthChecks(): Promise<HealthCheckResult[]> {
   console.log('🔄 Running hourly health checks...');
-  
+
   const results: HealthCheckResult[] = [];
-  
+
   results.push(await checkDatabaseConnection());
   results.push(await checkGeminiAPI());
   results.push(await checkErrorRates());
   results.push(await checkContentAvailability());
   results.push(await runSmokeTest());
-  
+
   return results;
 }
 
@@ -535,9 +535,9 @@ export async function runHourlyHealthChecks(): Promise<HealthCheckResult[]> {
  */
 export async function runDailyHealthChecks(): Promise<HealthCheckResult[]> {
   console.log('🔄 Running daily health checks...');
-  
+
   const results: HealthCheckResult[] = [];
-  
+
   results.push(await checkDatabaseConnection());
   results.push(await checkDatabasePerformance());
   results.push(await checkGeminiAPI());
@@ -549,7 +549,7 @@ export async function runDailyHealthChecks(): Promise<HealthCheckResult[]> {
   results.push(await checkQuestionPool());
   results.push(await runSmokeTest());
   results.push(await checkSSLExpiry());
-  
+
   return results;
 }
 
@@ -565,10 +565,10 @@ export function summarizeResults(results: HealthCheckResult[]): {
 } {
   return {
     total: results.length,
-    passed: results.filter(r => r.status === 'pass').length,
-    failed: results.filter(r => r.status === 'fail').length,
-    warnings: results.filter(r => r.status === 'warning').length,
-    allPassed: results.every(r => r.status !== 'fail'),
+    passed: results.filter((r) => r.status === 'pass').length,
+    failed: results.filter((r) => r.status === 'fail').length,
+    warnings: results.filter((r) => r.status === 'warning').length,
+    allPassed: results.every((r) => r.status !== 'fail'),
   };
 }
 
@@ -593,11 +593,11 @@ export default {
   checkQuestionPool,
   runSmokeTest,
   checkSSLExpiry,
-  
+
   // Aggregates
   runHourlyHealthChecks,
   runDailyHealthChecks,
   summarizeResults,
-  
+
   disconnect,
 };

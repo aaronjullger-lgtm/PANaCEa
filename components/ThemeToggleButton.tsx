@@ -8,7 +8,7 @@ const ThemeToggleButton: React.FC = () => {
   const [theme, setTheme] = useTheme();
 
   return (
-    <motion.button 
+    <motion.button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className="relative p-2.5 rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-all duration-200 shadow-sm hover:shadow-md"
       aria-label="Toggle theme"
@@ -18,7 +18,7 @@ const ThemeToggleButton: React.FC = () => {
       <motion.div
         initial={false}
         animate={{ rotate: theme === 'dark' ? 0 : 180 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {theme === 'light' ? (
           <MoonIcon className="w-5 h-5 text-[var(--color-text-secondary)]" />

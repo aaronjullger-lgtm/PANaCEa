@@ -9,18 +9,20 @@ Grand Rounds is a daily competitive mode where users compete globally on a timed
 ### Database Models
 
 **GrandRoundsChallenge**
+
 ```prisma
 model GrandRoundsChallenge {
   id          String   @id @default(uuid())
   date        DateTime @unique // UTC date, ensures one challenge per day
   questionIds String[] // Array of Question IDs
   createdAt   DateTime @default(now())
-  
+
   attempts GrandRoundsAttempt[]
 }
 ```
 
 **GrandRoundsAttempt**
+
 ```prisma
 model GrandRoundsAttempt {
   id          String   @id @default(uuid())
@@ -29,10 +31,10 @@ model GrandRoundsAttempt {
   score       Int
   timeSpentMs Int
   completedAt DateTime @default(now())
-  
+
   challenge GrandRoundsChallenge @relation(...)
   user      User                 @relation(...)
-  
+
   @@unique([userId, challengeId]) // One attempt per user per challenge
 }
 ```
@@ -44,6 +46,7 @@ model GrandRoundsAttempt {
 Fetches today's challenge. Returns different responses based on completion status.
 
 **Response (not completed)**:
+
 ```json
 {
   "status": "active",
@@ -63,6 +66,7 @@ Fetches today's challenge. Returns different responses based on completion statu
 ```
 
 **Response (already completed)**:
+
 ```json
 {
   "status": "completed",
@@ -82,11 +86,12 @@ Fetches today's challenge. Returns different responses based on completion statu
 Submits answers for a challenge.
 
 **Request**:
+
 ```json
 {
   "challengeId": "uuid",
   "answers": {
-    "question-id-1": 0,  // Selected answer index
+    "question-id-1": 0, // Selected answer index
     "question-id-2": 2,
     "question-id-3": 1
   },
@@ -95,6 +100,7 @@ Submits answers for a challenge.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -107,6 +113,7 @@ Submits answers for a challenge.
 ```
 
 **Validation**:
+
 - Requires authentication via Clerk
 - Validates challengeId exists
 - Ensures user hasn't already submitted (@@unique constraint)
@@ -118,20 +125,24 @@ Submits answers for a challenge.
 #### grandRoundsService.ts
 
 **getOrCreateDailyChallenge()**
+
 - Queries for today's challenge by UTC date
 - If none exists, creates one with 5 random questions
 - Returns GrandRoundsChallenge
 
 **getUserAttemptForChallenge(userId, challengeId)**
+
 - Checks if user has already completed this challenge
 - Returns GrandRoundsAttempt or null
 
 **calculatePercentile(challengeId, score)**
+
 - Queries all attempts for the challenge
 - Calculates percentile ranking (higher is better)
 - Returns number (0-100)
 
 **getRankingForChallenge(challengeId, userId)**
+
 - Queries attempts ordered by score DESC, timeSpentMs ASC
 - Finds user's position in leaderboard
 - Returns rank number (1-indexed)
@@ -141,12 +152,14 @@ Submits answers for a challenge.
 **Base Points**: 20 points per correct answer
 
 **Speed Bonus**: Up to 20 additional points based on completion time
+
 - Formula: `max(0, 20 - Math.floor(timeSpentMs / 60000))`
 - Complete under 1 minute: +20 points
 - Complete under 10 minutes: +10 points
 - Complete under 20 minutes: +0 points
 
 **Example**:
+
 - 5 questions, 4 correct in 8 minutes
 - Base: 4 × 20 = 80 points
 - Speed bonus: 20 - 8 = 12 points
@@ -157,6 +170,7 @@ Submits answers for a challenge.
 ### GrandRoundsMode.tsx
 
 **View States**:
+
 - `loading`: Fetching challenge data
 - `completed`: Already finished today (shows stats + countdown)
 - `landing`: Intro screen before starting
@@ -165,6 +179,7 @@ Submits answers for a challenge.
 - `error`: Error state
 
 **Key Features**:
+
 1. **Global Timer**: 20-minute countdown, cannot be paused
 2. **Auto-submit**: Automatically submits when time runs out
 3. **Answer Tracking**: Saves answers in state, submits all at once
@@ -172,6 +187,7 @@ Submits answers for a challenge.
 5. **Percentile Badge**: Special badge if scored in top 10%
 
 **Flow**:
+
 ```
 Mount → Fetch /api/grand-rounds/today
   ↓
@@ -230,6 +246,7 @@ Show summary with score/rank/percentile
 ## Database Migration
 
 Run to add Grand Rounds tables:
+
 ```bash
 npx prisma migrate dev --name add_grand_rounds
 npx prisma generate

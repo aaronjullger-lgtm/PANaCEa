@@ -27,8 +27,8 @@ export interface LabPanels {
  * Basic science concept link for foundational learning
  */
 export interface BasicScienceLink {
-  title: string;      // e.g., "Review: Insulin Signaling"
-  conceptId: string;  // Internal ID for the foundational page
+  title: string; // e.g., "Review: Insulin Signaling"
+  conceptId: string; // Internal ID for the foundational page
 }
 
 /**

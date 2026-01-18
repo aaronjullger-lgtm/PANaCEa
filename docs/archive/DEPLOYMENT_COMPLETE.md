@@ -30,16 +30,19 @@ The PANaCEa platform now has a **fully automated, context-aware content manageme
 ### 📋 Deployment Steps Completed
 
 ✅ **Step 1: Dependencies Installed**
+
 ```bash
 npm install  # Including sharp for image processing
 ```
 
 ✅ **Step 2: Prisma Client Generated**
+
 ```bash
 npx prisma generate
 ```
 
 ⏳ **Step 3: Database Schema** (In Progress)
+
 ```bash
 npx prisma db push  # Applies schema changes
 ```
@@ -47,6 +50,7 @@ npx prisma db push  # Applies schema changes
 📝 **Step 4: Supabase Buckets** (Manual - See below)
 
 ✅ **Step 5: Scripts Added**
+
 - `npm run media:process-existing` - Process existing photos
 - `npm run orchestrate:full` - Run full automation pipeline
 - `npm run orchestrate:context-aware` - Context-aware maintenance
@@ -54,9 +58,11 @@ npx prisma db push  # Applies schema changes
 ### 🚀 System Components
 
 #### 1. Automated Content Pipeline
+
 **File**: `services/automatedContentPipeline.ts`
 
 Handles:
+
 - Processing existing repository photos
 - Identifying content gaps
 - Sourcing new content
@@ -67,31 +73,34 @@ Handles:
 **Run**: `npm run orchestrate:full`
 
 #### 2. Context-Aware Orchestrator
+
 **File**: `services/contextAwareOrchestrator.ts`
 
 Maintains ALL site components with intelligence about:
 
-| Component | Purpose | Content Types | Quality Required |
-|-----------|---------|---------------|------------------|
-| Photo Drill | Visual diagnosis | Clinical images, ECG, radiology | Critical |
-| Patient Encounter | Clinical reasoning | Cases, histories, findings | Critical |
-| Pharm Drill | Pharmacology | Drug info, interactions | Critical |
-| First Line Treatment | Evidence-based tx | Treatment protocols | Critical |
-| Lab Cases | Lab interpretation | Lab values, patterns | Critical |
-| Grand Rounds | Complex cases | Teaching cases | Critical |
-| Antibiotic Mode | Stewardship | Coverage, resistance | Critical (Realtime) |
-| Fluid & Electrolyte | Fluid management | Protocols, calculations | Critical |
-| Code Blue | Emergency ACLS | Algorithms, timing | Critical |
-| Guideline Drill | Clinical guidelines | Recommendations | Critical (Current) |
-| Condition Drill | Disease knowledge | Pathophysiology | Critical |
-| Buzzword Bank | Pattern recognition | Clinical pearls | High |
+| Component            | Purpose             | Content Types                   | Quality Required    |
+| -------------------- | ------------------- | ------------------------------- | ------------------- |
+| Photo Drill          | Visual diagnosis    | Clinical images, ECG, radiology | Critical            |
+| Patient Encounter    | Clinical reasoning  | Cases, histories, findings      | Critical            |
+| Pharm Drill          | Pharmacology        | Drug info, interactions         | Critical            |
+| First Line Treatment | Evidence-based tx   | Treatment protocols             | Critical            |
+| Lab Cases            | Lab interpretation  | Lab values, patterns            | Critical            |
+| Grand Rounds         | Complex cases       | Teaching cases                  | Critical            |
+| Antibiotic Mode      | Stewardship         | Coverage, resistance            | Critical (Realtime) |
+| Fluid & Electrolyte  | Fluid management    | Protocols, calculations         | Critical            |
+| Code Blue            | Emergency ACLS      | Algorithms, timing              | Critical            |
+| Guideline Drill      | Clinical guidelines | Recommendations                 | Critical (Current)  |
+| Condition Drill      | Disease knowledge   | Pathophysiology                 | Critical            |
+| Buzzword Bank        | Pattern recognition | Clinical pearls                 | High                |
 
 **Run**: `npm run orchestrate:context-aware`
 
 #### 3. Content Orchestrator
+
 **File**: `services/contentOrchestrator.ts`
 
 Background service that:
+
 - Schedules automated pipeline every 6 hours
 - Monitors content needs hourly
 - Alerts on quality issues
@@ -104,6 +113,7 @@ Background service that:
 Each content type has defined quality standards:
 
 **Clinical Images**
+
 - Must have: Clear pathology, proper labeling, context, verification
 - Must be accurate: Diagnosis, findings, significance
 - Must be current: Yes
@@ -111,6 +121,7 @@ Each content type has defined quality standards:
 - Update frequency: Continuous
 
 **Drug Information**
+
 - Must have: Mechanism, indications, contraindications, interactions, dosing
 - Must be accurate: FDA approval, safety warnings, dosages
 - Must be current: Yes (Realtime)
@@ -118,6 +129,7 @@ Each content type has defined quality standards:
 - Update frequency: Daily
 
 **Guidelines**
+
 - Must have: Source, date, recommendations, evidence level
 - Must be accurate: Recommendations, contradictions
 - Must be current: Yes
@@ -147,10 +159,13 @@ Each content type has defined quality standards:
 ### 🎮 Usage
 
 #### Process Existing Photos (One-Time)
+
 ```bash
 npm run media:process-existing
 ```
+
 This will:
+
 - Analyze all images in `/public`
 - Check clinical relevance
 - Suggest better names
@@ -158,10 +173,13 @@ This will:
 - Upload approved images to database
 
 #### Run Full Automation Pipeline
+
 ```bash
 npm run orchestrate:full
 ```
+
 Runs complete automation:
+
 1. Process existing photos
 2. Identify content gaps
 3. Source new content
@@ -170,10 +188,13 @@ Runs complete automation:
 6. Optimize database
 
 #### Run Context-Aware Maintenance
+
 ```bash
 npm run orchestrate:context-aware
 ```
+
 Analyzes entire site:
+
 - All 12+ components
 - Content needs per component
 - Quality requirements
@@ -190,6 +211,7 @@ Analyzes entire site:
    - `educational-resources` (Public, 50MB limit)
 
 3. Apply storage policies:
+
 ```sql
 -- For medical-images bucket
 CREATE POLICY "Public Access"
@@ -199,7 +221,7 @@ USING ( bucket_id = 'medical-images' );
 CREATE POLICY "Authenticated users can upload"
 ON storage.objects FOR INSERT
 WITH CHECK (
-  bucket_id = 'medical-images' 
+  bucket_id = 'medical-images'
   AND auth.role() = 'authenticated'
 );
 ```
@@ -207,6 +229,7 @@ WITH CHECK (
 #### Add Admin Route
 
 In your routing configuration:
+
 ```typescript
 import { MediaApprovalDashboard } from '@/components/admin/MediaApprovalDashboard';
 
@@ -218,6 +241,7 @@ import { MediaApprovalDashboard } from '@/components/admin/MediaApprovalDashboar
 All automation is configurable via the service files:
 
 **Quality Thresholds** (`services/imageQualityService.ts`):
+
 ```typescript
 const QUALITY_THRESHOLDS = {
   MIN_WIDTH: 800,
@@ -228,6 +252,7 @@ const QUALITY_THRESHOLDS = {
 ```
 
 **Content Expectations** (`services/contextAwareOrchestrator.ts`):
+
 ```typescript
 // Adjust expected counts per content type
 stats.expectedCount = 500; // Clinical images
@@ -236,11 +261,15 @@ stats.expectedCount = 1000; // Case vignettes
 ```
 
 **Automation Frequency** (`services/contentOrchestrator.ts`):
+
 ```typescript
 // Run every 6 hours (adjustable)
-setInterval(() => {
-  runAutomatedPipeline().catch(console.error);
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    runAutomatedPipeline().catch(console.error);
+  },
+  6 * 60 * 60 * 1000
+);
 ```
 
 ### 📈 Monitoring
@@ -291,6 +320,7 @@ The system provides real-time feedback:
 ### 🚀 Next Steps
 
 1. **Complete Database Schema Push**
+
    ```bash
    npx prisma db push
    ```
@@ -298,14 +328,17 @@ The system provides real-time feedback:
 2. **Create Supabase Buckets** (See manual steps above)
 
 3. **Process Existing Photos**
+
    ```bash
    npm run media:process-existing
    ```
 
 4. **Start Server with Orchestrator**
+
    ```bash
    npm run dev:all
    ```
+
    The orchestrator starts automatically!
 
 5. **Monitor Progress**

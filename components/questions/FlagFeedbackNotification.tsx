@@ -1,19 +1,26 @@
 /**
  * Question Flag Feedback Loop
- * 
+ *
  * Shows users status of their flagged questions:
  * - "3 of your flags have been resolved"
  * - Improves trust in platform quality
  * - Notification badge + expandable panel
- * 
+ *
  * @see docs/CRITICAL_FIXES_SPRINT_TRACKER.md - Sprint E
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Flag, CheckCircle, Clock, XCircle, ChevronRight, 
-  Bell, X, ThumbsUp, MessageSquare
+import {
+  Flag,
+  CheckCircle,
+  Clock,
+  XCircle,
+  ChevronRight,
+  Bell,
+  X,
+  ThumbsUp,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -48,25 +55,27 @@ const StatusBadge: React.FC<{ status: FlaggedQuestion['status'] }> = ({ status }
     resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   };
-  
+
   const labels = {
     pending: 'Pending',
     under_review: 'Reviewing',
     resolved: 'Resolved',
     rejected: 'No Change',
   };
-  
+
   const icons = {
     pending: Clock,
     under_review: MessageSquare,
     resolved: CheckCircle,
     rejected: XCircle,
   };
-  
+
   const Icon = icons[status];
-  
+
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
+    >
       <Icon className="w-3 h-3" />
       {labels[status]}
     </span>
@@ -81,30 +90,30 @@ const ActionBadge: React.FC<{ action: string }> = ({ action }) => {
     removed: '🗑️ Removed',
     no_change: '➡️ No Change Needed',
   };
-  
-  return (
-    <span className="text-xs text-[var(--color-text-muted)]">
-      {labels[action] || action}
-    </span>
-  );
+
+  return <span className="text-xs text-[var(--color-text-muted)]">{labels[action] || action}</span>;
 };
 
 // Individual flag item
 const FlagItem: React.FC<{ flag: FlaggedQuestion }> = ({ flag }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   return (
     <div className="border-b border-[var(--color-border)] last:border-b-0">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full p-3 flex items-start gap-3 hover:bg-[var(--color-bg-tertiary)] transition-colors text-left"
       >
-        <Flag className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-          flag.status === 'resolved' ? 'text-green-500' :
-          flag.status === 'rejected' ? 'text-red-500' :
-          'text-yellow-500'
-        }`} />
-        
+        <Flag
+          className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+            flag.status === 'resolved'
+              ? 'text-green-500'
+              : flag.status === 'rejected'
+                ? 'text-red-500'
+                : 'text-yellow-500'
+          }`}
+        />
+
         <div className="flex-1 min-w-0">
           <p className="text-sm text-[var(--color-text-primary)] line-clamp-1">
             {flag.questionPreview}
@@ -116,12 +125,14 @@ const FlagItem: React.FC<{ flag: FlaggedQuestion }> = ({ flag }) => {
             </span>
           </div>
         </div>
-        
-        <ChevronRight className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${
-          isExpanded ? 'rotate-90' : ''
-        }`} />
+
+        <ChevronRight
+          className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${
+            isExpanded ? 'rotate-90' : ''
+          }`}
+        />
       </button>
-      
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -134,22 +145,24 @@ const FlagItem: React.FC<{ flag: FlaggedQuestion }> = ({ flag }) => {
               <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg text-sm space-y-2">
                 <div>
                   <span className="text-[var(--color-text-muted)]">Flag type: </span>
-                  <span className="text-[var(--color-text-primary)] capitalize">{flag.flagType.replace('_', ' ')}</span>
+                  <span className="text-[var(--color-text-primary)] capitalize">
+                    {flag.flagType.replace('_', ' ')}
+                  </span>
                 </div>
-                
+
                 {flag.resolution && (
                   <>
                     <div className="flex items-center gap-2">
                       <span className="text-[var(--color-text-muted)]">Action: </span>
                       <ActionBadge action={flag.resolution.action} />
                     </div>
-                    
+
                     {flag.resolution.note && (
                       <div className="p-2 bg-[var(--color-bg-tertiary)] rounded text-xs text-[var(--color-text-muted)]">
                         "{flag.resolution.note}"
                       </div>
                     )}
-                    
+
                     <div className="text-xs text-[var(--color-text-muted)]">
                       Resolved: {new Date(flag.resolution.resolvedAt).toLocaleDateString()}
                     </div>
@@ -179,7 +192,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
   // Fetch user's flags
   const fetchFlags = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/user/flags?userId=${userId}`);
@@ -235,13 +248,16 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
   }, [fetchFlags]);
 
   // Count resolved flags since last dismissal
-  const newResolvedCount = flags.filter(f => 
-    f.status === 'resolved' && 
-    (!lastDismissed || new Date(f.resolution?.resolvedAt || 0) > lastDismissed)
+  const newResolvedCount = flags.filter(
+    (f) =>
+      f.status === 'resolved' &&
+      (!lastDismissed || new Date(f.resolution?.resolvedAt || 0) > lastDismissed)
   ).length;
-  
-  const totalResolved = flags.filter(f => f.status === 'resolved').length;
-  const totalPending = flags.filter(f => f.status === 'pending' || f.status === 'under_review').length;
+
+  const totalResolved = flags.filter((f) => f.status === 'resolved').length;
+  const totalPending = flags.filter(
+    (f) => f.status === 'pending' || f.status === 'under_review'
+  ).length;
 
   // Handle dismissal
   const handleDismiss = () => {
@@ -262,7 +278,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
   // Compact notification badge
   if (compact) {
     if (newResolvedCount === 0) return null;
-    
+
     return (
       <button
         onClick={() => setIsOpen(true)}
@@ -301,7 +317,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsOpen(true)}
@@ -356,15 +372,21 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 p-4 bg-[var(--color-bg-secondary)]">
               <div className="text-center">
-                <div className="text-xl font-bold text-green-600 dark:text-green-400">{totalResolved}</div>
+                <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {totalResolved}
+                </div>
                 <div className="text-xs text-[var(--color-text-muted)]">Resolved</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{totalPending}</div>
+                <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {totalPending}
+                </div>
                 <div className="text-xs text-[var(--color-text-muted)]">In Progress</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-[var(--color-text-primary)]">{flags.length}</div>
+                <div className="text-xl font-bold text-[var(--color-text-primary)]">
+                  {flags.length}
+                </div>
                 <div className="text-xs text-[var(--color-text-muted)]">Total</div>
               </div>
             </div>
@@ -376,7 +398,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
                   Loading your flags...
                 </div>
               ) : (
-                flags.map(flag => <FlagItem key={flag.id} flag={flag} />)
+                flags.map((flag) => <FlagItem key={flag.id} flag={flag} />)
               )}
             </div>
 
@@ -396,8 +418,6 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
 };
 
 // Badge-only variant for navbar
-export const FlagNotificationBadge: React.FC = () => (
-  <FlagFeedbackNotification compact />
-);
+export const FlagNotificationBadge: React.FC = () => <FlagFeedbackNotification compact />;
 
 export default FlagFeedbackNotification;

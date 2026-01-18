@@ -1,6 +1,6 @@
 /**
  * DDx Comparison Components
- * 
+ *
  * Re-exports all DDx comparison related components for easier imports.
  */
 

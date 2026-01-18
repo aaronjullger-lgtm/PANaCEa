@@ -64,10 +64,8 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
             <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
               Algorithm adjusted for{' '}
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {reason}
-              </span>{' '}
-              based on recent drift.
+              <span className="font-semibold text-blue-600 dark:text-blue-400">{reason}</span> based
+              on recent drift.
               {adjustment === 'tighten' ? ' Intervals tightened.' : ' Intervals relaxed.'}
             </p>
           </div>
@@ -77,11 +75,13 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
         <div className="grid grid-cols-2 gap-3 pt-2">
           <div className="text-center p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Adjustment</p>
-            <p className={`text-sm font-semibold ${
-              adjustment === 'tighten'
-                ? 'text-orange-600 dark:text-orange-400'
-                : 'text-green-600 dark:text-green-400'
-            }`}>
+            <p
+              className={`text-sm font-semibold ${
+                adjustment === 'tighten'
+                  ? 'text-orange-600 dark:text-orange-400'
+                  : 'text-green-600 dark:text-green-400'
+              }`}
+            >
               {adjustment === 'tighten' ? '↑ Tighter' : '↓ Looser'}
             </p>
           </div>

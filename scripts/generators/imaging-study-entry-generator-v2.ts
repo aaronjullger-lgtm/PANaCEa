@@ -13,36 +13,36 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // PANCE-relevant imaging studies
 const PANCE_IMAGING_STUDIES = [
-  { name: "Ventilation-Perfusion Scan", modality: "Nuclear Medicine", bodyRegion: "Chest" },
-  { name: "HIDA Scan", modality: "Nuclear Medicine", bodyRegion: "Abdomen" },
-  { name: "Bone Scan", modality: "Nuclear Medicine", bodyRegion: "Whole Body" },
-  { name: "PET-CT", modality: "Nuclear Medicine", bodyRegion: "Whole Body" },
-  { name: "Renal Scan", modality: "Nuclear Medicine", bodyRegion: "Abdomen" },
-  { name: "Thyroid Uptake Scan", modality: "Nuclear Medicine", bodyRegion: "Neck" },
-  { name: "Myocardial Perfusion Imaging", modality: "Nuclear Medicine", bodyRegion: "Chest" },
-  { name: "Stress Echocardiography", modality: "Ultrasound", bodyRegion: "Chest" },
-  { name: "Transesophageal Echocardiography", modality: "Ultrasound", bodyRegion: "Chest" },
-  { name: "Carotid Duplex Ultrasound", modality: "Ultrasound", bodyRegion: "Neck" },
-  { name: "Lower Extremity Venous Doppler", modality: "Ultrasound", bodyRegion: "Lower Extremity" },
-  { name: "Renal Artery Doppler", modality: "Ultrasound", bodyRegion: "Abdomen" },
-  { name: "Scrotal Ultrasound", modality: "Ultrasound", bodyRegion: "Pelvis" },
-  { name: "Transvaginal Ultrasound", modality: "Ultrasound", bodyRegion: "Pelvis" },
-  { name: "Obstetric Ultrasound", modality: "Ultrasound", bodyRegion: "Pelvis" },
-  { name: "MRCP", modality: "MRI", bodyRegion: "Abdomen" },
-  { name: "MR Enterography", modality: "MRI", bodyRegion: "Abdomen" },
-  { name: "Cardiac MRI", modality: "MRI", bodyRegion: "Chest" },
-  { name: "CT Angiography - Coronary", modality: "CT", bodyRegion: "Chest" },
-  { name: "CT Angiography - Pulmonary", modality: "CT", bodyRegion: "Chest" },
-  { name: "CT Angiography - Aorta", modality: "CT", bodyRegion: "Chest/Abdomen" },
-  { name: "CT Urogram", modality: "CT", bodyRegion: "Abdomen/Pelvis" },
-  { name: "KUB (Plain Film)", modality: "X-Ray", bodyRegion: "Abdomen" },
-  { name: "Barium Swallow", modality: "Fluoroscopy", bodyRegion: "Chest/Esophagus" },
-  { name: "Upper GI Series", modality: "Fluoroscopy", bodyRegion: "Abdomen" },
-  { name: "Small Bowel Follow Through", modality: "Fluoroscopy", bodyRegion: "Abdomen" },
-  { name: "Barium Enema", modality: "Fluoroscopy", bodyRegion: "Abdomen" },
-  { name: "Voiding Cystourethrogram", modality: "Fluoroscopy", bodyRegion: "Pelvis" },
-  { name: "Mammography", modality: "X-Ray", bodyRegion: "Chest" },
-  { name: "DEXA Scan", modality: "X-Ray", bodyRegion: "Spine/Hip" },
+  { name: 'Ventilation-Perfusion Scan', modality: 'Nuclear Medicine', bodyRegion: 'Chest' },
+  { name: 'HIDA Scan', modality: 'Nuclear Medicine', bodyRegion: 'Abdomen' },
+  { name: 'Bone Scan', modality: 'Nuclear Medicine', bodyRegion: 'Whole Body' },
+  { name: 'PET-CT', modality: 'Nuclear Medicine', bodyRegion: 'Whole Body' },
+  { name: 'Renal Scan', modality: 'Nuclear Medicine', bodyRegion: 'Abdomen' },
+  { name: 'Thyroid Uptake Scan', modality: 'Nuclear Medicine', bodyRegion: 'Neck' },
+  { name: 'Myocardial Perfusion Imaging', modality: 'Nuclear Medicine', bodyRegion: 'Chest' },
+  { name: 'Stress Echocardiography', modality: 'Ultrasound', bodyRegion: 'Chest' },
+  { name: 'Transesophageal Echocardiography', modality: 'Ultrasound', bodyRegion: 'Chest' },
+  { name: 'Carotid Duplex Ultrasound', modality: 'Ultrasound', bodyRegion: 'Neck' },
+  { name: 'Lower Extremity Venous Doppler', modality: 'Ultrasound', bodyRegion: 'Lower Extremity' },
+  { name: 'Renal Artery Doppler', modality: 'Ultrasound', bodyRegion: 'Abdomen' },
+  { name: 'Scrotal Ultrasound', modality: 'Ultrasound', bodyRegion: 'Pelvis' },
+  { name: 'Transvaginal Ultrasound', modality: 'Ultrasound', bodyRegion: 'Pelvis' },
+  { name: 'Obstetric Ultrasound', modality: 'Ultrasound', bodyRegion: 'Pelvis' },
+  { name: 'MRCP', modality: 'MRI', bodyRegion: 'Abdomen' },
+  { name: 'MR Enterography', modality: 'MRI', bodyRegion: 'Abdomen' },
+  { name: 'Cardiac MRI', modality: 'MRI', bodyRegion: 'Chest' },
+  { name: 'CT Angiography - Coronary', modality: 'CT', bodyRegion: 'Chest' },
+  { name: 'CT Angiography - Pulmonary', modality: 'CT', bodyRegion: 'Chest' },
+  { name: 'CT Angiography - Aorta', modality: 'CT', bodyRegion: 'Chest/Abdomen' },
+  { name: 'CT Urogram', modality: 'CT', bodyRegion: 'Abdomen/Pelvis' },
+  { name: 'KUB (Plain Film)', modality: 'X-Ray', bodyRegion: 'Abdomen' },
+  { name: 'Barium Swallow', modality: 'Fluoroscopy', bodyRegion: 'Chest/Esophagus' },
+  { name: 'Upper GI Series', modality: 'Fluoroscopy', bodyRegion: 'Abdomen' },
+  { name: 'Small Bowel Follow Through', modality: 'Fluoroscopy', bodyRegion: 'Abdomen' },
+  { name: 'Barium Enema', modality: 'Fluoroscopy', bodyRegion: 'Abdomen' },
+  { name: 'Voiding Cystourethrogram', modality: 'Fluoroscopy', bodyRegion: 'Pelvis' },
+  { name: 'Mammography', modality: 'X-Ray', bodyRegion: 'Chest' },
+  { name: 'DEXA Scan', modality: 'X-Ray', bodyRegion: 'Spine/Hip' },
 ];
 
 interface ImagingStudyData {
@@ -80,7 +80,10 @@ interface ImagingStudyData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -103,15 +106,19 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateImagingStudyData(name: string, modality: string, bodyRegion: string): Promise<ImagingStudyData> {
+async function generateImagingStudyData(
+  name: string,
+  modality: string,
+  bodyRegion: string
+): Promise<ImagingStudyData> {
   await rateLimiter.acquire();
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -143,12 +150,12 @@ Return as JSON.`;
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 

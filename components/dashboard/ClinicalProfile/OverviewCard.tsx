@@ -27,7 +27,9 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
           <Clock3 className="w-5 h-5 text-emerald-500" />
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">Avg Time / Q</p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-white">{avgTimeSec ? `${avgTimeSec}s` : '—'}</p>
+            <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+              {avgTimeSec ? `${avgTimeSec}s` : '—'}
+            </p>
           </div>
         </div>
       </div>
@@ -36,7 +38,9 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
           <Activity className="w-5 h-5 text-indigo-500" />
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">Avg Session</p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-white">{avgSessionLength ? `${Math.round(avgSessionLength)} min` : '—'}</p>
+            <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+              {avgSessionLength ? `${Math.round(avgSessionLength)} min` : '—'}
+            </p>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { FINDING_REGISTRY } from '../findingRegistry';
+import { FINDING_REGISTRY } from '../src/registries/findingRegistry';
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 interface SyncStats {
@@ -13,7 +13,9 @@ export async function syncAllFindings(): Promise<string> {
 
   for (const finding of FINDING_REGISTRY) {
     try {
-      const existing = await prisma.physicalExamFinding.findUnique({ where: { name: finding.name } });
+      const existing = await prisma.physicalExamFinding.findUnique({
+        where: { name: finding.name },
+      });
 
       await prisma.physicalExamFinding.upsert({
         where: { name: finding.name },

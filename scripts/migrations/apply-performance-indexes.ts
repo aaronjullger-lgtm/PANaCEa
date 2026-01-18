@@ -15,39 +15,43 @@ const prisma = new PrismaClient();
 
 async function applyIndexes() {
   console.log('📊 Applying performance indexes...\n');
-  
-  const sqlPath = path.join(__dirname, '../../prisma/migrations/20260105_add_performance_indexes/migration.sql');
+
+  const sqlPath = path.join(
+    __dirname,
+    '../../prisma/migrations/20260105_add_performance_indexes/migration.sql'
+  );
   const sql = fs.readFileSync(sqlPath, 'utf-8');
-  
+
   // Split into individual statements
   const statements = sql
     .split(';')
-    .map(s => s.trim())
-    .filter(s => {
+    .map((s) => s.trim())
+    .filter((s) => {
       // Remove comments and empty lines
-      const lines = s.split('\n').filter(line => {
+      const lines = s.split('\n').filter((line) => {
         const trimmed = line.trim();
         return trimmed.length > 0 && !trimmed.startsWith('--');
       });
       return lines.length > 0;
     })
-    .map(s => {
+    .map((s) => {
       // Remove comments from multi-line statements
-      return s.split('\n')
-        .filter(line => !line.trim().startsWith('--'))
+      return s
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('--'))
         .join('\n')
         .trim();
     });
-  
+
   let successCount = 0;
   let skipCount = 0;
-  
+
   for (const statement of statements) {
     if (statement.length === 0) continue;
-    
+
     try {
       await prisma.$executeRawUnsafe(statement);
-      
+
       // Extract operation type
       if (statement.toUpperCase().includes('CREATE INDEX')) {
         const indexName = statement.match(/"([^"]+)"_idx/)?.[1] || 'index';
@@ -73,7 +77,7 @@ async function applyIndexes() {
       }
     }
   }
-  
+
   console.log(`\n📈 Summary:`);
   console.log(`  ✅ Successfully applied: ${successCount}`);
   console.log(`  ⏭️  Skipped (exists): ${skipCount}`);

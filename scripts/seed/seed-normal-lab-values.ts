@@ -1,9 +1,9 @@
 /**
  * Seed Normal Lab Values
- * 
+ *
  * Seeds the NormalLabValue table with comprehensive normal reference ranges
  * for common laboratory tests, including variations by age and sex.
- * 
+ *
  * Usage: npx tsx scripts/seed/seed-normal-lab-values.ts
  */
 
@@ -57,8 +57,13 @@ const cbcValues: NormalLabValueSeed[] = [
     criticalLow: 2.0,
     criticalHigh: 30.0,
     clinicalNotes: 'Leukocytosis >11, Leukopenia <4.5. Stress, infection, steroids can elevate.',
-    commonCauses: ['Infection (elevated)', 'Leukemia (elevated)', 'Bone marrow suppression (low)', 'Autoimmune (low)'],
-    source: 'Harrison\'s Principles of Internal Medicine',
+    commonCauses: [
+      'Infection (elevated)',
+      'Leukemia (elevated)',
+      'Bone marrow suppression (low)',
+      'Autoimmune (low)',
+    ],
+    source: "Harrison's Principles of Internal Medicine",
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -90,7 +95,7 @@ const cbcValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // RBC - varies by sex
   {
     labTestName: 'Red Blood Cell Count (RBC)',
@@ -107,7 +112,11 @@ const cbcValues: NormalLabValueSeed[] = [
     criticalLow: 2.0,
     criticalHigh: 8.0,
     clinicalNotes: 'Men have higher RBC due to testosterone effect on erythropoiesis',
-    commonCauses: ['Polycythemia vera (elevated)', 'Anemia (low)', 'Dehydration (falsely elevated)'],
+    commonCauses: [
+      'Polycythemia vera (elevated)',
+      'Anemia (low)',
+      'Dehydration (falsely elevated)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -129,7 +138,7 @@ const cbcValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Hemoglobin - varies by sex
   {
     labTestName: 'Hemoglobin (Hgb)',
@@ -146,7 +155,12 @@ const cbcValues: NormalLabValueSeed[] = [
     criticalLow: 7.0,
     criticalHigh: 20.0,
     clinicalNotes: 'Anemia defined as Hgb <13.5 in men. Critical <7 may need transfusion.',
-    commonCauses: ['Iron deficiency (low)', 'B12/folate deficiency (low)', 'Polycythemia (high)', 'Chronic disease (low)'],
+    commonCauses: [
+      'Iron deficiency (low)',
+      'B12/folate deficiency (low)',
+      'Polycythemia (high)',
+      'Chronic disease (low)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -168,7 +182,7 @@ const cbcValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Hematocrit - varies by sex
   {
     labTestName: 'Hematocrit (Hct)',
@@ -180,7 +194,8 @@ const cbcValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 20,
     criticalHigh: 60,
-    clinicalNotes: 'Hct ≈ 3x Hgb. Elevated in dehydration, polycythemia. Low in anemia, overhydration.',
+    clinicalNotes:
+      'Hct ≈ 3x Hgb. Elevated in dehydration, polycythemia. Low in anemia, overhydration.',
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -194,11 +209,12 @@ const cbcValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 20,
     criticalHigh: 60,
-    clinicalNotes: 'Lower in women due to menstruation. Falls in pregnancy due to plasma expansion.',
+    clinicalNotes:
+      'Lower in women due to menstruation. Falls in pregnancy due to plasma expansion.',
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Platelets
   {
     labTestName: 'Platelet Count',
@@ -215,11 +231,17 @@ const cbcValues: NormalLabValueSeed[] = [
     criticalLow: 50,
     criticalHigh: 1000,
     clinicalNotes: '<50 increased bleeding risk. <20 spontaneous bleeding. >1000 thrombotic risk.',
-    commonCauses: ['ITP (low)', 'TTP/HUS (low)', 'Sepsis (low)', 'Splenomegaly (low)', 'Reactive thrombocytosis (high)'],
+    commonCauses: [
+      'ITP (low)',
+      'TTP/HUS (low)',
+      'Sepsis (low)',
+      'Splenomegaly (low)',
+      'Reactive thrombocytosis (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // MCV
   {
     labTestName: 'Mean Corpuscular Volume (MCV)',
@@ -229,12 +251,18 @@ const cbcValues: NormalLabValueSeed[] = [
     units: 'fL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: '<80 microcytic (iron def, thalassemia). >100 macrocytic (B12, folate, alcohol, liver disease).',
-    commonCauses: ['Iron deficiency (low)', 'Thalassemia (low)', 'B12/folate deficiency (high)', 'Alcoholism (high)'],
+    clinicalNotes:
+      '<80 microcytic (iron def, thalassemia). >100 macrocytic (B12, folate, alcohol, liver disease).',
+    commonCauses: [
+      'Iron deficiency (low)',
+      'Thalassemia (low)',
+      'B12/folate deficiency (high)',
+      'Alcoholism (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // MCH
   {
     labTestName: 'Mean Corpuscular Hemoglobin (MCH)',
@@ -248,7 +276,7 @@ const cbcValues: NormalLabValueSeed[] = [
     isHighYield: false,
     panceRelevance: 3,
   },
-  
+
   // MCHC
   {
     labTestName: 'Mean Corpuscular Hemoglobin Concentration (MCHC)',
@@ -263,7 +291,7 @@ const cbcValues: NormalLabValueSeed[] = [
     isHighYield: false,
     panceRelevance: 3,
   },
-  
+
   // RDW
   {
     labTestName: 'Red Cell Distribution Width (RDW)',
@@ -273,7 +301,8 @@ const cbcValues: NormalLabValueSeed[] = [
     units: '%',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Elevated RDW = anisocytosis. High in iron deficiency (vs thalassemia which has normal RDW).',
+    clinicalNotes:
+      'Elevated RDW = anisocytosis. High in iron deficiency (vs thalassemia which has normal RDW).',
     commonCauses: ['Iron deficiency (high)', 'Mixed deficiency (high)', 'Reticulocytosis (high)'],
     isHighYield: true,
     panceRelevance: 4,
@@ -299,12 +328,19 @@ const bmpValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 120,
     criticalHigh: 160,
-    clinicalNotes: '<120 or >160 can cause seizures, coma. Correct slowly to avoid osmotic demyelination.',
-    commonCauses: ['SIADH (low)', 'Diuretics (low)', 'Dehydration (high)', 'DI (high)', 'Hyperaldosteronism (high)'],
+    clinicalNotes:
+      '<120 or >160 can cause seizures, coma. Correct slowly to avoid osmotic demyelination.',
+    commonCauses: [
+      'SIADH (low)',
+      'Diuretics (low)',
+      'Dehydration (high)',
+      'DI (high)',
+      'Hyperaldosteronism (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Potassium
   {
     labTestName: 'Potassium (K)',
@@ -320,12 +356,19 @@ const bmpValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 2.5,
     criticalHigh: 6.5,
-    clinicalNotes: 'Cardiac arrhythmias at extremes. ECG changes: hypo (U waves, flat T) vs hyper (peaked T, wide QRS).',
-    commonCauses: ['Diuretics (low)', 'Vomiting/diarrhea (low)', 'Renal failure (high)', 'ACE-I/ARB (high)', 'Hemolysis (falsely high)'],
+    clinicalNotes:
+      'Cardiac arrhythmias at extremes. ECG changes: hypo (U waves, flat T) vs hyper (peaked T, wide QRS).',
+    commonCauses: [
+      'Diuretics (low)',
+      'Vomiting/diarrhea (low)',
+      'Renal failure (high)',
+      'ACE-I/ARB (high)',
+      'Hemolysis (falsely high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Chloride
   {
     labTestName: 'Chloride (Cl)',
@@ -339,11 +382,12 @@ const bmpValues: NormalLabValueSeed[] = [
     conversionFactor: 1,
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Usually follows sodium. Low in vomiting (loss of HCl). Use for anion gap calculation.',
+    clinicalNotes:
+      'Usually follows sodium. Low in vomiting (loss of HCl). Use for anion gap calculation.',
     isHighYield: false,
     panceRelevance: 3,
   },
-  
+
   // CO2/Bicarbonate
   {
     labTestName: 'Carbon Dioxide (CO2/HCO3)',
@@ -359,12 +403,19 @@ const bmpValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 10,
     criticalHigh: 40,
-    clinicalNotes: 'Low in metabolic acidosis. High in metabolic alkalosis or respiratory compensation.',
-    commonCauses: ['DKA (low)', 'Lactic acidosis (low)', 'Renal tubular acidosis (low)', 'Vomiting (high)', 'Diuretics (high)'],
+    clinicalNotes:
+      'Low in metabolic acidosis. High in metabolic alkalosis or respiratory compensation.',
+    commonCauses: [
+      'DKA (low)',
+      'Lactic acidosis (low)',
+      'Renal tubular acidosis (low)',
+      'Vomiting (high)',
+      'Diuretics (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // BUN
   {
     labTestName: 'Blood Urea Nitrogen (BUN)',
@@ -378,12 +429,19 @@ const bmpValues: NormalLabValueSeed[] = [
     conversionFactor: 0.357,
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'BUN:Cr >20:1 suggests prerenal azotemia or GI bleed. Affected by protein intake, catabolism.',
-    commonCauses: ['Prerenal azotemia (high)', 'GI bleed (high)', 'High protein diet (high)', 'Liver failure (low)', 'Malnutrition (low)'],
+    clinicalNotes:
+      'BUN:Cr >20:1 suggests prerenal azotemia or GI bleed. Affected by protein intake, catabolism.',
+    commonCauses: [
+      'Prerenal azotemia (high)',
+      'GI bleed (high)',
+      'High protein diet (high)',
+      'Liver failure (low)',
+      'Malnutrition (low)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Creatinine - varies by sex
   {
     labTestName: 'Creatinine (Cr)',
@@ -398,7 +456,8 @@ const bmpValues: NormalLabValueSeed[] = [
     sex: 'male',
     ageGroup: 'adult',
     criticalHigh: 10.0,
-    clinicalNotes: 'Reflects muscle mass and GFR. Not elevated until 50% nephron loss. Use for eGFR calculation.',
+    clinicalNotes:
+      'Reflects muscle mass and GFR. Not elevated until 50% nephron loss. Use for eGFR calculation.',
     commonCauses: ['AKI (high)', 'CKD (high)', 'Rhabdomyolysis (high)', 'Low muscle mass (low)'],
     isHighYield: true,
     panceRelevance: 5,
@@ -420,7 +479,7 @@ const bmpValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Glucose (fasting)
   {
     labTestName: 'Glucose (Fasting)',
@@ -436,12 +495,18 @@ const bmpValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 40,
     criticalHigh: 400,
-    clinicalNotes: 'Prediabetes 100-125. Diabetes ≥126 (fasting) or ≥200 (random with symptoms). <70 hypoglycemia.',
-    commonCauses: ['Diabetes (high)', 'Stress/illness (high)', 'Insulinoma (low)', 'Adrenal insufficiency (low)'],
+    clinicalNotes:
+      'Prediabetes 100-125. Diabetes ≥126 (fasting) or ≥200 (random with symptoms). <70 hypoglycemia.',
+    commonCauses: [
+      'Diabetes (high)',
+      'Stress/illness (high)',
+      'Insulinoma (low)',
+      'Adrenal insufficiency (low)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Calcium
   {
     labTestName: 'Calcium (Total)',
@@ -457,8 +522,14 @@ const bmpValues: NormalLabValueSeed[] = [
     ageGroup: 'adult',
     criticalLow: 6.0,
     criticalHigh: 14.0,
-    clinicalNotes: 'Correct for albumin: add 0.8 for each 1g/dL albumin below 4. Hypercalcemia: stones, bones, groans, moans.',
-    commonCauses: ['Hyperparathyroidism (high)', 'Malignancy (high)', 'Vitamin D deficiency (low)', 'Hypoparathyroidism (low)'],
+    clinicalNotes:
+      'Correct for albumin: add 0.8 for each 1g/dL albumin below 4. Hypercalcemia: stones, bones, groans, moans.',
+    commonCauses: [
+      'Hyperparathyroidism (high)',
+      'Malignancy (high)',
+      'Vitamin D deficiency (low)',
+      'Hypoparathyroidism (low)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -478,11 +549,16 @@ const lftValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     clinicalNotes: 'Also found in heart, muscle. AST:ALT >2:1 suggests alcoholic liver disease.',
-    commonCauses: ['Hepatitis (high)', 'Alcoholic liver disease (high)', 'MI (high)', 'Rhabdomyolysis (high)'],
+    commonCauses: [
+      'Hepatitis (high)',
+      'Alcoholic liver disease (high)',
+      'MI (high)',
+      'Rhabdomyolysis (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // ALT
   {
     labTestName: 'Alanine Aminotransferase (ALT)',
@@ -497,7 +573,7 @@ const lftValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // ALP
   {
     labTestName: 'Alkaline Phosphatase (ALP)',
@@ -507,12 +583,18 @@ const lftValues: NormalLabValueSeed[] = [
     units: 'U/L',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Elevated in cholestasis, bone disease. Check GGT to differentiate liver vs bone source.',
-    commonCauses: ['Cholestasis (high)', 'Bone metastases (high)', 'Paget disease (high)', 'Pregnancy (high)'],
+    clinicalNotes:
+      'Elevated in cholestasis, bone disease. Check GGT to differentiate liver vs bone source.',
+    commonCauses: [
+      'Cholestasis (high)',
+      'Bone metastases (high)',
+      'Paget disease (high)',
+      'Pregnancy (high)',
+    ],
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // GGT
   {
     labTestName: 'Gamma-Glutamyl Transferase (GGT)',
@@ -522,12 +604,13 @@ const lftValues: NormalLabValueSeed[] = [
     units: 'U/L',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Elevated GGT + elevated ALP confirms hepatobiliary source. Very sensitive to alcohol.',
+    clinicalNotes:
+      'Elevated GGT + elevated ALP confirms hepatobiliary source. Very sensitive to alcohol.',
     commonCauses: ['Alcohol use (high)', 'Cholestasis (high)', 'Medications (high)'],
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Total Bilirubin
   {
     labTestName: 'Bilirubin (Total)',
@@ -542,12 +625,18 @@ const lftValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalHigh: 15.0,
-    clinicalNotes: 'Jaundice visible at >2.5. Unconjugated (indirect) vs conjugated (direct) helps localize cause.',
-    commonCauses: ['Hemolysis (unconjugated)', 'Gilbert syndrome (unconjugated)', 'Hepatitis (both)', 'Obstruction (conjugated)'],
+    clinicalNotes:
+      'Jaundice visible at >2.5. Unconjugated (indirect) vs conjugated (direct) helps localize cause.',
+    commonCauses: [
+      'Hemolysis (unconjugated)',
+      'Gilbert syndrome (unconjugated)',
+      'Hepatitis (both)',
+      'Obstruction (conjugated)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Direct Bilirubin
   {
     labTestName: 'Bilirubin (Direct/Conjugated)',
@@ -557,11 +646,12 @@ const lftValues: NormalLabValueSeed[] = [
     units: 'mg/dL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Elevated in hepatocellular disease and cholestasis. Water-soluble, excreted in urine.',
+    clinicalNotes:
+      'Elevated in hepatocellular disease and cholestasis. Water-soluble, excreted in urine.',
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Albumin
   {
     labTestName: 'Albumin',
@@ -575,12 +665,18 @@ const lftValues: NormalLabValueSeed[] = [
     conversionFactor: 10,
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Marker of synthetic function. Low in chronic liver disease, nephrotic syndrome, malnutrition.',
-    commonCauses: ['Cirrhosis (low)', 'Nephrotic syndrome (low)', 'Malnutrition (low)', 'Inflammation (low)'],
+    clinicalNotes:
+      'Marker of synthetic function. Low in chronic liver disease, nephrotic syndrome, malnutrition.',
+    commonCauses: [
+      'Cirrhosis (low)',
+      'Nephrotic syndrome (low)',
+      'Malnutrition (low)',
+      'Inflammation (low)',
+    ],
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Total Protein
   {
     labTestName: 'Total Protein',
@@ -590,7 +686,8 @@ const lftValues: NormalLabValueSeed[] = [
     units: 'g/dL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Albumin + globulins. Low in liver disease, malnutrition. High in multiple myeloma, chronic infection.',
+    clinicalNotes:
+      'Albumin + globulins. Low in liver disease, malnutrition. High in multiple myeloma, chronic infection.',
     isHighYield: false,
     panceRelevance: 3,
   },
@@ -610,12 +707,18 @@ const coagValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalHigh: 30,
-    clinicalNotes: 'Tests extrinsic pathway (VII) and common pathway. Prolonged by warfarin, liver disease, vitamin K deficiency.',
-    commonCauses: ['Warfarin (prolonged)', 'Liver disease (prolonged)', 'Vitamin K deficiency (prolonged)', 'DIC (prolonged)'],
+    clinicalNotes:
+      'Tests extrinsic pathway (VII) and common pathway. Prolonged by warfarin, liver disease, vitamin K deficiency.',
+    commonCauses: [
+      'Warfarin (prolonged)',
+      'Liver disease (prolonged)',
+      'Vitamin K deficiency (prolonged)',
+      'DIC (prolonged)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // INR
   {
     labTestName: 'International Normalized Ratio (INR)',
@@ -626,11 +729,12 @@ const coagValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalHigh: 5.0,
-    clinicalNotes: 'Warfarin target 2-3 for most indications. >4.5 high bleed risk. Used for warfarin monitoring.',
+    clinicalNotes:
+      'Warfarin target 2-3 for most indications. >4.5 high bleed risk. Used for warfarin monitoring.',
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // PTT/aPTT
   {
     labTestName: 'Partial Thromboplastin Time (PTT/aPTT)',
@@ -641,12 +745,18 @@ const coagValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalHigh: 100,
-    clinicalNotes: 'Tests intrinsic pathway (VIII, IX, XI, XII) and common. Prolonged by heparin, hemophilia, lupus anticoagulant.',
-    commonCauses: ['Heparin (prolonged)', 'Hemophilia A/B (prolonged)', 'von Willebrand disease (prolonged)', 'Lupus anticoagulant (prolonged)'],
+    clinicalNotes:
+      'Tests intrinsic pathway (VIII, IX, XI, XII) and common. Prolonged by heparin, hemophilia, lupus anticoagulant.',
+    commonCauses: [
+      'Heparin (prolonged)',
+      'Hemophilia A/B (prolonged)',
+      'von Willebrand disease (prolonged)',
+      'Lupus anticoagulant (prolonged)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Fibrinogen
   {
     labTestName: 'Fibrinogen',
@@ -657,12 +767,13 @@ const coagValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalLow: 100,
-    clinicalNotes: 'Acute phase reactant (elevated in inflammation). Low in DIC, liver failure. Critical for hemostasis.',
+    clinicalNotes:
+      'Acute phase reactant (elevated in inflammation). Low in DIC, liver failure. Critical for hemostasis.',
     commonCauses: ['DIC (low)', 'Liver failure (low)', 'Inflammation (high)', 'Pregnancy (high)'],
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // D-dimer
   {
     labTestName: 'D-dimer',
@@ -672,8 +783,15 @@ const coagValues: NormalLabValueSeed[] = [
     units: 'µg/mL FEU',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'High sensitivity, low specificity for VTE. Negative D-dimer rules out PE/DVT in low probability patients.',
-    commonCauses: ['PE/DVT (high)', 'DIC (high)', 'Surgery/trauma (high)', 'Pregnancy (high)', 'Malignancy (high)'],
+    clinicalNotes:
+      'High sensitivity, low specificity for VTE. Negative D-dimer rules out PE/DVT in low probability patients.',
+    commonCauses: [
+      'PE/DVT (high)',
+      'DIC (high)',
+      'Surgery/trauma (high)',
+      'Pregnancy (high)',
+      'Malignancy (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
@@ -700,7 +818,7 @@ const lipidValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // LDL Cholesterol
   {
     labTestName: 'LDL Cholesterol',
@@ -714,11 +832,12 @@ const lipidValues: NormalLabValueSeed[] = [
     conversionFactor: 0.0259,
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Primary target for statin therapy. Optimal <100. Very high risk patients target <70.',
+    clinicalNotes:
+      'Primary target for statin therapy. Optimal <100. Very high risk patients target <70.',
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // HDL Cholesterol
   {
     labTestName: 'HDL Cholesterol',
@@ -732,7 +851,8 @@ const lipidValues: NormalLabValueSeed[] = [
     conversionFactor: 0.0259,
     sex: 'male',
     ageGroup: 'adult',
-    clinicalNotes: 'Protective. Men: low <40. Higher is better. Exercise and moderate alcohol increase HDL.',
+    clinicalNotes:
+      'Protective. Men: low <40. Higher is better. Exercise and moderate alcohol increase HDL.',
     isHighYield: true,
     panceRelevance: 4,
   },
@@ -744,11 +864,12 @@ const lipidValues: NormalLabValueSeed[] = [
     units: 'mg/dL',
     sex: 'female',
     ageGroup: 'adult',
-    clinicalNotes: 'Protective. Women: low <50. Estrogen contributes to higher HDL in premenopausal women.',
+    clinicalNotes:
+      'Protective. Women: low <50. Estrogen contributes to higher HDL in premenopausal women.',
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Triglycerides
   {
     labTestName: 'Triglycerides',
@@ -763,8 +884,15 @@ const lipidValues: NormalLabValueSeed[] = [
     sex: 'all',
     ageGroup: 'adult',
     criticalHigh: 500,
-    clinicalNotes: 'Fasting preferred. >500 pancreatitis risk. >1000 very high risk. Associated with metabolic syndrome.',
-    commonCauses: ['Metabolic syndrome (high)', 'Alcohol (high)', 'Diabetes (high)', 'Obesity (high)', 'Hypothyroidism (high)'],
+    clinicalNotes:
+      'Fasting preferred. >500 pancreatitis risk. >1000 very high risk. Associated with metabolic syndrome.',
+    commonCauses: [
+      'Metabolic syndrome (high)',
+      'Alcohol (high)',
+      'Diabetes (high)',
+      'Obesity (high)',
+      'Hypothyroidism (high)',
+    ],
     isHighYield: true,
     panceRelevance: 4,
   },
@@ -783,12 +911,18 @@ const thyroidValues: NormalLabValueSeed[] = [
     units: 'mIU/L',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Best screening test. Low TSH = hyperthyroid. High TSH = hypothyroid. Inverse relationship with T4.',
-    commonCauses: ['Graves disease (low)', 'Toxic nodule (low)', 'Hashimoto thyroiditis (high)', 'Primary hypothyroidism (high)'],
+    clinicalNotes:
+      'Best screening test. Low TSH = hyperthyroid. High TSH = hypothyroid. Inverse relationship with T4.',
+    commonCauses: [
+      'Graves disease (low)',
+      'Toxic nodule (low)',
+      'Hashimoto thyroiditis (high)',
+      'Primary hypothyroidism (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Free T4
   {
     labTestName: 'Free T4 (Thyroxine)',
@@ -802,11 +936,12 @@ const thyroidValues: NormalLabValueSeed[] = [
     conversionFactor: 12.87,
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Free T4 not affected by protein binding (unlike total T4). Confirms hyper/hypothyroidism.',
+    clinicalNotes:
+      'Free T4 not affected by protein binding (unlike total T4). Confirms hyper/hypothyroidism.',
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Free T3
   {
     labTestName: 'Free T3 (Triiodothyronine)',
@@ -816,7 +951,8 @@ const thyroidValues: NormalLabValueSeed[] = [
     units: 'pg/mL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'More metabolically active than T4. Useful in T3 toxicosis (elevated T3 with normal T4).',
+    clinicalNotes:
+      'More metabolically active than T4. Useful in T3 toxicosis (elevated T3 with normal T4).',
     isHighYield: false,
     panceRelevance: 3,
   },
@@ -835,12 +971,19 @@ const cardiacValues: NormalLabValueSeed[] = [
     units: 'ng/mL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Gold standard for MI. Rises 3-6 hrs, peaks 12-24 hrs. Also elevated in PE, myocarditis, renal failure.',
-    commonCauses: ['MI (high)', 'PE (high)', 'Myocarditis (high)', 'Heart failure (high)', 'Renal failure (high)'],
+    clinicalNotes:
+      'Gold standard for MI. Rises 3-6 hrs, peaks 12-24 hrs. Also elevated in PE, myocarditis, renal failure.',
+    commonCauses: [
+      'MI (high)',
+      'PE (high)',
+      'Myocarditis (high)',
+      'Heart failure (high)',
+      'Renal failure (high)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Troponin T (high-sensitivity)
   {
     labTestName: 'High-Sensitivity Troponin T',
@@ -854,7 +997,7 @@ const cardiacValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // BNP
   {
     labTestName: 'B-type Natriuretic Peptide (BNP)',
@@ -864,12 +1007,18 @@ const cardiacValues: NormalLabValueSeed[] = [
     units: 'pg/mL',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Released by stretched ventricles. <100 essentially rules out HF. >400 highly suggestive of HF.',
-    commonCauses: ['Heart failure (high)', 'Renal failure (high)', 'PE (high)', 'Obesity (low/falsely normal)'],
+    clinicalNotes:
+      'Released by stretched ventricles. <100 essentially rules out HF. >400 highly suggestive of HF.',
+    commonCauses: [
+      'Heart failure (high)',
+      'Renal failure (high)',
+      'PE (high)',
+      'Obesity (low/falsely normal)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // NT-proBNP
   {
     labTestName: 'NT-proBNP',
@@ -915,25 +1064,27 @@ const urinalysisValues: NormalLabValueSeed[] = [
     normalRangeText: '4.5-8.0 (typically 5.5-6.5)',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Alkaline in UTI with urease-producing organisms. Acidic in metabolic acidosis, high protein diet.',
+    clinicalNotes:
+      'Alkaline in UTI with urease-producing organisms. Acidic in metabolic acidosis, high protein diet.',
     isHighYield: false,
     panceRelevance: 3,
   },
-  
+
   // Specific Gravity
   {
     labTestName: 'Urine Specific Gravity',
     category: 'Urinalysis',
     normalRangeLow: 1.005,
-    normalRangeHigh: 1.030,
+    normalRangeHigh: 1.03,
     units: 'ratio',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Reflects concentrating ability. Fixed at 1.010 in renal failure. Low in DI, high in dehydration.',
+    clinicalNotes:
+      'Reflects concentrating ability. Fixed at 1.010 in renal failure. Low in DI, high in dehydration.',
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Protein
   {
     labTestName: 'Urine Protein',
@@ -942,12 +1093,17 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'qualitative',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Dipstick detects albumin. Positive suggests glomerular disease. Confirm with 24hr urine or spot UPCR.',
-    commonCauses: ['Glomerulonephritis (positive)', 'Nephrotic syndrome (positive)', 'Diabetes nephropathy (positive)'],
+    clinicalNotes:
+      'Dipstick detects albumin. Positive suggests glomerular disease. Confirm with 24hr urine or spot UPCR.',
+    commonCauses: [
+      'Glomerulonephritis (positive)',
+      'Nephrotic syndrome (positive)',
+      'Diabetes nephropathy (positive)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Glucose
   {
     labTestName: 'Urine Glucose',
@@ -956,11 +1112,12 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'qualitative',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Positive when serum glucose >180 (exceeds renal threshold). Seen in uncontrolled diabetes.',
+    clinicalNotes:
+      'Positive when serum glucose >180 (exceeds renal threshold). Seen in uncontrolled diabetes.',
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // Ketones
   {
     labTestName: 'Urine Ketones',
@@ -974,7 +1131,7 @@ const urinalysisValues: NormalLabValueSeed[] = [
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Blood
   {
     labTestName: 'Urine Blood/Hemoglobin',
@@ -983,12 +1140,18 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'qualitative',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Positive with RBCs (hematuria), free hemoglobin (hemolysis), or myoglobin (rhabdomyolysis).',
-    commonCauses: ['UTI (positive)', 'Stones (positive)', 'Glomerulonephritis (positive)', 'Malignancy (positive)'],
+    clinicalNotes:
+      'Positive with RBCs (hematuria), free hemoglobin (hemolysis), or myoglobin (rhabdomyolysis).',
+    commonCauses: [
+      'UTI (positive)',
+      'Stones (positive)',
+      'Glomerulonephritis (positive)',
+      'Malignancy (positive)',
+    ],
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Leukocyte Esterase
   {
     labTestName: 'Leukocyte Esterase',
@@ -997,11 +1160,12 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'qualitative',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Marker of WBCs. Positive suggests UTI. Combined with nitrites increases UTI probability.',
+    clinicalNotes:
+      'Marker of WBCs. Positive suggests UTI. Combined with nitrites increases UTI probability.',
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // Nitrites
   {
     labTestName: 'Urine Nitrites',
@@ -1010,11 +1174,12 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'qualitative',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: 'Produced by gram-negative bacteria. Positive = high specificity for UTI. Negative doesn\'t rule out.',
+    clinicalNotes:
+      "Produced by gram-negative bacteria. Positive = high specificity for UTI. Negative doesn't rule out.",
     isHighYield: true,
     panceRelevance: 5,
   },
-  
+
   // WBC (microscopic)
   {
     labTestName: 'Urine WBC (Microscopic)',
@@ -1024,11 +1189,12 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'per HPF',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: '>5 WBCs/HPF = pyuria. Seen in UTI, interstitial nephritis, STI. Sterile pyuria in TB.',
+    clinicalNotes:
+      '>5 WBCs/HPF = pyuria. Seen in UTI, interstitial nephritis, STI. Sterile pyuria in TB.',
     isHighYield: true,
     panceRelevance: 4,
   },
-  
+
   // RBC (microscopic)
   {
     labTestName: 'Urine RBC (Microscopic)',
@@ -1038,7 +1204,8 @@ const urinalysisValues: NormalLabValueSeed[] = [
     units: 'per HPF',
     sex: 'all',
     ageGroup: 'adult',
-    clinicalNotes: '>3 RBCs/HPF = microscopic hematuria. Dysmorphic RBCs suggest glomerular source.',
+    clinicalNotes:
+      '>3 RBCs/HPF = microscopic hematuria. Dysmorphic RBCs suggest glomerular source.',
     isHighYield: true,
     panceRelevance: 4,
   },
@@ -1049,7 +1216,7 @@ const urinalysisValues: NormalLabValueSeed[] = [
 // =============================================================================
 async function seedNormalLabValues(): Promise<void> {
   console.log('🧪 Starting Normal Lab Values Seeding...\n');
-  
+
   const allValues: NormalLabValueSeed[] = [
     ...cbcValues,
     ...bmpValues,
@@ -1060,11 +1227,11 @@ async function seedNormalLabValues(): Promise<void> {
     ...cardiacValues,
     ...urinalysisValues,
   ];
-  
+
   let created = 0;
   let updated = 0;
   let errors = 0;
-  
+
   for (const value of allValues) {
     try {
       // Try to find existing by unique constraint
@@ -1075,7 +1242,7 @@ async function seedNormalLabValues(): Promise<void> {
           ageGroup: value.ageGroup || null,
         },
       });
-      
+
       const data = {
         labTestName: value.labTestName,
         category: value.category,
@@ -1099,7 +1266,7 @@ async function seedNormalLabValues(): Promise<void> {
         isHighYield: value.isHighYield || false,
         panceRelevance: value.panceRelevance,
       };
-      
+
       if (existing) {
         await prisma.normalLabValue.update({
           where: { id: existing.id },
@@ -1110,14 +1277,14 @@ async function seedNormalLabValues(): Promise<void> {
         await prisma.normalLabValue.create({ data });
         created++;
       }
-      
+
       console.log(`  ✅ ${value.labTestName} (${value.sex || 'all'}, ${value.ageGroup || 'all'})`);
     } catch (error) {
       errors++;
       console.error(`  ❌ Error seeding ${value.labTestName}:`, error);
     }
   }
-  
+
   console.log('\n📊 Seeding Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Updated: ${updated}`);
@@ -1131,18 +1298,17 @@ async function seedNormalLabValues(): Promise<void> {
 async function main(): Promise<void> {
   try {
     await seedNormalLabValues();
-    
+
     // Print category summary
     const categories = await prisma.normalLabValue.groupBy({
       by: ['category'],
       _count: { id: true },
     });
-    
+
     console.log('\n📋 Values by Category:');
     for (const cat of categories) {
       console.log(`   ${cat.category}: ${cat._count.id}`);
     }
-    
   } catch (error) {
     console.error('Fatal error:', error);
     process.exit(1);

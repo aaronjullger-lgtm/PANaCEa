@@ -3,12 +3,17 @@ import { ChevronDown, ChevronUp, Bookmark, Plus, AlertCircle } from 'lucide-reac
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 import { SystemBadge, YieldBadge } from '@/components/ui/badges';
-import { 
+import {
   ContentFieldRenderer,
   ClinicalPearlsRenderer,
-  ClassicTriadRenderer 
+  ClassicTriadRenderer,
 } from '@/components/ui/content-renderers';
-import { safeParseJson, safeParseList, handleFakeNull, normalizeToStringArray } from '@/lib/utils/jsonParser';
+import {
+  safeParseJson,
+  safeParseList,
+  handleFakeNull,
+  normalizeToStringArray,
+} from '@/lib/utils/jsonParser';
 
 interface MedicalContentCardProps {
   content: Partial<MedicalContentDisplay>;
@@ -27,11 +32,7 @@ interface SectionProps {
 /**
  * CollapsibleSection - Animated collapsible content section
  */
-const CollapsibleSection: React.FC<SectionProps> = ({ 
-  title, 
-  children, 
-  defaultOpen = false 
-}) => {
+const CollapsibleSection: React.FC<SectionProps> = ({ title, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   if (!children) return null;
@@ -45,14 +46,11 @@ const CollapsibleSection: React.FC<SectionProps> = ({
         <h3 className="text-base font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">
           {title}
         </h3>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
         </motion.div>
       </button>
-      
+
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
@@ -74,7 +72,7 @@ const CollapsibleSection: React.FC<SectionProps> = ({
 
 /**
  * MedicalContentCard - Dark sportsbook themed medical condition card
- * 
+ *
  * Features:
  * - Display font headers (Teko) for condition names
  * - Unified badge system with system and yield indicators
@@ -119,34 +117,31 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Condition Name - Display Font */}
-            <h2 
+            <h2
               className="text-3xl font-bold text-[var(--color-text-primary)] mb-3 tracking-wide"
               style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
             >
               {content.condition}
             </h2>
-            
+
             {/* Badges Row */}
             <div className="flex items-center gap-2 flex-wrap mb-2">
-              {content.system && (
-                <SystemBadge system={content.system} size="md" />
-              )}
-              
-              {content.pance_yield && (
-                <YieldBadge yield={content.pance_yield} size="md" />
-              )}
-              
+              {content.system && <SystemBadge system={content.system} size="md" />}
+
+              {content.pance_yield && <YieldBadge yield={content.pance_yield} size="md" />}
+
               {content.subcategory && (
                 <span className="px-2 py-1 bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] rounded text-xs">
                   {content.subcategory}
                 </span>
               )}
             </div>
-            
+
             {/* Synonyms */}
             {synonyms.length > 0 && (
               <div className="text-xs text-[var(--color-text-muted)] mt-2">
-                Also: <span className="text-[var(--color-text-secondary)]">{synonyms.join(', ')}</span>
+                Also:{' '}
+                <span className="text-[var(--color-text-secondary)]">{synonyms.join(', ')}</span>
               </div>
             )}
           </div>
@@ -158,9 +153,10 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                 onClick={onBookmark}
                 className={`
                   p-2 rounded-lg transition-colors
-                  ${isBookmarked 
-                    ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
-                    : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700'
+                  ${
+                    isBookmarked
+                      ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                      : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700'
                   }
                 `}
                 aria-label="Bookmark"
@@ -168,7 +164,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                 <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
               </button>
             )}
-            
+
             {onAddToDrill && (
               <button
                 onClick={onAddToDrill}
@@ -180,7 +176,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             )}
           </div>
         </div>
-        
+
         {/* Classic Patient Presentation - Prominent callout */}
         {content.classic_patient && (
           <motion.div
@@ -195,9 +191,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                 <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-1">
                   Classic Presentation
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed">
-                  {content.classic_patient}
-                </p>
+                <p className="text-sm text-slate-200 leading-relaxed">{content.classic_patient}</p>
               </div>
             </div>
           </motion.div>
@@ -240,7 +234,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
           <CollapsibleSection title="Buzzwords">
             <div className="flex flex-wrap gap-2">
               {buzzwords.map((word, idx) => (
-                <span 
+                <span
                   key={idx}
                   className="px-2.5 py-1 rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-sm font-medium"
                 >
@@ -257,22 +251,14 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             <div className="mt-4 space-y-2">
               {content.gold_standard_dx && (
                 <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-lg">
-                  <div className="text-xs font-semibold text-emerald-300 mb-1">
-                    Gold Standard
-                  </div>
-                  <div className="text-sm text-slate-200">
-                    {content.gold_standard_dx}
-                  </div>
+                  <div className="text-xs font-semibold text-emerald-300 mb-1">Gold Standard</div>
+                  <div className="text-sm text-slate-200">{content.gold_standard_dx}</div>
                 </div>
               )}
               {content.best_initial_test && (
                 <div className="p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg">
-                  <div className="text-xs font-semibold text-blue-300 mb-1">
-                    Best Initial Test
-                  </div>
-                  <div className="text-sm text-slate-200">
-                    {content.best_initial_test}
-                  </div>
+                  <div className="text-xs font-semibold text-blue-300 mb-1">Best Initial Test</div>
+                  <div className="text-sm text-slate-200">{content.best_initial_test}</div>
                 </div>
               )}
             </div>
@@ -287,9 +273,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                 <div className="text-xs font-semibold text-purple-300 mb-1">
                   First Line Treatment
                 </div>
-                <div className="text-sm text-slate-200 mb-2">
-                  {content.first_line_rx}
-                </div>
+                <div className="text-sm text-slate-200 mb-2">{content.first_line_rx}</div>
                 {content.rx_mechanism && (
                   <div className="text-xs text-slate-400 border-t border-purple-800/30 pt-2">
                     <span className="font-medium">Mechanism:</span> {content.rx_mechanism}

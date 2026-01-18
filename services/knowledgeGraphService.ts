@@ -1,6 +1,6 @@
 /**
  * Knowledge Graph Service - Sprint 4
- * 
+ *
  * Builds and traverses concept relationship graphs for intelligent learning paths.
  */
 
@@ -38,7 +38,7 @@ export function buildKnowledgeGraph(
   relationships: { from: string; to: string; type: KnowledgeEdge['type'] }[]
 ): KnowledgeGraph {
   const nodes = new Map<string, ConceptNode>();
-  
+
   // Initialize nodes
   for (const c of concepts) {
     nodes.set(c.id, {
@@ -82,21 +82,21 @@ export function findOptimalLearningPath(
 ): LearningPath {
   const path: string[] = [];
   const visited = new Set<string>();
-  
+
   function collectPrerequisites(conceptId: string): void {
     if (visited.has(conceptId)) return;
     visited.add(conceptId);
-    
+
     const node = graph.nodes.get(conceptId);
     if (!node) return;
-    
+
     // First, collect all prerequisites recursively
     for (const prereq of node.prerequisites) {
       if ((currentMastery[prereq] || 0) < 70) {
         collectPrerequisites(prereq);
       }
     }
-    
+
     // Then add this concept if not mastered
     if ((currentMastery[conceptId] || 0) < 70) {
       path.push(conceptId);
@@ -109,10 +109,11 @@ export function findOptimalLearningPath(
   const estimatedHours = path.length * 2;
 
   // Determine difficulty
-  const avgMastery = path.length > 0
-    ? path.reduce((sum, id) => sum + (currentMastery[id] || 0), 0) / path.length
-    : 50;
-  const difficulty: LearningPath['difficulty'] = 
+  const avgMastery =
+    path.length > 0
+      ? path.reduce((sum, id) => sum + (currentMastery[id] || 0), 0) / path.length
+      : 50;
+  const difficulty: LearningPath['difficulty'] =
     avgMastery < 30 ? 'beginner' : avgMastery < 60 ? 'intermediate' : 'advanced';
 
   // Find what this unlocks
@@ -130,7 +131,12 @@ export function findKeystoneConcepts(
   graph: KnowledgeGraph,
   currentMastery: Record<string, number>
 ): { conceptId: string; conceptName: string; unlocksCount: number; priority: number }[] {
-  const keystones: { conceptId: string; conceptName: string; unlocksCount: number; priority: number }[] = [];
+  const keystones: {
+    conceptId: string;
+    conceptName: string;
+    unlocksCount: number;
+    priority: number;
+  }[] = [];
 
   for (const [id, node] of graph.nodes) {
     // Count how many concepts this one blocks
@@ -141,7 +147,7 @@ export function findKeystoneConcepts(
 
     // Only consider unmastered concepts that block others
     if (blocksCount > 0 && (currentMastery[id] || 0) < 70) {
-      const priority = blocksCount * (100 - (currentMastery[id] || 0)) / 100;
+      const priority = (blocksCount * (100 - (currentMastery[id] || 0))) / 100;
       keystones.push({
         conceptId: id,
         conceptName: node.name,
@@ -174,7 +180,7 @@ export function getRelatedConcepts(
     for (const relatedId of node.relatedConcepts) {
       if (visited.has(relatedId)) continue;
       visited.add(relatedId);
-      
+
       const relatedNode = graph.nodes.get(relatedId);
       if (relatedNode) {
         related.push({
@@ -191,7 +197,7 @@ export function getRelatedConcepts(
     for (const prereqId of node.prerequisites) {
       if (visited.has(prereqId)) continue;
       visited.add(prereqId);
-      
+
       const prereqNode = graph.nodes.get(prereqId);
       if (prereqNode) {
         related.push({

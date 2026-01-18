@@ -3,72 +3,75 @@
  * GET /api/achievements/:userId
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+
+const AchievementParamsSchema = z.object({
+  params: z.object({
+    userId: z.string().min(1, 'User ID is required'),
+  }),
+});
 
 interface PagesContext {
   request: Request;
-  env: Env;
+  env: any;
   params: {
     userId: string;
   };
 }
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch user's achievements
  */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env, params } = context;
-
-  const authContext = await authenticateRequest(request, env);
-
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  const { userId: authenticatedUserId } = authContext;
-  const { userId: requestedUserId } = params;
+export const onRequestGet = authenticatedEndpoint(AchievementParamsSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/achievements/[userId]');
+  const { userId: requestedUserId } = validated.params;
 
   // Users can only fetch their own achievements
-  if (authenticatedUserId !== requestedUserId) {
-    return createErrorResponse('Forbidden', 403);
+  if (auth.userId !== requestedUserId) {
+    logger.warn('Forbidden access attempt', {
+      authenticatedUserId: auth.userId,
+      requestedUserId,
+    });
+    throw new Error('Forbidden');
   }
 
   if (!env.DATABASE_URL) {
-    return createErrorResponse('Database not configured', 500);
+    logger.error('Database not configured');
+    throw new Error('Database not configured');
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const achievements = await prisma.userAchievement.findMany({
-      where: { userId: requestedUserId }
+      where: { userId: requestedUserId },
     });
 
-    const response = {
-      success: true,
+    logger.info('Fetched user achievements', {
+      userId: requestedUserId,
+      count: achievements.length,
+    });
+
+    return {
       data: {
         achievements: achievements,
         totalUnlocked: achievements.length,
         // totalAvailable: 25, // This should ideally come from a config or DB
       },
     };
-
-    return createSuccessResponse(response);
   } catch (error: any) {
-    console.error('Achievements GET error:', error);
-    return createErrorResponse('Internal server error', 500);
+    logger.error('Achievements GET error', {
+      error: error.message,
+      userId: requestedUserId,
+    });
+    throw new Error('Internal server error');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

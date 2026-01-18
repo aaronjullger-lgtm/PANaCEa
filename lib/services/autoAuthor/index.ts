@@ -1,17 +1,17 @@
 /**
  * Auto-Author Service - Main Entry Point
- * 
+ *
  * Orchestrates the auto-author pipeline:
  * 1. Find conditions missing content
  * 2. Generate content via Gemini
  * 3. Save to database
  */
 
-export * from "./types";
-export * from "./contentGenerator";
-export * from "./databaseService";
+export * from './types';
+export * from './contentGenerator';
+export * from './databaseService';
 
-import { generateConditionContent, batchGenerateContent } from "./contentGenerator";
+import { generateConditionContent, batchGenerateContent } from './contentGenerator';
 import {
   findConditionsMissingContent,
   saveGeneratedContent,
@@ -19,9 +19,12 @@ import {
   closeAutoAuthorDb,
   formatAutoAuthorSummary,
   type MissingContentCondition,
-} from "./databaseService";
-import type { AutoAuthorStats, ContentGenerationOptions } from "./types";
-import { validateGeneratedContent, formatValidationResult } from "../../services/cms/contentValidator";
+} from './databaseService';
+import type { AutoAuthorStats, ContentGenerationOptions } from './types';
+import {
+  validateGeneratedContent,
+  formatValidationResult,
+} from '../../services/cms/contentValidator';
 
 /**
  * Run auto-author pipeline for all conditions missing content
@@ -35,11 +38,16 @@ export async function autoAuthorMissingContent(
     dryRun?: boolean;
   } = {}
 ): Promise<AutoAuthorStats> {
-  const { maxConditions = 100, delayMs = 2000, includeExtendedFields = true, dryRun = false } = options;
+  const {
+    maxConditions = 100,
+    delayMs = 2000,
+    includeExtendedFields = true,
+    dryRun = false,
+  } = options;
 
-  console.log("╔════════════════════════════════════════════════════════════╗");
-  console.log("║         Auto-Author: AI Content Generation Pipeline       ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║         Auto-Author: AI Content Generation Pipeline       ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const stats: AutoAuthorStats = {
     total: 0,
@@ -52,40 +60,42 @@ export async function autoAuthorMissingContent(
 
   try {
     // 1. Get current stats
-    console.log("📊 Analyzing database...\n");
+    console.log('📊 Analyzing database...\n');
     const contentStats = await getContentStats();
     console.log(`   Total Conditions: ${contentStats.total}`);
     console.log(`   ✅ With Content: ${contentStats.withContent}`);
     console.log(`   ❌ Missing Content: ${contentStats.missingContent}\n`);
 
     if (contentStats.missingContent === 0) {
-      console.log("✅ All conditions already have content! Nothing to do.\n");
+      console.log('✅ All conditions already have content! Nothing to do.\n');
       return stats;
     }
 
     // 2. Find conditions missing content
-    console.log("🔍 Finding conditions missing content...\n");
+    console.log('🔍 Finding conditions missing content...\n');
     const missingConditions = await findConditionsMissingContent();
-    
+
     // Limit to maxConditions
     const conditionsToProcess = missingConditions.slice(0, maxConditions);
     stats.total = conditionsToProcess.length;
 
     console.log(`   Found ${missingConditions.length} conditions missing content`);
-    console.log(`   Will process ${conditionsToProcess.length} conditions (max: ${maxConditions})\n`);
+    console.log(
+      `   Will process ${conditionsToProcess.length} conditions (max: ${maxConditions})\n`
+    );
 
     if (dryRun) {
-      console.log("🔎 DRY RUN MODE - Listing conditions that would be processed:\n");
+      console.log('🔎 DRY RUN MODE - Listing conditions that would be processed:\n');
       conditionsToProcess.forEach((cond, idx) => {
         console.log(`   ${idx + 1}. ${cond.name} (${cond.system})`);
       });
-      console.log("\n✅ Dry run complete. No changes made.\n");
+      console.log('\n✅ Dry run complete. No changes made.\n');
       return stats;
     }
 
     // 3. Generate content for each condition
-    console.log("🤖 Generating content with Gemini AI...\n");
-    console.log("━".repeat(60));
+    console.log('🤖 Generating content with Gemini AI...\n');
+    console.log('━'.repeat(60));
 
     for (let i = 0; i < conditionsToProcess.length; i++) {
       const condition = conditionsToProcess[i];
@@ -112,7 +122,7 @@ export async function autoAuthorMissingContent(
           stats.validationFailed++;
           stats.errors.push({
             entity: condition.name,
-            error: `Quality validation failed: ${validation.issues.join("; ")}`,
+            error: `Quality validation failed: ${validation.issues.join('; ')}`,
           });
           console.log(`   ❌ Content failed quality validation`);
           validation.issues.forEach((issue) => {
@@ -133,7 +143,7 @@ export async function autoAuthorMissingContent(
             stats.failed++;
             stats.errors.push({
               entity: condition.name,
-              error: "Failed to save to database",
+              error: 'Failed to save to database',
             });
             console.log(`   ❌ Generated but failed to save`);
           }
@@ -142,7 +152,7 @@ export async function autoAuthorMissingContent(
         stats.failed++;
         stats.errors.push({
           entity: condition.name,
-          error: result.error || "Unknown error",
+          error: result.error || 'Unknown error',
         });
         console.log(`   ❌ Generation failed: ${result.error}`);
       }
@@ -153,12 +163,12 @@ export async function autoAuthorMissingContent(
       }
     }
 
-    console.log("\n" + "━".repeat(60));
+    console.log('\n' + '━'.repeat(60));
 
     // 4. Print summary
-    console.log("\n╔════════════════════════════════════════════════════════════╗");
-    console.log("║                    Auto-Author Summary                     ║");
-    console.log("╚════════════════════════════════════════════════════════════╝\n");
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║                    Auto-Author Summary                     ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
 
     console.log(`📊 Conditions Processed: ${stats.total}`);
     console.log(`✅ Successfully Generated: ${stats.generated}`);
@@ -167,7 +177,7 @@ export async function autoAuthorMissingContent(
     console.log(`❌ Generation Failed: ${stats.failed}`);
 
     if (stats.errors.length > 0) {
-      console.log("\n⚠️  Errors:");
+      console.log('\n⚠️  Errors:');
       stats.errors.slice(0, 10).forEach((err, idx) => {
         console.log(`   ${idx + 1}. ${err.entity}: ${err.error}`);
       });
@@ -181,22 +191,26 @@ export async function autoAuthorMissingContent(
     const percentComplete = ((finalStats.withContent / finalStats.total) * 100).toFixed(1);
 
     console.log(`\n📈 Database Status:`);
-    console.log(`   ${finalStats.withContent}/${finalStats.total} conditions have content (${percentComplete}%)`);
+    console.log(
+      `   ${finalStats.withContent}/${finalStats.total} conditions have content (${percentComplete}%)`
+    );
     console.log(`   ${finalStats.missingContent} conditions still need content\n`);
 
     if (finalStats.missingContent > 0) {
-      console.log("💡 Next Steps:");
-      console.log(`   Run this script again to process the remaining ${finalStats.missingContent} conditions`);
+      console.log('💡 Next Steps:');
+      console.log(
+        `   Run this script again to process the remaining ${finalStats.missingContent} conditions`
+      );
       console.log(`   Or increase --max-conditions to process more at once\n`);
     } else {
-      console.log("🎉 All conditions now have content!\n");
+      console.log('🎉 All conditions now have content!\n');
     }
 
-    console.log("━".repeat(60) + "\n");
+    console.log('━'.repeat(60) + '\n');
 
     return stats;
   } catch (error: any) {
-    console.error("\n❌ Fatal error during auto-author run:", error);
+    console.error('\n❌ Fatal error during auto-author run:', error);
     throw error;
   }
 }

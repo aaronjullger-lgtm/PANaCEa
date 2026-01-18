@@ -9,26 +9,28 @@
  */
 export function stripMarkdown(text: string): string {
   if (!text) return '';
-  
-  return text
-    // Remove bold/italic markers
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove code blocks
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove list markers
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    // Clean up extra whitespace
-    .replace(/\s+/g, ' ')
-    .trim();
+
+  return (
+    text
+      // Remove bold/italic markers
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove links
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove list markers
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Clean up extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 /**
@@ -36,21 +38,21 @@ export function stripMarkdown(text: string): string {
  */
 export function truncateText(text: string, maxLength: number = 30): string {
   if (!text) return '';
-  
+
   const cleaned = stripMarkdown(text);
-  
+
   if (cleaned.length <= maxLength) {
     return cleaned;
   }
-  
+
   // Try to break at word boundary
   const truncated = cleaned.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
-  
+
   if (lastSpace > maxLength * 0.7) {
     return truncated.substring(0, lastSpace) + '...';
   }
-  
+
   return truncated + '...';
 }
 
@@ -64,9 +66,9 @@ export function extractSnippets(
   maxLength: number = 30
 ): string[] {
   if (!content) return [];
-  
+
   const snippets: string[] = [];
-  
+
   // Priority order for fields to extract
   const fieldPriority = [
     'classic_triad',
@@ -78,22 +80,21 @@ export function extractSnippets(
     'mnemonic',
     'classic_patient',
   ];
-  
+
   for (const field of fieldPriority) {
     if (snippets.length >= maxSnippets) break;
-    
+
     const value = content[field];
     if (!value) continue;
-    
+
     // Handle arrays (classic_triad, clinical_pearls, buzzwords)
     if (Array.isArray(value)) {
       for (const item of value) {
         if (snippets.length >= maxSnippets) break;
-        
-        const cleaned = typeof item === 'string' 
-          ? stripMarkdown(item) 
-          : stripMarkdown(String(item));
-        
+
+        const cleaned =
+          typeof item === 'string' ? stripMarkdown(item) : stripMarkdown(String(item));
+
         // Only include if it's reasonably short
         if (cleaned.length > 0 && cleaned.length <= maxLength * 1.5) {
           snippets.push(truncateText(cleaned, maxLength));
@@ -108,7 +109,7 @@ export function extractSnippets(
       }
     }
   }
-  
+
   return snippets;
 }
 
@@ -207,12 +208,14 @@ export function getSystemAccent(system: string): {
       hover: 'hover:border-fuchsia-300 dark:hover:border-fuchsia-700',
     },
   };
-  
+
   // Default slate for unknown systems
-  return accents[system] || {
-    bg: 'bg-slate-50 dark:bg-slate-900/10',
-    border: 'border-slate-200 dark:border-slate-800',
-    text: 'text-slate-700 dark:text-slate-300',
-    hover: 'hover:border-slate-300 dark:hover:border-slate-700',
-  };
+  return (
+    accents[system] || {
+      bg: 'bg-slate-50 dark:bg-slate-900/10',
+      border: 'border-slate-200 dark:border-slate-800',
+      text: 'text-slate-700 dark:text-slate-300',
+      hover: 'hover:border-slate-300 dark:hover:border-slate-700',
+    }
+  );
 }

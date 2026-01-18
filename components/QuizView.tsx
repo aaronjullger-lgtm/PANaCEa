@@ -1,29 +1,23 @@
 // components/QuizView.tsx
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useShortcut } from "../src/context/ShortcutContext";
-import { useUser } from "@clerk/clerk-react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useShortcut } from '../src/context/ShortcutContext';
+import { useUser } from '@clerk/clerk-react';
 
 // Core services
-import { getQuestion, fetchPearlsForQuestion } from "@/services/core";
-import { 
-  fetchSessionQuestions, 
+import { getQuestion, fetchPearlsForQuestion } from '@/services/core';
+import {
+  fetchSessionQuestions,
   recordSessionAnswer,
   initializeSession,
   getPoolStatus,
   checkAndReplenishPool,
   getSessionSummary as getMainSessionSummary,
-} from "@/services/core";
-import { recordQuestionAttempt } from "@/services/core";
+} from '@/services/core';
+import { recordQuestionAttempt } from '@/services/core';
 
 // Session services
-import { 
+import {
   recordAnswerPattern,
   recordBehavioralConfidence,
   inferConfidence,
@@ -31,38 +25,31 @@ import {
   recordMomentumResult,
   recordPauseResult,
   resetPauseTracking,
-} from "@/services/session";
+} from '@/services/session';
 
 // Analytics services
-import { recordCircadianPerformance } from "@/services/analytics";
-import { 
-  updatePerformancePrediction, 
-  resetPrediction 
-} from "@/services/analytics";
+import { recordCircadianPerformance } from '@/services/analytics';
+import { updatePerformancePrediction, resetPrediction } from '@/services/analytics';
 
 // Domain services
-import { 
-  recordQuestion, 
-  getSessionSummary, 
-  resetSessionDistribution 
-} from "@/services/domain";
+import { recordQuestion, getSessionSummary, resetSessionDistribution } from '@/services/domain';
 
 // AI services
-import { generateAlternateRationale } from "@/services/ai";
+import { generateAlternateRationale } from '@/services/ai';
 
 // Components
-import { FlagQuestionModal } from "./FlagQuestionModal";
-import AnswerChoice from "./quiz/AnswerChoice";
-import ErrorTagger from "./quiz/ErrorTagger";
-import Loader from "./Loader";
-import WellnessCheckModal from "./wellness/WellnessCheckModal";
-import { SRSFeedbackBadge } from "./quiz/SRSFeedbackBadge";
+import { FlagQuestionModal } from './FlagQuestionModal';
+import AnswerChoice from './quiz/AnswerChoice';
+import ErrorTagger from './quiz/ErrorTagger';
+import Loader from './Loader';
+import WellnessCheckModal from './wellness/WellnessCheckModal';
+import { SRSFeedbackBadge } from './quiz/SRSFeedbackBadge';
 
 // Sprint 4: Enhanced session components
-import { 
-  SessionStatsOverlay, 
-  AnswerFeedback, 
-  SessionEndSummary, 
+import {
+  SessionStatsOverlay,
+  AnswerFeedback,
+  SessionEndSummary,
   useAnswerFeedback,
   QuestionTimer,
   QuickStatsMiniBar,
@@ -72,41 +59,37 @@ import {
   SmartPauseIndicator,
   EncouragementToast,
   CognitiveStateIndicator,
-} from "./quiz";
+} from './quiz';
+import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 
 // Icons
-import { CloseIcon } from "./icons/CloseIcon";
-import { FlagIcon } from "./icons/FlagIcon";
-import { AlertTriangle, BarChart3 } from "lucide-react";
-import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
-import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
+import { CloseIcon } from './icons/CloseIcon';
+import { FlagIcon } from './icons/FlagIcon';
+import { AlertTriangle, BarChart3 } from 'lucide-react';
+import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
+import { ClearHighlightIcon } from './icons/ClearHighlightIcon';
 
 // Types
-import type {
-  Question,
-  PerformanceRecord,
-  SessionSettings,
-  ErrorTag,
-} from "../types";
-import type { SRSScheduleResult } from "../lib/services/srsService";
+import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '../types';
+import type { SRSScheduleResult } from '../lib/services/srsService';
 
 // Lib utils
-import { updateReviewOutcome } from "../lib/services/srsService";
+import { updateReviewOutcome } from '../lib/services/srsService';
 import { calculateParTime } from '../lib/utils/questionComplexity';
-import { 
-  optimisticUpdateStats, 
-  optimisticUpdateSystemStats, 
+import {
+  optimisticUpdateStats,
+  optimisticUpdateSystemStats,
   createOptimisticPerformanceRecord,
   showOptimisticFeedback,
-} from "../lib/utils/optimisticUI";
+} from '../lib/utils/optimisticUI';
 
 // Hooks
-import { useAuth } from "../hooks/useAuth";
-import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
-import { useImplicitMetrics } from "../hooks/useImplicitMetrics";
+import { useAuth } from '../hooks/useAuth';
+import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
+import { useImplicitMetrics } from '../hooks/useImplicitMetrics';
 
 // Other services (non-barrel)
-import { feedback } from "../services/feedbackService";
+import { feedback } from '../services/feedbackService';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -142,7 +125,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       try {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-        return;
+          return;
         }
 
         const range = selection.getRangeAt(0);
@@ -150,49 +133,48 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
           return;
         }
 
-        const span = document.createElement("span");
-        span.className = "user-highlight";
+        const span = document.createElement('span');
+        span.className = 'user-highlight';
         range.surroundContents(span);
         selection.removeAllRanges();
       } catch (e) {
-        console.error("Highlighting failed.", e);
+        console.error('Highlighting failed.', e);
         window.getSelection()?.removeAllRanges();
       }
     };
 
-    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener('mouseup', handleMouseUp);
     return () => {
-      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener('mouseup', handleMouseUp);
     };
   }, [text]);
 
-  const hasTable = text.includes("<table");
+  const hasTable = text.includes('<table');
 
   // ---------- TABLE BRANCH ----------
   if (hasTable) {
     // 1) Extract table HTML
     const tableMatch = text.match(/<table[\s\S]*?<\/table>/i);
-    const tableHTML = tableMatch ? tableMatch[0] : "";
+    const tableHTML = tableMatch ? tableMatch[0] : '';
 
     // 2) Replace table with a sentinel
-    const beforeAfter = text.replace(tableHTML, "|||TABLE|||");
+    const beforeAfter = text.replace(tableHTML, '|||TABLE|||');
 
     // 3) Normalize line breaks
     const normalized = beforeAfter
-      .replace(/&lt;br\s*\/?&gt;/gi, "\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/\n{2,}/g, "\n")
+      .replace(/&lt;br\s*\/?&gt;/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/\n{2,}/g, '\n')
       .trim();
 
-    const [beforeTable = "", afterTableRaw = ""] =
-      normalized.split("|||TABLE|||");
+    const [beforeTable = '', afterTableRaw = ''] = normalized.split('|||TABLE|||');
 
     // 4) Pull out the last sentence (the actual question) after the table
     const lastSentenceMatch = afterTableRaw.match(/[^.!?]+[.!?]+\s*$/);
-    const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : "";
+    const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : '';
 
     const vignetteAfterTable = lastSentence
-      ? afterTableRaw.replace(lastSentenceMatch![0], "").trim()
+      ? afterTableRaw.replace(lastSentenceMatch![0], '').trim()
       : afterTableRaw.trim();
 
     return (
@@ -203,35 +185,22 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {/* Text before the table */}
-        {beforeTable && (
-          <p className="whitespace-pre-wrap">{beforeTable}</p>
-        )}
+        {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
 
         {/* Table */}
-        <div
-          className="my-2"
-          dangerouslySetInnerHTML={{ __html: tableHTML }}
-        />
+        <div className="my-2" dangerouslySetInnerHTML={{ __html: tableHTML }} />
 
         {/* Any non-final text after the table */}
-        {vignetteAfterTable && (
-          <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>
-        )}
+        {vignetteAfterTable && <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>}
 
         {/* Final bolded question line */}
-        {lastSentence && (
-          <p className="font-semibold whitespace-pre-wrap">
-            {lastSentence}
-          </p>
-        )}
+        {lastSentence && <p className="font-semibold whitespace-pre-wrap">{lastSentence}</p>}
       </div>
     );
   }
 
   // ---------- NON-TABLE BRANCH ----------
-  const normalizedText = text
-    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n");
+  const normalizedText = text.replace(/&lt;br\s*\/?&gt;/gi, '\n').replace(/<br\s*\/?>/gi, '\n');
 
   const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
@@ -249,7 +218,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   }
 
   const lastSentence = lastSentenceMatch[0].trim();
-  const vignette = normalizedText.replace(lastSentenceMatch[0], "").trim();
+  const vignette = normalizedText.replace(lastSentenceMatch[0], '').trim();
 
   // Add visual enhancement (shadowed block/border) around question text for better focus
   return (
@@ -260,9 +229,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
-      <p className="font-semibold mt-4 whitespace-pre-wrap">
-        {lastSentence}
-      </p>
+      <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
     </div>
   );
 };
@@ -305,18 +272,21 @@ const QuizView: React.FC<QuizViewProps> = ({
       removeFlaggedQuestion,
       updateQuestionNote,
     };
-    
+
     for (const [name, callback] of Object.entries(requiredCallbacks)) {
       if (typeof callback !== 'function') {
-        console.error(`QuizView: Required callback prop "${name}" is not a function:`, typeof callback);
+        console.error(
+          `QuizView: Required callback prop "${name}" is not a function:`,
+          typeof callback
+        );
       }
     }
   }, []);
-  
+
   // ---- CLERK USER & AUTH ----
   const { user } = useUser();
   const { getToken } = useAuth();
-  
+
   // ---- ADVANCED ANALYTICS ----
   const { recordQuestionResult, cognitiveState, recommendations } = useAdvancedAnalytics();
 
@@ -325,12 +295,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
-    initialQueue[0] || null
-  );
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(initialQueue[0] || null);
 
-  const [selectedAnswerIndex, setSelectedAnswerIndex] =
-    useState<number | null>(null);
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
 
@@ -339,12 +306,10 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
   const [showRationale, setShowRationale] = useState<boolean>(false);
-  const [alternateRationale, setAlternateRationale] =
-    useState<string | null>(null);
-  const [isExplainerLoading, setIsExplainerLoading] =
-    useState<boolean>(false);
+  const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
+  const [isExplainerLoading, setIsExplainerLoading] = useState<boolean>(false);
 
-  const [localNote, setLocalNote] = useState<string>("");
+  const [localNote, setLocalNote] = useState<string>('');
 
   // Track eliminated answers (by index) for the current question
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
@@ -364,9 +329,11 @@ const QuizView: React.FC<QuizViewProps> = ({
   const LATE_NIGHT_START_HOUR = 22;
   const LATE_NIGHT_END_HOUR = 5;
   const LATE_NIGHT_CHECK_INTERVAL = 15;
-  
+
   const [showWellnessModal, setShowWellnessModal] = useState(false);
-  const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>('rapid_questions');
+  const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>(
+    'rapid_questions'
+  );
   const questionsAnsweredInSession = useRef(0);
   const sessionStartTime = useRef(Date.now());
 
@@ -384,17 +351,12 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Keep CSS variable in sync with fontSizeAdjustment
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--font-size-adj",
-      `${fontSizeAdjustment * 0.1}rem`
-    );
+    document.documentElement.style.setProperty('--font-size-adj', `${fontSizeAdjustment * 0.1}rem`);
   }, [fontSizeAdjustment]);
-  
+
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
-    return flaggedQuestions.some(
-      (q) => q.question === currentQuestion.question
-    );
+    return flaggedQuestions.some((q) => q.question === currentQuestion.question);
   }, [currentQuestion, flaggedQuestions]);
 
   // Keep current question synced with queue[0]
@@ -404,8 +366,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- SHOULD WE REPLENISH ENDLESSLY? ----
   const shouldEndlesslyReplenish =
-    sessionSettings.focus !== "review" &&
-    sessionSettings.focus !== "reviewFlagged";
+    sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
 
   // Sprint 4: Handler to show session end summary before ending
   const handleEndSession = useCallback(() => {
@@ -419,44 +380,34 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [onEndSession, shouldEndlesslyReplenish, performanceData.length]);
 
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
-  useShortcut(
-    'TOGGLE_STATS',
-    () => setShowStatsOverlay(prev => !prev),
-    { enabled: true }
-  );
+  useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
 
   // ---- REPLENISH QUEUE (ALL / GROWTH / TOPIC) ----
   const replenishQueue = useCallback(async () => {
-  // Do NOT show the global loader here – this is background work
-  if (!shouldEndlesslyReplenish) return;
+    // Do NOT show the global loader here – this is background work
+    if (!shouldEndlesslyReplenish) return;
 
-  setIsGeneratingQuestion(true);
-  try {
-    // Use questionService for single question fetch (pool + Gemini fallback)
-    // The mainSessionService is used for batch fetches and analytics
-    const newQuestion = await getQuestion(sessionSettings, growthAreas, getToken);
+    setIsGeneratingQuestion(true);
+    try {
+      // Use questionService for single question fetch (pool + Gemini fallback)
+      // The mainSessionService is used for batch fetches and analytics
+      const newQuestion = await getQuestion(sessionSettings, growthAreas, getToken);
 
-    if (newQuestion) {
-      // keep both queues in sync
-      setParentQueue((prev) => [...prev, newQuestion]);
-      setQueue((prev) => [...prev, newQuestion]);
+      if (newQuestion) {
+        // keep both queues in sync
+        setParentQueue((prev) => [...prev, newQuestion]);
+        setQueue((prev) => [...prev, newQuestion]);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to replenish queue:', err);
+      // soft-fail: show a user-friendly error but don't kill the session
+      setError(
+        'Unable to load more questions right now. You can continue with your current questions.'
+      );
+    } finally {
+      setIsGeneratingQuestion(false);
     }
-  } catch (err: unknown) {
-    console.error("Failed to replenish queue:", err);
-    // soft-fail: show a user-friendly error but don't kill the session
-    setError(
-      "Unable to load more questions right now. You can continue with your current questions."
-    );
-  } finally {
-    setIsGeneratingQuestion(false);
-  }
-}, [
-  shouldEndlesslyReplenish,
-  sessionSettings,
-  growthAreas,
-  setParentQueue,
-  setError,
-]);
+  }, [shouldEndlesslyReplenish, sessionSettings, growthAreas, setParentQueue, setError]);
 
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
@@ -515,9 +466,9 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion && initialQueue.length > 0) {
       setCurrentQuestion(initialQueue[0]);
     }
-    setLocalNote(initialQueue[0]?.userNote || "");
+    setLocalNote(initialQueue[0]?.userNote || '');
     setEliminatedAnswers(new Set()); // Reset when new question loaded
-    
+
     // Start tracking implicit metrics for the first question
     if (initialQueue.length > 0) {
       implicitMetrics.startQuestion();
@@ -525,18 +476,21 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [initialQueue, currentQuestion, implicitMetrics]);
 
   // Handler for toggling elimination state
-  const handleToggleEliminate = useCallback((index: number) => {
-    if (isAnswered) return;
-    setEliminatedAnswers((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  }, [isAnswered]);
+  const handleToggleEliminate = useCallback(
+    (index: number) => {
+      if (isAnswered) return;
+      setEliminatedAnswers((prev) => {
+        const next = new Set(prev);
+        if (next.has(index)) {
+          next.delete(index);
+        } else {
+          next.add(index);
+        }
+        return next;
+      });
+    },
+    [isAnswered]
+  );
 
   // Keyboard shortcuts
   const handleSubmitAnswer = useCallback(async () => {
@@ -544,21 +498,21 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
 
     setIsAnswered(true);
-    
+
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
     const timeToAnswer = Date.now() - questionStartTime;
-    
+
     // Sprint C: Submit implicit metrics to backend
     const questionId = currentQuestion.id || `temp-${questionNumber}`;
-    await implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch(err => {
+    await implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
       // Don't block UI if metrics submission fails
       console.warn('Implicit metrics submission failed:', err);
     });
-    
+
     // Sprint 4: Show optimistic feedback INSTANTLY (no server wait)
     showOptimisticFeedback(isCorrect);
-    
+
     // Load pearls from medical content if not already loaded
     if (!currentQuestion.pearls && currentQuestion.conditionId) {
       try {
@@ -566,13 +520,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         const pearls = await fetchPearlsForQuestion(currentQuestion.conditionId, token);
         if (pearls.length > 0) {
           // Update the current question with loaded pearls
-          setCurrentQuestion(prev => prev ? { ...prev, pearls } : null);
+          setCurrentQuestion((prev) => (prev ? { ...prev, pearls } : null));
         }
       } catch (error) {
         console.error('Failed to load clinical pearls:', error);
       }
     }
-    
+
     // Sprint 4: Calculate par time (isCorrect and timeToAnswer already calculated above for instant feedback)
     const parTime = calculateParTime(currentQuestion);
 
@@ -582,14 +536,14 @@ const QuizView: React.FC<QuizViewProps> = ({
       parTimeMs: parTime,
       answerChangeCount,
       eliminatedCount: eliminatedAnswers.size,
-      quickInitialSelection: firstSelectedAnswer !== null && 
-        (Date.now() - questionStartTime) < parTime * 0.5,
+      quickInitialSelection:
+        firstSelectedAnswer !== null && Date.now() - questionStartTime < parTime * 0.5,
     };
     recordBehavioralConfidence(behaviorSignals, isCorrect);
-    
+
     // Sprint 4: Record momentum data
     recordMomentumResult(isCorrect, timeToAnswer, parTime);
-    
+
     // Sprint 4: Record answer pattern for post-session analysis
     recordAnswerPattern({
       questionId: currentQuestion.id || `temp-${questionNumber}`,
@@ -602,7 +556,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       answerChangeCount,
       wasCorrect: isCorrect,
     });
-    
+
     // Sprint 4: Update performance prediction
     updatePerformancePrediction({
       correct: isCorrect,
@@ -612,14 +566,14 @@ const QuizView: React.FC<QuizViewProps> = ({
       questionNumber,
       inferredConfidence: inferConfidence(behaviorSignals),
     });
-    
+
     // Sprint 4: Record for smart pause detection
     recordPauseResult({
       correct: isCorrect,
       timeSpentMs: timeToAnswer,
       parTimeMs: parTime,
     });
-    
+
     // Advanced analytics: Record comprehensive question result
     recordQuestionResult(
       currentQuestion.id || `temp-${questionNumber}`,
@@ -630,15 +584,15 @@ const QuizView: React.FC<QuizViewProps> = ({
       currentQuestion.difficulty || 'medium',
       inferConfidence(behaviorSignals)
     );
-    
-    setBehavioralRefreshKey(k => k + 1);
+
+    setBehavioralRefreshKey((k) => k + 1);
 
     // Trigger sensory feedback (haptic + optional sound)
     if (isCorrect) {
       feedback.correct();
       // Sprint 4: Trigger answer feedback animation and update streak
       answerFeedback.triggerCorrect(currentStreak + 1);
-      setCurrentStreak(prev => prev + 1);
+      setCurrentStreak((prev) => prev + 1);
     } else {
       feedback.incorrect();
       // Sprint 4: Trigger incorrect animation and reset streak
@@ -651,7 +605,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       recordQuestion(currentQuestion.system, isCorrect);
     }
 
-    if (sessionSettings.focus === "review") {
+    if (sessionSettings.focus === 'review') {
       updateReviewQuestion(currentQuestion, isCorrect);
     } else {
       if (!isCorrect) {
@@ -663,11 +617,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     const questionWordCount = currentQuestion.question
       .replace(/<[^>]*>/g, ' ') // Remove HTML tags
       .split(/\s+/)
-      .filter(word => word.length > 0).length;
+      .filter((word) => word.length > 0).length;
 
     // Record detailed performance, including system/subcategory/condition
     const timestamp = Date.now();
-    
+
     addPerformanceRecord({
       timestamp,
       system: currentQuestion.system ?? null,
@@ -684,16 +638,19 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Record attempt to database (non-blocking)
     if (currentQuestion.id) {
-      getToken().then(token => {
-        recordQuestionAttempt({
-          questionId: currentQuestion.id!,
-          wasCorrect: isCorrect,
-          system: currentQuestion.system || currentQuestion.topic,
-          conditionId: currentQuestion.conditionId,
-          mode: 'session',
-          timeSpentMs: timeToAnswer,
-          answerChangedCount: answerChangeCount,
-        }, token).catch(err => {
+      getToken().then((token) => {
+        recordQuestionAttempt(
+          {
+            questionId: currentQuestion.id!,
+            wasCorrect: isCorrect,
+            system: currentQuestion.system || currentQuestion.topic,
+            conditionId: currentQuestion.conditionId,
+            mode: 'session',
+            timeSpentMs: timeToAnswer,
+            answerChangedCount: answerChangeCount,
+          },
+          token
+        ).catch((err) => {
           console.warn('[QuizView] Failed to record attempt to database:', err);
         });
       });
@@ -719,7 +676,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       // Calculate complexity-aware par time based on word count, images, and labs
       const baselineTime = calculateParTime(currentQuestion);
       const performanceRatio = timeToAnswer / baselineTime;
-      
+
       // Calculate quality score (0-5 scale) using FSRS v5 adaptive logic
       // Quality accounts for both correctness AND time relative to question complexity
       let quality: number;
@@ -746,8 +703,8 @@ const QuizView: React.FC<QuizViewProps> = ({
         .filter((p) => p.topic === currentQuestion.topic)
         .slice(-20);
       const recentCorrect = topicPerformance.filter((p) => p.isCorrect).length;
-      const isInRedZone = topicPerformance.length > 0 && 
-        (recentCorrect / topicPerformance.length) < 0.75;
+      const isInRedZone =
+        topicPerformance.length > 0 && recentCorrect / topicPerformance.length < 0.75;
 
       // Update SRS schedule asynchronously (non-blocking)
       // FSRS v5 will apply additional modifiers based on quality, time, and red zone status
@@ -770,19 +727,45 @@ const QuizView: React.FC<QuizViewProps> = ({
     questionsAnsweredInSession.current += 1;
 
     // Trigger wellness check after threshold questions
-    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0) {
+    if (
+      questionsAnsweredInSession.current > 0 &&
+      questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0
+    ) {
       setWellnessReason('rapid_questions');
       setShowWellnessModal(true);
     }
 
     // Check if studying late at night
     const currentHour = new Date().getHours();
-    if ((currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) && 
-        questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0) {
+    if (
+      (currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) &&
+      questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0
+    ) {
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
-  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer, setCurrentQuestion, questionNumber, implicitMetrics]);
+  }, [
+    selectedAnswerIndex,
+    currentQuestion,
+    isAnswered,
+    sessionSettings,
+    updateReviewQuestion,
+    addMissedQuestion,
+    addPerformanceRecord,
+    recordCircadianPerformance,
+    user,
+    questionStartTime,
+    performanceData,
+    getToken,
+    answerFeedback,
+    currentStreak,
+    answerChangeCount,
+    eliminatedAnswers,
+    firstSelectedAnswer,
+    setCurrentQuestion,
+    questionNumber,
+    implicitMetrics,
+  ]);
 
   // Keyboard shortcuts using centralized shortcut context
   // FLIP_CARD: Toggle showing the explanation/rationale after answering
@@ -790,7 +773,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     'FLIP_CARD',
     () => {
       if (isAnswered) {
-        setShowRationale(prev => !prev);
+        setShowRationale((prev) => !prev);
       }
     },
     { enabled: isAnswered }
@@ -811,14 +794,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   // These are quiz-specific and don't map to global actions
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        (event.target as HTMLElement).tagName.toLowerCase() === "textarea"
-      ) {
+      if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
         return;
       }
 
       // Escape key to go back to menu
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         event.preventDefault();
         onShowMenu();
         return;
@@ -848,18 +829,26 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
 
       // Enter to submit selected answer (if not yet submitted)
-      if (!isAnswered && selectedAnswerIndex !== null && event.key === "Enter") {
+      if (!isAnswered && selectedAnswerIndex !== null && event.key === 'Enter') {
         event.preventDefault();
         handleSubmitAnswer();
         return;
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, handleSubmitAnswer]);
+  }, [
+    isAnswered,
+    selectedAnswerIndex,
+    handleToggleEliminate,
+    eliminatedAnswers,
+    currentQuestion,
+    onShowMenu,
+    handleSubmitAnswer,
+  ]);
 
   const handleOptionClick = (index: number) => {
     // Guard against selecting eliminated answers or already answered questions
@@ -871,7 +860,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setFirstSelectedAnswer(index);
     } else if (selectedAnswerIndex !== null && selectedAnswerIndex !== index) {
       // Changed answer
-      setAnswerChangeCount(prev => prev + 1);
+      setAnswerChangeCount((prev) => prev + 1);
     }
 
     // Record answer selection for implicit metrics
@@ -881,8 +870,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     setSelectedAnswerIndex(index);
   };
 
-
-
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;
 
@@ -891,8 +878,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     try {
       const userAnswer = currentQuestion.options[selectedAnswerIndex];
-      const correctAnswer =
-        currentQuestion.options[currentQuestion.correctAnswerIndex];
+      const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex];
       const explanation = await generateAlternateRationale(
         currentQuestion,
         userAnswer,
@@ -949,9 +935,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [isAnswered, currentQuestion, performanceData]);
 
   const getBarColor = (score: number): string => {
-    if (score < 50) return "bg-red-500";
-    if (score < 80) return "bg-yellow-500";
-    return "bg-green-500";
+    if (score < 50) return 'bg-red-500';
+    if (score < 80) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
@@ -972,7 +958,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         </div>
       );
     }
-    
+
     // Otherwise, show session complete (for finite modes or when truly done)
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
@@ -981,16 +967,10 @@ const QuizView: React.FC<QuizViewProps> = ({
           You've reached the end of this set of questions.
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
-          <button
-            onClick={onShowMenu}
-            className="btn-glass px-6 py-2"
-          >
+          <button onClick={onShowMenu} className="btn-glass px-6 py-2">
             Back to Dashboard
           </button>
-          <button
-            onClick={handleEndSession}
-            className="btn-secondary px-6 py-2"
-          >
+          <button onClick={handleEndSession} className="btn-secondary px-6 py-2">
             View Summary
           </button>
         </div>
@@ -1016,13 +996,9 @@ const QuizView: React.FC<QuizViewProps> = ({
                 Question {questionNumber}
               </p>
               {/* Sprint 4: Momentum Badge (compact) */}
-              {questionNumber > 3 && (
-                <MomentumBadge refreshKey={behavioralRefreshKey} />
-              )}
+              {questionNumber > 3 && <MomentumBadge refreshKey={behavioralRefreshKey} />}
               {/* Sprint 4: Streak Badge */}
-              {currentStreak >= 3 && (
-                <StreakBadge streak={currentStreak} />
-              )}
+              {currentStreak >= 3 && <StreakBadge streak={currentStreak} />}
               {/* Sprint 4: Question Timer */}
               {currentQuestion && (
                 <QuestionTimer
@@ -1039,12 +1015,12 @@ const QuizView: React.FC<QuizViewProps> = ({
           <div className="flex items-center space-x-2 flex-shrink-0">
             {/* Sprint 4: Session Stats Toggle */}
             <button
-              onClick={() => setShowStatsOverlay(prev => !prev)}
+              onClick={() => setShowStatsOverlay((prev) => !prev)}
               title="Toggle session stats (S)"
               className={`p-1.5 rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? "bg-blue-100 text-blue-700 border-blue-300"
-                  : "bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                  ? 'bg-blue-100 text-blue-700 border-blue-300'
+                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1062,11 +1038,11 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Flag for personal review */}
             <button
               onClick={toggleFlag}
-              title={isFlagged ? "Unflag for review" : "Flag for review"}
+              title={isFlagged ? 'Unflag for review' : 'Flag for review'}
               className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
-                  ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-                  : "bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-white hover:border-[var(--color-accent)]"
+                  ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-white hover:border-[var(--color-accent)]'
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -1075,11 +1051,9 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Clear Highlights */}
             <button
               onClick={() => {
-                const container =
-                  document.getElementById("question-container");
+                const container = document.getElementById('question-container');
                 if (!container) return;
-                const spans =
-                  container.querySelectorAll("span.user-highlight");
+                const spans = container.querySelectorAll('span.user-highlight');
                 spans.forEach((s) => {
                   const parent = s.parentNode;
                   if (!parent) return;
@@ -1098,9 +1072,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Font size controls */}
             <div className="flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-card-bg)]">
               <button
-                onClick={() =>
-                  setFontSizeAdjustment((prev) => prev - 1)
-                }
+                onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
                 className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
@@ -1108,9 +1080,7 @@ const QuizView: React.FC<QuizViewProps> = ({
               </button>
               <div className="w-px h-4 bg-[#D0C7BF]"></div>
               <button
-                onClick={() =>
-                  setFontSizeAdjustment((prev) => prev + 1)
-                }
+                onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
                 className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
@@ -1134,7 +1104,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
           >
             <QuestionDisplay text={currentQuestion.question} />
           </motion.div>
@@ -1170,14 +1140,15 @@ const QuizView: React.FC<QuizViewProps> = ({
       {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
       {!isAnswered && selectedAnswerIndex !== null && (
         <div className="mt-6 text-center animate-fade-in space-y-4">
-          <button
-            onClick={handleSubmitAnswer}
-            className="btn-glass px-8 py-3"
-          >
+          <button onClick={handleSubmitAnswer} className="btn-glass px-8 py-3">
             Submit Answer
           </button>
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            Press <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">Enter</kbd> to submit
+            Press{' '}
+            <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">
+              Enter
+            </kbd>{' '}
+            to submit
           </p>
         </div>
       )}
@@ -1188,9 +1159,9 @@ const QuizView: React.FC<QuizViewProps> = ({
           {/* SRS Feedback Badge */}
           {srsResult && (
             <div className="flex justify-center mb-4">
-              <SRSFeedbackBadge 
-                result={srsResult} 
-                isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex} 
+              <SRSFeedbackBadge
+                result={srsResult}
+                isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex}
               />
             </div>
           )}
@@ -1202,8 +1173,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                   {currentQuestion.topic}
                 </span>
                 <span className="font-medium text-[var(--color-text-muted)]">
-                  {topicStats.score.toFixed(0)}% (
-                  {topicStats.correct}/{topicStats.total})
+                  {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
                 </span>
               </div>
               <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
@@ -1225,25 +1195,20 @@ const QuizView: React.FC<QuizViewProps> = ({
               </div>
             )}
 
-            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-              Rationale
-            </h3>
+            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">Rationale</h3>
             <div
               className="text-[var(--color-text-secondary)] leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
             />
 
-            {selectedAnswerIndex !==
-              currentQuestion.correctAnswerIndex && (
+            {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
               <div className="mt-4">
                 <button
                   onClick={handleExplainDifferently}
                   disabled={isExplainerLoading}
                   className="btn-glass px-4 py-2 text-sm"
                 >
-                  {isExplainerLoading
-                    ? "Thinking..."
-                    : "Explain this differently"}
+                  {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
                 </button>
               </div>
             )}
@@ -1253,15 +1218,13 @@ const QuizView: React.FC<QuizViewProps> = ({
                 <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></div>
                 <div
                   className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
-                  style={{ animationDelay: "0.2s" }}
+                  style={{ animationDelay: '0.2s' }}
                 ></div>
                 <div
                   className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
-                  style={{ animationDelay: "0.4s" }}
+                  style={{ animationDelay: '0.4s' }}
                 ></div>
-                <span className="text-sm">
-                  Generating new explanation...
-                </span>
+                <span className="text-sm">Generating new explanation...</span>
               </div>
             )}
 
@@ -1277,26 +1240,21 @@ const QuizView: React.FC<QuizViewProps> = ({
             )}
 
             {/* Clinical Pearls Section */}
-            {(currentQuestion.pearls && currentQuestion.pearls.length > 0) && (
+            {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                   Key Pearls: {currentQuestion.condition}
                 </h3>
                 <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                   {currentQuestion.pearls.map((pearl, index) => (
-                    <li
-                      key={index}
-                      dangerouslySetInnerHTML={{ __html: pearl }}
-                    />
+                    <li key={index} dangerouslySetInnerHTML={{ __html: pearl }} />
                   ))}
                 </ul>
               </div>
             )}
 
             <div className="mt-4 pt-4 border-t border-slate-200">
-              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                My Notes
-              </h3>
+              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">My Notes</h3>
               <textarea
                 value={localNote}
                 onChange={handleNoteChange}
@@ -1345,19 +1303,17 @@ const QuizView: React.FC<QuizViewProps> = ({
           <SessionInsightsPanel refreshKey={behavioralRefreshKey} />
         </div>
       )}
-      
+
       {/* Sprint 4: Smart Pause Indicator */}
-      {performanceData.length >= 5 && (
-        <SmartPauseIndicator refreshKey={behavioralRefreshKey} />
-      )}
-      
+      {performanceData.length >= 5 && <SmartPauseIndicator refreshKey={behavioralRefreshKey} />}
+
       {/* Advanced Analytics: Cognitive State Indicator */}
       {performanceData.length >= 3 && cognitiveState && (
         <div className="fixed bottom-4 right-4 z-40">
           <CognitiveStateIndicator cognitiveState={cognitiveState} compact />
         </div>
       )}
-      
+
       {/* Sprint 4: Encouragement Toast */}
       <EncouragementToast refreshKey={behavioralRefreshKey} />
 
@@ -1394,7 +1350,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       {/* Sprint 4: Session Stats Overlay */}
       <SessionStatsOverlay
         isOpen={showStatsOverlay}
-        onToggle={() => setShowStatsOverlay(prev => !prev)}
+        onToggle={() => setShowStatsOverlay((prev) => !prev)}
         performanceData={performanceData}
         currentQuestionNumber={questionNumber}
       />
@@ -1415,7 +1371,6 @@ const QuizView: React.FC<QuizViewProps> = ({
         sessionSettings={{
           mode: sessionSettings.mode,
           focus: sessionSettings.focus,
-          difficulty: sessionSettings.difficulty,
         }}
         onContinueStudying={() => {
           setShowSessionEndSummary(false);

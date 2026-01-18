@@ -1,6 +1,6 @@
 /**
  * BookmarksPanel - Displays bookmarked conditions
- * 
+ *
  * Shows user's bookmarked conditions with optional notes
  */
 
@@ -71,14 +71,12 @@ const BookmarkItem: React.FC<{
             {bookmark.condition}
           </p>
           <p className="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1">
-            {bookmark.system && (
-              <span className="truncate">{bookmark.system}</span>
-            )}
+            {bookmark.system && <span className="truncate">{bookmark.system}</span>}
             {bookmark.system && <span>•</span>}
             <span>{formatRelativeTime(bookmark.bookmarkedAt)}</span>
           </p>
         </div>
-        
+
         {/* Actions */}
         <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
           {onAddNote && (
@@ -153,9 +151,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
     return (
       <div className="px-3 py-4 text-center">
         <Bookmark className="w-8 h-8 mx-auto text-[var(--color-text-muted)] opacity-50 mb-2" />
-        <p className="text-xs text-[var(--color-text-muted)]">
-          No bookmarked conditions
-        </p>
+        <p className="text-xs text-[var(--color-text-muted)]">No bookmarked conditions</p>
         <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
           Click the bookmark icon on any card to save it
         </p>

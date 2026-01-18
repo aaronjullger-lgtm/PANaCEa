@@ -5,6 +5,7 @@
 ### 1. API Endpoints Created
 
 #### `/functions/api/admin/media/upload.ts`
+
 - **POST**: Upload medical images to Supabase Storage
 - **GET**: List media assets with filtering by status/category
 - Requires admin role authentication
@@ -13,12 +14,14 @@
 - Creates MediaAsset record with `pending` approval status
 
 #### `/functions/api/admin/media/approve.ts`
+
 - **POST**: Approve or reject a single media asset
 - **PUT**: Batch approve/reject multiple media assets (max 100)
 - Updates approvalStatus, folder, and status fields
 - Logs approval actions
 
 #### `/functions/api/admin/media/[id].ts`
+
 - **GET**: Retrieve single media asset details
 - **PUT**: Update media metadata (diagnosis, distractors, tags, etc.)
 - **DELETE**: Remove media from both storage and database
@@ -26,6 +29,7 @@
 ### 2. Database Schema Updates
 
 #### New Fields on `ImagingStudy`
+
 ```prisma
 exampleImageUrls     String[]  @default([])
 annotatedImageUrls   String[]  @default([])
@@ -33,12 +37,15 @@ thumbnailUrl         String?
 ```
 
 #### New Field on `MediaAsset`
+
 ```prisma
 imagingStudyId      String?
 ```
 
 #### New Junction Table `MedicalContentMedia`
+
 Links MedicalContent to MediaAsset for many-to-many relationship:
+
 ```prisma
 model MedicalContentMedia {
   id               String
@@ -53,6 +60,7 @@ model MedicalContentMedia {
 ### 3. Updated Admin Component
 
 `MediaApprovalDashboard.tsx` now:
+
 - Uses Clerk authentication (`useAuth` hook)
 - Connects to new `/api/admin/media/*` endpoints
 - Includes upload modal with drag-and-drop
@@ -109,6 +117,7 @@ CLERK_SECRET_KEY=your-clerk-secret
 ## How Media Works Now
 
 ### Upload Flow
+
 1. Admin uploads image via dashboard
 2. Image stored in Supabase Storage (`medical-images` bucket)
 3. MediaAsset record created with `pending` status
@@ -116,12 +125,15 @@ CLERK_SECRET_KEY=your-clerk-secret
 5. Approved images available for drill modes
 
 ### Linking to Content
+
 - **Conditions**: Use `conditionId` field on MediaAsset
 - **ImagingStudy**: Use `imagingStudyId` or direct URL fields
 - **MedicalContent**: Use `MedicalContentMedia` junction table
 
 ### Drill Integration
+
 The existing `/api/drills/media.ts` endpoint returns approved media for photo drills. Categories map to modalities:
+
 - `ecg` → ECG drill
 - `derm` → Dermatology drill
 - `radiology` → Radiology drill

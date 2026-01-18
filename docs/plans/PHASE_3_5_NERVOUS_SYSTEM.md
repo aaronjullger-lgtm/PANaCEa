@@ -16,15 +16,15 @@ The "Phase 3: Nervous System" roadmap was based on **stale documentation**. A fo
 
 ### Already Implemented (NO ACTION REQUIRED)
 
-| Feature | User's Assumption | Reality in Codebase |
-|---------|-------------------|---------------------|
-| **Blueprint Weights** | "Uses 13%/10%" | `lib/nccpa-blueprint.ts` → **Cardio: 0.11 (11%), Pulm: 0.09 (9%)** ✅ |
+| Feature                  | User's Assumption       | Reality in Codebase                                                                                                |
+| ------------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Blueprint Weights**    | "Uses 13%/10%"          | `lib/nccpa-blueprint.ts` → **Cardio: 0.11 (11%), Pulm: 0.09 (9%)** ✅                                              |
 | **Behavioral Telemetry** | "Only explicit results" | `hooks/useImplicitMetrics.ts` → Full sensor: `timeToFirstClick`, `answerSwitches`, `totalDwellTime`, `timezone` ✅ |
-| **Backend Persistence** | "Need sensor layer" | Auto-POSTs to `/api/user/behavior-metrics` ✅ |
-| **Database Schema** | "Need ReviewTelemetry" | `UserBehaviorMetrics` model exists with 15+ fields ✅ |
-| **FSRS Optimization** | "Static parameters" | `PersonalizedFSRSParams` model + `UserSRSConfig` ✅ |
-| **Interleaving** | Not mentioned | Full blueprint adherence scoring using cosine similarity ✅ |
-| **Calibration Mode** | Not mentioned | `CalibrationProtocolUI.tsx` with 60-question threshold ✅ |
+| **Backend Persistence**  | "Need sensor layer"     | Auto-POSTs to `/api/user/behavior-metrics` ✅                                                                      |
+| **Database Schema**      | "Need ReviewTelemetry"  | `UserBehaviorMetrics` model exists with 15+ fields ✅                                                              |
+| **FSRS Optimization**    | "Static parameters"     | `PersonalizedFSRSParams` model + `UserSRSConfig` ✅                                                                |
+| **Interleaving**         | Not mentioned           | Full blueprint adherence scoring using cosine similarity ✅                                                        |
+| **Calibration Mode**     | Not mentioned           | `CalibrationProtocolUI.tsx` with 60-question threshold ✅                                                          |
 
 ### Cognitive Psychometrics Infrastructure Found
 
@@ -77,6 +77,7 @@ const result = calculateOptimalRetention({
 ```
 
 **Key Features:**
+
 - Minimizes `Workload / Knowledge` ratio
 - Adjusts for available study time
 - Applies exam urgency factor
@@ -93,12 +94,12 @@ import { EpistemicGauge, CalibrationCTA } from '@/components/ui/EpistemicGauge';
 
 // Usage in dashboard
 <EpistemicGauge
-  value={0.72}           // 72% accuracy
-  dataPoints={35}        // Only 35 questions
+  value={0.72} // 72% accuracy
+  dataPoints={35} // Only 35 questions
   confidenceThreshold={60}
   label="Cardiovascular"
   colorScheme="blue"
-/>
+/>;
 
 // Renders with:
 // - opacity: 0.25 + (35/60 * 0.75) = 0.69
@@ -107,6 +108,7 @@ import { EpistemicGauge, CalibrationCTA } from '@/components/ui/EpistemicGauge';
 ```
 
 **Key Features:**
+
 - Confidence formula: `C = min(1, N_reviews / 60)`
 - Opacity-based uncertainty visualization
 - Blur overlay for very low confidence (<33%)
@@ -122,30 +124,31 @@ import { EpistemicGauge, CalibrationCTA } from '@/components/ui/EpistemicGauge';
 The Prisma schema already contains comprehensive telemetry support:
 
 ### `UserBehaviorMetrics` Model (EXISTS ✅)
+
 ```prisma
 model UserBehaviorMetrics {
   id           String @id
   userId       String
   questionId   String
-  
+
   // Core timing
   timeToFirstClick  Int
   dwellTime         Int
   totalResponseTime Int
-  
+
   // Interaction patterns
   answerChanges    Int @default(0)
   optionHovers     Int @default(0)
   scrollDepth      Int?
-  
+
   // Behavioral signals
   hesitationEvents Int @default(0)
   backtrackCount   Int @default(0)
-  
+
   // FSRS derivation
   derivedRating    Int?    // 1-4
   ratingConfidence Float?  // 0-1
-  
+
   // Advanced (optional)
   trajectoryData Json?     // Mouse trajectory
   typingRhythm   Json?     // Keystroke timing
@@ -153,17 +156,18 @@ model UserBehaviorMetrics {
 ```
 
 ### `PersonalizedFSRSParams` Model (EXISTS ✅)
+
 ```prisma
 model PersonalizedFSRSParams {
   id     String @id
   userId String @unique
   w      Json   // The 19 FSRS weights
-  
+
   // Optimization metadata
   sampleSize             Int?
   lastOptimizedAt        DateTime?
   improvementOverDefault Float?
-  
+
   // Per-system adjustments
   systemModifiers Json?
 }
@@ -181,15 +185,15 @@ import { calculateOptimalRetention, getRetentionPresets } from '@/lib/cmrr-optim
 
 export function RetentionSettings() {
   const { reviewHistory, studyTime, examDate } = useUserProfile();
-  
+
   const recommendation = calculateOptimalRetention({
     reviewHistory,
     avgStudyTimeMinutes: studyTime,
     targetExamDate: examDate,
   });
-  
+
   const presets = getRetentionPresets();
-  
+
   return (
     <div>
       <h3>Study Efficiency Slider</h3>
@@ -222,10 +226,10 @@ export function SystemMasteryPanel({ systems, totalQuestions }) {
       />
     );
   }
-  
+
   return (
     <EpistemicSystemGrid
-      systems={systems.map(s => ({
+      systems={systems.map((s) => ({
         system: s.name,
         accuracy: s.correct / s.total,
         dataPoints: s.total,
@@ -241,21 +245,21 @@ export function SystemMasteryPanel({ systems, totalQuestions }) {
 
 ## 📝 Files Created
 
-| File | Purpose |
-|------|---------|
-| `lib/cmrr-optimizer.ts` | Dynamic retention calculator using CMRR algorithm |
-| `components/ui/EpistemicGauge.tsx` | Uncertainty-aware visualization components |
-| `docs/plans/PHASE_3_5_NERVOUS_SYSTEM.md` | This documentation |
+| File                                     | Purpose                                           |
+| ---------------------------------------- | ------------------------------------------------- |
+| `lib/cmrr-optimizer.ts`                  | Dynamic retention calculator using CMRR algorithm |
+| `components/ui/EpistemicGauge.tsx`       | Uncertainty-aware visualization components        |
+| `docs/plans/PHASE_3_5_NERVOUS_SYSTEM.md` | This documentation                                |
 
 ---
 
 ## ❌ NOT Implemented (Deferred)
 
-| Feature | Reason |
-|---------|--------|
-| Per-distractor hover tracking | `useImplicitMetrics` tracks `answerSwitches` but not per-option duration. Deferred to Phase 4. |
-| CMRR Settings UI | Infrastructure ready, UI integration deferred |
-| Keystroke-based rating derivation | `typing-rhythm.ts` exists but not integrated into FSRS rating |
+| Feature                           | Reason                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Per-distractor hover tracking     | `useImplicitMetrics` tracks `answerSwitches` but not per-option duration. Deferred to Phase 4. |
+| CMRR Settings UI                  | Infrastructure ready, UI integration deferred                                                  |
+| Keystroke-based rating derivation | `typing-rhythm.ts` exists but not integrated into FSRS rating                                  |
 
 ---
 

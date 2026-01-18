@@ -9,6 +9,7 @@
 ## Overview
 
 Sprint B implemented intelligent personalization features that enable PANaCEa to adapt to each user's unique learning patterns:
+
 - **Step 3**: Enrich UserLearningProfile with aggregated metrics
 - **Step 4**: Detect learning style from behavioral patterns
 - **Step 5**: Goal tracking system with full CRUD
@@ -20,10 +21,13 @@ These features transform PANaCEa from a generic study platform into a personaliz
 ## Step 3: UserLearningProfile Enrichment Job
 
 ### Purpose
+
 Automatically populate empty `UserLearningProfile` fields with calculated metrics from user activity, enabling data-driven personalization without manual configuration.
 
 ### Problem Statement
+
 The `UserLearningProfile` table existed but most analytical fields were empty:
+
 - ❌ No chronotype detection (morning vs. night learner)
 - ❌ Peak performance hours unknown
 - ❌ Learning velocity not calculated
@@ -96,11 +100,13 @@ This prevented personalized study recommendations and adaptive difficulty adjust
 ### Data Sources
 
 **Primary Tables**:
+
 - `StudySession`: Session patterns, duration, questions answered
 - `QuestionAttempt`: Performance, timing, confidence levels
 - `UserBehaviorMetrics`: Answer changes, hesitation, behavioral signals
 
 **Batch Processing**:
+
 - Processes users in batches of 50
 - Targets users active in last 90 days
 - Requires minimum data thresholds per metric
@@ -108,6 +114,7 @@ This prevented personalized study recommendations and adaptive difficulty adjust
 ### Algorithms
 
 **1. Chronotype Detection**
+
 ```typescript
 // Group attempts by hour (0-23)
 // Calculate accuracy for each hour
@@ -120,6 +127,7 @@ This prevented personalized study recommendations and adaptive difficulty adjust
 ```
 
 **2. Learning Velocity (Linear Regression)**
+
 ```typescript
 // Group attempts by date
 // Calculate daily accuracy
@@ -128,6 +136,7 @@ This prevented personalized study recommendations and adaptive difficulty adjust
 ```
 
 **3. Metacognition Score**
+
 ```typescript
 // For each confidence level (1-5):
 //   Calculate actual accuracy
@@ -138,6 +147,7 @@ This prevented personalized study recommendations and adaptive difficulty adjust
 ```
 
 **4. Cognitive Load Threshold**
+
 ```typescript
 // Calculate rolling 5-question accuracy windows
 // Find initial accuracy (first window)
@@ -172,6 +182,7 @@ Processed 342 / 342 users
 ### Use Cases
 
 **1. Personalized Study Reminders**
+
 ```typescript
 // Send reminder at user's peak learning hour
 const profile = await getUserLearningProfile(userId);
@@ -179,6 +190,7 @@ scheduleReminder(userId, profile.bestStudyHour);
 ```
 
 **2. Adaptive Session Length**
+
 ```typescript
 // Recommend optimal session length
 const profile = await getUserLearningProfile(userId);
@@ -187,39 +199,45 @@ generateSession(userId, { count: recommendedLength });
 ```
 
 **3. Fatigue Detection**
+
 ```typescript
 // Warn user approaching fatigue point
 if (currentQuestion >= profile.fatigueOnsetQuestion) {
-  showWarning("Consider taking a break - accuracy may decline");
+  showWarning('Consider taking a break - accuracy may decline');
 }
 ```
 
 **4. Chronotype-Based Scheduling**
+
 ```typescript
 // Schedule study sessions during best hours
 const profile = await getUserLearningProfile(userId);
 if (profile.chronotype === 'morning') {
-  suggestStudyTime("6:00 AM - 11:00 AM");
+  suggestStudyTime('6:00 AM - 11:00 AM');
 }
 ```
 
 ### Benefits
+
 ✅ Zero-configuration personalization  
 ✅ Data-driven study recommendations  
 ✅ Fatigue prevention  
 ✅ Optimal timing suggestions  
 ✅ Learning velocity tracking  
-✅ Metacognitive awareness insights  
+✅ Metacognitive awareness insights
 
 ---
 
 ## Step 4: Learning Style Detection
 
 ### Purpose
+
 Automatically detect how each user learns best by analyzing behavioral patterns across four dimensions, enabling adaptive content delivery and personalized study strategies.
 
 ### Problem Statement
+
 All users received the same study experience regardless of individual learning preferences:
+
 - ❌ No adaptation for fast deciders vs. thorough analyzers
 - ❌ Can't adjust explanation depth to user engagement
 - ❌ No detection of spaced repetition vs. mass practice preference
@@ -238,11 +256,13 @@ All users received the same study experience regardless of individual learning p
 Analyzes decision-making speed and answer certainty.
 
 Classifications:
+
 - **fast-decider**: Quick first click (<3s), few answer changes (<0.3)
 - **thorough-analyzer**: Long deliberation (>8s), extended dwell time (>60s)
 - **balanced**: Middle ground
 
 Detection Logic:
+
 ```typescript
 avgTimeToFirstClick = mean(timeToFirstClick across attempts)
 avgAnswerChanges = mean(answerChanges across attempts)
@@ -260,11 +280,13 @@ else:
 Measures depth of interaction with educational content.
 
 Classifications:
+
 - **deep-dive**: High view rate (>70%), long durations (>45s), proactive viewing
 - **moderate**: Balanced viewing behavior
 - **minimal**: Low view rate (<20%) or short durations (<10s)
 
 Detection Logic:
+
 ```typescript
 viewRate = explanationViews / totalQuestions
 avgViewDuration = mean(viewDurationMs)
@@ -283,11 +305,13 @@ else:
 Identifies preferred review spacing strategy.
 
 Classifications:
+
 - **spaced-repetition**: Increasing intervals, high variance (optimal for long-term retention)
 - **mass-practice**: Short intervals (<2 days), low variance (cramming pattern)
 - **mixed**: Combination of both approaches
 
 Detection Logic:
+
 ```typescript
 reviewIntervals = extract intervals from reviewHistory
 avgInterval = mean(reviewIntervals)
@@ -306,10 +330,12 @@ else:
 Analyzes how users respond to mistakes.
 
 Classifications:
+
 - **reflective**: Takes time after errors (>5 min), shows improvement (>70% post-error accuracy)
 - **persistent**: Quick return (<2 min), pushes through without pausing
 
 Detection Logic:
+
 ```typescript
 For each incorrect attempt:
   nextAttempts = get next 3 attempts
@@ -335,17 +361,17 @@ interface LearningStyleProfile {
   explanationEngagement: 'deep-dive' | 'moderate' | 'minimal';
   repetitionPattern: 'spaced-repetition' | 'mass-practice' | 'mixed';
   errorRecovery: 'reflective' | 'persistent';
-  
+
   confidence: {
-    pace: number;          // 0-1
+    pace: number; // 0-1
     explanation: number;
     repetition: number;
     errorRecovery: number;
   };
-  
-  overallStyle: string;  // e.g., "Intuitive Deep Processor"
+
+  overallStyle: string; // e.g., "Intuitive Deep Processor"
   recommendations: string[];
-  
+
   lastAnalyzed: Date;
   dataPoints: {
     questions: number;
@@ -359,40 +385,46 @@ interface LearningStyleProfile {
 
 Combines dimensions into descriptive labels:
 
-| Pace | Engagement | Example Label |
-|------|------------|---------------|
-| fast-decider | deep-dive | "Intuitive Deep Processor" |
-| fast-decider | moderate | "Intuitive Balanced Learner" |
-| fast-decider | minimal | "Intuitive Efficient Learner" |
-| thorough-analyzer | deep-dive | "Methodical Deep Processor" |
-| thorough-analyzer | moderate | "Methodical Balanced Learner" |
-| balanced | moderate | "Adaptive Balanced Learner" |
+| Pace              | Engagement | Example Label                 |
+| ----------------- | ---------- | ----------------------------- |
+| fast-decider      | deep-dive  | "Intuitive Deep Processor"    |
+| fast-decider      | moderate   | "Intuitive Balanced Learner"  |
+| fast-decider      | minimal    | "Intuitive Efficient Learner" |
+| thorough-analyzer | deep-dive  | "Methodical Deep Processor"   |
+| thorough-analyzer | moderate   | "Methodical Balanced Learner" |
+| balanced          | moderate   | "Adaptive Balanced Learner"   |
 
 ### Personalized Recommendations
 
 System generates tailored advice based on detected style:
 
 **For fast-deciders**:
+
 - "Trust your instincts - your first answer is usually correct"
 - "Challenge yourself with harder questions to maintain engagement"
 
 **For thorough-analyzers**:
+
 - "Set time limits to avoid overthinking"
 - "Review explanations after submission rather than before"
 
 **For deep-dive learners**:
+
 - "Your deep engagement with explanations is excellent - consider creating study notes"
 - "Try teaching concepts to others to reinforce understanding"
 
 **For minimal engagement**:
+
 - "Spend more time reviewing explanations, especially for incorrect answers"
 - "Deeper review can improve long-term retention"
 
 **For mass-practice users**:
+
 - "Space out your reviews more - distributed practice improves long-term retention"
 - "Use the FSRS system to schedule optimal review intervals"
 
 **For reflective error recovery**:
+
 - "Your reflective approach to errors is ideal for deep learning"
 - "Continue taking time to understand mistakes before moving on"
 
@@ -404,7 +436,7 @@ hasSufficientDataForDetection(data):
   - 20+ question attempts
   - 3+ study sessions
   - 3+ days of activity
-  
+
   Confidence levels:
   - High: 100+ attempts, 10+ sessions, 7+ days
   - Medium: 50+ attempts, 5+ sessions, 5+ days
@@ -419,23 +451,24 @@ const style = await updateUserLearningStyle(userId, data, prisma);
 
 // Stores in UserLearningProfile:
 learningInsights: [
-  "Learning Style: Intuitive Deep Processor",
-  "Pace: fast-decider (85% confidence)",
-  "Explanation: deep-dive",
-  "Repetition: spaced-repetition",
-  "Error Recovery: reflective"
-]
+  'Learning Style: Intuitive Deep Processor',
+  'Pace: fast-decider (85% confidence)',
+  'Explanation: deep-dive',
+  'Repetition: spaced-repetition',
+  'Error Recovery: reflective',
+];
 
 recommendations: [
-  "Trust your instincts - your first answer is usually correct",
-  "Your deep engagement with explanations is excellent",
+  'Trust your instincts - your first answer is usually correct',
+  'Your deep engagement with explanations is excellent',
   // ...
-]
+];
 ```
 
 ### Use Cases
 
 **1. Adaptive Question Timing**
+
 ```typescript
 if (style.pacePreference === 'thorough-analyzer') {
   increaseTimeLimit(question, 1.5); // 50% more time
@@ -443,6 +476,7 @@ if (style.pacePreference === 'thorough-analyzer') {
 ```
 
 **2. Explanation Presentation**
+
 ```typescript
 if (style.explanationEngagement === 'minimal') {
   showBriefExplanation();
@@ -454,6 +488,7 @@ if (style.explanationEngagement === 'minimal') {
 ```
 
 **3. Review Scheduling**
+
 ```typescript
 if (style.repetitionPattern === 'spaced-repetition') {
   useFSRSScheduling(); // User prefers this
@@ -463,6 +498,7 @@ if (style.repetitionPattern === 'spaced-repetition') {
 ```
 
 **4. Post-Error Handling**
+
 ```typescript
 if (!wasCorrect) {
   if (style.errorRecovery === 'reflective') {
@@ -476,21 +512,25 @@ if (!wasCorrect) {
 ```
 
 ### Benefits
+
 ✅ Personalized learning experience  
 ✅ Adaptive content delivery  
 ✅ Style-specific recommendations  
 ✅ Better engagement and retention  
-✅ Data-driven coaching insights  
+✅ Data-driven coaching insights
 
 ---
 
 ## Step 5: Goal Tracking System
 
 ### Purpose
+
 Enable users to set, track, and achieve PANCE preparation goals with automatic progress monitoring, streak tracking, and motivational features.
 
 ### Problem Statement
+
 Users had no way to:
+
 - ❌ Set concrete study goals
 - ❌ Track progress toward targets
 - ❌ Monitor daily/weekly streaks
@@ -509,46 +549,46 @@ Users had no way to:
 model UserGoal {
   id                  String   @id @default(cuid())
   userId              String
-  
+
   // Goal identification
   title               String
   description         String?
   goalType            String   // 'daily' | 'weekly' | 'exam_date' | 'mastery'
-  
+
   // Goal targets
   targetValue         Int?     // Numeric target
   targetUnit          String?  // 'questions' | 'minutes' | 'conditions' | 'accuracy'
   targetDate          DateTime?
   targetSystem        String?  // For mastery goals
   targetStability     Float?   // FSRS stability target
-  
+
   // Progress tracking
   currentValue        Int      @default(0)
   progressPercentage  Float    @default(0)
-  
+
   // Status
   status              String   @default("active")
   isRecurring         Boolean  @default(false)
-  
+
   // Milestones (JSON)
   milestones          Json?
-  
+
   // Streak tracking
   currentStreak       Int      @default(0)
   bestStreak          Int      @default(0)
   lastMetDate         DateTime?
-  
+
   // Motivation
   motivationNotes     String?
   rewardMessage       String?
-  
+
   // Relations
   User                User     @relation(...)
-  
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   completedAt         DateTime?
-  
+
   @@index([userId, status])
   @@index([userId, goalType])
   @@index([targetDate])
@@ -558,6 +598,7 @@ model UserGoal {
 ### Four Goal Types
 
 **1. Daily Goals** (Recurring)
+
 ```json
 {
   "title": "Complete 40 questions daily",
@@ -567,11 +608,13 @@ model UserGoal {
   "isRecurring": true
 }
 ```
+
 - Auto-resets at completion
 - Tracks daily streak
 - Common targets: 20, 40, 60 questions/day
 
 **2. Weekly Goals** (Recurring)
+
 ```json
 {
   "title": "Study 300 minutes this week",
@@ -581,11 +624,13 @@ model UserGoal {
   "isRecurring": true
 }
 ```
+
 - Resets weekly
 - Flexible pacing within week
 - Common targets: 200-500 minutes/week
 
 **3. Exam Date Goals** (One-time)
+
 ```json
 {
   "title": "Reach 85% accuracy by May 1",
@@ -595,11 +640,13 @@ model UserGoal {
   "targetDate": "2026-05-01T00:00:00Z"
 }
 ```
+
 - Deadline-driven
 - Shows days remaining
 - Common targets: accuracy %, questions completed
 
 **4. Mastery Goals** (System-specific)
+
 ```json
 {
   "title": "Master Cardiovascular system",
@@ -609,6 +656,7 @@ model UserGoal {
   "description": "Achieve 90% FSRS stability on all CV conditions"
 }
 ```
+
 - Tracks FSRS stability for specific system
 - Measures true mastery (not just completion)
 - Integrates with spaced repetition
@@ -620,11 +668,13 @@ model UserGoal {
 List all goals with optional filtering.
 
 Query Parameters:
+
 - `status`: Filter by status ('active', 'completed', 'paused', 'failed')
 - `goalType`: Filter by type ('daily', 'weekly', 'exam_date', 'mastery')
 - `limit`: Max results (default 50, max 100)
 
 Response:
+
 ```json
 {
   "success": true,
@@ -650,6 +700,7 @@ Response:
 Create a new goal.
 
 Request Body:
+
 ```json
 {
   "title": "Complete 40 questions daily",
@@ -664,15 +715,19 @@ Request Body:
 ```
 
 Validation:
+
 - `title` and `goalType` required
 - `goalType` must be: daily, weekly, exam_date, or mastery
 - Returns 400 if invalid
 
 Response:
+
 ```json
 {
   "success": true,
-  "goal": { /* created goal */ },
+  "goal": {
+    /* created goal */
+  },
   "message": "Goal created successfully"
 }
 ```
@@ -682,12 +737,14 @@ Response:
 Update goal progress or any field.
 
 Special Auto-Logic:
+
 - **Auto-completes**: When `currentValue >= targetValue`
 - **Resets recurring goals**: After completion if `isRecurring=true`
 - **Updates progressPercentage**: Automatically calculated
 - **Tracks streaks**: Increments `currentStreak`, updates `bestStreak`
 
 Request Body (example - update progress):
+
 ```json
 {
   "currentValue": 40
@@ -695,6 +752,7 @@ Request Body (example - update progress):
 ```
 
 Behavior:
+
 1. Calculates `progressPercentage = (40 / 40) * 100 = 100%`
 2. Sets `status = 'completed'`
 3. Sets `completedAt = now()`
@@ -704,10 +762,13 @@ Behavior:
 7. If `isRecurring=true`: Resets `currentValue=0`, `status='active'`, `completedAt=null`
 
 Response:
+
 ```json
 {
   "success": true,
-  "goal": { /* updated goal */ },
+  "goal": {
+    /* updated goal */
+  },
   "message": "Goal updated successfully"
 }
 ```
@@ -717,6 +778,7 @@ Response:
 Delete a goal (with ownership check).
 
 Response:
+
 ```json
 {
   "success": true,
@@ -727,6 +789,7 @@ Response:
 ### Smart Features
 
 **1. Automatic Progress Calculation**
+
 ```typescript
 // No need to manually calculate percentage
 // Just update currentValue, system does the rest
@@ -735,9 +798,10 @@ await updateGoal(goalId, { currentValue: 35 });
 ```
 
 **2. Auto-Completion**
+
 ```typescript
 // When target reached:
-currentValue = 40, targetValue = 40
+((currentValue = 40), (targetValue = 40));
 // System automatically:
 // - Sets status = 'completed'
 // - Records completedAt timestamp
@@ -747,6 +811,7 @@ currentValue = 40, targetValue = 40
 ```
 
 **3. Streak Tracking**
+
 ```typescript
 // Daily goal completed 7 days in a row:
 currentStreak: 7
@@ -759,6 +824,7 @@ lastMetDate: "2026-01-13"
 ```
 
 **4. Milestones** (JSON array)
+
 ```json
 {
   "milestones": [
@@ -773,6 +839,7 @@ lastMetDate: "2026-01-13"
 ### Use Cases
 
 **1. Daily Goal Dashboard**
+
 ```typescript
 // Show active daily goal with progress
 const dailyGoals = await fetch('/api/user/goals?goalType=daily&status=active');
@@ -781,6 +848,7 @@ displayGoalCard(dailyGoals[0]);
 ```
 
 **2. Exam Countdown**
+
 ```typescript
 // Show days until exam with progress
 const examGoals = await fetch('/api/user/goals?goalType=exam_date&status=active');
@@ -790,25 +858,27 @@ const daysLeft = daysBetween(now(), goal.targetDate);
 ```
 
 **3. Progress Submission After Session**
+
 ```typescript
 // User completes 20-question session
 const activeGoal = await getActiveDailyGoal(userId);
 await fetch(`/api/user/goals/${activeGoal.id}`, {
   method: 'PATCH',
   body: JSON.stringify({
-    currentValue: activeGoal.currentValue + 20
-  })
+    currentValue: activeGoal.currentValue + 20,
+  }),
 });
 // System auto-updates progress, checks for completion
 ```
 
 **4. Motivational Notifications**
+
 ```typescript
 // When goal completed:
 if (goal.status === 'completed' && goal.rewardMessage) {
   showNotification(goal.rewardMessage);
   // → "Great job! Keep the streak going! 🎉"
-  
+
   if (goal.currentStreak === goal.bestStreak) {
     showNotification(`New record! ${goal.currentStreak} day streak!`);
   }
@@ -816,11 +886,12 @@ if (goal.status === 'completed' && goal.rewardMessage) {
 ```
 
 **5. Weekly Progress Report**
+
 ```typescript
 // Generate weekly summary
 const weeklyGoals = await fetch('/api/user/goals?goalType=weekly&status=completed');
 const completedCount = weeklyGoals.length;
-const avgStreak = average(weeklyGoals.map(g => g.currentStreak));
+const avgStreak = average(weeklyGoals.map((g) => g.currentStreak));
 // → "You completed 3 weekly goals with an average 5-day streak!"
 ```
 
@@ -834,9 +905,9 @@ CREATE TABLE "UserGoal" (
   "title" TEXT NOT NULL,
   "goalType" TEXT NOT NULL,
   -- ... all fields ...
-  CONSTRAINT "UserGoal_userId_fkey" 
-    FOREIGN KEY ("userId") 
-    REFERENCES "User"("id") 
+  CONSTRAINT "UserGoal_userId_fkey"
+    FOREIGN KEY ("userId")
+    REFERENCES "User"("id")
     ON DELETE CASCADE
 );
 
@@ -846,6 +917,7 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 ```
 
 ### Benefits
+
 ✅ Concrete, trackable study goals  
 ✅ Automatic progress monitoring  
 ✅ Streak tracking for motivation  
@@ -853,7 +925,7 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 ✅ Exam deadline countdown  
 ✅ System mastery tracking  
 ✅ Custom motivation messages  
-✅ No manual calculations needed  
+✅ No manual calculations needed
 
 ---
 
@@ -862,6 +934,7 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 ### ✅ Completed
 
 **Step 3: UserProfile Enrichment**
+
 - ✅ Job created: `userProfileEnrichment.ts` (450 lines)
 - ✅ 12+ metrics calculated
 - ✅ Batch processing (50 users at a time)
@@ -869,6 +942,7 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 - ⏳ Ready for cron scheduling
 
 **Step 4: Learning Style Detection**
+
 - ✅ Library created: `learningStyleDetection.ts` (480 lines)
 - ✅ 4 dimensions analyzed
 - ✅ Confidence scoring implemented
@@ -876,6 +950,7 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 - ✅ Database integration complete
 
 **Step 5: Goal Tracking**
+
 - ✅ UserGoal table created
 - ✅ Migration applied successfully
 - ✅ API endpoints deployed (4 endpoints)
@@ -886,11 +961,13 @@ CREATE INDEX "UserGoal_targetDate_idx" ON "UserGoal"("targetDate");
 ### 🔄 Next Steps (Sprint C or Integration)
 
 **Option A: Continue to Sprint C** (Steps 6-8)
+
 1. Per-user confusion patterns
 2. Session context tracking
 3. Circadian performance storage
 
 **Option B: Client Integration** (Enable Sprint B features)
+
 1. Call enrichment job from scheduler
 2. Display learning style in profile
 3. Build goal tracking UI
@@ -920,10 +997,18 @@ import { detectLearningStyle, hasSufficientDataForDetection } from './lib/learni
 
 // Sample data
 const data = {
-  attempts: [ /* 50+ attempts */ ],
-  sessions: [ /* 5+ sessions */ ],
-  explanationViews: [ /* optional */ ],
-  reviewHistory: [ /* optional */ ],
+  attempts: [
+    /* 50+ attempts */
+  ],
+  sessions: [
+    /* 5+ sessions */
+  ],
+  explanationViews: [
+    /* optional */
+  ],
+  reviewHistory: [
+    /* optional */
+  ],
 };
 
 // Check if sufficient data
@@ -969,21 +1054,22 @@ curl https://panacea.app/api/user/goals?status=active \
 
 ### New Files (3 files, ~1,350 lines)
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `scripts/automation/jobs/userProfileEnrichment.ts` | Daily aggregation job | 450 |
-| `lib/learningStyleDetection.ts` | Learning style detection | 480 |
-| `functions/api/user/goals.ts` | Goal tracking CRUD API | 420 |
+| File                                               | Purpose                  | Lines |
+| -------------------------------------------------- | ------------------------ | ----- |
+| `scripts/automation/jobs/userProfileEnrichment.ts` | Daily aggregation job    | 450   |
+| `lib/learningStyleDetection.ts`                    | Learning style detection | 480   |
+| `functions/api/user/goals.ts`                      | Goal tracking CRUD API   | 420   |
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
+| File                   | Changes                          |
+| ---------------------- | -------------------------------- |
 | `prisma/schema.prisma` | Added UserGoal model (+50 lines) |
 
 ### Database Changes
 
 **Migration**: `add_user_goals`
+
 - ✅ Created `UserGoal` table
 - ✅ Added 3 indexes (userId+status, userId+goalType, targetDate)
 - ✅ Foreign key to User with CASCADE delete
@@ -993,17 +1079,20 @@ curl https://panacea.app/api/user/goals?status=active \
 ## Performance Considerations
 
 ### Enrichment Job
+
 - **Execution time**: ~5-10 seconds per 50 users
 - **Memory**: ~100MB for 1,000 users
 - **Schedule**: Daily at 3 AM UTC (low traffic)
 - **Optimization**: Batch processing prevents timeout
 
 ### Learning Style Detection
+
 - **Execution time**: <100ms per user
 - **Data requirements**: 20+ attempts minimum
 - **Confidence**: Increases with more data (100+ attempts ideal)
 
 ### Goal API
+
 - **Read operations**: <50ms (indexed queries)
 - **Write operations**: <100ms (includes auto-calculations)
 - **Concurrent updates**: Safe (database transactions)
@@ -1013,24 +1102,27 @@ curl https://panacea.app/api/user/goals?status=active \
 ## Success Metrics
 
 ### Before Sprint B
+
 ❌ No learning personalization  
 ❌ Empty UserLearningProfile fields  
 ❌ Generic study experience for all users  
 ❌ No goal tracking  
-❌ No understanding of learning styles  
+❌ No understanding of learning styles
 
 ### After Sprint B
+
 ✅ 12+ UserLearningProfile metrics calculated  
 ✅ Learning style detected and classified  
 ✅ Personalized recommendations generated  
 ✅ Goal tracking with auto-completion  
 ✅ Streak tracking for motivation  
 ✅ Chronotype and fatigue detection  
-✅ Adaptive session length recommendations  
+✅ Adaptive session length recommendations
 
 ---
 
 ## Related Documentation
+
 - [USER_DATA_IMPROVEMENT_PLAN.md](./USER_DATA_IMPROVEMENT_PLAN.md) - Complete plan
 - [USER_DATA_SPRINT_A_SUMMARY.md](./USER_DATA_SPRINT_A_SUMMARY.md) - Sprint A summary
 - [QUESTION_GENERATION_IMPROVEMENT_PLAN.md](./QUESTION_GENERATION_IMPROVEMENT_PLAN.md) - Question quality

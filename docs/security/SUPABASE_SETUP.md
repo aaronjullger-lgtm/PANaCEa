@@ -23,14 +23,16 @@ This guide walks you through setting up Supabase as the database and storage bac
 1. In your Supabase project, go to **Project Settings** (gear icon) > **Database**
 2. Scroll down to **Connection string** section
 3. Copy the following:
-   
+
    **For DATABASE_URL** (Transaction mode - for app runtime):
+
    ```
    Mode: Transaction
    Connection string: postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true
    ```
-   
+
    **For DIRECT_DATABASE_URL** (Session mode - for migrations):
+
    ```
    Mode: Session
    Connection string: postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
@@ -47,16 +49,18 @@ This guide walks you through setting up Supabase as the database and storage bac
 ## Step 4: Configure Environment Variables
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
 
 2. Update the following variables in `.env`:
+
    ```env
    # Database URLs from Step 2
    DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
    DIRECT_DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
-   
+
    # API Keys from Step 3
    SUPABASE_URL=https://[PROJECT-REF].supabase.co
    SUPABASE_ANON_KEY=your-anon-key-here
@@ -89,7 +93,7 @@ npx prisma migrate dev --name init_schema
    - Public: ✅ Yes (images need to be publicly accessible)
    - File size limit: 50MB
    - Allowed MIME types: `image/jpeg, image/png, image/webp`
-   
+
 4. Set up storage policies:
    - Go to **Storage** > **Policies** > **medical-images**
    - Add policy for public read access:
@@ -103,7 +107,7 @@ npx prisma migrate dev --name init_schema
      CREATE POLICY "Authenticated users can upload"
      ON storage.objects FOR INSERT
      WITH CHECK (
-       bucket_id = 'medical-images' 
+       bucket_id = 'medical-images'
        AND auth.role() = 'authenticated'
      );
      ```
@@ -134,13 +138,13 @@ If you have existing medical images:
 
 ## Environment Variables Reference
 
-| Variable | Description | Where to Find |
-|----------|-------------|---------------|
-| `DATABASE_URL` | Transaction pooler connection | Project Settings > Database > Connection String (Transaction mode) |
-| `DIRECT_DATABASE_URL` | Direct connection for migrations | Project Settings > Database > Connection String (Session mode) |
-| `SUPABASE_URL` | Your project URL | Project Settings > API > Project URL |
-| `SUPABASE_ANON_KEY` | Public anonymous key | Project Settings > API > Project API keys > anon public |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only) | Project Settings > API > Project API keys > service_role |
+| Variable                    | Description                      | Where to Find                                                      |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| `DATABASE_URL`              | Transaction pooler connection    | Project Settings > Database > Connection String (Transaction mode) |
+| `DIRECT_DATABASE_URL`       | Direct connection for migrations | Project Settings > Database > Connection String (Session mode)     |
+| `SUPABASE_URL`              | Your project URL                 | Project Settings > API > Project URL                               |
+| `SUPABASE_ANON_KEY`         | Public anonymous key             | Project Settings > API > Project API keys > anon public            |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only)   | Project Settings > API > Project API keys > service_role           |
 
 ## Security Best Practices
 
@@ -155,11 +159,13 @@ If you have existing medical images:
 ### Connection Errors
 
 **Error: "Connection string is not valid"**
+
 - Check that you replaced `[PROJECT-REF]`, `[PASSWORD]`, and `[REGION]` with actual values
 - Make sure there are no extra spaces in the connection string
 - Verify the password is correct
 
 **Error: "prepared statement already exists"**
+
 - This happens with PgBouncer in Transaction mode
 - Make sure `?pgbouncer=true` is in your `DATABASE_URL`
 - For migrations, use `DIRECT_DATABASE_URL` without pgbouncer
@@ -167,12 +173,14 @@ If you have existing medical images:
 ### Migration Errors
 
 **Error: "Migration engine error"**
+
 - Use `DIRECT_DATABASE_URL` for migrations (not the pooler)
 - Try `npx prisma db push` instead of `migrate dev` for initial setup
 
 ### Storage Upload Issues
 
 **Error: "new row violates row-level security policy"**
+
 - Check that you've created the storage policies in Step 6
 - Verify the user is authenticated when uploading
 
@@ -188,9 +196,11 @@ Once setup is complete:
 ## Support
 
 For Supabase-specific issues:
+
 - Supabase Docs: https://supabase.com/docs
 - Supabase Discord: https://discord.supabase.com
 
 For PANaCEa-specific issues:
+
 - Check the README.md
 - Review DEVELOPER_GUIDE.md

@@ -1,6 +1,6 @@
 /**
  * Admin Authentication Middleware
- * 
+ *
  * Provides role-based access control for administrative operations.
  * Integrates with Clerk authentication and adds admin role verification.
  */
@@ -38,17 +38,17 @@ export interface AdminAuditLogEntry {
 const ADMIN_PERMISSIONS = {
   admin: [
     'media:approve',
-    'media:reject', 
+    'media:reject',
     'media:view_pending',
     'content:edit',
     'content:approve',
     'users:view',
-    'reports:view'
+    'reports:view',
   ],
   superadmin: [
     'media:approve',
     'media:reject',
-    'media:view_pending', 
+    'media:view_pending',
     'media:delete',
     'content:edit',
     'content:approve',
@@ -58,8 +58,8 @@ const ADMIN_PERMISSIONS = {
     'users:delete',
     'reports:view',
     'system:configure',
-    'audit:view'
-  ]
+    'audit:view',
+  ],
 } as const;
 
 /**
@@ -83,11 +83,11 @@ export async function verifyAdminRole(
 
   try {
     const token = authHeader.substring(7);
-    
+
     // Verify token with Clerk
     const verifiedToken = await verifyToken(token, {
       secretKey,
-      clockSkewInMs: 5000
+      clockSkewInMs: 5000,
     });
 
     if (!verifiedToken.sub) {
@@ -100,7 +100,7 @@ export async function verifyAdminRole(
     // This should be replaced with actual database lookup
     const userId = verifiedToken.sub;
     const userRole = await getUserRole(userId);
-    
+
     if (!userRole || (userRole !== 'admin' && userRole !== 'superadmin')) {
       console.error(`[ADMIN_AUTH] User ${userId} does not have admin privileges`);
       return null;
@@ -117,13 +117,15 @@ export async function verifyAdminRole(
 
     // Check required permissions if specified
     if (options.requiredPermissions) {
-      const hasAllPermissions = options.requiredPermissions.every(
-        permission => permissions.includes(permission as any)
+      const hasAllPermissions = options.requiredPermissions.every((permission) =>
+        permissions.includes(permission as any)
       );
-      
+
       if (!hasAllPermissions) {
-        console.error(`[ADMIN_AUTH] User ${userId} missing required permissions:`, 
-          options.requiredPermissions);
+        console.error(
+          `[ADMIN_AUTH] User ${userId} missing required permissions:`,
+          options.requiredPermissions
+        );
         return null;
       }
     }
@@ -133,9 +135,8 @@ export async function verifyAdminRole(
       clerkId: userId,
       role: userRole,
       email: (verifiedToken as any).email as string,
-      permissions: [...permissions]
+      permissions: [...permissions],
     };
-
   } catch (error) {
     console.error('[ADMIN_AUTH] Token verification failed:', error);
     return null;
@@ -149,38 +150,38 @@ async function getUserRole(userId: string): Promise<'admin' | 'superadmin' | nul
   try {
     // Query database for user role
     const { prisma } = await import('../prisma');
-    
+
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      select: { role: true }
+      select: { role: true },
     });
-    
+
     if (!user) {
       console.error(`[ADMIN_AUTH] User not found in database: ${userId}`);
       return null;
     }
-    
+
     // Check if user has admin privileges
     if (user.role === 'admin' || user.role === 'superadmin') {
       return user.role as 'admin' | 'superadmin';
     }
-    
+
     return null;
   } catch (error) {
     console.error('[ADMIN_AUTH] Database error checking user role:', error);
-    
+
     // Fallback to environment variables if database is unavailable
     const adminUserIds = process.env.ADMIN_USER_IDS?.split(',') || [];
     const superAdminUserIds = process.env.SUPERADMIN_USER_IDS?.split(',') || [];
-    
+
     if (superAdminUserIds.includes(userId)) {
       return 'superadmin';
     }
-    
+
     if (adminUserIds.includes(userId)) {
       return 'admin';
     }
-    
+
     return null;
   }
 }
@@ -202,19 +203,20 @@ export async function logAdminAction(
     resource,
     outcome,
     metadata,
-    ipAddress: request?.headers.get('cf-connecting-ip') || 
-               request?.headers.get('x-forwarded-for') || 
-               'unknown',
+    ipAddress:
+      request?.headers.get('cf-connecting-ip') ||
+      request?.headers.get('x-forwarded-for') ||
+      'unknown',
     userAgent: request?.headers.get('user-agent') || 'unknown',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   // Audit entry logged to database and structured logger
-  
+
   try {
     // Store in database for permanent audit trail
     const { prisma } = await import('../prisma');
-    
+
     // await prisma.adminAuditLog.create({
     //   data: {
     //     action: 'admin_login',
@@ -236,11 +238,11 @@ export async function logAdminAction(
 export function requireAdmin(options: AdminMiddlewareOptions = {}) {
   return async (req: any, res: any, next: any) => {
     const secretKey = process.env.CLERK_SECRET_KEY;
-    
+
     if (!secretKey) {
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Server configuration error',
-        code: 'MISSING_SECRET_KEY'
+        code: 'MISSING_SECRET_KEY',
       });
     }
 
@@ -255,22 +257,20 @@ export function requireAdmin(options: AdminMiddlewareOptions = {}) {
           action: 'admin_access_attempt',
           resource: req.path,
           outcome: 'blocked',
-          metadata: { 
+          metadata: {
             method: req.method,
-            hasAuthHeader: !!authHeader 
+            hasAuthHeader: !!authHeader,
           },
-          ipAddress: req.headers['cf-connecting-ip'] || 
-                     req.headers['x-forwarded-for'] || 
-                     'unknown',
+          ipAddress: req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || 'unknown',
           userAgent: req.headers['user-agent'] || 'unknown',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         // Failed attempt logged to structured logger
       }
 
       return res.status(403).json({
         error: 'Admin access required',
-        code: 'INSUFFICIENT_PRIVILEGES'
+        code: 'INSUFFICIENT_PRIVILEGES',
       });
     }
 
@@ -302,15 +302,18 @@ export async function requireAdminCF(
   options: AdminMiddlewareOptions = {}
 ): Promise<AdminAuthContext | Response> {
   const secretKey = env.CLERK_SECRET_KEY;
-  
+
   if (!secretKey) {
-    return new Response(JSON.stringify({ 
-      error: 'Server configuration error',
-      code: 'MISSING_SECRET_KEY'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Server configuration error',
+        code: 'MISSING_SECRET_KEY',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   const authHeader = request.headers.get('Authorization');
@@ -324,26 +327,30 @@ export async function requireAdminCF(
         action: 'admin_access_attempt',
         resource: new URL(request.url).pathname,
         outcome: 'blocked',
-        metadata: { 
+        metadata: {
           method: request.method,
-          hasAuthHeader: !!authHeader 
+          hasAuthHeader: !!authHeader,
         },
-        ipAddress: request.headers.get('cf-connecting-ip') || 
-                   request.headers.get('x-forwarded-for') || 
-                   'unknown',
+        ipAddress:
+          request.headers.get('cf-connecting-ip') ||
+          request.headers.get('x-forwarded-for') ||
+          'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       // Failed attempt logged to structured logger
     }
 
-    return new Response(JSON.stringify({
-      error: 'Admin access required',
-      code: 'INSUFFICIENT_PRIVILEGES'
-    }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Admin access required',
+        code: 'INSUFFICIENT_PRIVILEGES',
+      }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   // Log successful admin access
@@ -364,10 +371,7 @@ export async function requireAdminCF(
 /**
  * Check if user has specific permission
  */
-export function hasPermission(
-  context: AdminAuthContext,
-  permission: string
-): boolean {
+export function hasPermission(context: AdminAuthContext, permission: string): boolean {
   return context.permissions.includes(permission);
 }
 

@@ -1,14 +1,17 @@
 # Condition Registry & Global Search Overhaul - Complete Implementation
 
 ## Overview
+
 This implementation addresses all requirements from the problem statement, providing a clean, organized, and intelligent search system with parent-child condition relationships and polymorphic search across multiple content types.
 
 ## What Was Implemented
 
 ### Phase 1: Database Schema Update ✅
+
 **File**: `prisma/schema.prisma`
 
 #### Enhanced Condition Model
+
 - **Parent-Child Relationships**: Conditions can now have parents and children
   - Example: "Acute Kidney Injury" (parent) with "Prerenal", "Intrinsic", "Postrenal" (children)
   - Example: "Polycystic Kidney Disease" (parent) with "ADPKD", "ARPKD" (children)
@@ -17,23 +20,28 @@ This implementation addresses all requirements from the problem statement, provi
 - **Content Storage**: JSON field for complete condition content
 
 #### New PhysiologyConcept Model
+
 - Stores basic science concepts (mRNA, DNA, Preload, Afterload, etc.)
 - Includes proper capitalization mappings
 - Links to related conditions and drugs
 - 24 concepts in initial registry
 
 #### Enhanced Other Models
+
 - **Drug**: Added `displayName` and `aliases` fields
 - **Treatment**: Added `displayName` and `aliases` fields
 - **SpecialTest**: Added `displayName` and `aliases` fields
 
 ### Phase 2: Smart Search Bar Logic ✅
-**Files**: 
+
+**Files**:
+
 - `src/lib/unifiedSearch.ts` (complete rewrite)
 - `src/types/search.ts` (new)
 - `components/CommandPalette.tsx` (enhanced)
 
 #### Features
+
 1. **Polymorphic Search**: Search across 5 content types
    - Conditions (1111 items)
    - Drugs (74 items)
@@ -64,9 +72,11 @@ This implementation addresses all requirements from the problem statement, provi
    - Smart scoring with condition boost (1.5x)
 
 ### Phase 3: Unified Condition Page Layout ✅
+
 **File**: `pages/conditions/[id].tsx`
 
 #### New Design Features
+
 1. **Clean Header**
    - Large, bold title with clean name
    - Category badges (system + subcategory)
@@ -96,11 +106,14 @@ This implementation addresses all requirements from the problem statement, provi
    - Responsive design
 
 ### Phase 4: Data Backfill & Migration ✅
-**Files**: 
+
+**Files**:
+
 - `scripts/backfillConditionData.ts` (new)
 - `scripts/testRegistryChanges.ts` (new - validation)
 
 #### Backfill Script Features
+
 1. **Scans Database**: Identifies empty/incomplete conditions
 2. **AI Content Generation**: Uses Gemini API to generate:
    - Pathophysiology (2-3 paragraphs)
@@ -124,7 +137,9 @@ This implementation addresses all requirements from the problem statement, provi
 ### Registry Enhancements ✅
 
 #### Created New Registry
+
 **File**: `physiologyRegistry.ts`
+
 - 24 physiology concepts across categories:
   - Cardiovascular (Preload, Afterload, Frank-Starling, etc.)
   - Respiratory (V/Q Mismatch, Dead Space, etc.)
@@ -133,9 +148,11 @@ This implementation addresses all requirements from the problem statement, provi
   - Endocrine (Feedback loops, HPA axis, etc.)
 
 #### Updated Existing Registries
+
 **Files**: `conditionRegistry.ts`, `drugRegistry.ts`, `specialTestRegistry.ts`, `treatmentRegistry.ts`
 
 All registry interfaces now include:
+
 ```typescript
 {
   name: string;
@@ -148,27 +165,34 @@ All registry interfaces now include:
 ## Problem Statement Solutions
 
 ### 1. Search Clutter - Port-Wine Stain ✅
+
 **Before**: "Port-Wine Stain (Capillary Malformation)"
 **After**: "Port-Wine Stain"
+
 - Aliases: ["Capillary Malformation", "Nevus Flammeus"]
 - Searching "Capillary Malformation" finds it
 - Results show: "Port-Wine Stain (matches 'Capillary Malformation')"
 
 ### 2. Over-Segmentation - AKI ✅
-**Before**: 
+
+**Before**:
+
 - "AKI (General)" - separate page
 - "AKI (Shock States)" - separate page
 - "Prerenal AKI" - separate page
 - etc.
 
 **After**:
+
 - Single "Acute Kidney Injury" condition
 - Tabs for: General, Prerenal, Intrinsic, Postrenal
 - All info on one page with easy navigation
 
 ### 3. Missing Scope - Only Conditions ✅
+
 **Before**: Search only found conditions
 **After**: Search finds 1294 items across:
+
 - ✅ Conditions (1111)
 - ✅ Drugs (74)
 - ✅ Special Tests (37)
@@ -176,22 +200,27 @@ All registry interfaces now include:
 - ✅ Treatments (48)
 
 ### 4. Capitalization Issues ✅
+
 **Before**: "Mrna"
 **After**: "mRNA" with automatic fix
+
 - Applied to: mRNA, DNA, HIV, AKI, CKD, COPD, GERD, NSAIDs, etc.
 
 ### 5. Duplicate Entries ✅
+
 **Before**: Multiple AKI entries, multiple PKD entries
 **After**: De-duplicated with parent-child structure
 
 ## Testing Results ✅
 
 Run the test script:
+
 ```bash
 npx tsx scripts/testRegistryChanges.ts
 ```
 
 Results:
+
 ```
 ✅ Condition Registry: 1111 conditions
 ✅ Drug Registry: 74 drugs
@@ -208,16 +237,19 @@ Results:
 ## Manual Steps to Complete
 
 ### Step 1: Generate Prisma Client
+
 ```bash
 npm run db:generate
 ```
 
 ### Step 2: Create Database Migration
+
 ```bash
 npx prisma migrate dev --name add_parent_child_aliases
 ```
 
 This will:
+
 - Add `parentId` column to Condition table
 - Add `displayName` column to Condition, Drug, Treatment, SpecialTest
 - Add `aliases` array column to all tables
@@ -225,11 +257,13 @@ This will:
 - Create PhysiologyConcept table
 
 ### Step 3: Run Backfill Script
+
 ```bash
 tsx scripts/backfillConditionData.ts
 ```
 
 This will:
+
 - Scan existing conditions
 - Generate missing content via Gemini API
 - Update display names and aliases
@@ -239,11 +273,13 @@ This will:
 **Note**: Requires `GEMINI_API_KEY` in environment
 
 ### Step 4: Test the Application
+
 ```bash
 npm run dev:all
 ```
 
 Then test:
+
 1. Search for "Port-Wine Stain" - should show clean name
 2. Search for "Capillary Malformation" - should find Port-Wine Stain
 3. Search for "AKI" - should show consolidated entry
@@ -256,6 +292,7 @@ Then test:
 ## Architecture Notes
 
 ### Search Flow
+
 ```
 User types query
   ↓
@@ -275,6 +312,7 @@ Return to UI
 ```
 
 ### Parent-Child Resolution
+
 ```
 Database Query
   ↓
@@ -289,6 +327,7 @@ Else:
 ```
 
 ### Content Loading
+
 ```
 Page Load
   ↓
@@ -306,6 +345,7 @@ Render sections
 ## Extending the System
 
 ### Adding a New Content Type
+
 1. Create registry file (e.g., `labTestRegistry.ts`)
 2. Add interface with `displayName` and `aliases`
 3. Create Prisma model
@@ -314,6 +354,7 @@ Render sections
 6. Update grouped results mapping
 
 ### Adding New Condition
+
 1. Add to appropriate registry section in `conditionRegistry.ts`
 2. Include `displayName` if different from `condition`
 3. Add `aliases` array
@@ -321,6 +362,7 @@ Render sections
 5. Run backfill script to generate content
 
 ### Adding Physiology Concept
+
 1. Add to appropriate category in `physiologyRegistry.ts`
 2. Use proper capitalization in `displayName`
 3. Add common aliases
@@ -330,12 +372,14 @@ Render sections
 ## Files Modified
 
 ### New Files (5)
+
 1. `physiologyRegistry.ts` - Physiology concepts registry
 2. `src/types/search.ts` - TypeScript types for search
 3. `scripts/backfillConditionData.ts` - Data backfill script
 4. `scripts/testRegistryChanges.ts` - Validation tests
 
 ### Modified Files (8)
+
 1. `prisma/schema.prisma` - Enhanced schema
 2. `conditionRegistry.ts` - Fixed entries, added structure
 3. `drugRegistry.ts` - Added displayName/aliases
@@ -348,18 +392,21 @@ Render sections
 ## Performance Considerations
 
 ### Search Performance
+
 - In-memory search (no database queries)
 - Optimized scoring algorithm
 - Lazy evaluation of results
 - Limit to top 30 results by default
 
 ### Page Load Performance
+
 - Lazy loading of condition content
 - Collapsible sections render on-demand
 - Tabs don't reload entire page
 - Animations use GPU acceleration
 
 ### Database Performance
+
 - Indexed columns: name, displayName, parentId, system
 - Array columns (aliases) use GIN index (PostgreSQL)
 - Content stored as JSONB for flexible querying
@@ -374,6 +421,7 @@ Render sections
 ## Future Enhancements
 
 Potential improvements for future iterations:
+
 1. **Fuzzy Search**: Levenshtein distance for typo tolerance
 2. **Search Analytics**: Track popular searches
 3. **Autocomplete**: Real-time suggestions as user types
@@ -385,6 +433,7 @@ Potential improvements for future iterations:
 ## Support
 
 For issues or questions:
+
 1. Run validation test: `npx tsx scripts/testRegistryChanges.ts`
 2. Check database connection: `npx prisma db pull`
 3. Verify Gemini API: `echo $GEMINI_API_KEY`

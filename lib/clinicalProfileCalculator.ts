@@ -38,7 +38,7 @@ function mean(values: number[]): number {
 function standardDeviation(values: number[]): number {
   if (!values.length) return 0;
   const avg = mean(values);
-  const variance = mean(values.map(v => Math.pow(v - avg, 2)));
+  const variance = mean(values.map((v) => Math.pow(v - avg, 2)));
   return Math.sqrt(variance);
 }
 
@@ -57,9 +57,10 @@ export function updateSystemStats(
   const correctAfter = correctBefore + (isCorrect ? 1 : 0);
 
   const time = typeof timeSpentMs === 'number' && timeSpentMs > 0 ? timeSpentMs : null;
-  const avgTimeMs = time !== null
-    ? ((existing.avgTimeMs || 0) * totalBefore + time) / totalAfter
-    : existing.avgTimeMs || 0;
+  const avgTimeMs =
+    time !== null
+      ? ((existing.avgTimeMs || 0) * totalBefore + time) / totalAfter
+      : existing.avgTimeMs || 0;
 
   next[system] = {
     correct: correctAfter,
@@ -84,11 +85,17 @@ export function calculateProfile(userStats: UserStatisticsShape) {
   const globalStdDev = standardDeviation(timingValues);
 
   const rushedSystems = systemEntries
-    .filter(([, stat]) => typeof stat.avgTimeMs === 'number' && stat.avgTimeMs < globalAvgTime - globalStdDev)
+    .filter(
+      ([, stat]) =>
+        typeof stat.avgTimeMs === 'number' && stat.avgTimeMs < globalAvgTime - globalStdDev
+    )
     .map(([system]) => system);
 
   const overthinkingSystems = systemEntries
-    .filter(([, stat]) => typeof stat.avgTimeMs === 'number' && stat.avgTimeMs > globalAvgTime + globalStdDev)
+    .filter(
+      ([, stat]) =>
+        typeof stat.avgTimeMs === 'number' && stat.avgTimeMs > globalAvgTime + globalStdDev
+    )
     .map(([system]) => system);
 
   const sortedByAccuracy = systemEntries

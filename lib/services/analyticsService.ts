@@ -1,6 +1,6 @@
 /**
  * Analytics Service for Peer Benchmarking
- * 
+ *
  * Provides functions to calculate user performance metrics and compare against cohort benchmarks.
  * Uses efficient Prisma aggregations to avoid loading all rows into memory.
  */
@@ -40,13 +40,11 @@ export interface PeerComparison {
 /**
  * Calculates a user's accuracy profile across all systems.
  * Uses groupBy to avoid fetching all individual attempts.
- * 
+ *
  * @param userId - The user's ID
  * @returns Array of accuracy metrics by system
  */
-export async function getUserAccuracyProfile(
-  userId: string
-): Promise<UserAccuracyProfile[]> {
+export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
   const groupedData = await prisma.questionAttempt.groupBy({
     by: ['system', 'wasCorrect'],
@@ -57,20 +55,21 @@ export async function getUserAccuracyProfile(
     _count: {
       id: true,
     },
-  });
+  }) as Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }>;
 
   // Organize data by system
   const systemMap = new Map<string, { correct: number; total: number }>();
 
   for (const row of groupedData) {
-    if (!row.system) continue;
+    const system = row.system;
+    if (!system) continue;
 
-    const existing = systemMap.get(row.system) || { correct: 0, total: 0 };
+    const existing = systemMap.get(system) || { correct: 0, total: 0 };
     existing.total += row._count.id;
     if (row.wasCorrect) {
       existing.correct += row._count.id;
     }
-    systemMap.set(row.system, existing);
+    systemMap.set(system, existing);
   }
 
   // Convert to output format
@@ -94,13 +93,11 @@ export async function getUserAccuracyProfile(
 /**
  * Calculates cohort-wide benchmarks for each system.
  * Filters out users with <5 attempts per system for statistical relevance.
- * 
+ *
  * @param cohortId - The cohort ID, or 'global' for all users
  * @returns Array of benchmark metrics by system
  */
-export async function getCohortBenchmarks(
-  cohortId: string
-): Promise<CohortBenchmark[]> {
+export async function getCohortBenchmarks(cohortId: string): Promise<CohortBenchmark[]> {
   let targetUserIds: string[] | undefined;
 
   // Determine which users to include
@@ -126,7 +123,7 @@ export async function getCohortBenchmarks(
     _count: {
       id: true,
     },
-  });
+  }) as Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }>;
 
   // Calculate per-user, per-system accuracy
   interface UserSystemStat {
@@ -140,20 +137,22 @@ export async function getCohortBenchmarks(
   const userSystemMap = new Map<string, Map<string, { correct: number; total: number }>>();
 
   for (const row of userSystemData) {
-    if (!row.system) continue;
+    const system = row.system;
+    const userId = row.userId;
+    if (!system) continue;
 
-    let systemMap = userSystemMap.get(row.userId);
+    let systemMap = userSystemMap.get(userId);
     if (!systemMap) {
       systemMap = new Map();
-      userSystemMap.set(row.userId, systemMap);
+      userSystemMap.set(userId, systemMap);
     }
 
-    const existing = systemMap.get(row.system) || { correct: 0, total: 0 };
+    const existing = systemMap.get(system) || { correct: 0, total: 0 };
     existing.total += row._count.id;
     if (row.wasCorrect) {
       existing.correct += row._count.id;
     }
-    systemMap.set(row.system, existing);
+    systemMap.set(system, existing);
   }
 
   // Convert to flat array and filter by minimum attempts
@@ -213,7 +212,7 @@ export async function getCohortBenchmarks(
  * Generates a comprehensive peer comparison for a user.
  * Determines the appropriate cohort (provided, user's first study group, or global).
  * Calculates the user's percentile within the cohort for each system.
- * 
+ *
  * @param userId - The user's ID
  * @param cohortId - Optional cohort ID. If not provided, uses user's first cohort or 'global'
  * @returns Array of peer comparison metrics by system
@@ -265,7 +264,7 @@ export async function generatePeerComparison(
     _count: {
       id: true,
     },
-  });
+  }) as Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }>;
 
   // Build cohort accuracy distribution by system
   const cohortSystemMap = new Map<string, Map<string, { correct: number; total: number }>>();

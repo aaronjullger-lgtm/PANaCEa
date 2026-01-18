@@ -14,7 +14,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -25,7 +28,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -91,13 +94,10 @@ async function main() {
 
   // Find procedures with gaps in these specific fields
   const allProcedures = await prisma.procedure.findMany();
-  const proceduresWithGaps = allProcedures.filter(p => {
-    return !p.displayName ||
-           !p.type ||
-           !p.preparation ||
-           !p.positioning ||
-           !p.anesthesia ||
-           !p.duration;
+  const proceduresWithGaps = allProcedures.filter((p) => {
+    return (
+      !p.displayName || !p.type || !p.preparation || !p.positioning || !p.anesthesia || !p.duration
+    );
   });
 
   console.log(`Found ${proceduresWithGaps.length} procedures with gaps\n`);
@@ -106,7 +106,9 @@ async function main() {
   let failed = 0;
 
   for (const procedure of proceduresWithGaps) {
-    console.log(`Processing [${filled + failed + 1}/${proceduresWithGaps.length}]: ${procedure.name}`);
+    console.log(
+      `Processing [${filled + failed + 1}/${proceduresWithGaps.length}]: ${procedure.name}`
+    );
 
     const content = await generateContent(procedure);
     if (!content) {
@@ -117,7 +119,7 @@ async function main() {
 
     // Only update fields that are missing
     const updateData: any = { updatedAt: new Date() };
-    
+
     if (!procedure.displayName && content.displayName) {
       updateData.displayName = content.displayName;
     }
@@ -142,7 +144,11 @@ async function main() {
         where: { id: procedure.id },
         data: updateData,
       });
-      console.log(`  ✅ Updated: ${Object.keys(updateData).filter(k => k !== 'updatedAt').join(', ')}`);
+      console.log(
+        `  ✅ Updated: ${Object.keys(updateData)
+          .filter((k) => k !== 'updatedAt')
+          .join(', ')}`
+      );
       filled++;
     } catch (error) {
       console.error(`  ❌ DB error:`, error);

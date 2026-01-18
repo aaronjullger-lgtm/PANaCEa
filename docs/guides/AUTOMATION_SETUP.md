@@ -9,6 +9,7 @@ The automated tasks are **already set up** and will run automatically once you d
 ### Daily Automation (3 AM)
 
 **Automatically runs:**
+
 1. Creates today's Grand Rounds challenge
 2. Cleans up old OSCE chat history (7+ days)
 3. Cleans up old background jobs (30+ days)
@@ -20,14 +21,17 @@ The automated tasks are **already set up** and will run automatically once you d
 **Setup for deployment:**
 
 #### Option 1: Cloudflare Pages (Recommended)
+
 The automation will NOT run automatically on Cloudflare Pages (static site). You need to set up a scheduled worker or use Option 2.
 
 **To add scheduled automation:**
+
 1. Create a Cloudflare Worker with cron trigger
 2. Set schedule: `0 3 * * *` (3 AM daily)
 3. Call your automation endpoint or run tasks directly
 
 **Example Worker:**
+
 ```typescript
 export default {
   async scheduled(event, env, ctx) {
@@ -35,24 +39,27 @@ export default {
     const response = await fetch('https://your-domain.com/api/automation/daily', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${env.AUTOMATION_SECRET}`
-      }
+        Authorization: `Bearer ${env.AUTOMATION_SECRET}`,
+      },
     });
-    
+
     console.log('Daily automation completed:', await response.json());
-  }
+  },
 };
 ```
 
 #### Option 2: Node.js Backend (Alternative)
+
 If you deploy `server.ts` to a Node.js platform (Railway, Render, Fly.io):
 
 1. **Install cron package:**
+
 ```bash
 npm install node-cron
 ```
 
 2. **Add to server.ts:**
+
 ```typescript
 import cron from 'node-cron';
 
@@ -71,6 +78,7 @@ cron.schedule('0 3 * * *', async () => {
 3. **Deploy** - The cron job will run automatically
 
 #### Option 3: GitHub Actions (Simple Alternative)
+
 Create `.github/workflows/daily-automation.yml`:
 
 ```yaml
@@ -78,23 +86,23 @@ name: Daily Automation
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # 3 AM daily
-  workflow_dispatch:  # Manual trigger
+    - cron: '0 3 * * *' # 3 AM daily
+  workflow_dispatch: # Manual trigger
 
 jobs:
   run-automation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-          
+
       - name: Install dependencies
         run: npm install
-        
+
       - name: Run daily tasks
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -129,10 +137,8 @@ cat logs/daily/daily-$(date +%Y-%m-%d).json
 1. **Grand Rounds**: No challenge exists yet
    - First run will create today's challenge
    - Users can complete immediately
-   
 2. **OSCE Chat**: No old data to clean
    - Cleanup runs but finds nothing (normal)
-   
 3. **Performance Metrics**: May show no data
    - Will populate as users study
 
@@ -152,6 +158,7 @@ cat logs/daily/daily-$(date +%Y-%m-%d).json
 ```
 
 ### Success indicators:
+
 - ✅ Log file created in `logs/daily/`
 - ✅ All tasks show "completed" status
 - ✅ Grand Rounds challenge exists for today
@@ -160,18 +167,23 @@ cat logs/daily/daily-$(date +%Y-%m-%d).json
 ## Troubleshooting
 
 ### Automation not running
+
 **Check:**
+
 1. Cron is configured (see setup options above)
 2. Database connection works
 3. Environment variables are set
 
 ### Tasks failing
+
 **Check logs:**
+
 ```bash
 cat logs/daily/daily-*.json | grep "failed"
 ```
 
 **Common issues:**
+
 - Database connection timeout (check `DATABASE_URL`)
 - Gemini API rate limit (check API key)
 - Missing environment variables
@@ -186,6 +198,7 @@ cat logs/daily/daily-*.json | grep "failed"
 4. Use environment secrets for sensitive data
 
 This ensures:
+
 - ✅ Frontend is fast (Cloudflare CDN)
 - ✅ Backend handles database (Node.js with Prisma)
 - ✅ Automation runs reliably (GitHub Actions)

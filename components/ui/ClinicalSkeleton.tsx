@@ -12,9 +12,7 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
   lines = 5,
   variant = 'card',
 }) => {
-  const heightClass = variant === 'card'
-    ? 'min-h-[260px] sm:min-h-[320px]'
-    : 'min-h-[120px]';
+  const heightClass = variant === 'card' ? 'min-h-[260px] sm:min-h-[320px]' : 'min-h-[120px]';
 
   const mergedClassName = [
     'relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700',
@@ -50,4 +48,5 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
   );
 };
 
+export { ClinicalSkeleton };
 export default ClinicalSkeleton;

@@ -25,7 +25,9 @@ interface UserStatsState {
 }
 
 interface UseUserStatsResult extends UserStatsState {
-  setPerformanceData: (data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => void;
+  setPerformanceData: (
+    data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])
+  ) => void;
   setMissedQuestions: (data: Question[] | ((prev: Question[]) => Question[])) => void;
   setFlaggedQuestions: (data: Question[] | ((prev: Question[]) => Question[])) => void;
   syncToCloud: () => Promise<void>;
@@ -52,8 +54,8 @@ function separateSavedQuestions(savedQuestions: SavedQuestionWithType[]): {
   missed: Question[];
   flagged: Question[];
 } {
-  const missed = savedQuestions.filter(q => q.type === 'missed');
-  const flagged = savedQuestions.filter(q => q.type === 'flagged');
+  const missed = savedQuestions.filter((q) => q.type === 'missed');
+  const flagged = savedQuestions.filter((q) => q.type === 'flagged');
   return { missed, flagged };
 }
 
@@ -130,13 +132,13 @@ export function useUserStats(): UseUserStatsResult {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           userId: user.clerkId,
           performanceRecords: performanceData,
           srsItems,
-          savedQuestions: [...missedQuestions, ...flaggedQuestions].map(q => ({
+          savedQuestions: [...missedQuestions, ...flaggedQuestions].map((q) => ({
             ...q,
             type: missedQuestions.includes(q) ? 'missed' : 'flagged',
             // Ensure updatedAt is present for conflict resolution
@@ -146,7 +148,9 @@ export function useUserStats(): UseUserStatsResult {
       });
 
       if (response.status === 401) {
-        throw new Error('Authentication failed: Your session may have expired. Please sign in again.');
+        throw new Error(
+          'Authentication failed: Your session may have expired. Please sign in again.'
+        );
       }
 
       if (!response.ok) {
@@ -155,25 +159,25 @@ export function useUserStats(): UseUserStatsResult {
       }
 
       const result = await response.json();
-      
+
       // Process server response and update local state with merged data
       if (result.success && result.data) {
         // Update local state with merged data from server
         if (result.data.performanceRecords) {
           setPerformanceDataState(result.data.performanceRecords);
         }
-        
+
         if (result.data.srsItems) {
           loadSRSItemsFromCloud(result.data.srsItems);
         }
-        
+
         if (result.data.savedQuestions) {
           const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }
       }
-      
+
       setLastSyncTime(Date.now());
       console.log('Sync to cloud successful:', result);
     } catch (error) {
@@ -205,7 +209,7 @@ export function useUserStats(): UseUserStatsResult {
       const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -214,17 +218,17 @@ export function useUserStats(): UseUserStatsResult {
       }
 
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         // Merge cloud data with local data (keep most recent)
         if (result.data.performanceRecords) {
           setPerformanceDataState(result.data.performanceRecords);
         }
-        
+
         if (result.data.srsItems) {
           loadSRSItemsFromCloud(result.data.srsItems);
         }
-        
+
         if (result.data.savedQuestions) {
           const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
           setMissedQuestionsState(missed);
@@ -245,7 +249,7 @@ export function useUserStats(): UseUserStatsResult {
   // Initialize debounced sync function
   useEffect(() => {
     debouncedSyncRef.current = createDebouncedFunction(syncToCloud, 2000);
-    
+
     // Cleanup on unmount
     return () => {
       if (debouncedSyncRef.current) {
@@ -297,27 +301,36 @@ export function useUserStats(): UseUserStatsResult {
   }, []);
 
   // Wrapper setters that also trigger cloud sync with proper debouncing
-  const setPerformanceData = useCallback((data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
-    setPerformanceDataState(data);
-    // Trigger debounced sync if signed in
-    if (isSignedIn && debouncedSyncRef.current) {
-      debouncedSyncRef.current.debounced();
-    }
-  }, [isSignedIn]);
+  const setPerformanceData = useCallback(
+    (data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
+      setPerformanceDataState(data);
+      // Trigger debounced sync if signed in
+      if (isSignedIn && debouncedSyncRef.current) {
+        debouncedSyncRef.current.debounced();
+      }
+    },
+    [isSignedIn]
+  );
 
-  const setMissedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
-    setMissedQuestionsState(data);
-    if (isSignedIn && debouncedSyncRef.current) {
-      debouncedSyncRef.current.debounced();
-    }
-  }, [isSignedIn]);
+  const setMissedQuestions = useCallback(
+    (data: Question[] | ((prev: Question[]) => Question[])) => {
+      setMissedQuestionsState(data);
+      if (isSignedIn && debouncedSyncRef.current) {
+        debouncedSyncRef.current.debounced();
+      }
+    },
+    [isSignedIn]
+  );
 
-  const setFlaggedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
-    setFlaggedQuestionsState(data);
-    if (isSignedIn && debouncedSyncRef.current) {
-      debouncedSyncRef.current.debounced();
-    }
-  }, [isSignedIn]);
+  const setFlaggedQuestions = useCallback(
+    (data: Question[] | ((prev: Question[]) => Question[])) => {
+      setFlaggedQuestionsState(data);
+      if (isSignedIn && debouncedSyncRef.current) {
+        debouncedSyncRef.current.debounced();
+      }
+    },
+    [isSignedIn]
+  );
 
   return {
     performanceData,

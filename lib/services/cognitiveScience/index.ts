@@ -1,39 +1,39 @@
 /**
  * Cognitive Science Learning Engine
- * 
+ *
  * A comprehensive suite of research-backed learning optimization tools.
  * This module brings together proven cognitive science research to maximize
  * learning efficiency, reduce study time, and improve exam scores.
- * 
+ *
  * ## Research Foundation
- * 
+ *
  * ### Desirable Difficulties (Bjork, 1994, 2011)
  * Conditions that appear to slow learning but actually enhance retention:
  * - Spacing Effect: 200% better retention than massed practice
  * - Interleaving: 43% better transfer to new problems
  * - Testing Effect: 50-150% better retention than re-reading
  * - Generation Effect: 20-40% better retention than passive reading
- * 
+ *
  * ### Cognitive Load Theory (Sweller, 1988, 2011)
  * Managing the three types of cognitive load:
  * - Intrinsic Load: Inherent complexity (manage with chunking)
  * - Extraneous Load: Poor design (eliminate ruthlessly)
  * - Germane Load: Schema construction (optimize this!)
- * 
+ *
  * ### Circadian Optimization (Wright, Schmidt, Walker)
  * Timing study for peak performance:
  * - Chronotype matching: 15-30% efficiency gain
  * - Sleep consolidation: Critical for memory formation
  * - Fatigue management: Prevents overtraining
- * 
+ *
  * ## Expected Benefits
- * 
+ *
  * Studies suggest proper application of these principles can:
  * - Reduce total study time by 30-50%
  * - Improve long-term retention by 40-60%
  * - Increase transfer to new situations by 30-40%
  * - Reduce exam anxiety through better preparation
- * 
+ *
  * @module lib/services/cognitiveScience
  */
 
@@ -110,32 +110,32 @@ export {
 
 /**
  * Quick Start Guide
- * 
+ *
  * @example
  * ```typescript
- * import { 
- *   determineChronotype, 
+ * import {
+ *   determineChronotype,
  *   assessSleepImpact,
  *   createOptimizedStudyPlan,
  *   calculateTotalLoad,
- *   generateLoadBasedRecommendations 
+ *   generateLoadBasedRecommendations
  * } from '@/lib/services/cognitiveScience';
- * 
+ *
  * // 1. Profile the learner
  * const chronotype = determineChronotype(7, 23, 'morning', false);
  * const sleepImpact = assessSleepImpact(7, 'good', 1);
- * 
+ *
  * // 2. Create optimized study plan
  * const plan = createOptimizedStudyPlan(
  *   ['Cardiology', 'Pulmonology', 'GI'],
  *   60, // minutes
  *   learnerProfile
  * );
- * 
+ *
  * // 3. Monitor cognitive load during session
  * const load = calculateTotalLoad(35, 15, 40, sessionMinutes, lastBreak);
  * const recommendations = generateLoadBasedRecommendations(load);
- * 
+ *
  * // 4. Adjust in real-time based on performance
  * if (load.isOverloaded) {
  *   // Suggest break

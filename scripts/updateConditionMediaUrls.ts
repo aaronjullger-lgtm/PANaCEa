@@ -19,10 +19,7 @@ async function main() {
   const assets = await prisma.mediaAsset.findMany({
     where: {
       conditionId: { not: null },
-      OR: [
-        { originalUrl: { not: null } },
-        { thumbnailUrl: { not: null } },
-      ],
+      OR: [{ originalUrl: { not: null } }, { thumbnailUrl: { not: null } }],
     },
     select: {
       id: true,

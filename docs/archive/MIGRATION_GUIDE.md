@@ -36,6 +36,7 @@ The following data is migrated to your cloud account:
 ### Step 2: Automatic Upload
 
 Once signed in:
+
 - Your local data is automatically uploaded to the cloud
 - You'll see a "Syncing..." indicator
 - When complete, you'll see "Synced" with a cloud icon
@@ -43,6 +44,7 @@ Once signed in:
 ### Step 3: Verify
 
 To verify your data was migrated:
+
 1. Check your Analytics Dashboard
 2. Your performance history should show all previous sessions
 3. Missed/Flagged questions should appear in their respective sections
@@ -112,6 +114,7 @@ If you want to create a manual backup before migrating:
 5. Save in a safe location
 
 To restore from manual backup:
+
 1. Open DevTools
 2. Go to Application > Local Storage
 3. Create or update the keys with your saved values
@@ -155,6 +158,7 @@ If you encounter issues during migration:
 ## Privacy Note
 
 We take your data privacy seriously:
+
 - ✅ Data is encrypted in transit and at rest
 - ✅ No personal study information is shared
 - ✅ You can export your data anytime

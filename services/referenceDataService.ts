@@ -1,9 +1,9 @@
 /**
  * Reference Data Service - Frontend API Client
- * 
+ *
  * Provides access to all reference tables for study features:
  * - Anatomy Structures
- * - Procedures  
+ * - Procedures
  * - History Components (HPI elements)
  * - Differential Diagnoses
  * - Physiology Concepts
@@ -167,17 +167,14 @@ export interface PracticeGuideline {
 // API HELPER
 // ============================================
 
-async function fetchWithAuth<T>(
-  url: string,
-  getToken: () => Promise<string | null>
-): Promise<T> {
+async function fetchWithAuth<T>(url: string, getToken: () => Promise<string | null>): Promise<T> {
   const token = await getToken();
-  
+
   const response = await fetch(url, {
     headers: {
-      'Authorization': token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json'
-    }
+      Authorization: token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -203,20 +200,20 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
     // ANATOMY
     // ========================================
     anatomy: {
-      getAll: (system?: string) => 
+      getAll: (system?: string) =>
         fetchWithAuth<AnatomyStructure[]>(
           `/api/reference/anatomy${system ? `?system=${encodeURIComponent(system)}` : ''}`,
           getToken
         ),
-      
+
       getById: (id: string) =>
         fetchWithAuth<AnatomyStructure>(`/api/reference/anatomy/${id}`, getToken),
-      
+
       search: (query: string) =>
         fetchWithAuth<AnatomyStructure[]>(
           `/api/reference/anatomy?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -233,15 +230,15 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           getToken
         );
       },
-      
+
       getById: (id: string) =>
         fetchWithAuth<Procedure>(`/api/reference/procedures/${id}`, getToken),
-      
+
       search: (query: string) =>
         fetchWithAuth<Procedure[]>(
           `/api/reference/procedures?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -253,15 +250,15 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/history-components${type ? `?type=${encodeURIComponent(type)}` : ''}`,
           getToken
         ),
-      
+
       getById: (id: string) =>
         fetchWithAuth<HistoryComponent>(`/api/reference/history-components/${id}`, getToken),
-      
+
       search: (query: string) =>
         fetchWithAuth<HistoryComponent[]>(
           `/api/reference/history-components?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -273,21 +270,21 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/differentials${category ? `?category=${encodeURIComponent(category)}` : ''}`,
           getToken
         ),
-      
+
       getById: (id: string) =>
         fetchWithAuth<DifferentialDiagnosis>(`/api/reference/differentials/${id}`, getToken),
-      
+
       getByComplaint: (complaint: string) =>
         fetchWithAuth<DifferentialDiagnosis[]>(
           `/api/reference/differentials?presentingComplaint=${encodeURIComponent(complaint)}`,
           getToken
         ),
-      
+
       search: (query: string) =>
         fetchWithAuth<DifferentialDiagnosis[]>(
           `/api/reference/differentials?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -299,12 +296,12 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/physiology${category ? `?category=${encodeURIComponent(category)}` : ''}`,
           getToken
         ),
-      
+
       search: (query: string) =>
         fetchWithAuth<PhysiologyConcept[]>(
           `/api/reference/physiology?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -316,12 +313,12 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/findings${system ? `?system=${encodeURIComponent(system)}` : ''}`,
           getToken
         ),
-      
+
       search: (query: string) =>
         fetchWithAuth<PhysicalExamFinding[]>(
           `/api/reference/findings?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -333,12 +330,12 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/labs${category ? `?category=${encodeURIComponent(category)}` : ''}`,
           getToken
         ),
-      
+
       search: (query: string) =>
         fetchWithAuth<LabTest[]>(
           `/api/reference/labs?query=${encodeURIComponent(query)}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -349,7 +346,7 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
         fetchWithAuth<ECGPattern[]>(
           `/api/reference/ecg${category ? `?category=${encodeURIComponent(category)}` : ''}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
@@ -360,16 +357,15 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
         fetchWithAuth<PracticeGuideline[]>(
           `/api/reference/guidelines${category ? `?category=${encodeURIComponent(category)}` : ''}`,
           getToken
-        )
+        ),
     },
 
     // ========================================
     // VITALS
     // ========================================
     vitals: {
-      getAll: () =>
-        fetchWithAuth<VitalSignRange[]>('/api/reference/vitals', getToken)
-    }
+      getAll: () => fetchWithAuth<VitalSignRange[]>('/api/reference/vitals', getToken),
+    },
   };
 }
 
@@ -380,7 +376,7 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
 /**
  * React hook to access reference data service
  * Automatically handles authentication
- * 
+ *
  * @example
  * const refService = useReferenceService();
  * const anatomy = await refService.anatomy.getAll('CV');

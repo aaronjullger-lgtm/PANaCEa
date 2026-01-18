@@ -1,6 +1,6 @@
 /**
  * useDifferentialDrill - Hook for Differential Diagnosis drill mode
- * 
+ *
  * Fetches DDx data from the database and generates questions.
  * Practice identifying differentials for presenting complaints.
  */
@@ -58,11 +58,21 @@ export interface UseDDxDrillReturn {
  * Generate a question from DDx data
  */
 function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | null {
-  const questionTypes: Array<DDxQuestion['questionType']> = ['mustNotMiss', 'mostCommon', 'distinguishing', 'redFlag'];
-  const availableTypes = questionTypes.filter(type => {
+  const questionTypes: Array<DDxQuestion['questionType']> = [
+    'mustNotMiss',
+    'mostCommon',
+    'distinguishing',
+    'redFlag',
+  ];
+  const availableTypes = questionTypes.filter((type) => {
     if (type === 'mustNotMiss' && ddx.mustNotMiss?.length > 0) return true;
     if (type === 'mostCommon' && ddx.mostCommon?.length > 0) return true;
-    if (type === 'distinguishing' && ddx.distinguishingFeatures && Object.keys(ddx.distinguishingFeatures).length > 0) return true;
+    if (
+      type === 'distinguishing' &&
+      ddx.distinguishingFeatures &&
+      Object.keys(ddx.distinguishingFeatures).length > 0
+    )
+      return true;
     if (type === 'redFlag' && ddx.redFlags?.length > 0) return true;
     return false;
   });
@@ -70,13 +80,13 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
   if (availableTypes.length === 0) return null;
 
   const questionType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-  
+
   switch (questionType) {
     case 'mustNotMiss': {
       const correctAnswer = ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)];
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
       const options = shuffleArray([correctAnswer, ...distractors]);
-      
+
       return {
         id: `${ddx.id}-mnm-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
@@ -85,7 +95,7 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         correctIndex: options.indexOf(correctAnswer),
         explanation: `${correctAnswer} is a must-not-miss diagnosis for ${ddx.presentingComplaint} due to its potentially life-threatening nature.`,
         category: ddx.category,
-        questionType: 'mustNotMiss'
+        questionType: 'mustNotMiss',
       };
     }
 
@@ -93,7 +103,7 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
       const correctAnswer = ddx.mostCommon![Math.floor(Math.random() * ddx.mostCommon!.length)];
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
       const options = shuffleArray([correctAnswer, ...distractors]);
-      
+
       return {
         id: `${ddx.id}-mc-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
@@ -102,27 +112,27 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         correctIndex: options.indexOf(correctAnswer),
         explanation: `${correctAnswer} is among the most common causes of ${ddx.presentingComplaint}.`,
         category: ddx.category,
-        questionType: 'mostCommon'
+        questionType: 'mostCommon',
       };
     }
 
     case 'distinguishing': {
       const pairs = Object.keys(ddx.distinguishingFeatures!);
       if (pairs.length === 0) return null;
-      
+
       const pairKey = pairs[Math.floor(Math.random() * pairs.length)];
       const features = ddx.distinguishingFeatures![pairKey];
       const correctFeature = features[Math.floor(Math.random() * features.length)];
-      
+
       // Get distractors from other conditions' features
       const distractorFeatures = allDDx
-        .filter(d => d.id !== ddx.id && d.distinguishingFeatures)
-        .flatMap(d => Object.values(d.distinguishingFeatures!).flat())
-        .filter(f => f !== correctFeature)
+        .filter((d) => d.id !== ddx.id && d.distinguishingFeatures)
+        .flatMap((d) => Object.values(d.distinguishingFeatures!).flat())
+        .filter((f) => f !== correctFeature)
         .slice(0, 3);
-      
+
       const options = shuffleArray([correctFeature, ...distractorFeatures.slice(0, 3)]);
-      
+
       return {
         id: `${ddx.id}-dist-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
@@ -131,22 +141,22 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         correctIndex: options.indexOf(correctFeature),
         explanation: `${correctFeature} is a distinguishing feature for ${pairKey}.`,
         category: ddx.category,
-        questionType: 'distinguishing'
+        questionType: 'distinguishing',
       };
     }
 
     case 'redFlag': {
       const correctAnswer = ddx.redFlags![Math.floor(Math.random() * ddx.redFlags!.length)];
-      
+
       // Get distractors from reassuring features or other non-red-flag items
       const distractors = allDDx
-        .filter(d => d.redFlags)
-        .flatMap(d => d.redFlags || [])
-        .filter(f => f !== correctAnswer && !ddx.redFlags?.includes(f))
+        .filter((d) => d.redFlags)
+        .flatMap((d) => d.redFlags || [])
+        .filter((f) => f !== correctAnswer && !ddx.redFlags?.includes(f))
         .slice(0, 3);
-      
+
       const options = shuffleArray([correctAnswer, ...distractors]);
-      
+
       return {
         id: `${ddx.id}-rf-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
@@ -155,7 +165,7 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         correctIndex: options.indexOf(correctAnswer),
         explanation: `${correctAnswer} is a red flag for ${ddx.presentingComplaint} that warrants urgent evaluation.`,
         category: ddx.category,
-        questionType: 'redFlag'
+        questionType: 'redFlag',
       };
     }
 
@@ -167,25 +177,31 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
 /**
  * Get distractor diagnoses that are plausible but incorrect
  */
-function getDistractorDiagnoses(correct: string, currentDDx: DDxData, allDDx: DDxData[], count: number): string[] {
+function getDistractorDiagnoses(
+  correct: string,
+  currentDDx: DDxData,
+  allDDx: DDxData[],
+  count: number
+): string[] {
   const distractors: string[] = [];
-  
+
   // First, try to get distractors from the same presenting complaint's differential list
-  const sameComplaintDiagnoses = currentDDx.differentialList
-    .filter(d => d !== correct && !currentDDx.mustNotMiss?.includes(d));
-  
+  const sameComplaintDiagnoses = currentDDx.differentialList.filter(
+    (d) => d !== correct && !currentDDx.mustNotMiss?.includes(d)
+  );
+
   distractors.push(...shuffleArray(sameComplaintDiagnoses).slice(0, count));
-  
+
   // If we need more, get from other DDx entries
   if (distractors.length < count) {
     const otherDiagnoses = allDDx
-      .filter(d => d.id !== currentDDx.id)
-      .flatMap(d => d.differentialList)
-      .filter(d => d !== correct && !distractors.includes(d));
-    
+      .filter((d) => d.id !== currentDDx.id)
+      .flatMap((d) => d.differentialList)
+      .filter((d) => d !== correct && !distractors.includes(d));
+
     distractors.push(...shuffleArray(otherDiagnoses).slice(0, count - distractors.length));
   }
-  
+
   return distractors.slice(0, count);
 }
 
@@ -222,107 +238,113 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
   const currentQuestion = questions[currentQuestionIndex] || null;
 
   // Fetch DDx data from API
-  const fetchDDxData = useCallback(async (category?: string) => {
-    setStatus('loading');
-    setError(null);
+  const fetchDDxData = useCallback(
+    async (category?: string) => {
+      setStatus('loading');
+      setError(null);
 
-    try {
-      const token = await getToken();
-      const url = category 
-        ? `/api/reference/differentials?category=${encodeURIComponent(category)}`
-        : '/api/reference/differentials';
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
+      try {
+        const token = await getToken();
+        const url = category
+          ? `/api/reference/differentials?category=${encodeURIComponent(category)}`
+          : '/api/reference/differentials';
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch differentials: ${response.statusText}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch differentials: ${response.statusText}`);
-      }
 
-      const result = await response.json();
-      const data: DDxData[] = result.data || result;
-      
-      if (!data || data.length === 0) {
-        throw new Error('No differential diagnosis data available.');
-      }
+        const result = await response.json();
+        const data: DDxData[] = result.data || result;
 
-      setDdxData(data);
-      
-      // Extract unique categories
-      const categories: string[] = [...new Set(data.map((d: DDxData) => d.category))];
-      setAvailableCategories(categories);
-
-      // Generate questions from DDx data
-      const generatedQuestions: DDxQuestion[] = [];
-      const shuffledDDx = shuffleArray(data);
-      
-      for (const ddx of shuffledDDx.slice(0, 15)) {
-        const question = generateDDxQuestion(ddx, data);
-        if (question) {
-          generatedQuestions.push(question);
+        if (!data || data.length === 0) {
+          throw new Error('No differential diagnosis data available.');
         }
-      }
 
-      if (generatedQuestions.length === 0) {
-        throw new Error('Could not generate questions from available data.');
-      }
+        setDdxData(data);
 
-      setQuestions(shuffleArray(generatedQuestions));
-      setCurrentQuestionIndex(0);
-      setStatus('playing');
-      sessionStartRef.current = Date.now();
-      sessionDataRef.current = {
-        questionsAttempted: 0,
-        correctAnswers: 0,
-        bestStreak: 0,
-      };
-    } catch (err) {
-      console.error('DDx drill error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load differential diagnosis data');
-      setStatus('error');
-    }
-  }, [getToken]);
+        // Extract unique categories
+        const categories: string[] = [...new Set(data.map((d: DDxData) => d.category))];
+        setAvailableCategories(categories);
 
-  const submitAnswer = useCallback((index: number) => {
-    if (status !== 'playing' || !currentQuestion || userAnswerIndex !== null) return;
+        // Generate questions from DDx data
+        const generatedQuestions: DDxQuestion[] = [];
+        const shuffledDDx = shuffleArray(data);
 
-    setUserAnswerIndex(index);
-    const correct = index === currentQuestion.correctIndex;
-    setIsCorrect(correct);
-    setTotalAttempts(prev => prev + 1);
-    sessionDataRef.current.questionsAttempted++;
-
-    if (correct) {
-      setScore(prev => prev + 1);
-      setStreak(prev => {
-        const newStreak = prev + 1;
-        if (newStreak > sessionDataRef.current.bestStreak) {
-          sessionDataRef.current.bestStreak = newStreak;
+        for (const ddx of shuffledDDx.slice(0, 15)) {
+          const question = generateDDxQuestion(ddx, data);
+          if (question) {
+            generatedQuestions.push(question);
+          }
         }
-        return newStreak;
-      });
-      sessionDataRef.current.correctAnswers++;
-    } else {
-      setStreak(0);
-    }
 
-    setStatus('feedback');
-  }, [status, currentQuestion, userAnswerIndex]);
+        if (generatedQuestions.length === 0) {
+          throw new Error('Could not generate questions from available data.');
+        }
+
+        setQuestions(shuffleArray(generatedQuestions));
+        setCurrentQuestionIndex(0);
+        setStatus('playing');
+        sessionStartRef.current = Date.now();
+        sessionDataRef.current = {
+          questionsAttempted: 0,
+          correctAnswers: 0,
+          bestStreak: 0,
+        };
+      } catch (err) {
+        console.error('DDx drill error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load differential diagnosis data');
+        setStatus('error');
+      }
+    },
+    [getToken]
+  );
+
+  const submitAnswer = useCallback(
+    (index: number) => {
+      if (status !== 'playing' || !currentQuestion || userAnswerIndex !== null) return;
+
+      setUserAnswerIndex(index);
+      const correct = index === currentQuestion.correctIndex;
+      setIsCorrect(correct);
+      setTotalAttempts((prev) => prev + 1);
+      sessionDataRef.current.questionsAttempted++;
+
+      if (correct) {
+        setScore((prev) => prev + 1);
+        setStreak((prev) => {
+          const newStreak = prev + 1;
+          if (newStreak > sessionDataRef.current.bestStreak) {
+            sessionDataRef.current.bestStreak = newStreak;
+          }
+          return newStreak;
+        });
+        sessionDataRef.current.correctAnswers++;
+      } else {
+        setStreak(0);
+      }
+
+      setStatus('feedback');
+    },
+    [status, currentQuestion, userAnswerIndex]
+  );
 
   const nextQuestion = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
     } else {
       // End of session
       setStatus('complete');
-      
+
       // Record session stats
       const duration = Math.floor((Date.now() - sessionStartRef.current) / 1000);
       const now = new Date().toISOString();
@@ -332,11 +354,16 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         endTime: now,
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
-        accuracy: sessionDataRef.current.questionsAttempted > 0 
-          ? Math.round((sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100)
-          : 0,
+        accuracy:
+          sessionDataRef.current.questionsAttempted > 0
+            ? Math.round(
+                (sessionDataRef.current.correctAnswers /
+                  sessionDataRef.current.questionsAttempted) *
+                  100
+              )
+            : 0,
         timeSpent: duration,
-        bestStreak: sessionDataRef.current.bestStreak
+        bestStreak: sessionDataRef.current.bestStreak,
       });
     }
   }, [currentQuestionIndex, questions.length]);
@@ -357,10 +384,13 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
     };
   }, []);
 
-  const startSession = useCallback((category?: string) => {
-    reset();
-    fetchDDxData(category);
-  }, [reset, fetchDDxData]);
+  const startSession = useCallback(
+    (category?: string) => {
+      reset();
+      fetchDDxData(category);
+    },
+    [reset, fetchDDxData]
+  );
 
   const exitToMenu = useCallback(() => {
     reset();

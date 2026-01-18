@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, 
+import {
+  BarChart3,
   AlertTriangle,
   TrendingDown,
   TrendingUp,
@@ -9,7 +9,7 @@ import {
   Flag,
   Clock,
   Target,
-  Zap
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
@@ -71,14 +71,14 @@ export const QuestionPerformanceDashboard: React.FC = () => {
       const params = new URLSearchParams({
         sortBy,
         order,
-        limit: '100'
+        limit: '100',
       });
 
       const response = await fetch(`/api/questions/performance?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -142,7 +142,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Analyzed</span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Analyzed
+              </span>
             </div>
             <p className="text-2xl font-bold text-slate-800 dark:text-white">
               {summary.totalQuestionsAnalyzed}
@@ -151,7 +153,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Avg Accuracy</span>
+              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                Avg Accuracy
+              </span>
             </div>
             <p className="text-2xl font-bold text-blue-800 dark:text-blue-300">
               {summary.avgAccuracy}%
@@ -160,7 +164,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
             <div className="flex items-center gap-2 mb-1">
               <TrendingDown className="w-4 h-4 text-red-600" />
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">Low Accuracy</span>
+              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                Low Accuracy
+              </span>
             </div>
             <p className="text-2xl font-bold text-red-800 dark:text-red-300">
               {summary.lowAccuracyCount}
@@ -169,7 +175,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
             <div className="flex items-center gap-2 mb-1">
               <Flag className="w-4 h-4 text-orange-600" />
-              <span className="text-xs font-medium text-orange-600 dark:text-orange-400">Flagged</span>
+              <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                Flagged
+              </span>
             </div>
             <p className="text-2xl font-bold text-orange-800 dark:text-orange-300">
               {summary.highFlagCount}
@@ -178,7 +186,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="w-4 h-4 text-yellow-600" />
-              <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">Needs Review</span>
+              <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                Needs Review
+              </span>
             </div>
             <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-300">
               {summary.needsReviewCount}
@@ -261,10 +271,15 @@ export const QuestionPerformanceDashboard: React.FC = () => {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {questions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                    <td
+                      colSpan={7}
+                      className="px-4 py-12 text-center text-slate-500 dark:text-slate-400"
+                    >
                       No question performance data available yet.
                       <br />
-                      <span className="text-sm">Questions need at least 5 attempts to appear here.</span>
+                      <span className="text-sm">
+                        Questions need at least 5 attempts to appear here.
+                      </span>
                     </td>
                   </tr>
                 ) : (
@@ -290,7 +305,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${getQualityBg(q.qualityScore)} ${getQualityColor(q.qualityScore)}`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${getQualityBg(q.qualityScore)} ${getQualityColor(q.qualityScore)}`}
+                        >
                           <Zap className="w-3 h-3" />
                           {q.qualityScore}
                         </span>

@@ -1,6 +1,6 @@
 /**
  * Strict Curated Image Processor for PA Students
- * 
+ *
  * Processes images from curated_images folder with strict quality control:
  * 1. AI verification that image is PANCE-relevant for PA student diagnosis
  * 2. Quality assessment (clinical photos, X-rays, ECGs, CT - NOT endoscopy, surgery, etc.)
@@ -41,26 +41,26 @@ const CURATED_PATH = '/Users/aaronullger/PANaCEa/DATA/DATA/curated_images';
 
 // PANCE-relevant image types that PA students need to recognize
 const ACCEPTABLE_IMAGE_TYPES = [
-  'clinical_photo',      // Skin lesions, physical findings
-  'dermoscopy',          // Dermatoscope images
-  'xray',                // Chest, extremity, abdominal X-rays
-  'ct',                  // CT scans (head, chest, abdomen)
-  'ecg',                 // 12-lead ECGs
-  'mri',                 // MRI scans
-  'ultrasound',          // Point-of-care ultrasound
-  'fundoscopy',          // Eye fundus photos
+  'clinical_photo', // Skin lesions, physical findings
+  'dermoscopy', // Dermatoscope images
+  'xray', // Chest, extremity, abdominal X-rays
+  'ct', // CT scans (head, chest, abdomen)
+  'ecg', // 12-lead ECGs
+  'mri', // MRI scans
+  'ultrasound', // Point-of-care ultrasound
+  'fundoscopy', // Eye fundus photos
 ];
 
 // Image types that are NOT useful for PA student visual diagnosis
 const REJECT_IMAGE_TYPES = [
-  'endoscopy',           // Requires specialist interpretation
-  'surgical',            // Intraoperative images
-  'pathology_slide',     // Microscopy - not PA scope
-  'diagram',             // Educational diagrams give away answer
-  'flowchart',           // Not visual diagnosis
-  'text_heavy',          // Text-based images
-  'stock_photo',         // Generic medical stock photos
-  'illustration',        // Medical illustrations
+  'endoscopy', // Requires specialist interpretation
+  'surgical', // Intraoperative images
+  'pathology_slide', // Microscopy - not PA scope
+  'diagram', // Educational diagrams give away answer
+  'flowchart', // Not visual diagnosis
+  'text_heavy', // Text-based images
+  'stock_photo', // Generic medical stock photos
+  'illustration', // Medical illustrations
 ];
 
 interface AIAnalysis {
@@ -81,7 +81,10 @@ interface AIAnalysis {
 /**
  * Analyze image with Gemini 2.5 Flash for strict PA-student relevance
  */
-async function analyzeImageStrict(imagePath: string, filenameHint: string): Promise<AIAnalysis | null> {
+async function analyzeImageStrict(
+  imagePath: string,
+  filenameHint: string
+): Promise<AIAnalysis | null> {
   if (!GEMINI_API_KEY) {
     console.log('  ⚠️ No API key - skipping AI analysis');
     return null;
@@ -137,17 +140,16 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: base64 } }
-            ]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }],
+            },
+          ],
           generationConfig: {
             temperature: 0.1,
             maxOutputTokens: 2048,
-          }
-        })
+          },
+        }),
       }
     );
 
@@ -160,7 +162,7 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
       }
       if (response.status === 429) {
         console.log('  ⚠️ Rate limited, waiting 30s...');
-        await new Promise(r => setTimeout(r, 30000));
+        await new Promise((r) => setTimeout(r, 30000));
         return analyzeImageStrict(imagePath, filenameHint); // Retry
       }
       console.log(`  ⚠️ API error ${response.status}: ${errorText.substring(0, 100)}`);
@@ -169,7 +171,7 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
+
     // Parse JSON from response - handle markdown and incomplete JSON
     let cleaned = text;
     // Remove markdown code blocks
@@ -177,16 +179,16 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
       cleaned = cleaned.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
     }
     cleaned = cleaned.trim();
-    
+
     // Find JSON object
     const match = cleaned.match(/\{[\s\S]*\}/);
-    
+
     if (!match) {
       // Try to extract key fields even from incomplete response
       const acceptMatch = text.match(/"accept"\s*:\s*(true|false)/i);
       const typeMatch = text.match(/"imageType"\s*:\s*"([^"]+)"/i);
       const condMatch = text.match(/"detectedCondition"\s*:\s*"([^"]+)"/i);
-      
+
       if (acceptMatch && typeMatch) {
         return {
           accept: acceptMatch[1].toLowerCase() === 'true',
@@ -198,7 +200,7 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
           rejectReason: acceptMatch[1].toLowerCase() === 'false' ? 'AI rejected' : undefined,
           visualKeys: [],
           needsCrop: false,
-          explanation: ''
+          explanation: '',
         };
       }
       console.log(`  ⚠️ No JSON in response`);
@@ -236,9 +238,8 @@ Only accept: high or medium panceRelevance AND qualityScore >= 6`;
       suggestedConditionId: parsed.suggestedConditionId,
       needsCrop: parsed.needsCrop || false,
       cropRegion: parsed.cropRegion,
-      explanation: parsed.explanation || ''
+      explanation: parsed.explanation || '',
     };
-
   } catch (error) {
     console.log(`  ⚠️ Analysis error: ${error}`);
     return null;
@@ -252,7 +253,7 @@ async function findConditionId(analysis: AIAnalysis, filenameHint: string): Prom
   // Use AI suggestion if provided
   if (analysis.suggestedConditionId) {
     const exists = await prisma.condition.findUnique({
-      where: { id: analysis.suggestedConditionId }
+      where: { id: analysis.suggestedConditionId },
     });
     if (exists) return analysis.suggestedConditionId;
   }
@@ -263,9 +264,9 @@ async function findConditionId(analysis: AIAnalysis, filenameHint: string): Prom
     where: {
       OR: [
         { name: { contains: searchTerm, mode: 'insensitive' } },
-        { aliases: { has: searchTerm } }
-      ]
-    }
+        { aliases: { has: searchTerm } },
+      ],
+    },
   });
 
   if (condition) return condition.id;
@@ -276,9 +277,9 @@ async function findConditionId(analysis: AIAnalysis, filenameHint: string): Prom
     where: {
       OR: [
         { name: { contains: filenameClean, mode: 'insensitive' } },
-        { id: { contains: filenameClean.toLowerCase().replace(/ /g, '_'), mode: 'insensitive' } }
-      ]
-    }
+        { id: { contains: filenameClean.toLowerCase().replace(/ /g, '_'), mode: 'insensitive' } },
+      ],
+    },
   });
 
   return byFilename?.id || null;
@@ -296,37 +297,45 @@ async function saveImage(
     const filename = path.basename(imagePath);
     const ext = path.extname(imagePath).toLowerCase();
     const id = crypto.randomUUID();
-    
+
     // Generate unique storage path
     const timestamp = Date.now();
-    const folder = analysis.imageType === 'ecg' ? 'ecg' : 
-                   analysis.imageType === 'xray' || analysis.imageType === 'ct' ? 'radiology' :
-                   analysis.imageType === 'clinical_photo' || analysis.imageType === 'dermoscopy' ? 'derm' : 'other';
+    const folder =
+      analysis.imageType === 'ecg'
+        ? 'ecg'
+        : analysis.imageType === 'xray' || analysis.imageType === 'ct'
+          ? 'radiology'
+          : analysis.imageType === 'clinical_photo' || analysis.imageType === 'dermoscopy'
+            ? 'derm'
+            : 'other';
     const storagePath = `${folder}/${timestamp}-${filename}`;
-    
+
     // Read file and upload to Supabase Storage
     const fileBuffer = fs.readFileSync(imagePath);
-    const mimeType = ext === '.png' ? 'image/png' : 
-                     ext === '.gif' ? 'image/gif' : 
-                     ext === '.webp' ? 'image/webp' : 'image/jpeg';
-    
+    const mimeType =
+      ext === '.png'
+        ? 'image/png'
+        : ext === '.gif'
+          ? 'image/gif'
+          : ext === '.webp'
+            ? 'image/webp'
+            : 'image/jpeg';
+
     const { error: uploadError } = await supabase.storage
       .from(MEDIA_BUCKET)
       .upload(storagePath, fileBuffer, {
         contentType: mimeType,
-        upsert: true
+        upsert: true,
       });
-    
+
     if (uploadError) {
       console.log(`  ⚠️ Upload error: ${uploadError.message}`);
       return false;
     }
-    
+
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from(MEDIA_BUCKET)
-      .getPublicUrl(storagePath);
-    
+    const { data: urlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(storagePath);
+
     const publicUrl = urlData.publicUrl;
 
     await prisma.mediaAsset.create({
@@ -347,17 +356,22 @@ async function saveImage(
           panceRelevance: analysis.panreRelevance,
           visualKeys: analysis.visualKeys,
           needsCrop: analysis.needsCrop,
-          cropRegion: analysis.cropRegion
+          cropRegion: analysis.cropRegion,
         },
         status: 'approved',
         approvalStatus: 'approved',
-        modality: analysis.imageType === 'ecg' ? 'ecg' : 
-                  analysis.imageType === 'xray' || analysis.imageType === 'ct' ? 'radiology' :
-                  analysis.imageType === 'clinical_photo' || analysis.imageType === 'dermoscopy' ? 'derm' : null,
+        modality:
+          analysis.imageType === 'ecg'
+            ? 'ecg'
+            : analysis.imageType === 'xray' || analysis.imageType === 'ct'
+              ? 'radiology'
+              : analysis.imageType === 'clinical_photo' || analysis.imageType === 'dermoscopy'
+                ? 'derm'
+                : null,
         explanation: analysis.explanation,
         difficulty: 'medium', // All questions are PANCE-level
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return true;
@@ -412,31 +426,34 @@ async function main() {
     noCondition: 0,
     errors: 0,
     skipped: 0,
-    byReason: new Map<string, number>()
+    byReason: new Map<string, number>(),
   };
 
   // Get existing filenames from database for duplicate checking
   const existingImages = await prisma.mediaAsset.findMany({
-    select: { filename: true }
+    select: { filename: true },
   });
-  const existingFilenames = new Set(existingImages.map(img => img.filename));
+  const existingFilenames = new Set(existingImages.map((img) => img.filename));
   console.log(`📊 Found ${existingFilenames.size} existing images in database\n`);
 
   for (let i = 0; i < images.length; i++) {
     const imagePath = images[i];
     const filename = path.basename(imagePath);
     const folder = path.basename(path.dirname(imagePath));
-    
+
     // Check for duplicates
     if (existingFilenames.has(filename)) {
-      process.stdout.write(`[${i + 1}/${images.length}] ${folder}/${filename.substring(0, 35)}... `);
+      process.stdout.write(
+        `[${i + 1}/${images.length}] ${folder}/${filename.substring(0, 35)}... `
+      );
       console.log('⏭️ Already exists');
       stats.skipped++;
       continue;
     }
-    
+
     // Extract condition hint from filename
-    const filenameHint = filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '')
+    const filenameHint = filename
+      .replace(/\.(jpg|jpeg|png|gif|webp)$/i, '')
       .replace(/_\d+$/, '')
       .replace(/_/g, ' ');
 
@@ -444,11 +461,11 @@ async function main() {
 
     // Analyze with AI
     const analysis = await analyzeImageStrict(imagePath, filenameHint);
-    
+
     if (!analysis) {
       console.log('⚠️ No analysis');
       stats.errors++;
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
       continue;
     }
 
@@ -460,30 +477,32 @@ async function main() {
       console.log(`❌ ${reason}`);
       stats.rejected++;
       stats.byReason.set(reason, (stats.byReason.get(reason) || 0) + 1);
-      await new Promise(r => setTimeout(r, 2000)); // Rate limit
+      await new Promise((r) => setTimeout(r, 2000)); // Rate limit
       continue;
     }
 
     // Find matching condition
     const conditionId = await findConditionId(analysis, filenameHint);
-    
+
     if (!conditionId) {
       console.log(`⚠️ No condition match for: ${analysis.detectedCondition}`);
       stats.noCondition++;
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
       continue;
     }
 
     // Save to database
     if (await saveImage(imagePath, conditionId, analysis)) {
-      console.log(`✅ ${analysis.detectedCondition} (${analysis.panreRelevance}, Q${analysis.qualityScore})`);
+      console.log(
+        `✅ ${analysis.detectedCondition} (${analysis.panreRelevance}, Q${analysis.qualityScore})`
+      );
       stats.accepted++;
     } else {
       stats.errors++;
     }
 
     // Rate limit - 2 seconds between API calls
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   // Summary
@@ -493,11 +512,13 @@ async function main() {
   console.log(`Total images:     ${stats.total}`);
   console.log(`Skipped (dups):   ${stats.skipped}`);
   console.log(`Analyzed:         ${stats.analyzed}`);
-  console.log(`Accepted:         ${stats.accepted} (${stats.analyzed > 0 ? ((stats.accepted / stats.analyzed) * 100).toFixed(1) : 0}%)`);
+  console.log(
+    `Accepted:         ${stats.accepted} (${stats.analyzed > 0 ? ((stats.accepted / stats.analyzed) * 100).toFixed(1) : 0}%)`
+  );
   console.log(`Rejected:         ${stats.rejected}`);
   console.log(`No condition:     ${stats.noCondition}`);
   console.log(`Errors:           ${stats.errors}`);
-  
+
   if (stats.byReason.size > 0) {
     console.log('\nRejection reasons:');
     const sorted = [...stats.byReason.entries()].sort((a, b) => b[1] - a[1]);

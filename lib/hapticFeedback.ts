@@ -24,7 +24,7 @@ export function triggerHapticFeedback(type: HapticFeedbackType = 'selection'): b
   }
 
   const pattern = HAPTIC_PATTERNS[type];
-  
+
   try {
     return navigator.vibrate(pattern);
   } catch (error) {

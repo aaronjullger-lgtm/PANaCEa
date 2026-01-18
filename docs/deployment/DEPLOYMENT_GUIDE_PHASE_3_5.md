@@ -28,6 +28,7 @@ pg_dump -U your_user -d panacea_db > backup_$(date +%Y%m%d_%H%M%S).sql
 ### 1.2 Review Schema Changes
 
 The migration adds:
+
 - 8 new tables (MedicalContent, ContentVersion, ContentAuditLog, etc.)
 - 2 table modifications (User, MediaAsset)
 - 30+ indexes for performance
@@ -188,13 +189,13 @@ Update user roles in database:
 
 ```sql
 -- Update a user to superadmin
-UPDATE "User" 
-SET role = 'superadmin' 
+UPDATE "User"
+SET role = 'superadmin'
 WHERE email = 'admin@example.com';
 
 -- Update a user to approver
-UPDATE "User" 
-SET role = 'approver' 
+UPDATE "User"
+SET role = 'approver'
 WHERE email = 'doctor@example.com';
 ```
 
@@ -320,6 +321,7 @@ npm run build
 ### Issue: Migration Fails
 
 **Solution:**
+
 1. Check PostgreSQL version (need 12+)
 2. Verify database connection
 3. Check for conflicting tables
@@ -328,6 +330,7 @@ npm run build
 ### Issue: Background Worker Not Processing Jobs
 
 **Solution:**
+
 1. Check PM2 logs: `pm2 logs panacea-worker`
 2. Verify DATABASE_URL is set
 3. Check job queue table for pending jobs
@@ -336,6 +339,7 @@ npm run build
 ### Issue: Audit Logs Not Recording
 
 **Solution:**
+
 1. Verify API endpoints are using audit service
 2. Check user roles and permissions
 3. Verify database connection
@@ -344,6 +348,7 @@ npm run build
 ### Issue: Offline Sync Not Working
 
 **Solution:**
+
 1. Check browser console for errors
 2. Verify localStorage is enabled
 3. Check network connectivity
@@ -355,7 +360,7 @@ npm run build
 
 ```sql
 -- Create additional indexes if needed
-CREATE INDEX idx_content_search ON "MedicalContent" 
+CREATE INDEX idx_content_search ON "MedicalContent"
 USING gin(to_tsvector('english', condition));
 
 -- Analyze tables
@@ -427,11 +432,13 @@ pm2 start npm --name "panacea-worker-2" -- run worker
 ## Support & Resources
 
 ### Documentation
+
 - `PHASE_3_4_5_IMPLEMENTATION.md` - Feature documentation
 - `ADMIN_CMS_IMPLEMENTATION.md` - CMS guide
 - `prisma/schema.prisma` - Database schema
 
 ### Commands Reference
+
 ```bash
 npm run dev           # Frontend dev server
 npm run dev:server    # Backend dev server
@@ -443,7 +450,9 @@ npm run build         # Build production
 ```
 
 ### Contact
+
 For issues or questions:
+
 1. Check logs: `pm2 logs`
 2. Review documentation
 3. Check GitHub issues

@@ -4,16 +4,20 @@
  * directly from the database (no AI generation).
  */
 
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { Prisma } from '@prisma/client/edge';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken, type Env } from '../_shared/auth';
+import { z } from 'zod';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
-
-export const onRequestOptions = handleCorsOptions;
+// Schema - no query params required
+const DailyTriadSchema = z.object({
+  query: z.object({}).optional(),
+});
 
 interface DailyTriadResponse {
   conditionId: string;
@@ -51,42 +55,31 @@ function extractPearl(clinicalPearls: unknown): string | null {
   return null;
 }
 
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
 
-  try {
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  DailyTriadSchema,
+  async ({ env, auth }) => {
+    const log = createEndpointLogger('/api/dashboard/daily-triad', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
 
     try {
+      if (!env.DATABASE_URL) {
+        log.error('Database not configured');
+        return { status: 500, error: 'Database not configured' };
+      }
+
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
       const where = {
         status: 'published',
-        OR: [
-          { gold_standard_dx: { not: null } },
-          { clinical_pearls: { not: Prisma.DbNull } },
-        ],
+        OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }],
       } as const;
 
       const total = await prisma.medicalContent.count({ where });
       if (total === 0) {
-        return new Response(JSON.stringify({ error: 'No high-yield content available' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        log.warn('No high-yield content available');
+        return { status: 404, error: 'No high-yield content available' };
       }
 
       const randomSkip = Math.max(0, Math.floor(Math.random() * total));
@@ -110,10 +103,8 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       });
 
       if (!record) {
-        return new Response(JSON.stringify({ error: 'No triad found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        log.warn('No triad found after random selection');
+        return { status: 404, error: 'No triad found' };
       }
 
       const goldStandard = record.gold_standard_dx?.trim();
@@ -121,10 +112,8 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       const highlight = goldStandard || pearl;
 
       if (!highlight) {
-        return new Response(JSON.stringify({ error: 'No triad content found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        log.warn('No triad content found for record', { conditionId: record.conditionId });
+        return { status: 404, error: 'No triad content found' };
       }
 
       const payload: DailyTriadResponse = {
@@ -140,24 +129,21 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         source: 'database',
       };
 
-      return new Response(JSON.stringify({ success: true, data: payload }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=600',
-        },
+      log.info('Daily triad fetched', {
+        conditionId: payload.conditionId,
+        type: payload.type,
       });
+
+      return {
+        success: true,
+        data: payload,
+        _cacheControl: 'public, max-age=600',
+      };
+    } catch (error) {
+      log.error('Error fetching daily triad', error);
+      return { status: 500, error: 'Failed to fetch daily triad' };
     } finally {
-      await prisma.$disconnect();
+      await safePrismaDisconnect(prisma);
     }
-  } catch (error) {
-    console.error('[DailyTriad] Error fetching triad', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch daily triad', message: (error as Error)?.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
   }
-}
+);

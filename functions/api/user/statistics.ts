@@ -1,36 +1,33 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { applyAttemptToUserStatistics, updateTimingAggregates } from '../../../lib/services/userStatisticsService';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import {
+  applyAttemptToUserStatistics,
+  updateTimingAggregates,
+} from '../../../lib/services/userStatisticsService';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const UserStatisticsUpdateSchema = z.object({
+  body: z.object({
+    questionId: z.string().optional(),
+    isCorrect: z.boolean(),
+    timeSpentMs: z.number().int().positive().optional(),
+    system: z.string().optional(),
+    selectedCondition: z.string().optional(),
+    correctCondition: z.string().optional(),
+  }),
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestPatch = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestPatch = authenticatedEndpoint(UserStatisticsUpdateSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/statistics');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    let body: any;
-    try {
-      body = await request.json();
-    } catch (error) {
-      return createErrorResponse('Invalid JSON payload', 400);
-    }
-
-    const { questionId, isCorrect, timeSpentMs, system, selectedCondition, correctCondition } = body || {};
-
-    if (typeof isCorrect !== 'boolean') {
-      return createErrorResponse('Field "isCorrect" is required and must be a boolean', 400);
-    }
+    const { questionId, isCorrect, timeSpentMs, system, selectedCondition, correctCondition } =
+      validated.body;
 
     // system is optional, but without it we cannot update per-system metrics
     const normalizedSystem = typeof system === 'string' && system.length ? system : undefined;
@@ -47,11 +44,20 @@ export const onRequestPatch = async (context: { request: Request; env: Env }) =>
 
     await updateTimingAggregates(prisma as any, auth.userId, { refreshPeakHours: true });
 
-    return createSuccessResponse(updated);
+    logger.info('Updated user statistics', {
+      userId: auth.userId,
+      isCorrect,
+      system: normalizedSystem,
+    });
+
+    return { data: updated };
   } catch (error) {
-    console.error('[user/statistics] Failed to update user statistics', error);
-    return createErrorResponse('Failed to update statistics', 500);
+    logger.error('Failed to update user statistics', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to update statistics');
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

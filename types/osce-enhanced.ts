@@ -63,12 +63,12 @@ export interface PatientAllergy {
 // 2. AI PATIENT PERSONALITY ENGINE TYPES
 // =============================================================================
 
-export type CommunicationStyle = 
-  | 'verbose' 
-  | 'terse' 
-  | 'anxious' 
-  | 'stoic' 
-  | 'angry' 
+export type CommunicationStyle =
+  | 'verbose'
+  | 'terse'
+  | 'anxious'
+  | 'stoic'
+  | 'angry'
   | 'confused'
   | 'evasive'
   | 'dramatic';
@@ -77,7 +77,7 @@ export type HealthLiteracy = 'low' | 'moderate' | 'high';
 
 export type PainBehavior = 'minimizer' | 'accurate' | 'catastrophizer';
 
-export type HiddenAgenda = 
+export type HiddenAgenda =
   | 'none'
   | 'afraid_of_diagnosis'
   | 'wants_specific_medication'
@@ -136,7 +136,7 @@ export interface RapportMilestone {
 // 3. INTERACTIVE PHYSICAL EXAM TYPES
 // =============================================================================
 
-export type BodyRegion = 
+export type BodyRegion =
   | 'head'
   | 'eyes'
   | 'ears'
@@ -169,7 +169,13 @@ export type BodyRegion =
   | 'neurological'
   | 'musculoskeletal';
 
-export type ExamTechnique = 'inspection' | 'palpation' | 'percussion' | 'auscultation' | 'neurological' | 'special_test';
+export type ExamTechnique =
+  | 'inspection'
+  | 'palpation'
+  | 'percussion'
+  | 'auscultation'
+  | 'neurological'
+  | 'special_test';
 
 export interface ExamManeuver {
   id: string;
@@ -216,10 +222,10 @@ export interface SmartExamSuggestion {
 // 4. COMPREHENSIVE SCORING & CRITICAL ACTION TRACKING
 // =============================================================================
 
-export type CriticalActionCategory = 
+export type CriticalActionCategory =
   | 'safety'
-  | 'diagnosis' 
-  | 'communication' 
+  | 'diagnosis'
+  | 'communication'
   | 'procedure'
   | 'efficiency';
 
@@ -300,29 +306,29 @@ export interface EnhancedEncounterSession {
   caseId: string;
   startTime: number;
   endTime?: number;
-  
+
   // Patient State
   patientPersonality: PatientPersonalityMatrix;
   rapportMeter: RapportMeter;
   emotionalState: EmotionalState;
   nonVerbalCues: NonVerbalCue[];
   revealedInformation: Set<string>;
-  
+
   // Orders
   placedOrders: PlacedOrder[];
   orderAlerts: OrderAlert[];
-  
+
   // Physical Exam
   completedExams: ExamFinding[];
   suggestedExams: SmartExamSuggestion[];
-  
+
   // Scoring
   scoringEvents: ScoringEvent[];
   criticalActionsTracked: CriticalAction[];
-  
+
   // Conversation
   conversationHistory: EnhancedChatMessage[];
-  
+
   // Final Results
   finalDiagnosis?: string;
   differentialDiagnoses: string[];

@@ -1,22 +1,23 @@
 # DrillShell Migration Guide
 
 ## Overview
+
 `DrillShell` is a standardized layout component that unifies the UX across all drill modes. It replaces custom headers and layout code with a consistent, responsive wrapper.
 
 ## Component API
 
 ```typescript
 interface DrillShellProps {
-  title: string;              // Drill mode name (e.g., "Rapid Recall")
-  subtitle?: string;          // Optional breadcrumb (e.g., "Buzzword Recognition")
-  rightAction?: ReactNode;    // Optional slot for score/streak/timer
-  onExit: () => void;         // Back to dashboard handler
-  children: ReactNode;        // Main content
-  fullWidth?: boolean;        // Remove max-width constraint
-  noPadding?: boolean;        // Remove padding for edge-to-edge content
-  fullScreen?: boolean;       // Use fixed positioning for immersive mode
-  backgroundColor?: string;   // Override background (e.g., dark for imaging)
-  contentClassName?: string;  // Custom classes for content wrapper
+  title: string; // Drill mode name (e.g., "Rapid Recall")
+  subtitle?: string; // Optional breadcrumb (e.g., "Buzzword Recognition")
+  rightAction?: ReactNode; // Optional slot for score/streak/timer
+  onExit: () => void; // Back to dashboard handler
+  children: ReactNode; // Main content
+  fullWidth?: boolean; // Remove max-width constraint
+  noPadding?: boolean; // Remove padding for edge-to-edge content
+  fullScreen?: boolean; // Use fixed positioning for immersive mode
+  backgroundColor?: string; // Override background (e.g., dark for imaging)
+  contentClassName?: string; // Custom classes for content wrapper
 }
 ```
 
@@ -25,6 +26,7 @@ interface DrillShellProps {
 ### For Standard Drill Modes (e.g., RapidRecallDrill, MiniLabDrill)
 
 **Before:**
+
 ```tsx
 <div className="min-h-screen bg-[var(--color-bg-primary)]">
   <header className="sticky top-0 ...">
@@ -32,13 +34,12 @@ interface DrillShellProps {
     <h1>Rapid Recall</h1>
     <div>Score: {score}</div>
   </header>
-  <main className="max-w-4xl mx-auto px-4 py-6">
-    {/* Content */}
-  </main>
+  <main className="max-w-4xl mx-auto px-4 py-6">{/* Content */}</main>
 </div>
 ```
 
 **After:**
+
 ```tsx
 <DrillShell
   title="Rapid Recall"
@@ -57,6 +58,7 @@ interface DrillShellProps {
 ### For Immersive Modes (e.g., PhotoDrill, ImagingDrill)
 
 **Before:**
+
 ```tsx
 <div className="fixed inset-0 bg-slate-950">
   <header className="absolute top-0 w-full ...">
@@ -66,13 +68,12 @@ interface DrillShellProps {
     <h1>Photo Drill</h1>
     <div>Streak: {streak}</div>
   </header>
-  <main className="w-full h-full pt-16">
-    {/* Content */}
-  </main>
+  <main className="w-full h-full pt-16">{/* Content */}</main>
 </div>
 ```
 
 **After:**
+
 ```tsx
 <DrillShell
   title="Photo Drill"
@@ -96,6 +97,7 @@ interface DrillShellProps {
 ## Common Patterns
 
 ### Pattern 1: Score + Streak Display
+
 ```tsx
 rightAction={
   <div className="flex items-center gap-4">
@@ -111,6 +113,7 @@ rightAction={
 ```
 
 ### Pattern 2: Timer Display
+
 ```tsx
 rightAction={
   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20">
@@ -121,6 +124,7 @@ rightAction={
 ```
 
 ### Pattern 3: Settings Button
+
 ```tsx
 rightAction={
   <button
@@ -139,7 +143,7 @@ rightAction={
 ✅ **Maintainable**: Update header styling once, affects all drills  
 ✅ **Accessible**: Proper ARIA labels and keyboard navigation  
 ✅ **Flexible**: Support for both standard and immersive layouts  
-✅ **Clean Code**: Separates layout concerns from drill logic  
+✅ **Clean Code**: Separates layout concerns from drill logic
 
 ## Files to Migrate
 

@@ -1,12 +1,17 @@
 /**
  * useTrainingActions - Hook for handling training mode navigation and actions.
- * 
+ *
  * This hook provides functions to navigate to different training modes
  * based on their configuration in the MODE_REGISTRY.
  */
 
 import { useCallback } from 'react';
-import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+import {
+  MODE_REGISTRY,
+  TrainingModeConfig,
+  TrainingModeId,
+  MODES_WITH_DEDICATED_ROUTES,
+} from '@/config/training-modes';
 
 export interface UseTrainingActionsOptions {
   /** Callback when a mode with a route is selected */
@@ -48,14 +53,14 @@ export function useTrainingActions(
 
   /**
    * Navigate to a specific training mode.
-   * 
+   *
    * - If the mode has a dedicated route, calls onNavigate with the route.
    * - Otherwise, falls back to onStartCoreSession for quiz-based modes.
    */
   const navigateToMode = useCallback(
     (modeId: TrainingModeId, focus?: string) => {
       const mode = getModeById(modeId);
-      
+
       // Debug logging to help troubleshoot routing issues
       console.log('[useTrainingActions] navigateToMode called:', {
         modeId,
@@ -71,7 +76,9 @@ export function useTrainingActions(
 
       // Check if mode is blocked due to "coming soon" status
       if (mode.isComingSoon) {
-        console.warn(`[useTrainingActions] Mode "${mode.label}" is marked as coming soon. Check config to enable.`);
+        console.warn(
+          `[useTrainingActions] Mode "${mode.label}" is marked as coming soon. Check config to enable.`
+        );
         return;
       }
 
@@ -84,7 +91,9 @@ export function useTrainingActions(
         if (onNavigate) {
           onNavigate(mode.route, mode);
         } else {
-          console.warn('[useTrainingActions] onNavigate callback not provided. Navigation will not occur.');
+          console.warn(
+            '[useTrainingActions] onNavigate callback not provided. Navigation will not occur.'
+          );
         }
         return;
       }
@@ -94,7 +103,9 @@ export function useTrainingActions(
       if (onStartCoreSession) {
         onStartCoreSession(focus);
       } else {
-        console.warn('[useTrainingActions] onStartCoreSession callback not provided. Session will not start.');
+        console.warn(
+          '[useTrainingActions] onStartCoreSession callback not provided. Session will not start.'
+        );
       }
     },
     [getModeById, hasDedicatedRoute, onNavigate, onStartCoreSession]

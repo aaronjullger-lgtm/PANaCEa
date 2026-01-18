@@ -1,13 +1,19 @@
 /**
  * GET /api/user/rolling-360-stats
- * 
+ *
  * Returns the user's Rolling 360 statistics for dashboard display.
  * Safety: Returns structured empty state for new users instead of 404.
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { Rolling360Service } from '../../../lib/services/rolling360Service';
+
+const Rolling360StatsSchema = z.object({
+  query: z.object({}).optional(), // No query params expected
+});
 
 // Empty state response for new users
 const EMPTY_STATE_RESPONSE = {
@@ -28,32 +34,23 @@ const EMPTY_STATE_RESPONSE = {
   questionsNeeded: 50, // Questions needed for "provisional" confidence
 };
 
-export async function onRequestGet(context: any): Promise<Response> {
-  const { request, env } = context;
-  
-  // Authenticate
-  const auth = await authenticateRequest(request, env);
-  if (!auth) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/user/rolling-360-stats');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     const rolling360Service = new Rolling360Service(prisma);
     const stats = await rolling360Service.getRolling360Stats(auth.userId);
-    
+
     // Safety: Return structured empty state if no data exists
     if (!stats) {
-      return new Response(JSON.stringify(EMPTY_STATE_RESPONSE), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      logger.info('Returning empty state for new user', { userId: auth.userId });
+      return { data: EMPTY_STATE_RESPONSE };
     }
-    
+
     // Calculate questions needed for next confidence level
     let questionsNeeded = 0;
     if (stats.scoreConfidence === 'collecting') {
@@ -61,29 +58,36 @@ export async function onRequestGet(context: any): Promise<Response> {
     } else if (stats.scoreConfidence === 'provisional') {
       questionsNeeded = 180 - stats.totalInWindow;
     }
-    
-    return new Response(JSON.stringify({
-      ...stats,
-      questionsNeeded: Math.max(0, questionsNeeded),
-      message: getConfidenceMessage(stats.scoreConfidence, stats.totalInWindow),
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+
+    logger.info('Fetched Rolling 360 stats', {
+      userId: auth.userId,
+      totalInWindow: stats.totalInWindow,
+      scoreConfidence: stats.scoreConfidence,
     });
-    
+
+    return {
+      data: {
+        ...stats,
+        questionsNeeded: Math.max(0, questionsNeeded),
+        message: getConfidenceMessage(stats.scoreConfidence, stats.totalInWindow),
+      },
+    };
   } catch (error) {
-    console.error('Error fetching Rolling 360 stats:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to fetch statistics',
-      ...EMPTY_STATE_RESPONSE,
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    logger.error('Error fetching Rolling 360 stats', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    // Return empty state on error to maintain graceful degradation
+    return {
+      data: {
+        error: 'Failed to fetch statistics',
+        ...EMPTY_STATE_RESPONSE,
+      },
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 function getConfidenceMessage(
   confidence: 'collecting' | 'provisional' | 'confident',

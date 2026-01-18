@@ -5,13 +5,23 @@
  * DELETE /api/admin/content/[id] - Delete content
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+  type Env,
+} from '../../_shared/auth';
 import { canViewCMS, canEditContent, isAdmin, type UserRole } from '../../_shared/rbac';
 import { updateContent } from '../../../../lib/services/cms/contentService';
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateRequest, AdminContentUpdateSchema } from '../../_shared/schemas';
 
-export async function onRequestGet(context: { request: Request; env: Env; params: { id: string } }) {
+export async function onRequestGet(context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) {
   const { request, env, params } = context;
 
   if (request.method === 'OPTIONS') {
@@ -28,7 +38,7 @@ export async function onRequestGet(context: { request: Request; env: Env; params
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true }
+      select: { id: true, role: true },
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
@@ -54,11 +64,15 @@ export async function onRequestGet(context: { request: Request; env: Env; params
     console.error('Error fetching content:', error);
     return createErrorResponse('Failed to fetch content', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
 
-export async function onRequestPut(context: { request: Request; env: Env; params: { id: string } }) {
+export async function onRequestPut(context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) {
   const { request, env, params } = context;
 
   if (request.method === 'OPTIONS') {
@@ -75,7 +89,7 @@ export async function onRequestPut(context: { request: Request; env: Env; params
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true }
+      select: { id: true, role: true },
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
@@ -90,9 +104,8 @@ export async function onRequestPut(context: { request: Request; env: Env; params
     const { content: contentData, description } = (validation as { success: true; data: any }).data;
 
     // Get client IP and user agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const updated = await updateContent(
@@ -113,11 +126,15 @@ export async function onRequestPut(context: { request: Request; env: Env; params
     console.error('Error updating content:', error);
     return createErrorResponse(error.message || 'Failed to update content', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
 
-export async function onRequestDelete(context: { request: Request; env: Env; params: { id: string } }) {
+export async function onRequestDelete(context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) {
   const { request, env, params } = context;
 
   if (request.method === 'OPTIONS') {
@@ -134,7 +151,7 @@ export async function onRequestDelete(context: { request: Request; env: Env; par
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true }
+      select: { id: true, role: true },
     });
 
     if (!user || !isAdmin(user.role as UserRole)) {
@@ -155,6 +172,6 @@ export async function onRequestDelete(context: { request: Request; env: Env; par
     console.error('Error deleting content:', error);
     return createErrorResponse('Failed to delete content', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

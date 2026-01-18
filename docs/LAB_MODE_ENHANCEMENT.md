@@ -9,6 +9,7 @@ The Lab Mode has been enhanced to support a more realistic clinical workflow whe
 ### 1. Comprehensive Lab Test Database (300+ Tests)
 
 Located in `src/data/labTests.ts`, this database contains:
+
 - **300+ available laboratory tests** organized by category
 - Categories include:
   - Basic Panels (BMP, CBC, CMP, LFT)
@@ -25,6 +26,7 @@ Located in `src/data/labTests.ts`, this database contains:
   - And more...
 
 Each test includes:
+
 - Test name
 - Category
 - Typical use description
@@ -33,6 +35,7 @@ Each test includes:
 ### 2. Lab-Driven Conditions Database (300 Conditions)
 
 Located in `src/data/labDrivenConditions.ts`, this database contains:
+
 - **300 conditions** that are primarily diagnosed through laboratory testing
 - Organized by medical specialty:
   - Hematology (40 conditions)
@@ -49,7 +52,9 @@ Located in `src/data/labDrivenConditions.ts`, this database contains:
 ### 3. Orderable Tests Workflow
 
 #### Initial State
+
 When a lab case is presented, users see:
+
 - **Patient demographics** (age, sex)
 - **Clinical vignette** (2-3 sentences describing presentation)
 - **Three default lab panels** (always shown):
@@ -58,6 +63,7 @@ When a lab case is presented, users see:
   3. Liver Function Tests (LFT)
 
 #### Ordering Additional Tests
+
 - Click the **"Order Additional Tests"** button
 - Browse available tests (shown in a dropdown menu)
 - Click on a test name to order it
@@ -65,6 +71,7 @@ When a lab case is presented, users see:
 - Continue ordering tests as needed to reach a diagnosis
 
 #### Submitting Diagnosis
+
 - Once ready, enter your diagnosis in the text field
 - The system will provide feedback on correctness
 - Review key findings and explanations
@@ -80,13 +87,13 @@ interface LabCase {
   clinicalContext: string;
   patientAge: number;
   patientSex: 'M' | 'F';
-  panels: LabPanel[];  // Initially shown panels
+  panels: LabPanel[]; // Initially shown panels
   correctDiagnosis: string;
   keyFindings: string[];
   explanation: string;
   category: LabCategory;
-  orderableTests?: LabPanel[];  // Tests that can be ordered
-  orderedTests?: string[];      // Tests the user has ordered
+  orderableTests?: LabPanel[]; // Tests that can be ordered
+  orderedTests?: string[]; // Tests the user has ordered
 }
 ```
 
@@ -96,11 +103,11 @@ The `useMiniLabDrill` hook provides:
 
 ```typescript
 const {
-  currentCase,           // Current lab case
-  status,               // Game status
-  availableTests,       // Tests that can be ordered
-  orderTest,            // Function to order a test
-  submitAnswer,         // Function to submit diagnosis
+  currentCase, // Current lab case
+  status, // Game status
+  availableTests, // Tests that can be ordered
+  orderTest, // Function to order a test
+  submitAnswer, // Function to submit diagnosis
   // ... other functions
 } = useMiniLabDrill();
 ```
@@ -108,6 +115,7 @@ const {
 ### Component Integration
 
 The `MiniLabDrillSession` component:
+
 - Displays initial lab panels
 - Shows "Order Additional Tests" button when orderable tests are available
 - Provides a dropdown menu of available tests
@@ -120,7 +128,7 @@ The `MiniLabDrillSession` component:
 
 ```typescript
 // Order a test programmatically
-const testToOrder = "Arterial Blood Gas";
+const testToOrder = 'Arterial Blood Gas';
 orderTest(testToOrder);
 
 // Check available tests
@@ -133,12 +141,14 @@ console.log(currentCase?.orderedTests); // ["Arterial Blood Gas"]
 ### For Content Generation
 
 The `generateLabContent.ts` script has been updated to:
+
 1. Use the comprehensive condition database
 2. Include orderable tests in generated cases
 3. Ensure default panels (BMP, CBC, LFT) are always included
 4. Add 2-4 relevant orderable tests per case
 
 Run the script:
+
 ```bash
 npm run generate:lab
 ```
@@ -146,6 +156,7 @@ npm run generate:lab
 ## Testing
 
 Comprehensive test suite in `hooks/game/use-mini-lab-drill.test.ts` covers:
+
 - Initial state verification
 - Test ordering functionality
 - Panel updates
@@ -154,6 +165,7 @@ Comprehensive test suite in `hooks/game/use-mini-lab-drill.test.ts` covers:
 - Basic game functionality
 
 Run tests:
+
 ```bash
 npm test hooks/game/use-mini-lab-drill.test.ts
 ```
@@ -161,12 +173,14 @@ npm test hooks/game/use-mini-lab-drill.test.ts
 ## Files Modified/Created
 
 ### New Files
+
 - `src/data/labTests.ts` - Comprehensive lab test database
 - `src/data/labDrivenConditions.ts` - Lab-driven conditions database
 - `hooks/game/use-mini-lab-drill.test.ts` - Test suite
 - `docs/LAB_MODE_ENHANCEMENT.md` - This documentation
 
 ### Modified Files
+
 - `src/types/content.ts` - Added orderable tests support
 - `hooks/game/use-mini-lab-drill.ts` - Added ordering functionality
 - `components/drill/MiniLabDrillSession.tsx` - Added UI for ordering tests
@@ -175,6 +189,7 @@ npm test hooks/game/use-mini-lab-drill.test.ts
 ## Future Enhancements
 
 Possible improvements:
+
 1. **Cost tracking** - Track the "cost" of ordered tests
 2. **Time limits** - Add time pressure to ordering decisions
 3. **Hints** - Provide hints about which tests might be helpful
@@ -186,6 +201,7 @@ Possible improvements:
 ## Educational Benefits
 
 This enhancement provides:
+
 - **Realistic clinical workflow** - Mirrors actual medical decision-making
 - **Cost awareness** - Encourages thoughtful test ordering
 - **Differential diagnosis practice** - Users must think about which tests will help
@@ -195,6 +211,7 @@ This enhancement provides:
 ## Backward Compatibility
 
 The system maintains full backward compatibility:
+
 - Existing lab cases work without orderable tests
 - Cases without orderable tests show only default panels
 - No breaking changes to existing functionality

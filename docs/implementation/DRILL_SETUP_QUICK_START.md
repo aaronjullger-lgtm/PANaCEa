@@ -7,11 +7,13 @@ Replace static `conditionRegistry` imports with live database queries using the 
 ## 5-Minute Integration
 
 ### Step 1: Import DrillSetup
+
 ```typescript
 import { DrillSetup, type DrillConfiguration } from '@/components/drill/DrillSetup';
 ```
 
 ### Step 2: Add Setup Phase
+
 ```typescript
 const [phase, setPhase] = useState<'setup' | 'active'>('setup');
 
@@ -34,17 +36,17 @@ if (phase === 'setup') {
 ```
 
 ### Step 3: Use Filtered Conditions
+
 ```typescript
 // Pick random condition from filtered pool
-const randomCondition = config.availableConditions[
-  Math.floor(Math.random() * config.availableConditions.length)
-];
+const randomCondition =
+  config.availableConditions[Math.floor(Math.random() * config.availableConditions.length)];
 
 // Generate question
 const question = await fetchNewQuestion({
   conditionName: randomCondition.name,
   difficulty: config.difficulty,
-  focus: 'all'
+  focus: 'all',
 });
 ```
 
@@ -70,29 +72,29 @@ export function MyDrill({ onExit }: MyDrillProps) {
   const handleStart = async (drillConfig: DrillConfiguration) => {
     setConfig(drillConfig);
     setPhase('active');
-    
+
     // Generate questions from filtered conditions
     const generatedQuestions: Question[] = [];
     for (let i = 0; i < drillConfig.questionCount; i++) {
       const randomCondition = drillConfig.availableConditions[
         Math.floor(Math.random() * drillConfig.availableConditions.length)
       ];
-      
+
       const question = await fetchNewQuestion({
         conditionName: randomCondition.name,
         difficulty: drillConfig.difficulty,
         focus: 'all'
       }, []);
-      
+
       generatedQuestions.push(question);
     }
-    
+
     setQuestions(generatedQuestions);
   };
 
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) setScore(score + 1);
-    
+
     if (currentIndex + 1 >= questions.length) {
       setPhase('complete');
     } else {
@@ -149,6 +151,7 @@ export function MyDrill({ onExit }: MyDrillProps) {
 ## Service API Cheat Sheet
 
 ### Import
+
 ```typescript
 import {
   fetchConditions,
@@ -163,36 +166,42 @@ import {
 ### Common Operations
 
 #### Get all conditions (cached)
+
 ```typescript
 const conditions = await fetchConditions();
 // Returns: ConditionMetadata[]
 ```
 
 #### Get systems
+
 ```typescript
 const systems = await getAvailableSystems();
 // Returns: ['CV', 'PULM', 'GI', ...]
 ```
 
 #### Filter by system
+
 ```typescript
 const cvConditions = await getConditionsBySystem('CV');
 // Returns: ConditionMetadata[] (only CV conditions)
 ```
 
 #### Random selection
+
 ```typescript
 const randomCondition = await getRandomConditionForSystem('PULM');
 // Returns: ConditionMetadata | null
 ```
 
 #### Search by name
+
 ```typescript
 const condition = await findConditionByName('Myocardial Infarction');
 // Returns: ConditionMetadata | null
 ```
 
 #### Statistics
+
 ```typescript
 const stats = await getRegistryStats();
 // Returns: {
@@ -206,33 +215,44 @@ const stats = await getRegistryStats();
 
 ```typescript
 interface ConditionMetadata {
-  id: string;           // "CV__arrhythmia__atrial_fibrillation"
-  name: string;         // "Atrial Fibrillation"
-  system: SystemCode;   // "CV"
-  subcategory: string;  // "Arrhythmias"
+  id: string; // "CV__arrhythmia__atrial_fibrillation"
+  name: string; // "Atrial Fibrillation"
+  system: SystemCode; // "CV"
+  subcategory: string; // "Arrhythmias"
 }
 
 interface DrillConfiguration {
-  system?: SystemCode;              // Selected system filter
+  system?: SystemCode; // Selected system filter
   difficulty: 'easier' | 'same' | 'harder';
-  questionCount: number;            // Number of questions
-  availableConditions: ConditionMetadata[];  // Filtered pool
+  questionCount: number; // Number of questions
+  availableConditions: ConditionMetadata[]; // Filtered pool
 }
 
-type SystemCode = 
-  | 'CV' | 'DERM' | 'ENDO' | 'GI' | 'GU' | 'HEME' 
-  | 'HEENT' | 'ID' | 'MSK' | 'NEURO' | 'PRO' 
-  | 'PSYCH' | 'PULM' | 'RENAL' | 'REPRO' | 'OTHER';
+type SystemCode =
+  | 'CV'
+  | 'DERM'
+  | 'ENDO'
+  | 'GI'
+  | 'GU'
+  | 'HEME'
+  | 'HEENT'
+  | 'ID'
+  | 'MSK'
+  | 'NEURO'
+  | 'PRO'
+  | 'PSYCH'
+  | 'PULM'
+  | 'RENAL'
+  | 'REPRO'
+  | 'OTHER';
 ```
 
 ## Common Patterns
 
 ### Pattern 1: Pick N Random Conditions
+
 ```typescript
-function pickRandomConditions(
-  conditions: ConditionMetadata[], 
-  count: number
-): ConditionMetadata[] {
+function pickRandomConditions(conditions: ConditionMetadata[], count: number): ConditionMetadata[] {
   const shuffled = [...conditions].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
@@ -242,20 +262,25 @@ const randomConditions = pickRandomConditions(config.availableConditions, 10);
 ```
 
 ### Pattern 2: Generate Question for Condition
+
 ```typescript
 async function generateQuestionForCondition(
   condition: ConditionMetadata,
   difficulty: 'easier' | 'same' | 'harder'
 ): Promise<Question> {
-  return await fetchNewQuestion({
-    conditionName: condition.name,
-    difficulty,
-    focus: 'all'
-  }, []);
+  return await fetchNewQuestion(
+    {
+      conditionName: condition.name,
+      difficulty,
+      focus: 'all',
+    },
+    []
+  );
 }
 ```
 
 ### Pattern 3: Prefetch on App Init
+
 ```typescript
 // In App.tsx
 import { prefetchConditions } from '@/services/conditionRegistryService';
@@ -266,6 +291,7 @@ useEffect(() => {
 ```
 
 ### Pattern 4: Force Refresh Cache
+
 ```typescript
 import { fetchConditions, clearConditionsCache } from '@/services/conditionRegistryService';
 
@@ -280,28 +306,29 @@ async function refreshRegistry() {
 
 ### DrillSetup Component
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | **required** | Drill mode title |
-| `description` | `string` | **required** | Brief description |
-| `defaultDifficulty` | `'easier' \| 'same' \| 'harder'` | `'same'` | Initial difficulty |
-| `showSystemFilter` | `boolean` | `true` | Show system dropdown |
-| `showQuestionCount` | `boolean` | `true` | Show question selector |
-| `defaultQuestionCount` | `number` | `10` | Initial question count |
-| `onStart` | `(config: DrillConfiguration) => void` | **required** | Start callback |
-| `onBack` | `() => void` | `undefined` | Back button callback |
-| `systemFilter` | `SystemCode[]` | `undefined` | Pre-filter systems |
+| Prop                   | Type                                   | Default      | Description            |
+| ---------------------- | -------------------------------------- | ------------ | ---------------------- |
+| `title`                | `string`                               | **required** | Drill mode title       |
+| `description`          | `string`                               | **required** | Brief description      |
+| `defaultDifficulty`    | `'easier' \| 'same' \| 'harder'`       | `'same'`     | Initial difficulty     |
+| `showSystemFilter`     | `boolean`                              | `true`       | Show system dropdown   |
+| `showQuestionCount`    | `boolean`                              | `true`       | Show question selector |
+| `defaultQuestionCount` | `number`                               | `10`         | Initial question count |
+| `onStart`              | `(config: DrillConfiguration) => void` | **required** | Start callback         |
+| `onBack`               | `() => void`                           | `undefined`  | Back button callback   |
+| `systemFilter`         | `SystemCode[]`                         | `undefined`  | Pre-filter systems     |
 
 ## Testing
 
 ### Unit Test Example
+
 ```typescript
 import { fetchConditions, getRandomConditionForSystem } from './conditionRegistryService';
 
 describe('conditionRegistryService', () => {
   it('fetches conditions from database', async () => {
     const conditions = await fetchConditions();
-    
+
     expect(conditions).toBeDefined();
     expect(conditions.length).toBeGreaterThan(0);
     expect(conditions[0]).toHaveProperty('id');
@@ -311,7 +338,7 @@ describe('conditionRegistryService', () => {
 
   it('returns random condition for system', async () => {
     const condition = await getRandomConditionForSystem('CV');
-    
+
     expect(condition).toBeDefined();
     expect(condition?.system).toBe('CV');
   });
@@ -319,6 +346,7 @@ describe('conditionRegistryService', () => {
 ```
 
 ### Integration Test
+
 ```bash
 # Start dev server
 npm run dev:all
@@ -340,6 +368,7 @@ curl -H "Authorization: Bearer $CLERK_TOKEN" \
 ## Troubleshooting
 
 ### Error: "Failed to load conditions"
+
 ```typescript
 // Check database connection
 console.log('DATABASE_URL:', process.env.DATABASE_URL);
@@ -352,6 +381,7 @@ npm run sync:all
 ```
 
 ### Warning: "Using stale cache"
+
 ```typescript
 // Clear cache
 import { clearConditionsCache } from '@/services/conditionRegistryService';
@@ -362,6 +392,7 @@ const conditions = await fetchConditions(true);
 ```
 
 ### Performance: Slow initial load
+
 ```typescript
 // Add prefetch to App.tsx initialization
 import { prefetchConditions } from '@/services/conditionRegistryService';
@@ -394,13 +425,15 @@ useEffect(() => {
 ## Support
 
 Questions? Check:
+
 1. The comprehensive guide (`DRILL_SETUP_REFACTOR_GUIDE.md`)
 2. Example implementation (`ConditionDrillSession-Example.tsx`)
 3. Existing usage in `ClinicalLibrary.tsx`
 
 ---
 
-**Quick Reference**: 
+**Quick Reference**:
+
 - Import: `@/components/drill/DrillSetup`
 - Service: `@/services/conditionRegistryService`
 - API: `GET /api/conditions` (Clerk auth required)

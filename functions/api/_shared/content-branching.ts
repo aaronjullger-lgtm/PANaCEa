@@ -1,4 +1,3 @@
-
 interface BranchCreateOptions {
   name: string;
   description?: string;
@@ -22,27 +21,27 @@ export async function createBranch(prisma: any, options: BranchCreateOptions): P
     if (!/^[a-zA-Z0-9_-]+$/.test(options.name)) {
       throw new Error('Branch name can only contain letters, numbers, hyphens, and underscores');
     }
-    
+
     // Check if branch already exists
     const existing = await prisma.contentBranch.findUnique({
       where: { name: options.name },
     });
-    
+
     if (existing) {
       throw new Error(`Branch "${options.name}" already exists`);
     }
-    
+
     // Validate base branch if specified
     if (options.baseBranch) {
       const baseBranchExists = await prisma.contentBranch.findUnique({
         where: { name: options.baseBranch },
       });
-      
+
       if (!baseBranchExists) {
         throw new Error(`Base branch "${options.baseBranch}" does not exist`);
       }
     }
-    
+
     // Create branch
     const branch = await prisma.contentBranch.create({
       data: {
@@ -52,7 +51,7 @@ export async function createBranch(prisma: any, options: BranchCreateOptions): P
         createdBy: options.createdBy,
       },
     });
-    
+
     return branch.id;
   } catch (error) {
     console.error('[ContentBranching] Error creating branch:', error);
@@ -71,8 +70,8 @@ export async function listBranches(prisma: any, includeArchived: boolean = false
         },
       },
     });
-    
-    return branches.map(b => ({
+
+    return branches.map((b) => ({
       id: b.id,
       name: b.name,
       description: b.description,
@@ -104,24 +103,24 @@ export async function mergeBranch(
         changes: true,
       },
     });
-    
+
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
     }
-    
+
     if (branch.status !== 'active') {
       throw new Error(`Branch "${branchName}" is ${branch.status} and cannot be merged`);
     }
-    
+
     // Check for conflicts
     const conflicts: Array<{ contentId: string; reason: string }> = [];
-    
+
     // For each change, check if the target content has been modified since branch creation
     for (const change of branch.changes) {
       const existingContent = await prisma.medicalContent.findUnique({
         where: { id: change.contentId },
       });
-      
+
       if (change.changeType === 'update' && existingContent) {
         // Check if content was modified after branch creation
         if (existingContent.updatedAt > branch.createdAt) {
@@ -142,7 +141,7 @@ export async function mergeBranch(
         });
       }
     }
-    
+
     // If there are conflicts, return them without merging
     if (conflicts.length > 0) {
       return {
@@ -151,10 +150,10 @@ export async function mergeBranch(
         message: `Found ${conflicts.length} conflict(s). Resolve conflicts before merging.`,
       };
     }
-    
+
     // Apply changes
     let mergedCount = 0;
-    
+
     for (const change of branch.changes) {
       try {
         if (change.changeType === 'create') {
@@ -192,7 +191,7 @@ export async function mergeBranch(
         // Continue with other changes
       }
     }
-    
+
     // Mark branch as merged
     await prisma.contentBranch.update({
       where: { id: branch.id },
@@ -202,7 +201,7 @@ export async function mergeBranch(
         mergedBy,
       },
     });
-    
+
     return {
       success: true,
       mergedCount,

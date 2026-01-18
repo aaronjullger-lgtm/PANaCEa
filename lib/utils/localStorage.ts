@@ -1,6 +1,6 @@
 /**
  * Optimized localStorage utilities with caching and batching
- * 
+ *
  * Provides performance-optimized wrappers around localStorage operations
  * with in-memory caching to reduce expensive JSON parse/stringify operations.
  */
@@ -22,8 +22,8 @@ export function getCachedItem<T>(key: string, defaultValue: T, ttl: number = CAC
   // Check cache first
   const cached = storageCache.get(key);
   const now = Date.now();
-  
-  if (cached && (now - cached.timestamp) < ttl) {
+
+  if (cached && now - cached.timestamp < ttl) {
     return cached.value as T;
   }
 
@@ -34,7 +34,7 @@ export function getCachedItem<T>(key: string, defaultValue: T, ttl: number = CAC
       storageCache.set(key, { value: defaultValue, timestamp: now });
       return defaultValue;
     }
-    
+
     const parsed = JSON.parse(raw) as T;
     storageCache.set(key, { value: parsed, timestamp: now });
     return parsed;
@@ -97,7 +97,7 @@ export function batchSetItems<T = any>(items: Array<{ key: string; value: T }>):
   if (typeof window === 'undefined') return;
 
   const now = Date.now();
-  
+
   items.forEach(({ key, value }) => {
     try {
       const serialized = JSON.stringify(value);

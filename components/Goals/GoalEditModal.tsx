@@ -1,6 +1,6 @@
 /**
  * Goal Edit Modal
- * 
+ *
  * Modal for editing existing goals.
  */
 
@@ -18,7 +18,7 @@ interface GoalEditModalProps {
 export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onUpdate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     title: goal.title,
     description: goal.description || '',
@@ -27,17 +27,17 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
     motivationNotes: goal.motivationNotes || '',
     rewardMessage: goal.rewardMessage || '',
   });
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       if (!formData.title.trim()) {
         throw new Error('Title is required');
       }
-      
+
       const updates: Partial<UserGoal> = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
@@ -46,17 +46,17 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
         motivationNotes: formData.motivationNotes.trim() || undefined,
         rewardMessage: formData.rewardMessage.trim() || undefined,
       };
-      
+
       // Calculate progress percentage
       if (goal.targetValue) {
         updates.progressPercentage = (formData.currentValue / goal.targetValue) * 100;
       }
-      
+
       // Set completedAt if status changed to completed
       if (formData.status === 'completed' && goal.status !== 'completed') {
         updates.completedAt = new Date().toISOString();
       }
-      
+
       await onUpdate(updates);
     } catch (err) {
       console.error('[GoalEditModal] Submit error:', err);
@@ -64,7 +64,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -87,7 +87,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
@@ -95,7 +95,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 {error}
               </div>
             )}
-            
+
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -109,7 +109,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 required
               />
             </div>
-            
+
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -122,7 +122,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 rows={2}
               />
             </div>
-            
+
             {/* Status */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -139,7 +139,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 <option value="failed">Failed</option>
               </select>
             </div>
-            
+
             {/* Current Value */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -149,7 +149,9 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 <input
                   type="number"
                   value={formData.currentValue}
-                  onChange={(e) => setFormData({ ...formData, currentValue: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currentValue: parseInt(e.target.value) })
+                  }
                   className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   min="0"
                 />
@@ -158,7 +160,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 </span>
               </div>
             </div>
-            
+
             {/* Motivation */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -171,7 +173,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
               />
             </div>
-            
+
             {/* Reward Message */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -184,7 +186,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
               />
             </div>
-            
+
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <button

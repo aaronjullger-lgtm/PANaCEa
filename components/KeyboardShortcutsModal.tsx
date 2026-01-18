@@ -23,14 +23,15 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Enter'], description: 'Proceed to next question', category: 'quiz' },
   { keys: ['Esc'], description: 'Return to dashboard', category: 'quiz' },
   // General shortcuts
-  { keys: ['⌘/Ctrl', 'K'], description: 'Open command palette (quick navigation)', category: 'general' },
+  {
+    keys: ['⌘/Ctrl', 'K'],
+    description: 'Open command palette (quick navigation)',
+    category: 'general',
+  },
   { keys: ['⌘/Ctrl', '/'], description: 'Open keyboard shortcuts', category: 'general' },
 ];
 
-const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen, onClose }) => {
   // Handle escape key to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,8 +56,8 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     };
   }, [isOpen]);
 
-  const quizShortcuts = SHORTCUTS.filter(s => s.category === 'quiz');
-  const generalShortcuts = SHORTCUTS.filter(s => s.category === 'general');
+  const quizShortcuts = SHORTCUTS.filter((s) => s.category === 'quiz');
+  const generalShortcuts = SHORTCUTS.filter((s) => s.category === 'general');
 
   return (
     <AnimatePresence>
@@ -125,7 +126,11 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
             {/* Footer */}
             <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
               <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                Press <kbd className="px-1.5 py-0.5 text-xs font-mono bg-slate-200 dark:bg-slate-700 rounded">Esc</kbd> to close
+                Press{' '}
+                <kbd className="px-1.5 py-0.5 text-xs font-mono bg-slate-200 dark:bg-slate-700 rounded">
+                  Esc
+                </kbd>{' '}
+                to close
               </p>
             </div>
           </motion.div>
@@ -137,18 +142,14 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 
 const ShortcutRow: React.FC<{ shortcut: ShortcutItem }> = ({ shortcut }) => (
   <div className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-    <span className="text-sm text-slate-700 dark:text-slate-300">
-      {shortcut.description}
-    </span>
+    <span className="text-sm text-slate-700 dark:text-slate-300">{shortcut.description}</span>
     <div className="flex items-center gap-1">
       {shortcut.keys.map((key, idx) => (
         <React.Fragment key={idx}>
           <kbd className="px-2 py-1 text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md shadow-sm min-w-[28px] text-center">
             {key}
           </kbd>
-          {idx < shortcut.keys.length - 1 && (
-            <span className="text-slate-400 text-xs">+</span>
-          )}
+          {idx < shortcut.keys.length - 1 && <span className="text-slate-400 text-xs">+</span>}
         </React.Fragment>
       ))}
     </div>

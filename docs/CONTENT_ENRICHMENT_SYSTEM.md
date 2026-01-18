@@ -22,6 +22,7 @@ GET /api/admin/content-audit?limit=50
 ```
 
 **Response includes:**
+
 - `totalConditions`: Total count
 - `fullyComplete`: Count of 100% complete conditions
 - `partiallyComplete`: Count with only high-yield fields missing
@@ -44,6 +45,7 @@ POST /api/admin/enrich-condition
 ```
 
 **Response includes:**
+
 - `conditionId`: The enriched condition
 - `fieldsUpdated`: Array of fields that were updated
 - `displayPriority`: AI-determined display priority configuration
@@ -73,14 +75,18 @@ npx ts-node scripts/content-enrichment.ts --condition "Acute MI"
 ## Field Categories
 
 ### Required Fields (60% weight)
+
 These MUST have content for a condition to be considered complete:
+
 - `overview`
 - `symptoms`
 - `treatment`
 - `diagnostics`
 
 ### High-Yield Fields (40% weight)
+
 These should ideally have content or explicit N/A:
+
 - `gold_standard_dx`
 - `first_line_rx`
 - `buzzwords`
@@ -114,6 +120,7 @@ Each condition can have a `display_priority` object stored in the `content` JSON
 ```
 
 ### Priority Options
+
 - `classic_triad` - Condition has a pathognomonic triad (e.g., Beck's triad)
 - `buzzwords` - Best recognized by specific buzzwords
 - `classic_patient` - Patient demographics are key identifiers
@@ -122,7 +129,9 @@ Each condition can have a `display_priority` object stored in the `content` JSON
 - `mnemonic` - A mnemonic is the best memory aid
 
 ### Auto-Inference Logic
+
 If no stored priority exists, the renderer infers priority based on available data:
+
 1. If `classic_triad` has 3+ items → primary = `classic_triad`
 2. If `buzzwords` has 3+ items → primary = `buzzwords`
 3. If `classic_patient` is detailed (>50 chars) → primary = `classic_patient`
@@ -132,12 +141,14 @@ If no stored priority exists, the renderer infers priority based on available da
 ## Usage Workflow
 
 ### Initial Audit
+
 ```bash
 # See current content completeness
 npx ts-node scripts/content-enrichment.ts --audit
 ```
 
 ### Prioritized Enrichment
+
 ```bash
 # Enrich high-yield conditions first
 npx ts-node scripts/content-enrichment.ts --enrich --limit 20
@@ -147,6 +158,7 @@ npx ts-node scripts/content-enrichment.ts --audit
 ```
 
 ### Targeted Enrichment
+
 ```bash
 # Focus on specific system
 npx ts-node scripts/content-enrichment.ts --enrich --system Cardiovascular --limit 30
@@ -158,6 +170,7 @@ npx ts-node scripts/content-enrichment.ts --condition "Cardiac Tamponade"
 ## Renderer Integration
 
 The `ConditionMasterEmbedded` component in `ClinicalReferenceLibrary.tsx` automatically:
+
 1. Checks for stored `display_priority` in content JSONB
 2. Falls back to inference logic if not present
 3. Orders the "quick facts" section based on priority
@@ -166,6 +179,7 @@ The `ConditionMasterEmbedded` component in `ClinicalReferenceLibrary.tsx` automa
 ## Environment Variables
 
 Required for AI enrichment:
+
 ```bash
 GEMINI_API_KEY=your-api-key
 ```
@@ -173,12 +187,14 @@ GEMINI_API_KEY=your-api-key
 ## Rate Limiting
 
 The CLI script has built-in rate limiting:
+
 - 1.5 second delay between API calls
 - Prevents hitting Gemini rate limits
 
 ## Security
 
 Both API endpoints require:
+
 1. Valid Clerk authentication
 2. User role of `ADMIN` or `SUPERADMIN` (checked from database)
 

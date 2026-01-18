@@ -1,6 +1,6 @@
 /**
  * Polypharmacy Drill Hook
- * 
+ *
  * Database-driven hook for polypharmacy puzzle mode.
  * Manages case loading, deprescribing evaluation, and progress tracking.
  */
@@ -34,7 +34,9 @@ export interface UsePolypharmacyDrillReturn {
 /**
  * Hook for managing polypharmacy drill sessions
  */
-export function usePolypharmacyDrill(difficulty: 'easy' | 'medium' | 'hard' = 'medium'): UsePolypharmacyDrillReturn {
+export function usePolypharmacyDrill(
+  difficulty: 'easy' | 'medium' | 'hard' = 'medium'
+): UsePolypharmacyDrillReturn {
   const [state, setState] = useState<PolypharmacyDrillState>({
     currentCase: null,
     loading: false,
@@ -51,29 +53,31 @@ export function usePolypharmacyDrill(difficulty: 'easy' | 'medium' | 'hard' = 'm
    * Load a new polypharmacy case from the database
    */
   const loadNewCase = async (): Promise<void> => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const response = await fetch(`/api/questions/polypharmacy-drill?count=1&difficulty=${difficulty}`);
-      
+      const response = await fetch(
+        `/api/questions/polypharmacy-drill?count=1&difficulty=${difficulty}`
+      );
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to load case');
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.cases || data.cases.length === 0) {
         throw new Error('No cases returned from server');
       }
-      
-      setState(prev => ({ 
-        ...prev, 
-        currentCase: data.cases[0], 
-        loading: false 
+
+      setState((prev) => ({
+        ...prev,
+        currentCase: data.cases[0],
+        loading: false,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
         error: error instanceof Error ? error.message : 'Failed to load case',
@@ -90,47 +94,49 @@ export function usePolypharmacyDrill(difficulty: 'easy' | 'medium' | 'hard' = 'm
   ): { correct: boolean; partialCredit: number; feedback: string } => {
     const correctSet = new Set(correctMedications);
     const selectedSet = new Set(selectedMedications);
-    
+
     // Calculate true positives, false positives, false negatives
-    const truePositives = selectedMedications.filter(med => correctSet.has(med)).length;
-    const falsePositives = selectedMedications.filter(med => !correctSet.has(med)).length;
-    const falseNegatives = correctMedications.filter(med => !selectedSet.has(med)).length;
-    
+    const truePositives = selectedMedications.filter((med) => correctSet.has(med)).length;
+    const falsePositives = selectedMedications.filter((med) => !correctSet.has(med)).length;
+    const falseNegatives = correctMedications.filter((med) => !selectedSet.has(med)).length;
+
     // Perfect match
     if (truePositives === correctMedications.length && falsePositives === 0) {
       return {
         correct: true,
         partialCredit: 100,
-        feedback: '✅ Perfect! You correctly identified all medications that should be deprescribed.'
+        feedback:
+          '✅ Perfect! You correctly identified all medications that should be deprescribed.',
       };
     }
-    
+
     // Calculate partial credit
-    const partialCredit = Math.max(0, Math.round(
-      (truePositives / correctMedications.length * 100) - (falsePositives * 20)
-    ));
-    
+    const partialCredit = Math.max(
+      0,
+      Math.round((truePositives / correctMedications.length) * 100 - falsePositives * 20)
+    );
+
     // Generate feedback
     let feedback = '';
-    
+
     if (falseNegatives > 0) {
       feedback += `⚠️ You missed ${falseNegatives} medication(s) that should be stopped. `;
     }
-    
+
     if (falsePositives > 0) {
       feedback += `⚠️ You selected ${falsePositives} medication(s) that should continue. `;
     }
-    
+
     if (truePositives > 0) {
       feedback += `✅ You correctly identified ${truePositives} out of ${correctMedications.length} problematic medications. `;
     }
-    
+
     feedback += `\nPartial credit: ${partialCredit}%`;
-    
+
     return {
       correct: false,
       partialCredit,
-      feedback
+      feedback,
     };
   };
 
@@ -164,7 +170,7 @@ export function usePolypharmacyDrill(difficulty: 'easy' | 'medium' | 'hard' = 'm
     };
 
     // Update state
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       attempts: [...prev.attempts, attempt],
       score: {

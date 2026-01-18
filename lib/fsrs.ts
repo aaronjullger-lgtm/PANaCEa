@@ -57,9 +57,8 @@ export const defaultParameters: FSRSParameters = {
   request_retention: 0.9,
   maximum_interval: 36500,
   w: [
-    0.40255, 1.18385, 3.173, 15.69105, 7.19605, 0.5345, 1.4604, 0.0046, 1.54575,
-    0.1192, 1.01925, 1.9395, 0.41, 0.75825, 0.143, 0.96455, 0.2764, 0.5982,
-    0.39155,
+    0.40255, 1.18385, 3.173, 15.69105, 7.19605, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925,
+    1.9395, 0.41, 0.75825, 0.143, 0.96455, 0.2764, 0.5982, 0.39155,
   ],
 };
 
@@ -113,7 +112,8 @@ export class FSRS {
       newCard.state = FSRSState.Learning;
     } else if (card.state === FSRSState.Learning || card.state === FSRSState.Relearning) {
       this.next_ds(newCard, rating);
-      newCard.state = rating === Rating.Good || rating === Rating.Easy ? FSRSState.Review : FSRSState.Learning;
+      newCard.state =
+        rating === Rating.Good || rating === Rating.Easy ? FSRSState.Review : FSRSState.Learning;
     } else if (card.state === FSRSState.Review) {
       const interval = card.elapsed_days;
       const last_d = card.difficulty;
@@ -128,7 +128,12 @@ export class FSRS {
         newCard.state = FSRSState.Relearning;
         newCard.stability = this.next_forget_stability(last_d, last_s, retrievability);
       } else {
-        newCard.stability = this.next_recall_stability(last_d, last_s, adjustedRetrievability, rating);
+        newCard.stability = this.next_recall_stability(
+          last_d,
+          last_s,
+          adjustedRetrievability,
+          rating
+        );
       }
     }
 
@@ -140,8 +145,10 @@ export class FSRS {
       // Learning steps (simplified)
       // Again: 5min, Hard: 10min, Good: 1day, Easy: 4days
       // We map this to days for simplicity in this DB model
-      if (rating === Rating.Again) next_interval = 0.0035; // ~5 min
-      else if (rating === Rating.Hard) next_interval = 0.007; // ~10 min
+      if (rating === Rating.Again)
+        next_interval = 0.0035; // ~5 min
+      else if (rating === Rating.Hard)
+        next_interval = 0.007; // ~10 min
       else if (rating === Rating.Good) next_interval = 1;
       else if (rating === Rating.Easy) next_interval = 4;
     }
@@ -174,19 +181,25 @@ export class FSRS {
   private next_recall_stability(d: number, s: number, r: number, rating: Rating): number {
     const hard_penalty = rating === Rating.Hard ? this.p.w[15] : 1;
     const easy_bonus = rating === Rating.Easy ? Math.max(1.08, this.p.w[16]) : 1;
-    return s * (1 + Math.exp(this.p.w[8]) *
-      (11 - d) *
-      Math.pow(s, -this.p.w[9]) *
-      (Math.exp((1 - r) * this.p.w[10]) - 1) *
-      hard_penalty *
-      easy_bonus);
+    return (
+      s *
+      (1 +
+        Math.exp(this.p.w[8]) *
+          (11 - d) *
+          Math.pow(s, -this.p.w[9]) *
+          (Math.exp((1 - r) * this.p.w[10]) - 1) *
+          hard_penalty *
+          easy_bonus)
+    );
   }
 
   private next_forget_stability(d: number, s: number, r: number): number {
-    return this.p.w[11] *
+    return (
+      this.p.w[11] *
       Math.pow(d, -this.p.w[12]) *
       (Math.pow(s + 1, this.p.w[13]) - 1) *
-      Math.exp((1 - r) * this.p.w[14]);
+      Math.exp((1 - r) * this.p.w[14])
+    );
   }
 
   private next_interval(s: number): number {
@@ -224,13 +237,12 @@ export function topicProgressToCard(record: any): FSRSCard {
   // scheduled is time from last review to next review
 
   const now = new Date();
-  const elapsedDays = record.lastReviewDate
-    ? (now.getTime() - lastReview.getTime()) / 86400000
-    : 0;
+  const elapsedDays = record.lastReviewDate ? (now.getTime() - lastReview.getTime()) / 86400000 : 0;
 
-  const scheduledDays = (record.nextReviewDate && record.lastReviewDate)
-    ? (nextReview.getTime() - lastReview.getTime()) / 86400000
-    : 0;
+  const scheduledDays =
+    record.nextReviewDate && record.lastReviewDate
+      ? (nextReview.getTime() - lastReview.getTime()) / 86400000
+      : 0;
 
   return {
     stability: record.stability,

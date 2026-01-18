@@ -1,6 +1,6 @@
 /**
  * DDx Table Component
- * 
+ *
  * Renders a structured comparison table between two conditions.
  * Uses color-coded sections to highlight differences.
  */
@@ -74,7 +74,10 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
           <h4 className={`font-semibold mb-2 ${colorsA.text}`}>{conditionA}</h4>
           <ul className="space-y-1.5">
             {itemsA.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <li
+                key={idx}
+                className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+              >
                 <span className={`${colorsA.bullet} mt-1`}>•</span>
                 <span>{item}</span>
               </li>
@@ -87,7 +90,10 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
           <h4 className={`font-semibold mb-2 ${colorsB.text}`}>{conditionB}</h4>
           <ul className="space-y-1.5">
             {itemsB.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <li
+                key={idx}
+                className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+              >
                 <span className={`${colorsB.bullet} mt-1`}>•</span>
                 <span>{item}</span>
               </li>
@@ -110,7 +116,10 @@ const SimilaritiesSection: React.FC<{ items: string[] }> = ({ items }) => (
     <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
       <ul className="space-y-1.5">
         {items.map((item, idx) => (
-          <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <li
+            key={idx}
+            className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+          >
             <span className="text-amber-500 mt-1">•</span>
             <span>{item}</span>
           </li>
@@ -195,7 +204,10 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
           <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
             <ul className="space-y-1.5">
               {triadItems.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                >
                   <span className="text-rose-500 mt-1">•</span>
                   <span>{item}</span>
                 </li>

@@ -1,16 +1,16 @@
 /**
  * Learning Progress Card
- * 
+ *
  * A visually engaging component that displays comprehensive learning progress
  * with animated gauges, trend indicators, and statistical insights.
- * 
+ *
  * Features:
  * - Animated circular progress indicator
  * - Confidence interval display
  * - Trend direction with velocity
  * - PANCE score prediction
  * - Memory strength visualization
- * 
+ *
  * @module components/analytics/LearningProgressCard
  */
 
@@ -41,10 +41,10 @@ interface LearningProgressCardProps {
   // Required data
   accuracy: number; // 0-100
   totalQuestions: number;
-  
+
   // Optional historical data for trends
   accuracyHistory?: { timestamp: Date; value: number }[];
-  
+
   // Optional customization
   title?: string;
   showPrediction?: boolean;
@@ -130,9 +130,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           {label || `${Math.round(percentage)}%`}
         </motion.span>
         {sublabel && (
-          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {sublabel}
-          </span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sublabel}</span>
         )}
       </div>
     </div>
@@ -183,7 +181,10 @@ const TrendIndicator: React.FC<{ trend: TrendAnalysis }> = ({ trend }) => {
   );
 };
 
-const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> = ({ ci, accuracy }) => {
+const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> = ({
+  ci,
+  accuracy,
+}) => {
   const rangeWidth = ci.upper - ci.lower;
   const markerPosition = ((accuracy - ci.lower) / rangeWidth) * 100;
 
@@ -199,9 +200,7 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
       </div>
       <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
         {/* Gradient fill */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 opacity-30"
-        />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 opacity-30" />
         {/* Marker for current accuracy */}
         <motion.div
           initial={{ left: '0%' }}
@@ -234,7 +233,9 @@ const PANCEPredictionBadge: React.FC<{
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Award className={`w-5 h-5 bg-gradient-to-r ${getStatusColor()} text-white rounded p-0.5`} />
+          <Award
+            className={`w-5 h-5 bg-gradient-to-r ${getStatusColor()} text-white rounded p-0.5`}
+          />
           <span className="font-medium text-slate-700 dark:text-slate-200">
             PANCE Score Prediction
           </span>
@@ -243,7 +244,7 @@ const PANCEPredictionBadge: React.FC<{
           {prediction.range.min} - {prediction.range.max}
         </span>
       </div>
-      
+
       <div className="flex items-center gap-4">
         <motion.div
           initial={{ scale: 0 }}
@@ -257,9 +258,7 @@ const PANCEPredictionBadge: React.FC<{
           <div className="text-sm font-medium text-slate-600 dark:text-slate-300">
             {prediction.passLikelihood}
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Passing score: ~350
-          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">Passing score: ~350</div>
         </div>
       </div>
     </motion.div>
@@ -311,22 +310,18 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
   // Calculate statistics
   const stats = useMemo(() => {
     const ci = calculateConfidenceInterval(
-      Math.round(accuracy * totalQuestions / 100),
+      Math.round((accuracy * totalQuestions) / 100),
       totalQuestions
     );
-    
-    const trend = accuracyHistory.length >= 2 
-      ? analyzeTrend(accuracyHistory)
-      : null;
-    
-    const prediction = showPrediction 
-      ? predictPANCEScore(accuracy, totalQuestions)
-      : null;
-    
+
+    const trend = accuracyHistory.length >= 2 ? analyzeTrend(accuracyHistory) : null;
+
+    const prediction = showPrediction ? predictPANCEScore(accuracy, totalQuestions) : null;
+
     const insights = showInsights
       ? generateLearningInsights(accuracyHistory, accuracy, totalQuestions)
       : [];
-    
+
     return { ci, trend, prediction, insights };
   }, [accuracy, totalQuestions, accuracyHistory, showPrediction, showInsights]);
 
@@ -352,9 +347,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
           <CircularProgress value={accuracy} size={80} strokeWidth={8} />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${gradeInfo.color}`}>
-                {gradeInfo.grade}
-              </span>
+              <span className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</span>
               {stats.trend && <TrendIndicator trend={stats.trend} />}
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -379,9 +372,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
             <Brain className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-              {title}
-            </h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Based on {totalQuestions} questions
             </p>
@@ -392,12 +383,8 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
       {/* Main progress */}
       <div className="flex flex-col items-center mb-6">
-        <CircularProgress 
-          value={accuracy} 
-          label={`${Math.round(accuracy)}%`}
-          sublabel="Accuracy"
-        />
-        
+        <CircularProgress value={accuracy} label={`${Math.round(accuracy)}%`} sublabel="Accuracy" />
+
         {/* Grade badge */}
         <motion.div
           initial={{ scale: 0 }}
@@ -406,9 +393,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
           className="mt-4 flex items-center gap-2"
         >
           <span className="text-sm text-slate-500 dark:text-slate-400">Grade:</span>
-          <span className={`text-2xl font-bold ${gradeInfo.color}`}>
-            {gradeInfo.grade}
-          </span>
+          <span className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</span>
         </motion.div>
       </div>
 

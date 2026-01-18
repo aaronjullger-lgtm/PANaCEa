@@ -1,77 +1,44 @@
 /**
- * Content Systems API - GET /api/content/systems
- * 
+ * GET /api/content/systems
+ *
  * Returns distinct organ systems with content counts.
  * Used to populate filter dropdowns in the library browser.
  */
 
-import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-}
+const ContentSystemsSchema = z.object({});
 
-// Handle CORS preflight
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (context) => {
+  const { env } = context;
+  const logger = createEndpointLogger('/api/content/systems');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Authenticate user
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: CORS_HEADERS,
-      });
-    }
-
-    // Edge-safe approach: findMany + JS reduce (avoids groupBy/_count order issues)
     const allSystems = await prisma.medicalContent.findMany({
       select: { system: true },
     });
 
     const systemCounts = new Map<string, number>();
     for (const { system } of allSystems) {
-      if (system) {
-        systemCounts.set(system, (systemCounts.get(system) || 0) + 1);
-      }
+      if (system) systemCounts.set(system, (systemCounts.get(system) || 0) + 1);
     }
 
     const systems = Array.from(systemCounts.entries())
-      .map(([system, count]) => ({
-        id: system,
-        label: system,
-        count,
-      }))
+      .map(([system, count]) => ({ id: system, label: system, count }))
       .sort((a, b) => b.count - a.count);
 
-    return new Response(JSON.stringify(systems), {
-      status: 200,
-      headers: CORS_HEADERS,
-    });
+    logger.info('Systems fetched', { count: systems.length });
+    return { data: systems, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    console.error('[systems] Failed to fetch systems:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to fetch systems',
-        details: error instanceof Error ? error.message : String(error)
-      }),
-      {
-        status: 500,
-        headers: CORS_HEADERS,
-      }
-    );
+    logger.error('Failed to fetch systems', { error: error instanceof Error ? error.message : String(error) });
+    throw new Error('Failed to fetch systems');
   } finally {
     await safePrismaDisconnect(prisma);
   }
-}
+});

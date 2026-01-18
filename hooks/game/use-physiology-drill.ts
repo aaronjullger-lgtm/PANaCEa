@@ -1,6 +1,6 @@
 /**
  * usePhysiologyDrill - Hook for Physiology Review drill mode
- * 
+ *
  * Fetches physiology questions from the database and manages drill state.
  * Practice core physiology concepts essential for clinical reasoning.
  */
@@ -63,13 +63,13 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
 
     try {
       const response = await fetch('/api/questions?category=physiology&limit=20');
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch questions: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.questions || data.questions.length === 0) {
         throw new Error('No physiology questions available. Please run seed script.');
       }
@@ -77,8 +77,8 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
       // Transform database questions
       const transformedQuestions: PhysiologyQuestion[] = data.questions.map((q: any) => {
         const options = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : (q.tags || []);
-        
+        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags || [];
+
         // Find index of correct answer in options array
         const correctIndex = options.findIndex((opt: string) => opt === q.correctAnswer);
 
@@ -158,8 +158,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });
@@ -203,8 +202,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });

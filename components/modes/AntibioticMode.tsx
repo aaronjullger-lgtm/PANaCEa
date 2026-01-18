@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
-import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play, Bug, Zap, AlertTriangle, Target, AlertCircle } from 'lucide-react';
-import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
+import {
+  X,
+  CheckCircle,
+  XCircle,
+  Pill,
+  ArrowRight,
+  RotateCcw,
+  Shuffle,
+  Play,
+  Bug,
+  Zap,
+  AlertTriangle,
+  Target,
+  AlertCircle,
+} from 'lucide-react';
+import type {
+  AntibioticDrillQuestion,
+  OrganismInfection,
+  AntibioticDrug,
+} from '@/types/drill-modes';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { toTitleCase } from '@/lib/textUtils';
 import { submitDrillResult } from '@/services/drillService';
@@ -29,19 +47,74 @@ interface AntibioticGuideline {
 const ANTIBIOTICS: AntibioticDrug[] = [
   { id: 'abx-001', name: 'Penicillin', class: 'Beta-lactam', description: 'Natural penicillin' },
   { id: 'abx-002', name: 'Amoxicillin', class: 'Beta-lactam', description: 'Aminopenicillin' },
-  { id: 'abx-003', name: 'Amoxicillin-Clavulanate', class: 'Beta-lactam + Inhibitor', description: 'Extended spectrum' },
-  { id: 'abx-004', name: 'Nafcillin', class: 'Beta-lactam', description: 'Anti-staphylococcal penicillin' },
-  { id: 'abx-005', name: 'Piperacillin-Tazobactam', class: 'Beta-lactam + Inhibitor', description: 'Anti-pseudomonal' },
-  { id: 'abx-006', name: 'Ceftriaxone', class: 'Cephalosporin (3rd gen)', description: 'Broad spectrum' },
-  { id: 'abx-007', name: 'Cefepime', class: 'Cephalosporin (4th gen)', description: 'Anti-pseudomonal' },
+  {
+    id: 'abx-003',
+    name: 'Amoxicillin-Clavulanate',
+    class: 'Beta-lactam + Inhibitor',
+    description: 'Extended spectrum',
+  },
+  {
+    id: 'abx-004',
+    name: 'Nafcillin',
+    class: 'Beta-lactam',
+    description: 'Anti-staphylococcal penicillin',
+  },
+  {
+    id: 'abx-005',
+    name: 'Piperacillin-Tazobactam',
+    class: 'Beta-lactam + Inhibitor',
+    description: 'Anti-pseudomonal',
+  },
+  {
+    id: 'abx-006',
+    name: 'Ceftriaxone',
+    class: 'Cephalosporin (3rd gen)',
+    description: 'Broad spectrum',
+  },
+  {
+    id: 'abx-007',
+    name: 'Cefepime',
+    class: 'Cephalosporin (4th gen)',
+    description: 'Anti-pseudomonal',
+  },
   { id: 'abx-008', name: 'Vancomycin', class: 'Glycopeptide', description: 'MRSA coverage' },
   { id: 'abx-009', name: 'Azithromycin', class: 'Macrolide', description: 'Atypical coverage' },
-  { id: 'abx-010', name: 'Ciprofloxacin', class: 'Fluoroquinolone', description: 'Gram-negative, atypical' },
-  { id: 'abx-011', name: 'Levofloxacin', class: 'Fluoroquinolone', description: 'Respiratory quinolone' },
-  { id: 'abx-012', name: 'Doxycycline', class: 'Tetracycline', description: 'Atypical, tick-borne' },
-  { id: 'abx-013', name: 'Metronidazole', class: 'Nitroimidazole', description: 'Anaerobic coverage' },
-  { id: 'abx-014', name: 'Meropenem', class: 'Carbapenem', description: 'Broad spectrum, last-line' },
-  { id: 'abx-015', name: 'Fluconazole', class: 'Azole antifungal', description: 'Candida coverage' }
+  {
+    id: 'abx-010',
+    name: 'Ciprofloxacin',
+    class: 'Fluoroquinolone',
+    description: 'Gram-negative, atypical',
+  },
+  {
+    id: 'abx-011',
+    name: 'Levofloxacin',
+    class: 'Fluoroquinolone',
+    description: 'Respiratory quinolone',
+  },
+  {
+    id: 'abx-012',
+    name: 'Doxycycline',
+    class: 'Tetracycline',
+    description: 'Atypical, tick-borne',
+  },
+  {
+    id: 'abx-013',
+    name: 'Metronidazole',
+    class: 'Nitroimidazole',
+    description: 'Anaerobic coverage',
+  },
+  {
+    id: 'abx-014',
+    name: 'Meropenem',
+    class: 'Carbapenem',
+    description: 'Broad spectrum, last-line',
+  },
+  {
+    id: 'abx-015',
+    name: 'Fluconazole',
+    class: 'Azole antifungal',
+    description: 'Candida coverage',
+  },
 ];
 
 /**
@@ -64,21 +137,23 @@ const fetchAntibioticGuidelines = async (): Promise<AntibioticGuideline[]> => {
 /**
  * Generate a coverage drill question from guidelines
  */
-const generateCoverageDrill = (guidelines: AntibioticGuideline[]): AntibioticDrillQuestion | null => {
+const generateCoverageDrill = (
+  guidelines: AntibioticGuideline[]
+): AntibioticDrillQuestion | null => {
   if (guidelines.length === 0) return null;
-  
+
   const guideline = guidelines[Math.floor(Math.random() * guidelines.length)];
-  
+
   const organism: OrganismInfection = {
     id: guideline.id,
     name: guideline.organism,
     category: guideline.class.toLowerCase().replace(' ', '_') as OrganismInfection['category'],
-    description: guideline.description || undefined
+    description: guideline.description || undefined,
   };
 
   // Map drug names to IDs
   const correctDrugs = guideline.effective
-    .map(drugName => ANTIBIOTICS.find(d => d.name === drugName)?.id)
+    .map((drugName) => ANTIBIOTICS.find((d) => d.name === drugName)?.id)
     .filter((id): id is string => id !== undefined);
 
   return {
@@ -86,7 +161,9 @@ const generateCoverageDrill = (guidelines: AntibioticGuideline[]): AntibioticDri
     type: 'coverage',
     organism,
     correctDrugs,
-    explanation: guideline.notes || `For ${guideline.organism}, appropriate antibiotics include those targeting ${guideline.class} bacteria. ${guideline.effective.join(', ')} provide effective coverage.`
+    explanation:
+      guideline.notes ||
+      `For ${guideline.organism}, appropriate antibiotics include those targeting ${guideline.class} bacteria. ${guideline.effective.join(', ')} provide effective coverage.`,
   };
 };
 
@@ -103,10 +180,11 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
         'Inhibits cell wall synthesis by binding PBPs',
         'Inhibits protein synthesis at 30S ribosome',
         'Inhibits DNA gyrase',
-        'Inhibits folic acid synthesis'
+        'Inhibits folic acid synthesis',
       ],
       correctIndex: 0,
-      explanation: 'Beta-lactams like Penicillin inhibit cell wall synthesis by binding to penicillin-binding proteins (PBPs), preventing peptidoglycan cross-linking.'
+      explanation:
+        'Beta-lactams like Penicillin inhibit cell wall synthesis by binding to penicillin-binding proteins (PBPs), preventing peptidoglycan cross-linking.',
     },
     {
       drug: ANTIBIOTICS[7], // Vancomycin
@@ -115,10 +193,11 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
         'Inhibits protein synthesis at 50S ribosome',
         'Inhibits cell wall synthesis by binding D-Ala-D-Ala',
         'Disrupts cell membrane',
-        'Inhibits folic acid synthesis'
+        'Inhibits folic acid synthesis',
       ],
       correctIndex: 1,
-      explanation: 'Vancomycin inhibits cell wall synthesis by binding to D-Ala-D-Ala terminal of peptidoglycan precursors, preventing cross-linking.'
+      explanation:
+        'Vancomycin inhibits cell wall synthesis by binding to D-Ala-D-Ala terminal of peptidoglycan precursors, preventing cross-linking.',
     },
     {
       drug: ANTIBIOTICS[8], // Azithromycin
@@ -127,15 +206,16 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
         'Inhibits cell wall synthesis',
         'Inhibits protein synthesis at 50S ribosome',
         'Inhibits DNA gyrase',
-        'Inhibits folic acid synthesis'
+        'Inhibits folic acid synthesis',
       ],
       correctIndex: 1,
-      explanation: 'Macrolides like Azithromycin inhibit protein synthesis by binding to the 50S ribosomal subunit, blocking translocation.'
-    }
+      explanation:
+        'Macrolides like Azithromycin inhibit protein synthesis by binding to the 50S ribosomal subunit, blocking translocation.',
+    },
   ];
-  
+
   const selected = mechanisms[Math.floor(Math.random() * mechanisms.length)];
-  
+
   return {
     id: `drill-mech-${Date.now()}`,
     type: 'mechanism',
@@ -143,7 +223,7 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
     mechanismQuestion: selected.question,
     mechanismChoices: selected.choices,
     correctMechanismIndex: selected.correctIndex,
-    explanation: selected.explanation
+    explanation: selected.explanation,
   };
 };
 
@@ -152,14 +232,10 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
     {
       drug: ANTIBIOTICS[8], // Azithromycin
       question: 'What is a major adverse effect of Azithromycin?',
-      choices: [
-        'Nephrotoxicity',
-        'QT prolongation',
-        'Gray baby syndrome',
-        'Disulfiram reaction'
-      ],
+      choices: ['Nephrotoxicity', 'QT prolongation', 'Gray baby syndrome', 'Disulfiram reaction'],
       correctIndex: 1,
-      explanation: 'Azithromycin can cause QT prolongation, increasing risk of torsades de pointes, especially in patients with cardiac risk factors.'
+      explanation:
+        'Azithromycin can cause QT prolongation, increasing risk of torsades de pointes, especially in patients with cardiac risk factors.',
     },
     {
       drug: ANTIBIOTICS[7], // Vancomycin
@@ -168,10 +244,11 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
         'Hepatotoxicity and pancreatitis',
         'Nephrotoxicity and ototoxicity',
         'Bone marrow suppression',
-        'Peripheral neuropathy'
+        'Peripheral neuropathy',
       ],
       correctIndex: 1,
-      explanation: 'Vancomycin\'s major toxicities include nephrotoxicity and ototoxicity. "Red man syndrome" from rapid infusion is also notable.'
+      explanation:
+        'Vancomycin\'s major toxicities include nephrotoxicity and ototoxicity. "Red man syndrome" from rapid infusion is also notable.',
     },
     {
       drug: ANTIBIOTICS[9], // Ciprofloxacin
@@ -180,15 +257,16 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
         'Tendon rupture',
         'Aplastic anemia',
         'Stevens-Johnson syndrome',
-        'Hemorrhagic cystitis'
+        'Hemorrhagic cystitis',
       ],
       correctIndex: 0,
-      explanation: 'Fluoroquinolones carry a black box warning for tendon rupture, particularly the Achilles tendon. Risk increases with age >60 and concurrent steroid use.'
-    }
+      explanation:
+        'Fluoroquinolones carry a black box warning for tendon rupture, particularly the Achilles tendon. Risk increases with age >60 and concurrent steroid use.',
+    },
   ];
-  
+
   const selected = sideEffects[Math.floor(Math.random() * sideEffects.length)];
-  
+
   return {
     id: `drill-side-${Date.now()}`,
     type: 'side_effects',
@@ -196,67 +274,74 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
     sideEffectQuestion: selected.question,
     sideEffectChoices: selected.choices,
     correctSideEffectIndex: selected.correctIndex,
-    explanation: selected.explanation
+    explanation: selected.explanation,
   };
 };
 
 const generateEmpiricChoiceDrill = (): AntibioticDrillQuestion => {
   const scenarios = [
     {
-      scenario: 'A 45-year-old presents with acute cystitis. Urine culture pending. What is the first-line empiric treatment?',
-      choices: [
-        'Ciprofloxacin',
-        'Nitrofurantoin or TMP-SMX',
-        'Amoxicillin',
-        'Vancomycin'
-      ],
+      scenario:
+        'A 45-year-old presents with acute cystitis. Urine culture pending. What is the first-line empiric treatment?',
+      choices: ['Ciprofloxacin', 'Nitrofurantoin or TMP-SMX', 'Amoxicillin', 'Vancomycin'],
       correctIndex: 1,
-      explanation: 'For uncomplicated UTI, first-line empiric therapy is Nitrofurantoin or TMP-SMX. Fluoroquinolones are reserved for complicated cases.'
+      explanation:
+        'For uncomplicated UTI, first-line empiric therapy is Nitrofurantoin or TMP-SMX. Fluoroquinolones are reserved for complicated cases.',
     },
     {
-      scenario: 'A patient with suspected community-acquired pneumonia and risk factors for MRSA needs admission. What empiric coverage?',
+      scenario:
+        'A patient with suspected community-acquired pneumonia and risk factors for MRSA needs admission. What empiric coverage?',
       choices: [
         'Ceftriaxone + Azithromycin only',
         'Vancomycin + Piperacillin-Tazobactam',
         'Ceftriaxone + Azithromycin + Vancomycin',
-        'Azithromycin alone'
+        'Azithromycin alone',
       ],
       correctIndex: 2,
-      explanation: 'CAP with MRSA risk requires typical coverage (Ceftriaxone + Azithromycin) plus MRSA coverage (Vancomycin). Alternative: Linezolid instead of Vancomycin.'
+      explanation:
+        'CAP with MRSA risk requires typical coverage (Ceftriaxone + Azithromycin) plus MRSA coverage (Vancomycin). Alternative: Linezolid instead of Vancomycin.',
     },
     {
-      scenario: 'A patient with hospital-acquired pneumonia and risk for Pseudomonas needs empiric therapy. What do you choose?',
+      scenario:
+        'A patient with hospital-acquired pneumonia and risk for Pseudomonas needs empiric therapy. What do you choose?',
       choices: [
         'Ceftriaxone + Azithromycin',
         'Vancomycin + Cefepime or Piperacillin-Tazobactam',
         'Amoxicillin-Clavulanate',
-        'Meropenem alone'
+        'Meropenem alone',
       ],
       correctIndex: 1,
-      explanation: 'HAP with Pseudomonas risk requires anti-pseudomonal beta-lactam (Cefepime, Pip-Tazo, or Meropenem) plus MRSA coverage (Vancomycin or Linezolid).'
-    }
+      explanation:
+        'HAP with Pseudomonas risk requires anti-pseudomonal beta-lactam (Cefepime, Pip-Tazo, or Meropenem) plus MRSA coverage (Vancomycin or Linezolid).',
+    },
   ];
-  
+
   const selected = scenarios[Math.floor(Math.random() * scenarios.length)];
-  
+
   return {
     id: `drill-emp-${Date.now()}`,
     type: 'empiric_choice',
     clinicalScenario: selected.scenario,
     empiricChoices: selected.choices,
     correctEmpiricIndex: selected.correctIndex,
-    explanation: selected.explanation
+    explanation: selected.explanation,
   };
 };
 
 /**
  * Generate antibiotic drill - now uses database for coverage drills
  */
-const generateAntibioticDrill = (guidelines: AntibioticGuideline[]): AntibioticDrillQuestion | null => {
-  const types: ('coverage' | 'mechanism' | 'side_effects' | 'empiric_choice')[] = 
-    ['coverage', 'mechanism', 'side_effects', 'empiric_choice'];
+const generateAntibioticDrill = (
+  guidelines: AntibioticGuideline[]
+): AntibioticDrillQuestion | null => {
+  const types: ('coverage' | 'mechanism' | 'side_effects' | 'empiric_choice')[] = [
+    'coverage',
+    'mechanism',
+    'side_effects',
+    'empiric_choice',
+  ];
   const randomType = types[Math.floor(Math.random() * types.length)];
-  
+
   switch (randomType) {
     case 'coverage':
       return generateCoverageDrill(guidelines);
@@ -284,7 +369,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   const handleStart = async () => {
     setViewState('loading');
     setError(null);
-    
+
     // Fetch guidelines if not already loaded
     let guidelineData = guidelines;
     if (guidelineData.length === 0) {
@@ -296,14 +381,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       }
       setGuidelines(guidelineData);
     }
-    
+
     const drill = generateAntibioticDrill(guidelineData);
     if (!drill) {
       setError('Failed to generate drill. Please try again.');
       setViewState('error');
       return;
     }
-    
+
     setCurrentDrill(drill);
     setViewState('active');
   };
@@ -315,14 +400,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     setIsSubmitted(false);
     setIsCorrect(false);
     setError(null);
-    
+
     const drill = generateAntibioticDrill(guidelines);
     if (!drill) {
       setError('Failed to generate next drill. Please try again.');
       setViewState('error');
       return;
     }
-    
+
     setCurrentDrill(drill);
     setViewState('active');
   };
@@ -334,20 +419,20 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
   const handleSubmit = () => {
     if (!currentDrill) return;
-    
+
     let correct = false;
 
     if (currentDrill.type === 'coverage') {
       // Check if selected drugs match correct drugs
       const correctDrugSet = new Set(currentDrill.correctDrugs || []);
       const selectedDrugSet = new Set(selectedDrugs);
-      correct = 
+      correct =
         selectedDrugs.length > 0 &&
-        selectedDrugs.every(drug => correctDrugSet.has(drug)) &&
+        selectedDrugs.every((drug) => correctDrugSet.has(drug)) &&
         selectedDrugs.length <= correctDrugSet.size;
     } else {
       // For MCQ-type questions
-      correct = 
+      correct =
         selectedAnswer === currentDrill.correctMechanismIndex ||
         selectedAnswer === currentDrill.correctSideEffectIndex ||
         selectedAnswer === currentDrill.correctEmpiricIndex;
@@ -355,11 +440,11 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
     setIsCorrect(correct);
     setIsSubmitted(true);
-    setScore(prev => ({
+    setScore((prev) => ({
       correct: prev.correct + (correct ? 1 : 0),
-      total: prev.total + 1
+      total: prev.total + 1,
     }));
-    
+
     // Trigger haptic feedback
     if (correct) {
       hapticSuccess();
@@ -379,31 +464,39 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
   const toggleDrugSelection = (drugId: string) => {
     if (isSubmitted) return;
-    
-    setSelectedDrugs(prev => 
-      prev.includes(drugId)
-        ? prev.filter(id => id !== drugId)
-        : [...prev, drugId]
+
+    setSelectedDrugs((prev) =>
+      prev.includes(drugId) ? prev.filter((id) => id !== drugId) : [...prev, drugId]
     );
   };
 
   const getDrillTypeLabel = () => {
     switch (currentDrill.type) {
-      case 'coverage': return 'Bug-Drug Coverage';
-      case 'mechanism': return 'Mechanism of Action';
-      case 'side_effects': return 'Side Effects';
-      case 'empiric_choice': return 'Empiric Therapy';
-      default: return 'Antibiotic Drill';
+      case 'coverage':
+        return 'Bug-Drug Coverage';
+      case 'mechanism':
+        return 'Mechanism of Action';
+      case 'side_effects':
+        return 'Side Effects';
+      case 'empiric_choice':
+        return 'Empiric Therapy';
+      default:
+        return 'Antibiotic Drill';
     }
   };
 
   const getDrillTypeColor = () => {
     switch (currentDrill.type) {
-      case 'coverage': return 'from-blue-600 to-indigo-700';
-      case 'mechanism': return 'from-purple-600 to-violet-700';
-      case 'side_effects': return 'from-red-600 to-rose-700';
-      case 'empiric_choice': return 'from-emerald-600 to-green-700';
-      default: return 'from-slate-600 to-gray-700';
+      case 'coverage':
+        return 'from-blue-600 to-indigo-700';
+      case 'mechanism':
+        return 'from-purple-600 to-violet-700';
+      case 'side_effects':
+        return 'from-red-600 to-rose-700';
+      case 'empiric_choice':
+        return 'from-emerald-600 to-green-700';
+      default:
+        return 'from-slate-600 to-gray-700';
     }
   };
 
@@ -413,16 +506,22 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         <div className="space-y-6">
           {/* Organism Card */}
           <div className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md">
-            <h3 className="text-lg font-semibold mb-2 text-purple-600 dark:text-purple-400">Target Organism</h3>
+            <h3 className="text-lg font-semibold mb-2 text-purple-600 dark:text-purple-400">
+              Target Organism
+            </h3>
             <div className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1] mb-2">{currentDrill.organism.name}</h4>
+              <h4 className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1] mb-2">
+                {currentDrill.organism.name}
+              </h4>
               <div className="flex items-center gap-2 text-sm">
                 <span className="px-3 py-1 bg-purple-50 dark:bg-purple-950/30 rounded-full text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
                   {currentDrill.organism.category.replace('_', ' ')}
                 </span>
               </div>
               {currentDrill.organism.description && (
-                <p className="text-[#364154] dark:text-[#cbd5e1] text-sm mt-3">{currentDrill.organism.description}</p>
+                <p className="text-[#364154] dark:text-[#cbd5e1] text-sm mt-3">
+                  {currentDrill.organism.description}
+                </p>
               )}
             </div>
           </div>
@@ -447,8 +546,12 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1F283A] hover:border-purple-300 dark:hover:border-purple-700'
                   } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
-                  <div className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-sm">{drug.name}</div>
-                  <div className="text-xs text-[#364154] dark:text-[#cbd5e1] mt-1">{toTitleCase(drug.class)}</div>
+                  <div className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-sm">
+                    {drug.name}
+                  </div>
+                  <div className="text-xs text-[#364154] dark:text-[#cbd5e1] mt-1">
+                    {toTitleCase(drug.class)}
+                  </div>
                 </button>
               ))}
             </div>
@@ -458,15 +561,17 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     }
 
     // MCQ-type drills
-    const question = 
-      currentDrill.mechanismQuestion || 
-      currentDrill.sideEffectQuestion || 
-      currentDrill.clinicalScenario || '';
-    
-    const choices = 
-      currentDrill.mechanismChoices || 
-      currentDrill.sideEffectChoices || 
-      currentDrill.empiricChoices || [];
+    const question =
+      currentDrill.mechanismQuestion ||
+      currentDrill.sideEffectQuestion ||
+      currentDrill.clinicalScenario ||
+      '';
+
+    const choices =
+      currentDrill.mechanismChoices ||
+      currentDrill.sideEffectChoices ||
+      currentDrill.empiricChoices ||
+      [];
 
     return (
       <div className="space-y-6">
@@ -485,8 +590,12 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
         {/* Question */}
         <div className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">Question</h3>
-          <p className="text-[#1F283A] dark:text-[#E9ECF1] mb-6 leading-relaxed font-medium">{question}</p>
+          <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">
+            Question
+          </h3>
+          <p className="text-[#1F283A] dark:text-[#E9ECF1] mb-6 leading-relaxed font-medium">
+            {question}
+          </p>
 
           {/* Answer Choices */}
           <div className="space-y-3">
@@ -502,14 +611,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    selectedAnswer === index
-                      ? 'border-purple-500 bg-purple-500'
-                      : 'border-slate-300 dark:border-slate-600'
-                  }`}>
-                    {selectedAnswer === index && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    )}
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selectedAnswer === index
+                        ? 'border-purple-500 bg-purple-500'
+                        : 'border-slate-300 dark:border-slate-600'
+                    }`}
+                  >
+                    {selectedAnswer === index && <div className="w-2 h-2 bg-white rounded-full" />}
                   </div>
                   <span className="text-[#1F283A] dark:text-[#E9ECF1]">{choice}</span>
                 </div>
@@ -542,7 +651,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Antibiotic Selection & Knowledge</p>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">
+                  Antibiotic Selection & Knowledge
+                </p>
               </div>
             </div>
             {onExit && (
@@ -564,7 +675,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">Master Antibiotic Selection</h2>
+              <h2 className="text-4xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">
+                Master Antibiotic Selection
+              </h2>
               <p className="text-xl text-[#364154] dark:text-[#cbd5e1]">
                 Sharpen your antimicrobial stewardship skills with rotating drill types
               </p>
@@ -572,19 +685,42 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
             {/* Drill Types Card */}
             <div className="bg-white dark:bg-[#364154] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-6">Drill Types</h3>
-              
+              <h3 className="text-2xl font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-6">
+                Drill Types
+              </h3>
+
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { title: 'Bug-Drug Coverage', desc: 'Match organisms to appropriate antibiotics', Icon: Bug },
-                  { title: 'Mechanism of Action', desc: 'Understand how antibiotics work', Icon: Zap },
-                  { title: 'Side Effects', desc: 'Know the adverse reactions and contraindications', Icon: AlertTriangle },
-                  { title: 'Empiric Therapy', desc: 'Choose the right antibiotic for clinical scenarios', Icon: Target }
+                  {
+                    title: 'Bug-Drug Coverage',
+                    desc: 'Match organisms to appropriate antibiotics',
+                    Icon: Bug,
+                  },
+                  {
+                    title: 'Mechanism of Action',
+                    desc: 'Understand how antibiotics work',
+                    Icon: Zap,
+                  },
+                  {
+                    title: 'Side Effects',
+                    desc: 'Know the adverse reactions and contraindications',
+                    Icon: AlertTriangle,
+                  },
+                  {
+                    title: 'Empiric Therapy',
+                    desc: 'Choose the right antibiotic for clinical scenarios',
+                    Icon: Target,
+                  },
                 ].map((drill, i) => (
-                  <div key={i} className="bg-[#E9ECF1] dark:bg-[#1F283A] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                  <div
+                    key={i}
+                    className="bg-[#E9ECF1] dark:bg-[#1F283A] rounded-xl p-4 border border-slate-200 dark:border-slate-700"
+                  >
                     <div className="flex items-center gap-3 mb-2">
                       <drill.Icon className="w-6 h-6 text-[var(--color-accent)]" />
-                      <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{drill.title}</h4>
+                      <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">
+                        {drill.title}
+                      </h4>
                     </div>
                     <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">{drill.desc}</p>
                   </div>
@@ -676,7 +812,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Antibiotic Selection & Knowledge</p>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">
+                  Antibiotic Selection & Knowledge
+                </p>
               </div>
             </div>
             {onExit && (
@@ -698,7 +836,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-8 border border-red-200 dark:border-red-900 text-center"
           >
             <AlertCircle className="w-16 h-16 text-red-600 dark:text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-700 dark:text-red-300 mb-2">Error Loading Drill</h2>
+            <h2 className="text-2xl font-bold text-red-700 dark:text-red-300 mb-2">
+              Error Loading Drill
+            </h2>
             <p className="text-[#364154] dark:text-[#cbd5e1] mb-6">
               {error || 'An unexpected error occurred. Please try again.'}
             </p>
@@ -739,7 +879,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             </div>
             <div>
               <h1 className="text-xl font-bold">Bug-Drug Mastery</h1>
-              <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Antibiotic Selection & Knowledge</p>
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">
+                Antibiotic Selection & Knowledge
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -842,16 +984,20 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                     <XCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
                   )}
                   <div className="flex-1">
-                    <p className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+                    <p
+                      className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}
+                    >
                       {isCorrect ? 'Correct!' : 'Incorrect'}
                     </p>
                     <p className="text-[#364154] dark:text-[#cbd5e1] leading-relaxed">
                       {currentDrill.explanation}
                     </p>
-                    
+
                     {currentDrill.pearls && currentDrill.pearls.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <p className="font-semibold text-purple-600 dark:text-purple-400">Clinical Pearls:</p>
+                        <p className="font-semibold text-purple-600 dark:text-purple-400">
+                          Clinical Pearls:
+                        </p>
                         <ul className="list-disc list-inside space-y-1 text-sm text-[#364154] dark:text-[#cbd5e1]">
                           {currentDrill.pearls.map((pearl, idx) => (
                             <li key={idx}>{pearl}</li>
@@ -861,21 +1007,26 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                     )}
 
                     {/* Show correct answer for coverage drills */}
-                    {!isCorrect && currentDrill.type === 'coverage' && currentDrill.correctDrugs && (
-                      <div className="mt-4">
-                        <p className="font-semibold text-purple-400 mb-2">Correct Antibiotics:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {currentDrill.correctDrugs.map(drugId => {
-                            const drug = ANTIBIOTICS.find(d => d.id === drugId);
-                            return drug ? (
-                              <span key={drugId} className="px-3 py-1 bg-green-900/40 rounded-full text-green-300 text-sm border border-green-700/30">
-                                {drug.name}
-                              </span>
-                            ) : null;
-                          })}
+                    {!isCorrect &&
+                      currentDrill.type === 'coverage' &&
+                      currentDrill.correctDrugs && (
+                        <div className="mt-4">
+                          <p className="font-semibold text-purple-400 mb-2">Correct Antibiotics:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {currentDrill.correctDrugs.map((drugId) => {
+                              const drug = ANTIBIOTICS.find((d) => d.id === drugId);
+                              return drug ? (
+                                <span
+                                  key={drugId}
+                                  className="px-3 py-1 bg-green-900/40 rounded-full text-green-300 text-sm border border-green-700/30"
+                                >
+                                  {drug.name}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               </motion.div>

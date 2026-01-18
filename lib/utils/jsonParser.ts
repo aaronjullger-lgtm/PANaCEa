@@ -1,17 +1,17 @@
 /**
  * JSON Parser Utilities
- * 
+ *
  * Safe parsing functions for handling JSONB fields from the database.
  * Prevents crashes from malformed JSON and provides sensible fallbacks.
  */
 
 /**
  * Safely parses a JSON value with a fallback
- * 
+ *
  * @param value - The value to parse (can be string, object, or null)
  * @param fallback - The fallback value if parsing fails
  * @returns Parsed value or fallback
- * 
+ *
  * @example
  * const pearls = safeParseJson(row.clinical_pearls, []);
  * const demographic = safeParseJson(row.age_demographic, null);
@@ -55,9 +55,7 @@ export function safeParseList(value: unknown): string[] {
   if (value === null || value === undefined) return [];
 
   const normalize = (items: unknown[]): string[] =>
-    items
-      .map(item => String(item ?? '').trim())
-      .filter(item => item.length > 0);
+    items.map((item) => String(item ?? '').trim()).filter((item) => item.length > 0);
 
   if (Array.isArray(value)) {
     return normalize(value);
@@ -107,17 +105,17 @@ export function handleFakeNull<T>(value: unknown, fallback: T): T | null {
 
 /**
  * Normalizes various input formats to a string array
- * 
+ *
  * Handles:
  * - Already an array of strings → return as-is
  * - Single string → wrap in array
  * - String with newlines → split by newlines
  * - Object with values → extract values as strings
  * - Null/undefined → return empty array
- * 
+ *
  * @param value - The value to normalize
  * @returns Array of strings
- * 
+ *
  * @example
  * normalizeToStringArray(['item1', 'item2']) // ['item1', 'item2']
  * normalizeToStringArray('single item')      // ['single item']
@@ -133,9 +131,9 @@ export function normalizeToStringArray(value: unknown): string[] {
   // Already a string array
   if (Array.isArray(value)) {
     return value
-      .filter(item => item != null) // Remove null/undefined
-      .map(item => String(item))    // Convert all to strings
-      .filter(item => item.trim() !== ''); // Remove empty strings
+      .filter((item) => item != null) // Remove null/undefined
+      .map((item) => String(item)) // Convert all to strings
+      .filter((item) => item.trim() !== ''); // Remove empty strings
   }
 
   // Single string
@@ -144,10 +142,10 @@ export function normalizeToStringArray(value: unknown): string[] {
     if (value.includes('\n')) {
       return value
         .split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== '');
+        .map((line) => line.trim())
+        .filter((line) => line !== '');
     }
-    
+
     // Single line string
     return value.trim() !== '' ? [value.trim()] : [];
   }
@@ -155,9 +153,9 @@ export function normalizeToStringArray(value: unknown): string[] {
   // Object → extract values
   if (typeof value === 'object' && value !== null) {
     return Object.values(value)
-      .filter(val => val != null)
-      .map(val => String(val))
-      .filter(val => val.trim() !== '');
+      .filter((val) => val != null)
+      .map((val) => String(val))
+      .filter((val) => val.trim() !== '');
   }
 
   // Fallback: empty array
@@ -166,21 +164,17 @@ export function normalizeToStringArray(value: unknown): string[] {
 
 /**
  * Safely extracts a nested property from a JSONB object
- * 
+ *
  * @param obj - The object to extract from
  * @param path - Dot-separated path (e.g., 'diagnosis.gold_standard')
  * @param fallback - Fallback value if path doesn't exist
  * @returns The value at the path or fallback
- * 
+ *
  * @example
  * const goldStandard = safeExtractPath(content, 'diagnosis.gold_standard', '');
  * const firstLine = safeExtractPath(content, 'treatment.first_line', 'Unknown');
  */
-export function safeExtractPath<T>(
-  obj: unknown,
-  path: string,
-  fallback: T
-): T {
+export function safeExtractPath<T>(obj: unknown, path: string, fallback: T): T {
   if (!obj || typeof obj !== 'object') {
     return fallback;
   }
@@ -201,10 +195,10 @@ export function safeExtractPath<T>(
 
 /**
  * Checks if a JSONB field is effectively empty
- * 
+ *
  * @param value - The value to check
  * @returns True if empty, false otherwise
- * 
+ *
  * @example
  * isEmptyJsonbField(null)           // true
  * isEmptyJsonbField([])             // true
@@ -252,7 +246,7 @@ export function cleanMedicalContent(rawData: Record<string, unknown>): Record<st
 
 /**
  * Parses and validates an age demographic object
- * 
+ *
  * @param value - The age demographic value from database
  * @returns Parsed age demographic or null
  */
@@ -263,7 +257,7 @@ export function parseAgeDemographic(value: unknown): {
   peak?: string;
 } | null {
   const parsed = safeParseJson<Record<string, unknown>>(value, {});
-  
+
   if (isEmptyJsonbField(parsed)) {
     return null;
   }

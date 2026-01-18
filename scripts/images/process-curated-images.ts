@@ -1,12 +1,12 @@
 /**
  * Process Curated Medical Images with AI
- * 
+ *
  * - Analyzes each image with Gemini 2.5 Flash
  * - Verifies condition matches (filenames may be misleading)
  * - Generates visual keys and educational content
  * - Crops if needed to remove annotations
  * - Links to correct condition in database
- * 
+ *
  * Usage: npx tsx scripts/images/process-curated-images.ts
  */
 
@@ -33,7 +33,7 @@ async function rateLimit() {
   const now = Date.now();
   const elapsed = now - lastApiCall;
   if (elapsed < MIN_DELAY_MS) {
-    await new Promise(r => setTimeout(r, MIN_DELAY_MS - elapsed));
+    await new Promise((r) => setTimeout(r, MIN_DELAY_MS - elapsed));
   }
   lastApiCall = Date.now();
 }
@@ -42,7 +42,15 @@ interface ImageAnalysis {
   isValid: boolean;
   detectedCondition: string;
   confidence: number;
-  imageType: 'ecg' | 'xray' | 'ct' | 'mri' | 'clinical_photo' | 'dermoscopy' | 'ultrasound' | 'other';
+  imageType:
+    | 'ecg'
+    | 'xray'
+    | 'ct'
+    | 'mri'
+    | 'clinical_photo'
+    | 'dermoscopy'
+    | 'ultrasound'
+    | 'other';
   visualKeys: string[];
   explanation: string;
   quizSuitability: 'excellent' | 'good' | 'fair' | 'poor' | 'unusable';
@@ -104,28 +112,27 @@ Be accurate about the condition. The filename may be misleading.`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: base64 } }
-            ]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }],
+            },
+          ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 1024
-          }
-        })
+            maxOutputTokens: 1024,
+          },
+        }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
       console.error(`API error ${response.status}: ${errText.substring(0, 200)}`);
-      
+
       // Handle rate limiting with exponential backoff
       if (response.status === 429) {
         console.log('Rate limited, waiting 30s...');
-        await new Promise(r => setTimeout(r, 30000));
+        await new Promise((r) => setTimeout(r, 30000));
         return analyzeImage(imagePath, folderHint); // Retry
       }
       return null;
@@ -133,18 +140,20 @@ Be accurate about the condition. The filename may be misleading.`;
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
+
     // Parse JSON from response
-    const clean = text.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+    const clean = text
+      .replace(/```json\n?/g, '')
+      .replace(/```/g, '')
+      .trim();
     const match = clean.match(/\{[\s\S]*\}/);
-    
+
     if (!match) {
       console.error('No JSON in response');
       return null;
     }
 
     return JSON.parse(match[0]) as ImageAnalysis;
-
   } catch (error) {
     console.error(`Analysis error: ${error}`);
     return null;
@@ -164,19 +173,16 @@ async function uploadToSupabase(imagePath: string, conditionId: string): Promise
     const imageBuffer = fs.readFileSync(imagePath);
     const ext = path.extname(imagePath).toLowerCase();
     const filename = `${conditionId}/${crypto.randomUUID()}${ext}`;
-    
-    const response = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/medical-images/${filename}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': ext === '.png' ? 'image/png' : 'image/jpeg',
-          'x-upsert': 'true'
-        },
-        body: imageBuffer
-      }
-    );
+
+    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/medical-images/${filename}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': ext === '.png' ? 'image/png' : 'image/jpeg',
+        'x-upsert': 'true',
+      },
+      body: imageBuffer,
+    });
 
     if (!response.ok) {
       const errText = await response.text();
@@ -194,7 +200,10 @@ async function uploadToSupabase(imagePath: string, conditionId: string): Promise
 /**
  * Find matching condition in database
  */
-async function findCondition(suggestedId: string | null, detectedName: string): Promise<string | null> {
+async function findCondition(
+  suggestedId: string | null,
+  detectedName: string
+): Promise<string | null> {
   // Try exact match first
   if (suggestedId) {
     const exact = await prisma.condition.findUnique({ where: { id: suggestedId } });
@@ -203,9 +212,9 @@ async function findCondition(suggestedId: string | null, detectedName: string): 
 
   // Try fuzzy match on name
   const normalized = detectedName.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
+
   const conditions = await prisma.condition.findMany({
-    select: { id: true, name: true, aliases: true }
+    select: { id: true, name: true, aliases: true },
   });
 
   for (const c of conditions) {
@@ -213,7 +222,7 @@ async function findCondition(suggestedId: string | null, detectedName: string): 
     if (nameNorm.includes(normalized) || normalized.includes(nameNorm)) {
       return c.id;
     }
-    
+
     // Check aliases
     for (const alias of c.aliases || []) {
       const aliasNorm = alias.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -241,14 +250,13 @@ async function main() {
     const folderPath = path.join(CURATED_PATH, folder);
     if (!fs.existsSync(folderPath)) continue;
 
-    const files = fs.readdirSync(folderPath)
-      .filter(f => /\.(jpg|jpeg|png)$/i.test(f));
-    
+    const files = fs.readdirSync(folderPath).filter((f) => /\.(jpg|jpeg|png)$/i.test(f));
+
     for (const file of files) {
       allImages.push({
         path: path.join(folderPath, file),
         folder,
-        filename: file
+        filename: file,
       });
     }
   }
@@ -261,19 +269,19 @@ async function main() {
     added: 0,
     skipped: 0,
     failed: 0,
-    noCondition: 0
+    noCondition: 0,
   };
 
   // Process each image
   for (let i = 0; i < allImages.length; i++) {
     const img = allImages[i];
     const progress = `[${i + 1}/${allImages.length}]`;
-    
+
     process.stdout.write(`${progress} ${img.filename.substring(0, 50)}... `);
 
     // Analyze with AI
     const analysis = await analyzeImage(img.path, img.folder);
-    
+
     if (!analysis) {
       console.log('❌ AI failed');
       stats.failed++;
@@ -319,23 +327,27 @@ async function main() {
             detectedCondition: analysis.detectedCondition,
             visualKeys: analysis.visualKeys,
             quizSuitability: analysis.quizSuitability,
-            quizReason: analysis.quizReason
+            quizReason: analysis.quizReason,
           },
           explanation: analysis.explanation,
           status: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending_review',
           approvalStatus: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending',
           isAnnotated: analysis.hasProblematicAnnotations,
           usageType: analysis.hasProblematicAnnotations ? 'reference' : 'quiz',
-          modality: img.folder.toLowerCase() === 'ecg' ? 'ecg' : 
-                    img.folder.toLowerCase() === 'rad' ? 'radiology' : 
-                    img.folder.toLowerCase() === 'derm' ? 'derm' : null,
-          updatedAt: new Date()
-        }
+          modality:
+            img.folder.toLowerCase() === 'ecg'
+              ? 'ecg'
+              : img.folder.toLowerCase() === 'rad'
+                ? 'radiology'
+                : img.folder.toLowerCase() === 'derm'
+                  ? 'derm'
+                  : null,
+          updatedAt: new Date(),
+        },
       });
 
       console.log(`✅ ${analysis.detectedCondition} (${analysis.quizSuitability})`);
       stats.added++;
-
     } catch (error) {
       console.log(`❌ DB error: ${error}`);
       stats.failed++;
@@ -360,7 +372,7 @@ async function main() {
     by: ['conditionId'],
     _count: true,
     orderBy: { _count: { conditionId: 'desc' } },
-    take: 20
+    take: 20,
   });
 
   console.log('\nTop conditions by image count:');

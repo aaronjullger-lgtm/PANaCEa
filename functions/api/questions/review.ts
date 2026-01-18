@@ -1,30 +1,33 @@
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { ReviewService, type ReviewQuestion } from '../../../lib/services/review/reviewService';
-import { validateRequest, IDSchema } from '../_shared/schemas';
-import { z } from 'zod';
-import type { JsonValue } from '@prisma/client/runtime/library';
+/**
+ * GET/POST /api/questions/review
+ * GET: Fetch questions needing review (SRS due, flagged, missed, weak areas)
+ * POST: Record a review and update SRS data
+ */
 
-// Zod schema for review submission
-const ReviewSubmitSchema = z.object({
-  questionId: IDSchema,
-  wasCorrect: z.boolean(),
-  timeSpentMs: z.number().int().min(0).max(600000).optional(),
-  quality: z.number().int().min(0).max(5).optional(),
-  srsItemId: IDSchema.optional(),
-  conditionId: IDSchema.optional(),
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { ReviewService, type ReviewQuestion } from '../../../lib/services/review/reviewService';
+
+const ReviewGetSchema = z.object({
+  query: z.object({
+    mode: z.string().optional(),
+    limit: z.string().optional(),
+    system: z.string().optional(),
+  }),
 });
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+const ReviewPostSchema = z.object({
+  body: z.object({
+    questionId: z.string().min(1),
+    wasCorrect: z.boolean(),
+    timeSpentMs: z.number().int().min(0).max(600000).optional(),
+    quality: z.number().int().min(0).max(5).optional(),
+    srsItemId: z.string().optional(),
+    conditionId: z.string().optional(),
+  }),
+});
 
 interface ReviewSummary {
   srsDue: number;
@@ -35,124 +38,91 @@ interface ReviewSummary {
   urgentCount: number;
 }
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
-/**
- * GET: Fetch questions needing review
- */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+export const onRequestGet = authenticatedEndpoint(ReviewGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/review');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const url = new URL(context.request.url);
-    const mode = url.searchParams.get('mode') || 'all';
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
-    const system = url.searchParams.get('system');
-
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return createErrorResponse('User not found', 404);
+      return { data: { error: 'User not found' }, status: 404 };
     }
-    
-    const reviewService = new ReviewService(context.env.DATABASE_URL, user.id);
+
+    const mode = validated.query?.mode || 'all';
+    const limit = Math.min(parseInt(validated.query?.limit || '20'), 100);
+    const system = validated.query?.system || null;
+
+    const reviewService = new ReviewService(env.DATABASE_URL, user.id);
     const reviewQuestions = await reviewService.getReviewQuestions(mode, limit, system);
-
     const summary = generateSummary(reviewQuestions);
-    
-    return createSuccessResponse({
-      questions: reviewQuestions,
-      summary,
-      mode,
-      userId: auth.userId,
-    });
-  } catch (error) {
-    console.error('[ReviewAPI] Error:', error);
-    return createErrorResponse('Failed to fetch review questions', 500);
-  } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
-  }
-}
 
-/**
- * POST: Mark questions as reviewed
- */
-export async function onRequestPost(context: PagesContext): Promise<Response> {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    logger.info('Review questions fetched', { userId: auth.userId, mode, count: reviewQuestions.length });
+
+    return { data: { questions: reviewQuestions, summary, mode, userId: auth.userId } };
+  } catch (error) {
+    logger.error('Error fetching review questions', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to fetch review questions');
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+});
+
+export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/review');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    // Validate input with Zod schema
-    const validation = await validateRequest(context.request.clone(), ReviewSubmitSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const body = (validation as { success: true; data: z.infer<typeof ReviewSubmitSchema> }).data;
-
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return createErrorResponse('User not found', 404);
+      return { data: { error: 'User not found' }, status: 404 };
     }
 
+    const { questionId, wasCorrect, timeSpentMs, quality: inputQuality, srsItemId, conditionId } = validated.body;
     const now = new Date();
-    const quality = body.quality ?? (body.wasCorrect ? 4 : 1);
-    
-    let srsItem;
-    
-    if (body.srsItemId) {
-      srsItem = await prisma.sRSItem.findUnique({
-        where: { id: body.srsItemId },
-      });
+    const quality = inputQuality ?? (wasCorrect ? 4 : 1);
+
+    // Find or create SRS item
+    let srsItem = null;
+
+    if (srsItemId) {
+      srsItem = await prisma.sRSItem.findUnique({ where: { id: srsItemId } });
     }
-    
-    if (!srsItem && body.conditionId) {
+
+    if (!srsItem && conditionId) {
       const questionsForCondition = await prisma.question.findMany({
-        where: { conditionId: body.conditionId },
+        where: { conditionId },
         select: { id: true },
         take: 100,
       });
-      const questionIds = questionsForCondition.map(q => q.id);
-      
+      const questionIds = questionsForCondition.map((q) => q.id);
+
       if (questionIds.length > 0) {
         srsItem = await prisma.sRSItem.findFirst({
-          where: {
-            userId: user.id,
-            questionId: { in: questionIds },
-          },
+          where: { userId: user.id, questionId: { in: questionIds } },
           orderBy: { dueDate: 'asc' },
         });
       }
     }
-    
+
     if (!srsItem) {
       srsItem = await prisma.sRSItem.findFirst({
-        where: {
-          userId: user.id,
-          questionId: body.questionId,
-        },
+        where: { userId: user.id, questionId },
       });
     }
 
+    // Update or create SRS item
     if (srsItem) {
       const newInterval = calculateNewInterval(srsItem, quality);
       const nextDue = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
@@ -169,14 +139,14 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         },
       });
     } else {
-      const interval = body.wasCorrect ? 1 : 0;
+      const interval = wasCorrect ? 1 : 0;
       const nextDue = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
 
       await prisma.sRSItem.create({
         data: {
           id: crypto.randomUUID(),
           userId: user.id,
-          questionId: body.questionId,
+          questionId,
           lastReviewed: now,
           dueDate: nextDue,
           interval,
@@ -189,88 +159,69 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       });
     }
 
+    // Record the attempt
     await prisma.questionAttempt.create({
       data: {
         id: crypto.randomUUID(),
         userId: user.id,
-        questionId: body.questionId,
-        wasCorrect: body.wasCorrect,
-        timeSpentMs: body.timeSpentMs,
+        questionId,
+        wasCorrect,
+        timeSpentMs,
         mode: 'review',
-        conditionId: body.conditionId,
+        conditionId,
       },
     });
 
+    // Update UserQuestionSeen
     await prisma.userQuestionSeen.upsert({
-      where: {
-        userId_questionId_questionType: {
-          userId: user.id,
-          questionId: body.questionId,
-          questionType: 'review',
-        },
-      },
+      where: { userId_questionId_questionType: { userId: user.id, questionId, questionType: 'review' } },
       create: {
         userId: user.id,
-        questionId: body.questionId,
+        questionId,
         questionType: 'review',
         firstSeenAt: now,
         lastSeenAt: now,
         timesShown: 1,
-        timesCorrect: body.wasCorrect ? 1 : 0,
-        timesIncorrect: body.wasCorrect ? 0 : 1,
+        timesCorrect: wasCorrect ? 1 : 0,
+        timesIncorrect: wasCorrect ? 0 : 1,
       },
       update: {
         lastSeenAt: now,
         timesShown: { increment: 1 },
-        timesCorrect: body.wasCorrect ? { increment: 1 } : undefined,
-        timesIncorrect: body.wasCorrect ? undefined : { increment: 1 },
+        timesCorrect: wasCorrect ? { increment: 1 } : undefined,
+        timesIncorrect: wasCorrect ? undefined : { increment: 1 },
       },
     });
 
-    return createSuccessResponse({
-      success: true,
-      message: 'Review recorded',
-    });
+    logger.info('Review recorded', { userId: auth.userId, questionId, wasCorrect });
+
+    return { data: { success: true, message: 'Review recorded' } };
   } catch (error) {
-    console.error('[ReviewAPI] Error recording review:', error);
-    return createErrorResponse('Failed to record review', 500);
+    logger.error('Error recording review', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to record review');
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
+// Helper functions
 function generateSummary(questions: ReviewQuestion[]): ReviewSummary {
-  const srsDue = questions.filter(q => q.reviewReason === 'srs_due').length;
-  const flagged = questions.filter(q => q.reviewReason === 'flagged').length;
-  const missed = questions.filter(q => q.reviewReason === 'missed').length;
-  const weakArea = questions.filter(q => q.reviewReason === 'weak_area').length;
-  const urgentCount = questions.filter(q => q.priority >= 80).length;
-
   return {
-    srsDue,
-    flagged,
-    missed,
-    weakArea,
+    srsDue: questions.filter((q) => q.reviewReason === 'srs_due').length,
+    flagged: questions.filter((q) => q.reviewReason === 'flagged').length,
+    missed: questions.filter((q) => q.reviewReason === 'missed').length,
+    weakArea: questions.filter((q) => q.reviewReason === 'weak_area').length,
     total: questions.length,
-    urgentCount,
+    urgentCount: questions.filter((q) => q.priority >= 80).length,
   };
 }
 
 function calculateNewInterval(srsItem: { interval: number; easiness: number; repetition: number }, quality: number): number {
-  if (quality < 3) {
-    return 0;
-  }
-  const easiness = srsItem.easiness;
-  const currentInterval = srsItem.interval;
-  const repetition = srsItem.repetition;
-  if (repetition === 0) {
-    return 1;
-  } else if (repetition === 1) {
-    return 6;
-  }
-  return Math.round(currentInterval * easiness);
+  if (quality < 3) return 0;
+  const { easiness, interval, repetition } = srsItem;
+  if (repetition === 0) return 1;
+  if (repetition === 1) return 6;
+  return Math.round(interval * easiness);
 }
 
 function adjustEasiness(currentEasiness: number, quality: number): number {

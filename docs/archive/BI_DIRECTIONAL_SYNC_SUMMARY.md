@@ -7,10 +7,12 @@ A **Master Orchestrator** system that provides bi-directional synchronization be
 ## Files Created
 
 ### 1. Back-Sync Agent
+
 **File**: `scripts/sync_db_to_registry.ts`  
 **Purpose**: Captures database records back to local TypeScript files
 
 **Features**:
+
 - Compares database against local registries
 - Identifies "ghost" records (in DB but not in code)
 - Generates properly formatted TypeScript entries
@@ -18,6 +20,7 @@ A **Master Orchestrator** system that provides bi-directional synchronization be
 - Injects new entries in separate arrays for easy review
 
 **How it works**:
+
 ```typescript
 // Reads database
 const dbConditions = await prisma.condition.findMany();
@@ -39,6 +42,7 @@ export const CONDITION_REGISTRY = [
 ```
 
 ### 2. Master Orchestrator
+
 **File**: `scripts/maintenance/orchestrator.ts`  
 **Purpose**: Runs the complete sync and health cycle
 
@@ -50,7 +54,7 @@ export const CONDITION_REGISTRY = [
    ├─ Action: Upsert local registries to database
    └─ Ensures: DB has all your typed conditions/drugs
 
-🔬 Phase 2: The Diagnostic  
+🔬 Phase 2: The Diagnostic
    ├─ Script: validate_database.ts
    ├─ Action: Check for nulls, bad formats, invalid enums
    └─ Report: reports/validation-report-*.json
@@ -67,11 +71,13 @@ export const CONDITION_REGISTRY = [
 ```
 
 **Execution**:
+
 ```bash
 npm run db:orchestrate
 ```
 
 **Output**:
+
 - Colored console output with emojis
 - Phase-by-phase progress
 - Comprehensive summary report
@@ -81,6 +87,7 @@ npm run db:orchestrate
 ### 3. Documentation
 
 **ORCHESTRATION_GUIDE.md** (2,500+ lines)
+
 - Complete architecture overview
 - Phase-by-phase explanations
 - Usage examples
@@ -91,11 +98,13 @@ npm run db:orchestrate
 - Advanced customization
 
 **scripts/maintenance/README.md**
+
 - Quick reference for maintenance scripts
 - Auto-repair template
 - Common commands
 
 **DATABASE_AUTOMATION_GUIDE.md** (updated)
+
 - Added orchestration section
 - Clarified two automation systems
 - Cross-referenced new guide
@@ -112,9 +121,11 @@ npm run db:orchestrate
 ## Key Features
 
 ### 1. Bi-Directional Sync
+
 **Problem**: AI generates 50 new conditions in DB. How do you get them into your codebase?
 
 **Solution**:
+
 ```bash
 npm run db:orchestrate
 # ✅ 50 new conditions added to conditionRegistry.ts
@@ -122,18 +133,22 @@ npm run db:orchestrate
 ```
 
 ### 2. Ghost Record Detection
+
 **Problem**: Someone created records directly in the database. Your code doesn't know about them.
 
 **Solution**: Back-sync agent detects any DB record not in local files by:
+
 - Normalizing names (lowercase, remove special chars)
 - Checking for exact matches in TypeScript source
 - Identifying missing entries
 - Generating proper TypeScript syntax
 
 ### 3. Safe File Modification
+
 **Problem**: Automated script could break TypeScript syntax.
 
 **Solution**:
+
 - Creates `.bak` backup before any modification
 - Finds proper insertion points (before main export)
 - Generates valid TypeScript syntax
@@ -141,9 +156,11 @@ npm run db:orchestrate
 - Maintains file structure
 
 ### 4. Organized Output
+
 **Problem**: AI-generated entries mixed with curated content.
 
 **Solution**: Separate arrays for clarity:
+
 ```typescript
 // Your curated content
 export const CONDITION_REGISTRY_CV = [...];
@@ -162,18 +179,22 @@ export const CONDITION_REGISTRY = [
 ```
 
 ### 5. Error Resilience
+
 **Problem**: One phase fails, whole orchestration stops.
 
 **Solution**:
+
 - Phases continue even if one fails (non-critical)
 - Detailed error reporting
 - Individual phase re-run capability
 - Summary shows which phases succeeded
 
 ### 6. Validation Integration
+
 **Problem**: Need to validate after syncing.
 
 **Solution**: Orchestrator runs validation automatically:
+
 ```
 Handshake → Diagnostic → Auto-Repair → Write-Back
    ↓            ↓           ↓             ↓
@@ -193,7 +214,7 @@ npm run db:orchestrate
 
 # Output:
 # 🔄 The Handshake: Local → Cloud ✅
-# 🔬 The Diagnostic ✅  
+# 🔬 The Diagnostic ✅
 # 💾 The Write-Back: Cloud → Local ✅
 #     📝 Found 100 conditions to add to local registry
 #     ✅ Added 100 conditions to conditionRegistry.ts
@@ -239,6 +260,7 @@ npm run db:orchestrate
 ## Technical Implementation Details
 
 ### Name Normalization
+
 ```typescript
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -251,6 +273,7 @@ function normalizeName(name: string): string {
 ```
 
 ### File Parsing
+
 ```typescript
 // Find condition entries in TypeScript
 const lines = fileText.split('\n');
@@ -263,13 +286,15 @@ for (const line of lines) {
 ```
 
 ### TypeScript Generation
+
 ```typescript
 function generateConditionEntry(condition: any): string {
   const escapeName = (s: string) => s.replace(/"/g, '\\"');
-  const aliases = condition.aliases?.length > 0
-    ? `, aliases: [${condition.aliases.map(a => `"${escapeName(a)}"`).join(', ')}]`
-    : '';
-  
+  const aliases =
+    condition.aliases?.length > 0
+      ? `, aliases: [${condition.aliases.map((a) => `"${escapeName(a)}"`).join(', ')}]`
+      : '';
+
   return `  { system: "${condition.system}", subcategory: "AI Generated", condition: "${escapeName(condition.name)}"${aliases} },`;
 }
 
@@ -278,6 +303,7 @@ function generateConditionEntry(condition: any): string {
 ```
 
 ### Safe Injection
+
 ```typescript
 // Find insertion point (before main export)
 const insertionPoint = fileText.indexOf('export const CONDITION_REGISTRY: ConditionMeta[]');
@@ -311,16 +337,19 @@ const newFileText = before + newArray + after;
 ## Next Steps
 
 ### Immediate
+
 1. Test orchestration: `npm run db:orchestrate`
 2. Review generated documentation
 3. Try back-sync with test data
 
 ### Short Term
+
 1. Create `autoRepair.ts` for common fixes
 2. Set up CI/CD integration
 3. Schedule weekly orchestration runs
 
 ### Long Term
+
 1. Add more repair patterns to auto-mechanic
 2. Implement dry-run mode for all phases
 3. Create dashboard for sync status
@@ -329,27 +358,33 @@ const newFileText = before + newArray + after;
 ## Architecture Decision Records
 
 ### Why Separate Arrays?
+
 **Decision**: Create `REGISTRY_DB_SYNCED` instead of injecting into existing arrays.
 
 **Reasoning**:
+
 - Easy to identify auto-generated vs. curated content
 - Simple to review and reorganize
 - No risk of breaking existing array structure
 - Clear separation of concerns
 
 ### Why Four Phases?
+
 **Decision**: Split into Handshake, Diagnostic, Auto-Mechanic, Write-Back.
 
 **Reasoning**:
+
 - Each phase has clear responsibility
 - Failures isolated to specific phases
 - Can run phases independently
 - Natural workflow progression
 
 ### Why Backups?
+
 **Decision**: Create `.bak` files before modifying registries.
 
 **Reasoning**:
+
 - Safety net for automated modifications
 - Easy rollback mechanism
 - No git dependency for recovery
@@ -358,12 +393,14 @@ const newFileText = before + newArray + after;
 ## Metrics
 
 **Lines of Code**:
+
 - Back-Sync Agent: ~350 lines
 - Orchestrator: ~250 lines
 - Documentation: ~2,500 lines
 - **Total**: ~3,100 lines
 
 **Files Created**:
+
 - 2 new scripts
 - 3 documentation files
 - 1 README

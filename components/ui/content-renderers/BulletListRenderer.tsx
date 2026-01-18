@@ -10,12 +10,12 @@ interface BulletListRendererProps {
 
 /**
  * BulletListRenderer - Renders an array of strings as a styled list
- * 
+ *
  * Supports multiple visual styles appropriate for different content types:
  * - default: Simple bullet points
  * - clinical: Medical context styling with accent color
  * - checklist: Checkmark icons for clinical pearls/criteria
- * 
+ *
  * @param items - Array of strings to render
  * @param className - Additional CSS classes
  * @param variant - Visual style variant
@@ -32,7 +32,7 @@ export const BulletListRenderer: React.FC<BulletListRendererProps> = ({
   }
 
   // Filter out empty strings
-  const filteredItems = items.filter(item => item && item.trim() !== '');
+  const filteredItems = items.filter((item) => item && item.trim() !== '');
 
   if (filteredItems.length === 0) {
     return null;
@@ -54,17 +54,12 @@ export const BulletListRenderer: React.FC<BulletListRendererProps> = ({
   return (
     <ul className={`${variantClasses[variant]} ${className}`}>
       {filteredItems.map((item, index) => (
-        <li
-          key={index}
-          className={`${itemVariantClasses[variant]} leading-relaxed`}
-        >
+        <li key={index} className={`${itemVariantClasses[variant]} leading-relaxed`}>
           {variant === 'checklist' && (
             <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
           )}
           {showNumbers && (
-            <span className="font-semibold text-[var(--color-accent)] mr-2">
-              {index + 1}.
-            </span>
+            <span className="font-semibold text-[var(--color-accent)] mr-2">{index + 1}.</span>
           )}
           <span className="flex-1">{item}</span>
         </li>
@@ -79,9 +74,7 @@ export const BulletListRenderer: React.FC<BulletListRendererProps> = ({
 export const ClinicalPearlsList: React.FC<{ pearls: string[]; className?: string }> = ({
   pearls,
   className,
-}) => (
-  <BulletListRenderer items={pearls} variant="checklist" className={className} />
-);
+}) => <BulletListRenderer items={pearls} variant="checklist" className={className} />;
 
 /**
  * Convenience component for treatment steps
@@ -89,8 +82,6 @@ export const ClinicalPearlsList: React.FC<{ pearls: string[]; className?: string
 export const TreatmentStepsList: React.FC<{ steps: string[]; className?: string }> = ({
   steps,
   className,
-}) => (
-  <BulletListRenderer items={steps} variant="clinical" showNumbers className={className} />
-);
+}) => <BulletListRenderer items={steps} variant="clinical" showNumbers className={className} />;
 
 export default BulletListRenderer;

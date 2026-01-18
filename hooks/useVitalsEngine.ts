@@ -35,7 +35,12 @@ function parseBp(value: any): { sbp: number; dbp: number } {
     }
   }
 
-  if (value && typeof value === 'object' && typeof value.sbp === 'number' && typeof value.dbp === 'number') {
+  if (
+    value &&
+    typeof value === 'object' &&
+    typeof value.sbp === 'number' &&
+    typeof value.dbp === 'number'
+  ) {
     return { sbp: value.sbp, dbp: value.dbp };
   }
 
@@ -52,11 +57,12 @@ function parseInitialVitals(initial: any): ParsedVitals {
     sbp: bp.sbp,
     dbp: bp.dbp,
     rr: typeof initial.rr === 'number' ? initial.rr : DEFAULT_VITALS.rr,
-    o2: typeof initial.o2 === 'number'
-      ? initial.o2
-      : typeof initial.o2sat === 'number'
-        ? initial.o2sat
-        : DEFAULT_VITALS.o2,
+    o2:
+      typeof initial.o2 === 'number'
+        ? initial.o2
+        : typeof initial.o2sat === 'number'
+          ? initial.o2sat
+          : DEFAULT_VITALS.o2,
   };
 }
 
@@ -131,7 +137,7 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
   const applyDrift = useCallback(() => {
     const deltas = getPathologyDeltas(pathology);
 
-    setVitals(prev => {
+    setVitals((prev) => {
       const lastHr = prev.hr[prev.hr.length - 1];
       const lastSbp = prev.sbp[prev.sbp.length - 1];
       const lastDbp = prev.dbp[prev.dbp.length - 1];
@@ -156,7 +162,7 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
   }, [pathology]);
 
   const nudgeNoise = useCallback(() => {
-    setVitals(prev => {
+    setVitals((prev) => {
       const lastHr = prev.hr[prev.hr.length - 1];
       const lastSbp = prev.sbp[prev.sbp.length - 1];
       const lastDbp = prev.dbp[prev.dbp.length - 1];
@@ -196,7 +202,7 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
     const giveFluids = /fluid|bolus|saline|lactated|ringer|ivf/.test(text);
     const giveOxygen = /oxygen|o2|nasal cannula|non[-\s]?rebreather|mask/.test(text);
 
-    setVitals(prev => {
+    setVitals((prev) => {
       const lastHr = prev.hr[prev.hr.length - 1];
       const lastSbp = prev.sbp[prev.sbp.length - 1];
       const lastDbp = prev.dbp[prev.dbp.length - 1];
@@ -220,13 +226,16 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
     });
   }, []);
 
-  const currentVitals = useMemo(() => ({
-    hr: vitals.hr[vitals.hr.length - 1],
-    sbp: vitals.sbp[vitals.sbp.length - 1],
-    dbp: vitals.dbp[vitals.dbp.length - 1],
-    rr: vitals.rr[vitals.rr.length - 1],
-    o2: vitals.o2[vitals.o2.length - 1],
-  }), [vitals]);
+  const currentVitals = useMemo(
+    () => ({
+      hr: vitals.hr[vitals.hr.length - 1],
+      sbp: vitals.sbp[vitals.sbp.length - 1],
+      dbp: vitals.dbp[vitals.dbp.length - 1],
+      rr: vitals.rr[vitals.rr.length - 1],
+      o2: vitals.o2[vitals.o2.length - 1],
+    }),
+    [vitals]
+  );
 
   return {
     currentVitals,

@@ -5,7 +5,7 @@
 All required dependencies have been successfully installed:
 
 - ✅ **recharts** (3.6.0) - For data visualization charts
-- ✅ **swr** (2.3.4) - For data fetching and caching  
+- ✅ **swr** (2.3.4) - For data fetching and caching
 - ✅ **react-router-dom** (7.11.0) - For navigation and routing
 
 ## File Structure
@@ -39,6 +39,7 @@ functions/api/stats/
 ## Features Implemented
 
 ### 1. Dashboard Page (`DashboardPage.tsx`)
+
 - **Header**: Dynamic greeting, personalized to user
 - **Quick Stats**: Day Streak, Cards Learned, PANCE Predictor
 - **Priority Action**: Smart Review card with due count
@@ -48,17 +49,20 @@ functions/api/stats/
 - **Error Handling**: Retry mechanism, skeleton loaders
 
 ### 2. Navigation System
+
 - **Sidebar**: Professional medical aesthetic
 - **Categories**: Overview, Core Study, Reference, Daily Practice
 - **Features**: Active states, smooth animations, responsive
 - **Icons**: Lucide React icons throughout
 
 ### 3. Chart Components
+
 - **DecayCurve**: 30-day retention projection with danger zone
 - **StabilityPyramid**: Distribution of cards by stability level
 - **Styling**: Clean, professional, dark mode support
 
 ### 4. API Endpoint
+
 - **Path**: `/api/stats/retention`
 - **Auth**: Clerk authentication required
 - **Data**: Decay curve, stability buckets, tuning info
@@ -72,7 +76,7 @@ functions/api/stats/
 import { DashboardPage } from './components/dashboard';
 
 // In your App.tsx or routing component:
-<DashboardPage onNavigate={(path) => handleNavigation(path)} />
+<DashboardPage onNavigate={(path) => handleNavigation(path)} />;
 ```
 
 ### Use the Sidebar
@@ -116,6 +120,7 @@ const { data, error, isLoading } = useSWR('/api/stats/retention', fetcher);
 ## API Requirements
 
 The retention API expects:
+
 - Clerk authentication token in request headers
 - Supabase database with `SRSItem` table
 - Environment variables: `DATABASE_URL`, `CLERK_SECRET_KEY`

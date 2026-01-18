@@ -1,83 +1,81 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
  * GET /api/reference/history-components
  * Fetch all history components, optionally filtered by type or search query
+ *
+ * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
  */
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const type = url.searchParams.get('type');
-  const query = url.searchParams.get('query');
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
+
+const HistoryComponentsQuerySchema = z.object({
+  query: z
+    .object({
+      type: z.string().max(100).optional(),
+      query: z.string().max(200).optional(),
+    })
+    .optional(),
+});
+
+// ============================================================================
+// ENDPOINT HANDLERS
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(
+  HistoryComponentsQuerySchema,
+  async ({ env, auth, validated }) => {
+    const log = createEndpointLogger('/api/reference/history-components', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const type = validated?.query?.type;
+      const searchQuery = validated?.query?.query;
+
+      let results;
+
+      if (searchQuery) {
+        // Search mode
+        log.info('Searching history components', { searchQuery });
+        results = await prisma.historyComponent.findMany({
+          where: {
+            OR: [
+              { name: { contains: searchQuery, mode: 'insensitive' } },
+              { description: { contains: searchQuery, mode: 'insensitive' } },
+            ],
+          },
+          orderBy: { name: 'asc' },
+          take: 20,
+        });
+      } else {
+        // List mode with optional type filter
+        log.info('Listing history components', { type: type || 'all' });
+        results = await prisma.historyComponent.findMany({
+          where: type ? { type } : undefined,
+          orderBy: { name: 'asc' },
+        });
       }
-    });
-  }
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    let results;
-    
-    if (query) {
-      // Search mode
-      results = await prisma.historyComponent.findMany({
-        where: {
-          OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } }
-          ]
-        },
-        orderBy: { name: 'asc' },
-        take: 20
-      });
-    } else {
-      // List mode with optional type filter
-      results = await prisma.historyComponent.findMany({
-        where: type ? { type } : undefined,
-        orderBy: { name: 'asc' }
-      });
+      log.info('History components fetched', { count: results.length });
+      return { data: { success: true, data: results } };
+    } catch (error) {
+      log.error('Failed to fetch history components', error);
+      return { status: 500, error: 'Failed to fetch history components' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    
-    return new Response(JSON.stringify({ success: true, data: results }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error: any) {
-    console.error('Error fetching history components:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch history components', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

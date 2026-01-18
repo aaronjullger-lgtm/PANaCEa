@@ -1,9 +1,9 @@
 /**
  * RichText Component
- * 
+ *
  * Intelligently renders markdown-style text with proper formatting.
  * Strips raw markdown syntax and applies styled HTML elements.
- * 
+ *
  * Features:
  * - Bold text (**text** or __text__) → styled bold
  * - Italic text (*text* or _text_) → styled italic
@@ -99,9 +99,7 @@ function parseMarkdown(text: string, accentColor: string): React.ReactNode[] {
       if (match && match.index !== undefined) {
         // Add text before the match
         if (match.index > 0) {
-          elements.push(
-            <span key={key++}>{remaining.substring(0, match.index)}</span>
-          );
+          elements.push(<span key={key++}>{remaining.substring(0, match.index)}</span>);
         }
 
         // Add the rendered element

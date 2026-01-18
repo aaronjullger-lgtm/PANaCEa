@@ -55,10 +55,12 @@ type UserWordleStateRecord = {
   updatedAt: Date;
 };
 
-const getOrCreateDailyWord = async (normalized: NormalizedWordleDate): Promise<DailyWordleWithWord> => {
+const getOrCreateDailyWord = async (
+  normalized: NormalizedWordleDate
+): Promise<DailyWordleWithWord> => {
   const existing = await prisma.dailyWordle.findUnique({
     where: { date: normalized.dateOnly },
-    include: { word: true },
+    include: { Buzzword: true },
   });
 
   if (existing) {
@@ -89,7 +91,7 @@ const getOrCreateDailyWord = async (normalized: NormalizedWordleDate): Promise<D
       date: normalized.dateOnly,
       wordId: selected.id,
     },
-    include: { word: true },
+    include: { Buzzword: true },
   });
 
   return created;
@@ -137,7 +139,10 @@ export interface WordleDailyPayload {
   };
 }
 
-const buildPayload = (daily: DailyWordleWithWord, state: UserWordleStateRecord): WordleDailyPayload => {
+const buildPayload = (
+  daily: DailyWordleWithWord,
+  state: UserWordleStateRecord
+): WordleDailyPayload => {
   const normalizedDate = daily.date.toISOString().split('T')[0];
   const attemptsLeft = Math.max(0, WORDLE_MAX_ATTEMPTS - state.guesses.length);
 
@@ -161,7 +166,10 @@ const buildPayload = (daily: DailyWordleWithWord, state: UserWordleStateRecord):
   };
 };
 
-export async function getDailyWordForUser(userId: string, date?: string | Date): Promise<WordleDailyPayload> {
+export async function getDailyWordForUser(
+  userId: string,
+  date?: string | Date
+): Promise<WordleDailyPayload> {
   const normalized = normalizeWordleDate(date);
   const daily = await getOrCreateDailyWord(normalized);
   const state = await getOrCreateUserState(userId, normalized);
@@ -185,7 +193,11 @@ const normalizeGuess = (guess: string, targetLength: number): string => {
   return sanitized;
 };
 
-export async function submitWordleGuess(userId: string, guess: string, date?: string | Date): Promise<WordleDailyPayload> {
+export async function submitWordleGuess(
+  userId: string,
+  guess: string,
+  date?: string | Date
+): Promise<WordleDailyPayload> {
   const normalized = normalizeWordleDate(date);
   const daily = await getOrCreateDailyWord(normalized);
   const target = daily.word.buzzword.toUpperCase();
@@ -193,7 +205,7 @@ export async function submitWordleGuess(userId: string, guess: string, date?: st
   const state = await getOrCreateUserState(userId, normalized);
 
   if (state.status !== 'playing') {
-    throw new WordleServiceError('You have already completed today\'s Wordle');
+    throw new WordleServiceError("You have already completed today's Wordle");
   }
 
   const sanitizedGuess = normalizeGuess(guess, target.length);

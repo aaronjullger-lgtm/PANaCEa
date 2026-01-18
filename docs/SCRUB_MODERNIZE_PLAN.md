@@ -11,14 +11,15 @@
 This document contains the findings from a comprehensive audit of the PANaCEa codebase and provides three detailed, self-contained Copilot prompts for systematic cleanup.
 
 ### Stack Overview
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Frontend | React | 19.2.0 |
-| Database | PostgreSQL + Prisma | 7.2.0 |
-| Build | Vite | 6.2.0 |
-| Styling | Tailwind CSS | 3.4.18 |
-| Runtime | Cloudflare Pages Functions | Latest |
-| Auth | Clerk | 5.57.1 |
+
+| Layer    | Technology                 | Version |
+| -------- | -------------------------- | ------- |
+| Frontend | React                      | 19.2.0  |
+| Database | PostgreSQL + Prisma        | 7.2.0   |
+| Build    | Vite                       | 6.2.0   |
+| Styling  | Tailwind CSS               | 3.4.18  |
+| Runtime  | Cloudflare Pages Functions | Latest  |
+| Auth     | Clerk                      | 5.57.1  |
 
 ---
 
@@ -26,19 +27,19 @@ This document contains the findings from a comprehensive audit of the PANaCEa co
 
 ### Issues Discovered
 
-| Category | Count | Severity |
-|----------|-------|----------|
-| Console.log statements | 300+ | Medium |
-| TODO/FIXME comments | 50+ | Medium |
-| Inline styles (should use Tailwind) | 172+ | Low |
-| Hardcoded hex colors | 50+ | Low |
-| `any` type usage | 20+ files | High |
-| Incomplete service implementations | 1 major | High |
+| Category                            | Count     | Severity |
+| ----------------------------------- | --------- | -------- |
+| Console.log statements              | 300+      | Medium   |
+| TODO/FIXME comments                 | 50+       | Medium   |
+| Inline styles (should use Tailwind) | 172+      | Low      |
+| Hardcoded hex colors                | 50+       | Low      |
+| `any` type usage                    | 20+ files | High     |
+| Incomplete service implementations  | 1 major   | High     |
 
 ### Key Files Requiring Attention
 
 1. **`services/studyGroupService.ts`** - Entirely scaffolded, not implemented
-2. **`functions/api/**/*.ts`** - Heavy `any` type usage
+2. **`functions/api/**/\*.ts`** - Heavy `any` type usage
 3. **`components/analytics/*.tsx`** - Most inline styles and hardcoded colors
 4. **`services/*.ts`** - Most console.log statements
 
@@ -47,9 +48,11 @@ This document contains the findings from a comprehensive audit of the PANaCEa co
 ## Tier 1: Critical Stabilization
 
 ### Overview
+
 Fix crashes, broken types, and schema desyncs. These issues can cause runtime errors or data inconsistencies.
 
 ### Issues to Address
+
 - [ ] API handlers using `context: any` pattern
 - [ ] Heavy use of `any` in data processing
 - [ ] Incomplete studyGroupService implementation
@@ -60,9 +63,11 @@ Fix crashes, broken types, and schema desyncs. These issues can cause runtime er
 ## Tier 2: Refactoring & Hygiene
 
 ### Overview
+
 Clean up the codebase and enforce strict patterns. These issues affect maintainability and code quality.
 
 ### Issues to Address
+
 - [ ] 300+ console.log statements in production code
 - [ ] 50+ unresolved TODO comments
 - [ ] Inconsistent error handling patterns
@@ -73,9 +78,11 @@ Clean up the codebase and enforce strict patterns. These issues affect maintaina
 ## Tier 3: UI/UX Polish
 
 ### Overview
+
 Visual modernization and interaction smoothing. These issues affect user experience and visual consistency.
 
 ### Issues to Address
+
 - [ ] 172+ inline styles should use Tailwind
 - [ ] Inconsistent loading states
 - [ ] Missing skeleton loaders
@@ -92,12 +99,14 @@ Visual modernization and interaction smoothing. These issues affect user experie
 ## Context
 
 I'm working on the PANaCEa medical education platform. This is a React 19 + TypeScript + Prisma 7 + Cloudflare Pages Functions application. The codebase uses:
+
 - Clerk for authentication
 - Zod for validation
 - FSRS algorithm for spaced repetition
 - Tailwind CSS for styling
 
 The project follows these critical rules from `.clinerules`:
+
 1. All API endpoints must use `try/finally` with `prisma.$disconnect()` in the finally block
 2. Use Zod for runtime validation of all external data
 3. Never use `any` type - create proper interfaces
@@ -127,18 +136,20 @@ export interface CloudflareContext {
 }
 
 export interface AuthenticatedContext extends CloudflareContext {
-  userId: string;  // Clerk user ID after auth verification
+  userId: string; // Clerk user ID after auth verification
 }
 ```
 
 ### 2. Update API handlers to use proper types
 
 For every file in `functions/api/`, replace:
+
 ```typescript
 export const onRequestPost = async (context: any) => {
 ```
 
 With:
+
 ```typescript
 import { CloudflareContext } from '../_shared/types';
 
@@ -146,6 +157,7 @@ export const onRequestPost = async (context: CloudflareContext) => {
 ```
 
 Priority files to fix (most critical):
+
 1. `functions/api/drills/submit-review.ts` - handles FSRS updates
 2. `functions/api/questions/session.ts` - session generation
 3. `functions/api/webhooks/clerk.ts` - user sync
@@ -154,10 +166,12 @@ Priority files to fix (most critical):
 ### 3. Fix the studyGroupService implementation
 
 The file `services/studyGroupService.ts` is entirely scaffolded with TODO comments. Either:
+
 - **Option A:** Implement it properly with Prisma calls
 - **Option B:** Remove it if not needed and update any imports
 
 If implementing, use this pattern from other services:
+
 ```typescript
 import { createEdgePrismaClient } from '../functions/api/_shared/prisma-edge';
 
@@ -176,10 +190,12 @@ export class StudyGroupService {
 ### 4. Add missing admin authorization checks
 
 In these files, add admin role verification after auth:
+
 - `functions/api/questions/flags.ts` (line with `// TODO: Add admin check here`)
 - `functions/api/questions/flag/[flagId]/resolve.ts`
 
 Use this pattern:
+
 ```typescript
 import { verifyAuthToken } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
@@ -201,11 +217,13 @@ if (!user || !['ADMIN', 'SUPERADMIN'].includes(user.role)) {
 ### 5. Fix `any` types in submit-review.ts
 
 In `functions/api/drills/submit-review.ts`, replace:
+
 ```typescript
 const qData: any = (question as any).questionData || {};
 ```
 
 With a proper interface:
+
 ```typescript
 interface QuestionData {
   stem?: string;
@@ -227,6 +245,7 @@ const qData = (question.questionData as QuestionData) || {};
 ### Validation Criteria
 
 After completing these changes:
+
 1. Run `npx tsc --noEmit` - should have no type errors
 2. Run `npm test` - existing tests should pass
 3. Deploy to preview and verify `/api/drills/submit-review` works
@@ -244,6 +263,7 @@ After completing these changes:
 I'm working on the PANaCEa medical education platform (React 19 + TypeScript + Prisma 7 + Cloudflare). This task focuses on code hygiene cleanup.
 
 The project follows these rules:
+
 1. No console.log in production code (use proper logging or remove)
 2. All TODOs should be resolved or converted to GitHub issues
 3. Consistent error handling patterns across the codebase
@@ -260,9 +280,8 @@ Create `lib/logger.ts`:
  * Uses console in development, silent in production (or send to Sentry)
  */
 
-const isDev = typeof window !== 'undefined' 
-  ? import.meta.env.DEV 
-  : process.env.NODE_ENV !== 'production';
+const isDev =
+  typeof window !== 'undefined' ? import.meta.env.DEV : process.env.NODE_ENV !== 'production';
 
 export const logger = {
   debug: (...args: unknown[]) => {
@@ -291,27 +310,32 @@ export default logger;
 
 For each file with console.log statements, apply these rules:
 
-**Scripts (`scripts/*.ts`):** 
+**Scripts (`scripts/*.ts`):**
+
 - Keep console.log - these are CLI tools and need output
 - Consider using chalk for colored output
 
 **Services (`services/*.ts`):**
+
 - Replace `console.log` with `logger.debug()` or `logger.info()`
 - Replace `console.warn` with `logger.warn()`
 - Replace `console.error` with `logger.error()`
 
 Priority files to update:
+
 1. `services/questionService.ts` - 8+ console.log statements
 2. `services/contextAwareOrchestrator.ts` - 20+ console.log statements
 3. `services/mainSessionService.ts` - scattered logging
 4. `services/batchGeneratorService.ts` - progress logging
 
-**API Functions (`functions/api/**/*.ts`):**
+**API Functions (`functions/api/**/\*.ts`):\*\*
+
 - Remove debug console.log statements entirely
 - Keep console.error for actual error cases
 - Replace informational logs with `logger.debug()` if needed
 
 Files to clean:
+
 1. `functions/api/_shared/prisma-edge.ts` - Remove debug logging
 2. `functions/api/_shared/auth.ts` - Remove `[AUTH]` debug logs
 3. `functions/api/_shared/kv-cache.ts` - Remove cache hit/miss logs
@@ -322,6 +346,7 @@ Files to clean:
 For each TODO, apply one of these actions:
 
 **Action A: Implement if simple (< 5 lines)**
+
 ```typescript
 // BEFORE:
 // TODO: Add admin check here
@@ -333,6 +358,7 @@ if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
 ```
 
 **Action B: Create a tracking comment with issue reference**
+
 ```typescript
 // BEFORE:
 // TODO: Save to database
@@ -346,6 +372,7 @@ if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
 Check if the TODO is already implemented elsewhere or no longer needed.
 
 Priority TODOs to address:
+
 1. `services/studyGroupService.ts` - 10+ TODOs (implement or remove service)
 2. `functions/api/questions/flags.ts` - admin check TODO
 3. `server.ts` - migration TODO
@@ -375,11 +402,11 @@ export function createErrorResponse(
   const isAppError = error instanceof AppError;
   const status = isAppError ? error.statusCode : 500;
   const message = isAppError ? error.message : defaultMessage;
-  
+
   logger.error('API Error:', error);
-  
+
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
       error: message,
       code: isAppError ? error.code : 'INTERNAL_ERROR',
     }),
@@ -408,14 +435,14 @@ import { createErrorResponse, AppError } from '../../lib/errorHandling';
 
 export const onRequestPost = async (context: CloudflareContext) => {
   let prisma: EdgePrismaClient | null = null;
-  
+
   try {
     // ... handler logic
-    
+
     if (!someCondition) {
       throw new AppError('Resource not found', 404, 'NOT_FOUND');
     }
-    
+
     return new Response(JSON.stringify({ success: true, data }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
@@ -430,6 +457,7 @@ export const onRequestPost = async (context: CloudflareContext) => {
 ### Validation Criteria
 
 After completing these changes:
+
 1. Run `grep -r "console.log" services/ --include="*.ts" | wc -l` - should be < 10
 2. Run `grep -r "// TODO" functions/ --include="*.ts" | wc -l` - should be 0
 3. All tests should still pass
@@ -447,11 +475,13 @@ After completing these changes:
 I'm working on the PANaCEa medical education platform (React 19 + TypeScript + Tailwind CSS). This task focuses on visual consistency and UX improvements.
 
 The project uses:
+
 - Tailwind CSS 3.4 with custom CSS variables (`var(--color-*)`)
 - Framer Motion for animations
 - Existing skeleton loaders in `components/ui/SkeletonLoader.tsx`
 
 The `.clinerules` specifies:
+
 1. Zero Layout Shift (CLS = 0.0) - use skeleton loaders
 2. All skeletons use `bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl`
 3. Smooth transitions with framer-motion
@@ -461,6 +491,7 @@ The `.clinerules` specifies:
 ### 1. Replace inline styles with Tailwind utilities
 
 **Pattern to convert:**
+
 ```tsx
 // BEFORE:
 style={{ width: `${percentage}%` }}
@@ -473,9 +504,10 @@ className="w-1/2"   // If always 50%
 ```
 
 **For dynamic widths (progress bars), use this pattern:**
+
 ```tsx
 // Good pattern - dynamic inline style is acceptable for calculated values
-<div 
+<div
   className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-300"
   style={{ width: `${Math.min(100, progress)}%` }}
 />
@@ -483,16 +515,17 @@ className="w-1/2"   // If always 50%
 
 **Convert static inline styles to Tailwind:**
 
-| Inline Style | Tailwind Equivalent |
-|--------------|---------------------|
-| `fontSize: 12` | `text-xs` |
-| `fontSize: 11` | `text-[11px]` |
-| `margin: 0` | `m-0` |
-| `padding: 20px` | `p-5` |
-| `color: '#64748b'` | `text-slate-500` |
-| `color: '#e2e8f0'` | `text-slate-200` |
+| Inline Style       | Tailwind Equivalent |
+| ------------------ | ------------------- |
+| `fontSize: 12`     | `text-xs`           |
+| `fontSize: 11`     | `text-[11px]`       |
+| `margin: 0`        | `m-0`               |
+| `padding: 20px`    | `p-5`               |
+| `color: '#64748b'` | `text-slate-500`    |
+| `color: '#e2e8f0'` | `text-slate-200`    |
 
 Priority files to update:
+
 1. `components/analytics/AnalyticsDashboard.tsx`
 2. `components/ProgressDashboard/HeatmapCalendar.tsx`
 3. `components/achievements/UnlockAnimation.tsx`
@@ -544,6 +577,7 @@ export const chartTheme = {
 For components that fetch data, add loading skeletons:
 
 **Pattern:**
+
 ```tsx
 import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
 
@@ -566,6 +600,7 @@ const MyComponent = () => {
 ```
 
 Priority components to add skeletons:
+
 1. `components/modes/SmartReviewMode.tsx` - Replace simple spinner with content skeleton
 2. `components/analytics/AnalyticsDashboard.tsx` - Add chart skeletons
 3. `components/dashboard/TrainingMenu.tsx` - Add mode card skeletons
@@ -608,11 +643,11 @@ if (viewState === 'loading') {
         <div className="flex justify-center">
           <SkeletonLoader width={140} height={36} className="rounded-full" />
         </div>
-        
+
         {/* Question card skeleton */}
         <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-8">
           <SkeletonText lines={3} className="mb-8" />
-          
+
           {/* Answer choices skeleton */}
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
@@ -620,7 +655,7 @@ if (viewState === 'loading') {
             ))}
           </div>
         </div>
-        
+
         {/* Button skeleton */}
         <div className="flex justify-center">
           <SkeletonLoader width={160} height={48} className="rounded-xl" />
@@ -657,9 +692,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       className={`flex flex-col items-center justify-center p-8 text-center ${className}`}
     >
       <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-      <p className="text-[var(--color-text-primary)] font-medium mb-2">
-        {message}
-      </p>
+      <p className="text-[var(--color-text-primary)] font-medium mb-2">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
@@ -694,8 +727,8 @@ Ensure all progress bar containers have explicit heights:
 
 // AFTER: Fixed height prevents shift
 <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-  <div 
-    style={{ width: `${progress}%` }} 
+  <div
+    style={{ width: `${progress}%` }}
     className="h-full bg-blue-500 transition-all duration-300"
   />
 </div>
@@ -704,6 +737,7 @@ Ensure all progress bar containers have explicit heights:
 ### Validation Criteria
 
 After completing these changes:
+
 1. Run Lighthouse audit - CLS should be < 0.1
 2. Toggle dark mode - all colors should update correctly
 3. Throttle network to 3G - skeletons should appear before content
@@ -726,7 +760,7 @@ After completing these changes:
 npx tsc --noEmit
 npm test
 
-# After Tier 2  
+# After Tier 2
 npm run audit:all  # If available
 grep -r "console.log" services/ --include="*.ts" | wc -l
 
@@ -739,11 +773,13 @@ npm run preview
 ### Rollback Plan
 
 Create a branch before starting:
+
 ```bash
 git checkout -b scrub-modernize-2026-01
 ```
 
 Commit after each tier:
+
 ```bash
 git commit -m "Tier 1: Type safety and critical fixes"
 git commit -m "Tier 2: Code hygiene cleanup"
@@ -755,18 +791,21 @@ git commit -m "Tier 3: UI/UX polish"
 ## Appendix: Files Index
 
 ### High Priority Files (Tier 1)
+
 - `functions/api/_shared/types.ts`
 - `functions/api/drills/submit-review.ts`
 - `functions/api/questions/session.ts`
 - `services/studyGroupService.ts`
 
 ### Medium Priority Files (Tier 2)
+
 - `services/questionService.ts`
 - `services/contextAwareOrchestrator.ts`
 - `functions/api/_shared/prisma-edge.ts`
 - `functions/api/_shared/auth.ts`
 
 ### Lower Priority Files (Tier 3)
+
 - `components/analytics/AnalyticsDashboard.tsx`
 - `components/modes/SmartReviewMode.tsx`
 - `components/ProgressDashboard/*.tsx`

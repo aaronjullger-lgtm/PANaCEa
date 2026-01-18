@@ -9,6 +9,7 @@ PANaCEa now includes comprehensive automation and intelligent features to make m
 ### 1. Grand Rounds Daily Competitive Mode
 
 **What it does:**
+
 - Automatically creates a new 5-question challenge every day at 3 AM
 - Speed-weighted scoring system rewards both accuracy and speed
 - Global leaderboard shows your rank against all students
@@ -42,11 +43,13 @@ GET /api/grandrounds/rank?userId={userId}&date={date}
 ```
 
 **Scoring:**
+
 - Base points: Depends on question difficulty
 - Time bonus: 0-200 points (faster = more bonus)
 - Rank calculation: Higher score wins; ties broken by speed
 
 **Usage:**
+
 ```typescript
 import { getTodaysChallenge, submitCompletion } from '@/services/grandRoundsService';
 
@@ -62,6 +65,7 @@ const rank = await submitCompletion(userId, score, timeMs, correctCount);
 ### 2. OSCE Chat History System
 
 **What it does:**
+
 - Stores conversation history during patient encounters
 - Maintains context for AI to understand the full conversation
 - Automatically cleans up chat after 7 days
@@ -89,12 +93,13 @@ DELETE /api/osce/cleanup?sessionId={sessionId}
 ```
 
 **Usage:**
+
 ```typescript
-import { 
-  saveChatMessage, 
-  getChatHistory, 
+import {
+  saveChatMessage,
+  getChatHistory,
   cleanupChatHistory,
-  buildConversationContext 
+  buildConversationContext,
 } from '@/services/osceService';
 
 // Save messages during encounter
@@ -114,6 +119,7 @@ await cleanupChatHistory(sessionId);
 ### 3. Student Insights & Recommendations
 
 **What it does:**
+
 - Analyzes your performance automatically
 - Identifies weak areas with specific recommendations
 - Tracks performance trends (improving/declining/stable)
@@ -128,6 +134,7 @@ GET /api/student/insights?userId={userId}&period={period}
 ```
 
 **Response includes:**
+
 - Overall accuracy and trend
 - Weak areas with recommendations
 - Strong areas for confidence
@@ -136,13 +143,14 @@ GET /api/student/insights?userId={userId}&period={period}
 - Achievement level (Beginner → Master)
 
 **Usage:**
+
 ```typescript
-import { 
+import {
   getStudentInsights,
   formatInsightMessage,
   getPriorityAction,
   needsBreak,
-  getAchievementLevel
+  getAchievementLevel,
 } from '@/services/studentInsightsService';
 
 // Get insights
@@ -169,6 +177,7 @@ console.log(`${emoji} ${level}: ${message}`);
 ### Daily Automation (runs at 3 AM)
 
 **Tasks performed:**
+
 1. **Create Grand Rounds Challenge** - Generates today's 5 questions
 2. **Content Accuracy Validation** - Checks for placeholder content
 3. **Content Gap Identification** - Finds systems with <10 conditions
@@ -179,11 +188,13 @@ console.log(`${emoji} ${level}: ${message}`);
    - Old OSCE chat history (7+ days)
 
 **Run manually:**
+
 ```bash
 npm run automation:daily
 ```
 
 **Logs saved to:**
+
 ```
 logs/daily/daily-YYYY-MM-DD.json
 ```
@@ -191,6 +202,7 @@ logs/daily/daily-YYYY-MM-DD.json
 ### Hourly Automation
 
 **Tasks performed:**
+
 1. Database connection check
 2. Gemini API connectivity test
 3. Background job monitoring
@@ -198,6 +210,7 @@ logs/daily/daily-YYYY-MM-DD.json
 5. System resource monitoring
 
 **Run manually:**
+
 ```bash
 npm run automation:hourly
 ```
@@ -247,11 +260,13 @@ npm run automation:hourly
 ### Grand Rounds not creating challenges
 
 **Check:**
+
 1. Daily automation is scheduled: `0 3 * * *`
 2. Database connection is active
 3. Check logs: `logs/daily/daily-*.json`
 
 **Fix:**
+
 ```bash
 # Run manually to create today's challenge
 npm run automation:daily
@@ -260,11 +275,13 @@ npm run automation:daily
 ### OSCE chat not saving
 
 **Check:**
+
 1. SessionId is valid and consistent
 2. Message length is 1-5000 characters
 3. Role is 'user' or 'patient'
 
 **Error codes:**
+
 - 400: Invalid input (check validation)
 - 401: Not authenticated
 - 500: Server error (check logs)
@@ -272,11 +289,13 @@ npm run automation:daily
 ### Student insights not loading
 
 **Check:**
+
 1. User has performance data in the period
 2. PerformanceRecord table has data
 3. UserId matches authenticated user
 
 **Response when no data:**
+
 ```json
 {
   "insights": {
@@ -331,6 +350,7 @@ GEMINI_API_KEY=your_gemini_api_key
 ## Support
 
 For issues or questions:
+
 1. Check logs in `logs/` directory
 2. Review error messages in console
 3. Verify environment variables

@@ -1,40 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <!-- Safety net for CJS/ESM mixed module initialization -->
-    <script>var global = global || window; var exports = exports || {};</script>
+    <script>
+      var global = global || window;
+      var exports = exports || {};
+    </script>
     <link rel="icon" type="image/svg+xml" href="/Favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PANaCEa</title>
-    
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="PANCE preparation platform with comprehensive medical database, performance tracking, clinical image training, and 15+ training modes for PA students." />
-    <meta name="keywords" content="PANCE, Physician Assistant, PA exam, medical education, NCCPA, exam preparation, spaced repetition, clinical training" />
+    <meta
+      name="description"
+      content="PANCE preparation platform with comprehensive medical database, performance tracking, clinical image training, and 15+ training modes for PA students."
+    />
+    <meta
+      name="keywords"
+      content="PANCE, Physician Assistant, PA exam, medical education, NCCPA, exam preparation, spaced repetition, clinical training"
+    />
     <meta name="author" content="PANaCEa" />
     <meta name="theme-color" content="#1F283A" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://panacea.app/" />
     <meta property="og:title" content="PANaCEa" />
-    <meta property="og:description" content="Study platform with comprehensive medical database, performance tracking, clinical training modes, and 1000+ conditions for PA students." />
+    <meta
+      property="og:description"
+      content="Study platform with comprehensive medical database, performance tracking, clinical training modes, and 1000+ conditions for PA students."
+    />
     <meta property="og:image" content="/og-image.png" />
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://panacea.app/" />
     <meta property="twitter:title" content="PANaCEa" />
-    <meta property="twitter:description" content="Study platform with comprehensive medical database, performance tracking, clinical training modes, and 1000+ conditions for PA students." />
+    <meta
+      property="twitter:description"
+      content="Study platform with comprehensive medical database, performance tracking, clinical training modes, and 1000+ conditions for PA students."
+    />
     <meta property="twitter:image" content="/og-image.png" />
-    
+
     <!-- PWA -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       // Guard CommonJS globals before any modulepreload/import execution.
       if (typeof globalThis.exports === 'undefined') {
@@ -48,7 +66,7 @@
       /* CSS Custom Properties for theming - Deep Navy & Soft Whites */
       :root {
         /* Light mode - Clean, sophisticated aesthetic with soft backgrounds */
-        --color-bg-primary: #E9ECF1;
+        --color-bg-primary: #e9ecf1;
         --color-bg-secondary: #ffffff;
         --color-bg-tertiary: #f8f9fb;
         --color-text-primary: #101729;
@@ -56,82 +74,84 @@
         --color-text-muted: #64748b;
         --color-border: #cbd5e1;
         --color-border-light: #e2e8f0;
-        
+
         /* Navy accent for primary actions */
-        --color-accent: #1F283A;
+        --color-accent: #1f283a;
         --color-accent-hover: #364154;
-        --color-accent-light: #E9ECF1;
-        
+        --color-accent-light: #e9ecf1;
+
         /* Shiny Gold - Reserved for extraordinary achievements only */
         --color-gold: #d4af37;
         --color-gold-light: #f4e5b8;
         --color-gold-dark: #b8941f;
         --color-gold-gradient: linear-gradient(135deg, #f9d423 0%, #d4af37 50%, #b8941f 100%);
         --color-gold-glow: 0 4px 24px rgba(212, 175, 55, 0.4);
-        
+
         /* Glass effects - Enhanced for premium feel */
-        --color-card-bg: rgba(255, 255, 255, 0.70);
+        --color-card-bg: rgba(255, 255, 255, 0.7);
         --color-input-bg: #ffffff;
         --color-overlay: rgba(15, 23, 42, 0.6);
-        
+
         /* Button text colors */
         --color-btn-primary-text: #ffffff;
         --color-btn-secondary-text: #0f172a;
-        
+
         /* Premium glass styling */
         --color-glass-bg: rgba(255, 255, 255, 0.75);
         --color-glass-border: rgba(203, 213, 225, 0.8);
         --color-glass-shadow: rgba(0, 0, 0, 0.08);
-        --color-glass-hover: rgba(255, 255, 255, 0.90);
+        --color-glass-hover: rgba(255, 255, 255, 0.9);
         --color-glass-text: #101729;
       }
 
       .dark {
         /* Dark mode - Deep navy sophistication */
         --color-bg-primary: #101729;
-        --color-bg-secondary: #1F283A;
+        --color-bg-secondary: #1f283a;
         --color-bg-tertiary: #364154;
-        --color-text-primary: #E9ECF1;
+        --color-text-primary: #e9ecf1;
         --color-text-secondary: #cbd5e1;
         --color-text-muted: #94a3b8;
         --color-border: #475569;
         --color-border-light: #364154;
-        
+
         /* Light accent for high contrast */
-        --color-accent: #E9ECF1;
+        --color-accent: #e9ecf1;
         --color-accent-hover: #ffffff;
         --color-accent-light: rgba(233, 236, 241, 0.15);
-        
+
         /* Shiny Gold - Same for dark mode, reserved for achievements */
         --color-gold: #f4d03f;
         --color-gold-light: #f9e79f;
         --color-gold-dark: #d4af37;
         --color-gold-gradient: linear-gradient(135deg, #f9e79f 0%, #f4d03f 50%, #d4af37 100%);
         --color-gold-glow: 0 4px 32px rgba(244, 208, 63, 0.5);
-        
+
         /* Glass effects for dark mode */
-        --color-card-bg: #1F283A;
+        --color-card-bg: #1f283a;
         --color-input-bg: #364154;
         --color-overlay: rgba(0, 0, 0, 0.8);
-        
+
         /* Button text colors */
         --color-btn-primary-text: #101729;
-        --color-btn-secondary-text: #E9ECF1;
-        --color-tile-text: #E9ECF1;
-        
+        --color-btn-secondary-text: #e9ecf1;
+        --color-tile-text: #e9ecf1;
+
         /* Premium frosted glass styling */
-        --color-glass-bg: rgba(255, 255, 255, 0.10);
+        --color-glass-bg: rgba(255, 255, 255, 0.1);
         --color-glass-border: rgba(255, 255, 255, 0.15);
         --color-glass-shadow: rgba(0, 0, 0, 0.4);
         --color-glass-hover: rgba(255, 255, 255, 0.18);
-        --color-glass-text: #E9ECF1;
+        --color-glass-text: #e9ecf1;
       }
 
       body {
         font-family: 'Inter', sans-serif;
         background-color: var(--color-bg-primary);
         color: var(--color-text-primary);
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
 
       #question-container {
@@ -146,7 +166,7 @@
         font-size: 0.9em;
         line-height: 1.5;
       }
-      #question-container th, 
+      #question-container th,
       #question-container td {
         border: 1px solid var(--color-border);
         padding: 0.5rem 0.75rem;
@@ -162,19 +182,33 @@
         background-color: var(--color-bg-secondary);
       }
       /* ===== ELEGANT ANIMATIONS & MICRO-INTERACTIONS ===== */
-      
+
       @keyframes shake {
-        10%, 90% { transform: translateX(-1px); }
-        20%, 80% { transform: translateX(2px); }
-        30%, 50%, 70% { transform: translateX(-4px); }
-        40%, 60% { transform: translateX(4px); }
+        10%,
+        90% {
+          transform: translateX(-1px);
+        }
+        20%,
+        80% {
+          transform: translateX(2px);
+        }
+        30%,
+        50%,
+        70% {
+          transform: translateX(-4px);
+        }
+        40%,
+        60% {
+          transform: translateX(4px);
+        }
       }
       .animate-shake {
-        animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
       }
-      
+
       @keyframes bounce {
-        0%, 100% {
+        0%,
+        100% {
           transform: translateY(-25%);
           animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
         }
@@ -186,40 +220,62 @@
       .animate-bounce-custom {
         animation: bounce 1s infinite;
       }
-      
+
       /* Smooth fade transitions */
       @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
       .animate-fade-in {
         animation: fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
-      
+
       @keyframes fade-in-down {
-        from { opacity: 0; transform: translateY(-12px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       .animate-fade-in-down {
         animation: fade-in-down 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
-      
+
       @keyframes slide-up {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       .animate-slide-up {
         animation: slide-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
-      
+
       @keyframes scale-in {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
       .animate-scale-in {
         animation: scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
-      
+
       /* Gold Celebration Animation - Reserved for extraordinary achievements */
       @keyframes gold-shimmer {
         0% {
@@ -229,36 +285,50 @@
           background-position: 200% center;
         }
       }
-      
+
       @keyframes gold-glow-pulse {
-        0%, 100% {
-          box-shadow: var(--color-gold-glow), 0 2px 8px rgba(0, 0, 0, 0.1);
+        0%,
+        100% {
+          box-shadow:
+            var(--color-gold-glow),
+            0 2px 8px rgba(0, 0, 0, 0.1);
         }
         50% {
-          box-shadow: 0 8px 40px rgba(212, 175, 55, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15);
+          box-shadow:
+            0 8px 40px rgba(212, 175, 55, 0.6),
+            0 4px 12px rgba(0, 0, 0, 0.15);
         }
       }
-      
+
       .gold-achievement {
         background: var(--color-gold-gradient);
         background-size: 200% auto;
-        animation: gold-shimmer 3s linear infinite, gold-glow-pulse 2s ease-in-out infinite;
+        animation:
+          gold-shimmer 3s linear infinite,
+          gold-glow-pulse 2s ease-in-out infinite;
         color: #1a1410;
         font-weight: 700;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
-      
+
       .dark .gold-achievement {
         color: #1a1410;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
-      
+
       /* Gold sparkle effect for perfect streaks */
       @keyframes sparkle {
-        0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-        50% { opacity: 1; transform: scale(1) rotate(180deg); }
+        0%,
+        100% {
+          opacity: 0;
+          transform: scale(0) rotate(0deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1) rotate(180deg);
+        }
       }
-      
+
       .gold-sparkle::after {
         content: '★';
         position: absolute;
@@ -267,7 +337,7 @@
         animation: sparkle 2s ease-in-out infinite;
       }
       .user-highlight {
-        background-color: #FFF176;
+        background-color: #fff176;
         color: #000;
       }
       .dark .user-highlight {
@@ -283,20 +353,26 @@
       }
 
       /* ===== SMOOTH TRANSITIONS - Nothing should feel jarring ===== */
-      
+
       /* Elegant transitions for all interactive elements */
-      button, a, input, textarea, select {
+      button,
+      a,
+      input,
+      textarea,
+      select {
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
-      
-      button:active, a:active {
+
+      button:active,
+      a:active {
         transition-duration: 0.1s;
       }
 
       /* Premium card hover effects with smooth elevation */
       .card-hover {
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+          transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .card-hover:hover {
         transform: translateY(-3px);
@@ -305,7 +381,7 @@
       .dark .card-hover:hover {
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
       }
-      
+
       /* Smooth scale effect for clickable items */
       .scale-on-hover {
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -318,7 +394,7 @@
       }
 
       /* ===== GLASSMORPHISM - Premium feel without clutter ===== */
-      
+
       /* Glass button styling - Elegant and fluid */
       .btn-glass {
         background: var(--color-glass-bg);
@@ -326,7 +402,7 @@
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid var(--color-glass-border);
         color: var(--color-glass-text);
-        box-shadow: 
+        box-shadow:
           0 4px 16px var(--color-glass-shadow),
           inset 0 1px 0 rgba(255, 255, 255, 0.15);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -334,7 +410,7 @@
       .btn-glass:hover {
         background: var(--color-glass-hover);
         transform: translateY(-2px);
-        box-shadow: 
+        box-shadow:
           0 8px 24px var(--color-glass-shadow),
           inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
@@ -354,7 +430,7 @@
         border-bottom: 1px solid rgba(148, 163, 184, 0.65);
         border-right: 1px solid rgba(148, 163, 184, 0.65);
         /* Soft, layered shadows for premium depth */
-        box-shadow: 
+        box-shadow:
           0 10px 40px rgba(148, 163, 184, 0.28),
           0 4px 12px rgba(148, 163, 184, 0.18),
           inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -362,8 +438,8 @@
       }
       .card-premium-glass:hover {
         transform: translateY(-3px);
-        box-shadow: 
-          0 14px 48px rgba(148, 163, 184, 0.30),
+        box-shadow:
+          0 14px 48px rgba(148, 163, 184, 0.3),
           0 6px 16px rgba(148, 163, 184, 0.18);
       }
       .dark .card-premium-glass {
@@ -374,14 +450,14 @@
         border-left: 1px solid rgba(255, 255, 255, 0.14);
         border-bottom: 1px solid rgba(71, 85, 105, 0.45);
         border-right: 1px solid rgba(71, 85, 105, 0.45);
-        box-shadow: 
-          0 10px 40px rgba(0, 0, 0, 0.50),
-          0 4px 12px rgba(0, 0, 0, 0.30),
+        box-shadow:
+          0 10px 40px rgba(0, 0, 0, 0.5),
+          0 4px 12px rgba(0, 0, 0, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
       .dark .card-premium-glass:hover {
-        box-shadow: 
-          0 16px 52px rgba(0, 0, 0, 0.60),
+        box-shadow:
+          0 16px 52px rgba(0, 0, 0, 0.6),
           0 6px 18px rgba(0, 0, 0, 0.35);
       }
 
@@ -394,7 +470,7 @@
         border-left: 1px solid rgba(255, 255, 255, 0.85);
         border-bottom: 1px solid rgba(148, 163, 184, 0.55);
         border-right: 1px solid rgba(148, 163, 184, 0.55);
-        box-shadow: 
+        box-shadow:
           0 8px 32px rgba(148, 163, 184, 0.22),
           inset 0 1px 0 rgba(255, 255, 255, 0.3);
         border-radius: 16px;
@@ -402,7 +478,7 @@
       }
       .widget-premium-glass:hover {
         transform: translateY(-2px);
-        box-shadow: 
+        box-shadow:
           0 12px 40px rgba(148, 163, 184, 0.28),
           inset 0 1px 0 rgba(255, 255, 255, 0.35);
       }
@@ -412,14 +488,14 @@
         -webkit-backdrop-filter: blur(28px);
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         border-left: 1px solid rgba(255, 255, 255, 0.12);
-        border-bottom: 1px solid rgba(71, 85, 105, 0.40);
-        border-right: 1px solid rgba(71, 85, 105, 0.40);
-        box-shadow: 
+        border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+        border-right: 1px solid rgba(71, 85, 105, 0.4);
+        box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.45),
           inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .dark .widget-premium-glass:hover {
-        box-shadow: 
+        box-shadow:
           0 12px 40px rgba(0, 0, 0, 0.55),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
@@ -481,13 +557,13 @@
         select:focus {
           scroll-margin-bottom: 200px;
         }
-        
+
         /* Extra padding for scrollable containers to help with keyboard visibility */
         .condition-scrollable {
           padding-bottom: 100px;
         }
       }
-      
+
       /* Ensure proper viewport behavior on iOS */
       @supports (-webkit-touch-callout: none) {
         html {
@@ -498,7 +574,7 @@
         }
       }
     </style>
-    <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/index.css" />
   </head>
   <body>
     <div id="root"></div>

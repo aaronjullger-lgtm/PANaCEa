@@ -26,6 +26,7 @@ Comprehensive test coverage created for the core spaced repetition algorithm inc
 - **Regression Tests:** Fixed-input validation for algorithm stability
 
 **Test Categories (40+ tests):**
+
 ```
 ✓ createEmptyCard
 ✓ State Transitions (New→Learning, Learning→Review, Review→Relearning)
@@ -43,6 +44,7 @@ Comprehensive test coverage created for the core spaced repetition algorithm inc
 ```
 
 **Note:** Tests require Node.js &lt;25 due to ESM module resolution changes. Run with:
+
 ```bash
 # Use Node 18 or 20
 nvm use 18
@@ -55,21 +57,22 @@ npm test tests/fsrs.test.ts
 
 ### Phase 1: Stability (Critical)
 
-| Item | Status | Files | Notes |
-|------|--------|-------|-------|
-| #3 FSRS Tests | ✅ Complete | `tests/fsrs.test.ts` | 40+ comprehensive tests |
-| #5 API Security | ✅ Complete | `functions/api/**` | Endpoints use `verifyAuthToken` - audit confirmed |
-| #4 Static Data | ✅ Complete | `data/*.json`, `data/*.ts` | No active imports found - safe to archive |
-| #7 Error Boundaries | ✅ Complete | `components/error/GlobalErrorBoundary.tsx` | Created with Sentry integration |
+| Item                | Status      | Files                                      | Notes                                             |
+| ------------------- | ----------- | ------------------------------------------ | ------------------------------------------------- |
+| #3 FSRS Tests       | ✅ Complete | `tests/fsrs.test.ts`                       | 40+ comprehensive tests                           |
+| #5 API Security     | ✅ Complete | `functions/api/**`                         | Endpoints use `verifyAuthToken` - audit confirmed |
+| #4 Static Data      | ✅ Complete | `data/*.json`, `data/*.ts`                 | No active imports found - safe to archive         |
+| #7 Error Boundaries | ✅ Complete | `components/error/GlobalErrorBoundary.tsx` | Created with Sentry integration                   |
 
 ### Phase 2: Architecture
 
-| Item | Status | Files | Notes |
-|------|--------|-------|-------|
-| #1 Service Consolidation | 📊 Audited | `services/` (78 files), `lib/services/` (40 files) | 118 total services - need deduplication |
-| #2 App.tsx Refactor | 📊 Audited | `App.tsx` (**1182 lines**) | 6x over target - needs major refactoring |
+| Item                     | Status     | Files                                              | Notes                                    |
+| ------------------------ | ---------- | -------------------------------------------------- | ---------------------------------------- |
+| #1 Service Consolidation | 📊 Audited | `services/` (78 files), `lib/services/` (40 files) | 118 total services - need deduplication  |
+| #2 App.tsx Refactor      | 📊 Audited | `App.tsx` (**1182 lines**)                         | 6x over target - needs major refactoring |
 
 **Architecture Audit Findings:**
+
 - **services/**: 78 service files (root level, legacy location)
 - **lib/services/**: 40 service files (target canonical location per .clinerules)
 - **Duplicates identified**: offlineSyncService, analyticsService, grandRoundsService
@@ -77,6 +80,7 @@ npm test tests/fsrs.test.ts
 - **App.tsx**: 1182 lines (target <200 lines) - contains routing, state, rendering in single file
 
 **Service Consolidation Action Plan:**
+
 1. ✅ **DELETED** `services/analyticsService.ts` (no imports, `lib/services/analyticsService.ts` is canonical)
 2. ✅ **DELETED** `services/grandRoundsService.ts` (no imports, `lib/services/grandRoundsService.ts` is canonical)
 3. ✅ **DELETED** `services/offlineSyncService.ts` (no imports, `lib/services/offline/offlineSyncService.ts` is canonical)
@@ -84,12 +88,13 @@ npm test tests/fsrs.test.ts
 
 ### Phase 3: Quality
 
-| Item | Status | Files | Notes |
-|------|--------|-------|-------|
-| #6 Loading States | 📊 Audited | See list below | **6 implementations** - need consolidation |
-| #9 Test Coverage | ⏳ Pending | `tests/`, `lib/services/` | Target 80% on critical paths |
+| Item              | Status     | Files                     | Notes                                      |
+| ----------------- | ---------- | ------------------------- | ------------------------------------------ |
+| #6 Loading States | 📊 Audited | See list below            | **6 implementations** - need consolidation |
+| #9 Test Coverage  | ⏳ Pending | `tests/`, `lib/services/` | Target 80% on critical paths               |
 
 **Loading State Implementations Found:**
+
 1. `components/ui/SkeletonLoader.tsx` - Generic skeleton
 2. `components/ui/ClinicalSkeleton.tsx` - Medical-themed skeleton
 3. `components/loading/SkeletonLoader.tsx` - **DUPLICATE** (same name, different location)
@@ -101,10 +106,10 @@ npm test tests/fsrs.test.ts
 
 ### Phase 4: Polish
 
-| Item | Status | Files | Notes |
-|------|--------|-------|-------|
-| #8 Scripts Cleanup | 📊 Audited | `scripts/` (**266 files**) | Archive unused, create CLI |
-| #10-14 Features | ⏳ Pending | Various | Metacognition, Pearl Harvester, etc. |
+| Item               | Status     | Files                      | Notes                                |
+| ------------------ | ---------- | -------------------------- | ------------------------------------ |
+| #8 Scripts Cleanup | 📊 Audited | `scripts/` (**266 files**) | Archive unused, create CLI           |
+| #10-14 Features    | ⏳ Pending | Various                    | Metacognition, Pearl Harvester, etc. |
 
 ---
 
@@ -193,42 +198,45 @@ const content = await loadConditionContent(conditionId);
 
 ### Critical
 
-| Issue | Impact | Effort | Priority |
-|-------|--------|--------|----------|
-| Duplicate services | Maintenance confusion | Medium | P1 |
-| No FSRS tests | Algorithm regression risk | Low | P1 ✅ |
-| Static data files | Data inconsistency | Medium | P1 |
+| Issue              | Impact                    | Effort | Priority |
+| ------------------ | ------------------------- | ------ | -------- |
+| Duplicate services | Maintenance confusion     | Medium | P1       |
+| No FSRS tests      | Algorithm regression risk | Low    | P1 ✅    |
+| Static data files  | Data inconsistency        | Medium | P1       |
 
 ### High
 
-| Issue | Impact | Effort | Priority |
-|-------|--------|--------|----------|
-| Monolithic App.tsx | Code maintainability | High | P2 |
-| Inconsistent loading | UX (CLS > 0) | Medium | P2 |
-| Missing error boundaries | User experience | Low | P2 |
+| Issue                    | Impact               | Effort | Priority |
+| ------------------------ | -------------------- | ------ | -------- |
+| Monolithic App.tsx       | Code maintainability | High   | P2       |
+| Inconsistent loading     | UX (CLS > 0)         | Medium | P2       |
+| Missing error boundaries | User experience      | Low    | P2       |
 
 ### Medium
 
-| Issue | Impact | Effort | Priority |
-|-------|--------|--------|----------|
-| Scripts sprawl | Developer productivity | Medium | P3 |
-| Low test coverage | Regression risk | High | P3 |
+| Issue             | Impact                 | Effort | Priority |
+| ----------------- | ---------------------- | ------ | -------- |
+| Scripts sprawl    | Developer productivity | Medium | P3       |
+| Low test coverage | Regression risk        | High   | P3       |
 
 ---
 
 ## Metrics to Track
 
 ### Code Quality
+
 - [ ] Test coverage: Target &gt;80% on critical paths
 - [ ] CLS score: Target 0.0
 - [ ] API response time: Target &lt;200ms P95
 
 ### Security
+
 - [ ] All endpoints use `authenticateRequest()`
 - [ ] AI endpoints have rate limiting
 - [ ] No sensitive data in client bundle
 
 ### Architecture
+
 - [ ] Single service layer (`lib/services/`)
 - [ ] No static JSON data files
 - [ ] App.tsx &lt;200 lines
@@ -247,6 +255,7 @@ const content = await loadConditionContent(conditionId);
 ## Changelog
 
 ### 2026-01-08
+
 - Created Strategic Improvement Plan from deep audit
 - Implemented comprehensive FSRS v5 test suite (40+ tests)
 - Fixed Node.js version to 20 (`.node-version`)

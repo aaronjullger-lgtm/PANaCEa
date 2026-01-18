@@ -25,11 +25,13 @@
 ### 1. Theme & Dark Mode System (✅ DONE)
 
 **Files Modified**:
+
 - `tailwind.config.js`: Semantic color tokens
 - `index.css`: CSS variables for light/dark
 - `components/SessionSetupModal.tsx`: Theme-aware buttons
 
 **Color System**:
+
 ```css
 Light: White (#FFFFFF) bg, Navy (#0F172A) text, Blue (#0284C7) accent
 Dark: Navy (#0F172A) bg, Light (#F0F0F0) text, Bright Blue (#0EA5E9) accent
@@ -40,15 +42,18 @@ Dark: Navy (#0F172A) bg, Light (#F0F0F0) text, Bright Blue (#0EA5E9) accent
 ### 2. Database Schema (✅ DONE)
 
 **New Models**:
+
 - `GrandRoundsChallenge`: Daily question sets (date, questionIds, seed)
 - `GrandRoundsHistory`: User completions (score, time, rank)
 - `EncounterChatHistory`: OSCE conversation logs (sessionId, role, message)
 
 **Deprecated**:
+
 - `Leaderboard` (commented out, safe to delete later)
 - `LeaderboardEntry` (commented out, safe to delete later)
 
 **Migration Required**:
+
 ```bash
 npx prisma generate
 npx prisma db push  # Or create migration
@@ -59,6 +64,7 @@ npx prisma db push  # Or create migration
 **File**: `services/grandRoundsService.ts`
 
 **Functions**:
+
 - `getTodaysChallenge()`: Fetch/create daily challenge
 - `hasCompletedToday()`: Check completion status
 - `submitCompletion()`: Submit with speed bonus
@@ -66,6 +72,7 @@ npx prisma db push  # Or create migration
 - `calculateScore()`: Speed-weighted algorithm
 
 **Scoring**:
+
 - Base: Points from correct answers
 - Bonus: Up to +200 pts for speed (<5 min)
 - Formula: `score = baseScore + floor((1 - time/300) * 200)`
@@ -79,6 +86,7 @@ npx prisma db push  # Or create migration
 **File**: `components/modes/GrandRoundsMode.tsx`
 
 **Changes Required**:
+
 1. Import `grandRoundsService`
 2. Replace `SAMPLE_QUESTIONS` with `getTodaysChallenge()`
 3. Add `hasCompletedToday()` check on landing page
@@ -87,8 +95,13 @@ npx prisma db push  # Or create migration
 6. Display `getTodaysLeaderboard()` in results view
 
 **Example Refactor**:
+
 ```typescript
-import { getTodaysChallenge, hasCompletedToday, submitCompletion } from '@/services/grandRoundsService';
+import {
+  getTodaysChallenge,
+  hasCompletedToday,
+  submitCompletion,
+} from '@/services/grandRoundsService';
 
 // In component:
 const [hasCompleted, setHasCompleted] = useState(false);
@@ -119,6 +132,7 @@ const rank = await submitCompletion(userId, totalScore, timeMs, correctCount);
 **Target**: Use `MiniDrillLayout` wrapper
 
 **Refactor Steps**:
+
 1. Import `MiniDrillLayout`
 2. Wrap main content in `<MiniDrillLayout>`
 3. Pass props: `title`, `score`, `totalAttempts`, `streak`
@@ -127,6 +141,7 @@ const rank = await submitCompletion(userId, totalScore, timeMs, correctCount);
 6. Remove custom header/exit/reset buttons
 
 **Template**:
+
 ```typescript
 import MiniDrillLayout from './MiniDrillLayout';
 
@@ -152,6 +167,7 @@ return (
 **File**: `components/drill/GuidelineDrillSession.tsx`
 
 **Same refactor as MiniLabDrillSession**
+
 - Wrap in `MiniDrillLayout`
 - Pass scoring props
 - Move feedback to footer
@@ -159,6 +175,7 @@ return (
 #### 2C: Add DrillLandingPage
 
 **Missing Pre-Session Screens**:
+
 - Photo Drill (all categories)
 - Mini Lab
 - Pharm
@@ -168,12 +185,14 @@ return (
 - DDx Compare
 
 **Implementation**:
+
 1. Import `DrillLandingPage`
 2. Add `viewState` state: `'landing' | 'active'`
 3. Show landing page when `viewState === 'landing'`
 4. Call `onStart` to transition to `'active'`
 
 **Template**:
+
 ```typescript
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { Microscope } from 'lucide-react'; // Drill-specific icon
@@ -213,6 +232,7 @@ return <MiniDrillLayout ...>...</MiniDrillLayout>;
 **File**: `App.tsx`
 
 **Add Route**:
+
 ```typescript
 const AR_ANATOMY: TrainingModeId = 'ar_anatomy';
 
@@ -230,6 +250,7 @@ type View = "menu" | "quiz" | ... | "ar_anatomy";
 **File**: `components/MenuView.tsx`
 
 **Add Navigation Card** (find "Training Modes" section):
+
 ```typescript
 <DrillCard
   icon={Scan}
@@ -243,6 +264,7 @@ type View = "menu" | "quiz" | ... | "ar_anatomy";
 #### 3B: PANRE-LA Simulator
 
 **Same pattern as AR Anatomy**:
+
 - Add route in `App.tsx`
 - Add card in `MenuView.tsx`
 - Ensure internal references (not UpToDate links)
@@ -252,6 +274,7 @@ type View = "menu" | "quiz" | ... | "ar_anatomy";
 **File**: `components/modes/PatientEncounterMode.tsx`
 
 **Add Chat History Storage**:
+
 ```typescript
 import type { EncounterChatHistory } from '@prisma/client';
 
@@ -266,9 +289,9 @@ async function saveMessage(role: 'user' | 'patient', message: string) {
         userId,
         role,
         message,
-        phase: currentPhase
-      }
-    })
+        phase: currentPhase,
+      },
+    }),
   });
 }
 
@@ -278,13 +301,14 @@ async function clearHistory() {
     method: 'DELETE',
     body: JSON.stringify({
       endpoint: 'osce/session',
-      params: { sessionId }
-    })
+      params: { sessionId },
+    }),
   });
 }
 ```
 
 **Add Voice Mode**:
+
 1. Create `hooks/useSpeechRecognition.ts`
 2. Create `hooks/useSpeechSynthesis.ts`
 3. Add toggle button for voice mode
@@ -296,16 +320,18 @@ async function clearHistory() {
 **Create**: `services/imageProcessingService.ts`
 
 **Functions**:
+
 - `findClinicalImages(conditionId)`: Query MediaAsset table
 - `gradeImage(imageUrl)`: Use Gemini Vision API (0-100 score)
 - `processSingle(imageUrl)`: Crop, enhance, store to R2
 - `linkToQuestion(imageId, questionId)`: Associate media
 
 **Backend**: `functions/api/image-process.ts`
+
 ```typescript
 export async function onRequestPost(context) {
   const { imageUrl, conditionId } = await context.request.json();
-  
+
   // 1. Download image
   // 2. Run Gemini Vision analysis
   // 3. Crop/enhance
@@ -320,12 +346,14 @@ export async function onRequestPost(context) {
 ## 📝 Testing Plan
 
 ### Visual Testing
+
 1. Toggle dark mode on every screen
 2. Check button contrast
 3. Verify text legibility
 4. Test drill mode layouts
 
 ### Functional Testing
+
 1. Complete Grand Rounds challenge
 2. Check leaderboard ranking
 3. Try OSCE conversation flow
@@ -333,6 +361,7 @@ export async function onRequestPost(context) {
 5. Navigate to AR Anatomy/PANRE-LA
 
 ### Database Testing
+
 ```bash
 # Check Grand Rounds data
 npx prisma studio
@@ -349,18 +378,22 @@ npx prisma studio
 ## 🚧 Known Issues & Considerations
 
 ### Grand Rounds
+
 - **Issue**: Need actual Question table queries, not sample data
 - **Solution**: Update service to fetch from `Question` model by `questionIds`
 
 ### Leaderboard Removal
+
 - **Issue**: `LeaderboardPanel.tsx` still in codebase
 - **Solution**: Delete file, remove import from MenuView
 
 ### Basic Science
+
 - **Issue**: Features not located yet
 - **Solution**: Run `grep -r "basic.science\|physiology" components/`
 
 ### Photo Drill
+
 - **Issue**: Complex AI pipeline (Vision API, R2, cropping)
 - **Solution**: Implement in phases: 1) DB query, 2) AI grading, 3) Processing
 
@@ -369,23 +402,27 @@ npx prisma studio
 ## 🎓 Best Practices
 
 ### When Using MiniDrillLayout
+
 - Always pass all required props
 - Use `footer` for feedback UI
 - Don't recreate header/controls
 - Let layout handle theme/responsiveness
 
 ### When Adding DrillLandingPage
+
 - Provide meaningful stats
 - Keep instructions concise (3-5 items)
 - Use appropriate icon and color
 - Test on mobile (cards stack vertically)
 
 ### When Modifying Schema
+
 - Always run `npx prisma generate` after changes
 - Test migrations in dev first
 - Keep old models commented (don't delete immediately)
 
 ### When Integrating Gemini API
+
 - Use `/geminiProxy` endpoint for all calls
 - Check rate limits (Pro vs Flash)
 - Use **Pro** for medical content (accuracy critical)
@@ -396,12 +433,14 @@ npx prisma studio
 ## 📚 Reference Files
 
 ### Core Documentation
+
 - `UI_UX_IMPLEMENTATION_STATUS.md`: Task tracker
 - `REGISTRY_FIRST_ARCHITECTURE.md`: Content architecture
 - `DATABASE_IMPLEMENTATION.md`: Schema details
 - `DEVELOPER_GUIDE.md`: Full development guide
 
 ### Key Components
+
 - `components/drill/MiniDrillLayout.tsx`: Standard drill wrapper
 - `components/drill/DrillLandingPage.tsx`: Pre-session screen
 - `components/modes/GrandRoundsMode.tsx`: Competitive mode
@@ -409,6 +448,7 @@ npx prisma studio
 - `components/PhotoDrillSession.tsx`: Image-based drills
 
 ### Services
+
 - `services/grandRoundsService.ts`: Daily challenge API
 - `services/geminiService.ts`: AI question generation
 - `services/offlineSync.ts`: Offline-first sync
@@ -418,6 +458,7 @@ npx prisma studio
 ## 🎯 Success Criteria
 
 ### Must Have (MVP)
+
 - [x] Theme system working in both modes
 - [x] Grand Rounds service layer complete
 - [ ] Grand Rounds UI refactored (daily challenges work)
@@ -427,12 +468,14 @@ npx prisma studio
 - [ ] PANRE-LA accessible via navigation
 
 ### Should Have
+
 - [ ] All 7 drill modes standardized
 - [ ] OSCE chat history working
 - [ ] Photo drill queries database first
 - [ ] Basic science features integrated
 
 ### Nice to Have
+
 - [ ] OSCE voice-to-voice mode
 - [ ] Photo drill AI processing pipeline
 - [ ] Gemini Vision image grading
@@ -443,17 +486,20 @@ npx prisma studio
 ## 💡 Quick Wins
 
 **30 minutes or less**:
+
 1. Add AR Anatomy route and card
 2. Add PANRE-LA route and card
 3. Delete LeaderboardPanel.tsx
 4. Add DrillLandingPage to PharmDrill
 
 **1-2 hours**:
+
 1. Refactor MiniLabDrillSession with MiniDrillLayout
 2. Refactor GrandRoundsMode with service
 3. Add DrillLandingPage to all 7 drills
 
 **Half day**:
+
 1. Implement OSCE chat history storage
 2. Create image processing service foundation
 3. Basic science feature discovery and integration
@@ -463,6 +509,7 @@ npx prisma studio
 ## 🔗 Next Session Checklist
 
 Before starting next session:
+
 - [ ] Run `npx prisma generate`
 - [ ] Test dark mode on existing screens
 - [ ] Review `UI_UX_IMPLEMENTATION_STATUS.md`
@@ -470,6 +517,7 @@ Before starting next session:
 - [ ] Locate basic science features
 
 First tasks to tackle:
+
 1. Grand Rounds UI refactor (high impact)
 2. MiniLabDrillSession standardization (quick win)
 3. Add AR Anatomy navigation (quick win)

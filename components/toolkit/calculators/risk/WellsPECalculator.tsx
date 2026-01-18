@@ -1,9 +1,9 @@
 /**
  * Wells' PE Criteria Calculator
- * 
+ *
  * Estimates probability of pulmonary embolism (PE).
  * Helps guide D-dimer and CTPA ordering.
- * 
+ *
  * Score interpretation:
  * - <2: Low probability (~1.3% PE prevalence)
  * - 2-6: Moderate probability (~16% prevalence)
@@ -39,23 +39,28 @@ export const WellsPECalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         interpretation: 'Low Probability',
         recommendation: 'D-dimer recommended. If negative, PE excluded. If positive, obtain CTPA.',
         riskLevel: 'low',
-        details: 'PE prevalence ~1.3%. Negative D-dimer safely rules out PE without need for imaging.',
+        details:
+          'PE prevalence ~1.3%. Negative D-dimer safely rules out PE without need for imaging.',
       };
     } else if (score <= 6) {
       return {
         score: score.toFixed(1),
         interpretation: 'Moderate Probability',
-        recommendation: 'D-dimer or CTPA. Consider clinical judgment, oxygen saturation, and patient stability.',
+        recommendation:
+          'D-dimer or CTPA. Consider clinical judgment, oxygen saturation, and patient stability.',
         riskLevel: 'moderate',
-        details: 'PE prevalence ~16%. May use D-dimer or proceed directly to CTPA based on clinical context.',
+        details:
+          'PE prevalence ~16%. May use D-dimer or proceed directly to CTPA based on clinical context.',
       };
     } else {
       return {
         score: score.toFixed(1),
         interpretation: 'High Probability',
-        recommendation: 'CTPA recommended. Consider empiric anticoagulation if imaging will be delayed.',
+        recommendation:
+          'CTPA recommended. Consider empiric anticoagulation if imaging will be delayed.',
         riskLevel: 'high',
-        details: 'PE prevalence ~41%. Skip D-dimer and proceed to definitive imaging. Consider hemodynamic status.',
+        details:
+          'PE prevalence ~41%. Skip D-dimer and proceed to definitive imaging. Consider hemodynamic status.',
       };
     }
   };

@@ -1,20 +1,20 @@
 /**
  * usePreferences Hook
- * 
+ *
  * Manages user preferences with automatic DB sync.
  * Provides:
  * - Automatic localStorage → DB migration on first load
  * - Real-time preference updates
  * - Optimistic updates with fallback
  * - Cross-device sync via database
- * 
+ *
  * Usage:
  * ```tsx
  * const { preferences, updatePreference, isLoading, isSyncing } = usePreferences();
- * 
+ *
  * // Update a preference
  * await updatePreference('theme', 'dark');
- * 
+ *
  * // Access preferences
  * console.log(preferences.dailyGoal);
  * ```
@@ -122,7 +122,7 @@ export function usePreferences(): UsePreferencesReturn {
         const error = err instanceof Error ? err : new Error('Failed to load preferences');
         console.error('[usePreferences] Load error:', error);
         setError(error);
-        
+
         // Fallback to localStorage
         const localPrefs = extractLocalStoragePreferences();
         setPreferences({ ...DEFAULT_PREFERENCES, ...localPrefs });

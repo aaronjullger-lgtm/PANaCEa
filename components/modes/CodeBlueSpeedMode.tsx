@@ -1,24 +1,24 @@
 /**
  * Code Blue Speed Mode Component
- * 
+ *
  * Timed ACLS/PALS rapid-fire drill mode with 5 seconds per question.
  * High-intensity training for emergency cardiac and pediatric protocols.
- * 
+ *
  * Database-driven: Fetches questions from /api/drills/code-blue
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Siren, 
-  Timer, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Siren,
+  Timer,
+  CheckCircle,
+  XCircle,
   Play,
   RotateCcw,
   Trophy,
   AlertTriangle,
-  Zap
+  Zap,
 } from 'lucide-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
@@ -47,18 +47,18 @@ type ViewState = 'landing' | 'loading' | 'active' | 'complete' | 'error';
 async function fetchCodeBlueQuestions(count: number = 10): Promise<CodeBlueQuestion[]> {
   try {
     const response = await fetch(`/api/drills/code-blue?count=${count}`);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
-    
+
     const questions = await response.json();
-    
+
     if (!Array.isArray(questions) || questions.length === 0) {
       throw new Error('No Code Blue questions available');
     }
-    
+
     return questions;
   } catch (error) {
     console.error('[Code Blue] Failed to fetch questions:', error);
@@ -83,7 +83,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
   const handleStart = useCallback(async () => {
     setViewState('loading');
     setErrorMessage('');
-    
+
     try {
       const fetchedQuestions = await fetchCodeBlueQuestions(10);
       setQuestions(fetchedQuestions);
@@ -97,9 +97,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
     } catch (error) {
       console.error('[Code Blue] Failed to start:', error);
       setErrorMessage(
-        error instanceof Error 
-          ? error.message 
-          : 'Failed to load questions. Please try again.'
+        error instanceof Error ? error.message : 'Failed to load questions. Please try again.'
       );
       setViewState('error');
     }
@@ -136,9 +134,9 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
     const isCorrect = selectedAnswer === currentQuestion.correctIndex;
     setIsSubmitted(true);
-    setScore(prev => ({
+    setScore((prev) => ({
       correct: prev.correct + (isCorrect ? 1 : 0),
-      total: prev.total + 1
+      total: prev.total + 1,
     }));
 
     if (isCorrect) {
@@ -150,7 +148,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
   const handleNext = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setIsSubmitted(false);
       setIsTimeUp(false);
@@ -168,9 +166,9 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
   useEffect(() => {
     if (isTimeUp && !isSubmitted) {
       setIsSubmitted(true);
-      setScore(prev => ({
+      setScore((prev) => ({
         correct: prev.correct,
-        total: prev.total + 1
+        total: prev.total + 1,
       }));
     }
   }, [isTimeUp, isSubmitted]);
@@ -187,24 +185,22 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
               <motion.div
-                animate={{ 
+                animate={{
                   rotate: [0, 10, -10, 0],
-                  scale: [1, 1.05, 1]
+                  scale: [1, 1.05, 1],
                 }}
-                transition={{ 
+                transition={{
                   repeat: Infinity,
                   duration: 2,
-                  ease: "easeInOut"
+                  ease: 'easeInOut',
                 }}
                 className="inline-flex items-center justify-center w-24 h-24 bg-red-500/10 rounded-full"
               >
                 <Siren className="w-12 h-12 text-red-500" />
               </motion.div>
-              
-              <h1 className="text-4xl font-bold text-red-500">
-                Code Blue Speed Mode
-              </h1>
-              
+
+              <h1 className="text-4xl font-bold text-red-500">Code Blue Speed Mode</h1>
+
               <p className="text-xl text-[var(--color-text-muted)]">
                 ACLS/PALS Rapid-Fire Challenge
               </p>
@@ -221,7 +217,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Zap className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                   <div>
@@ -231,7 +227,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                   <div>
@@ -277,7 +273,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
         >
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
             className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full"
           >
             <Siren className="w-8 h-8 text-red-500" />
@@ -349,21 +345,15 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
               <Trophy className="w-20 h-20 text-red-500 mx-auto" />
-              
-              <h1 className="text-4xl font-bold">
-                Code Blue Complete!
-              </h1>
-              
-              <p className="text-xl text-[var(--color-text-muted)]">
-                Final Results
-              </p>
+
+              <h1 className="text-4xl font-bold">Code Blue Complete!</h1>
+
+              <p className="text-xl text-[var(--color-text-muted)]">Final Results</p>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
               <div className="text-center space-y-2">
-                <div className="text-6xl font-bold text-red-500">
-                  {accuracy}%
-                </div>
+                <div className="text-6xl font-bold text-red-500">{accuracy}%</div>
                 <div className="text-lg text-[var(--color-text-muted)]">
                   {score.correct} correct out of {score.total}
                 </div>
@@ -392,7 +382,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   <RotateCcw className="w-5 h-5" />
                   Try Again
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -449,11 +439,13 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
           {/* Timer */}
           <div className="flex items-center justify-center gap-2">
-            <Timer className={`w-5 h-5 ${timeLeft <= 2 ? 'text-red-500' : 'text-[var(--color-text-muted)]'}`} />
+            <Timer
+              className={`w-5 h-5 ${timeLeft <= 2 ? 'text-red-500' : 'text-[var(--color-text-muted)]'}`}
+            />
             <motion.div
-              animate={{ 
+              animate={{
                 scale: timeLeft <= 2 ? [1, 1.1, 1] : 1,
-                color: timeLeft <= 2 ? '#ef4444' : undefined
+                color: timeLeft <= 2 ? '#ef4444' : undefined,
               }}
               transition={{ repeat: timeLeft <= 2 ? Infinity : 0, duration: 0.5 }}
               className={`text-2xl font-bold ${timeLeft <= 2 ? 'text-red-500' : ''}`}
@@ -481,9 +473,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
             {/* Question */}
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6">
-              <h2 className="text-xl font-semibold leading-relaxed">
-                {currentQuestion.question}
-              </h2>
+              <h2 className="text-xl font-semibold leading-relaxed">{currentQuestion.question}</h2>
             </div>
 
             {/* Options */}
@@ -505,11 +495,11 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                         ? isThisCorrect
                           ? 'bg-green-500/10 border-green-500 text-green-500'
                           : isSelected
-                          ? 'bg-red-500/10 border-red-500 text-red-500'
-                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-50'
+                            ? 'bg-red-500/10 border-red-500 text-red-500'
+                            : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-50'
                         : isSelected
-                        ? 'bg-red-500/10 border-red-500'
-                        : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-red-500/50'
+                          ? 'bg-red-500/10 border-red-500'
+                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-red-500/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -544,8 +534,10 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                     <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <div className={`font-semibold mb-1 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>
-                      {isTimeUp ? 'Time\'s Up!' : isCorrect ? 'Correct!' : 'Incorrect'}
+                    <div
+                      className={`font-semibold mb-1 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}
+                    >
+                      {isTimeUp ? "Time's Up!" : isCorrect ? 'Correct!' : 'Incorrect'}
                     </div>
                     <p className="text-sm text-[var(--color-text-muted)]">
                       {currentQuestion.explanation}

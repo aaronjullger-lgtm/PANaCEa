@@ -1,6 +1,6 @@
 /**
  * Educational Resource Service
- * 
+ *
  * Processes and manages educational resources (textbooks, lectures, PDFs)
  * Extracts content, links to conditions, and enables search
  */
@@ -39,7 +39,8 @@ export interface ResourceProcessingResult {
 export async function uploadEducationalResource(
   options: ResourceUploadOptions
 ): Promise<ResourceProcessingResult> {
-  const { file, title, resourceType, originalFilename, author, source, pageNumber, uploadedBy } = options;
+  const { file, title, resourceType, originalFilename, author, source, pageNumber, uploadedBy } =
+    options;
 
   // Sanitize filename
   const sanitizedFilename = originalFilename
@@ -114,7 +115,7 @@ async function processResourceContent(
     // Use AI to analyze content
     if (extractedText) {
       const analysis = await analyzeEducationalContent(extractedText);
-      
+
       summary = analysis.summary;
       keyTopics = analysis.keyTopics;
       systemCodes = analysis.systemCodes;
@@ -138,7 +139,6 @@ async function processResourceContent(
         },
       });
     }
-
   } catch (error) {
     console.error('Error processing resource content:', error);
     // Don't fail the upload, just mark for manual review
@@ -165,32 +165,31 @@ async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
   try {
     // Dynamic import to handle potential missing dependency gracefully
     const pdfParse = await import('pdf-parse').catch(() => null);
-    
+
     if (!pdfParse) {
       console.warn('pdf-parse library not available, falling back to AI vision');
       return extractTextFromPDFWithAI(pdfBuffer);
     }
 
     const data = await pdfParse.default(pdfBuffer);
-    
+
     // Clean and format the extracted text
     let text = data.text;
-    
+
     // Remove excessive whitespace and normalize line breaks
     text = text.replace(/\s+/g, ' ').trim();
     text = text.replace(/(.{100})/g, '$1\n'); // Add line breaks for readability
-    
+
     // Remove common PDF artifacts
     text = text.replace(/\f/g, '\n'); // Form feed characters
     text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control characters
-    
+
     if (text.length < 50) {
       console.warn('PDF text extraction yielded minimal content, falling back to AI vision');
       return extractTextFromPDFWithAI(pdfBuffer);
     }
-    
+
     return text;
-    
   } catch (error) {
     console.error('PDF parsing failed:', error);
     console.warn('Falling back to AI vision for PDF text extraction');
@@ -214,7 +213,7 @@ async function extractTextFromPDFWithAI(pdfBuffer: Buffer): Promise<string> {
   };
 
   const prompt = 'Extract all text from this PDF document. Return only the extracted text.';
-  
+
   const result = await model.generateContent([prompt, pdfPart]);
   const response = await result.response;
   return response.text();
@@ -235,8 +234,9 @@ async function extractTextFromPPTX(pptxBuffer: Buffer): Promise<string> {
     },
   };
 
-  const prompt = 'Extract all text from this PowerPoint presentation. Return only the extracted text.';
-  
+  const prompt =
+    'Extract all text from this PowerPoint presentation. Return only the extracted text.';
+
   const result = await model.generateContent([prompt, pptxPart]);
   const response = await result.response;
   return response.text();
@@ -282,7 +282,7 @@ Respond in JSON format:
   }
 
   const analysis = JSON.parse(jsonMatch[0]);
-  
+
   return {
     summary: analysis.summary || '',
     keyTopics: analysis.keyTopics || [],
@@ -319,10 +319,7 @@ async function linkToConditions(topics: string[]): Promise<string[]> {
 /**
  * Get educational resources for a condition
  */
-export async function getResourcesForCondition(
-  conditionId: string,
-  limit: number = 10
-) {
+export async function getResourcesForCondition(conditionId: string, limit: number = 10) {
   return prisma.educationalResource.findMany({
     where: {
       conditionIds: {
@@ -391,7 +388,7 @@ export async function trackResourceAccess(resourceId: string) {
  */
 function getMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
-  
+
   const mimeTypes: Record<string, string> = {
     pdf: 'application/pdf',
     pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -455,14 +452,12 @@ export async function batchProcessExistingPDFs(): Promise<{
         console.log(`Processed PDF ${resource.id}: ${resource.title}`);
 
         // Add small delay to avoid overwhelming the system
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         console.error(`Failed to process PDF ${resource.id}:`, error);
         results.failed++;
       }
     }
-
   } catch (error) {
     console.error('Batch processing failed:', error);
     throw error;
@@ -477,12 +472,12 @@ export async function batchProcessExistingPDFs(): Promise<{
 export async function scheduleBackgroundProcessing(): Promise<void> {
   // In a production environment, this would integrate with a job queue
   // For now, we'll use a simple setTimeout approach
-  
+
   const processInBackground = async () => {
     try {
       const results = await batchProcessExistingPDFs();
       console.log('Background PDF processing completed:', results);
-      
+
       // Schedule next batch if there were processed items
       if (results.processed > 0) {
         setTimeout(processInBackground, 60000); // Process next batch in 1 minute
@@ -510,21 +505,21 @@ export async function getProcessingStatus(): Promise<{
 }> {
   const [total, processed, pending] = await Promise.all([
     prisma.educationalResource.count({
-      where: { resourceType: 'pdf' }
+      where: { resourceType: 'pdf' },
     }),
     prisma.educationalResource.count({
       where: {
         resourceType: 'pdf',
-        extractedText: { not: null }
-      }
+        extractedText: { not: null },
+      },
     }),
     prisma.educationalResource.count({
       where: {
         resourceType: 'pdf',
         extractedText: null,
-        approvalStatus: 'pending'
-      }
-    })
+        approvalStatus: 'pending',
+      },
+    }),
   ]);
 
   const failed = total - processed - pending;
@@ -535,6 +530,6 @@ export async function getProcessingStatus(): Promise<{
     processed,
     pending,
     failed,
-    processingRate
+    processingRate,
   };
 }

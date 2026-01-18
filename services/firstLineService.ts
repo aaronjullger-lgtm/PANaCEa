@@ -12,5 +12,5 @@ export const firstLineService = {
     const response = await fetch('/api/first-line/categories');
     if (!response.ok) throw new Error('Failed to fetch categories');
     return response.json();
-  }
+  },
 };

@@ -31,7 +31,13 @@ import {
   TrendingUp,
   ChevronRight,
 } from 'lucide-react';
-import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, TrainingCategory, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+import {
+  MODE_REGISTRY,
+  TrainingModeConfig,
+  TrainingModeId,
+  TrainingCategory,
+  MODES_WITH_DEDICATED_ROUTES,
+} from '@/config/training-modes';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -81,7 +87,10 @@ interface TrainingMenuProps {
   /** Number of growth areas identified */
   growthAreasCount?: number;
   /** User's progress data for each mode (for progress indicators) */
-  modeProgress?: Record<string, { masteryPercent: number; lastPracticed?: Date; questionsAnswered?: number }>;
+  modeProgress?: Record<
+    string,
+    { masteryPercent: number; lastPracticed?: Date; questionsAnswered?: number }
+  >;
 }
 
 /**
@@ -97,7 +106,7 @@ interface TrainingMenuProps {
  * - Standardized 3-column grid
  * - Mobile horizontal scrolling
  */
-const TrainingMenu: React.FC<TrainingMenuProps> = ({ 
+const TrainingMenu: React.FC<TrainingMenuProps> = ({
   onStartSession,
   onNavigateToMode,
   onClose,
@@ -110,7 +119,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const [focus, setFocus] = useState<FocusOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  
+
   // Get the core adaptive mode from registry
   const coreMode = MODE_REGISTRY.find((mode) => mode.id === 'core_adaptive');
 
@@ -152,9 +161,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const filteredModes = useMemo(() => {
     if (!searchQuery.trim()) return drillModes;
     const query = searchQuery.toLowerCase();
-    return drillModes.filter((mode) =>
-      mode?.label?.toLowerCase().includes(query) ||
-      mode?.description?.toLowerCase().includes(query)
+    return drillModes.filter(
+      (mode) =>
+        mode?.label?.toLowerCase().includes(query) ||
+        mode?.description?.toLowerCase().includes(query)
     );
   }, [searchQuery, drillModes]);
 
@@ -162,10 +172,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    * Calculate daily recommended mode (mode not practiced recently)
    */
   const dailyRecommended = useMemo(() => {
-    const activeModes = drillModes.filter(mode => !mode.isComingSoon);
+    const activeModes = drillModes.filter((mode) => !mode.isComingSoon);
     if (activeModes.length === 0) return null;
 
-    const modesWithProgress = activeModes.filter(mode => modeProgress[mode.id]?.questionsAnswered);
+    const modesWithProgress = activeModes.filter(
+      (mode) => modeProgress[mode.id]?.questionsAnswered
+    );
     if (modesWithProgress.length > 0) {
       return modesWithProgress.sort((a, b) => {
         const aLast = modeProgress[a.id]?.lastPracticed?.getTime() || 0;
@@ -174,7 +186,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       })[0].id;
     }
 
-    const untriedMode = activeModes.find(mode => !modeProgress[mode.id]?.questionsAnswered);
+    const untriedMode = activeModes.find((mode) => !modeProgress[mode.id]?.questionsAnswered);
     return untriedMode?.id || null;
   }, [drillModes, modeProgress]);
 
@@ -218,10 +230,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const handleDrillClick = (mode: TrainingModeConfig) => {
     // Check if mode is blocked due to "coming soon" status
     if (mode.isComingSoon) {
-      console.warn(`[TrainingMenu] Mode "${mode.label}" is marked as coming soon. Check config to enable.`);
+      console.warn(
+        `[TrainingMenu] Mode "${mode.label}" is marked as coming soon. Check config to enable.`
+      );
       return;
     }
-    
+
     // Debug logging to help troubleshoot routing issues
     console.log('[TrainingMenu] handleDrillClick:', {
       modeId: mode.id,
@@ -238,7 +252,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       if (onNavigateToMode) {
         onNavigateToMode(mode.route, mode);
       } else {
-        console.warn('[TrainingMenu] onNavigateToMode callback not provided. Navigation will not occur.');
+        console.warn(
+          '[TrainingMenu] onNavigateToMode callback not provided. Navigation will not occur.'
+        );
       }
       onClose?.();
       return;
@@ -269,8 +285,18 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const renderFocusToggle = () => {
     const options: { value: FocusOption; label: string; count?: number; disabled?: boolean }[] = [
       { value: 'all', label: 'All Topics' },
-      { value: 'growth', label: 'Growth Areas', count: growthAreasCount, disabled: growthAreasCount === 0 },
-      { value: 'flagged', label: 'Flagged', count: flaggedQuestionsCount, disabled: flaggedQuestionsCount === 0 },
+      {
+        value: 'growth',
+        label: 'Growth Areas',
+        count: growthAreasCount,
+        disabled: growthAreasCount === 0,
+      },
+      {
+        value: 'flagged',
+        label: 'Flagged',
+        count: flaggedQuestionsCount,
+        disabled: flaggedQuestionsCount === 0,
+      },
       { value: 'due', label: 'Due', count: dueQuestionsCount, disabled: dueQuestionsCount === 0 },
     ];
 
@@ -286,16 +312,20 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               focus === option.value
                 ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-md'
                 : option.disabled
-                ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
+                  ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
             {option.count !== undefined && option.count > 0 && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                focus === option.value ? 'bg-[var(--color-bg-primary)]/20 text-[var(--color-bg-primary)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-              }`}>
+              <span
+                className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  focus === option.value
+                    ? 'bg-[var(--color-bg-primary)]/20 text-[var(--color-bg-primary)]'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                }`}
+              >
                 {option.count}
               </span>
             )}
@@ -308,8 +338,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   /**
    * Get special styling for specific drill modes - Clinical Theme
    */
-  const getDrillModeStyles = (modeId: string): { 
-    background: string; 
+  const getDrillModeStyles = (
+    modeId: string
+  ): {
+    background: string;
     border: string;
     overlay?: string;
     iconBg: string;
@@ -418,7 +450,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     if (!progress) return null;
 
     const { masteryPercent, lastPracticed, questionsAnswered } = progress;
-    const daysSinceLastPractice = lastPracticed ? Math.floor((Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const daysSinceLastPractice = lastPracticed
+      ? Math.floor((Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24))
+      : null;
 
     return (
       <div className="mt-2 space-y-1">
@@ -465,11 +499,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       case 'mini_lab':
         return 'Interpret lab panels and make the diagnosis.';
       case 'guideline_drill':
-        return 'Glasgow coma, Light\'s criteria, JONES, and more.';
+        return "Glasgow coma, Light's criteria, JONES, and more.";
       case 'condition_drill':
         return '5-stage progressive questions for any condition.';
       case 'first_line_treatment':
-        return 'What\'s the go-to treatment for each condition?';
+        return "What's the go-to treatment for each condition?";
       case 'pharmacology':
         return 'Drug mechanisms, side effects, and interactions.';
       default:
@@ -480,13 +514,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   /**
    * Render drill mode card with unique styling per mode - Clinical Theme
    */
-  const renderDrillCard = (mode: TrainingModeConfig, variant: 'featured' | 'standard' = 'standard') => {
+  const renderDrillCard = (
+    mode: TrainingModeConfig,
+    variant: 'featured' | 'standard' = 'standard'
+  ) => {
     const ICON_MAP = getIconMap();
     const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
     const isDisabled = mode.isComingSoon;
     const styles = getDrillModeStyles(mode.id);
     const isDailyRecommended = dailyRecommended === mode.id;
-    const featuredClasses = variant === 'featured' ? 'md:col-span-2 lg:col-span-2 shadow-lg hover:shadow-2xl' : '';
+    const featuredClasses =
+      variant === 'featured' ? 'md:col-span-2 lg:col-span-2 shadow-lg hover:shadow-2xl' : '';
 
     return (
       <button
@@ -497,9 +535,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         className={`
           relative p-5 rounded-2xl border overflow-hidden
           text-left transition-all duration-200
-          ${isDisabled 
-            ? 'opacity-40 grayscale cursor-not-allowed bg-slate-900/30 text-slate-600 border-dashed border-slate-700' 
-            : 'bg-transparent hover:bg-slate-800/20 cursor-pointer border-slate-700 hover:border-white hover:shadow-xl'
+          ${
+            isDisabled
+              ? 'opacity-40 grayscale cursor-not-allowed bg-slate-900/30 text-slate-600 border-dashed border-slate-700'
+              : 'bg-transparent hover:bg-slate-800/20 cursor-pointer border-slate-700 hover:border-white hover:shadow-xl'
           }
           ${featuredClasses}
           ${isDailyRecommended && !isDisabled ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''}
@@ -510,7 +549,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             Coming Soon
           </span>
         )}
-        
+
         {/* Daily Recommended badge */}
         {isDailyRecommended && !isDisabled && (
           <div className="absolute top-2 right-2 flex items-center gap-1 bg-white text-slate-900 px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-slate-200">
@@ -518,16 +557,24 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             Daily Pick
           </div>
         )}
-        
+
         <div className="flex flex-col gap-3 relative z-[1]">
-          <div className={`w-10 h-10 rounded-xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-700 ${isDisabled ? 'opacity-50' : ''}`}>
-            <IconComponent className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`} />
+          <div
+            className={`w-10 h-10 rounded-xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-700 ${isDisabled ? 'opacity-50' : ''}`}
+          >
+            <IconComponent
+              className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`}
+            />
           </div>
           <div className="min-h-[80px]">
-            <h3 className={`font-semibold text-white text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <h3
+              className={`font-semibold text-white text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}
+            >
               {mode.label}
             </h3>
-            <p className={`text-sm text-slate-300 mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <p
+              className={`text-sm text-slate-300 mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
+            >
               {getDrillDescription(mode)}
             </p>
           </div>
@@ -559,7 +606,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <h3 className="text-lg font-bold text-white">{title}</h3>
           <p className="text-sm text-slate-400 hidden sm:block">{description}</p>
         </div>
-        
+
         {/* Desktop: Standard 3-column grid */}
         <div className="hidden md:grid grid-cols-3 gap-4">
           {modes.map((mode) => renderDrillCard(mode, 'standard'))}
@@ -628,18 +675,14 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                     <Brain className="w-7 h-7 text-slate-100" />
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-white">
-                      Core PANCE Simulation
-                    </h2>
+                    <h2 className="text-xl font-bold text-white">Core PANCE Simulation</h2>
                     <p className="text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
                       {getFocusDescription()}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-5">
-                  {renderFocusToggle()}
-                </div>
+                <div className="mt-5">{renderFocusToggle()}</div>
               </div>
 
               <div className="flex items-center">
@@ -656,43 +699,44 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         )}
 
         {/* Grand Rounds - Secondary Daily Challenge (Stormy Slate Theme) */}
-        {!searchQuery && (() => {
-          const grandRoundsMode = MODE_REGISTRY.find(m => m.id === 'grand_rounds');
-          if (!grandRoundsMode) return null;
-          
-          return (
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-6 shadow-lg">
-              <div className="flex flex-col md:flex-row gap-6 items-center">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-700/60 flex items-center justify-center shadow-sm border border-slate-600">
-                      <Trophy className="w-6 h-6 text-slate-200" />
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        Grand Rounds
-                        <span className="px-2 py-0.5 text-xs font-semibold bg-slate-700 text-slate-200 rounded-full border border-slate-600">
-                          Daily Challenge
-                        </span>
-                      </h2>
-                      <p className="text-slate-400 text-sm mt-1">
-                        Same questions for everyone today - compete with your peers
-                      </p>
+        {!searchQuery &&
+          (() => {
+            const grandRoundsMode = MODE_REGISTRY.find((m) => m.id === 'grand_rounds');
+            if (!grandRoundsMode) return null;
+
+            return (
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-6 shadow-lg">
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-slate-700/60 flex items-center justify-center shadow-sm border border-slate-600">
+                        <Trophy className="w-6 h-6 text-slate-200" />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                          Grand Rounds
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-slate-700 text-slate-200 rounded-full border border-slate-600">
+                            Daily Challenge
+                          </span>
+                        </h2>
+                        <p className="text-slate-400 text-sm mt-1">
+                          Same questions for everyone today - compete with your peers
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDrillClick(grandRoundsMode)}
+                    className="px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:border-white transition-all border border-slate-600"
+                  >
+                    Start Challenge
+                  </button>
                 </div>
-                
-                <button
-                  type="button"
-                  onClick={() => handleDrillClick(grandRoundsMode)}
-                  className="px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:border-white transition-all border border-slate-600"
-                >
-                  Start Challenge
-                </button>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
 
         {/* Intent-Based Sections */}
         <div className="space-y-8">

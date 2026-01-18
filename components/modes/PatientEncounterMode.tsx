@@ -1,21 +1,68 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield, Heart, ClipboardList, Stethoscope as StethoscopeIcon } from 'lucide-react';
+import {
+  X,
+  MessageSquare,
+  Send,
+  User,
+  Clock,
+  Award,
+  CheckCircle,
+  XCircle,
+  Globe,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+  Heart,
+  ClipboardList,
+  Stethoscope as StethoscopeIcon,
+} from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import type { PatientEncounterCase, PatientQuestion, EncounterSession, PatientPersona } from '@/types/drill-modes';
+import type {
+  PatientEncounterCase,
+  PatientQuestion,
+  EncounterSession,
+  PatientPersona,
+} from '@/types/drill-modes';
 import type { PlacedOrder, ExamFinding, OSCEScoreReport } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
 import { OrderPanel, ExamPanel, RapportMeter, RapportIndicator, ScoreReport } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
-import { getRandomEncounterCase, calculateEncounterScore, saveChatMessage, getSessionHistory, clearSession } from '@/services/osceService';
+import {
+  getRandomEncounterCase,
+  calculateEncounterScore,
+  saveChatMessage,
+  getSessionHistory,
+  clearSession,
+} from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
-import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, orderDiagnosticTest, evaluateTreatmentPlan, generateAfterActionReport } from '@/services/geminiService';
+import {
+  chatWithPatientSimulator,
+  evaluateDiagnosis,
+  performPhysicalExam,
+  orderDiagnosticTest,
+  evaluateTreatmentPlan,
+  generateAfterActionReport,
+} from '@/services/geminiService';
 import { generatePatientCase } from '@/services/patientEncounterGenerator';
 import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
 import { generateDebrief, type PreceptorFeedback } from '@/services/virtualPreceptorService';
-import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle, FlaskConical, Scan, TestTube } from 'lucide-react';
+import {
+  Activity,
+  Stethoscope,
+  Microscope,
+  FileText,
+  Pill,
+  ChevronRight,
+  PauseCircle,
+  PlayCircle,
+  FlaskConical,
+  Scan,
+  TestTube,
+} from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
 import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
@@ -36,10 +83,20 @@ function loadClinicalFidelitySettings(): ClinicalFidelitySettings {
     try {
       return JSON.parse(saved);
     } catch {
-      return { emrInterface: false, writeOrders: false, rawLabValues: false, multimediaAuscultation: false };
+      return {
+        emrInterface: false,
+        writeOrders: false,
+        rawLabValues: false,
+        multimediaAuscultation: false,
+      };
     }
   }
-  return { emrInterface: false, writeOrders: false, rawLabValues: false, multimediaAuscultation: false };
+  return {
+    emrInterface: false,
+    writeOrders: false,
+    rawLabValues: false,
+    multimediaAuscultation: false,
+  };
 }
 
 interface PatientEncounterModeProps {
@@ -54,39 +111,53 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [phase, setPhase] = useState<EncounterPhase>('history');
   const [isPaused, setIsPaused] = useState(false);
-  
+
   const [currentCase, setCurrentCase] = useState<PatientEncounterCase | null>(null);
   const [session, setSession] = useState<EncounterSession | null>(null);
   const [patientPersona, setPatientPersona] = useState<PatientPersona | null>(null);
   const [secretDiagnosis, setSecretDiagnosis] = useState<string | null>(null);
-  
+
   // Phase Inputs
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const [examAction, setExamAction] = useState<string>('');
   const [diagnosticOrder, setDiagnosticOrder] = useState<string>('');
   const [userDiagnosis, setUserDiagnosis] = useState<string>('');
   const [treatmentPlan, setTreatmentPlan] = useState<string>('');
-  
+
   // Phase Data
-  const [physicalFindings, setPhysicalFindings] = useState<{maneuver: string, finding: string}[]>([]);
-  const [diagnosticResults, setDiagnosticResults] = useState<{testName: string, result: string, interpretation: string}[]>([]);
+  const [physicalFindings, setPhysicalFindings] = useState<{ maneuver: string; finding: string }[]>(
+    []
+  );
+  const [diagnosticResults, setDiagnosticResults] = useState<
+    { testName: string; result: string; interpretation: string }[]
+  >([]);
   const [differentialDiagnoses, setDifferentialDiagnoses] = useState<string[]>([]);
   const [newDifferential, setNewDifferential] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [languageMode, setLanguageMode] = useState<SpanishMode>('english');
   const [loadError, setLoadError] = useState<string | null>(null);
-  
+
   // Feedback
-  const [diagnosisFeedback, setDiagnosisFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
-  const [treatmentFeedback, setTreatmentFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
+  const [diagnosisFeedback, setDiagnosisFeedback] = useState<{
+    isCorrect: boolean;
+    feedback: string;
+    score: number;
+  } | null>(null);
+  const [treatmentFeedback, setTreatmentFeedback] = useState<{
+    isCorrect: boolean;
+    feedback: string;
+    score: number;
+  } | null>(null);
   const [aar, setAar] = useState<string>('');
   const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
   const [preceptorFeedback, setPreceptorFeedback] = useState<PreceptorFeedback | null>(null);
-  
+
   // Clinical Fidelity Mode
-  const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() => loadClinicalFidelitySettings());
+  const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() =>
+    loadClinicalFidelitySettings()
+  );
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
 
   // Enhanced OSCE Panel States
@@ -102,18 +173,32 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     enableScoring: true,
   });
 
-  const fallbackVitals = useMemo(() => ({
-    hr: 82,
-    bp: '122/76',
-    rr: 16,
-    o2sat: 98,
-  }), []);
+  const fallbackVitals = useMemo(
+    () => ({
+      hr: 82,
+      bp: '122/76',
+      rr: 16,
+      o2sat: 98,
+    }),
+    []
+  );
 
-  const initialVitals = useMemo(() => currentCase?.vitalSigns || fallbackVitals, [currentCase, fallbackVitals]);
-  const pathologyKey = useMemo(() => currentCase?.correctDiagnosis || currentCase?.chiefComplaint || 'stable', [currentCase]);
+  const initialVitals = useMemo(
+    () => currentCase?.vitalSigns || fallbackVitals,
+    [currentCase, fallbackVitals]
+  );
+  const pathologyKey = useMemo(
+    () => currentCase?.correctDiagnosis || currentCase?.chiefComplaint || 'stable',
+    [currentCase]
+  );
 
-  const { currentVitals, history: vitalsHistory, registerTick, applyIntervention } = useVitalsEngine(initialVitals, pathologyKey);
-  
+  const {
+    currentVitals,
+    history: vitalsHistory,
+    registerTick,
+    applyIntervention,
+  } = useVitalsEngine(initialVitals, pathologyKey);
+
   // Listen for changes to clinical fidelity settings
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -157,19 +242,22 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return value < range[0] || value > range[1] ? 'text-red-500' : 'text-green-500';
   }, []);
 
-  const detectInterventionIntent = useCallback((text: string) => {
-    if (!text) return;
-    const lower = text.toLowerCase();
-    if (/(fluid|bolus|saline|lactated|ringer|ivf)/.test(lower)) {
-      applyIntervention('fluids');
-    }
-    if (/(oxygen|o2|nasal cannula|non[-\s]?rebreather|mask|supplemental)/.test(lower)) {
-      applyIntervention('oxygen');
-    }
-  }, [applyIntervention]);
+  const detectInterventionIntent = useCallback(
+    (text: string) => {
+      if (!text) return;
+      const lower = text.toLowerCase();
+      if (/(fluid|bolus|saline|lactated|ringer|ivf)/.test(lower)) {
+        applyIntervention('fluids');
+      }
+      if (/(oxygen|o2|nasal cannula|non[-\s]?rebreather|mask|supplemental)/.test(lower)) {
+        applyIntervention('oxygen');
+      }
+    },
+    [applyIntervention]
+  );
 
   const toggleLanguageMode = () => {
-    setLanguageMode(prev => {
+    setLanguageMode((prev) => {
       if (prev === 'english') return 'spanish';
       if (prev === 'spanish') return 'side-by-side';
       return 'english';
@@ -187,59 +275,61 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     // Extract first number found in string
     const match = currentValueStr.match(/(\d+(\.\d+)?)/);
     if (!match) return null;
-    
+
     const currentVal = parseFloat(match[0]);
     if (isNaN(currentVal)) return null;
-  
+
     // Generate 5-7 historical points
     const points = 6;
     const data: number[] = [];
-    
+
     // Create a trend that leads to the current value
     // Randomly decide if trend is stable, rising, or falling
     const trendType = Math.random();
-    
+
     let val = currentVal;
-    
+
     // Work backwards
     for (let i = 0; i < points; i++) {
       data.unshift(val);
-      
+
       // Add noise
       const noise = (Math.random() - 0.5) * (currentVal * 0.1); // 10% variance
-      
+
       if (trendType < 0.6) {
         // Stable
         val = val + noise;
       } else if (trendType < 0.8) {
         // Rising (so previous was lower)
-        val = val - (currentVal * 0.05) + noise;
+        val = val - currentVal * 0.05 + noise;
       } else {
         // Falling (so previous was higher)
-        val = val + (currentVal * 0.05) + noise;
+        val = val + currentVal * 0.05 + noise;
       }
     }
-    
+
     return data;
   };
 
   const handleStartEncounter = async () => {
     setIsLoading(true);
     setLoadError(null);
-    
+
     // Get authentication token
     const token = await getToken();
-    
+
     // Use dynamic generation to ensure fresh content each time (backend OSCE case)
     const newCase = await getRandomEncounterCase(token);
-    
+
     if (!newCase) {
-      console.error("Failed to load case");
+      console.error('Failed to load case');
       setIsLoading(false);
-      setLoadError("Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.");
+      setLoadError(
+        'Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.'
+      );
       return;
     }
-    
+
     setCurrentCase(newCase);
 
     // Initialize Enhanced OSCE with case data (pass full case for type compatibility)
@@ -253,7 +343,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         sessionId = osceSession.id;
       }
     } catch (e) {
-      console.error("Failed to start OSCE session", e);
+      console.error('Failed to start OSCE session', e);
     }
 
     // Simulate loading for content generation buffer
@@ -274,12 +364,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     setIsTyping(true);
     detectInterventionIntent(currentQuestion);
-    
+
     // Prepare history for AI
-    const chatHistory = session.questions.map(q => [
-      { role: 'user' as const, content: q.questionText },
-      { role: 'model' as const, content: q.response }
-    ]).flat();
+    const chatHistory = session.questions
+      .map((q) => [
+        { role: 'user' as const, content: q.questionText },
+        { role: 'model' as const, content: q.response },
+      ])
+      .flat();
 
     try {
       // Call Gemini Simulator
@@ -287,9 +379,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         currentCase,
         chatHistory,
         currentQuestion,
-        patientPersona,
+        patientPersona
       );
-      
+
       const newQuestion: PatientQuestion = {
         questionText: currentQuestion,
         category: determineCategory(currentQuestion),
@@ -298,11 +390,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         timestamp: Date.now(),
       };
 
-      setSession(prev => prev ? ({
-        ...prev,
-        questions: [...prev.questions, newQuestion]
-      }) : null);
-      
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              questions: [...prev.questions, newQuestion],
+            }
+          : null
+      );
+
       setCurrentQuestion('');
 
       // Persist chat messages individually
@@ -313,9 +409,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         // Save patient response
         await saveChatMessage(session.id, 'patient', response, token);
       }
-
     } catch (error) {
-      console.error("Error getting patient response:", error);
+      console.error('Error getting patient response:', error);
       // Fallback or error toast could go here
     } finally {
       setIsTyping(false);
@@ -330,14 +425,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       // Evaluate diagnosis with AI
       const caseContext = `Patient: ${currentCase.patientName}, ${currentCase.age}yo ${currentCase.sex}. CC: ${currentCase.chiefComplaint}. Correct Dx: ${currentCase.correctDiagnosis}`;
-      const feedback = await evaluateDiagnosis(currentCase.correctDiagnosis, userDiagnosis, caseContext);
-      
+      const feedback = await evaluateDiagnosis(
+        currentCase.correctDiagnosis,
+        userDiagnosis,
+        caseContext
+      );
+
       setDiagnosisFeedback(feedback);
-      
+
       // Move to Treatment Phase
       setPhase('treatment');
     } catch (error) {
-      console.error("Error submitting diagnosis:", error);
+      console.error('Error submitting diagnosis:', error);
     } finally {
       setIsLoading(false);
     }
@@ -368,10 +467,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     try {
       const result = await performPhysicalExam(examAction, currentCase);
-      setPhysicalFindings(prev => [...prev, { maneuver: examAction, finding: result }]);
+      setPhysicalFindings((prev) => [...prev, { maneuver: examAction, finding: result }]);
       setExamAction('');
     } catch (error) {
-      console.error("Exam error:", error);
+      console.error('Exam error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -382,14 +481,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     try {
       const data = await orderDiagnosticTest(diagnosticOrder, currentCase);
-      setDiagnosticResults(prev => [...prev, { 
-        testName: diagnosticOrder, 
-        result: data.result, 
-        interpretation: data.interpretation 
-      }]);
+      setDiagnosticResults((prev) => [
+        ...prev,
+        {
+          testName: diagnosticOrder,
+          result: data.result,
+          interpretation: data.interpretation,
+        },
+      ]);
       setDiagnosticOrder('');
     } catch (error) {
-      console.error("Diagnostic error:", error);
+      console.error('Diagnostic error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -397,7 +499,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const handleAddDifferential = () => {
     if (newDifferential.trim()) {
-      setDifferentialDiagnoses(prev => [...prev, newDifferential.trim()]);
+      setDifferentialDiagnoses((prev) => [...prev, newDifferential.trim()]);
       setNewDifferential('');
     }
   };
@@ -408,14 +510,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       const feedback = await evaluateTreatmentPlan(treatmentPlan, currentCase);
       setTreatmentFeedback(feedback);
-      
+
       // Complete session in backend
       if (session?.id) {
         const token = await getToken();
         await completeOSCESession(session.id, userDiagnosis, treatmentPlan, token);
       }
     } catch (error) {
-      console.error("Treatment error:", error);
+      console.error('Treatment error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -423,14 +525,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const handleEndEncounter = async () => {
     if (!currentCase || !session) return;
-    
+
     setIsLoading(true);
     try {
       // Prepare session summary for Virtual Preceptor
       const sessionSummary = {
-        transcript: session.questions.flatMap(q => [
+        transcript: session.questions.flatMap((q) => [
           { role: 'user' as const, content: q.questionText },
-          { role: 'model' as const, content: q.response }
+          { role: 'model' as const, content: q.response },
         ]),
         physicalExams: physicalFindings,
         diagnosticTests: diagnosticResults,
@@ -438,11 +540,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         treatmentPlan: treatmentPlan || undefined,
         differentials: differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined,
       };
-      
+
       // Get Virtual Preceptor evaluation
       const feedback = await generateDebrief(sessionSummary, currentCase);
       setPreceptorFeedback(feedback);
-      
+
       // Generate Enhanced OSCE Score Report
       const osceReport = enhancedOSCE.generateScoreReport({
         diagnosisSubmitted: userDiagnosis,
@@ -450,30 +552,33 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         differentials: differentialDiagnoses,
       });
       setEnhancedScoreReport(osceReport);
-      
+
       // Generate legacy AAR for compatibility
-      const report = await generateAfterActionReport({
-        sessionId: session?.id || 'unknown',
-        startTime: new Date(session?.startTime || Date.now()).toISOString(),
-        endTime: new Date().toISOString(),
-        testsOrdered: diagnosticResults.map(r => r.testName),
-        chatHistory: session.questions.flatMap(q => [
-          { role: 'user', content: q.questionText },
-          { role: 'model', content: q.response }
-        ]),
-        actionsPerformed: [
-          ...physicalFindings.map(f => `Exam: ${f.maneuver} -> ${f.finding}`),
-          ...diagnosticResults.map(r => `Lab: ${r.testName} -> ${r.result}`)
-        ],
-        diagnosisSubmitted: userDiagnosis,
-        treatmentPlan: treatmentPlan ? [treatmentPlan] : [],
-        score: feedback.score
-      }, currentCase);
+      const report = await generateAfterActionReport(
+        {
+          sessionId: session?.id || 'unknown',
+          startTime: new Date(session?.startTime || Date.now()).toISOString(),
+          endTime: new Date().toISOString(),
+          testsOrdered: diagnosticResults.map((r) => r.testName),
+          chatHistory: session.questions.flatMap((q) => [
+            { role: 'user', content: q.questionText },
+            { role: 'model', content: q.response },
+          ]),
+          actionsPerformed: [
+            ...physicalFindings.map((f) => `Exam: ${f.maneuver} -> ${f.finding}`),
+            ...diagnosticResults.map((r) => `Lab: ${r.testName} -> ${r.result}`),
+          ],
+          diagnosisSubmitted: userDiagnosis,
+          treatmentPlan: treatmentPlan ? [treatmentPlan] : [],
+          score: feedback.score,
+        },
+        currentCase
+      );
       setAar(report);
-      
+
       setViewState('results');
     } catch (error) {
-      console.error("Error ending encounter:", error);
+      console.error('Error ending encounter:', error);
     } finally {
       setIsLoading(false);
     }
@@ -484,7 +589,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setPhase(target);
       return;
     }
-    
+
     if (phase === 'history') setPhase('physical');
     else if (phase === 'physical') setPhase('diagnostic');
     else if (phase === 'diagnostic') setPhase('diagnosis');
@@ -493,13 +598,28 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const determineCategory = (question: string): PatientQuestion['category'] => {
     const lowerQ = question.toLowerCase();
-    if (lowerQ.includes('history') || lowerQ.includes('when') || lowerQ.includes('how long') || lowerQ.includes('family')) {
+    if (
+      lowerQ.includes('history') ||
+      lowerQ.includes('when') ||
+      lowerQ.includes('how long') ||
+      lowerQ.includes('family')
+    ) {
       return 'history';
     }
-    if (lowerQ.includes('exam') || lowerQ.includes('physical') || lowerQ.includes('abdomen') || lowerQ.includes('heart')) {
+    if (
+      lowerQ.includes('exam') ||
+      lowerQ.includes('physical') ||
+      lowerQ.includes('abdomen') ||
+      lowerQ.includes('heart')
+    ) {
       return 'physical';
     }
-    if (lowerQ.includes('lab') || lowerQ.includes('test') || lowerQ.includes('ecg') || lowerQ.includes('xray')) {
+    if (
+      lowerQ.includes('lab') ||
+      lowerQ.includes('test') ||
+      lowerQ.includes('ecg') ||
+      lowerQ.includes('xray')
+    ) {
       return 'labs';
     }
     return 'other';
@@ -507,21 +627,31 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const getRelevanceColor = (relevance: PatientQuestion['relevance']) => {
     switch (relevance) {
-      case 'essential': return 'text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-950/30 dark:border-green-900';
-      case 'helpful': return 'text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/30 dark:border-blue-900';
-      case 'unnecessary': return 'text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-300 dark:bg-orange-950/30 dark:border-orange-900';
-      case 'redundant': return 'text-muted-foreground bg-muted border-border';
-      default: return 'text-muted-foreground bg-muted border-border';
+      case 'essential':
+        return 'text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-950/30 dark:border-green-900';
+      case 'helpful':
+        return 'text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/30 dark:border-blue-900';
+      case 'unnecessary':
+        return 'text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-300 dark:bg-orange-950/30 dark:border-orange-900';
+      case 'redundant':
+        return 'text-muted-foreground bg-muted border-border';
+      default:
+        return 'text-muted-foreground bg-muted border-border';
     }
   };
 
   const getRelevanceLabel = (relevance: PatientQuestion['relevance']) => {
     switch (relevance) {
-      case 'essential': return 'Essential';
-      case 'helpful': return 'Helpful';
-      case 'unnecessary': return 'Unnecessary';
-      case 'redundant': return 'Redundant';
-      default: return 'Other';
+      case 'essential':
+        return 'Essential';
+      case 'helpful':
+        return 'Helpful';
+      case 'unnecessary':
+        return 'Unnecessary';
+      case 'redundant':
+        return 'Redundant';
+      default:
+        return 'Other';
     }
   };
 
@@ -544,7 +674,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Virtual OSCE</h1>
-                <p className="text-sm text-[var(--color-text-secondary)]">Interactive Patient Interviews</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  Interactive Patient Interviews
+                </p>
               </div>
             </div>
             {onExit && (
@@ -567,10 +699,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">Virtual Patient Encounter</h2>
+              <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
+                Virtual Patient Encounter
+              </h2>
               <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-                Practice clinical reasoning in a realistic patient interview simulation. 
-                Gather history, perform exams, order tests, and make your diagnosis.
+                Practice clinical reasoning in a realistic patient interview simulation. Gather
+                history, perform exams, order tests, and make your diagnosis.
               </p>
             </div>
 
@@ -633,34 +767,36 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* How It Works Card */}
             <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-[var(--color-border)] shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">Encounter Flow</h3>
-              
+              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+                Encounter Flow
+              </h3>
+
               <div className="space-y-5">
                 {[
                   {
                     num: 1,
                     title: 'Review the Chief Complaint',
                     desc: "You'll be presented with a patient's chief complaint and vital signs. The patient will respond dynamically to your questions.",
-                    Icon: User
+                    Icon: User,
                   },
                   {
                     num: 2,
                     title: 'Take History',
                     desc: 'Type questions to gather history. Use focused, open-ended questions first, then targeted follow-ups. Information is revealed only when you ask!',
-                    Icon: MessageSquare
+                    Icon: MessageSquare,
                   },
                   {
                     num: 3,
                     title: 'Physical Exam & Diagnostics',
                     desc: 'Request physical exam maneuvers and order labs/imaging. Build your differential diagnosis as you gather data.',
-                    Icon: Microscope
+                    Icon: Microscope,
                   },
                   {
                     num: 4,
                     title: 'Diagnose & Treat',
                     desc: 'Submit your diagnosis and treatment plan. Receive detailed feedback from a virtual preceptor on your clinical reasoning.',
-                    Icon: FileText
-                  }
+                    Icon: FileText,
+                  },
                 ].map((step) => (
                   <div key={step.num} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-secondary)] flex items-center justify-center flex-shrink-0 border border-[var(--color-border)]">
@@ -686,7 +822,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <ul className="text-sm text-[var(--color-text-secondary)] space-y-2">
                   <li className="flex items-start gap-2">
                     <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
-                    <span>Start with open-ended questions (onset, location, duration, character, aggravating/alleviating factors)</span>
+                    <span>
+                      Start with open-ended questions (onset, location, duration, character,
+                      aggravating/alleviating factors)
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
@@ -694,11 +833,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
-                    <span>Order tests to rule in or rule out specific diagnoses, not as a shotgun approach</span>
+                    <span>
+                      Order tests to rule in or rule out specific diagnoses, not as a shotgun
+                      approach
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
-                    <span>Think about pre-test probability before ordering expensive or invasive tests</span>
+                    <span>
+                      Think about pre-test probability before ordering expensive or invasive tests
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -733,7 +877,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </>
                 )}
               </motion.button>
-              
+
               {/* Error Message */}
               {loadError && (
                 <motion.div
@@ -775,11 +919,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <div>
                 <h1 className="text-xl font-bold">Virtual OSCE</h1>
                 <p className="text-sm text-[var(--color-text-secondary)]">
-                  Phase: <span className="font-semibold text-[var(--color-accent)] uppercase">{phase}</span>
+                  Phase:{' '}
+                  <span className="font-semibold text-[var(--color-accent)] uppercase">
+                    {phase}
+                  </span>
                 </p>
               </div>
             </div>
-            
+
             {/* Phase Progress Indicator */}
             <div className="hidden md:flex items-center gap-2">
               {['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].map((p, idx) => {
@@ -787,17 +934,25 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 const currentIdx = phases.indexOf(phase);
                 const isCompleted = idx < currentIdx;
                 const isCurrent = idx === currentIdx;
-                
+
                 return (
                   <div key={p} className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
-                      ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 
-                        isCurrent ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white' : 
-                        'bg-transparent border-slate-300 text-slate-400'}`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
+                      ${
+                        isCompleted
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : isCurrent
+                            ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+                            : 'bg-transparent border-slate-300 text-slate-400'
+                      }`}
+                    >
                       {idx + 1}
                     </div>
                     {idx < phases.length - 1 && (
-                      <div className={`w-8 h-0.5 ${isCompleted ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      <div
+                        className={`w-8 h-0.5 ${isCompleted ? 'bg-green-500' : 'bg-slate-300'}`}
+                      />
                     )}
                   </div>
                 );
@@ -852,12 +1007,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 <Globe className="w-4 h-4 text-[var(--color-text-secondary)]" />
                 <span className="text-xs font-medium text-[var(--color-text-secondary)] uppercase w-8 text-center">
-                  {languageMode === 'side-by-side' ? 'Dual' : languageMode === 'spanish' ? 'ES' : 'EN'}
+                  {languageMode === 'side-by-side'
+                    ? 'Dual'
+                    : languageMode === 'spanish'
+                      ? 'ES'
+                      : 'EN'}
                 </span>
               </button>
-              <div className="flex items-center gap-2 text-sm" aria-label={`Time elapsed: ${minutes} minutes ${seconds} seconds`}>
+              <div
+                className="flex items-center gap-2 text-sm"
+                aria-label={`Time elapsed: ${minutes} minutes ${seconds} seconds`}
+              >
                 <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                <span className="font-mono text-[var(--color-text-primary)]">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
+                <span className="font-mono text-[var(--color-text-primary)]">
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </span>
               </div>
               {onExit && (
                 <button
@@ -883,7 +1047,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-md overflow-hidden"
               >
-                <div 
+                <div
                   className="p-4 md:p-6 flex items-start gap-4 cursor-pointer hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
                   onClick={() => setIsPatientInfoExpanded(!isPatientInfoExpanded)}
                 >
@@ -892,13 +1056,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-[var(--color-text-primary)] truncate">{currentCase.patientName}</h2>
+                      <h2 className="text-xl font-bold text-[var(--color-text-primary)] truncate">
+                        {currentCase.patientName}
+                      </h2>
                       <button className="text-[var(--color-text-secondary)] p-1">
-                        {isPatientInfoExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        {isPatientInfoExpanded ? (
+                          <ChevronUp className="w-5 h-5" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                     <p className="text-[var(--color-text-secondary)] truncate text-sm">
-                      {formatPatientAgeShort(currentCase.age)} {currentCase.sex} • {currentCase.chiefComplaint.substring(0, 40)}{currentCase.chiefComplaint.length > 40 ? '...' : ''}
+                      {formatPatientAgeShort(currentCase.age)} {currentCase.sex} •{' '}
+                      {currentCase.chiefComplaint.substring(0, 40)}
+                      {currentCase.chiefComplaint.length > 40 ? '...' : ''}
                     </p>
                   </div>
                 </div>
@@ -913,23 +1085,37 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       className="px-4 pb-4 md:px-6 md:pb-6 space-y-3"
                     >
                       <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
-                        <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
+                        <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">
+                          CHIEF COMPLAINT
+                        </p>
                         <p className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap">
-                          {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : <span className="inline-block w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>}
+                          {currentCase?.chiefComplaint ? (
+                            getTranslatedText(currentCase.chiefComplaint)
+                          ) : (
+                            <span className="inline-block w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>
+                          )}
                         </p>
                       </div>
 
                       <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)] space-y-3">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-[var(--color-text-secondary)]">EMR MONITOR</p>
-                          <span className="text-[10px] uppercase tracking-wide text-[var(--color-accent)]">Live</span>
+                          <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                            EMR MONITOR
+                          </p>
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--color-accent)]">
+                            Live
+                          </span>
                         </div>
 
                         <div className="grid sm:grid-cols-2 gap-3">
                           <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">Blood Pressure</span>
-                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp, [90, 140])}`}>
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">
+                                Blood Pressure
+                              </span>
+                              <span
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp, [90, 140])}`}
+                              >
                                 {Math.round(currentVitals.sbp)}/{Math.round(currentVitals.dbp)} mmHg
                               </span>
                             </div>
@@ -945,8 +1131,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                           <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">Heart Rate</span>
-                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr, [60, 100])}`}>
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">
+                                Heart Rate
+                              </span>
+                              <span
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr, [60, 100])}`}
+                              >
                                 {Math.round(currentVitals.hr)} bpm
                               </span>
                             </div>
@@ -962,8 +1152,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                           <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">Respiratory Rate</span>
-                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr, [12, 20])}`}>
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">
+                                Respiratory Rate
+                              </span>
+                              <span
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr, [12, 20])}`}
+                              >
                                 {Math.round(currentVitals.rr)} /min
                               </span>
                             </div>
@@ -979,8 +1173,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                           <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">O₂ Saturation</span>
-                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2, [94, 100])}`}>
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">
+                                O₂ Saturation
+                              </span>
+                              <span
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2, [94, 100])}`}
+                              >
                                 {Math.round(currentVitals.o2)}%
                               </span>
                             </div>
@@ -1001,7 +1199,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </motion.div>
 
               {/* Phase Specific Inputs */}
-              
+
               {/* HISTORY PHASE */}
               {phase === 'history' && (
                 <motion.div
@@ -1010,7 +1208,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Ask a Question</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                    Ask a Question
+                  </h3>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1052,8 +1252,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Perform Physical Exam</h3>
-                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate abdomen").</p>
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                    Perform Physical Exam
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                    Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate
+                    abdomen").
+                  </p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1099,8 +1304,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Order Diagnostics</h3>
-                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Order labs or imaging (e.g., "CBC", "Chest X-Ray").</p>
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                    Order Diagnostics
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                    Order labs or imaging (e.g., "CBC", "Chest X-Ray").
+                  </p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1146,7 +1355,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.2 }}
                   className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Final Diagnosis</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                    Final Diagnosis
+                  </h3>
                   <input
                     type="text"
                     value={userDiagnosis}
@@ -1185,8 +1396,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md space-y-4"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Treatment Plan</h3>
-                    <p className="text-sm text-[var(--color-text-muted)] mb-3">Outline your management plan (medications, disposition, follow-up).</p>
+                    <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                      Treatment Plan
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                      Outline your management plan (medications, disposition, follow-up).
+                    </p>
                     <textarea
                       value={treatmentPlan}
                       onChange={(e) => setTreatmentPlan(e.target.value)}
@@ -1196,14 +1411,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm min-h-[120px]"
                     />
                   </div>
-                  
+
                   {treatmentFeedback && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
-                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Treatment Feedback:</p>
-                      <p className="text-sm text-[var(--color-text-secondary)]">{treatmentFeedback.feedback}</p>
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                        Treatment Feedback:
+                      </p>
+                      <p className="text-sm text-[var(--color-text-secondary)]">
+                        {treatmentFeedback.feedback}
+                      </p>
                     </div>
                   )}
-                  
+
                   <div className="flex gap-3">
                     {!treatmentFeedback && (
                       <button
@@ -1223,7 +1442,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         )}
                       </button>
                     )}
-                    
+
                     <button
                       onClick={handleEndEncounter}
                       disabled={isLoading}
@@ -1246,17 +1465,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
                 </motion.div>
               )}
-
             </div>
 
             {/* Right Column: Output Stream */}
             <div className="space-y-4">
               {/* Rapport Meter (when enabled) */}
               {showRapportMeter && enhancedOSCE.state.isSessionActive && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                   <RapportMeter
                     meter={enhancedOSCE.state.rapportMeter}
                     emotionalState={enhancedOSCE.state.emotionalState}
@@ -1271,16 +1486,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md h-[600px] flex flex-col"
               >
-                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Encounter Log</h3>
-                
+                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
+                  Encounter Log
+                </h3>
+
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                   {/* History Log */}
                   {session.questions.map((q, idx) => (
-                    <div key={`hist-${idx}`} className="bg-[var(--color-bg-secondary)] rounded-lg p-4 space-y-2 border border-[var(--color-border)]">
+                    <div
+                      key={`hist-${idx}`}
+                      className="bg-[var(--color-bg-secondary)] rounded-lg p-4 space-y-2 border border-[var(--color-border)]"
+                    >
                       <div className="flex items-center gap-2 text-xs font-bold text-[var(--color-text-muted)] uppercase">
                         <MessageSquare className="w-3 h-3" /> History
                       </div>
-                      <p className="text-[var(--color-text-primary)] font-semibold">Q: {q.questionText}</p>
+                      <p className="text-[var(--color-text-primary)] font-semibold">
+                        Q: {q.questionText}
+                      </p>
                       <p className="text-[var(--color-text-secondary)] text-sm pl-4 border-l-2 border-[var(--color-border)] whitespace-pre-wrap">
                         A: {getTranslatedText(q.response)}
                       </p>
@@ -1289,11 +1511,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                   {/* Physical Exam Log */}
                   {physicalFindings.map((f, idx) => (
-                    <div key={`phys-${idx}`} className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2 border border-blue-100 dark:border-blue-800">
+                    <div
+                      key={`phys-${idx}`}
+                      className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2 border border-blue-100 dark:border-blue-800"
+                    >
                       <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase">
                         <Stethoscope className="w-3 h-3" /> Physical Exam
                       </div>
-                      <p className="text-[var(--color-text-primary)] font-semibold">Exam: {f.maneuver}</p>
+                      <p className="text-[var(--color-text-primary)] font-semibold">
+                        Exam: {f.maneuver}
+                      </p>
                       <p className="text-[var(--color-text-secondary)] text-sm pl-4 border-l-2 border-blue-300 whitespace-pre-wrap">
                         Finding: {f.finding}
                       </p>
@@ -1303,28 +1530,35 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {/* Diagnostic Log */}
                   {diagnosticResults.map((r, idx) => {
                     const trendData = generateTrendData(r.result);
-                    
+
                     return (
-                      <div key={`diag-${idx}`} className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-2 border border-purple-100 dark:border-purple-800">
+                      <div
+                        key={`diag-${idx}`}
+                        className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-2 border border-purple-100 dark:border-purple-800"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-xs font-bold text-purple-500 uppercase">
                             <Activity className="w-3 h-3" /> Diagnostics
                           </div>
                           {trendData && !clinicalFidelity.rawLabValues && (
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-purple-400 uppercase font-semibold">Trend</span>
-                              <Sparkline 
-                                data={trendData} 
-                                width={60} 
-                                height={20} 
-                                color="#a855f7" 
+                              <span className="text-[10px] text-purple-400 uppercase font-semibold">
+                                Trend
+                              </span>
+                              <Sparkline
+                                data={trendData}
+                                width={60}
+                                height={20}
+                                color="#a855f7"
                                 strokeWidth={2}
                                 showDots={false}
                               />
                             </div>
                           )}
                         </div>
-                        <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Order: {r.testName}</p>
+                        <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">
+                          Order: {r.testName}
+                        </p>
                         <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
                           Result: {r.result}
                         </p>
@@ -1344,7 +1578,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center gap-2 text-xs font-bold text-green-500 uppercase">
                         <CheckCircle className="w-3 h-3" /> Diagnosis
                       </div>
-                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Dx: {userDiagnosis}</p>
+                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">
+                        Dx: {userDiagnosis}
+                      </p>
                       <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-green-300 whitespace-pre-wrap">
                         {diagnosisFeedback.feedback}
                       </p>
@@ -1352,26 +1588,35 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   )}
 
                   {/* Loading state with smooth skeleton */}
-                  {isLoading && (
-                    <ChatSkeleton messages={2} className="mt-4" />
-                  )}
+                  {isLoading && <ChatSkeleton messages={2} className="mt-4" />}
 
                   {/* Typing indicator (when AI is responding but not loading) */}
                   {isTyping && !isLoading && (
                     <div className="flex items-center gap-2 text-muted-foreground italic p-4">
-                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div
+                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      />
                       <span className="text-sm ml-2">Processing...</span>
                     </div>
                   )}
-                  
+
                   {/* Empty State */}
-                  {session.questions.length === 0 && physicalFindings.length === 0 && diagnosticResults.length === 0 && (
-                    <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
-                      Start the encounter by asking about the patient's history.
-                    </p>
-                  )}
+                  {session.questions.length === 0 &&
+                    physicalFindings.length === 0 &&
+                    diagnosticResults.length === 0 && (
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
+                        Start the encounter by asking about the patient's history.
+                      </p>
+                    )}
                 </div>
               </motion.div>
             </div>
@@ -1399,15 +1644,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   isOpen={showOrderPanel}
                   onOrderPlace={(orders: PlacedOrder[]) => {
                     // Handle the newly placed orders
-                    const existingIds = new Set(enhancedOSCE.state.orders.map(o => o.id));
-                    const newOrders = orders.filter(o => !existingIds.has(o.id));
-                    newOrders.forEach(order => {
+                    const existingIds = new Set(enhancedOSCE.state.orders.map((o) => o.id));
+                    const newOrders = orders.filter((o) => !existingIds.has(o.id));
+                    newOrders.forEach((order) => {
                       enhancedOSCE.placeOrder(order);
-                      setDiagnosticResults(prev => [...prev, {
-                        testName: order.itemName,
-                        result: 'Pending...',
-                        interpretation: ''
-                      }]);
+                      setDiagnosticResults((prev) => [
+                        ...prev,
+                        {
+                          testName: order.itemName,
+                          result: 'Pending...',
+                          interpretation: '',
+                        },
+                      ]);
                     });
                   }}
                   placedOrders={enhancedOSCE.state.orders}
@@ -1437,14 +1685,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <ExamPanel
                   onExamPerformed={(finding) => {
                     enhancedOSCE.recordExamFinding(finding);
-                    setPhysicalFindings(prev => [...prev, {
-                      maneuver: finding.maneuverName,
-                      finding: finding.finding
-                    }]);
+                    setPhysicalFindings((prev) => [
+                      ...prev,
+                      {
+                        maneuver: finding.maneuverName,
+                        finding: finding.finding,
+                      },
+                    ]);
                   }}
                   completedExams={enhancedOSCE.state.examFindings}
-                  suggestedRegions={enhancedOSCE.getSuggestedExams(currentCase?.chiefComplaint || '')}
-                  caseData={currentCase ? { physicalExamData: currentCase.physicalExamData, correctDiagnosis: currentCase.correctDiagnosis } : undefined}
+                  suggestedRegions={enhancedOSCE.getSuggestedExams(
+                    currentCase?.chiefComplaint || ''
+                  )}
+                  caseData={
+                    currentCase
+                      ? {
+                          physicalExamData: currentCase.physicalExamData,
+                          correctDiagnosis: currentCase.correctDiagnosis,
+                        }
+                      : undefined
+                  }
                   onClose={() => setShowExamPanel(false)}
                 />
               </motion.div>
@@ -1501,22 +1761,45 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             transition={{ delay: 0.1 }}
             className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
           >
-            <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">Clinical Competencies</h3>
+            <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">
+              Clinical Competencies
+            </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { label: 'History-Taking', score: preceptorFeedback?.clinicalReasoning?.historyTaking || 0, icon: MessageSquare },
-                { label: 'Physical Exam', score: preceptorFeedback?.clinicalReasoning?.physicalExam || 0, icon: Stethoscope },
-                { label: 'Diagnosis', score: preceptorFeedback?.clinicalReasoning?.diagnosis || 0, icon: FileText },
-                { label: 'Management', score: preceptorFeedback?.clinicalReasoning?.management || 0, icon: Pill },
+                {
+                  label: 'History-Taking',
+                  score: preceptorFeedback?.clinicalReasoning?.historyTaking || 0,
+                  icon: MessageSquare,
+                },
+                {
+                  label: 'Physical Exam',
+                  score: preceptorFeedback?.clinicalReasoning?.physicalExam || 0,
+                  icon: Stethoscope,
+                },
+                {
+                  label: 'Diagnosis',
+                  score: preceptorFeedback?.clinicalReasoning?.diagnosis || 0,
+                  icon: FileText,
+                },
+                {
+                  label: 'Management',
+                  score: preceptorFeedback?.clinicalReasoning?.management || 0,
+                  icon: Pill,
+                },
               ].map((item, idx) => {
                 const percentage = (item.score / 10) * 100;
                 const Icon = item.icon;
                 return (
-                  <div key={idx} className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+                  <div
+                    key={idx}
+                    className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]"
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <Icon className="w-5 h-5 text-[var(--color-accent)]" />
-                        <span className="font-semibold text-[var(--color-text-primary)]">{item.label}</span>
+                        <span className="font-semibold text-[var(--color-text-primary)]">
+                          {item.label}
+                        </span>
                       </div>
                       <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
                         {item.score}/10
@@ -1528,7 +1811,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         animate={{ width: `${percentage}%` }}
                         transition={{ duration: 0.8, delay: 0.2 + idx * 0.1 }}
                         className={`h-full rounded-full ${
-                          percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                          percentage >= 80
+                            ? 'bg-green-500'
+                            : percentage >= 60
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
                         }`}
                       />
                     </div>
@@ -1550,8 +1837,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-[var(--color-accent)]">Your Preceptor's Feedback</h3>
-                <p className="text-sm text-[var(--color-text-secondary)]">Clinical reasoning assessment</p>
+                <h3 className="text-xl font-semibold text-[var(--color-accent)]">
+                  Your Preceptor's Feedback
+                </h3>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  Clinical reasoning assessment
+                </p>
               </div>
             </div>
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-5 border border-[var(--color-border)]">
@@ -1575,7 +1866,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-green-900 dark:text-green-100">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-green-900 dark:text-green-100"
+                    >
                       <span className="text-green-500 mt-0.5">•</span>
                       <span>{strength}</span>
                     </li>
@@ -1596,7 +1890,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.areasForImprovement.map((area, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-orange-900 dark:text-orange-100">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-orange-900 dark:text-orange-100"
+                    >
                       <span className="text-orange-500 mt-0.5">•</span>
                       <span>{area}</span>
                     </li>
@@ -1622,7 +1919,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </p>
               <ul className="space-y-2">
                 {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-red-900 dark:text-red-100 bg-red-100 dark:bg-red-900/30 rounded p-3 border border-red-200 dark:border-red-800">
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-red-900 dark:text-red-100 bg-red-100 dark:bg-red-900/30 rounded p-3 border border-red-200 dark:border-red-800"
+                  >
                     <span className="text-red-500 font-bold mt-0.5">!</span>
                     <span>{cue}</span>
                   </li>
@@ -1647,7 +1947,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </p>
               <div className="grid sm:grid-cols-2 gap-2">
                 {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
-                  <div key={idx} className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+                  <div
+                    key={idx}
+                    className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-800"
+                  >
                     <span className="font-semibold text-purple-900 dark:text-purple-100">{dx}</span>
                   </div>
                 ))}
@@ -1662,14 +1965,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             transition={{ delay: 0.7 }}
             className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800"
           >
-            <h3 className="text-lg font-semibold mb-3 text-blue-700 dark:text-blue-300">Correct Diagnosis</h3>
-            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-3">{currentCase.correctDiagnosis}</p>
+            <h3 className="text-lg font-semibold mb-3 text-blue-700 dark:text-blue-300">
+              Correct Diagnosis
+            </h3>
+            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-3">
+              {currentCase.correctDiagnosis}
+            </p>
             {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
               <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Teaching Points:</p>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                  Teaching Points:
+                </p>
                 <ul className="space-y-1">
                   {currentCase.teachingPoints.map((point, idx) => (
-                    <li key={idx} className="text-sm text-blue-900 dark:text-blue-100 flex items-start gap-2">
+                    <li
+                      key={idx}
+                      className="text-sm text-blue-900 dark:text-blue-100 flex items-start gap-2"
+                    >
                       <Award className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                       <span>{point}</span>
                     </li>
@@ -1771,15 +2083,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <XCircle className="w-8 h-8 text-orange-500 dark:text-orange-400" />
               )}
               <div>
-                <h2 className={`text-2xl font-bold ${
-                  isCorrectDiagnosis ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'
-                }`}>
+                <h2
+                  className={`text-2xl font-bold ${
+                    isCorrectDiagnosis
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-orange-700 dark:text-orange-300'
+                  }`}
+                >
                   {isCorrectDiagnosis ? 'Correct Diagnosis!' : 'Diagnosis Review'}
                 </h2>
-                <p className="text-[#364154] dark:text-[#cbd5e1]">Your diagnosis: {userDiagnosis}</p>
+                <p className="text-[#364154] dark:text-[#cbd5e1]">
+                  Your diagnosis: {userDiagnosis}
+                </p>
               </div>
             </div>
-            
+
             {diagnosisFeedback?.feedback && (
               <div className="mb-4 p-4 bg-card/50 rounded-lg border border-border/50">
                 <p className="text-sm font-semibold mb-1 opacity-75">AI Feedback:</p>
@@ -1789,7 +2107,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             <div className="bg-card rounded-lg p-4 border border-border">
               <p className="text-sm text-muted-foreground mb-1">Correct Diagnosis:</p>
-              <p className="text-lg font-semibold text-[var(--color-accent)]">{currentCase.correctDiagnosis}</p>
+              <p className="text-lg font-semibold text-[var(--color-accent)]">
+                {currentCase.correctDiagnosis}
+              </p>
             </div>
           </motion.div>
 

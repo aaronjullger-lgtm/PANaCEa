@@ -1,13 +1,26 @@
 /**
  * PharmacologyDrillSession - Drug-focused drill mode
- * 
+ *
  * Allows users to practice pharmacology questions by drug class.
  * Uses /api/questions/pharmacology-drill endpoint for database-driven content.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pill, X, Heart, Shield, Brain, Zap, Droplets, Activity, Syringe, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import {
+  Pill,
+  X,
+  Heart,
+  Shield,
+  Brain,
+  Zap,
+  Droplets,
+  Activity,
+  Syringe,
+  ArrowRight,
+  BarChart3,
+  Loader2,
+} from 'lucide-react';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
@@ -31,23 +44,107 @@ interface PharmacologyDrillSessionProps {
 }
 
 const DRUG_CLASS_OPTIONS = [
-  { id: 'beta-blockers', name: 'Beta Blockers', icon: Heart, color: 'red', description: 'Metoprolol, Atenolol, Carvedilol' },
-  { id: 'ace-inhibitors', name: 'ACE Inhibitors', icon: Heart, color: 'rose', description: 'Lisinopril, Enalapril, Ramipril' },
-  { id: 'antibiotics', name: 'Antibiotics', icon: Shield, color: 'green', description: 'Penicillins, Cephalosporins, Fluoroquinolones' },
-  { id: 'anticoagulants', name: 'Anticoagulants', icon: Droplets, color: 'red', description: 'Warfarin, Heparin, DOACs' },
-  { id: 'antidiabetics', name: 'Antidiabetics', icon: Activity, color: 'blue', description: 'Metformin, Insulin, SGLT2i' },
-  { id: 'antihypertensives', name: 'Antihypertensives', icon: Heart, color: 'purple', description: 'CCBs, ARBs, Diuretics' },
-  { id: 'antipsychotics', name: 'Antipsychotics', icon: Brain, color: 'violet', description: 'Haloperidol, Risperidone, Quetiapine' },
-  { id: 'antidepressants', name: 'Antidepressants', icon: Brain, color: 'indigo', description: 'SSRIs, SNRIs, TCAs' },
-  { id: 'bronchodilators', name: 'Bronchodilators', icon: Activity, color: 'cyan', description: 'Albuterol, Ipratropium, Theophylline' },
-  { id: 'corticosteroids', name: 'Corticosteroids', icon: Syringe, color: 'amber', description: 'Prednisone, Hydrocortisone, Dexamethasone' },
-  { id: 'diuretics', name: 'Diuretics', icon: Droplets, color: 'teal', description: 'Furosemide, HCTZ, Spironolactone' },
-  { id: 'nsaids', name: 'NSAIDs', icon: Zap, color: 'orange', description: 'Ibuprofen, Naproxen, Ketorolac' },
-  { id: 'opioids', name: 'Opioids', icon: Pill, color: 'slate', description: 'Morphine, Oxycodone, Hydrocodone' },
-  { id: 'statins', name: 'Statins', icon: Heart, color: 'pink', description: 'Atorvastatin, Simvastatin, Rosuvastatin' },
+  {
+    id: 'beta-blockers',
+    name: 'Beta Blockers',
+    icon: Heart,
+    color: 'red',
+    description: 'Metoprolol, Atenolol, Carvedilol',
+  },
+  {
+    id: 'ace-inhibitors',
+    name: 'ACE Inhibitors',
+    icon: Heart,
+    color: 'rose',
+    description: 'Lisinopril, Enalapril, Ramipril',
+  },
+  {
+    id: 'antibiotics',
+    name: 'Antibiotics',
+    icon: Shield,
+    color: 'green',
+    description: 'Penicillins, Cephalosporins, Fluoroquinolones',
+  },
+  {
+    id: 'anticoagulants',
+    name: 'Anticoagulants',
+    icon: Droplets,
+    color: 'red',
+    description: 'Warfarin, Heparin, DOACs',
+  },
+  {
+    id: 'antidiabetics',
+    name: 'Antidiabetics',
+    icon: Activity,
+    color: 'blue',
+    description: 'Metformin, Insulin, SGLT2i',
+  },
+  {
+    id: 'antihypertensives',
+    name: 'Antihypertensives',
+    icon: Heart,
+    color: 'purple',
+    description: 'CCBs, ARBs, Diuretics',
+  },
+  {
+    id: 'antipsychotics',
+    name: 'Antipsychotics',
+    icon: Brain,
+    color: 'violet',
+    description: 'Haloperidol, Risperidone, Quetiapine',
+  },
+  {
+    id: 'antidepressants',
+    name: 'Antidepressants',
+    icon: Brain,
+    color: 'indigo',
+    description: 'SSRIs, SNRIs, TCAs',
+  },
+  {
+    id: 'bronchodilators',
+    name: 'Bronchodilators',
+    icon: Activity,
+    color: 'cyan',
+    description: 'Albuterol, Ipratropium, Theophylline',
+  },
+  {
+    id: 'corticosteroids',
+    name: 'Corticosteroids',
+    icon: Syringe,
+    color: 'amber',
+    description: 'Prednisone, Hydrocortisone, Dexamethasone',
+  },
+  {
+    id: 'diuretics',
+    name: 'Diuretics',
+    icon: Droplets,
+    color: 'teal',
+    description: 'Furosemide, HCTZ, Spironolactone',
+  },
+  {
+    id: 'nsaids',
+    name: 'NSAIDs',
+    icon: Zap,
+    color: 'orange',
+    description: 'Ibuprofen, Naproxen, Ketorolac',
+  },
+  {
+    id: 'opioids',
+    name: 'Opioids',
+    icon: Pill,
+    color: 'slate',
+    description: 'Morphine, Oxycodone, Hydrocodone',
+  },
+  {
+    id: 'statins',
+    name: 'Statins',
+    icon: Heart,
+    color: 'pink',
+    description: 'Atorvastatin, Simvastatin, Rosuvastatin',
+  },
 ];
 
-const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({ 
+const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
   onExit,
   addPerformanceRecord,
   addMissedQuestion,
@@ -72,29 +169,32 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
   const categoryBreakdown = getCategoryBreakdown('pharmacology'); // Get actual category breakdown
 
   // Fetch question from API
-  const fetchPharmQuestion = useCallback(async (drugClass?: string, difficulty?: string): Promise<Question> => {
-    const token = await getToken();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  const fetchPharmQuestion = useCallback(
+    async (drugClass?: string, difficulty?: string): Promise<Question> => {
+      const token = await getToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-    const response = await fetch('/api/questions/pharmacology-drill', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ drugClass, difficulty }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Please sign in to access questions');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      throw new Error(`Failed to fetch question: ${response.status}`);
-    }
 
-    return response.json();
-  }, [getToken]);
+      const response = await fetch('/api/questions/pharmacology-drill', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ drugClass, difficulty }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to access questions');
+        }
+        throw new Error(`Failed to fetch question: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    [getToken]
+  );
 
   // Load initial questions when drug class is selected (or on "All Drug Classes")
   useEffect(() => {
@@ -186,30 +286,42 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       >
         {onExit && (
           <div className="absolute top-4 right-4 z-10">
-            <button onClick={onExit} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors" aria-label="Exit">
+            <button
+              onClick={onExit}
+              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
+              aria-label="Exit"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
-        
+
         {/* Category Progress */}
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Drug Class Progress</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Drug Class Progress
+              </h3>
             </div>
             <div className="space-y-2">
               {categoryBreakdown.slice(0, 5).map((cat) => (
                 <div key={cat.category} className="flex items-center justify-between text-sm">
                   <span className="text-[var(--color-text-secondary)]">{cat.category}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-[var(--color-text-muted)]">{cat.attempts} attempts</span>
-                    <span className={`font-semibold ${
-                      cat.accuracy >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                      cat.accuracy >= 70 ? 'text-amber-600 dark:text-amber-400' :
-                      'text-red-600 dark:text-red-400'
-                    }`}>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {cat.attempts} attempts
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        cat.accuracy >= 80
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : cat.accuracy >= 70
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
                       {cat.accuracy}%
                     </span>
                   </div>
@@ -239,7 +351,9 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
             <div className="text-red-500 mb-4">⚠️</div>
-            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">Error Loading Questions</h2>
+            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
+              Error Loading Questions
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
             <div className="flex gap-2 justify-center">
               <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
@@ -258,9 +372,14 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">No Questions Available</h2>
+            <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
+              No Questions Available
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-4">
-              No pharmacology questions found for {selectedDrugClass === 'all' ? 'all drug classes' : DRUG_CLASS_OPTIONS.find(d => d.id === selectedDrugClass)?.name}
+              No pharmacology questions found for{' '}
+              {selectedDrugClass === 'all'
+                ? 'all drug classes'
+                : DRUG_CLASS_OPTIONS.find((d) => d.id === selectedDrugClass)?.name}
             </p>
             <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
               Back to Drug Classes
@@ -311,7 +430,10 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-        <button onClick={onExit} className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+        <button
+          onClick={onExit}
+          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium">Exit</span>
         </button>
@@ -321,7 +443,11 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
           <h2 className="text-3xl font-bold mb-2">Select Drug Class</h2>
           <p className="text-[var(--color-text-secondary)]">Master pharmacology by drug class</p>
         </motion.div>
@@ -363,8 +489,12 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
                 className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-green-300 hover:shadow-md transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg bg-${drugClass.color}-100 dark:bg-${drugClass.color}-900/20`}>
-                    <Icon className={`w-6 h-6 text-${drugClass.color}-600 dark:text-${drugClass.color}-400`} />
+                  <div
+                    className={`p-3 rounded-lg bg-${drugClass.color}-100 dark:bg-${drugClass.color}-900/20`}
+                  >
+                    <Icon
+                      className={`w-6 h-6 text-${drugClass.color}-600 dark:text-${drugClass.color}-400`}
+                    />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">

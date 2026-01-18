@@ -9,6 +9,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 ## Sprint 5 Objectives
 
 ### Primary Goals
+
 1. ✅ Evaluate remaining static data files
 2. ✅ Disable tests for non-implemented features
 3. ✅ Mark files for future implementation
@@ -22,6 +23,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 ### Files Evaluated
 
 #### 1. `data/modes/triageTentData.ts` (363 lines)
+
 - **Purpose**: Triage Tent (Mass Casualty Event) training mode
 - **Content**: START triage protocol, victim scenarios, scoring logic
 - **Status**: **Planned Feature** - Not yet implemented in UI
@@ -29,6 +31,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 - **Decision**: Keep for future implementation
 
 #### 2. `data/modes/polypharmacyData.ts` (280 lines)
+
 - **Purpose**: Polypharmacy Puzzle (Geriatric Deprescribing) mode
 - **Content**: Medication interaction cases, deprescribing logic
 - **Status**: **Planned Feature** - Referenced in DiagnosticDrillHub but not fully implemented
@@ -36,6 +39,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 - **Decision**: Keep for future implementation
 
 #### 3. `data/modes/radiologyScrollData.ts` (271 lines)
+
 - **Purpose**: Radiology Scroll (DICOM Viewer) interactive mode
 - **Content**: CT/MRI series with scrollable slices, pathology identification
 - **Status**: **Planned Feature** - Not yet implemented in UI
@@ -43,6 +47,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 - **Decision**: Keep for future implementation
 
 #### 4. `data/modes/dailyRitualsData.ts` (Active)
+
 - **Purpose**: Daily features (Medical Wordle, This Day in Medicine, Streak Freeze)
 - **Status**: **ACTIVE** - Currently implemented and used
 - **Usage**: Production code
@@ -63,6 +68,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 **Changes Made**:
 
 1. **Commented Out Imports**:
+
 ```typescript
 // Note: These modes are planned for future database implementation
 // import {
@@ -84,6 +90,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 ```
 
 2. **Disabled Test Suites**:
+
 - ❌ Triage Tent tests (6 tests) - Commented out with note
 - ❌ Polypharmacy Puzzle tests (6 tests) - Commented out with note
 - ❌ Radiology Scroll tests (6 tests) - Commented out with note
@@ -95,6 +102,7 @@ Sprint 5 successfully completed the final polish of the database-first migration
 Created clear markers for future developers:
 
 **Remaining Static Files in `data/modes/`:**
+
 1. ✅ `dailyRitualsData.ts` - **ACTIVE** (Daily features)
 2. 📋 `triageTentData.ts` - **FUTURE** (Triage mode)
 3. 📋 `polypharmacyData.ts` - **FUTURE** (Deprescribing mode)
@@ -117,18 +125,21 @@ Created clear markers for future developers:
 ### What We Achieved
 
 #### 1. Clean Codebase
+
 - ✅ No static file imports in production code
 - ✅ Clear separation: Active vs. Planned features
 - ✅ Test suite aligned with implementation status
 - ✅ Build process clean and fast
 
 #### 2. Future-Proof Architecture
+
 - ✅ Data structures ready for future implementation
 - ✅ Clear migration path for new features
 - ✅ Consistent patterns established
 - ✅ Documentation comprehensive
 
 #### 3. Developer Experience
+
 - ✅ No confusion about which files to use
 - ✅ Clear markers for future work
 - ✅ Test suite reflects reality
@@ -137,20 +148,26 @@ Created clear markers for future developers:
 ### What We Did NOT Do (Intentionally)
 
 #### ❌ Did Not Delete Future Feature Files
+
 **Reason**: These files represent completed design work for planned features. Deleting them would:
+
 - Waste prior development effort
 - Remove valuable reference implementations
 - Force recreation when features are implemented
 
 #### ❌ Did Not Migrate to Database
+
 **Reason**: No UI components currently use these data structures. Database migration should happen:
+
 - When UI components are ready
 - When user stories are defined
 - When feature is prioritized
 - As part of feature implementation sprint
 
 #### ❌ Did Not Create Empty Database Tables
+
 **Reason**: Premature optimization. Database schema should be created:
+
 - Based on actual UI requirements
 - With proper field validation
 - With complete seed data
@@ -163,12 +180,14 @@ Created clear markers for future developers:
 ### Production Code: 100% Database-First ✅
 
 **Runtime Code Analysis:**
+
 - ✅ `components/` - 0 static file imports
 - ✅ `services/` - 0 static file imports
 - ✅ `src/` - 0 static file imports
 - ✅ All content flows: **PostgreSQL → API → Frontend**
 
 **Legitimate Non-Runtime Usage:**
+
 - ✅ `lib/services/sync/registrySync.ts` - Sync utility
 - ✅ `scripts/` - Migration/seed scripts
 - ✅ Documentation files - Usage examples
@@ -176,12 +195,14 @@ Created clear markers for future developers:
 ### Future Features: Ready for Implementation 📋
 
 **Planned Modes with Complete Data Structures:**
+
 1. **Triage Tent** - Mass casualty management (START protocol)
 2. **Polypharmacy Puzzle** - Geriatric deprescribing scenarios
 3. **Radiology Scroll** - Interactive DICOM viewer with pathology cases
 
 **When to Implement:**
 Each feature should follow this pattern:
+
 1. Create Prisma schema for mode-specific data
 2. Seed database with content from static file
 3. Build API endpoint (`/api/modes/[mode-name]`)
@@ -194,12 +215,14 @@ Each feature should follow this pattern:
 ## Comparison: Sprint 4 vs Sprint 5
 
 ### Sprint 4: The Migration
+
 - **Goal**: Delete migrated files
 - **Action**: Removed 3 static files (Code Blue, Fluids, Antibiotics)
 - **Impact**: Eliminated redundancy from completed migrations
 - **Status**: Production features cleaned up
 
 ### Sprint 5: The Polish
+
 - **Goal**: Evaluate remaining files
 - **Action**: Documented future features, disabled premature tests
 - **Impact**: Clear roadmap for future development
@@ -212,10 +235,12 @@ Each feature should follow this pattern:
 ## Files Modified
 
 ### Sprint 5 Changes
+
 - ✅ `tests/new-training-modes.test.ts` - Disabled 18 tests for unimplemented features
 - ✅ `SPRINT_5_COMPLETE.md` - This documentation
 
 ### Files Preserved (Intentionally)
+
 - 📋 `data/modes/triageTentData.ts` - Future implementation
 - 📋 `data/modes/polypharmacyData.ts` - Future implementation
 - 📋 `data/modes/radiologyScrollData.ts` - Future implementation
@@ -226,6 +251,7 @@ Each feature should follow this pattern:
 ## Testing & Validation
 
 ### Build Status
+
 ```bash
 ✓ built in 6.22s
 ✓ 90 entries precached
@@ -235,6 +261,7 @@ Each feature should follow this pattern:
 ```
 
 ### Test Suite Status
+
 - ✅ Daily Rituals tests - PASSING (active feature)
 - ✅ MODE_REGISTRY tests - PASSING (configuration)
 - ❌ Triage Tent tests - DISABLED (future feature)
@@ -251,6 +278,7 @@ Each feature should follow this pattern:
 ### For Production Development
 
 **When building new features:**
+
 1. Use database-first pattern (see Sprints 1-4)
 2. Never import from `data/` directory
 3. All content via `/api/*` endpoints
@@ -272,6 +300,7 @@ Each feature should follow this pattern:
 ### For Maintenance
 
 **Monthly checklist:**
+
 - ✅ Run `npm run sync:all` - Keep database current
 - ✅ Review `data/modes/` - Check for new static files
 - ✅ Update `SPRINT_5_COMPLETE.md` - Document new features
@@ -284,6 +313,7 @@ Each feature should follow this pattern:
 ### Immediate Next Steps (Post-Sprint 5)
 
 **No immediate action required.** The codebase is:
+
 - ✅ Production-ready
 - ✅ Database-first compliant
 - ✅ Well-documented
@@ -294,16 +324,19 @@ Each feature should follow this pattern:
 **When prioritized, implement in this order:**
 
 #### Priority 1: Polypharmacy Puzzle
+
 - **Rationale**: Referenced in DiagnosticDrillHub, highest user value
 - **Complexity**: Medium (medication interactions, scoring logic)
 - **Database impact**: New `PolypharmacyCase` table (~10 cases)
 
 #### Priority 2: Triage Tent
+
 - **Rationale**: Unique simulation mode, high educational value
 - **Complexity**: High (START protocol, complex scoring, time pressure)
 - **Database impact**: New `TriageVictim` and `TriageSession` tables
 
 #### Priority 3: Radiology Scroll
+
 - **Rationale**: Advanced feature, requires UI/UX design
 - **Complexity**: Very High (DICOM rendering, image handling, slice navigation)
 - **Database impact**: New `RadiologySeries` table + image storage integration
@@ -315,6 +348,7 @@ Each feature should follow this pattern:
 ### Sprint 1-5: Complete Achievement
 
 **Database-First Migration:**
+
 - ✅ Sprint 1: Eliminated conditionRegistry.ts (2195 lines)
 - ✅ Sprint 2: Migrated Pharm + Photo drills
 - ✅ Sprint 3: Migrated Code Blue + Fluids + Antibiotics simulations
@@ -322,6 +356,7 @@ Each feature should follow this pattern:
 - ✅ Sprint 5: Polished remaining files, documented future work
 
 **Code Quality:**
+
 - ✅ 0 static file imports in production code
 - ✅ 100% database-driven content delivery
 - ✅ Clean test suite (24 future tests disabled appropriately)
@@ -329,6 +364,7 @@ Each feature should follow this pattern:
 - ✅ Comprehensive documentation
 
 **Developer Experience:**
+
 - ✅ Clear separation: Active vs. Future features
 - ✅ Consistent patterns established
 - ✅ Migration path documented
@@ -366,6 +402,7 @@ Each feature should follow this pattern:
 **Sprint 5 is COMPLETE** 🎉
 
 All objectives achieved:
+
 - ✅ Remaining static files evaluated
 - ✅ Future features clearly marked
 - ✅ Test suite aligned with reality
@@ -396,12 +433,14 @@ All objectives achieved:
 ### Architecture Achievements
 
 **Before Sprint 1**:
+
 - Mixed static/database approach
 - conditionRegistry.ts (2195 lines)
 - Inconsistent data sources
 - Build warnings
 
 **After Sprint 5**:
+
 - 100% database-first production code
 - Clear future feature roadmap
 - Consistent patterns throughout

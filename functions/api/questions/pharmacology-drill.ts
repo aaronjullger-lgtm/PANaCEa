@@ -1,44 +1,31 @@
 /**
  * POST /api/questions/pharmacology-drill
- * 
  * Generate pharmacology question for Pharmacology Drill mode
  * Filters questions by topic='Pharmacology' or drugClass
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
-import { validateRequest } from '../_shared/schemas';
 import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
 // Zod schema for pharmacology drill request
 const PharmacologyDrillSchema = z.object({
-  drugClass: z.string().max(100).optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  body: z.object({
+    drugClass: z.string().max(100).optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  }),
 });
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: any) => {
-
-  // Authenticate user
-  const env = context.env as any;
-  const authResult = await authenticateRequest(context.request, env);
-  if (!authResult) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
-
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/pharmacology-drill');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Validate input with Zod schema
-    const validation = await validateRequest(context.request.clone(), PharmacologyDrillSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const { drugClass, difficulty } = (validation as { success: true; data: any }).data;
+    const { drugClass, difficulty } = validated.body;
 
     // Build where clause for pharmacology questions
     const where: any = {
@@ -75,16 +62,15 @@ export const onRequestPost = async (context: any) => {
     const totalCount = await prisma.question.count({ where });
 
     if (totalCount === 0) {
-      return new Response(
-        JSON.stringify({
+      logger.info('No pharmacology questions found', { drugClass, userId: auth.userId });
+
+      return {
+        data: {
           error: 'No pharmacology questions found',
           drugClass,
-        }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        }
-      );
+        },
+        status: 404,
+      };
     }
 
     // Select random question using skip
@@ -114,35 +100,26 @@ export const onRequestPost = async (context: any) => {
     });
 
     if (!question) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to retrieve pharmacology question' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        }
-      );
+      logger.error('Failed to retrieve pharmacology question', { userId: auth.userId });
+      throw new Error('Failed to retrieve pharmacology question');
     }
 
-    return new Response(JSON.stringify(question), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+    logger.info('Pharmacology question retrieved', {
+      userId: auth.userId,
+      questionId: question.id,
+      drugClass: question.drugClass,
     });
+
+    return {
+      data: question,
+    };
   } catch (error) {
-    console.error('[pharmacology-drill] Error generating question:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to generate pharmacology question',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      }
-    );
+    logger.error('Error generating pharmacology question', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to generate pharmacology question');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

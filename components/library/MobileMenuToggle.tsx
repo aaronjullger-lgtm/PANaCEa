@@ -1,6 +1,6 @@
 /**
  * MobileMenuToggle - Hamburger menu button for mobile sidebar
- * 
+ *
  * Only visible on small screens (< 768px)
  */
 

@@ -1,14 +1,14 @@
 /**
  * Question Versioning Utility
- * 
+ *
  * Sprint C - Step 8: Track question edit history and enable rollback
- * 
+ *
  * Purpose: Every time a question is edited:
  * - Create a version snapshot
  * - Track what changed
  * - Enable rollback to previous versions
  * - Maintain audit trail
- * 
+ *
  * Note: Requires QuestionVersion table (see questionVersioning.schema.ts)
  */
 
@@ -41,7 +41,7 @@ export interface VersionMetadata {
 
 /**
  * Create a new version when a question is edited
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - ID of the question being edited
  * @param questionType - Type of question ('pre_generated', 'question', 'staging')
@@ -68,11 +68,11 @@ export async function createQuestionVersion(
   try {
     // Determine what fields changed
     const changedFields: string[] = [];
-    
+
     for (const key of Object.keys(newData)) {
       const oldValue = JSON.stringify(previousData[key]);
       const newValue = JSON.stringify(newData[key]);
-      
+
       if (oldValue !== newValue) {
         changedFields.push(key);
       }
@@ -109,7 +109,6 @@ export async function createQuestionVersion(
 
     console.log(`[Versioning] Created version ${nextVersion} for question ${questionId}`);
     return version;
-
   } catch (error) {
     console.error('[Versioning] Failed to create version:', error);
     throw error;
@@ -118,7 +117,7 @@ export async function createQuestionVersion(
 
 /**
  * Get all versions of a question
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - Question ID
  * @param questionType - Question type
@@ -150,7 +149,6 @@ export async function getQuestionVersions(
     });
 
     return versions;
-
   } catch (error) {
     console.error('[Versioning] Failed to get versions:', error);
     return [];
@@ -159,7 +157,7 @@ export async function getQuestionVersions(
 
 /**
  * Get a specific version of a question
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - Question ID
  * @param questionType - Question type
@@ -191,7 +189,6 @@ export async function getQuestionAtVersion(
     }
 
     return versionRecord.questionData as QuestionSnapshot;
-
   } catch (error) {
     console.error('[Versioning] Failed to get question at version:', error);
     return null;
@@ -200,7 +197,7 @@ export async function getQuestionAtVersion(
 
 /**
  * Rollback a question to a previous version
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - Question ID
  * @param questionType - Question type
@@ -218,14 +215,14 @@ export async function rollbackQuestion(
   try {
     // Get the target version data
     const targetData = await getQuestionAtVersion(prisma, questionId, questionType, targetVersion);
-    
+
     if (!targetData) {
       throw new Error(`Version ${targetVersion} not found`);
     }
 
     // Get current data (for creating rollback version)
     let currentData: QuestionSnapshot | null = null;
-    
+
     if (questionType === 'pre_generated') {
       const current = await prisma.preGeneratedQuestion.findUnique({
         where: { id: questionId },
@@ -260,18 +257,11 @@ export async function rollbackQuestion(
 
     // Create version of current state (before rollback)
     if (currentData) {
-      await createQuestionVersion(
-        prisma,
-        questionId,
-        questionType,
-        currentData,
-        targetData,
-        {
-          editedBy: rolledBackBy,
-          changeReason: 'rollback',
-          changeSummary: `Rolled back to version ${targetVersion}`,
-        }
-      );
+      await createQuestionVersion(prisma, questionId, questionType, currentData, targetData, {
+        editedBy: rolledBackBy,
+        changeReason: 'rollback',
+        changeSummary: `Rolled back to version ${targetVersion}`,
+      });
     }
 
     // Apply rollback
@@ -303,7 +293,6 @@ export async function rollbackQuestion(
 
     console.log(`[Versioning] Rolled back question ${questionId} to version ${targetVersion}`);
     return targetData;
-
   } catch (error) {
     console.error('[Versioning] Failed to rollback question:', error);
     return null;
@@ -312,7 +301,7 @@ export async function rollbackQuestion(
 
 /**
  * Compare two versions of a question
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - Question ID
  * @param questionType - Question type
@@ -343,11 +332,11 @@ export async function compareVersions(
 
     if (v1Data && v2Data) {
       const allKeys = new Set([...Object.keys(v1Data), ...Object.keys(v2Data)]);
-      
+
       for (const key of allKeys) {
         const oldValue = v1Data[key];
         const newValue = v2Data[key];
-        
+
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
           changes.push({
             field: key,
@@ -363,7 +352,6 @@ export async function compareVersions(
       version2Data: v2Data,
       changes,
     };
-
   } catch (error) {
     console.error('[Versioning] Failed to compare versions:', error);
     return {
@@ -376,7 +364,7 @@ export async function compareVersions(
 
 /**
  * Get version history summary (for UI display)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param questionId - Question ID
  * @param questionType - Question type
@@ -394,28 +382,25 @@ export async function getVersionHistorySummary(
       return 'No version history available';
     }
 
-    const lines = [
-      `📜 Version History for ${questionId}`,
-      '─'.repeat(70),
-    ];
+    const lines = [`📜 Version History for ${questionId}`, '─'.repeat(70)];
 
     for (const v of versions) {
       lines.push('');
       lines.push(`Version ${v.version} - ${v.createdAt.toLocaleString()}`);
       lines.push(`  Edited by: ${v.editedByEmail || v.editedBy}`);
-      
+
       if (v.changeSummary) {
         lines.push(`  Summary: ${v.changeSummary}`);
       }
-      
+
       if (v.changedFields.length > 0) {
         lines.push(`  Changed fields: ${v.changedFields.join(', ')}`);
       }
-      
+
       if (v.distractorScore !== null && v.distractorScore !== undefined) {
         lines.push(`  Distractor score: ${v.distractorScore}/100`);
       }
-      
+
       if (v.qualityScore !== null && v.qualityScore !== undefined) {
         lines.push(`  Quality score: ${v.qualityScore}/100`);
       }
@@ -423,9 +408,8 @@ export async function getVersionHistorySummary(
 
     lines.push('');
     lines.push('─'.repeat(70));
-    
-    return lines.join('\n');
 
+    return lines.join('\n');
   } catch (error) {
     console.error('[Versioning] Failed to get version history summary:', error);
     return 'Error loading version history';

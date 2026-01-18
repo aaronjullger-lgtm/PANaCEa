@@ -1,24 +1,24 @@
 #!/usr/bin/env tsx
 /**
  * Sync SpecialTest Table from Registry
- * 
+ *
  * This script syncs the SpecialTest table with the specialTestRegistry.
- * 
+ *
  * IMPORTANT: This script only ADDS new tests. It never overwrites existing database records.
  * This preserves any manual edits or AI-generated content in the database.
- * 
+ *
  * SPECIAL FEATURE: Uses Gemini API to generate in-depth content for each test including:
  * - Detailed technique/procedure
  * - Clinical rationale
  * - Interpretation of results
  * - Clinical pearls
- * 
+ *
  * Workflow:
  * 1. Add special test to specialTestRegistry.ts
  * 2. Run this script to sync SpecialTest table (adds only, no overwrites)
  * 3. Script generates comprehensive content via Gemini API
  * 4. Further automation can enhance content over time
- * 
+ *
  * Usage: tsx scripts/syncSpecialTestTable.ts
  */
 
@@ -26,7 +26,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
-import { SPECIAL_TEST_REGISTRY, buildSpecialTestId } from '../specialTestRegistry';
+import { SPECIAL_TEST_REGISTRY, buildSpecialTestId } from '../src/registries/specialTestRegistry';
 import { fileURLToPath } from 'url';
 
 // Load environment variables
@@ -66,7 +66,7 @@ const report: SyncReport = {
  */
 async function generateTestContent(meta: any): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY;
-  
+
   if (!apiKey) {
     console.warn('  ⚠️  GEMINI_API_KEY not set - skipping AI content generation');
     return {
@@ -116,7 +116,7 @@ Keep the content concise but comprehensive. Use clear, professional medical lang
 
     const data: any = await response.json();
     let rawText = '';
-    
+
     if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
       rawText = data.candidates[0].content.parts[0].text;
     }
@@ -130,7 +130,7 @@ Keep the content concise but comprehensive. Use clear, professional medical lang
     }
 
     const generatedContent = JSON.parse(text);
-    
+
     // Combine with registry metadata
     return {
       technique: generatedContent.technique || meta.technique || null,
@@ -192,7 +192,7 @@ async function syncSpecialTest(meta: any): Promise<void> {
     if (existing) {
       // Evaluate if existing content is sufficient
       const quality = evaluateContentQuality(existing);
-      
+
       if (!quality.needsUpdate) {
         report.skipped++;
         console.log(`  ⏭️  Skipped (already exists with sufficient content): ${meta.name}`);
@@ -201,7 +201,9 @@ async function syncSpecialTest(meta: any): Promise<void> {
         // Content exists but needs improvement - for now, still skip to preserve manual edits
         // Future enhancement: could offer to update with approval
         report.skipped++;
-        console.log(`  ⏭️  Skipped (exists but ${quality.reason} - preserving existing): ${meta.name}`);
+        console.log(
+          `  ⏭️  Skipped (exists but ${quality.reason} - preserving existing): ${meta.name}`
+        );
         return;
       }
     }
@@ -240,7 +242,9 @@ async function syncSpecialTest(meta: any): Promise<void> {
       },
     });
     report.created++;
-    console.log(`  ✨ Created with AI content: ${meta.name} (${meta.system}${meta.region ? ' - ' + meta.region : ''})`);
+    console.log(
+      `  ✨ Created with AI content: ${meta.name} (${meta.system}${meta.region ? ' - ' + meta.region : ''})`
+    );
   } catch (error: any) {
     report.failed++;
     report.errors.push({
@@ -272,10 +276,10 @@ async function syncAllTests(): Promise<void> {
 
   for (const meta of SPECIAL_TEST_REGISTRY) {
     await syncSpecialTest(meta);
-    
+
     // Rate limiting: Wait 1 second between API calls to avoid hitting rate limits
     if (apiKey) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 }
@@ -320,16 +324,18 @@ async function main() {
       process.exit(1);
     } else {
       console.log('\n✅ SpecialTest table sync completed successfully!');
-      
+
       if (report.created > 0) {
         console.log(`\n💡 ${report.created} new special tests added to database.`);
         console.log('   Automation will generate detailed content for these tests.');
       }
-      
+
       if (report.skipped > 0) {
-        console.log(`\n📝 ${report.skipped} tests already exist in database (preserved, not overwritten).`);
+        console.log(
+          `\n📝 ${report.skipped} tests already exist in database (preserved, not overwritten).`
+        );
       }
-      
+
       process.exit(0);
     }
   } catch (error: any) {

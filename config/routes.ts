@@ -33,7 +33,7 @@ export const ROUTES = {
 } as const;
 
 // Type for route values
-export type AppRoute = typeof ROUTES[keyof typeof ROUTES];
+export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
 
 // Helper function to check if a path matches a route
 export const matchesRoute = (currentPath: string, route: AppRoute): boolean => {

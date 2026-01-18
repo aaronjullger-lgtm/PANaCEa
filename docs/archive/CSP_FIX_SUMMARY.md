@@ -5,9 +5,9 @@
 The PANaCEa application was experiencing Content Security Policy (CSP) violations in production. The browser console showed numerous errors like:
 
 ```
-Loading the script 'https://studypanacea.com/assets/index-De0TFXQ2.js' violates the following 
-Content Security Policy directive: "script-src 'none'". Note that 'script-src-elem' was not 
-explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the 
+Loading the script 'https://studypanacea.com/assets/index-De0TFXQ2.js' violates the following
+Content Security Policy directive: "script-src 'none'". Note that 'script-src-elem' was not
+explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the
 violation has been logged but no further action has been taken.
 ```
 
@@ -16,6 +16,7 @@ violation has been logged but no further action has been taken.
 The application had a CSP directive of `script-src 'none'` which blocks **all** JavaScript execution. While the policy was in "report-only" mode (so scripts still executed), every script load triggered a violation warning.
 
 This indicated that either:
+
 1. A misconfigured CSP was deployed, OR
 2. No CSP was explicitly set, and a default restrictive policy was applied
 
@@ -76,11 +77,11 @@ Content-Security-Policy-Report-Only: script-src 'none'
 ### After (Proper CSP)
 
 ```http
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' [trusted-domains]; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' [trusted-domains];
   script-src-elem 'self' 'unsafe-inline' [trusted-domains];
-  worker-src 'self' blob:; 
+  worker-src 'self' blob:;
   ... (complete policy)
 ```
 
@@ -113,17 +114,17 @@ The new CSP provides protection against:
 
 Only the following external domains are allowed:
 
-| Domain | Purpose | Directives |
-|--------|---------|------------|
-| `*.clerk.accounts.dev` | Authentication | script-src, connect-src, frame-src |
-| `api.clerk.dev` | Auth API | connect-src |
-| `*.supabase.co` | Database | connect-src |
-| `generativelanguage.googleapis.com` | Gemini AI | connect-src |
-| `static.cloudflareinsights.com` | Analytics | script-src |
-| `challenges.cloudflare.com` | Bot protection | script-src |
-| `aistudiocdn.com` | CDN (React 19) | script-src |
-| `fonts.googleapis.com` | Google Fonts CSS | style-src |
-| `fonts.gstatic.com` | Google Fonts files | font-src |
+| Domain                              | Purpose            | Directives                         |
+| ----------------------------------- | ------------------ | ---------------------------------- |
+| `*.clerk.accounts.dev`              | Authentication     | script-src, connect-src, frame-src |
+| `api.clerk.dev`                     | Auth API           | connect-src                        |
+| `*.supabase.co`                     | Database           | connect-src                        |
+| `generativelanguage.googleapis.com` | Gemini AI          | connect-src                        |
+| `static.cloudflareinsights.com`     | Analytics          | script-src                         |
+| `challenges.cloudflare.com`         | Bot protection     | script-src                         |
+| `aistudiocdn.com`                   | CDN (React 19)     | script-src                         |
+| `fonts.googleapis.com`              | Google Fonts CSS   | style-src                          |
+| `fonts.gstatic.com`                 | Google Fonts files | font-src                           |
 
 ## Deployment
 
@@ -148,13 +149,13 @@ After deployment, verify the fix by:
 
 Beyond CSP, the configuration adds:
 
-| Header | Purpose |
-|--------|---------|
-| `Strict-Transport-Security` | Force HTTPS for 1 year |
-| `X-Content-Type-Options` | Prevent MIME sniffing |
-| `X-Frame-Options` | Prevent clickjacking |
-| `Referrer-Policy` | Control referrer information |
-| `Permissions-Policy` | Restrict device feature access |
+| Header                      | Purpose                        |
+| --------------------------- | ------------------------------ |
+| `Strict-Transport-Security` | Force HTTPS for 1 year         |
+| `X-Content-Type-Options`    | Prevent MIME sniffing          |
+| `X-Frame-Options`           | Prevent clickjacking           |
+| `Referrer-Policy`           | Control referrer information   |
+| `Permissions-Policy`        | Restrict device feature access |
 
 ## Future Enhancements
 

@@ -14,73 +14,73 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // PANCE-relevant special tests organized by system
 const PANCE_SPECIAL_TESTS = [
   // Orthopedic - Shoulder
-  { name: "Speed Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Yergason Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "O'Brien Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Sulcus Sign", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Apprehension Test (Shoulder)", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Relocation Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Cross-Body Adduction Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Lift-Off Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "Belly Press Test", system: "Musculoskeletal", region: "Shoulder" },
-  { name: "External Rotation Lag Sign", system: "Musculoskeletal", region: "Shoulder" },
-  
+  { name: 'Speed Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Yergason Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: "O'Brien Test", system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Sulcus Sign', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Apprehension Test (Shoulder)', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Relocation Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Cross-Body Adduction Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Lift-Off Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'Belly Press Test', system: 'Musculoskeletal', region: 'Shoulder' },
+  { name: 'External Rotation Lag Sign', system: 'Musculoskeletal', region: 'Shoulder' },
+
   // Orthopedic - Elbow/Wrist/Hand
-  { name: "Cozen Test", system: "Musculoskeletal", region: "Elbow" },
-  { name: "Mill Test", system: "Musculoskeletal", region: "Elbow" },
-  { name: "Golfer's Elbow Test", system: "Musculoskeletal", region: "Elbow" },
-  { name: "Valgus Stress Test (Elbow)", system: "Musculoskeletal", region: "Elbow" },
-  { name: "Watson Test", system: "Musculoskeletal", region: "Wrist" },
-  { name: "Grind Test", system: "Musculoskeletal", region: "Hand" },
-  { name: "Allen Test", system: "Cardiovascular", region: "Hand" },
-  
+  { name: 'Cozen Test', system: 'Musculoskeletal', region: 'Elbow' },
+  { name: 'Mill Test', system: 'Musculoskeletal', region: 'Elbow' },
+  { name: "Golfer's Elbow Test", system: 'Musculoskeletal', region: 'Elbow' },
+  { name: 'Valgus Stress Test (Elbow)', system: 'Musculoskeletal', region: 'Elbow' },
+  { name: 'Watson Test', system: 'Musculoskeletal', region: 'Wrist' },
+  { name: 'Grind Test', system: 'Musculoskeletal', region: 'Hand' },
+  { name: 'Allen Test', system: 'Cardiovascular', region: 'Hand' },
+
   // Orthopedic - Hip
-  { name: "Trendelenburg Test", system: "Musculoskeletal", region: "Hip" },
-  { name: "Ober Test", system: "Musculoskeletal", region: "Hip" },
-  { name: "FADIR Test", system: "Musculoskeletal", region: "Hip" },
-  { name: "Log Roll Test", system: "Musculoskeletal", region: "Hip" },
-  { name: "Piriformis Test", system: "Musculoskeletal", region: "Hip" },
-  
+  { name: 'Trendelenburg Test', system: 'Musculoskeletal', region: 'Hip' },
+  { name: 'Ober Test', system: 'Musculoskeletal', region: 'Hip' },
+  { name: 'FADIR Test', system: 'Musculoskeletal', region: 'Hip' },
+  { name: 'Log Roll Test', system: 'Musculoskeletal', region: 'Hip' },
+  { name: 'Piriformis Test', system: 'Musculoskeletal', region: 'Hip' },
+
   // Orthopedic - Knee
-  { name: "Pivot Shift Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Thessaly Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Apley Compression Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Apley Distraction Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Patellar Apprehension Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Ballottement Test", system: "Musculoskeletal", region: "Knee" },
-  { name: "Dial Test", system: "Musculoskeletal", region: "Knee" },
-  
+  { name: 'Pivot Shift Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Thessaly Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Apley Compression Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Apley Distraction Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Patellar Apprehension Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Ballottement Test', system: 'Musculoskeletal', region: 'Knee' },
+  { name: 'Dial Test', system: 'Musculoskeletal', region: 'Knee' },
+
   // Orthopedic - Ankle/Foot
-  { name: "Talar Tilt Test", system: "Musculoskeletal", region: "Ankle" },
-  { name: "Squeeze Test (Fibula)", system: "Musculoskeletal", region: "Ankle" },
-  { name: "External Rotation Stress Test", system: "Musculoskeletal", region: "Ankle" },
-  { name: "Mulder Click", system: "Musculoskeletal", region: "Foot" },
-  
+  { name: 'Talar Tilt Test', system: 'Musculoskeletal', region: 'Ankle' },
+  { name: 'Squeeze Test (Fibula)', system: 'Musculoskeletal', region: 'Ankle' },
+  { name: 'External Rotation Stress Test', system: 'Musculoskeletal', region: 'Ankle' },
+  { name: 'Mulder Click', system: 'Musculoskeletal', region: 'Foot' },
+
   // Spine
-  { name: "Slump Test", system: "Neurological", region: "Spine" },
-  { name: "Femoral Nerve Stretch Test", system: "Neurological", region: "Lumbar Spine" },
-  { name: "Spurling Test", system: "Neurological", region: "Cervical Spine" },
-  { name: "Distraction Test", system: "Neurological", region: "Cervical Spine" },
-  { name: "Compression Test (Spine)", system: "Neurological", region: "Cervical Spine" },
-  { name: "Gaenslen Test", system: "Musculoskeletal", region: "SI Joint" },
-  { name: "Sacral Thrust Test", system: "Musculoskeletal", region: "SI Joint" },
-  { name: "Stork Test", system: "Musculoskeletal", region: "Lumbar Spine" },
-  
+  { name: 'Slump Test', system: 'Neurological', region: 'Spine' },
+  { name: 'Femoral Nerve Stretch Test', system: 'Neurological', region: 'Lumbar Spine' },
+  { name: 'Spurling Test', system: 'Neurological', region: 'Cervical Spine' },
+  { name: 'Distraction Test', system: 'Neurological', region: 'Cervical Spine' },
+  { name: 'Compression Test (Spine)', system: 'Neurological', region: 'Cervical Spine' },
+  { name: 'Gaenslen Test', system: 'Musculoskeletal', region: 'SI Joint' },
+  { name: 'Sacral Thrust Test', system: 'Musculoskeletal', region: 'SI Joint' },
+  { name: 'Stork Test', system: 'Musculoskeletal', region: 'Lumbar Spine' },
+
   // Neurological
-  { name: "Adson Test", system: "Cardiovascular", region: "Upper Extremity" },
-  { name: "Roos Test", system: "Cardiovascular", region: "Upper Extremity" },
-  { name: "Wright Test", system: "Cardiovascular", region: "Upper Extremity" },
-  { name: "Tinel Sign (Elbow)", system: "Neurological", region: "Elbow" },
-  
+  { name: 'Adson Test', system: 'Cardiovascular', region: 'Upper Extremity' },
+  { name: 'Roos Test', system: 'Cardiovascular', region: 'Upper Extremity' },
+  { name: 'Wright Test', system: 'Cardiovascular', region: 'Upper Extremity' },
+  { name: 'Tinel Sign (Elbow)', system: 'Neurological', region: 'Elbow' },
+
   // Vascular
-  { name: "Ankle-Brachial Index", system: "Cardiovascular", region: "Lower Extremity" },
-  { name: "Buerger Test", system: "Cardiovascular", region: "Lower Extremity" },
-  { name: "Homan Sign", system: "Cardiovascular", region: "Lower Extremity" },
-  
+  { name: 'Ankle-Brachial Index', system: 'Cardiovascular', region: 'Lower Extremity' },
+  { name: 'Buerger Test', system: 'Cardiovascular', region: 'Lower Extremity' },
+  { name: 'Homan Sign', system: 'Cardiovascular', region: 'Lower Extremity' },
+
   // Vestibular
-  { name: "Dix-Hallpike Test", system: "EENT", region: "Vestibular" },
-  { name: "Head Impulse Test", system: "EENT", region: "Vestibular" },
-  { name: "HINTS Exam", system: "Neurological", region: "Vestibular" },
+  { name: 'Dix-Hallpike Test', system: 'EENT', region: 'Vestibular' },
+  { name: 'Head Impulse Test', system: 'EENT', region: 'Vestibular' },
+  { name: 'HINTS Exam', system: 'Neurological', region: 'Vestibular' },
 ];
 
 // Schema for Gemini response - matches Prisma SpecialTest model
@@ -90,13 +90,13 @@ const specialTestSchema = {
     displayName: { type: SchemaType.STRING },
     aliases: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     description: { type: SchemaType.STRING },
-    sensitivity: { type: SchemaType.NUMBER },  // Float in Prisma
-    specificity: { type: SchemaType.NUMBER },  // Float in Prisma
+    sensitivity: { type: SchemaType.NUMBER }, // Float in Prisma
+    specificity: { type: SchemaType.NUMBER }, // Float in Prisma
     technique: { type: SchemaType.STRING },
-    positiveTest: { type: SchemaType.STRING },  // Schema uses positiveTest not positiveResult
+    positiveTest: { type: SchemaType.STRING }, // Schema uses positiveTest not positiveResult
     interpretation: { type: SchemaType.STRING },
   },
-  required: ["description", "technique", "positiveTest", "interpretation"],
+  required: ['description', 'technique', 'positiveTest', 'interpretation'],
 };
 
 interface SpecialTestData {
@@ -114,7 +114,10 @@ interface SpecialTestData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -137,14 +140,18 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateSpecialTestData(name: string, system: string, region: string): Promise<SpecialTestData> {
+async function generateSpecialTestData(
+  name: string,
+  system: string,
+  region: string
+): Promise<SpecialTestData> {
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -169,13 +176,13 @@ IMPORTANT: sensitivity and specificity must be numbers (0-100) or null, NOT stri
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   // Extract JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 

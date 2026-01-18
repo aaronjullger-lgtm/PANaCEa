@@ -38,7 +38,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
 
   // Sort data by stability (weakest at top when rendered)
   const sortedData: StabilityData[] = data
-    .map(item => ({
+    .map((item) => ({
       ...item,
       order: stabilityOrder[item.bucket] || 0,
     }))
@@ -61,7 +61,11 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={sortedData} layout="vertical" margin={{ top: 5, right: 10, left: 60, bottom: 5 }}>
+      <BarChart
+        data={sortedData}
+        layout="vertical"
+        margin={{ top: 5, right: 10, left: 60, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" horizontal={false} />
 
         <XAxis

@@ -1,6 +1,6 @@
 /**
  * Intelligent Question Generation Service
- * 
+ *
  * Uses user analytics to generate perfectly targeted questions:
  * - Adapts difficulty based on cognitive state
  * - Targets weak areas identified by analytics
@@ -74,19 +74,19 @@ export interface QuestionSelectionCriteria {
 // ============================================================================
 
 const SYSTEM_CODE_MAP: Record<string, string> = {
-  'CV': 'Cardiovascular',
-  'PULM': 'Pulmonary',
-  'GI': 'Gastrointestinal',
-  'NEURO': 'Neurology',
-  'MSK': 'Musculoskeletal',
-  'DERM': 'Dermatology',
-  'HEME': 'Hematology',
-  'ENDO': 'Endocrine',
-  'HEENT': 'Head & Neck',
-  'RENAL': 'Renal',
-  'REPRO': 'Reproductive',
-  'PSYCH': 'Psychiatry',
-  'ID': 'Infectious Disease',
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  NEURO: 'Neurology',
+  MSK: 'Musculoskeletal',
+  DERM: 'Dermatology',
+  HEME: 'Hematology',
+  ENDO: 'Endocrine',
+  HEENT: 'Head & Neck',
+  RENAL: 'Renal',
+  REPRO: 'Reproductive',
+  PSYCH: 'Psychiatry',
+  ID: 'Infectious Disease',
 };
 
 // ============================================================================
@@ -105,36 +105,36 @@ export async function getIntelligentQuestions(
   // Get current user state
   const cognitiveState = getCognitiveState();
   const learningVelocity = getLearningVelocity();
-  
+
   // Generate targeting from analytics
-  const recentPerformance = systemMastery.map(s => ({
+  const recentPerformance = systemMastery.map((s) => ({
     system: s.system,
     accuracy: s.masteryLevel,
   }));
-  
+
   const targeting = generateQuestionTargeting(
     systemMastery,
     cognitiveState,
     learningVelocity,
     recentPerformance
   );
-  
+
   // Override with forced systems if specified
   if (request.forceSystems && request.forceSystems.length > 0) {
-    targeting.targetSystems = request.forceSystems.map(s => ({
+    targeting.targetSystems = request.forceSystems.map((s) => ({
       system: s,
       priority: 100,
       reason: 'User selected focus',
     }));
   }
-  
+
   // Calculate adaptive difficulty
   const adaptedDifficulty = adaptDifficulty(
     request.forceDifficulty || targeting.recommendedDifficulty,
     cognitiveState,
     learningVelocity
   );
-  
+
   // Generate session plan
   const availableMinutes = request.availableTime || 30;
   const studyPlan = generateAdaptiveStudyPlan(
@@ -143,52 +143,44 @@ export async function getIntelligentQuestions(
     10, // review cards due estimate
     systemMastery
   );
-  
+
   // Calculate question distribution
   const maxQuestions = request.maxQuestions || studyPlan.recommendedQuestions;
-  const difficultyMix = calculateDifficultyMix(
-    maxQuestions,
-    adaptedDifficulty,
-    cognitiveState
-  );
-  
+  const difficultyMix = calculateDifficultyMix(maxQuestions, adaptedDifficulty, cognitiveState);
+
   // Build selection criteria
-  const criteria = buildSelectionCriteria(
-    targeting,
-    difficultyMix,
-    previousQuestionIds,
-    request
-  );
-  
+  const criteria = buildSelectionCriteria(targeting, difficultyMix, previousQuestionIds, request);
+
   // Fetch questions based on criteria
   const token = getToken ? await getToken() : null;
   const questions = await fetchQuestionsFromPool(criteria, maxQuestions, token);
-  
+
   // Track adaptations made
   const adaptations: QuestionAdaptation[] = [];
-  
+
   if (request.forceDifficulty !== adaptedDifficulty) {
     adaptations.push({
       type: 'difficulty',
-      reason: cognitiveState.fatigueLevel > 60 
-        ? 'Reduced difficulty due to fatigue'
-        : cognitiveState.flowState > 70
-        ? 'Increased difficulty - optimal state detected'
-        : 'Adjusted based on learning velocity',
+      reason:
+        cognitiveState.fatigueLevel > 60
+          ? 'Reduced difficulty due to fatigue'
+          : cognitiveState.flowState > 70
+            ? 'Increased difficulty - optimal state detected'
+            : 'Adjusted based on learning velocity',
       original: request.forceDifficulty || 'medium',
       adapted: adaptedDifficulty,
     });
   }
-  
+
   if (targeting.targetSystems.length > 0) {
     adaptations.push({
       type: 'system',
       reason: targeting.targetSystems[0].reason,
       original: 'all systems',
-      adapted: targeting.targetSystems.map(t => t.system).join(', '),
+      adapted: targeting.targetSystems.map((t) => t.system).join(', '),
     });
   }
-  
+
   return {
     questions,
     targeting,
@@ -217,26 +209,26 @@ function adaptDifficulty(
     if (baseDifficulty === 'medium') return 'easy';
     return 'easy';
   }
-  
+
   // High cognitive load -> reduce difficulty
   if (cognitive.cognitiveLoad > 80) {
     if (baseDifficulty === 'hard') return 'medium';
     return baseDifficulty;
   }
-  
+
   // In flow state with good velocity -> can increase
   if (cognitive.flowState > 70 && velocity.trend === 'accelerating') {
     if (baseDifficulty === 'easy') return 'medium';
     if (baseDifficulty === 'medium') return 'hard';
     return 'hard';
   }
-  
+
   // Low attention -> reduce difficulty
   if (cognitive.attentionLevel < 40) {
     if (baseDifficulty === 'hard') return 'medium';
     return baseDifficulty;
   }
-  
+
   return baseDifficulty;
 }
 
@@ -249,7 +241,7 @@ function calculateDifficultyMix(
   cognitive: CognitiveState
 ): { easy: number; medium: number; hard: number } {
   let easy: number, medium: number, hard: number;
-  
+
   // Base distribution based on target
   switch (targetDifficulty) {
     case 'easy':
@@ -267,7 +259,7 @@ function calculateDifficultyMix(
       medium = 0.5;
       hard = 0.25;
   }
-  
+
   // Adjust for cognitive state
   if (cognitive.fatigueLevel > 50) {
     // Shift toward easier
@@ -278,13 +270,13 @@ function calculateDifficultyMix(
     easy -= 0.1;
     hard += 0.1;
   }
-  
+
   // Normalize and calculate counts
   const total = easy + medium + hard;
   easy = easy / total;
   medium = medium / total;
   hard = hard / total;
-  
+
   return {
     easy: Math.round(totalQuestions * easy),
     medium: Math.round(totalQuestions * medium),
@@ -302,7 +294,7 @@ function buildSelectionCriteria(
   request: IntelligentQuestionRequest
 ): QuestionSelectionCriteria[] {
   const criteria: QuestionSelectionCriteria[] = [];
-  
+
   // Priority systems with appropriate difficulties
   for (const target of targeting.targetSystems) {
     // Easy questions for priority system
@@ -315,7 +307,7 @@ function buildSelectionCriteria(
         preferImages: targeting.formatPreferences.includeImages,
       });
     }
-    
+
     // Medium questions
     if (difficultyMix.medium > 0) {
       criteria.push({
@@ -326,7 +318,7 @@ function buildSelectionCriteria(
         preferImages: targeting.formatPreferences.includeImages,
       });
     }
-    
+
     // Hard questions only if not targeting weak areas heavily
     if (difficultyMix.hard > 0 && target.priority < 80) {
       criteria.push({
@@ -338,7 +330,7 @@ function buildSelectionCriteria(
       });
     }
   }
-  
+
   // Add priority conditions
   for (const conditionId of targeting.priorityConditions.slice(0, 5)) {
     criteria.push({
@@ -348,7 +340,7 @@ function buildSelectionCriteria(
       excludeIds,
     });
   }
-  
+
   return criteria;
 }
 
@@ -367,13 +359,13 @@ async function fetchQuestionsFromPool(
   if (!token) return [];
 
   const headers: HeadersInit = {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   };
-  
+
   // Try to fetch from each criteria set
   for (const criterion of criteria) {
     if (questions.length >= maxTotal) break;
-    
+
     try {
       const params = new URLSearchParams();
       params.set('count', Math.min(5, maxTotal - questions.length).toString());
@@ -383,9 +375,9 @@ async function fetchQuestionsFromPool(
       if (criterion.excludeIds && criterion.excludeIds.length > 0) {
         params.set('excludeIds', criterion.excludeIds.join(','));
       }
-      
+
       const response = await fetch(`/api/questions/pool?${params}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
@@ -399,13 +391,13 @@ async function fetchQuestionsFromPool(
       console.warn('[IntelligentQuestionService] Pool fetch failed:', error);
     }
   }
-  
+
   // If we don't have enough, fill with general questions
   if (questions.length < maxTotal) {
     try {
       const needed = maxTotal - questions.length;
       const response = await fetch(`/api/questions/pool?count=${needed}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
@@ -419,7 +411,7 @@ async function fetchQuestionsFromPool(
       console.warn('[IntelligentQuestionService] Fallback fetch failed:', error);
     }
   }
-  
+
   return questions;
 }
 
@@ -427,20 +419,17 @@ async function fetchQuestionsFromPool(
  * Convert pool question format to app Question format
  */
 function convertPoolQuestion(poolQ: any): Question {
-  const letterToIndex: Record<string, number> = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
   let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
-  
+
   const condition = poolQ.tags?.[0] || poolQ.system;
-  const conditionId = poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
+  const conditionId =
+    poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
 
   return {
     id: poolQ.id,
-    question: poolQ.vignette 
-      ? `${poolQ.vignette}\n\n${poolQ.question}` 
-      : poolQ.question,
-    options: (poolQ.options || []).map((opt: string) => 
-      opt.replace(/^[A-D]\.\s*/, '')
-    ),
+    question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
+    options: (poolQ.options || []).map((opt: string) => opt.replace(/^[A-D]\.\s*/, '')),
     correctAnswerIndex: correctIndex,
     rationale: poolQ.explanation || '',
     topic: poolQ.system || 'General',
@@ -465,21 +454,21 @@ export async function getWeakAreaQuestions(
 ): Promise<Question[]> {
   // Find weakest systems
   const weakSystems = systemMastery
-    .filter(s => s.masteryLevel < 60 && s.questionsSeen >= 5)
+    .filter((s) => s.masteryLevel < 60 && s.questionsSeen >= 5)
     .sort((a, b) => a.masteryLevel - b.masteryLevel)
     .slice(0, 3);
-  
+
   if (weakSystems.length === 0) {
     return [];
   }
-  
+
   const questions: Question[] = [];
   const perSystem = Math.ceil(maxQuestions / weakSystems.length);
 
   const token = getToken ? await getToken() : null;
   if (!token) return [];
   const headers: HeadersInit = { Authorization: `Bearer ${token}` };
-  
+
   for (const system of weakSystems) {
     try {
       const params = new URLSearchParams({
@@ -487,14 +476,14 @@ export async function getWeakAreaQuestions(
         system: system.system,
         difficulty: 'medium', // Start medium for weak areas
       });
-      
+
       // Add weak subtopics if available
       if (system.weakSubtopics.length > 0) {
         params.set('tags', system.weakSubtopics.slice(0, 2).join(','));
       }
-      
+
       const response = await fetch(`/api/questions/pool?${params}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
@@ -505,7 +494,7 @@ export async function getWeakAreaQuestions(
       console.warn('[IntelligentQuestionService] Weak area fetch failed:', error);
     }
   }
-  
+
   return questions.slice(0, maxQuestions);
 }
 
@@ -520,22 +509,22 @@ export async function getReviewQuestions(
   if (dueConditionIds.length === 0) {
     return [];
   }
-  
+
   const questions: Question[] = [];
 
   const token = getToken ? await getToken() : null;
   if (!token) return [];
   const headers: HeadersInit = { Authorization: `Bearer ${token}` };
-  
+
   for (const conditionId of dueConditionIds.slice(0, maxQuestions)) {
     try {
       const params = new URLSearchParams({
         count: '1',
         conditionId,
       });
-      
+
       const response = await fetch(`/api/questions/pool?${params}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.questions?.[0]) {
@@ -546,7 +535,7 @@ export async function getReviewQuestions(
       console.warn('[IntelligentQuestionService] Review fetch failed:', error);
     }
   }
-  
+
   return questions;
 }
 
@@ -559,34 +548,37 @@ export async function getFlowStateQuestions(
   getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
   const cognitive = getCognitiveState();
-  
+
   // Find systems where user is competent but not mastered (sweet spot)
   const flowSystems = systemMastery
-    .filter(s => s.masteryLevel >= 60 && s.masteryLevel <= 85)
+    .filter((s) => s.masteryLevel >= 60 && s.masteryLevel <= 85)
     .sort((a, b) => {
       // Prefer systems closer to 75% (optimal challenge)
       return Math.abs(a.masteryLevel - 75) - Math.abs(b.masteryLevel - 75);
     })
     .slice(0, 3);
-  
+
   if (flowSystems.length === 0) {
     return [];
   }
-  
+
   // Determine difficulty based on current state
   const difficulty = cognitive.flowState > 60 ? 'hard' : 'medium';
-  
+
   const questions: Question[] = [];
   const perSystem = Math.ceil(maxQuestions / flowSystems.length);
 
   const token = getToken ? await getToken() : null;
   if (!token) return [];
   const headers: HeadersInit = { Authorization: `Bearer ${token}` };
-  
+
   for (const system of flowSystems) {
     try {
-      const response = await fetch(`/api/questions/pool?count=${perSystem}&system=${system.system}&difficulty=${difficulty}`, { headers });
-      
+      const response = await fetch(
+        `/api/questions/pool?count=${perSystem}&system=${system.system}&difficulty=${difficulty}`,
+        { headers }
+      );
+
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
@@ -597,7 +589,7 @@ export async function getFlowStateQuestions(
       console.warn('[IntelligentQuestionService] Flow fetch failed:', error);
     }
   }
-  
+
   return questions.slice(0, maxQuestions);
 }
 
@@ -615,40 +607,40 @@ export function enhanceSessionSettings(
   const cognitive = getCognitiveState();
   const velocity = getLearningVelocity();
   const enhancements: string[] = [];
-  
+
   const enhanced = { ...baseSettings, intelligentEnhancements: enhancements };
-  
+
   // Adapt difficulty based on fatigue
   // Note: SessionSettings.difficulty uses 'easier' | 'same' | 'harder' (relative difficulty)
   if (cognitive.fatigueLevel > 60 && baseSettings.difficulty !== 'easier') {
     enhanced.difficulty = baseSettings.difficulty === 'harder' ? 'same' : 'easier';
     enhancements.push(`Reduced difficulty due to fatigue (${Math.round(cognitive.fatigueLevel)}%)`);
   }
-  
+
   // Suggest focus area
   if (baseSettings.focus === 'all' && systemMastery.length > 0) {
     const weakest = systemMastery
-      .filter(s => s.questionsSeen >= 10)
-      .reduce((a, b) => a.masteryLevel < b.masteryLevel ? a : b, systemMastery[0]);
-    
+      .filter((s) => s.questionsSeen >= 10)
+      .reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b), systemMastery[0]);
+
     if (weakest && weakest.masteryLevel < 60) {
       // Don't override, but note recommendation
       enhancements.push(`Recommended focus: ${weakest.system} (${weakest.masteryLevel}% mastery)`);
     }
   }
-  
+
   // Session length recommendation
   if (cognitive.fatigueLevel > 50) {
     enhancements.push('Consider a shorter session due to detected fatigue');
   }
-  
+
   // Velocity-based suggestions
   if (velocity.trend === 'decelerating') {
     enhancements.push('Learning velocity decreasing - consider a break or easier content');
   } else if (velocity.trend === 'accelerating') {
     enhancements.push('Great momentum! Good time for challenging content');
   }
-  
+
   return enhanced;
 }
 

@@ -3,13 +3,32 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, X, Clock, DollarSign, AlertTriangle, CheckCircle, 
-  FlaskConical, Scan, Syringe, Pill, Package, Zap, Info,
-  ChevronRight, Plus, Minus, AlertCircle
+import {
+  Search,
+  X,
+  Clock,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  FlaskConical,
+  Scan,
+  Syringe,
+  Pill,
+  Package,
+  Zap,
+  Info,
+  ChevronRight,
+  Plus,
+  Minus,
+  AlertCircle,
 } from 'lucide-react';
-import type { 
-  OrderableItem, OrderBundle, PlacedOrder, OrderAlert, PatientAllergy, OrderCategory 
+import type {
+  OrderableItem,
+  OrderBundle,
+  PlacedOrder,
+  OrderAlert,
+  PatientAllergy,
+  OrderCategory,
 } from '@/types/osce-enhanced';
 
 interface OrderPanelProps {
@@ -42,10 +61,10 @@ const CATEGORY_LABELS: Record<OrderCategory, string> = {
 };
 
 const COST_COLORS: Record<string, string> = {
-  '$': 'text-green-600 dark:text-green-400',
-  '$$': 'text-yellow-600 dark:text-yellow-400',
-  '$$$': 'text-orange-600 dark:text-orange-400',
-  '$$$$': 'text-red-600 dark:text-red-400',
+  $: 'text-green-600 dark:text-green-400',
+  $$: 'text-yellow-600 dark:text-yellow-400',
+  $$$: 'text-orange-600 dark:text-orange-400',
+  $$$$: 'text-red-600 dark:text-red-400',
 };
 
 export const OrderPanel: React.FC<OrderPanelProps> = ({
@@ -72,7 +91,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
     const fetchItems = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/osce/orderable-items?category=${activeTab}&search=${searchQuery}`);
+        const response = await fetch(
+          `/api/osce/orderable-items?category=${activeTab}&search=${searchQuery}`
+        );
         if (response.ok) {
           const data = await response.json();
           setOrderableItems(data.items || []);
@@ -93,76 +114,81 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
   const relevantBundles = useMemo(() => {
     if (!chiefComplaint) return bundles;
     const lowerCC = chiefComplaint.toLowerCase();
-    return bundles.filter(bundle => 
-      bundle.relatedChiefComplaints.some(cc => 
-        lowerCC.includes(cc.toLowerCase()) || cc.toLowerCase().includes(lowerCC)
+    return bundles.filter((bundle) =>
+      bundle.relatedChiefComplaints.some(
+        (cc) => lowerCC.includes(cc.toLowerCase()) || cc.toLowerCase().includes(lowerCC)
       )
     );
   }, [bundles, chiefComplaint]);
 
   // Check for clinical decision support alerts
-  const checkAlerts = useCallback((itemId: string, itemName: string, contraindications: string[] = []): OrderAlert[] => {
-    const newAlerts: OrderAlert[] = [];
-    
-    // Check for duplicate orders
-    if (placedOrders.some(order => order.itemId === itemId && order.status !== 'cancelled')) {
-      newAlerts.push({
-        type: 'duplicate',
-        severity: 'warning',
-        message: `${itemName} has already been ordered`,
-        recommendation: 'Consider if repeat order is necessary',
-      });
-    }
+  const checkAlerts = useCallback(
+    (itemId: string, itemName: string, contraindications: string[] = []): OrderAlert[] => {
+      const newAlerts: OrderAlert[] = [];
 
-    // Check for allergy alerts
-    for (const allergy of patientAllergies) {
-      const allergenLower = allergy.allergen.toLowerCase();
-      const itemNameLower = itemName.toLowerCase();
-      
-      // Check direct matches
-      if (itemNameLower.includes(allergenLower) || allergenLower.includes(itemNameLower)) {
+      // Check for duplicate orders
+      if (placedOrders.some((order) => order.itemId === itemId && order.status !== 'cancelled')) {
         newAlerts.push({
-          type: 'allergy',
-          severity: allergy.severity === 'severe' ? 'critical' : 'warning',
-          message: `Patient allergic to ${allergy.allergen} (${allergy.reaction})`,
-          recommendation: 'Consider alternative or verify with patient',
+          type: 'duplicate',
+          severity: 'warning',
+          message: `${itemName} has already been ordered`,
+          recommendation: 'Consider if repeat order is necessary',
         });
       }
-      
-      // Check contrast allergy for imaging
-      if (allergy.allergen.toLowerCase().includes('contrast') || 
-          allergy.allergen.toLowerCase().includes('iodine')) {
-        if (itemNameLower.includes('ct') || itemNameLower.includes('contrast')) {
+
+      // Check for allergy alerts
+      for (const allergy of patientAllergies) {
+        const allergenLower = allergy.allergen.toLowerCase();
+        const itemNameLower = itemName.toLowerCase();
+
+        // Check direct matches
+        if (itemNameLower.includes(allergenLower) || allergenLower.includes(itemNameLower)) {
           newAlerts.push({
             type: 'allergy',
-            severity: 'critical',
-            message: `Contrast allergy: ${allergy.reaction}`,
-            recommendation: 'Use non-contrast study or pre-medicate',
+            severity: allergy.severity === 'severe' ? 'critical' : 'warning',
+            message: `Patient allergic to ${allergy.allergen} (${allergy.reaction})`,
+            recommendation: 'Consider alternative or verify with patient',
+          });
+        }
+
+        // Check contrast allergy for imaging
+        if (
+          allergy.allergen.toLowerCase().includes('contrast') ||
+          allergy.allergen.toLowerCase().includes('iodine')
+        ) {
+          if (itemNameLower.includes('ct') || itemNameLower.includes('contrast')) {
+            newAlerts.push({
+              type: 'allergy',
+              severity: 'critical',
+              message: `Contrast allergy: ${allergy.reaction}`,
+              recommendation: 'Use non-contrast study or pre-medicate',
+            });
+          }
+        }
+      }
+
+      // Check contraindications
+      for (const contra of contraindications) {
+        if (chiefComplaint.toLowerCase().includes(contra.toLowerCase())) {
+          newAlerts.push({
+            type: 'contraindication',
+            severity: 'warning',
+            message: `Potential contraindication: ${contra}`,
           });
         }
       }
-    }
 
-    // Check contraindications
-    for (const contra of contraindications) {
-      if (chiefComplaint.toLowerCase().includes(contra.toLowerCase())) {
-        newAlerts.push({
-          type: 'contraindication',
-          severity: 'warning',
-          message: `Potential contraindication: ${contra}`,
-        });
-      }
-    }
-
-    return newAlerts;
-  }, [placedOrders, patientAllergies, chiefComplaint]);
+      return newAlerts;
+    },
+    [placedOrders, patientAllergies, chiefComplaint]
+  );
 
   // Toggle item selection
   const toggleItemSelection = (item: OrderableItemWithMeta) => {
     const itemAlerts = checkAlerts(item.id, item.name, item.contraindications);
     setAlerts(itemAlerts);
-    
-    setSelectedItems(prev => {
+
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(item.id)) {
         newSet.delete(item.id);
@@ -176,9 +202,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
   // Select bundle items
   const selectBundle = (bundle: OrderBundle) => {
     const bundleItemIds = new Set(bundle.items);
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
-      bundleItemIds.forEach(id => newSet.add(id));
+      bundleItemIds.forEach((id) => newSet.add(id));
       return newSet;
     });
     setShowBundles(false);
@@ -187,9 +213,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
   // Place selected orders
   const handlePlaceOrders = () => {
     const newOrders: PlacedOrder[] = [];
-    
+
     for (const itemId of selectedItems) {
-      const item = orderableItems.find(i => i.id === itemId);
+      const item = orderableItems.find((i) => i.id === itemId);
       if (item) {
         newOrders.push({
           id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -203,7 +229,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
         });
       }
     }
-    
+
     onOrderPlace(newOrders);
     setSelectedItems(new Set());
     onClose();
@@ -232,7 +258,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="bg-[var(--color-bg-primary)] rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-[var(--color-border)]"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-secondary)]">
@@ -257,14 +283,15 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
 
           {/* Tabs */}
           <div className="flex border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-            {(Object.keys(CATEGORY_LABELS) as OrderCategory[]).map(cat => (
+            {(Object.keys(CATEGORY_LABELS) as OrderCategory[]).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveTab(cat)}
                 className={`flex-1 px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium transition-colors relative
-                  ${activeTab === cat 
-                    ? 'text-[var(--color-accent)] bg-[var(--color-bg-primary)]' 
-                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+                  ${
+                    activeTab === cat
+                      ? 'text-[var(--color-accent)] bg-[var(--color-bg-primary)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                   }`}
               >
                 {CATEGORY_ICONS[cat]}
@@ -286,7 +313,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={`Search ${CATEGORY_LABELS[activeTab].toLowerCase()}...`}
                 className="w-full pl-10 pr-4 py-2.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg
                          text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]
@@ -299,9 +326,14 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           {alerts.length > 0 && (
             <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
               {alerts.map((alert, idx) => (
-                <div key={idx} className={`flex items-start gap-2 text-sm ${
-                  alert.severity === 'critical' ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'
-                }`}>
+                <div
+                  key={idx}
+                  className={`flex items-start gap-2 text-sm ${
+                    alert.severity === 'critical'
+                      ? 'text-red-700 dark:text-red-300'
+                      : 'text-amber-700 dark:text-amber-300'
+                  }`}
+                >
                   {alert.severity === 'critical' ? (
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   ) : (
@@ -336,7 +368,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                   </button>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {relevantBundles.slice(0, 6).map(bundle => (
+                  {relevantBundles.slice(0, 6).map((bundle) => (
                     <button
                       key={bundle.id}
                       onClick={() => selectBundle(bundle)}
@@ -346,9 +378,13 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">{bundle.icon}</span>
-                        <span className="font-semibold text-[var(--color-text-primary)] text-sm">{bundle.name}</span>
+                        <span className="font-semibold text-[var(--color-text-primary)] text-sm">
+                          {bundle.name}
+                        </span>
                       </div>
-                      <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1">{bundle.description}</p>
+                      <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1">
+                        {bundle.description}
+                      </p>
                       <div className="mt-2 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
                         <span>{bundle.items.length} items</span>
                         <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -372,27 +408,32 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               </div>
             ) : (
               <div className="space-y-1">
-                {orderableItems.map(item => {
+                {orderableItems.map((item) => {
                   const isSelected = selectedItems.has(item.id);
-                  const isAlreadyOrdered = placedOrders.some(o => o.itemId === item.id && o.status !== 'cancelled');
-                  
+                  const isAlreadyOrdered = placedOrders.some(
+                    (o) => o.itemId === item.id && o.status !== 'cancelled'
+                  );
+
                   return (
                     <button
                       key={item.id}
                       onClick={() => toggleItemSelection(item)}
                       className={`w-full p-3 rounded-lg border transition-all text-left flex items-center gap-3
-                        ${isSelected 
-                          ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)] shadow-sm' 
-                          : isAlreadyOrdered
-                            ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-60'
-                            : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-sm'
+                        ${
+                          isSelected
+                            ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)] shadow-sm'
+                            : isAlreadyOrdered
+                              ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-60'
+                              : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-sm'
                         }`}
                     >
                       {/* Selection indicator */}
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
-                        ${isSelected 
-                          ? 'bg-[var(--color-accent)] border-[var(--color-accent)]' 
-                          : 'border-[var(--color-border)]'
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                        ${
+                          isSelected
+                            ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
+                            : 'border-[var(--color-border)]'
                         }`}
                       >
                         {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
@@ -401,7 +442,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                       {/* Item info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-[var(--color-text-primary)] truncate">{item.name}</span>
+                          <span className="font-medium text-[var(--color-text-primary)] truncate">
+                            {item.name}
+                          </span>
                           {item.isHighYield && (
                             <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
                               HY
@@ -414,7 +457,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                           )}
                         </div>
                         {item.subcategory && (
-                          <p className="text-xs text-[var(--color-text-muted)] truncate">{item.subcategory}</p>
+                          <p className="text-xs text-[var(--color-text-muted)] truncate">
+                            {item.subcategory}
+                          </p>
                         )}
                       </div>
 
@@ -424,7 +469,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                           <Clock className="w-3 h-3" />
                           <span>{formatTurnaround(item.turnaroundMinutes)}</span>
                         </div>
-                        <span className={`font-bold ${COST_COLORS[item.costTier] || 'text-[var(--color-text-muted)]'}`}>
+                        <span
+                          className={`font-bold ${COST_COLORS[item.costTier] || 'text-[var(--color-text-muted)]'}`}
+                        >
                           {item.costTier}
                         </span>
                       </div>
@@ -439,7 +486,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex items-center justify-between">
             <div className="text-sm text-[var(--color-text-secondary)]">
               {selectedItems.size > 0 && (
-                <span>{selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected</span>
+                <span>
+                  {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected
+                </span>
               )}
             </div>
             <div className="flex items-center gap-3">

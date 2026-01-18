@@ -1,15 +1,15 @@
 /**
  * Training Mode Configuration
- * 
+ *
  * ORGANIZATION PHILOSOPHY:
  * Modes are organized by PRIMARY LEARNING ACTIVITY TYPE.
- * 
+ *
  * Categories:
  * 1. VISUAL DIAGNOSTICS - Pattern recognition with images/media (3 modes - 1 row)
  * 2. CLINICAL SIMULATION - Interactive patient scenarios (6 modes - 2 rows)
  * 3. QUESTION PRACTICE - Traditional Q&A including pharm/abx, cram, rapid recall (9 modes - 3 rows)
  * 4. SPECIALTY DRILLS - High-yield focused drills (6 modes - 2 rows)
- * 
+ *
  * Special standalone modes:
  * - CORE ADAPTIVE (main event - front and center)
  * - OSCE (Virtual Patient) - significant standalone feature
@@ -77,11 +77,14 @@ export interface TrainingModeConfig {
   estimatedMinutes?: number;
 }
 
-export const CATEGORY_INFO: Record<TrainingCategory, {
-  label: string;
-  description: string;
-  iconName: string;
-}> = {
+export const CATEGORY_INFO: Record<
+  TrainingCategory,
+  {
+    label: string;
+    description: string;
+    iconName: string;
+  }
+> = {
   visual_diagnostics: {
     label: 'Visual Diagnostics',
     description: 'Pattern recognition with images and media',
@@ -421,26 +424,34 @@ const STANDALONE_MODE_IDS = ['core_adaptive', 'patient_encounter', 'grand_rounds
 
 // Filter modes by category, EXCLUDING standalone modes that have their own tabs
 export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(
-  m => m.category === 'visual_diagnostics' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
+  (m) =>
+    m.category === 'visual_diagnostics' &&
+    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
 );
 
 export const CLINICAL_SIMULATION_MODES = TRAINING_MODES.filter(
-  m => m.category === 'clinical_simulation' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
+  (m) =>
+    m.category === 'clinical_simulation' &&
+    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
 );
 
 export const QUESTION_PRACTICE_MODES = TRAINING_MODES.filter(
-  m => m.category === 'question_practice' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
+  (m) =>
+    m.category === 'question_practice' &&
+    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
 );
 
 export const SPECIALTY_DRILL_MODES = TRAINING_MODES.filter(
-  m => m.category === 'specialty_drills' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
+  (m) =>
+    m.category === 'specialty_drills' &&
+    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
 );
 
 // Individual standalone mode references
-export const CORE_ADAPTIVE_MODE = TRAINING_MODES.find(m => m.id === 'core_adaptive')!;
-export const OSCE_MODE = TRAINING_MODES.find(m => m.id === 'patient_encounter')!;
-export const GRAND_ROUNDS_MODE = TRAINING_MODES.find(m => m.id === 'grand_rounds')!;
-export const PANRE_LA_MODE = TRAINING_MODES.find(m => m.id === 'panre_la')!;
+export const CORE_ADAPTIVE_MODE = TRAINING_MODES.find((m) => m.id === 'core_adaptive')!;
+export const OSCE_MODE = TRAINING_MODES.find((m) => m.id === 'patient_encounter')!;
+export const GRAND_ROUNDS_MODE = TRAINING_MODES.find((m) => m.id === 'grand_rounds')!;
+export const PANRE_LA_MODE = TRAINING_MODES.find((m) => m.id === 'panre_la')!;
 
 // ============================================================================
 // Combined registries
@@ -450,28 +461,28 @@ export const PANRE_LA_MODE = TRAINING_MODES.find(m => m.id === 'panre_la')!;
 export const MODE_REGISTRY: TrainingModeConfig[] = TRAINING_MODES;
 
 export function getModesByCategory(category: TrainingCategory): TrainingModeConfig[] {
-  return MODE_REGISTRY.filter(m => m.category === category);
+  return MODE_REGISTRY.filter((m) => m.category === category);
 }
 
 export function getModesForUserContext(isPANREUser: boolean): TrainingModeConfig[] {
-  return MODE_REGISTRY.filter(mode => {
+  return MODE_REGISTRY.filter((mode) => {
     if (mode.panreOnly && !isPANREUser) return false;
     return true;
   });
 }
 
 export function getAvailableModes(): TrainingModeConfig[] {
-  return MODE_REGISTRY.filter(m => !m.isComingSoon);
+  return MODE_REGISTRY.filter((m) => !m.isComingSoon);
 }
 
 export function getModeById(id: TrainingModeId): TrainingModeConfig | undefined {
-  return MODE_REGISTRY.find(m => m.id === id);
+  return MODE_REGISTRY.find((m) => m.id === id);
 }
 
-export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = MODE_REGISTRY
-  .filter(m => m.route !== 'core_adaptive')
-  .map(m => m.id);
+export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = MODE_REGISTRY.filter(
+  (m) => m.route !== 'core_adaptive'
+).map((m) => m.id);
 
-export const ALL_MINI_MODES: TrainingModeId[] = MODE_REGISTRY
-  .filter(m => m.id !== 'core_adaptive')
-  .map(m => m.id);
+export const ALL_MINI_MODES: TrainingModeId[] = MODE_REGISTRY.filter(
+  (m) => m.id !== 'core_adaptive'
+).map((m) => m.id);

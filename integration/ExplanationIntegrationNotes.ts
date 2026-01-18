@@ -1,21 +1,21 @@
 /**
  * ExplanationIntegrationNotes
- * 
- * Guidance for integrating the ExplanationPanel component to replace the 
+ *
+ * Guidance for integrating the ExplanationPanel component to replace the
  * current static explanation text in Question View with the new high-yield,
  * Glass/Slate styled rationale experience.
- * 
+ *
  * This file provides integration patterns and examples for developers.
  */
 
 /**
  * INTEGRATION OVERVIEW
  * ====================
- * 
- * The ExplanationPanel component is designed to replace the current static 
- * rationale display in QuizView.tsx with a more interactive, high-yield 
+ *
+ * The ExplanationPanel component is designed to replace the current static
+ * rationale display in QuizView.tsx with a more interactive, high-yield
  * learning experience.
- * 
+ *
  * Key Features:
  * - Compressed bullet points (3-6 max) highlighting key concepts
  * - Buzzwords & Clues section with pathognomonic terms
@@ -29,9 +29,9 @@
 /**
  * STEP 1: Import the Component
  * ============================
- * 
+ *
  * In QuizView.tsx or your question display component:
- * 
+ *
  * ```typescript
  * import ExplanationPanel from '../components/ExplanationPanel';
  * import type { DifferentialItem } from '../components/ExplanationPanel';
@@ -41,12 +41,12 @@
 /**
  * STEP 2: Prepare Differential Data
  * ==================================
- * 
+ *
  * Convert incorrect answer options into DifferentialItem format:
- * 
+ *
  * ```typescript
  * const buildDifferentials = (
- *   question: Question, 
+ *   question: Question,
  *   selectedIndex: number
  * ): DifferentialItem[] => {
  *   return question.options
@@ -59,7 +59,7 @@
  *     .filter(item => !item.isCorrect)
  *     .map(item => ({
  *       option: item.option,
- *       reasoning: `This option is incorrect because it does not match the 
+ *       reasoning: `This option is incorrect because it does not match the
  *                   clinical presentation. The correct answer is ${
  *                     question.options[question.correctAnswerIndex]
  *                   } based on the key findings.`,
@@ -71,9 +71,9 @@
 /**
  * STEP 3: Replace Static Rationale Display
  * =========================================
- * 
+ *
  * Replace the current rationale section in QuizView.tsx:
- * 
+ *
  * BEFORE (current implementation):
  * ```tsx
  * <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
@@ -81,7 +81,7 @@
  *   <div dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }} />
  * </div>
  * ```
- * 
+ *
  * AFTER (with ExplanationPanel):
  * ```tsx
  * <ExplanationPanel
@@ -105,10 +105,10 @@
 /**
  * STEP 4: Implement onTeach Callback
  * ==================================
- * 
+ *
  * The "Teach Me This" button should navigate to a deep-dive learning experience.
  * Suggested implementations:
- * 
+ *
  * Option A: Navigate to Condition Detail Modal
  * ```typescript
  * const handleTeach = useCallback(() => {
@@ -116,7 +116,7 @@
  *   setShowConditionModal(true);
  * }, [currentQuestion]);
  * ```
- * 
+ *
  * Option B: Start a 5-Stage Drill Session
  * ```typescript
  * const handleTeach = useCallback(() => {
@@ -132,18 +132,18 @@
 /**
  * STEP 5: Implement onFeedback Callback for Analytics
  * ====================================================
- * 
+ *
  * The feedback buttons track user satisfaction with explanations:
- * 
+ *
  * ```typescript
  * import { storeUserReaction } from '../lib/services/explanationCompressionService';
- * 
+ *
  * const handleFeedback = useCallback((helpful: boolean) => {
  *   storeUserReaction(
  *     currentQuestion.conditionId,
  *     helpful ? 'helpful' : 'not_helpful'
  *   );
- *   
+ *
  *   // Optional: Send to analytics service
  *   analytics.track('explanation_feedback', {
  *     questionId: currentQuestion.conditionId,
@@ -158,16 +158,16 @@
 /**
  * STEP 6: Styling Customization
  * =============================
- * 
+ *
  * The ExplanationPanel uses Glass/Slate theming that adapts to light/dark mode.
  * Customize colors by updating CSS variables in index.css:
- * 
+ *
  * ```css
  * :root {
  *   --color-glass-bg: rgba(255, 255, 255, 0.7);
  *   --color-glass-border: rgba(148, 163, 184, 0.3);
  * }
- * 
+ *
  * .dark {
  *   --color-glass-bg: rgba(30, 41, 59, 0.8);
  *   --color-glass-border: rgba(255, 255, 255, 0.08);
@@ -178,7 +178,7 @@
 /**
  * FULL INTEGRATION EXAMPLE
  * ========================
- * 
+ *
  * Here's a complete example showing how to integrate ExplanationPanel
  * into an existing question view component:
  */
@@ -249,9 +249,9 @@ return (
 /**
  * MIGRATION CHECKLIST
  * ===================
- * 
+ *
  * Before deploying the ExplanationPanel integration:
- * 
+ *
  * [ ] Import ExplanationPanel component
  * [ ] Build differentials array from incorrect options
  * [ ] Implement onTeach callback (link to 5-Stage Drill or Condition Modal)

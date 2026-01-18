@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { LAB_TEST_REGISTRY } from '../labTestRegistry';
+import { LAB_TEST_REGISTRY } from '../src/registries/labTestRegistry';
 
 config();
 const prisma = new PrismaClient();

@@ -7,6 +7,7 @@ GET /api/content/search
 ```
 
 ### Query Parameters
+
 - `q` (required): Search query (min 2 chars)
 - `limit` (optional): Max results 1-50 (default: 10)
 - `type` (optional): `condition`, `drug`, or `condition,drug` (default: both)
@@ -100,7 +101,7 @@ function SearchComponent() {
         placeholder="Search medical content..."
       />
       {loading && <div>Searching...</div>}
-      {results.map(result => (
+      {results.map((result) => (
         <div key={result.id}>
           <h3>{result.title}</h3>
           <p>{result.snippet}</p>
@@ -113,12 +114,12 @@ function SearchComponent() {
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay);
     return () => clearTimeout(handler);
   }, [value, delay]);
-  
+
   return debouncedValue;
 }
 ```
@@ -163,12 +164,12 @@ router.get('/search', async (req, res) => {
   }
 
   try {
-    const includeTypes = type 
-      ? type.split(',').filter(t => ['condition', 'drug'].includes(t))
+    const includeTypes = type
+      ? type.split(',').filter((t) => ['condition', 'drug'].includes(t))
       : ['condition', 'drug'];
 
     const results = await searchContent(
-      q, 
+      q,
       parseInt(limit as string, 10),
       includeTypes as ('condition' | 'drug')[]
     );
@@ -185,12 +186,12 @@ export default router;
 
 ## Match Types Explained
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `exact` | Exact match or starts with query | "diabetes" matches "Diabetes Mellitus" |
-| `alias` | Matched via medical alias | "MI" matches "Myocardial Infarction" |
-| `fuzzy` | Partial match with typo tolerance | "diabets" matches "Diabetes Mellitus" |
-| `keyword` | Found in system/drug class | "beta" matches drugs with class "Beta-Blocker" |
+| Type      | Description                       | Example                                        |
+| --------- | --------------------------------- | ---------------------------------------------- |
+| `exact`   | Exact match or starts with query  | "diabetes" matches "Diabetes Mellitus"         |
+| `alias`   | Matched via medical alias         | "MI" matches "Myocardial Infarction"           |
+| `fuzzy`   | Partial match with typo tolerance | "diabets" matches "Diabetes Mellitus"          |
+| `keyword` | Found in system/drug class        | "beta" matches drugs with class "Beta-Blocker" |
 
 ## Scoring System
 
@@ -207,42 +208,49 @@ Results are ranked by score (highest first):
 ## Testing Scenarios
 
 ### 1. Exact Match
+
 ```bash
 curl "/api/content/search?q=diabetes"
 # Should return "Diabetes Mellitus" as top result
 ```
 
 ### 2. Alias Matching
+
 ```bash
 curl "/api/content/search?q=MI"
 # Should return "Myocardial Infarction" with matchedAlias: "MI"
 ```
 
 ### 3. Typo Tolerance
+
 ```bash
 curl "/api/content/search?q=diabets"
 # Should still find "Diabetes Mellitus" (fuzzy match)
 ```
 
 ### 4. Partial Search
+
 ```bash
 curl "/api/content/search?q=acute%20cor"
 # Should find "Acute Coronary Syndrome"
 ```
 
 ### 5. System Filter
+
 ```bash
 curl "/api/content/search?q=CV"
 # Should list cardiovascular conditions
 ```
 
 ### 6. Drug Class
+
 ```bash
 curl "/api/content/search?q=beta%20blocker&type=drug"
 # Should list beta-blocking drugs
 ```
 
 ### 7. Brand Name
+
 ```bash
 curl "/api/content/search?q=Tylenol&type=drug"
 # Should find "Acetaminophen"
@@ -255,14 +263,14 @@ curl "/api/content/search?q=Tylenol&type=drug"
 ```typescript
 try {
   const response = await fetch('/api/content/search?q=' + query);
-  
+
   if (!response.ok) {
     const error = await response.json();
     console.error('Search failed:', error.message);
     // Show error to user
     return;
   }
-  
+
   const data = await response.json();
   setResults(data.results);
 } catch (error) {
@@ -274,6 +282,7 @@ try {
 ### Expected Error Responses
 
 **400 - Missing query:**
+
 ```json
 {
   "error": "Query parameter \"q\" is required",
@@ -282,6 +291,7 @@ try {
 ```
 
 **400 - Query too short:**
+
 ```json
 {
   "error": "Query too short",
@@ -290,6 +300,7 @@ try {
 ```
 
 **500 - Database error:**
+
 ```json
 {
   "error": "Internal server error",
@@ -314,10 +325,7 @@ const controller = new AbortController();
 useEffect(() => {
   const fetchResults = async () => {
     try {
-      const response = await fetch(
-        `/api/content/search?q=${query}`,
-        { signal: controller.signal }
-      );
+      const response = await fetch(`/api/content/search?q=${query}`, { signal: controller.signal });
       // Process response...
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -338,21 +346,25 @@ useEffect(() => {
 ## Troubleshooting
 
 ### No results returned
+
 - ✅ Check database has data (run registry sync)
 - ✅ Verify aliases are populated
 - ✅ Test with simple query (e.g., "diabetes")
 
 ### Search is slow
+
 - ✅ Check database indexes exist
 - ✅ Verify connection pooling is configured
 - ✅ Monitor network latency
 
 ### Aliases not matching
+
 - ✅ Ensure aliases are stored as array in database
 - ✅ Check PostgreSQL `hasSome` operator works
 - ✅ Verify data was synced from registry
 
 ### Debounce not working
+
 - ✅ Check delay value (300ms recommended)
 - ✅ Verify useDebounce hook is used correctly
 - ✅ Test with console.log to see timing

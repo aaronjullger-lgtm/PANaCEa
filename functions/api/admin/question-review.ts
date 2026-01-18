@@ -1,108 +1,96 @@
 /**
  * Question Review API Endpoint
  * Admin workflow for validating PreGeneratedQuestions
- * 
+ *
  * GET  /api/admin/question-review - List questions pending review
  * POST /api/admin/question-review - Update validation status
- * 
+ *
  * Workflow: pending → approved | rejected | needs_revision
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
-import { isAdmin, type UserRole } from '../_shared/rbac';
 import { z } from 'zod';
-
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { isAdmin, type UserRole } from '../_shared/rbac';
 
 // Query schema for GET requests
 const GetQuerySchema = z.object({
-  validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
-  system: z.string().optional(),
-  minQualityScore: z.coerce.number().min(0).max(100).optional(),
-  maxFlagRate: z.coerce.number().min(0).max(1).optional(),
-  limit: z.coerce.number().min(1).max(100).default(50),
-  offset: z.coerce.number().min(0).default(0),
-  sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).default('generatedAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  query: z.object({
+    validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
+    system: z.string().optional(),
+    minQualityScore: z.string().optional(),
+    maxFlagRate: z.string().optional(),
+    limit: z.string().optional(),
+    offset: z.string().optional(),
+    sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
+  }).optional(),
 });
 
 // Validation schema for POST requests
 const ValidationSchema = z.object({
-  questionId: z.string(),
-  validationStatus: z.enum(['approved', 'rejected', 'needs_revision']),
-  validationNotes: z.string().optional(),
-  qualityScore: z.number().min(0).max(100).optional(),
-  conditionAccuracy: z.number().min(0).max(1).optional(),
-  contentRelevance: z.number().min(0).max(1).optional(),
-  distracorQuality: z.number().min(0).max(1).optional(),
+  body: z.object({
+    questionId: z.string(),
+    validationStatus: z.enum(['approved', 'rejected', 'needs_revision']),
+    validationNotes: z.string().optional(),
+    qualityScore: z.number().min(0).max(100).optional(),
+    conditionAccuracy: z.number().min(0).max(1).optional(),
+    contentRelevance: z.number().min(0).max(1).optional(),
+    distracorQuality: z.number().min(0).max(1).optional(),
+  }),
 });
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
 /**
  * GET - List questions for review
  */
-export const onRequestGet = async ({ request, env }: { request: Request; env: Env }) => {
-  
+export const onRequestGet = authenticatedEndpoint(GetQuerySchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/admin/question-review');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
-  try {
-    // Authenticate and check admin access
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth?.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
 
-    // Check if user is admin
+  try {
+    // Check if user is admin or content_creator
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { role: true }
+      select: { role: true, id: true },
     });
 
     if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      logger.warn('Non-admin attempted to access question review', {
+        userId: auth.userId,
+        role: user?.role,
       });
+
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
     }
 
-    // Parse query parameters
-    const url = new URL(request.url);
-    const params = GetQuerySchema.parse({
-      validationStatus: url.searchParams.get('validationStatus') || 'pending',
-      system: url.searchParams.get('system') || undefined,
-      minQualityScore: url.searchParams.get('minQualityScore') || undefined,
-      maxFlagRate: url.searchParams.get('maxFlagRate') || undefined,
-      limit: url.searchParams.get('limit') || 50,
-      offset: url.searchParams.get('offset') || 0,
-      sortBy: url.searchParams.get('sortBy') || 'generatedAt',
-      sortOrder: url.searchParams.get('sortOrder') || 'desc',
-    });
+    // Parse query parameters with defaults
+    const validationStatus = validated.query?.validationStatus || 'pending';
+    const system = validated.query?.system;
+    const minQualityScore = validated.query?.minQualityScore ? parseFloat(validated.query.minQualityScore) : undefined;
+    const maxFlagRate = validated.query?.maxFlagRate ? parseFloat(validated.query.maxFlagRate) : undefined;
+    const limit = validated.query?.limit ? parseInt(validated.query.limit) : 50;
+    const offset = validated.query?.offset ? parseInt(validated.query.offset) : 0;
+    const sortBy = validated.query?.sortBy || 'generatedAt';
+    const sortOrder = validated.query?.sortOrder || 'desc';
 
     // Build where clause
     const where: any = {
-      validationStatus: params.validationStatus || 'pending'
+      validationStatus,
     };
-    
-    if (params.system) where.system = params.system;
-    if (params.minQualityScore !== undefined) {
-      where.qualityScore = { gte: params.minQualityScore };
+
+    if (system) where.system = system;
+    if (minQualityScore !== undefined) {
+      where.qualityScore = { gte: minQualityScore };
     }
-    if (params.maxFlagRate !== undefined) {
-      where.flagRate = { lte: params.maxFlagRate };
+    if (maxFlagRate !== undefined) {
+      where.flagRate = { lte: maxFlagRate };
     }
 
     // Query questions with condition details
@@ -135,114 +123,100 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
               id: true,
               name: true,
               system: true,
-              panceYield: true
-            }
-          }
+              panceYield: true,
+            },
+          },
         },
-        orderBy: { [params.sortBy]: params.sortOrder },
-        take: params.limit,
-        skip: params.offset,
+        orderBy: { [sortBy]: sortOrder },
+        take: limit,
+        skip: offset,
       }),
-      prisma.preGeneratedQuestion.count({ where })
+      prisma.preGeneratedQuestion.count({ where }),
     ]);
 
     // Calculate pagination metadata
-    const hasMore = totalCount > params.offset + params.limit;
-    const pages = Math.ceil(totalCount / params.limit);
+    const hasMore = totalCount > offset + limit;
+    const pages = Math.ceil(totalCount / limit);
 
-    return new Response(JSON.stringify({
-      success: true,
-      data: questions,
-      pagination: {
-        total: totalCount,
-        limit: params.limit,
-        offset: params.offset,
-        hasMore,
-        pages
-      }
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    logger.info('Questions retrieved for review', {
+      userId: user.id,
+      validationStatus,
+      count: questions.length,
+      total: totalCount,
     });
 
+    return {
+      data: {
+        success: true,
+        data: questions,
+        pagination: {
+          total: totalCount,
+          limit,
+          offset,
+          hasMore,
+          pages,
+        },
+      },
+    };
   } catch (error) {
-    console.error('Error fetching questions for review:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    logger.error('Error fetching questions for review', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
-    
+    throw new Error('Failed to fetch questions for review');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});
 
 /**
  * POST - Update question validation status
  */
-export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
-  
+export const onRequestPost = authenticatedEndpoint(ValidationSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/admin/question-review');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
-  try {
-    // Authenticate and check admin access
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth?.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
 
-    // Check if user is admin
+  try {
+    // Check if user is admin or content_creator
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { role: true, name: true }
+      select: { role: true, id: true, name: true },
     });
 
     if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      logger.warn('Non-admin attempted to update question validation', {
+        userId: auth.userId,
+        role: user?.role,
       });
+
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
     }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = ValidationSchema.parse(body);
+    const validation = validated.body;
 
     // Check if question exists
     const existingQuestion = await prisma.preGeneratedQuestion.findUnique({
       where: { id: validation.questionId },
-      select: { id: true, validationStatus: true }
+      select: { id: true, validationStatus: true },
     });
 
     if (!existingQuestion) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Question not found'
-      }), {
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      logger.info('Question not found for validation', {
+        questionId: validation.questionId,
+        userId: user.id,
       });
+
+      return {
+        data: {
+          success: false,
+          error: 'Question not found',
+        },
+        status: 404,
+      };
     }
 
     // Update validation status
@@ -277,51 +251,42 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         validatedAt: true,
         validatedBy: true,
         qualityScore: true,
-        validationNotes: true
-      }
+        validationNotes: true,
+      },
     });
 
-    return new Response(JSON.stringify({
-      success: true,
-      data: updatedQuestion,
-      message: `Question ${validation.validationStatus}`
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    logger.info('Question validation updated', {
+      questionId: validation.questionId,
+      validationStatus: validation.validationStatus,
+      userId: user.id,
     });
 
+    return {
+      data: {
+        success: true,
+        data: updatedQuestion,
+        message: `Question ${validation.validationStatus}`,
+      },
+    };
   } catch (error) {
-    console.error('Error updating question validation:', error);
-    
+    logger.error('Error updating question validation', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+
     if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Invalid request data',
-        details: error.errors
-      }), {
+      return {
+        data: {
+          success: false,
+          error: 'Invalid request data',
+          details: error.issues,
+        },
         status: 400,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
+      };
     }
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-    
+    throw new Error('Failed to update question validation');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

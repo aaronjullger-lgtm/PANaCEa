@@ -62,7 +62,7 @@ async function generateQuestionFromImage(filePath: string) {
 async function main() {
   console.log('Starting image-based question generation...');
   const files = await fs.readdir(imageDirectory);
-  const imageFiles = files.filter(file => /\.(jpg|jpeg|png)$/i.test(file));
+  const imageFiles = files.filter((file) => /\.(jpg|jpeg|png)$/i.test(file));
 
   for (const file of imageFiles) {
     const filePath = path.join(imageDirectory, file);
@@ -79,7 +79,9 @@ async function main() {
         });
 
         if (!medicalContent) {
-          console.warn(`Could not find MedicalContent for condition: "${questionData.condition}". Skipping question save.`);
+          console.warn(
+            `Could not find MedicalContent for condition: "${questionData.condition}". Skipping question save.`
+          );
           continue;
         }
 
@@ -115,7 +117,7 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .catch((e) => {
     console.error(e);
     process.exit(1);
   })

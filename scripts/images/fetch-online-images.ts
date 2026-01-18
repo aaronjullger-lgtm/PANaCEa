@@ -1,11 +1,11 @@
 /**
  * Fetch Quality Medical Images from Open Sources
- * 
+ *
  * Sources medical images from:
  * 1. Wikimedia Commons (CC licensed medical images)
  * 2. DermNet NZ (dermatology)
  * 3. Radiopaedia (radiology, with attribution)
- * 
+ *
  * Usage: npx tsx scripts/images/fetch-online-images.ts [--condition=X] [--limit=N]
  */
 
@@ -33,7 +33,7 @@ const PRIORITY_CONDITIONS = [
   'DERM__infectious__tinea_corporis',
   'DERM__vascular__cherry_angioma',
   'DERM__autoimmune__vitiligo',
-  
+
   // Cardiology - ECGs
   'CV__ecg__atrial_fibrillation',
   'CV__ecg__atrial_flutter',
@@ -43,19 +43,19 @@ const PRIORITY_CONDITIONS = [
   'CV__conduction_disorders__right_bundle_branch_block',
   'CV__arrhythmia__ventricular_tachycardia',
   'CV__arrhythmia__ventricular_fibrillation',
-  
+
   // Pulmonology - X-rays
   'PULM__infectious__pneumonia',
   'PULM__pleural_disease__pneumothorax',
   'PULM__pleural_disease__pleural_effusion',
   'PULM__obstructive__copd',
-  
+
   // MSK - X-rays
   'MSK__fracture__colles_fracture',
   'MSK__fracture__hip_fracture',
   'MSK__arthritis__osteoarthritis',
   'MSK__arthritis__rheumatoid_arthritis',
-  
+
   // Neuro - CT/MRI
   'NEURO__cerebrovascular__ischemic_stroke',
   'NEURO__cerebrovascular__hemorrhagic_stroke',
@@ -75,26 +75,26 @@ interface ImageSource {
  */
 async function searchWikimedia(searchTerm: string, limit = 10): Promise<ImageSource[]> {
   const results: ImageSource[] = [];
-  
+
   try {
     // Search for images
     const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchTerm + ' medical')}&srnamespace=6&srlimit=${limit}&format=json&origin=*`;
-    
+
     const searchResponse = await fetch(searchUrl);
     const searchData = await searchResponse.json();
-    
+
     for (const result of searchData.query?.search || []) {
       const title = result.title;
-      
+
       // Get image info
       const infoUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=imageinfo&iiprop=url|extmetadata&format=json&origin=*`;
       const infoResponse = await fetch(infoUrl);
       const infoData = await infoResponse.json();
-      
+
       const pages = infoData.query?.pages || {};
       const pageId = Object.keys(pages)[0];
       const imageInfo = pages[pageId]?.imageinfo?.[0];
-      
+
       if (imageInfo?.url) {
         const metadata = imageInfo.extmetadata || {};
         results.push({
@@ -102,24 +102,27 @@ async function searchWikimedia(searchTerm: string, limit = 10): Promise<ImageSou
           title: title.replace('File:', ''),
           license: metadata.LicenseShortName?.value || 'Unknown',
           attribution: metadata.Artist?.value || 'Wikimedia Commons',
-          source: 'wikimedia'
+          source: 'wikimedia',
         });
       }
-      
+
       // Rate limit
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     }
   } catch (error) {
     console.error(`Wikimedia search error: ${error}`);
   }
-  
+
   return results;
 }
 
 /**
  * Verify image is suitable using Gemini
  */
-async function verifyImageWithAI(imageUrl: string, expectedCondition: string): Promise<{ suitable: boolean; reason: string }> {
+async function verifyImageWithAI(
+  imageUrl: string,
+  expectedCondition: string
+): Promise<{ suitable: boolean; reason: string }> {
   if (!GEMINI_API_KEY) {
     return { suitable: true, reason: 'No API key - accepting' };
   }
@@ -130,7 +133,7 @@ async function verifyImageWithAI(imageUrl: string, expectedCondition: string): P
     if (!imageResponse.ok) {
       return { suitable: false, reason: `Cannot fetch: ${imageResponse.status}` };
     }
-    
+
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64 = Buffer.from(imageBuffer).toString('base64');
     const mimeType = imageUrl.includes('.png') ? 'image/png' : 'image/jpeg';
@@ -148,14 +151,13 @@ NOT SUITABLE: Diagrams with labels, stock photos, unrelated conditions, poor qua
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: base64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 100 }
-        })
+          contents: [
+            {
+              parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }],
+            },
+          ],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 100 },
+        }),
       }
     );
 
@@ -165,14 +167,17 @@ NOT SUITABLE: Diagrams with labels, stock photos, unrelated conditions, poor qua
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    
+    const clean = text
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
     const match = clean.match(/\{[\s\S]*\}/);
     if (match) {
       const parsed = JSON.parse(match[0]);
       return { suitable: parsed.suitable ?? true, reason: parsed.reason || 'Unknown' };
     }
-    
+
     return { suitable: true, reason: 'Could not parse' };
   } catch (error) {
     return { suitable: false, reason: `Error: ${error}` };
@@ -182,7 +187,11 @@ NOT SUITABLE: Diagrams with labels, stock photos, unrelated conditions, poor qua
 /**
  * Upload image to Supabase storage
  */
-async function uploadToSupabase(imageUrl: string, conditionId: string, filename: string): Promise<string | null> {
+async function uploadToSupabase(
+  imageUrl: string,
+  conditionId: string,
+  filename: string
+): Promise<string | null> {
   // For now, just store the source URL directly
   // In production, you'd download and re-upload to Supabase storage
   return imageUrl;
@@ -191,24 +200,26 @@ async function uploadToSupabase(imageUrl: string, conditionId: string, filename:
 /**
  * Get conditions that need more images
  */
-async function getConditionsNeedingImages(minImages = 5): Promise<Array<{ id: string; name: string; currentCount: number }>> {
+async function getConditionsNeedingImages(
+  minImages = 5
+): Promise<Array<{ id: string; name: string; currentCount: number }>> {
   const conditions = await prisma.condition.findMany({
     select: {
       id: true,
       name: true,
-      _count: { select: { MediaAsset: true } }
+      _count: { select: { MediaAsset: true } },
     },
     where: {
-      id: { in: PRIORITY_CONDITIONS }
-    }
+      id: { in: PRIORITY_CONDITIONS },
+    },
   });
 
   return conditions
-    .filter(c => c._count.MediaAsset < minImages)
-    .map(c => ({
+    .filter((c) => c._count.MediaAsset < minImages)
+    .map((c) => ({
       id: c.id,
       name: c.name,
-      currentCount: c._count.MediaAsset
+      currentCount: c._count.MediaAsset,
     }))
     .sort((a, b) => a.currentCount - b.currentCount);
 }
@@ -218,17 +229,17 @@ async function getConditionsNeedingImages(minImages = 5): Promise<Array<{ id: st
  */
 function getSearchTerms(conditionId: string): string[] {
   const mapping: Record<string, string[]> = {
-    'DERM__infectious__cellulitis': ['cellulitis skin', 'cellulitis leg', 'erysipelas'],
-    'DERM__dermatitis__eczema__atopic_dermatitis': ['atopic dermatitis', 'eczema', 'atopic eczema'],
-    'DERM__papulosquamous__plaque_psoriasis': ['psoriasis plaque', 'psoriasis skin'],
-    'DERM__oncology__melanoma': ['melanoma skin', 'malignant melanoma dermoscopy'],
-    'DERM__oncology__basal_cell_carcinoma': ['basal cell carcinoma', 'BCC skin'],
-    'DERM__oncology__squamous_cell_carcinoma': ['squamous cell carcinoma skin', 'SCC skin'],
-    'CV__ecg__atrial_fibrillation': ['atrial fibrillation ECG', 'afib electrocardiogram'],
-    'CV__ecg__atrial_flutter': ['atrial flutter ECG', 'flutter waves'],
-    'CV__ischemic_heart_disease__stemi': ['STEMI ECG', 'ST elevation myocardial infarction ECG'],
-    'PULM__infectious__pneumonia': ['pneumonia chest xray', 'pneumonia radiograph'],
-    'PULM__pleural_disease__pneumothorax': ['pneumothorax xray', 'collapsed lung radiograph'],
+    DERM__infectious__cellulitis: ['cellulitis skin', 'cellulitis leg', 'erysipelas'],
+    DERM__dermatitis__eczema__atopic_dermatitis: ['atopic dermatitis', 'eczema', 'atopic eczema'],
+    DERM__papulosquamous__plaque_psoriasis: ['psoriasis plaque', 'psoriasis skin'],
+    DERM__oncology__melanoma: ['melanoma skin', 'malignant melanoma dermoscopy'],
+    DERM__oncology__basal_cell_carcinoma: ['basal cell carcinoma', 'BCC skin'],
+    DERM__oncology__squamous_cell_carcinoma: ['squamous cell carcinoma skin', 'SCC skin'],
+    CV__ecg__atrial_fibrillation: ['atrial fibrillation ECG', 'afib electrocardiogram'],
+    CV__ecg__atrial_flutter: ['atrial flutter ECG', 'flutter waves'],
+    CV__ischemic_heart_disease__stemi: ['STEMI ECG', 'ST elevation myocardial infarction ECG'],
+    PULM__infectious__pneumonia: ['pneumonia chest xray', 'pneumonia radiograph'],
+    PULM__pleural_disease__pneumothorax: ['pneumothorax xray', 'collapsed lung radiograph'],
   };
 
   // Default: use condition name parts
@@ -243,30 +254,32 @@ function getSearchTerms(conditionId: string): string[] {
 
 async function main() {
   const args = process.argv.slice(2);
-  const specificCondition = args.find(a => a.startsWith('--condition='))?.split('=')[1];
-  const limit = parseInt(args.find(a => a.startsWith('--limit='))?.split('=')[1] || '5');
+  const specificCondition = args.find((a) => a.startsWith('--condition='))?.split('=')[1];
+  const limit = parseInt(args.find((a) => a.startsWith('--limit='))?.split('=')[1] || '5');
 
   console.log('🌐 Fetching Quality Medical Images from Online Sources\n');
 
   // Get conditions needing images
   let conditionsToProcess: Array<{ id: string; name: string; currentCount: number }>;
-  
+
   if (specificCondition) {
     const condition = await prisma.condition.findUnique({
       where: { id: specificCondition },
-      select: { id: true, name: true, _count: { select: { MediaAsset: true } } }
+      select: { id: true, name: true, _count: { select: { MediaAsset: true } } },
     });
-    
+
     if (!condition) {
       console.error(`Condition not found: ${specificCondition}`);
       process.exit(1);
     }
-    
-    conditionsToProcess = [{
-      id: condition.id,
-      name: condition.name,
-      currentCount: condition._count.MediaAsset
-    }];
+
+    conditionsToProcess = [
+      {
+        id: condition.id,
+        name: condition.name,
+        currentCount: condition._count.MediaAsset,
+      },
+    ];
   } else {
     conditionsToProcess = await getConditionsNeedingImages(5);
   }
@@ -280,32 +293,32 @@ async function main() {
     if (needed <= 0) continue;
 
     console.log(`\n📁 ${condition.name} (have ${condition.currentCount}, need ${needed} more)`);
-    
+
     const searchTerms = getSearchTerms(condition.id);
     let addedForCondition = 0;
 
     for (const term of searchTerms) {
       if (addedForCondition >= needed) break;
-      
+
       console.log(`  🔍 Searching: "${term}"`);
       const images = await searchWikimedia(term, 5);
       stats.searched += images.length;
-      
+
       for (const image of images) {
         if (addedForCondition >= needed) break;
-        
+
         process.stdout.write(`    ${image.title.substring(0, 40)}... `);
-        
+
         // Verify with AI
         const verification = await verifyImageWithAI(image.url, condition.name);
         stats.verified++;
-        
+
         if (!verification.suitable) {
           console.log(`❌ ${verification.reason}`);
           stats.rejected++;
           continue;
         }
-        
+
         // Add to database
         const id = crypto.randomUUID();
         try {
@@ -321,19 +334,19 @@ async function main() {
               tags: [image.source, image.license],
               status: 'pending_review',
               approvalStatus: 'pending',
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
-          
+
           console.log('✅ Added');
           addedForCondition++;
           stats.added++;
         } catch (e) {
           console.log(`⚠️ DB error: ${e}`);
         }
-        
+
         // Rate limit
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 2000));
       }
     }
   }

@@ -1,6 +1,6 @@
 /**
  * Audit Logger Service
- * 
+ *
  * Handles immutable audit logging for all content changes
  * Required for Phase 3: Every 'Save', 'Approve', or 'Publish' action must log:
  * [Timestamp] [User_ID] [Field_Changed] [Old_Value] -> [New_Value]
@@ -33,10 +33,7 @@ export interface AuditLogData {
  * Create an audit log entry
  * This is an append-only operation for compliance
  */
-export async function createAuditLog(
-  prisma: PrismaClientLike,
-  data: AuditLogData
-): Promise<void> {
+export async function createAuditLog(prisma: PrismaClientLike, data: AuditLogData): Promise<void> {
   await prisma.contentAuditLog.create({
     data: {
       contentId: data.contentId,
@@ -109,10 +106,7 @@ export function detectChangedFields(
   const newValues: Record<string, any> = {};
 
   // Get all unique keys from both objects
-  const allKeys = new Set([
-    ...Object.keys(oldContent),
-    ...Object.keys(newContent),
-  ]);
+  const allKeys = new Set([...Object.keys(oldContent), ...Object.keys(newContent)]);
 
   for (const key of allKeys) {
     const oldValue = oldContent[key];
@@ -135,17 +129,17 @@ export function detectChangedFields(
 export function formatAuditLogEntry(entry: any): string {
   const timestamp = new Date(entry.changedAt).toISOString();
   const fields = entry.changedFields?.join(', ') || 'N/A';
-  
+
   let message = `[${timestamp}] [${entry.changedBy}] [${entry.changeType.toUpperCase()}]`;
-  
+
   if (entry.changedFields && entry.changedFields.length > 0) {
     message += ` Modified fields: ${fields}`;
   }
-  
+
   if (entry.changeDescription) {
     message += ` - ${entry.changeDescription}`;
   }
-  
+
   return message;
 }
 
@@ -177,8 +171,7 @@ export function exportAuditLogsToCsv(logs: any[]): string {
     log.ipAddress || '',
   ]);
 
-  return [
-    headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-  ].join('\n');
+  return [headers.join(','), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))].join(
+    '\n'
+  );
 }

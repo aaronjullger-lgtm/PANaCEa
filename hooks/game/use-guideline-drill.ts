@@ -56,7 +56,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
         const data = await guidelineService.getAllGuidelines();
         setAllGuidelines(data);
       } catch (error) {
-        console.error("Failed to load guidelines", error);
+        console.error('Failed to load guidelines', error);
       } finally {
         setIsLoading(false);
       }
@@ -79,52 +79,58 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
       guidelineId: currentGuideline.id,
       guidelineName: currentGuideline.name,
       cases: sessionResults,
-      totalCorrect: sessionResults.filter(r => r.isCorrect).length,
+      totalCorrect: sessionResults.filter((r) => r.isCorrect).length,
       totalAttempts: sessionResults.length,
     };
   }, [status, currentGuideline, sessionResults]);
 
-  const selectGuideline = useCallback((guidelineId: string) => {
-    const guideline = allGuidelines.find(g => g.id === guidelineId);
-    if (!guideline) return;
+  const selectGuideline = useCallback(
+    (guidelineId: string) => {
+      const guideline = allGuidelines.find((g) => g.id === guidelineId);
+      if (!guideline) return;
 
-    setCurrentGuideline(guideline);
-    setCurrentVignetteIndex(0);
-    setUserScore(null);
-    setIsCorrect(null);
-    setScore(0);
-    setStreak(0);
-    setSessionResults([]);
-    setStatus('playing');
-  }, [allGuidelines]);
-
-  const submitScore = useCallback((submittedScore: number) => {
-    if (!currentVignette || status !== 'playing') return;
-
-    setUserScore(submittedScore);
-    
-    const correct = submittedScore === currentVignette.correctScore;
-    setIsCorrect(correct);
-
-    if (correct) {
-      setScore(prev => prev + 1);
-      setStreak(prev => prev + 1);
-    } else {
+      setCurrentGuideline(guideline);
+      setCurrentVignetteIndex(0);
+      setUserScore(null);
+      setIsCorrect(null);
+      setScore(0);
       setStreak(0);
-    }
+      setSessionResults([]);
+      setStatus('playing');
+    },
+    [allGuidelines]
+  );
 
-    setSessionResults(prev => [
-      ...prev,
-      {
-        caseId: currentVignette.id,
-        userScore: submittedScore,
-        correctScore: currentVignette.correctScore,
-        isCorrect: correct,
-      },
-    ]);
+  const submitScore = useCallback(
+    (submittedScore: number) => {
+      if (!currentVignette || status !== 'playing') return;
 
-    setStatus('feedback');
-  }, [currentVignette, status]);
+      setUserScore(submittedScore);
+
+      const correct = submittedScore === currentVignette.correctScore;
+      setIsCorrect(correct);
+
+      if (correct) {
+        setScore((prev) => prev + 1);
+        setStreak((prev) => prev + 1);
+      } else {
+        setStreak(0);
+      }
+
+      setSessionResults((prev) => [
+        ...prev,
+        {
+          caseId: currentVignette.id,
+          userScore: submittedScore,
+          correctScore: currentVignette.correctScore,
+          isCorrect: correct,
+        },
+      ]);
+
+      setStatus('feedback');
+    },
+    [currentVignette, status]
+  );
 
   const nextVignette = useCallback(() => {
     if (!currentGuideline) return;
@@ -134,7 +140,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
       return;
     }
 
-    setCurrentVignetteIndex(prev => prev + 1);
+    setCurrentVignetteIndex((prev) => prev + 1);
     setUserScore(null);
     setIsCorrect(null);
     setStatus('playing');

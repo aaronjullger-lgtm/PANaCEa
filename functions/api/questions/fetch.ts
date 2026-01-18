@@ -1,122 +1,77 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken, type Env } from '../_shared/auth';
-import type { CloudflareContext } from '../_shared/types';
+/**
+ * POST /api/questions/fetch
+ * Fetch pre-generated questions for a user with filters
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export const onRequestPost = async (context: CloudflareContext<Env>) => {
+const QuestionFetchSchema = z.object({
+  body: z.object({
+    userId: z.string(),
+    system: z.string().optional(),
+    conditionId: z.string().optional(),
+    difficulty: z.string().optional(),
+    questionType: z.string().optional(),
+    limit: z.number().optional(),
+  }),
+});
 
-  const { request, env } = context;
+export const onRequestOptions = withCors();
+
+export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/fetch');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Verify auth
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = validated.body;
 
-    const body = await request.json();
-    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = body;
+    // Get seen question IDs
+    const historyWhere: { userId: string; questionType?: string } = { userId };
+    if (questionType) historyWhere.questionType = questionType;
 
-    if (!userId) {
-      return new Response(JSON.stringify({ error: 'userId is required' }), {
-        status: 400,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    const history = await prisma.userQuestionSeen.findMany({
+      where: historyWhere,
+      select: { questionId: true },
+    });
+    const seenQuestionIds = history.map((h) => h.questionId);
 
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    // Build query
+    const where: any = {};
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+    if (questionType) where.questionType = questionType;
+    if (conditionId) where.conditionId = conditionId;
 
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    // Fetch questions excluding user's history
+    const questions = await prisma.preGeneratedQuestion.findMany({
+      where: { ...where, id: { notIn: seenQuestionIds } },
+      take: limit,
+      orderBy: [{ generatedAt: 'asc' }],
+    });
 
-    try {
-      // 1. Get seen question IDs
-      const historyWhere: {
-        userId: string;
-        questionType?: string;
-      } = { userId };
-      if (questionType) historyWhere.questionType = questionType;
+    logger.info('Fetched questions', { userId: auth.userId, count: questions.length, filters: { system, conditionId, questionType } });
 
-      const history = await prisma.userQuestionSeen.findMany({
-        where: historyWhere,
-        select: { questionId: true },
-      });
-      const seenQuestionIds = history.map((h) => h.questionId);
-
-      // 2. Build query for live questions
-      // Do NOT filter by usedAt - questions remain available to all users
-      // Per-user filtering happens via notIn seenQuestionIds
-      const where: any = {};
-
-      if (system) where.system = system;
-      if (difficulty) where.difficulty = difficulty;
-      if (questionType) where.questionType = questionType;
-      if (conditionId) where.conditionId = conditionId;
-
-      // 3. Fetch questions excluding user's history
-      let questions = await prisma.preGeneratedQuestion.findMany({
-        where: {
-          ...where,
-          id: {
-            notIn: seenQuestionIds,
-          },
-        },
-        take: limit,
-        orderBy: [
-          { generatedAt: "asc" }, // Use oldest first for fairness
-        ],
-      });
-
-      // 4. If not enough questions, all questions for this user are exhausted
-      // The pool remains available for other users
-
-      // 5. Return results
-      return new Response(JSON.stringify({
+    return {
+      data: {
         success: true,
-        questions: questions,
-        source: "database",
+        questions,
+        source: 'database',
         count: questions.length,
         needsGeneration: questions.length < limit,
         generationNeeded: limit - questions.length,
-      }), {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-
-    } finally {
-      await prisma.$disconnect();
-    }
-
-  } catch (error: any) {
-    console.error('Error fetching questions:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to fetch questions',
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+      },
+    };
+  } catch (error) {
+    logger.error('Error fetching questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    throw new Error('Failed to fetch questions');
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-};
+});

@@ -1,34 +1,45 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
+import {
+  authenticatedEndpoint,
+  withCors,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
 }
 
-export const onRequestOptions = handleCorsOptions;
+// Define Zod schema for request validation
+const RecommendationActionSchema = z.object({
+  body: z.object({
+    recommendationId: z.string().uuid(),
+    action: z.enum(['complete', 'dismiss']),
+  }),
+});
 
-export const onRequestPost = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
+
+export const onRequestPost = authenticatedEndpoint(RecommendationActionSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/recommendations/action');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) return createErrorResponse('Unauthorized', 401);
-
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
       select: { id: true },
     });
 
-    if (!user) return createErrorResponse('User not found', 404);
-
-    const body = await request.json();
-    const { recommendationId, action } = body as { recommendationId: string; action: 'complete' | 'dismiss' };
-
-    if (!recommendationId || !['complete', 'dismiss'].includes(action)) {
-      return createErrorResponse('Invalid request', 400);
+    if (!user) {
+      return {
+        status: 404,
+        error: 'User not found',
+      };
     }
+
+    const { recommendationId, action } = validated.body;
 
     const { count } = await prisma.studyRecommendation.updateMany({
       where: {
@@ -42,16 +53,26 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     });
 
     if (count === 0) {
-      return createErrorResponse('Recommendation not found', 404);
+      return {
+        status: 404,
+        error: 'Recommendation not found',
+      };
     }
 
-    const updated = await prisma.studyRecommendation.findUnique({ where: { id: recommendationId } });
+    const updated = await prisma.studyRecommendation.findUnique({
+      where: { id: recommendationId },
+    });
 
-    return createSuccessResponse({ success: true, recommendation: updated });
+    return {
+      data: { success: true, recommendation: updated },
+    };
   } catch (error) {
-    console.error('[recommendations/action] Failed to update recommendation', error);
-    return createErrorResponse('Failed to update recommendation', 500);
+    logger.error('Failed to update recommendation', error);
+    return {
+      status: 500,
+      error: 'Failed to update recommendation',
+    };
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

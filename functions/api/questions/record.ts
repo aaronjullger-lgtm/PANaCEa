@@ -1,71 +1,42 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+/**
+ * POST /api/questions/record
+ * Record a question attempt (seen history + analytics)
+ */
+
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { isRankedMode } from '../../../config/training-modes';
 import { updateGlobalAccuracy } from '../../../lib/services/userStatsService';
 
-export const onRequestOptions = handleCorsOptions;
+const QuestionRecordSchema = z.object({
+  body: z.object({
+    userId: z.string(),
+    questionId: z.string(),
+    questionType: z.string(),
+    system: z.string().optional(),
+    conditionId: z.string().optional(),
+    wasCorrect: z.boolean().optional(),
+    mode: z.string().optional(),
+  }),
+});
 
-export const onRequestPost = async (context) => {
+export const onRequestOptions = withCors();
 
-  const { request, env } = context;
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/record');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Verify auth
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const body = await request.json();
-    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } = body;
-
+    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } = validated.body;
     const isRankedAttempt = isRankedMode(mode);
-
-    // Validate required fields
-    if (!userId || !questionId || !questionType) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing required fields: userId, questionId, and questionType are required' 
-      }), {
-        status: 400,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    // Record the question as seen (no-repeat guard)
-    const seenKey = {
-      userId,
-      questionId,
-      questionType,
-    } as const;
-
-    const existingSeen = await prisma.userQuestionSeen.findUnique({
-      where: { userId_questionId_questionType: seenKey },
-      select: { timesShown: true, avgTimeMs: true },
-    });
-
     const now = new Date();
+
+    // Record question seen (no-repeat guard)
+    const seenKey = { userId, questionId, questionType } as const;
+
     const updateData: any = {
       lastSeenAt: now,
       timesShown: { increment: 1 },
@@ -89,7 +60,7 @@ export const onRequestPost = async (context) => {
       update: updateData,
     });
 
-    // Always log attempts for drill history / analytics
+    // Log attempt for drill history / analytics
     await prisma.questionAttempt.create({
       data: {
         userId,
@@ -103,41 +74,25 @@ export const onRequestPost = async (context) => {
       },
     });
 
-    // Only ranked attempts should feed FSRS/Global stats pipelines
+    // Only ranked attempts feed FSRS/Global stats
     if (isRankedAttempt) {
       try {
         await updateGlobalAccuracy(prisma as any, userId);
       } catch (statsError) {
-        console.warn('Failed to update ranked stats', statsError);
+        logger.warn('Failed to update ranked stats', { error: statsError instanceof Error ? statsError.message : String(statsError) });
       }
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Question recorded successfully',
-      isRankedAttempt,
-    }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    logger.info('Question recorded', { userId: auth.userId, questionId, isRankedAttempt });
 
-  } catch (error: any) {
-    console.error('Error recording question:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to record question',
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    return { data: { success: true, message: 'Question recorded successfully', isRankedAttempt } };
+  } catch (error) {
+    logger.error('Error recording question', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    throw new Error('Failed to record question');
   } finally {
-    if (prisma) {
-      await prisma.$disconnect().catch(() => {});
-    }
+    await safePrismaDisconnect(prisma);
   }
-};
+});

@@ -1,25 +1,23 @@
 /**
  * GET /api/conditions/high-yield
- * 
- * Returns high-yield conditions for Cram Mode with buzzwords and clinical pearls.
- * Replaces static TOP_50_HIGH_YIELD_CONDITIONS from data/highYieldConditions.ts
- * 
+ *
+ * PUBLIC endpoint - Returns high-yield conditions for Cram Mode
+ * with buzzwords and clinical pearls.
+ *
  * Database-First: PostgreSQL is the ONLY source of truth for clinical content.
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+import { publicEndpoint } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { z } from 'zod';
 
-interface Env {
-  DATABASE_URL?: string;
-}
-
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
-
-export const onRequestOptions = handleCorsOptions;
+const HighYieldSchema = z.object({
+  query: z.object({
+    limit: z.coerce.number().min(1).max(100).optional().default(50),
+    system: z.string().optional(),
+    random: z.enum(['true', 'false']).optional(),
+  }),
+});
 
 /**
  * Response shape matching the static HighYieldCondition interface
@@ -69,36 +67,22 @@ function extractPearl(clinicalPearls: unknown, overview: string | null): string 
   return 'High-yield condition for PANCE';
 }
 
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
-
-  if (!env.DATABASE_URL) {
-    return new Response(
-      JSON.stringify({ error: 'Database not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
+export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-    const system = url.searchParams.get('system')?.toUpperCase();
-    const randomize = url.searchParams.get('random') === 'true';
+    const { limit, system, random } = validated.query;
+    const randomize = random === 'true';
 
     // Build where clause
     const where: any = {
       status: 'published',
       // Only include conditions with buzzwords or high yield score
-      OR: [
-        { buzzwords: { isEmpty: false } },
-        { pance_yield: { gt: 5 } }
-      ]
+      OR: [{ buzzwords: { isEmpty: false } }, { pance_yield: { gt: 5 } }],
     };
 
     if (system) {
-      where.system = system;
+      where.system = system.toUpperCase();
     }
 
     // Fetch high-yield conditions from database
@@ -112,17 +96,14 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         overview: true,
         pance_yield: true,
       },
-      orderBy: randomize 
+      orderBy: randomize
         ? undefined // Random handled after fetch
-        : [
-            { pance_yield: 'desc' },
-            { condition: 'asc' }
-          ],
+        : [{ pance_yield: 'desc' }, { condition: 'asc' }],
       take: randomize ? undefined : limit,
     });
 
     // Transform to response format
-    let results: HighYieldConditionResponse[] = conditions.map(c => ({
+    let results: HighYieldConditionResponse[] = conditions.map((c) => ({
       condition: c.condition,
       system: c.system,
       pearl: extractPearl(c.clinical_pearls, c.overview),
@@ -132,35 +113,15 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 
     // Randomize if requested
     if (randomize) {
-      results = results
-        .sort(() => Math.random() - 0.5)
-        .slice(0, limit);
+      results = results.sort(() => Math.random() - 0.5).slice(0, limit);
     }
 
-    return new Response(
-      JSON.stringify({
-        conditions: results,
-        total: results.length,
-        source: 'database',
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=300', // Cache 5 min
-        },
-      }
-    );
-  } catch (error) {
-    console.error('[High-Yield API] Error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to fetch high-yield conditions',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return {
+      conditions: results,
+      total: results.length,
+      source: 'database',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

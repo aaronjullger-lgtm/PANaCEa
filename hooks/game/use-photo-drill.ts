@@ -1,7 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { submitDrillResult } from '@/services/drillService';
-import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/drillStatsService';
+import {
+  recordDrillSession,
+  getRecommendedDifficulty,
+  type DrillType,
+} from '@/services/drillStatsService';
 
 // Static fallbacks used in tests/offline mode (database-first in production)
 export const MASTER_CONDITION_LIST: string[] = [
@@ -32,8 +36,28 @@ export const MASTER_CONDITION_LIST: string[] = [
 
 const CATEGORY_DIAGNOSES: Record<NonNullable<CategoryType>, string[]> = {
   ecg: ['Atrial Fibrillation', 'STEMI', 'Ventricular Tachycardia', 'Pericarditis'],
-  derm: ['Psoriasis', 'Shingles', 'Eczema', 'Cellulitis', 'Basal Cell Carcinoma', 'Melanoma', 'Dermatitis Herpetiformis', 'Tinea Corporis', 'Erythema Multiforme'],
-  radiology: ['Pneumothorax', 'Pneumonia', 'COPD Exacerbation', 'Heart Failure', 'Aortic Dissection', 'Pleuritis', 'ARDS', 'Bronchitis', 'Aspiration Pneumonitis'],
+  derm: [
+    'Psoriasis',
+    'Shingles',
+    'Eczema',
+    'Cellulitis',
+    'Basal Cell Carcinoma',
+    'Melanoma',
+    'Dermatitis Herpetiformis',
+    'Tinea Corporis',
+    'Erythema Multiforme',
+  ],
+  radiology: [
+    'Pneumothorax',
+    'Pneumonia',
+    'COPD Exacerbation',
+    'Heart Failure',
+    'Aortic Dissection',
+    'Pleuritis',
+    'ARDS',
+    'Bronchitis',
+    'Aspiration Pneumonitis',
+  ],
   random: MASTER_CONDITION_LIST,
 };
 
@@ -84,18 +108,16 @@ export function generateRandomCase(
   category: CategoryType,
   options: { educationalCaption?: string } = {}
 ): PhotoCase {
-  const pool = category && category !== 'random' ? CATEGORY_DIAGNOSES[category] : MASTER_CONDITION_LIST;
+  const pool =
+    category && category !== 'random' ? CATEGORY_DIAGNOSES[category] : MASTER_CONDITION_LIST;
   const correctDiagnosis = pool[Math.floor(Math.random() * pool.length)];
   const distractors = pool
     .filter((d) => d !== correctDiagnosis)
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
-  const modality: PhotoCase['modality'] = category === 'derm'
-    ? 'derm'
-    : category === 'radiology'
-      ? 'xray'
-      : 'ecg';
+  const modality: PhotoCase['modality'] =
+    category === 'derm' ? 'derm' : category === 'radiology' ? 'xray' : 'ecg';
 
   const colorMap: Record<PhotoCase['modality'], string> = {
     ecg: '1e293b',
@@ -148,6 +170,8 @@ export interface PhotoCase {
   imageUrl: string;
   /** The imaging modality type */
   modality: 'ecg' | 'xray' | 'derm';
+  /** Category or system (e.g., 'cardiovascular', 'pulmonary') */
+  category?: string;
   /** The correct diagnosis for this case */
   correctDiagnosis: string;
   /** Array of distractor (incorrect) diagnoses */
@@ -184,7 +208,7 @@ export type CategoryType = 'ecg' | 'derm' | 'radiology' | 'random' | null;
 
 /**
  * Fetch photo cases from the database API
- * 
+ *
  * @param modality - The image modality to fetch ('ecg', 'derm', 'radiology', or null for random)
  * @param count - Number of cases to fetch (default 20)
  * @returns Array of PhotoCase objects from approved media assets
@@ -197,7 +221,9 @@ async function fetchPhotoCases(
 
   // In tests/offline mode, skip network entirely and return generated cases
   if (isTestEnv) {
-    return Array.from({ length: count }).map(() => generateRandomCase(modality as CategoryType || 'random'));
+    return Array.from({ length: count }).map(() =>
+      generateRandomCase((modality as CategoryType) || 'random')
+    );
   }
 
   try {
@@ -208,27 +234,32 @@ async function fetchPhotoCases(
     }
     params.append('count', count.toString());
 
-    const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+    const baseUrl =
+      typeof window !== 'undefined' && window.location
+        ? window.location.origin
+        : 'http://localhost';
     const url = `${baseUrl}/api/drills/media?${params.toString()}`;
-    
+
     // Fetch from API
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
-    
+
     const cases = await response.json();
-    
+
     if (!Array.isArray(cases) || cases.length === 0) {
       throw new Error('No photo cases available');
     }
-    
+
     return cases;
   } catch (error) {
     console.error('[Photo Drill] Failed to fetch cases, using fallback:', error);
-    return Array.from({ length: count }).map(() => generateRandomCase(modality as CategoryType || 'random'));
+    return Array.from({ length: count }).map(() =>
+      generateRandomCase((modality as CategoryType) || 'random')
+    );
   }
 }
 
@@ -240,7 +271,7 @@ async function fetchPhotoCases(
  * Calculate the Levenshtein distance between two strings.
  * This measures the minimum number of single-character edits (insertions, deletions, or substitutions)
  * required to change one string into another.
- * 
+ *
  * @param str1 - First string to compare
  * @param str2 - Second string to compare
  * @returns The Levenshtein distance between the two strings
@@ -248,12 +279,12 @@ async function fetchPhotoCases(
 function levenshteinDistance(str1: string, str2: string): number {
   const len1 = str1.length;
   const len2 = str2.length;
-  
+
   // Create a 2D array to store distances
   const matrix: number[][] = Array(len1 + 1)
     .fill(null)
     .map(() => Array(len2 + 1).fill(0));
-  
+
   // Initialize first column and row
   for (let i = 0; i <= len1; i++) {
     matrix[i][0] = i;
@@ -261,52 +292,48 @@ function levenshteinDistance(str1: string, str2: string): number {
   for (let j = 0; j <= len2; j++) {
     matrix[0][j] = j;
   }
-  
+
   // Fill in the rest of the matrix
   for (let i = 1; i <= len1; i++) {
     for (let j = 1; j <= len2; j++) {
       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // deletion
-        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j] + 1, // deletion
+        matrix[i][j - 1] + 1, // insertion
         matrix[i - 1][j - 1] + cost // substitution
       );
     }
   }
-  
+
   return matrix[len1][len2];
 }
 
 /**
  * Fuzzy matching function that uses Levenshtein distance to allow for minor spelling errors.
  * This is especially useful for medical terminology where users might have small typos.
- * 
+ *
  * @param input - The user's input string
  * @param target - The correct target string
  * @param threshold - Similarity threshold (0-1), default 0.8. Higher values require closer matches.
  * @returns true if the input is similar enough to the target
  */
-export function fuzzyMatch(
-  input: string,
-  target: string,
-  threshold: number = 0.8
-): boolean {
+export function fuzzyMatch(input: string, target: string, threshold: number = 0.8): boolean {
   // Normalize both strings: lowercase and trim whitespace
   const normalizedInput = input.toLowerCase().trim();
   const normalizedTarget = target.toLowerCase().trim();
-  
+
   // Exact match always returns true
   if (normalizedInput === normalizedTarget) {
     return true;
   }
-  
+
   // Calculate Levenshtein distance
   const distance = levenshteinDistance(normalizedInput, normalizedTarget);
-  
+
   // Calculate similarity ratio based on the longer string
   const maxLength = Math.max(normalizedInput.length, normalizedTarget.length);
-  const similarity = 1 - (distance / maxLength);
-  
+  const similarity = 1 - distance / maxLength;
+
   // Return true if similarity meets or exceeds threshold
   return similarity >= threshold;
 }
@@ -371,7 +398,10 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   try {
     ({ getToken } = useAuth());
   } catch (err) {
-    console.warn('[Photo Drill] Clerk context missing; using stub auth in tests.', err instanceof Error ? err.message : err);
+    console.warn(
+      '[Photo Drill] Clerk context missing; using stub auth in tests.',
+      err instanceof Error ? err.message : err
+    );
   }
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>(null);
   const [queue, setQueue] = useState<PhotoCase[]>(initialCases);
@@ -381,10 +411,10 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<GameStatus>('menu');
-  
+
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
-  
+
   // Track session for drill statistics
   const sessionStartRef = useRef<number>(Date.now());
   const sessionDataRef = useRef({
@@ -394,7 +424,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   });
 
   // Current case from queue (all cases are dynamically generated)
-  const currentCase = queue.length > 0 ? queue[currentCaseIndex] ?? null : null;
+  const currentCase = queue.length > 0 ? (queue[currentCaseIndex] ?? null) : null;
   const totalCases = queue.length;
 
   /**
@@ -426,50 +456,57 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
    * Start a new session with the specified category.
    * Fetches initial queue from API and transitions to playing state.
    */
-  const startSession = useCallback((category: CategoryType) => {
-    setSelectedCategory(category);
-    recentDiagnosesRef.current.clear(); // Clear history on new session
-    
-    // Initialize session tracking
-    sessionStartRef.current = Date.now();
-    sessionDataRef.current = {
-      questionsAttempted: 0,
-      correctAnswers: 0,
-      bestStreak: 0,
-    };
-    
-    const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() => generateRandomCase(category || 'random'));
-    setQueue(seedQueue);
+  const startSession = useCallback(
+    (category: CategoryType) => {
+      setSelectedCategory(category);
+      recentDiagnosesRef.current.clear(); // Clear history on new session
 
-    setCurrentCaseIndex(0);
-    setScore(0);
-    setStreak(0);
-    setUserAnswer(null);
-    setIsCorrect(null);
-    setStatus('playing');
+      // Initialize session tracking
+      sessionStartRef.current = Date.now();
+      sessionDataRef.current = {
+        questionsAttempted: 0,
+        correctAnswers: 0,
+        bestStreak: 0,
+      };
 
-    // Replace seed queue with fetched cases when available
-    void fetchMoreCases(category, INITIAL_QUEUE_SIZE)
-      .then((initialQueue) => setQueue(initialQueue))
-      .catch((error) => {
-        console.error('[Photo Drill] Failed to start session:', error);
-      });
-  }, [fetchMoreCases]);
-  
+      const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() =>
+        generateRandomCase(category || 'random')
+      );
+      setQueue(seedQueue);
+
+      setCurrentCaseIndex(0);
+      setScore(0);
+      setStreak(0);
+      setUserAnswer(null);
+      setIsCorrect(null);
+      setStatus('playing');
+
+      // Replace seed queue with fetched cases when available
+      void fetchMoreCases(category, INITIAL_QUEUE_SIZE)
+        .then((initialQueue) => setQueue(initialQueue))
+        .catch((error) => {
+          console.error('[Photo Drill] Failed to start session:', error);
+        });
+    },
+    [fetchMoreCases]
+  );
+
   /**
    * Auto-refill queue when running low (background prefetch)
    */
   useEffect(() => {
     const MIN_QUEUE_SIZE = 5;
-    
+
     if (selectedCategory && queue.length > 0 && queue.length - currentCaseIndex <= MIN_QUEUE_SIZE) {
       // Running low on cases, fetch more in background
-      fetchMoreCases(selectedCategory, 10).then(newCases => {
-        setQueue(prev => [...prev, ...newCases]);
-      }).catch(error => {
-        console.error('[Photo Drill] Background refill failed:', error);
-        // Fail silently - user can continue with existing queue
-      });
+      fetchMoreCases(selectedCategory, 10)
+        .then((newCases) => {
+          setQueue((prev) => [...prev, ...newCases]);
+        })
+        .catch((error) => {
+          console.error('[Photo Drill] Background refill failed:', error);
+          // Fail silently - user can continue with existing queue
+        });
     }
   }, [currentCaseIndex, queue.length, selectedCategory, fetchMoreCases]);
 
@@ -481,25 +518,26 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     if (sessionDataRef.current.questionsAttempted > 0 && selectedCategory) {
       const endTime = Date.now();
       const drillTypeMap: Record<string, DrillType> = {
-        'ecg': 'ecg_drill',
-        'derm': 'derm_drill',
-        'radiology': 'imaging_drill',
+        ecg: 'ecg_drill',
+        derm: 'derm_drill',
+        radiology: 'imaging_drill',
       };
       const drillType = drillTypeMap[selectedCategory as string] || 'imaging_drill';
-      
+
       recordDrillSession({
         drillType,
         startTime: new Date(sessionStartRef.current).toISOString(),
         endTime: new Date(endTime).toISOString(),
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
-        accuracy: (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
+        accuracy:
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
         difficulty: getRecommendedDifficulty(drillType),
       });
     }
-    
+
     setSelectedCategory(null);
     setQueue([]);
     setCurrentCaseIndex(0);
@@ -536,11 +574,11 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
 
       // Submit result
       const drillTypeMap: Record<string, 'radiology' | 'ecg' | 'derm'> = {
-        'xray': 'radiology',
-        'ecg': 'ecg',
-        'derm': 'derm'
+        xray: 'radiology',
+        ecg: 'ecg',
+        derm: 'derm',
       };
-      
+
       const drillType = drillTypeMap[currentCase.modality] || 'radiology';
 
       submitDrillResult(
@@ -639,10 +677,12 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     setStreak(0);
     setUserAnswer(null);
     setIsCorrect(null);
-    
+
     // If we have a category, fetch new queue
     if (selectedCategory !== null) {
-      const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() => generateRandomCase(selectedCategory));
+      const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() =>
+        generateRandomCase(selectedCategory)
+      );
       setQueue(seedQueue);
       setStatus('playing');
 

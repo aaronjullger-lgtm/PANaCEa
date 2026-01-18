@@ -1,13 +1,22 @@
 /**
  * DDxCompareModal - Side-by-side comparison of two conditions
- * 
+ *
  * Useful for differential diagnosis review - helps students see
  * distinguishing features between similar conditions
  */
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeftRight, Search, Check, AlertTriangle, Stethoscope, Pill, Microscope } from 'lucide-react';
+import {
+  X,
+  ArrowLeftRight,
+  Search,
+  Check,
+  AlertTriangle,
+  Stethoscope,
+  Pill,
+  Microscope,
+} from 'lucide-react';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 import { parseListField, parseTextField } from '@/lib/utils/normalization';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
@@ -51,12 +60,11 @@ const ConditionSelector: React.FC<{
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    let result = conditions.filter(c => c.id !== otherSelected);
+    let result = conditions.filter((c) => c.id !== otherSelected);
     if (search.trim()) {
       const query = search.toLowerCase();
-      result = result.filter(c => 
-        c.condition?.toLowerCase().includes(query) ||
-        c.system?.toLowerCase().includes(query)
+      result = result.filter(
+        (c) => c.condition?.toLowerCase().includes(query) || c.system?.toLowerCase().includes(query)
       );
     }
     return result.slice(0, 20);
@@ -103,7 +111,7 @@ const ConditionSelector: React.FC<{
 
             {/* Results */}
             <div className="max-h-48 overflow-y-auto">
-              {filtered.map(condition => (
+              {filtered.map((condition) => (
                 <button
                   key={condition.id}
                   onClick={() => {
@@ -143,7 +151,7 @@ const ComparisonRow: React.FC<{
   right: Partial<MedicalContentDisplay> | null;
 }> = ({ field, left, right }) => {
   const Icon = field.icon;
-  
+
   const getValue = (condition: Partial<MedicalContentDisplay> | null): string => {
     if (!condition) return '-';
     const value = condition[field.key as keyof MedicalContentDisplay];
@@ -158,12 +166,14 @@ const ComparisonRow: React.FC<{
   const isDifferent = leftValue !== rightValue && leftValue !== '-' && rightValue !== '-';
 
   return (
-    <div className={`grid grid-cols-[1fr_auto_1fr] gap-4 p-3 rounded-lg ${isDifferent ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-[var(--color-bg-secondary)]/30'}`}>
+    <div
+      className={`grid grid-cols-[1fr_auto_1fr] gap-4 p-3 rounded-lg ${isDifferent ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-[var(--color-bg-secondary)]/30'}`}
+    >
       {/* Left value */}
       <div className="min-w-0">
         <p className="text-sm text-[var(--color-text-secondary)] break-words">{leftValue}</p>
       </div>
-      
+
       {/* Label */}
       <div className="flex flex-col items-center justify-center w-28">
         <Icon className="w-4 h-4 text-[var(--color-text-muted)] mb-1" />
@@ -176,7 +186,7 @@ const ComparisonRow: React.FC<{
           </span>
         )}
       </div>
-      
+
       {/* Right value */}
       <div className="min-w-0 text-right">
         <p className="text-sm text-[var(--color-text-secondary)] break-words">{rightValue}</p>
@@ -194,11 +204,13 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
 }) => {
   const [left, setLeft] = useState<Partial<MedicalContentDisplay> | null>(initialCondition || null);
   const [right, setRight] = useState<Partial<MedicalContentDisplay> | null>(null);
-  const [activeCategory, setActiveCategory] = useState<'all' | 'presentation' | 'diagnosis' | 'treatment'>('all');
+  const [activeCategory, setActiveCategory] = useState<
+    'all' | 'presentation' | 'diagnosis' | 'treatment'
+  >('all');
 
   const filteredFields = useMemo(() => {
     if (activeCategory === 'all') return COMPARISON_FIELDS;
-    return COMPARISON_FIELDS.filter(f => f.category === activeCategory);
+    return COMPARISON_FIELDS.filter((f) => f.category === activeCategory);
   }, [activeCategory]);
 
   const swapConditions = () => {
@@ -250,7 +262,7 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
             otherSelected={right?.id}
             placeholder="Select first condition..."
           />
-          
+
           <button
             onClick={swapConditions}
             className="p-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 transition-colors self-center"
@@ -258,7 +270,7 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
           >
             <ArrowLeftRight className="w-4 h-4 text-[var(--color-text-muted)]" />
           </button>
-          
+
           <ConditionSelector
             conditions={conditions}
             selected={right}
@@ -293,7 +305,7 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
 
         {/* Category Tabs */}
         <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--color-border)]">
-          {(['all', 'presentation', 'diagnosis', 'treatment'] as const).map(cat => (
+          {(['all', 'presentation', 'diagnosis', 'treatment'] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
@@ -311,7 +323,7 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
         {/* Comparison Grid */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {left && right ? (
-            filteredFields.map(field => (
+            filteredFields.map((field) => (
               <ComparisonRow key={field.key} field={field} left={left} right={right} />
             ))
           ) : (

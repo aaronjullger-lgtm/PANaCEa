@@ -5,6 +5,7 @@ This directory contains automated scripts for generating high-volume, medically 
 ## Overview
 
 These scripts use the Gemini API to generate:
+
 - **Lab Cases**: 250 unique cases focused on laboratory interpretation
 - **Clinical Cases**: 250 unique cases focused on clinical presentation and differential diagnosis
 
@@ -39,6 +40,7 @@ npm run generate:lab
 **Output**: `/src/data/labCases.json`
 
 **Features**:
+
 - Focuses on high-yield conditions (DKA, SIADH, AKI, Liver Failure, etc.)
 - Each case includes BMP, CBC, and LFT panels
 - Minimum 2-3 medically plausible abnormal values per case
@@ -56,6 +58,7 @@ npm run generate:clinical
 **Output**: `/src/data/clinicalCases.json`
 
 **Features**:
+
 - Focuses on high-yield systems: Neurology, Musculoskeletal, Complex Cardiac
 - Each case includes 4-6 presentation clues (buzzwords, physical exam, history)
 - Detailed clinical vignette (3-4 sentences)
@@ -125,6 +128,7 @@ The scripts implement the following strategies to handle API rate limits:
 ## Output Validation
 
 Each script validates:
+
 - JSON structure is correct
 - All required fields are present
 - Data types match the TypeScript interfaces
@@ -133,16 +137,19 @@ Each script validates:
 ## Troubleshooting
 
 ### "GEMINI_API_KEY is not set"
+
 ```bash
 export GEMINI_API_KEY="your-key-here"
 ```
 
 ### Rate Limit Errors
-- Increase `DELAY_BETWEEN_BATCHES` 
+
+- Increase `DELAY_BETWEEN_BATCHES`
 - Decrease `BATCH_SIZE`
 - Run script multiple times for smaller batches
 
 ### JSON Parse Errors
+
 - Check the console output for the problematic response
 - Gemini occasionally returns markdown code blocks - the script handles this automatically
 - If persistent, try using a different model or regenerating that batch
@@ -150,6 +157,7 @@ export GEMINI_API_KEY="your-key-here"
 ## Testing
 
 You can test the scripts without generating full content:
+
 1. Reduce `TARGET_CASES` to a smaller number (e.g., 10)
 2. Run the script to verify API key and output format
 

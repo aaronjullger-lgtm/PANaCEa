@@ -1,6 +1,6 @@
 /**
  * Medical Wordle Mode
- * 
+ *
  * Daily medical term guessing game - Wordle-style with 6 attempts.
  * Loads the shared daily word via the Wordle API so progress is persisted server-side.
  */
@@ -63,42 +63,45 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   }, [game, guesses]);
 
   // Evaluate a guess against the target word
-  const evaluateGuess = useCallback((guess: string): LetterResult[] => {
-    if (!game) return [];
+  const evaluateGuess = useCallback(
+    (guess: string): LetterResult[] => {
+      if (!game) return [];
 
-    const target = game.targetWord.toUpperCase();
-    const guessUpper = guess.toUpperCase();
-    const result: LetterResult[] = [];
-    const targetLetters = target.split('');
-    const usedIndices: number[] = [];
+      const target = game.targetWord.toUpperCase();
+      const guessUpper = guess.toUpperCase();
+      const result: LetterResult[] = [];
+      const targetLetters = target.split('');
+      const usedIndices: number[] = [];
 
-    // First pass: mark correct positions
-    for (let i = 0; i < guessUpper.length; i++) {
-      if (guessUpper[i] === targetLetters[i]) {
-        result[i] = { letter: guessUpper[i], status: 'correct' };
-        usedIndices.push(i);
+      // First pass: mark correct positions
+      for (let i = 0; i < guessUpper.length; i++) {
+        if (guessUpper[i] === targetLetters[i]) {
+          result[i] = { letter: guessUpper[i], status: 'correct' };
+          usedIndices.push(i);
+        }
       }
-    }
 
-    // Second pass: mark present letters
-    for (let i = 0; i < guessUpper.length; i++) {
-      if (result[i]) continue;
+      // Second pass: mark present letters
+      for (let i = 0; i < guessUpper.length; i++) {
+        if (result[i]) continue;
 
-      const letter = guessUpper[i];
-      const targetIndex = targetLetters.findIndex(
-        (t, idx) => t === letter && !usedIndices.includes(idx)
-      );
+        const letter = guessUpper[i];
+        const targetIndex = targetLetters.findIndex(
+          (t, idx) => t === letter && !usedIndices.includes(idx)
+        );
 
-      if (targetIndex !== -1) {
-        result[i] = { letter, status: 'present' };
-        usedIndices.push(targetIndex);
-      } else {
-        result[i] = { letter, status: 'absent' };
+        if (targetIndex !== -1) {
+          result[i] = { letter, status: 'present' };
+          usedIndices.push(targetIndex);
+        } else {
+          result[i] = { letter, status: 'absent' };
+        }
       }
-    }
 
-    return result;
-  }, [game]);
+      return result;
+    },
+    [game]
+  );
 
   // Handle keyboard input
   const handleKeyPress = useCallback(
@@ -169,15 +172,17 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   const handleShare = () => {
     if (!game || status === 'playing') return;
 
-    const emojiGrid = guesses.map((guess) => {
-      return evaluateGuess(guess)
-        .map((r) => {
-          if (r.status === 'correct') return '🟩';
-          if (r.status === 'present') return '🟨';
-          return '⬛';
-        })
-        .join('');
-    }).join('\n');
+    const emojiGrid = guesses
+      .map((guess) => {
+        return evaluateGuess(guess)
+          .map((r) => {
+            if (r.status === 'correct') return '🟩';
+            if (r.status === 'present') return '🟨';
+            return '⬛';
+          })
+          .join('');
+      })
+      .join('\n');
 
     const result = `PANaCEa Daily Term ${game.date}\n${status === 'won' ? guesses.length : 'X'}/${MAX_ATTEMPTS}\n\n${emojiGrid}`;
 
@@ -215,8 +220,8 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               result.status === 'correct'
                 ? 'bg-emerald-600 border-emerald-500'
                 : result.status === 'present'
-                ? 'bg-amber-600 border-amber-500'
-                : 'bg-slate-700 border-slate-600';
+                  ? 'bg-amber-600 border-amber-500'
+                  : 'bg-slate-700 border-slate-600';
           } else if (letter) {
             bgClass = 'bg-slate-700 border-slate-500';
           }
@@ -415,9 +420,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
       </AnimatePresence>
 
       {/* Keyboard */}
-      <div className="pb-6 px-2">
-        {renderKeyboard()}
-      </div>
+      <div className="pb-6 px-2">{renderKeyboard()}</div>
 
       {/* Shake animation */}
       <style>{`

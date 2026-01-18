@@ -1,6 +1,6 @@
 /**
  * Pharmacology Drug Card Renderer
- * 
+ *
  * Interactive drug card template displaying:
  * - Mechanism of action
  * - Side effects with visual indicators
@@ -10,10 +10,10 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Pill, 
-  AlertTriangle, 
-  Activity, 
+import {
+  Pill,
+  AlertTriangle,
+  Activity,
   Target,
   Heart,
   Brain,
@@ -21,7 +21,7 @@ import {
   Info,
   ChevronRight,
   X,
-  Gem
+  Gem,
 } from 'lucide-react';
 
 export interface DrugCard {
@@ -80,9 +80,7 @@ export default function DrugCardRenderer({
               <Pill className="w-6 h-6" />
               <h2 className="text-2xl font-bold">{drug.name}</h2>
             </div>
-            {drug.genericName && (
-              <p className="text-sm opacity-90 mb-1">({drug.genericName})</p>
-            )}
+            {drug.genericName && <p className="text-sm opacity-90 mb-1">({drug.genericName})</p>}
             <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
               {drug.class}
             </span>
@@ -107,9 +105,7 @@ export default function DrugCardRenderer({
           onToggle={() => toggleSection('mechanism')}
           theme={theme}
         >
-          <p className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}>
-            {drug.mechanism}
-          </p>
+          <p className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}>{drug.mechanism}</p>
         </Section>
 
         {/* Indications */}
@@ -122,10 +118,7 @@ export default function DrugCardRenderer({
         >
           <ul className="list-disc pl-5 space-y-1">
             {drug.indications.map((indication, idx) => (
-              <li
-                key={idx}
-                className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}
-              >
+              <li key={idx} className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}>
                 {indication}
               </li>
             ))}
@@ -151,8 +144,8 @@ export default function DrugCardRenderer({
                       ? 'bg-red-100 border-2 border-red-500'
                       : 'bg-red-900/30 border-2 border-red-500'
                     : theme === 'light'
-                    ? 'bg-gray-50 hover:bg-gray-100'
-                    : 'bg-gray-800 hover:bg-gray-700'
+                      ? 'bg-gray-50 hover:bg-gray-100'
+                      : 'bg-gray-800 hover:bg-gray-700'
                 }`}
                 onMouseEnter={() => setHighlightedEffect(effect)}
                 onMouseLeave={() => setHighlightedEffect(null)}
@@ -217,9 +210,7 @@ export default function DrugCardRenderer({
                   }`}
                 />
                 <span
-                  className={`text-sm ${
-                    theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-                  }`}
+                  className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
                 >
                   {interaction}
                 </span>
@@ -263,13 +254,13 @@ export default function DrugCardRenderer({
                     : 'bg-yellow-900/20 border border-yellow-800'
                 }`}
               >
-                <Gem className={`w-5 h-5 flex-shrink-0 ${
-                  theme === 'light' ? 'text-amber-500' : 'text-amber-400'
-                }`} />
-                <span
-                  className={`text-sm ${
-                    theme === 'light' ? 'text-yellow-900' : 'text-yellow-100'
+                <Gem
+                  className={`w-5 h-5 flex-shrink-0 ${
+                    theme === 'light' ? 'text-amber-500' : 'text-amber-400'
                   }`}
+                />
+                <span
+                  className={`text-sm ${theme === 'light' ? 'text-yellow-900' : 'text-yellow-100'}`}
                 >
                   {pearl}
                 </span>
@@ -305,48 +296,29 @@ function Section({
   badge,
 }: SectionProps): React.ReactElement {
   return (
-    <div
-      className={`border-b ${
-        theme === 'light' ? 'border-gray-200' : 'border-gray-700'
-      }`}
-    >
+    <div className={`border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-700'}`}>
       <button
         onClick={onToggle}
         className={`w-full flex items-center justify-between p-4 transition-colors ${
-          theme === 'light'
-            ? 'hover:bg-gray-50'
-            : 'hover:bg-gray-800'
+          theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-gray-800'
         }`}
       >
         <div className="flex items-center gap-3">
-          <span
-            className={theme === 'light' ? 'text-blue-600' : 'text-blue-400'}
-          >
-            {icon}
-          </span>
-          <h3
-            className={`font-semibold ${
-              theme === 'light' ? 'text-gray-900' : 'text-white'
-            }`}
-          >
+          <span className={theme === 'light' ? 'text-blue-600' : 'text-blue-400'}>{icon}</span>
+          <h3 className={`font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
             {title}
           </h3>
           {badge !== undefined && (
             <span
               className={`text-xs px-2 py-1 rounded-full ${
-                theme === 'light'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-blue-900/30 text-blue-400'
+                theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/30 text-blue-400'
               }`}
             >
               {badge}
             </span>
           )}
         </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 90 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronRight className="w-5 h-5" />
         </motion.div>
       </button>
@@ -372,8 +344,8 @@ function Section({
  * Get icon for body system
  */
 function getSystemIcon(system: SideEffect['system']): React.ReactNode {
-  const iconClass = "w-5 h-5";
-  
+  const iconClass = 'w-5 h-5';
+
   switch (system) {
     case 'cardiac':
       return <Heart className={`${iconClass} text-red-500`} />;
@@ -395,16 +367,14 @@ function getSeverityBadge(
   severity: SideEffect['severity'],
   theme: 'light' | 'dark'
 ): React.ReactNode {
-  const baseClass = "text-xs px-2 py-1 rounded-full font-medium";
-  
+  const baseClass = 'text-xs px-2 py-1 rounded-full font-medium';
+
   switch (severity) {
     case 'serious':
       return (
         <span
           className={`${baseClass} ${
-            theme === 'light'
-              ? 'bg-red-100 text-red-700'
-              : 'bg-red-900/30 text-red-400'
+            theme === 'light' ? 'bg-red-100 text-red-700' : 'bg-red-900/30 text-red-400'
           }`}
         >
           Serious
@@ -414,9 +384,7 @@ function getSeverityBadge(
       return (
         <span
           className={`${baseClass} ${
-            theme === 'light'
-              ? 'bg-blue-100 text-blue-700'
-              : 'bg-blue-900/30 text-blue-400'
+            theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/30 text-blue-400'
           }`}
         >
           Common
@@ -426,9 +394,7 @@ function getSeverityBadge(
       return (
         <span
           className={`${baseClass} ${
-            theme === 'light'
-              ? 'bg-gray-100 text-gray-700'
-              : 'bg-gray-700 text-gray-400'
+            theme === 'light' ? 'bg-gray-100 text-gray-700' : 'bg-gray-700 text-gray-400'
           }`}
         >
           Rare
@@ -440,10 +406,7 @@ function getSeverityBadge(
 /**
  * Render visualization for side effect
  */
-function renderVisualization(
-  effect: SideEffect,
-  theme: 'light' | 'dark'
-): React.ReactNode {
+function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React.ReactNode {
   if (!effect.visualization) return null;
 
   const bgClass = theme === 'light' ? 'bg-gray-100' : 'bg-gray-800';
@@ -463,7 +426,7 @@ function renderVisualization(
           >
             {/* Baseline */}
             <line x1="0" y1="50" x2="400" y2="50" stroke="#94a3b8" strokeWidth="1" />
-            
+
             {/* Normal beat */}
             <path
               d="M 20 50 L 30 50 L 35 20 L 37 50 L 40 60 L 45 50 L 80 50"
@@ -471,7 +434,7 @@ function renderVisualization(
               strokeWidth="2"
               fill="none"
             />
-            
+
             {/* Prolonged QT beat - wider T wave */}
             <path
               d="M 120 50 L 130 50 L 135 20 L 137 50 L 140 60 L 155 50 L 190 50"
@@ -479,10 +442,14 @@ function renderVisualization(
               strokeWidth="2"
               fill="none"
             />
-            
+
             {/* Annotations */}
-            <text x="50" y="75" fontSize="10" fill="#10b981">Normal</text>
-            <text x="140" y="75" fontSize="10" fill="#ef4444">Prolonged</text>
+            <text x="50" y="75" fontSize="10" fill="#10b981">
+              Normal
+            </text>
+            <text x="140" y="75" fontSize="10" fill="#ef4444">
+              Prolonged
+            </text>
           </svg>
           <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
             May lead to Torsades de Pointes (polymorphic VT)
@@ -513,9 +480,7 @@ function renderVisualization(
   return (
     <div className={`p-4 rounded-lg ${bgClass} text-center`}>
       <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-      <p className="text-xs text-gray-600 dark:text-gray-400">
-        Monitor closely for this effect
-      </p>
+      <p className="text-xs text-gray-600 dark:text-gray-400">Monitor closely for this effect</p>
     </div>
   );
 }
@@ -527,50 +492,51 @@ export const EXAMPLE_DRUG: DrugCard = {
   name: 'Amiodarone',
   genericName: 'Cordarone',
   class: 'Class III Antiarrhythmic',
-  mechanism: 'Blocks potassium channels, prolonging the action potential and refractory period. Also has some sodium and calcium channel blocking effects.',
+  mechanism:
+    'Blocks potassium channels, prolonging the action potential and refractory period. Also has some sodium and calcium channel blocking effects.',
   indications: [
     'Ventricular tachycardia',
     'Ventricular fibrillation',
     'Atrial fibrillation (rate control)',
-    'Supraventricular tachycardia'
+    'Supraventricular tachycardia',
   ],
   sideEffects: [
     {
       name: 'QT Prolongation',
       severity: 'serious',
       system: 'cardiac',
-      visualization: 'ekg'
+      visualization: 'ekg',
     },
     {
       name: 'Pulmonary Toxicity',
       severity: 'serious',
       system: 'other',
-      visualization: 'alert'
+      visualization: 'alert',
     },
     {
       name: 'Thyroid Dysfunction',
       severity: 'common',
       system: 'other',
-      visualization: 'alert'
+      visualization: 'alert',
     },
     {
       name: 'Photosensitivity',
       severity: 'common',
       system: 'derm',
-      visualization: 'alert'
-    }
+      visualization: 'alert',
+    },
   ],
   interactions: [
     'Warfarin: Increases INR significantly',
     'Digoxin: Increases digoxin levels',
     'Beta-blockers: Increased risk of bradycardia',
-    'Other QT-prolonging drugs: Additive effect'
+    'Other QT-prolonging drugs: Additive effect',
   ],
   contraindications: [
     'Severe sinus node dysfunction',
     'Second or third-degree AV block',
     'Cardiogenic shock',
-    'Known hypersensitivity'
+    'Known hypersensitivity',
   ],
   dosing: 'Loading: 800-1600 mg/day divided for 1-3 weeks\nMaintenance: 200-400 mg/day',
   pearls: [
@@ -578,6 +544,6 @@ export const EXAMPLE_DRUG: DrugCard = {
     'Contains iodine - check thyroid function before starting and periodically',
     'Get baseline PFTs and chest X-ray; monitor for pulmonary toxicity',
     'Check LFTs regularly as hepatotoxicity can occur',
-    'Bluish skin discoloration can develop with long-term use'
-  ]
+    'Bluish skin discoloration can develop with long-term use',
+  ],
 };

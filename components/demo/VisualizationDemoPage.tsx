@@ -1,11 +1,11 @@
 /**
  * Visualization Demo Page
- * 
+ *
  * Interactive demo showcasing all three visualization components:
  * - RadialProgress
- * - TrendSparkline  
+ * - TrendSparkline
  * - ActivityHeatmap
- * 
+ *
  * Visit this page to see all visualizations in action with sample data.
  */
 
@@ -21,12 +21,12 @@ import { Play, RefreshCw } from 'lucide-react';
 const generateSampleData = (): PerformanceRecord[] => {
   const records: PerformanceRecord[] = [];
   const now = Date.now();
-  
+
   for (let i = 0; i < 500; i++) {
     const daysAgo = Math.floor(Math.random() * 90);
-    const timestamp = now - (daysAgo * 24 * 60 * 60 * 1000);
+    const timestamp = now - daysAgo * 24 * 60 * 60 * 1000;
     const isCorrect = Math.random() > 0.25; // 75% accuracy
-    
+
     records.push({
       conditionId: `cond-${Math.floor(Math.random() * 50)}`,
       condition: 'Sample Condition',
@@ -41,7 +41,7 @@ const generateSampleData = (): PerformanceRecord[] => {
       questionType: 'diagnosis' as const,
     });
   }
-  
+
   return records.sort((a, b) => a.timestamp - b.timestamp);
 };
 
@@ -113,9 +113,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Overall Accuracy"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Large (140px)
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Large (140px)</p>
             </div>
 
             {/* Medium Display */}
@@ -127,9 +125,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Current Session"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Medium (100px)
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Medium (100px)</p>
             </div>
 
             {/* Compact Display */}
@@ -141,9 +137,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Quick View"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Compact (60px)
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Compact (60px)</p>
             </div>
 
             {/* Custom Color */}
@@ -156,9 +150,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Custom Purple"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Custom color
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Custom color</p>
             </div>
           </div>
 
@@ -288,8 +280,8 @@ const VisualizationDemoPage: React.FC = () => {
 
           <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-sm text-blue-900 dark:text-blue-300">
-              <strong>💡 Tip:</strong> Click on any day to see detailed statistics including questions answered,
-              accuracy, average time, and system breakdown for that day.
+              <strong>💡 Tip:</strong> Click on any day to see detailed statistics including
+              questions answered, accuracy, average time, and system breakdown for that day.
             </p>
           </div>
         </motion.section>
@@ -335,9 +327,7 @@ const VisualizationDemoPage: React.FC = () => {
                 Active Streak
               </span>
               <div className="text-5xl font-bold text-orange-500">15</div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                questions in a row
-              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">questions in a row</span>
             </div>
 
             {/* Accuracy Card */}
@@ -361,11 +351,12 @@ const VisualizationDemoPage: React.FC = () => {
           className="text-center space-y-2 pb-8"
         >
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            All components are <strong>theme-aware</strong>, <strong>mobile-responsive</strong>, 
-            and <strong>accessibility-compliant</strong>
+            All components are <strong>theme-aware</strong>, <strong>mobile-responsive</strong>, and{' '}
+            <strong>accessibility-compliant</strong>
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-500">
-            Built with React, TypeScript, Framer Motion, and pure SVG • Zero external chart libraries
+            Built with React, TypeScript, Framer Motion, and pure SVG • Zero external chart
+            libraries
           </p>
         </motion.div>
       </div>

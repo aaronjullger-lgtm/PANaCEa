@@ -1,16 +1,16 @@
 /**
  * Step 8: Media Asset Linking Audit
- * 
+ *
  * Audits which high-yield conditions need images and calculates
  * current media coverage by system.
- * 
+ *
  * Priority Systems:
  * - Dermatology (clinical photos) - Highest
  * - Cardiology (ECG strips) - Highest
  * - Radiology (X-ray/CT/MRI) - High
  * - HEENT (fundoscopy, otoscopy) - High
  * - Orthopedics (X-ray, special tests) - Medium
- * 
+ *
  * Run: npx tsx scripts/media/audit-media-needs.ts [--csv]
  */
 
@@ -42,20 +42,26 @@ interface ConditionMediaNeed {
   priority: number;
 }
 
-const SYSTEM_PRIORITIES: Record<string, { priority: 'Highest' | 'High' | 'Medium' | 'Low'; imageTypes: string[] }> = {
-  'Dermatology': { priority: 'Highest', imageTypes: ['Clinical photos', 'Rash patterns', 'Skin lesions'] },
-  'Cardiology': { priority: 'Highest', imageTypes: ['ECG strips', 'Echo images', 'Cardiac CT'] },
-  'Radiology': { priority: 'High', imageTypes: ['X-ray', 'CT', 'MRI', 'Ultrasound'] },
-  'HEENT': { priority: 'High', imageTypes: ['Fundoscopy', 'Otoscopy', 'Pharyngoscopy'] },
-  'Orthopedics': { priority: 'Medium', imageTypes: ['X-ray', 'Special tests', 'Joint images'] },
-  'Pulmonology': { priority: 'Medium', imageTypes: ['Chest X-ray', 'CT chest', 'PFT results'] },
-  'Gastroenterology': { priority: 'Medium', imageTypes: ['Endoscopy', 'CT abdomen', 'Colonoscopy'] },
-  'Neurology': { priority: 'High', imageTypes: ['CT head', 'MRI brain', 'EEG'] },
-  'Urology': { priority: 'Low', imageTypes: ['Ultrasound', 'CT urography', 'Cystoscopy'] },
-  'Nephrology': { priority: 'Low', imageTypes: ['Ultrasound kidney', 'Lab results'] },
-  'Endocrinology': { priority: 'Low', imageTypes: ['Lab results', 'Imaging studies'] },
-  'Rheumatology': { priority: 'Medium', imageTypes: ['X-ray joints', 'Lab results'] },
-  'Hematology': { priority: 'Low', imageTypes: ['Blood smear', 'Lab results'] },
+const SYSTEM_PRIORITIES: Record<
+  string,
+  { priority: 'Highest' | 'High' | 'Medium' | 'Low'; imageTypes: string[] }
+> = {
+  Dermatology: {
+    priority: 'Highest',
+    imageTypes: ['Clinical photos', 'Rash patterns', 'Skin lesions'],
+  },
+  Cardiology: { priority: 'Highest', imageTypes: ['ECG strips', 'Echo images', 'Cardiac CT'] },
+  Radiology: { priority: 'High', imageTypes: ['X-ray', 'CT', 'MRI', 'Ultrasound'] },
+  HEENT: { priority: 'High', imageTypes: ['Fundoscopy', 'Otoscopy', 'Pharyngoscopy'] },
+  Orthopedics: { priority: 'Medium', imageTypes: ['X-ray', 'Special tests', 'Joint images'] },
+  Pulmonology: { priority: 'Medium', imageTypes: ['Chest X-ray', 'CT chest', 'PFT results'] },
+  Gastroenterology: { priority: 'Medium', imageTypes: ['Endoscopy', 'CT abdomen', 'Colonoscopy'] },
+  Neurology: { priority: 'High', imageTypes: ['CT head', 'MRI brain', 'EEG'] },
+  Urology: { priority: 'Low', imageTypes: ['Ultrasound', 'CT urography', 'Cystoscopy'] },
+  Nephrology: { priority: 'Low', imageTypes: ['Ultrasound kidney', 'Lab results'] },
+  Endocrinology: { priority: 'Low', imageTypes: ['Lab results', 'Imaging studies'] },
+  Rheumatology: { priority: 'Medium', imageTypes: ['X-ray joints', 'Lab results'] },
+  Hematology: { priority: 'Low', imageTypes: ['Blood smear', 'Lab results'] },
   'Infectious Disease': { priority: 'Medium', imageTypes: ['Clinical photos', 'Cultures'] },
 };
 
@@ -74,10 +80,7 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
         subcategory: true,
         pance_yield: true,
       },
-      orderBy: [
-        { pance_yield: 'desc' },
-        { condition: 'asc' }
-      ]
+      orderBy: [{ pance_yield: 'desc' }, { condition: 'asc' }],
     });
 
     // Get media assets grouped by conditionId
@@ -85,9 +88,9 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
       by: ['conditionId'],
       where: {
         conditionId: { not: null },
-        approvalStatus: 'approved'
+        approvalStatus: 'approved',
       },
-      _count: true
+      _count: true,
     });
 
     // Create a map of conditionId to media count
@@ -119,7 +122,7 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
           highYieldWithMedia: 0,
           highYieldCoveragePercent: 0,
           avgPanceYield: 0,
-          priority: SYSTEM_PRIORITIES[system]?.priority || 'Low'
+          priority: SYSTEM_PRIORITIES[system]?.priority || 'Low',
         });
       }
 
@@ -133,10 +136,10 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
 
       // Calculate priority score (panceYield * systemPriorityWeight)
       const priorityWeight = {
-        'Highest': 4,
-        'High': 3,
-        'Medium': 2,
-        'Low': 1
+        Highest: 4,
+        High: 3,
+        Medium: 2,
+        Low: 1,
       }[SYSTEM_PRIORITIES[system]?.priority || 'Low'];
 
       const priorityScore = (content.pance_yield ?? 0) * priorityWeight;
@@ -152,34 +155,34 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
           hasMedia,
           mediaCount,
           recommendedImageTypes: SYSTEM_PRIORITIES[system]?.imageTypes || [],
-          priority: priorityScore
+          priority: priorityScore,
         });
       }
     }
 
     // Calculate percentages
     systemStats.forEach((stats) => {
-      stats.coveragePercent = stats.totalConditions > 0 
-        ? (stats.conditionsWithMedia / stats.totalConditions) * 100 
-        : 0;
-      stats.highYieldCoveragePercent = stats.highYieldConditions > 0
-        ? (stats.highYieldWithMedia / stats.highYieldConditions) * 100
-        : 0;
+      stats.coveragePercent =
+        stats.totalConditions > 0 ? (stats.conditionsWithMedia / stats.totalConditions) * 100 : 0;
+      stats.highYieldCoveragePercent =
+        stats.highYieldConditions > 0
+          ? (stats.highYieldWithMedia / stats.highYieldConditions) * 100
+          : 0;
     });
 
     // Sort by priority
     const sortedStats = Array.from(systemStats.values()).sort((a, b) => {
-      const priorityOrder = { 'Highest': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+      const priorityOrder = { Highest: 0, High: 1, Medium: 2, Low: 3 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
 
     // Calculate overall stats
     const totalConditions = conditions.length;
-    const totalWithMedia = conditions.filter(c => mediaMap.has(c.conditionId)).length;
+    const totalWithMedia = conditions.filter((c) => mediaMap.has(c.conditionId)).length;
     const overallCoverage = (totalWithMedia / totalConditions) * 100;
 
     // Display results
-    console.log('=' .repeat(80));
+    console.log('='.repeat(80));
     console.log('📊 OVERALL MEDIA COVERAGE');
     console.log('='.repeat(80));
     console.log(`Total Conditions:           ${totalConditions}`);
@@ -187,52 +190,54 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
     console.log(`Overall Coverage:           ${overallCoverage.toFixed(1)}%`);
     console.log('='.repeat(80) + '\n');
 
-    console.log('=' .repeat(80));
+    console.log('='.repeat(80));
     console.log('📋 SYSTEM-LEVEL MEDIA COVERAGE');
     console.log('='.repeat(80));
-    console.log('System                    Priority  Total  W/Media  Coverage  HY    HY+Media  HY%');
+    console.log(
+      'System                    Priority  Total  W/Media  Coverage  HY    HY+Media  HY%'
+    );
     console.log('-'.repeat(80));
 
     for (const stats of sortedStats) {
       const priorityEmoji = {
-        'Highest': '🔴',
-        'High': '🟠',
-        'Medium': '🟡',
-        'Low': '⚪'
+        Highest: '🔴',
+        High: '🟠',
+        Medium: '🟡',
+        Low: '⚪',
       }[stats.priority];
 
       console.log(
         `${stats.system.padEnd(25)} ${priorityEmoji} ${stats.priority.padEnd(7)} ` +
-        `${stats.totalConditions.toString().padStart(5)}  ` +
-        `${stats.conditionsWithMedia.toString().padStart(7)}  ` +
-        `${stats.coveragePercent.toFixed(1).padStart(7)}%  ` +
-        `${stats.highYieldConditions.toString().padStart(4)}  ` +
-        `${stats.highYieldWithMedia.toString().padStart(8)}  ` +
-        `${stats.highYieldCoveragePercent.toFixed(1).padStart(5)}%`
+          `${stats.totalConditions.toString().padStart(5)}  ` +
+          `${stats.conditionsWithMedia.toString().padStart(7)}  ` +
+          `${stats.coveragePercent.toFixed(1).padStart(7)}%  ` +
+          `${stats.highYieldConditions.toString().padStart(4)}  ` +
+          `${stats.highYieldWithMedia.toString().padStart(8)}  ` +
+          `${stats.highYieldCoveragePercent.toFixed(1).padStart(5)}%`
       );
     }
     console.log('='.repeat(80) + '\n');
 
     // Top 50 conditions needing media
-    const topNeeds = conditionNeeds
-      .sort((a, b) => b.priority - a.priority)
-      .slice(0, 50);
+    const topNeeds = conditionNeeds.sort((a, b) => b.priority - a.priority).slice(0, 50);
 
-    console.log('=' .repeat(80));
+    console.log('='.repeat(80));
     console.log('🎯 TOP 50 CONDITIONS NEEDING MEDIA (by priority score)');
     console.log('='.repeat(80));
-    console.log('Rank  Condition                           System          Yield  Priority  Image Types');
+    console.log(
+      'Rank  Condition                           System          Yield  Priority  Image Types'
+    );
     console.log('-'.repeat(80));
 
     topNeeds.forEach((need, index) => {
       const imageTypes = need.recommendedImageTypes.slice(0, 2).join(', ');
       console.log(
         `${(index + 1).toString().padStart(4)}  ` +
-        `${need.name.substring(0, 35).padEnd(35)} ` +
-        `${need.system.substring(0, 14).padEnd(14)}  ` +
-        `${need.panceYield.toString().padStart(4)}  ` +
-        `${need.priority.toString().padStart(8)}  ` +
-        `${imageTypes}`
+          `${need.name.substring(0, 35).padEnd(35)} ` +
+          `${need.system.substring(0, 14).padEnd(14)}  ` +
+          `${need.panceYield.toString().padStart(4)}  ` +
+          `${need.priority.toString().padStart(8)}  ` +
+          `${imageTypes}`
       );
     });
     console.log('='.repeat(80) + '\n');
@@ -241,9 +246,9 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
     if (generateCsv) {
       const timestamp = new Date().toISOString().split('T')[0];
       const csvPath = path.join(process.cwd(), `media-audit-${timestamp}.csv`);
-      
+
       const csvLines = [
-        'Rank,Condition,System,Subcategory,PANCE Yield,Priority Score,Has Media,Recommended Image Types'
+        'Rank,Condition,System,Subcategory,PANCE Yield,Priority Score,Has Media,Recommended Image Types',
       ];
 
       conditionNeeds
@@ -251,7 +256,7 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
         .forEach((need, index) => {
           csvLines.push(
             `${index + 1},"${need.name}","${need.system}","${need.subcategory}",` +
-            `${need.panceYield},${need.priority},${need.hasMedia},"${need.recommendedImageTypes.join('; ')}"`
+              `${need.panceYield},${need.priority},${need.hasMedia},"${need.recommendedImageTypes.join('; ')}"`
           );
         });
 
@@ -268,9 +273,8 @@ async function auditMediaNeeds(generateCsv: boolean = false) {
     return {
       overallCoverage,
       systemStats: sortedStats,
-      topNeeds: topNeeds.slice(0, 20)
+      topNeeds: topNeeds.slice(0, 20),
     };
-
   } catch (error) {
     console.error('❌ Error during media audit:', error);
     throw error;

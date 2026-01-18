@@ -2,17 +2,17 @@
 
 /**
  * Audit and Clean Database Images Script
- * 
+ *
  * This script reviews all existing images in the database using AI analysis
  * to verify they match their assigned conditions and are appropriate clinical images.
- * 
+ *
  * Actions:
  * - Verifies each image matches its assigned condition using Gemini Vision
  * - Detects and flags images with visible annotations/labels that give away answers
  * - Identifies irrelevant images (diagrams, infographics, text slides)
  * - Re-categorizes mismatched images to correct conditions
  * - Removes or flags inappropriate images
- * 
+ *
  * Usage: npx tsx scripts/images/audit-and-clean-images.ts [--dry-run] [--limit N]
  */
 
@@ -26,7 +26,8 @@ import * as path from 'path';
 config();
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -46,12 +47,12 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 // Command line options
 const ARGS = process.argv.slice(2);
 const DRY_RUN = ARGS.includes('--dry-run');
-const LIMIT_ARG = ARGS.find(a => a.startsWith('--limit='));
+const LIMIT_ARG = ARGS.find((a) => a.startsWith('--limit='));
 const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG.split('=')[1]) : undefined;
 const UNREVIEWED_ONLY = ARGS.includes('--unreviewed-only');
 
 // Rate limiting
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const API_DELAY_MS = 1000; // 1 second between API calls to avoid rate limits
 
 interface AuditResult {
@@ -99,17 +100,17 @@ async function analyzeImageWithAI(
 }> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-    
+
     // Fetch the image
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
-    
+
     const imageBuffer = await response.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
     const mimeType = response.headers.get('content-type') || 'image/jpeg';
-    
+
     const prompt = `You are a medical education image auditor. Analyze this image for a medical quiz/flashcard application.
 
 EXPECTED CONDITION: ${conditionName} (ID: ${expectedCondition})
@@ -141,33 +142,34 @@ Be strict - we want high-quality, relevant clinical images without answer-reveal
       {
         inlineData: {
           mimeType,
-          data: base64Image
-        }
-      }
+          data: base64Image,
+        },
+      },
     ]);
-    
+
     const responseText = result.response.text();
-    
+
     // Parse JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in AI response');
     }
-    
+
     const aiResult = JSON.parse(jsonMatch[0]);
-    
+
     return {
       isRelevant: aiResult.isRelevant ?? false,
       isClinical: aiResult.isClinical ?? false,
       hasAnnotations: aiResult.hasAnnotations ?? false,
       matchesCondition: aiResult.matchesCondition ?? false,
       confidence: aiResult.confidence ?? 0,
-      suggestedCondition: aiResult.detectedCondition !== 'unknown' && aiResult.detectedCondition !== 'not_medical' 
-        ? aiResult.detectedCondition 
-        : undefined,
+      suggestedCondition:
+        aiResult.detectedCondition !== 'unknown' && aiResult.detectedCondition !== 'not_medical'
+          ? aiResult.detectedCondition
+          : undefined,
       analysis: aiResult.analysis || '',
       action: aiResult.recommendation || 'flag',
-      reason: aiResult.reason || ''
+      reason: aiResult.reason || '',
     };
   } catch (error) {
     console.error(`  ❌ AI analysis error:`, error);
@@ -179,7 +181,7 @@ Be strict - we want high-quality, relevant clinical images without answer-reveal
       confidence: 0,
       analysis: `Error: ${error}`,
       action: 'flag',
-      reason: 'AI analysis failed'
+      reason: 'AI analysis failed',
     };
   }
 }
@@ -193,7 +195,7 @@ function getConditionName(conditionId: string): string {
   const lastPart = parts[parts.length - 1];
   return lastPart
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
 
@@ -207,7 +209,7 @@ async function auditImages() {
   if (LIMIT) console.log(`📊 Processing up to ${LIMIT} images`);
   if (UNREVIEWED_ONLY) console.log('🆕 Only processing images without description (unreviewed)');
   console.log('');
-  
+
   const stats: AuditStats = {
     total: 0,
     reviewed: 0,
@@ -215,21 +217,18 @@ async function auditImages() {
     deleted: 0,
     reclassified: 0,
     flagged: 0,
-    errors: 0
+    errors: 0,
   };
-  
+
   const results: AuditResult[] = [];
-  
+
   try {
     // Get images to audit
     const whereClause: any = {};
     if (UNREVIEWED_ONLY) {
-      whereClause.OR = [
-        { description: null },
-        { description: '' }
-      ];
+      whereClause.OR = [{ description: null }, { description: '' }];
     }
-    
+
     const images = await prisma.mediaAsset.findMany({
       where: whereClause,
       select: {
@@ -239,39 +238,39 @@ async function auditImages() {
         originalUrl: true,
         thumbnailUrl: true,
         tags: true,
-        description: true
+        description: true,
       },
       take: LIMIT,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
-    
+
     stats.total = images.length;
     console.log(`📷 Found ${stats.total} images to audit\n`);
-    
+
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
       const progress = `[${i + 1}/${stats.total}]`;
-      
+
       if (!image.conditionId) {
         console.log(`${progress} ⏭️ Skipping ${image.filename} - no condition assigned`);
         continue;
       }
-      
+
       // Get image URL (prefer original, fallback to thumbnail)
       const imageUrl = image.originalUrl || image.thumbnailUrl;
       if (!imageUrl) {
         console.log(`${progress} ⏭️ Skipping ${image.filename} - no URL`);
         continue;
       }
-      
+
       const conditionName = getConditionName(image.conditionId);
       console.log(`${progress} 🔍 Analyzing: ${image.filename}`);
       console.log(`       Condition: ${conditionName}`);
-      
+
       // Analyze with AI
       const analysis = await analyzeImageWithAI(imageUrl, image.conditionId, conditionName);
       stats.reviewed++;
-      
+
       const result: AuditResult = {
         imageId: image.id,
         conditionId: image.conditionId,
@@ -284,33 +283,43 @@ async function auditImages() {
         hasAnnotations: analysis.hasAnnotations,
         matchesCondition: analysis.matchesCondition,
         confidence: analysis.confidence,
-        aiAnalysis: analysis.analysis
+        aiAnalysis: analysis.analysis,
       };
-      
+
       results.push(result);
-      
+
       // Log result
       const actionEmoji = {
         keep: '✅',
         delete: '🗑️',
         reclassify: '🔄',
-        flag: '⚠️'
+        flag: '⚠️',
       };
-      
-      console.log(`       ${actionEmoji[analysis.action]} ${analysis.action.toUpperCase()}: ${analysis.reason}`);
+
+      console.log(
+        `       ${actionEmoji[analysis.action]} ${analysis.action.toUpperCase()}: ${analysis.reason}`
+      );
       if (analysis.suggestedCondition && analysis.action === 'reclassify') {
         console.log(`       → Suggested: ${analysis.suggestedCondition}`);
       }
       console.log('');
-      
+
       // Update stats
       switch (analysis.action) {
-        case 'keep': stats.kept++; break;
-        case 'delete': stats.deleted++; break;
-        case 'reclassify': stats.reclassified++; break;
-        case 'flag': stats.flagged++; break;
+        case 'keep':
+          stats.kept++;
+          break;
+        case 'delete':
+          stats.deleted++;
+          break;
+        case 'reclassify':
+          stats.reclassified++;
+          break;
+        case 'flag':
+          stats.flagged++;
+          break;
       }
-      
+
       // Execute action (if not dry run)
       if (!DRY_RUN) {
         try {
@@ -328,12 +337,12 @@ async function auditImages() {
                     isRelevant: analysis.isRelevant,
                     isClinical: analysis.isClinical,
                     matchesCondition: analysis.matchesCondition,
-                    confidence: analysis.confidence
-                  }
-                }
+                    confidence: analysis.confidence,
+                  },
+                },
               });
               break;
-              
+
             case 'delete':
               // Delete from storage
               if (image.originalUrl) {
@@ -346,7 +355,7 @@ async function auditImages() {
               // Delete from database
               await prisma.mediaAsset.delete({ where: { id: image.id } });
               break;
-              
+
             case 'reclassify':
               // Mark for manual review with suggested condition
               await prisma.mediaAsset.update({
@@ -358,12 +367,12 @@ async function auditImages() {
                     auditedAt: new Date().toISOString(),
                     suggestedCondition: analysis.suggestedCondition,
                     originalCondition: image.conditionId,
-                    reason: analysis.reason
-                  }
-                }
+                    reason: analysis.reason,
+                  },
+                },
               });
               break;
-              
+
             case 'flag':
               // Mark for manual review
               await prisma.mediaAsset.update({
@@ -374,9 +383,9 @@ async function auditImages() {
                   aiMetadata: {
                     auditedAt: new Date().toISOString(),
                     reason: analysis.reason,
-                    confidence: analysis.confidence
-                  }
-                }
+                    confidence: analysis.confidence,
+                  },
+                },
               });
               break;
           }
@@ -385,39 +394,51 @@ async function auditImages() {
           stats.errors++;
         }
       }
-      
+
       // Rate limiting
       await delay(API_DELAY_MS);
     }
-    
+
     // Save results to file
     const outputPath = path.join(__dirname, '../../data/exports/image-audit-results.json');
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    fs.writeFileSync(outputPath, JSON.stringify({
-      auditedAt: new Date().toISOString(),
-      dryRun: DRY_RUN,
-      stats,
-      results
-    }, null, 2));
-    
+    fs.writeFileSync(
+      outputPath,
+      JSON.stringify(
+        {
+          auditedAt: new Date().toISOString(),
+          dryRun: DRY_RUN,
+          stats,
+          results,
+        },
+        null,
+        2
+      )
+    );
+
     // Print summary
     console.log('\n==================================');
     console.log('📊 AUDIT SUMMARY');
     console.log('==================================');
     console.log(`Total images: ${stats.total}`);
     console.log(`Reviewed: ${stats.reviewed}`);
-    console.log(`✅ Keep: ${stats.kept} (${(stats.kept/stats.reviewed*100).toFixed(1)}%)`);
-    console.log(`🗑️ Delete: ${stats.deleted} (${(stats.deleted/stats.reviewed*100).toFixed(1)}%)`);
-    console.log(`🔄 Reclassify: ${stats.reclassified} (${(stats.reclassified/stats.reviewed*100).toFixed(1)}%)`);
-    console.log(`⚠️ Flagged: ${stats.flagged} (${(stats.flagged/stats.reviewed*100).toFixed(1)}%)`);
+    console.log(`✅ Keep: ${stats.kept} (${((stats.kept / stats.reviewed) * 100).toFixed(1)}%)`);
+    console.log(
+      `🗑️ Delete: ${stats.deleted} (${((stats.deleted / stats.reviewed) * 100).toFixed(1)}%)`
+    );
+    console.log(
+      `🔄 Reclassify: ${stats.reclassified} (${((stats.reclassified / stats.reviewed) * 100).toFixed(1)}%)`
+    );
+    console.log(
+      `⚠️ Flagged: ${stats.flagged} (${((stats.flagged / stats.reviewed) * 100).toFixed(1)}%)`
+    );
     console.log(`❌ Errors: ${stats.errors}`);
     console.log('');
     console.log(`Results saved to: ${outputPath}`);
-    
+
     if (DRY_RUN) {
       console.log('\n📋 This was a dry run. Run without --dry-run to apply changes.');
     }
-    
   } catch (error) {
     console.error('Fatal error:', error);
   } finally {

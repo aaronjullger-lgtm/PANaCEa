@@ -20,30 +20,37 @@ These improvements focus on reducing redundant operations, minimizing memory lea
 **Solution**: Consolidated all calculations into a single pass through the data array.
 
 **Benefits**:
+
 - Reduced time complexity from O(7n) to O(n) for statistics calculation
 - Eliminated redundant date parsing operations
 - Reduced memory allocations by reusing date strings
 - Optimized Map operations by checking for existing entries
 
 **Before**:
+
 ```typescript
-const totalCorrect = performanceData.filter(r => r.isCorrect).length;
-const todayRecords = performanceData.filter(r => 
-  new Date(r.timestamp).toISOString().split('T')[0] === today
+const totalCorrect = performanceData.filter((r) => r.isCorrect).length;
+const todayRecords = performanceData.filter(
+  (r) => new Date(r.timestamp).toISOString().split('T')[0] === today
 );
-const weekRecords = performanceData.filter(r => r.timestamp > weekAgo);
+const weekRecords = performanceData.filter((r) => r.timestamp > weekAgo);
 // ... multiple more filter operations
 ```
 
 **After**:
+
 ```typescript
 // Single pass through all records
 performanceData.forEach((r, index) => {
   // Calculate all statistics in one iteration
   if (r.isCorrect) totalCorrect++;
   const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
-  if (recordDate === today) { /* today stats */ }
-  if (r.timestamp > weekAgo) { /* week stats */ }
+  if (recordDate === today) {
+    /* today stats */
+  }
+  if (r.timestamp > weekAgo) {
+    /* week stats */
+  }
   // ... all calculations done in one pass
 });
 ```
@@ -59,22 +66,28 @@ performanceData.forEach((r, index) => {
 **Solution**: Implemented proper debouncing with cleanup using a ref-based approach.
 
 **Benefits**:
+
 - Prevents memory leaks from accumulating timeout IDs
 - Proper cleanup on component unmount
 - True debouncing behavior (only last call executes)
 
 **Before**:
+
 ```typescript
-const setPerformanceData = useCallback((data) => {
-  setPerformanceDataState(data);
-  if (isSignedIn) {
-    const timeoutId = setTimeout(() => syncToCloud(), 2000);
-    return () => clearTimeout(timeoutId); // Never called!
-  }
-}, [isSignedIn, syncToCloud]);
+const setPerformanceData = useCallback(
+  (data) => {
+    setPerformanceDataState(data);
+    if (isSignedIn) {
+      const timeoutId = setTimeout(() => syncToCloud(), 2000);
+      return () => clearTimeout(timeoutId); // Never called!
+    }
+  },
+  [isSignedIn, syncToCloud]
+);
 ```
 
 **After**:
+
 ```typescript
 // Create debounced function with cleanup
 const debouncedSyncRef = useRef<ReturnType<typeof createDebouncedFunction> | null>(null);
@@ -88,12 +101,15 @@ useEffect(() => {
   };
 }, [syncToCloud]);
 
-const setPerformanceData = useCallback((data) => {
-  setPerformanceDataState(data);
-  if (isSignedIn && debouncedSyncRef.current) {
-    debouncedSyncRef.current.debounced(); // True debouncing
-  }
-}, [isSignedIn]);
+const setPerformanceData = useCallback(
+  (data) => {
+    setPerformanceDataState(data);
+    if (isSignedIn && debouncedSyncRef.current) {
+      debouncedSyncRef.current.debounced(); // True debouncing
+    }
+  },
+  [isSignedIn]
+);
 ```
 
 **Impact**: Eliminates memory growth over time, especially for active users who frequently save data.
@@ -107,11 +123,13 @@ const setPerformanceData = useCallback((data) => {
 **Solution**: Added in-memory cache with TTL (Time To Live) for localStorage operations.
 
 **Benefits**:
+
 - Reduces localStorage reads by ~90% for repeated accesses
 - Eliminates redundant JSON parsing
 - 5-second cache TTL balances freshness with performance
 
 **Before**:
+
 ```typescript
 function loadAllRecords(): PerformanceRecord[] {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -121,6 +139,7 @@ function loadAllRecords(): PerformanceRecord[] {
 ```
 
 **After**:
+
 ```typescript
 let cachedRecords: PerformanceRecord[] | null = null;
 let cacheTimestamp: number = 0;
@@ -128,7 +147,7 @@ const CACHE_TTL = 5000; // 5 seconds
 
 function loadAllRecords(): PerformanceRecord[] {
   const now = Date.now();
-  if (cachedRecords && (now - cacheTimestamp) < CACHE_TTL) {
+  if (cachedRecords && now - cacheTimestamp < CACHE_TTL) {
     return cachedRecords; // Return cached data
   }
   // Load and cache
@@ -151,11 +170,13 @@ function loadAllRecords(): PerformanceRecord[] {
 **Solution**: Added caching layer that only re-parses when the localStorage value changes.
 
 **Benefits**:
+
 - Eliminates redundant JSON parsing
 - Reduces localStorage reads during question generation
 - Cache invalidation based on actual data changes
 
 **Before**:
+
 ```typescript
 function getEnabledSystems(): Set<SystemCode> {
   const saved = localStorage.getItem('panceai_enabled_systems');
@@ -167,6 +188,7 @@ function getEnabledSystems(): Set<SystemCode> {
 ```
 
 **After**:
+
 ```typescript
 let cachedEnabledSystems: Set<SystemCode> | null = null;
 let enabledSystemsCacheKey: string | null = null;
@@ -190,17 +212,21 @@ function getEnabledSystems(): Set<SystemCode> {
 ### 5. New Utilities Added
 
 #### lib/utils/debounce.ts
+
 Provides proper debouncing functionality with cleanup support for React components.
 
 **Features**:
+
 - Simple `debounce()` function for general use
 - `createDebouncedFunction()` for React hooks with cleanup capability
 - Prevents memory leaks from uncancelled timers
 
 #### lib/utils/localStorage.ts
+
 Comprehensive localStorage wrapper with caching and batching support.
 
 **Features**:
+
 - `getCachedItem()` - Read with automatic caching (default 5s TTL)
 - `setCachedItem()` - Write with cache update
 - `batchSetItems()` - Batch multiple writes efficiently
@@ -208,6 +234,7 @@ Comprehensive localStorage wrapper with caching and batching support.
 - Type-safe with TypeScript generics
 
 **Usage Example**:
+
 ```typescript
 import { getCachedItem, setCachedItem } from '@/lib/utils/localStorage';
 
@@ -227,12 +254,14 @@ setCachedItem('my_key', updatedData);
 **Solution**: Use `requestIdleCallback` when available, with intelligent loading order.
 
 **Benefits**:
+
 - Loads data during browser idle time
 - Prioritizes most-used data (condition content) first
 - Staggers less-critical data loads
 - Graceful fallback for older browsers
 
 **Before**:
+
 ```typescript
 export function preloadData(): void {
   setTimeout(() => {
@@ -244,6 +273,7 @@ export function preloadData(): void {
 ```
 
 **After**:
+
 ```typescript
 export function preloadData(): void {
   const preloadTask = () => {
@@ -268,16 +298,17 @@ export function preloadData(): void {
 
 ### Before vs After (Estimated)
 
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Statistics calculation (1000 records) | ~14ms | ~2ms | 85% faster |
-| localStorage reads (10 rapid calls) | 10 reads + 10 parses | 1 read + 1 parse | 90% reduction |
-| Question generation (system lookup) | Parse every time | Parse once | ~95% reduction |
-| Memory leak rate | 1 timeout/update | 0 leaks | 100% fixed |
+| Operation                             | Before               | After            | Improvement    |
+| ------------------------------------- | -------------------- | ---------------- | -------------- |
+| Statistics calculation (1000 records) | ~14ms                | ~2ms             | 85% faster     |
+| localStorage reads (10 rapid calls)   | 10 reads + 10 parses | 1 read + 1 parse | 90% reduction  |
+| Question generation (system lookup)   | Parse every time     | Parse once       | ~95% reduction |
+| Memory leak rate                      | 1 timeout/update     | 0 leaks          | 100% fixed     |
 
 ### Large Dataset Performance
 
 For users with extensive data:
+
 - **5000 performance records**: Statistics calculation reduced from ~70ms to ~10ms
 - **Frequent syncing**: Memory stable over time (no leak growth)
 - **Rapid navigation**: Cached reads eliminate UI lag
@@ -298,11 +329,13 @@ For users with extensive data:
 ## Testing
 
 All existing tests pass:
+
 - ✓ 30 test files, 406 tests passed
 - No regressions introduced
 - Build successful with no TypeScript errors
 
 To verify performance improvements locally:
+
 1. Open browser DevTools Performance tab
 2. Record while navigating statistics modal
 3. Compare before/after CPU usage and render times
@@ -324,6 +357,7 @@ While the current optimizations provide significant improvements, additional opp
 ## Migration Notes
 
 These changes are backward compatible:
+
 - No API changes for existing code
 - Cache automatically warms on first access
 - Fallbacks ensure compatibility with older browsers

@@ -1,6 +1,6 @@
 /**
  * Supabase Client Configuration
- * 
+ *
  * Provides Supabase client instances for database and storage operations.
  * Uses connection pooling and environment-based configuration.
  */
@@ -70,14 +70,14 @@ export function validateSupabaseConfig(): { valid: boolean; message: string } {
   if (!supabaseUrl) {
     return { valid: false, message: 'SUPABASE_URL is not configured' };
   }
-  
+
   if (!supabaseAnonKey) {
     return { valid: false, message: 'SUPABASE_ANON_KEY is not configured' };
   }
-  
+
   if (!supabaseUrl.startsWith('https://')) {
     return { valid: false, message: 'SUPABASE_URL must start with https://' };
   }
-  
+
   return { valid: true, message: 'Supabase configuration is valid' };
 }

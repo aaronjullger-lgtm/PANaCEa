@@ -1,4 +1,4 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { handleCorsOptions } from '../../_shared/auth';
 
 export const onRequestOptions = handleCorsOptions;
@@ -9,12 +9,12 @@ export async function onRequestGet(context: any) {
   const count = parseInt(url.searchParams.get('count') || '1');
 
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
+    return new Response(JSON.stringify({ error: 'Database not configured' }), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
 
@@ -27,23 +27,26 @@ export async function onRequestGet(context: any) {
       ORDER BY RANDOM()
       LIMIT ${count}
     `;
-    
+
     return new Response(JSON.stringify(cases), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   } catch (error: any) {
     console.error('Error fetching random lab cases:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch random lab cases', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch random lab cases', details: error.message }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
-    });
+    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

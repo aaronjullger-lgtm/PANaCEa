@@ -1,116 +1,110 @@
-
-import { authenticateRequest, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { SessionService, type SessionQuestionRequest } from '../../../lib/services/session/sessionService';
-import { validateRequest, SessionRequestSchema } from '../_shared/schemas';
-
-export const onRequestOptions = handleCorsOptions;
-
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}
-
 /**
- * GET /api/questions/session
- * Fetch questions for a study session
+ * GET/POST /api/questions/session
+ * Fetch questions for a study session with NCCPA blueprint weighting
  */
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  try {
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult) {
-      return jsonResponse({ error: 'Unauthorized' }, 401);
-    }
 
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import {
+  SessionService,
+  type SessionQuestionRequest,
+} from '../../../lib/services/session/sessionService';
+
+const SessionGetSchema = z.object({
+  query: z.object({
+    count: z.string().optional(),
+    system: z.string().optional(),
+    mode: z.string().optional(),
+  }),
+});
+
+const SessionPostSchema = z.object({
+  body: z.object({
+    count: z.number().int().min(1).max(50).optional(),
+    system: z.string().optional(),
+    mode: z.enum(['standard', 'review', 'weakness', 'random', 'interleaved']).optional(),
+    systems: z.array(z.string()).optional(),
+    prioritizeWeakAreas: z.boolean().optional(),
+  }),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(SessionGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/session');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
     const user = await prisma.user.findUnique({
-      where: { clerkId: authResult.userId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return jsonResponse({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet. Please refresh and try again.',
-      }, 404);
+      return { data: { error: 'User not found', message: 'Account not synced yet.' }, status: 404 };
     }
 
-    const url = new URL(context.request.url);
-    const count = parseInt(url.searchParams.get('count') || '10', 10);
-    const system = url.searchParams.get('system');
-    // Difficulty removed - all questions are now PANCE-level
-    const mode = url.searchParams.get('mode') || 'standard';
+    const count = Math.min(parseInt(validated.query?.count || '10', 10), 50);
+    const system = validated.query?.system || undefined;
+    const mode = (validated.query?.mode || 'standard') as SessionQuestionRequest['mode'];
 
-    const sessionService = new SessionService(context.env.DATABASE_URL, context.env);
+    const sessionService = new SessionService(env.DATABASE_URL, env);
     const result = await sessionService.getSessionQuestions({
       userId: user.id,
-      count: Math.min(count, 50),
-      system: system || undefined,
-      mode: mode as SessionQuestionRequest['mode'],
+      count,
+      system,
+      mode,
     });
 
-    return jsonResponse(result);
+    logger.info('Session questions fetched (GET)', { userId: auth.userId, count: result.questions?.length || 0 });
+
+    return { data: result };
   } catch (error) {
-    console.error('[Session] Error:', error);
-    return jsonResponse({ error: 'Failed to fetch session questions' }, 500);
+    logger.error('Error fetching session questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch session questions');
   } finally {
-    if(prisma) {
-        await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
-/**
- * POST /api/questions/session
- * Fetch questions with more complex filtering
- */
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  // Validate request body with Zod schema first
-  const validation = await validateRequest(context.request, SessionRequestSchema);
-  if (!validation.success) {
-    return (validation as { success: false; response: Response }).response;
-  }
+export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/session');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   try {
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult) {
-      return jsonResponse({ error: 'Unauthorized' }, 401);
-    }
-
     const user = await prisma.user.findUnique({
-      where: { clerkId: authResult.userId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return jsonResponse({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet. Please refresh and try again.',
-      }, 404);
+      return { data: { error: 'User not found', message: 'Account not synced yet.' }, status: 404 };
     }
 
-    const sessionService = new SessionService(context.env.DATABASE_URL, context.env);
+    const sessionService = new SessionService(env.DATABASE_URL, env);
     const result = await sessionService.getSessionQuestions({
-      ...validation.data,
+      ...validated.body,
       userId: user.id,
-      count: Math.min(validation.data.count || 10, 50),
+      count: Math.min(validated.body.count || 10, 50),
     });
 
-    return jsonResponse(result);
+    logger.info('Session questions fetched (POST)', { userId: auth.userId, count: result.questions?.length || 0 });
+
+    return { data: result };
   } catch (error) {
-    console.error('[Session] Error:', error);
-    return jsonResponse({ error: 'Failed to fetch session questions' }, 500);
+    logger.error('Error fetching session questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch session questions');
   } finally {
-    if(prisma) {
-        await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma);
   }
-}
+});

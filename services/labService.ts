@@ -1,13 +1,14 @@
 /**
  * Lab Service - Database-First Implementation
- * 
+ *
  * PostgreSQL is the ONLY source of truth for lab data.
  * Errors propagate to UI for proper handling.
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
-const isTestEnv = typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
+const isTestEnv =
+  typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
 
 export interface LabTest {
   id: string;
@@ -33,14 +34,14 @@ class LabService {
    */
   async getAllTests(): Promise<LabTest[]> {
     if (isTestEnv) return [];
-    
+
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_TESTS));
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch lab tests: ${response.status}`);
     }
-    
+
     return await response.json();
   }
 
@@ -50,14 +51,14 @@ class LabService {
    */
   async getAllCases(): Promise<LabCase[]> {
     if (isTestEnv) return [];
-    
+
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES));
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch lab cases: ${response.status}`);
     }
-    
+
     return await response.json();
   }
 
@@ -67,14 +68,14 @@ class LabService {
    */
   async getRandomCases(count: number = 1): Promise<LabCase[]> {
     if (isTestEnv) return [];
-    
+
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES_RANDOM(count)));
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch random lab cases: ${response.status}`);
     }
-    
+
     return await response.json();
   }
 }

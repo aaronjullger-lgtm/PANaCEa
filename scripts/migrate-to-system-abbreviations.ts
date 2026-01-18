@@ -2,21 +2,21 @@ import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 // Map from full system names to abbreviations (matches constants.ts)
 const SYSTEM_NAME_TO_ABBREVIATION: Record<string, string> = {
-  "Cardiovascular System": "CV",
-  "Dermatologic System": "DERM",
-  "Endocrine System": "ENDO",
-  "Eyes, Ears, Nose, and Throat": "HEENT",
-  "Gastrointestinal System/Nutrition": "GI",
-  "Genitourinary System": "GU",
-  "Hematologic System": "HEME",
-  "Infectious Diseases": "ID",
-  "Musculoskeletal System": "MSK",
-  "Neurologic System": "NEURO",
-  "Psychiatry/Behavioral Science": "PSYCH",
-  "Pulmonary System": "PULM",
-  "Renal System": "RENAL",
-  "Reproductive System": "REPRO",
-  "Professional Practice": "PRO"
+  'Cardiovascular System': 'CV',
+  'Dermatologic System': 'DERM',
+  'Endocrine System': 'ENDO',
+  'Eyes, Ears, Nose, and Throat': 'HEENT',
+  'Gastrointestinal System/Nutrition': 'GI',
+  'Genitourinary System': 'GU',
+  'Hematologic System': 'HEME',
+  'Infectious Diseases': 'ID',
+  'Musculoskeletal System': 'MSK',
+  'Neurologic System': 'NEURO',
+  'Psychiatry/Behavioral Science': 'PSYCH',
+  'Pulmonary System': 'PULM',
+  'Renal System': 'RENAL',
+  'Reproductive System': 'REPRO',
+  'Professional Practice': 'PRO',
 };
 
 async function migrateSystemsToAbbreviations() {
@@ -66,13 +66,13 @@ async function migrateSystemsToAbbreviations() {
     // Step 3: Migrate Condition table
     console.log('\n🔧 Migrating Condition table:');
     let totalConditionsUpdated = 0;
-    
+
     for (const [fullName, abbreviation] of Object.entries(SYSTEM_NAME_TO_ABBREVIATION)) {
       const count = await prisma.condition.updateMany({
         where: { system: fullName },
         data: { system: abbreviation },
       });
-      
+
       if (count.count > 0) {
         console.log(`  ✓ ${fullName} → ${abbreviation}: ${count.count} conditions`);
         totalConditionsUpdated += count.count;
@@ -82,13 +82,13 @@ async function migrateSystemsToAbbreviations() {
     // Step 4: Migrate MedicalContent table
     console.log('\n🔧 Migrating MedicalContent table:');
     let totalContentUpdated = 0;
-    
+
     for (const [fullName, abbreviation] of Object.entries(SYSTEM_NAME_TO_ABBREVIATION)) {
       const count = await prisma.medicalContent.updateMany({
         where: { system: fullName },
         data: { system: abbreviation },
       });
-      
+
       if (count.count > 0) {
         console.log(`  ✓ ${fullName} → ${abbreviation}: ${count.count} records`);
         totalContentUpdated += count.count;
@@ -119,7 +119,6 @@ async function migrateSystemsToAbbreviations() {
     console.log(`   - Condition table: ${totalConditionsUpdated} records updated`);
     console.log(`   - MedicalContent table: ${totalContentUpdated} records updated`);
     console.log(`   - All systems now use abbreviations (CV, HEENT, etc.)`);
-
   } catch (error) {
     console.error('\n❌ Migration failed:', error);
     throw error;
@@ -129,8 +128,7 @@ async function migrateSystemsToAbbreviations() {
 }
 
 // Run the migration
-migrateSystemsToAbbreviations()
-  .catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+migrateSystemsToAbbreviations().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

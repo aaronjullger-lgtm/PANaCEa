@@ -1,7 +1,6 @@
-
-import { createEdgePrismaClient } from "../../../functions/api/_shared/prisma-edge";
-import { ContentService } from "../content/contentService";
-import type { JsonValue } from "@prisma/client/runtime/library";
+import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
+import { ContentService } from '../content/contentService';
+import type { JsonValue } from '@prisma/client';
 
 // Interfaces moved from review.ts to be used in the service
 interface DBQuestion {
@@ -26,7 +25,7 @@ export interface ReviewQuestion {
   condition?: string;
   conditionId?: string;
   difficulty?: string;
-  reviewReason: "srs_due" | "flagged" | "missed" | "weak_area";
+  reviewReason: 'srs_due' | 'flagged' | 'missed' | 'weak_area';
   priority: number;
   lastSeen?: Date;
   nextDue?: Date;
@@ -52,33 +51,36 @@ export class ReviewService {
     const reviewQuestions: ReviewQuestion[] = [];
 
     // 1. SRS Due Questions
-    if (mode === "all" || mode === "srs") {
+    if (mode === 'all' || mode === 'srs') {
       const srsQuestions = await this.getSRSDueQuestions(system, limit);
       reviewQuestions.push(...srsQuestions);
     }
 
     // 2. Flagged Questions
-    if (mode === "all" || mode === "flagged") {
+    if (mode === 'all' || mode === 'flagged') {
       const flaggedQuestions = await this.getFlaggedQuestions(system, limit);
       reviewQuestions.push(...flaggedQuestions);
     }
 
     // 3. Missed Questions
-    if (mode === "all" || mode === "missed") {
+    if (mode === 'all' || mode === 'missed') {
       const missedQuestions = await this.getMissedQuestions(system, limit);
       reviewQuestions.push(...missedQuestions);
     }
 
     // 4. Weak Area Questions
-    if (mode === "all" || mode === "weak") {
+    if (mode === 'all' || mode === 'weak') {
       const weakQuestions = await this.getWeakAreaQuestions(system, limit);
       reviewQuestions.push(...weakQuestions);
     }
-    
+
     return this.deduplicateAndSort(reviewQuestions).slice(0, limit);
   }
 
-  private async getSRSDueQuestions(system: string | null, limit: number): Promise<ReviewQuestion[]> {
+  private async getSRSDueQuestions(
+    system: string | null,
+    limit: number
+  ): Promise<ReviewQuestion[]> {
     const now = new Date();
 
     const srsItems = await this.prisma.sRSItem.findMany({
@@ -86,18 +88,15 @@ export class ReviewService {
         userId: this.userId,
         dueDate: { lte: now },
       },
-      orderBy: [
-        { dueDate: 'asc' },
-        { easiness: 'asc' }, 
-      ],
-      take: limit * 2, 
+      orderBy: [{ dueDate: 'asc' }, { easiness: 'asc' }],
+      take: limit * 2,
     });
 
     if (srsItems.length === 0) {
       return [];
     }
 
-    const originalQuestionIds = srsItems.map(item => item.questionId);
+    const originalQuestionIds = srsItems.map((item) => item.questionId);
     const originalQuestions = await this.prisma.question.findMany({
       where: { id: { in: originalQuestionIds } },
       select: { id: true, conditionId: true, condition: true, system: true },
@@ -108,23 +107,26 @@ export class ReviewService {
       condition: string | null;
       system: string;
     }
-    
+
     const questionConditionMap = new Map<string, QuestionConditionInfo>(
-      originalQuestions.map(q => [q.id, { conditionId: q.conditionId, condition: q.condition, system: q.system }])
+      originalQuestions.map((q) => [
+        q.id,
+        { conditionId: q.conditionId, condition: q.condition, system: q.system },
+      ])
     );
 
     const seenHistory = await this.prisma.userQuestionSeen.findMany({
       where: { userId: this.userId },
       select: { questionId: true },
     });
-    const seenIds = new Set(seenHistory.map(h => h.questionId));
+    const seenIds = new Set(seenHistory.map((h) => h.questionId));
 
-    const conditionGroups = new Map<string, typeof srsItems[0]>();
+    const conditionGroups = new Map<string, (typeof srsItems)[0]>();
     for (const item of srsItems) {
       const questionInfo = questionConditionMap.get(item.questionId);
       if (!questionInfo?.conditionId) continue;
       if (system && questionInfo.system !== system) continue;
-      
+
       if (!conditionGroups.has(questionInfo.conditionId)) {
         conditionGroups.set(questionInfo.conditionId, item);
       }
@@ -150,8 +152,11 @@ export class ReviewService {
         const data = freshFromPool.questionData as Record<string, unknown>;
         const optionsData = data.options || data.answers || data.choices;
         const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
-        
-        const daysOverdue = Math.max(0, (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        const daysOverdue = Math.max(
+          0,
+          (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
 
         reviewQuestions.push({
           id: freshFromPool.id,
@@ -174,17 +179,20 @@ export class ReviewService {
         continue;
       }
 
-      const freshFromMain = await this.prisma.question.findFirst({
+      const freshFromMain = (await this.prisma.question.findFirst({
         where: {
           conditionId,
           id: { notIn: Array.from(seenIds) },
           ...(system ? { system } : {}),
         },
         orderBy: { createdAt: 'asc' },
-      }) as DBQuestion | null;
+      })) as DBQuestion | null;
 
       if (freshFromMain) {
-        const daysOverdue = Math.max(0, (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysOverdue = Math.max(
+          0,
+          (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
 
         reviewQuestions.push({
           id: freshFromMain.id,
@@ -207,14 +215,17 @@ export class ReviewService {
         continue;
       }
 
-      const fallbackQuestion = originalQuestions.find(q => q.id === srsItem.questionId);
+      const fallbackQuestion = originalQuestions.find((q) => q.id === srsItem.questionId);
       if (fallbackQuestion) {
-        const fullQuestion = await this.prisma.question.findUnique({
+        const fullQuestion = (await this.prisma.question.findUnique({
           where: { id: fallbackQuestion.id },
-        }) as DBQuestion | null;
+        })) as DBQuestion | null;
 
         if (fullQuestion) {
-          const daysOverdue = Math.max(0, (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+          const daysOverdue = Math.max(
+            0,
+            (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
 
           reviewQuestions.push({
             id: fullQuestion.id,
@@ -240,7 +251,10 @@ export class ReviewService {
     return reviewQuestions;
   }
 
-  private async getFlaggedQuestions(system: string | null, limit: number): Promise<ReviewQuestion[]> {
+  private async getFlaggedQuestions(
+    system: string | null,
+    limit: number
+  ): Promise<ReviewQuestion[]> {
     const savedQuestions = await this.prisma.savedQuestion.findMany({
       where: {
         userId: this.userId,
@@ -250,21 +264,22 @@ export class ReviewService {
       take: limit,
     });
 
-    const questionIds = savedQuestions.map(sq => sq.questionId);
-    const questions = questionIds.length > 0
-      ? await this.prisma.question.findMany({
-          where: {
-            id: { in: questionIds },
-            ...(system ? { system } : {}),
-          },
-        }) as DBQuestion[]
-      : [];
+    const questionIds = savedQuestions.map((sq) => sq.questionId);
+    const questions =
+      questionIds.length > 0
+        ? ((await this.prisma.question.findMany({
+            where: {
+              id: { in: questionIds },
+              ...(system ? { system } : {}),
+            },
+          })) as DBQuestion[])
+        : [];
 
-    const questionMap = new Map(questions.map(q => [q.id, q as DBQuestion]));
+    const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return savedQuestions
-      .filter(sq => questionMap.has(sq.questionId))
-      .map(sq => {
+      .filter((sq) => questionMap.has(sq.questionId))
+      .map((sq) => {
         const q = questionMap.get(sq.questionId)!;
         return {
           id: q.id,
@@ -283,7 +298,10 @@ export class ReviewService {
       });
   }
 
-  private async getMissedQuestions(system: string | null, limit: number): Promise<ReviewQuestion[]> {
+  private async getMissedQuestions(
+    system: string | null,
+    limit: number
+  ): Promise<ReviewQuestion[]> {
     const recentMissed = await this.prisma.questionAttempt.findMany({
       where: {
         userId: this.userId,
@@ -296,24 +314,27 @@ export class ReviewService {
 
     // Get unique question IDs
     const seenIds = new Set<string>();
-    const uniqueAttempts = recentMissed.filter(a => {
-      if (seenIds.has(a.questionId)) return false;
-      seenIds.add(a.questionId);
-      return true;
-    }).slice(0, limit);
+    const uniqueAttempts = recentMissed
+      .filter((a) => {
+        if (seenIds.has(a.questionId)) return false;
+        seenIds.add(a.questionId);
+        return true;
+      })
+      .slice(0, limit);
 
-    const questionIds = uniqueAttempts.map(a => a.questionId);
-    const questions = questionIds.length > 0
-      ? await this.prisma.question.findMany({
-          where: { id: { in: questionIds } },
-        }) as DBQuestion[]
-      : [];
+    const questionIds = uniqueAttempts.map((a) => a.questionId);
+    const questions =
+      questionIds.length > 0
+        ? ((await this.prisma.question.findMany({
+            where: { id: { in: questionIds } },
+          })) as DBQuestion[])
+        : [];
 
-    const questionMap = new Map(questions.map(q => [q.id, q as DBQuestion]));
+    const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return uniqueAttempts
-      .filter(a => questionMap.has(a.questionId))
-      .map(a => {
+      .filter((a) => questionMap.has(a.questionId))
+      .map((a) => {
         const q = questionMap.get(a.questionId)!;
         return {
           id: q.id,
@@ -332,7 +353,10 @@ export class ReviewService {
       });
   }
 
-  private async getWeakAreaQuestions(system: string | null, limit: number): Promise<ReviewQuestion[]> {
+  private async getWeakAreaQuestions(
+    system: string | null,
+    limit: number
+  ): Promise<ReviewQuestion[]> {
     const attempts = await this.prisma.questionAttempt.findMany({
       where: { userId: this.userId },
       select: {
@@ -357,7 +381,7 @@ export class ReviewService {
     // Find weak systems (< 60% accuracy with >= 5 attempts)
     const weakSystems: string[] = [];
     for (const [sys, stats] of systemStats) {
-      if (stats.total >= 5 && (stats.correct / stats.total) < 0.6) {
+      if (stats.total >= 5 && stats.correct / stats.total < 0.6) {
         weakSystems.push(sys);
       }
     }
@@ -367,14 +391,14 @@ export class ReviewService {
     }
 
     // Get questions from weak systems that user hasn't mastered
-    const questions = await this.prisma.question.findMany({
+    const questions = (await this.prisma.question.findMany({
       where: {
         system: { in: weakSystems },
         ...(system ? { system } : {}),
       },
       take: limit,
       orderBy: { id: 'asc' },
-    }) as DBQuestion[];
+    })) as DBQuestion[];
 
     return questions.map((q: DBQuestion) => {
       const stats = systemStats.get(q.system);

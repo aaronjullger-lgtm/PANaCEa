@@ -1,14 +1,14 @@
 /**
  * FSRS Question Linking Utility
- * 
+ *
  * Sprint C - Step 6: Link questions to FSRS cards for better tracking
- * 
+ *
  * Purpose: Enable question-specific FSRS scheduling by tracking which
  * questions update which FSRS cards. This allows:
  * - Question-specific review scheduling
  * - Understanding which questions contributed to card stability
  * - Better analytics on question effectiveness
- * 
+ *
  * Implementation: Extends UserProgress.reviewHistory JSON to include
  * questionId for each review event.
  */
@@ -44,7 +44,7 @@ export interface EnhancedFSRSCard {
 
 /**
  * Record a question attempt with FSRS update
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param conditionId - Condition being studied
@@ -81,11 +81,11 @@ export async function recordQuestionWithFSRS(
 
     // Parse current FSRS card
     const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
-    
+
     // Update question tracking
     const questionHistory = (fsrsCard.questionHistory || []).slice(-9); // Keep last 9
     questionHistory.push(questionId); // Add current (now 10 total)
-    
+
     const totalQuestionsAnswered = (fsrsCard.totalQuestionsAnswered || 0) + 1;
 
     // Create review event
@@ -125,14 +125,14 @@ export async function recordQuestionWithFSRS(
         reviewHistory: reviewHistory as any,
         totalAttempts: { increment: 1 },
         correctCount: wasCorrect ? { increment: 1 } : undefined,
-        accuracy: totalQuestionsAnswered > 0 
-          ? ((progress.correctCount + (wasCorrect ? 1 : 0)) / totalQuestionsAnswered) * 100
-          : 0,
+        accuracy:
+          totalQuestionsAnswered > 0
+            ? ((progress.correctCount + (wasCorrect ? 1 : 0)) / totalQuestionsAnswered) * 100
+            : 0,
         lastReviewAt: new Date(),
         updatedAt: new Date(),
       },
     });
-
   } catch (error) {
     console.error('[FSRSLinking] Failed to record question with FSRS:', error);
     throw error;
@@ -141,7 +141,7 @@ export async function recordQuestionWithFSRS(
 
 /**
  * Get question history for a condition
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param conditionId - Condition ID
@@ -171,7 +171,6 @@ export async function getQuestionHistoryForCondition(
 
     const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
     return fsrsCard.questionHistory || [];
-
   } catch (error) {
     console.error('[FSRSLinking] Failed to get question history:', error);
     return [];
@@ -180,7 +179,7 @@ export async function getQuestionHistoryForCondition(
 
 /**
  * Get detailed review history including questions
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param conditionId - Condition ID
@@ -209,7 +208,6 @@ export async function getDetailedReviewHistory(
     }
 
     return progress.reviewHistory as unknown as FSRSReviewEvent[];
-
   } catch (error) {
     console.error('[FSRSLinking] Failed to get review history:', error);
     return [];
@@ -218,7 +216,7 @@ export async function getDetailedReviewHistory(
 
 /**
  * Get statistics about question usage per condition
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param conditionId - Condition ID
@@ -273,7 +271,6 @@ export async function getQuestionUsageStats(
       averagePerformance: progress.accuracy,
       recentQuestions: questionHistory.slice(-10),
     };
-
   } catch (error) {
     console.error('[FSRSLinking] Failed to get question usage stats:', error);
     return {
@@ -289,7 +286,7 @@ export async function getQuestionUsageStats(
 /**
  * Find conditions that need more question variety
  * (same questions being repeated too often)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param minRepetitionRate - Threshold for flagging (default: 0.5 = 50% repetition)
@@ -299,12 +296,14 @@ export async function findHighRepetitionConditions(
   prisma: PrismaClient,
   userId: string,
   minRepetitionRate: number = 0.5
-): Promise<Array<{
-  conditionId: string;
-  totalQuestions: number;
-  uniqueQuestions: number;
-  repetitionRate: number;
-}>> {
+): Promise<
+  Array<{
+    conditionId: string;
+    totalQuestions: number;
+    uniqueQuestions: number;
+    repetitionRate: number;
+  }>
+> {
   try {
     const allProgress = await prisma.userProgress.findMany({
       where: { userId },
@@ -327,9 +326,10 @@ export async function findHighRepetitionConditions(
       const questionHistory = fsrsCard.questionHistory || [];
       const uniqueQuestions = new Set(questionHistory).size;
 
-      if (totalQuestions > 5) { // Only consider conditions with enough attempts
-        const repetitionRate = 1 - (uniqueQuestions / totalQuestions);
-        
+      if (totalQuestions > 5) {
+        // Only consider conditions with enough attempts
+        const repetitionRate = 1 - uniqueQuestions / totalQuestions;
+
         if (repetitionRate >= minRepetitionRate) {
           highRepetition.push({
             conditionId: progress.conditionId,
@@ -342,7 +342,6 @@ export async function findHighRepetitionConditions(
     }
 
     return highRepetition.sort((a, b) => b.repetitionRate - a.repetitionRate);
-
   } catch (error) {
     console.error('[FSRSLinking] Failed to find high repetition conditions:', error);
     return [];

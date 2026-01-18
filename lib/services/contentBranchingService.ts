@@ -37,34 +37,34 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
     if (!process.env.DATABASE_URL) {
       throw new Error('Database not configured');
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Validate branch name
     if (!/^[a-zA-Z0-9_-]+$/.test(options.name)) {
       throw new Error('Branch name can only contain letters, numbers, hyphens, and underscores');
     }
-    
+
     // Check if branch already exists
     const existing = await prisma.contentBranch.findUnique({
       where: { name: options.name },
     });
-    
+
     if (existing) {
       throw new Error(`Branch "${options.name}" already exists`);
     }
-    
+
     // Validate base branch if specified
     if (options.baseBranch) {
       const baseBranchExists = await prisma.contentBranch.findUnique({
         where: { name: options.baseBranch },
       });
-      
+
       if (!baseBranchExists) {
         throw new Error(`Base branch "${options.baseBranch}" does not exist`);
       }
     }
-    
+
     // Create branch
     const branch = await prisma.contentBranch.create({
       data: {
@@ -74,7 +74,7 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
         createdBy: options.createdBy,
       },
     });
-    
+
     console.log(`[ContentBranching] Created branch: ${options.name}`);
     return branch.id;
   } catch (error) {
@@ -86,30 +86,27 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
 /**
  * Add a change to a branch
  */
-export async function addChangeToBranch(
-  branchName: string,
-  change: BranchChange
-): Promise<string> {
+export async function addChangeToBranch(branchName: string, change: BranchChange): Promise<string> {
   try {
     if (!process.env.DATABASE_URL) {
       throw new Error('Database not configured');
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Find branch
     const branch = await prisma.contentBranch.findUnique({
       where: { name: branchName },
     });
-    
+
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
     }
-    
+
     if (branch.status !== 'active') {
       throw new Error(`Branch "${branchName}" is ${branch.status} and cannot accept changes`);
     }
-    
+
     // Add change
     const branchChange = await prisma.branchChange.create({
       data: {
@@ -122,7 +119,7 @@ export async function addChangeToBranch(
         createdBy: change.createdBy,
       },
     });
-    
+
     // Update branch statistics
     await prisma.contentBranch.update({
       where: { id: branch.id },
@@ -131,7 +128,7 @@ export async function addChangeToBranch(
         updatedAt: new Date(),
       },
     });
-    
+
     console.log(`[ContentBranching] Added ${change.changeType} change to branch ${branchName}`);
     return branchChange.id;
   } catch (error) {
@@ -148,23 +145,23 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
     if (!process.env.DATABASE_URL) {
       return [];
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const branch = await prisma.contentBranch.findUnique({
       where: { name: branchName },
       include: {
-        changes: {
+        BranchChange: {
           orderBy: { createdAt: 'desc' },
         },
       },
-    });
-    
+    }) as { BranchChange: any[] } | null;
+
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
     }
-    
-    return branch.changes.map(c => ({
+
+    return branch.BranchChange.map((c) => ({
       contentId: c.contentId,
       conditionId: c.conditionId,
       changeType: c.changeType as 'create' | 'update' | 'delete',
@@ -190,34 +187,34 @@ export async function mergeBranch(
     if (!process.env.DATABASE_URL) {
       throw new Error('Database not configured');
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Find source branch
     const branch = await prisma.contentBranch.findUnique({
       where: { name: branchName },
       include: {
-        changes: true,
+        BranchChange: true,
       },
     });
-    
+
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
     }
-    
+
     if (branch.status !== 'active') {
       throw new Error(`Branch "${branchName}" is ${branch.status} and cannot be merged`);
     }
-    
+
     // Check for conflicts
     const conflicts: Array<{ contentId: string; reason: string }> = [];
-    
+
     // For each change, check if the target content has been modified since branch creation
-    for (const change of branch.changes) {
+    for (const change of branch.BranchChange) {
       const existingContent = await prisma.medicalContent.findUnique({
         where: { id: change.contentId },
       });
-      
+
       if (change.changeType === 'update' && existingContent) {
         // Check if content was modified after branch creation
         if (existingContent.updatedAt > branch.createdAt) {
@@ -238,7 +235,7 @@ export async function mergeBranch(
         });
       }
     }
-    
+
     // If there are conflicts, return them without merging
     if (conflicts.length > 0) {
       return {
@@ -247,11 +244,11 @@ export async function mergeBranch(
         message: `Found ${conflicts.length} conflict(s). Resolve conflicts before merging.`,
       };
     }
-    
+
     // Apply changes
     let mergedCount = 0;
-    
-    for (const change of branch.changes) {
+
+    for (const change of branch.BranchChange) {
       try {
         if (change.changeType === 'create') {
           await prisma.medicalContent.create({
@@ -288,7 +285,7 @@ export async function mergeBranch(
         // Continue with other changes
       }
     }
-    
+
     // Mark branch as merged
     await prisma.contentBranch.update({
       where: { id: branch.id },
@@ -298,9 +295,9 @@ export async function mergeBranch(
         mergedBy,
       },
     });
-    
+
     console.log(`[ContentBranching] Merged branch ${branchName} - ${mergedCount} changes applied`);
-    
+
     return {
       success: true,
       mergedCount,
@@ -320,26 +317,26 @@ export async function listBranches(includeArchived: boolean = false): Promise<an
     if (!process.env.DATABASE_URL) {
       return [];
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const branches = await prisma.contentBranch.findMany({
       where: includeArchived ? {} : { status: { not: 'archived' } },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
-          select: { changes: true },
+          select: { BranchChange: true },
         },
       },
-    });
-    
-    return branches.map(b => ({
+    }) as Array<any & { _count: { BranchChange: number } }>;
+
+    return branches.map((b) => ({
       id: b.id,
       name: b.name,
       description: b.description,
       baseBranch: b.baseBranch,
       status: b.status,
-      changeCount: b._count.changes,
+      changeCount: b._count.BranchChange,
       createdBy: b.createdBy,
       createdAt: b.createdAt,
       updatedAt: b.updatedAt,
@@ -359,31 +356,31 @@ export async function deleteBranch(branchName: string): Promise<void> {
     if (!process.env.DATABASE_URL) {
       throw new Error('Database not configured');
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const branch = await prisma.contentBranch.findUnique({
       where: { name: branchName },
     });
-    
+
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
     }
-    
+
     if (branch.status === 'merged') {
       throw new Error('Cannot delete a merged branch. Archive it instead.');
     }
-    
+
     // Delete all changes
     await prisma.branchChange.deleteMany({
       where: { branchId: branch.id },
     });
-    
+
     // Delete branch
     await prisma.contentBranch.delete({
       where: { id: branch.id },
     });
-    
+
     console.log(`[ContentBranching] Deleted branch ${branchName}`);
   } catch (error) {
     console.error('[ContentBranching] Error deleting branch:', error);
@@ -407,13 +404,13 @@ export async function compareBranches(
     if (!process.env.DATABASE_URL) {
       return { added: [], modified: [], deleted: [], total: 0 };
     }
-    
+
     const changes = await getBranchChanges(branchName);
-    
-    const added = changes.filter(c => c.changeType === 'create').map(c => c.conditionId);
-    const modified = changes.filter(c => c.changeType === 'update').map(c => c.conditionId);
-    const deleted = changes.filter(c => c.changeType === 'delete').map(c => c.conditionId);
-    
+
+    const added = changes.filter((c) => c.changeType === 'create').map((c) => c.conditionId);
+    const modified = changes.filter((c) => c.changeType === 'update').map((c) => c.conditionId);
+    const deleted = changes.filter((c) => c.changeType === 'delete').map((c) => c.conditionId);
+
     return {
       added,
       modified,

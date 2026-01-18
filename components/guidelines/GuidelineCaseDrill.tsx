@@ -1,7 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ArrowRight, RotateCcw, AlertCircle } from 'lucide-react';
-import type { Guideline, GuidelineCase, GuidelineDrillStatus, GuidelineDrillResult } from '@/types/guidelines';
+import type {
+  Guideline,
+  GuidelineCase,
+  GuidelineDrillStatus,
+  GuidelineDrillResult,
+} from '@/types/guidelines';
 
 interface GuidelineCaseDrillProps {
   /** The guideline to practice */
@@ -14,7 +19,7 @@ interface GuidelineCaseDrillProps {
 
 /**
  * GuidelineCaseDrill - Vignette-based scoring drill component.
- * 
+ *
  * Runs a "Read -> Calculate -> Feedback" loop for clinical scoring guidelines.
  * Shows visual diff of criteria met/unmet after each answer.
  */
@@ -33,12 +38,13 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
   const isCorrect = userScoreInput === currentVignette?.correctScore;
 
   // Get risk tier for a given score
-  const getRiskTier = useCallback((score: number) => {
-    if (!guideline.scoringMap) return null;
-    return guideline.scoringMap.find(
-      (tier) => score >= tier.minScore && score <= tier.maxScore
-    );
-  }, [guideline.scoringMap]);
+  const getRiskTier = useCallback(
+    (score: number) => {
+      if (!guideline.scoringMap) return null;
+      return guideline.scoringMap.find((tier) => score >= tier.minScore && score <= tier.maxScore);
+    },
+    [guideline.scoringMap]
+  );
 
   // Handle score submission
   const handleSubmit = useCallback(() => {
@@ -196,7 +202,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   <h3 className="text-lg font-semibold mb-4">
                     Calculate the {guideline.name} Score
                   </h3>
-                  
+
                   {/* Score Buttons */}
                   <div className="flex flex-wrap gap-3 mb-4">
                     {Array.from({ length: guideline.maxScore + 1 }, (_, i) => (
@@ -247,7 +253,9 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         <XCircle className="w-8 h-8 text-red-400" />
                       )}
                       <div>
-                        <div className={`text-xl font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <div
+                          className={`text-xl font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}
+                        >
                           {isCorrect ? 'Correct!' : 'Incorrect'}
                         </div>
                         <div className="text-sm text-slate-300">
@@ -262,7 +270,9 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   {/* Risk Tier */}
                   {guideline.scoringMap && (
                     <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                      <h4 className="text-sm font-medium text-slate-400 mb-2">Risk Stratification</h4>
+                      <h4 className="text-sm font-medium text-slate-400 mb-2">
+                        Risk Stratification
+                      </h4>
                       <div className="text-lg font-semibold text-slate-100">
                         {getRiskTier(currentVignette.correctScore)?.tier || 'Unknown'}
                       </div>
@@ -304,7 +314,9 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                                 </span>
                               </div>
                               {component.description && (
-                                <div className={`text-sm mt-1 ${isMet ? 'text-slate-400' : 'text-slate-600'}`}>
+                                <div
+                                  className={`text-sm mt-1 ${isMet ? 'text-slate-400' : 'text-slate-600'}`}
+                                >
                                   {component.description}
                                 </div>
                               )}
@@ -313,7 +325,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         );
                       })}
                     </ul>
-                    
+
                     {/* Total Score */}
                     <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
                       <span className="text-slate-400 font-medium">Total Score</span>

@@ -18,6 +18,7 @@ The Socratic Coaching system provides intelligent, non-spoiler hints when studen
   - Focuses on clinical findings, pathophysiology, or differentiating features
 
 **Example Prompt Structure:**
+
 ```
 You are a wise medical attending using the Socratic method...
 
@@ -35,12 +36,14 @@ Instructions:
 ### 2. Hook Layer (`hooks/game/use-condition-drill.ts`)
 
 **New State Variables:**
+
 - `socraticHint: string | null` - The AI-generated hint
 - `isLoadingHint: boolean` - Loading state for hint generation
 - `attemptNumber: number` - Tracks 1st vs 2nd attempt (1 or 2)
 - `firstAttemptAnswer: number | null` - Stores the initial wrong answer
 
 **New Status:**
+
 - Added `'coaching'` to `ConditionDrillStatus` type
 
 **Modified Flow in `submitAnswer`:**
@@ -50,16 +53,16 @@ if (attemptNumber === 1 && !result.isCorrect) {
   // First attempt, incorrect → Enter coaching mode
   setStatus('coaching');
   setIsLoadingHint(true);
-  
+
   const hint = await getSocraticHint(question, correctAnswer, userAnswer);
   setSocraticHint(hint);
   setIsLoadingHint(false);
 } else if (result.isCorrect) {
   // Correct answer
   if (attemptNumber === 1) {
-    setScore(prev => prev + 1);        // Full point
+    setScore((prev) => prev + 1); // Full point
   } else {
-    setScore(prev => prev + 0.5);      // 50% for assisted correct
+    setScore((prev) => prev + 0.5); // 50% for assisted correct
   }
   setStatus('feedback');
 } else {
@@ -69,6 +72,7 @@ if (attemptNumber === 1 && !result.isCorrect) {
 ```
 
 **New Function:** `retryAfterHint()`
+
 - Sets `attemptNumber = 2`
 - Resets `userAnswerIndex = null`
 - Returns to `'playing'` status to allow re-selection
@@ -76,6 +80,7 @@ if (attemptNumber === 1 && !result.isCorrect) {
 ### 3. UI Layer (`components/drill/ConditionDrillSession.tsx`)
 
 **New Import:**
+
 ```typescript
 import { Lightbulb } from 'lucide-react';
 ```
@@ -85,32 +90,35 @@ import { Lightbulb } from 'lucide-react';
 Renders between the question card and answer options when `status === 'coaching'`:
 
 ```tsx
-{status === 'coaching' && (
-  <motion.div className="...border-amber-500...">
-    <div className="flex items-start gap-4">
-      <div className="...bg-amber-500...">
-        <Lightbulb className="w-5 h-5 text-white" />
+{
+  status === 'coaching' && (
+    <motion.div className="...border-amber-500...">
+      <div className="flex items-start gap-4">
+        <div className="...bg-amber-500...">
+          <Lightbulb className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3>Coach's Corner</h3>
+          {isLoadingHint ? (
+            <div>Thinking about your answer...</div>
+          ) : (
+            <>
+              <p>{socraticHint}</p>
+              <button onClick={retryAfterHint}>Try Again</button>
+              <p>💡 Getting it right after this hint will award 50% points (0.5 score)</p>
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex-1">
-        <h3>Coach's Corner</h3>
-        {isLoadingHint ? (
-          <div>Thinking about your answer...</div>
-        ) : (
-          <>
-            <p>{socraticHint}</p>
-            <button onClick={retryAfterHint}>Try Again</button>
-            <p>💡 Getting it right after this hint will award 50% points (0.5 score)</p>
-          </>
-        )}
-      </div>
-    </div>
-  </motion.div>
-)}
+    </motion.div>
+  );
+}
 ```
 
 ## User Flow
 
 ### Scenario 1: First Attempt Incorrect
+
 1. Student submits wrong answer
 2. System intercepts (no immediate explanation shown)
 3. Status changes to `'coaching'`
@@ -123,6 +131,7 @@ Renders between the question card and answer options when `status === 'coaching'
    - Note about 50% scoring
 
 ### Scenario 2: Second Attempt Correct (After Hint)
+
 1. Student clicks "Try Again"
 2. `attemptNumber` increments to 2
 3. Answer options re-enabled
@@ -131,30 +140,33 @@ Renders between the question card and answer options when `status === 'coaching'
 6. Status → `'feedback'` showing explanation
 
 ### Scenario 3: Second Attempt Incorrect
+
 1. Student tries again but still wrong
 2. Full explanation shown (standard feedback flow)
 3. No points awarded
 4. Can proceed to next question
 
 ### Scenario 4: First Attempt Correct
+
 1. Standard flow (no coaching needed)
 2. Awards **1.0 point** (full credit)
 3. Status → `'feedback'`
 
 ## Scoring Logic
 
-| Scenario | Points Awarded | Explanation |
-|----------|---------------|-------------|
-| Correct on 1st attempt | 1.0 | Full credit |
-| Correct on 2nd attempt (after hint) | 0.5 | Assisted correct (50%) |
-| Incorrect on both attempts | 0.0 | No credit |
+| Scenario                            | Points Awarded | Explanation            |
+| ----------------------------------- | -------------- | ---------------------- |
+| Correct on 1st attempt              | 1.0            | Full credit            |
+| Correct on 2nd attempt (after hint) | 0.5            | Assisted correct (50%) |
+| Incorrect on both attempts          | 0.0            | No credit              |
 
 **Implementation:**
+
 ```typescript
 if (attemptNumber === 1) {
-  setScore(prev => prev + 1);        // Full point
+  setScore((prev) => prev + 1); // Full point
 } else {
-  setScore(prev => prev + 0.5);      // Half point
+  setScore((prev) => prev + 0.5); // Half point
 }
 ```
 
@@ -175,6 +187,7 @@ const nextQuestion = () => {
 ## Visual Design
 
 **Coach's Corner Styling:**
+
 - **Border:** Amber/yellow (2px, 50% opacity)
 - **Background:** Gradient from amber-50 to yellow-50 (dark mode: amber-900/20)
 - **Icon:** Lightbulb in amber-500 circle
@@ -182,6 +195,7 @@ const nextQuestion = () => {
 - **Loading State:** Amber spinner with italic text
 
 **Positioning:**
+
 - Appears between question card and answer options
 - Full-width on mobile, max-width container on desktop
 - Animated entrance (fade + slide up)
@@ -190,12 +204,14 @@ const nextQuestion = () => {
 
 **Fallback Hints:**
 If Gemini API fails, returns a generic but helpful hint:
+
 ```
-"Think about the key clinical findings and what they tell you about 
+"Think about the key clinical findings and what they tell you about
 the underlying pathology. What diagnosis best fits this pattern?"
 ```
 
 **API Resilience:**
+
 - Wrapped in try-catch
 - Non-blocking (doesn't crash the drill session)
 - Logs errors to console for debugging
@@ -205,6 +221,7 @@ the underlying pathology. What diagnosis best fits this pattern?"
 All existing tests pass (35 test files, 452 tests).
 
 **Test Coverage:**
+
 - `services/CoachingService.test.ts` - 13 tests for metrics and prescriptions
 - Integration tests validate hook state management
 - UI rendering tested via component structure
@@ -214,15 +231,12 @@ All existing tests pass (35 test files, 452 tests).
 1. **Analytics:**
    - Track hint effectiveness (% who get it right on 2nd attempt)
    - Log which types of hints work best
-   
 2. **Personalization:**
    - Adjust hint difficulty based on user level
    - Track which topics need more scaffolding
-   
 3. **Hint Variations:**
    - Multiple hint strategies (differential diagnosis focus, mechanism focus, etc.)
    - Progressive hints if user still struggles
-   
 4. **A/B Testing:**
    - Compare outcomes with/without coaching
    - Optimize hint phrasing for learning outcomes
@@ -241,7 +255,7 @@ const {
 
 // Render Coach's Corner when status === 'coaching'
 {status === 'coaching' && (
-  <CoachCorner 
+  <CoachCorner
     hint={socraticHint}
     isLoading={isLoadingHint}
     onRetry={retryAfterHint}
@@ -252,15 +266,17 @@ const {
 ## API Contract
 
 **Function Signature:**
+
 ```typescript
 export async function getSocraticHint(
   questionText: string,
   correctAnswer: string,
   userAnswer: string
-): Promise<string>
+): Promise<string>;
 ```
 
 **Gemini Proxy Request:**
+
 ```json
 {
   "modelName": "gemini-1.5-flash",
@@ -270,6 +286,7 @@ export async function getSocraticHint(
 ```
 
 **Response:**
+
 ```json
 {
   "text": "Consider the absence of wheezing and the presence of an S3 gallop; which pathology does that favor?"

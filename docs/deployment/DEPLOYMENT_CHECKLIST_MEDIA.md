@@ -41,6 +41,7 @@ FRONTEND_URL="https://your-domain.com"
 ```
 
 **Get credentials from:**
+
 - Supabase: Dashboard → Project Settings → API & Database
 - Clerk: Dashboard → API Keys
 - Gemini: Google AI Studio
@@ -64,12 +65,14 @@ npm run db:generate
 ```
 
 **Verify:**
+
 ```bash
 # Open database GUI
 npm run db:studio
 ```
 
 Check that these tables exist:
+
 - `User`
 - `MediaAsset` (with new fields: status, folder, mediaType, etc.)
 - `EducationalResource`
@@ -83,11 +86,13 @@ Check that these tables exist:
 In Supabase Dashboard → Storage:
 
 **Bucket 1: `medical-images`**
+
 - Public: ✅ Yes
 - File size limit: 10 MB
 - Allowed MIME types: `image/*`
 
 **Bucket 2: `educational-resources`**
+
 - Public: ✅ Yes
 - File size limit: 50 MB
 - Allowed MIME types: `application/pdf`, `video/*`, `audio/*`
@@ -97,6 +102,7 @@ In Supabase Dashboard → Storage:
 For each bucket, add these policies:
 
 **Allow authenticated uploads:**
+
 ```sql
 CREATE POLICY "Allow authenticated uploads"
 ON storage.objects FOR INSERT
@@ -105,6 +111,7 @@ WITH CHECK (bucket_id = 'medical-images');
 ```
 
 **Allow public reads:**
+
 ```sql
 CREATE POLICY "Allow public reads"
 ON storage.objects FOR SELECT
@@ -130,6 +137,7 @@ In Clerk Dashboard → Users:
    ```
 
 **Available roles:**
+
 - `admin` - Full access
 - `superadmin` - Full access + user management
 - `approver` - Can approve media
@@ -142,26 +150,31 @@ In Clerk Dashboard → Users:
 ### 7. Migrate Existing Data
 
 **Option A: Migrate static content to database**
+
 ```bash
 npm run migrate:static-to-db
 ```
 
 This migrates:
+
 - Condition content from JSON files
 - Condition registry
 - Preserves all original files as backup
 
 **Option B: Process existing media files**
+
 ```bash
 npm run media:process-existing
 ```
 
 This:
+
 - Scans local media directories
 - Runs AI quality checks
 - Populates approval queue
 
 **Review migration report:**
+
 ```bash
 cat output/migration-report.json
 ```
@@ -173,6 +186,7 @@ npm run media:integrate
 ```
 
 This:
+
 - Scans media directories
 - Matches media to conditions
 - Writes to database
@@ -193,11 +207,13 @@ npm run build:server
 ### 10. Start Services
 
 **Development:**
+
 ```bash
 npm run dev:all
 ```
 
 **Production:**
+
 ```bash
 # Start backend
 NODE_ENV=production node dist-server/server.js
@@ -217,6 +233,7 @@ NODE_ENV=production node dist-server/server.js
    - OR navigate to `/admin/media` in your app
 
 2. **Upload test image:**
+
    ```bash
    curl -X POST http://localhost:3001/api/media/upload \
      -H "Authorization: Bearer YOUR_TOKEN" \
@@ -239,17 +256,20 @@ NODE_ENV=production node dist-server/server.js
    ```bash
    npm run db:studio
    ```
+
    - Open MediaAsset table
    - Confirm record exists with correct status
 
 ### 12. Test API Endpoints
 
 **Get pending media:**
+
 ```bash
 curl http://localhost:3001/api/media/pending?includeStats=true
 ```
 
 **Approve media:**
+
 ```bash
 curl -X POST http://localhost:3001/api/media/approve \
   -H "Content-Type: application/json" \
@@ -262,6 +282,7 @@ curl -X POST http://localhost:3001/api/media/approve \
 ```
 
 **Get stats:**
+
 ```bash
 curl http://localhost:3001/api/media/stats
 ```
@@ -281,6 +302,7 @@ app.post('/api/media/approve', requireAdmin, async (req, res) => {
 ```
 
 Apply to these routes:
+
 - `/api/media/pending`
 - `/api/media/approve`
 - `/api/media/stats`
@@ -291,12 +313,14 @@ Apply to these routes:
 In `server.ts`, update CORS settings:
 
 ```typescript
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 ```
 
 ### 15. Set Up Rate Limiting
@@ -319,9 +343,11 @@ npm install redis connect-redis express-rate-limit
 ### 16. Set Up Logging
 
 **Option A: Supabase logs**
+
 - Dashboard → Logs → View API logs
 
 **Option B: Custom logging**
+
 ```typescript
 // Add to server.ts
 import winston from 'winston';
@@ -331,19 +357,21 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
-  ]
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
 });
 ```
 
 ### 17. Health Checks
 
 **Application health:**
+
 ```bash
 curl http://localhost:3001/health
 ```
 
 **Database health:**
+
 ```bash
 npm run health-check
 ```
@@ -353,26 +381,31 @@ npm run health-check
 ### Common Issues
 
 **Error: "Prisma Client not generated"**
+
 ```bash
 npm run db:generate
 ```
 
 **Error: "Storage bucket does not exist"**
+
 - Check Supabase Dashboard → Storage
 - Create missing buckets
 - Verify bucket names match code
 
 **Error: "Authentication required"**
+
 - Check Clerk configuration
 - Verify token is being sent
 - Check user role in Clerk metadata
 
 **Images not loading:**
+
 - Verify bucket is Public
 - Check storage policies
 - Confirm CORS settings
 
 **Database connection failed:**
+
 - Verify DATABASE_URL in .env
 - Check Supabase dashboard for connection strings
 - Use direct URL for migrations, pooled URL for app
@@ -390,16 +423,19 @@ npm run db:generate
 ### 19. Optimize Performance
 
 **If slow uploads:**
+
 - Enable image compression
 - Implement chunked uploads
 - Add CDN for static assets
 
 **If database slow:**
+
 - Add database indexes
 - Enable query caching
 - Use read replicas
 
 **If approval queue large:**
+
 - Increase auto-approval threshold
 - Add more approvers
 - Implement batch processing
@@ -407,20 +443,24 @@ npm run db:generate
 ### 20. Backup Strategy
 
 **Database backups:**
+
 - Supabase: Automatic daily backups
 - Manual: `pg_dump` weekly
 
 **Storage backups:**
+
 - Download bucket contents monthly
 - Keep JSON migration reports
 
 **Static files:**
+
 - Keep all original JSON/TS files
 - Version control all code changes
 
 ## Success Criteria
 
 ✅ **System is ready when:**
+
 - [ ] All tests pass
 - [ ] Media uploads successfully
 - [ ] AI analysis runs
@@ -434,11 +474,13 @@ npm run db:generate
 ## Support
 
 **Documentation:**
+
 - [Media Approval Setup Guide](./MEDIA_APPROVAL_SETUP.md)
 - [Developer Guide](./DEVELOPER_GUIDE.md)
 - [API Reference](./docs/api/)
 
 **Issues:**
+
 - GitHub Issues: Report bugs
 - Supabase Support: Database issues
 - Clerk Support: Auth issues
@@ -448,6 +490,7 @@ npm run db:generate
 If deployment fails:
 
 1. **Revert database changes:**
+
    ```bash
    # Restore from Supabase backup
    # Or reset to previous migration
@@ -459,6 +502,7 @@ If deployment fails:
    - Deploy previous version
 
 3. **Clear cache:**
+
    ```bash
    npm run db:generate
    rm -rf node_modules/.cache
@@ -471,12 +515,14 @@ If deployment fails:
 
 ---
 
-**Deployment Date:** _____________
+**Deployment Date:** ******\_******
 
-**Deployed By:** _____________
+**Deployed By:** ******\_******
 
-**Version:** _____________
+**Version:** ******\_******
 
 **Notes:**
-_____________________________________________
-_____________________________________________
+
+---
+
+---

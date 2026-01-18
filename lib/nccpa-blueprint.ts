@@ -1,10 +1,10 @@
 /**
  * NCCPA Blueprint Weighting & Interleaving System
- * 
+ *
  * Implements research-backed interleaving for PANCE preparation.
  * Forces topic switching based on NCCPA exam blueprint weightings
  * to maximize "context change" benefits for long-term retention.
- * 
+ *
  * Blueprint Source: NCCPA 2024 Content Blueprint
  * Research: Rohrer & Taylor (2007) - Interleaving improves retention
  */
@@ -14,21 +14,21 @@
  * Total = 100%
  */
 export const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
-  'Cardiovascular': 0.11,
-  'Pulmonary': 0.09,
-  'Gastrointestinal': 0.08,
-  'Musculoskeletal': 0.08,
+  Cardiovascular: 0.11,
+  Pulmonary: 0.09,
+  Gastrointestinal: 0.08,
+  Musculoskeletal: 0.08,
   'Infectious Disease': 0.07,
-  'Neurological': 0.07,
-  'Psychiatry': 0.07,
-  'Reproductive': 0.07,
-  'Endocrine': 0.06,
-  'HEENT': 0.06,
+  Neurological: 0.07,
+  Psychiatry: 0.07,
+  Reproductive: 0.07,
+  Endocrine: 0.06,
+  HEENT: 0.06,
   'Professional Practice': 0.06,
-  'Hematology': 0.05,
-  'Renal': 0.05,
-  'Dermatology': 0.04,
-  'Genitourinary': 0.04,
+  Hematology: 0.05,
+  Renal: 0.05,
+  Dermatology: 0.04,
+  Genitourinary: 0.04,
 };
 
 /**
@@ -36,79 +36,79 @@ export const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
  */
 export const SYSTEM_ALIASES: Record<string, string> = {
   // Primary names
-  'Cardiovascular': 'Cardiovascular',
-  'Cardiac': 'Cardiovascular',
-  'Cardiology': 'Cardiovascular',
-  'Heart': 'Cardiovascular',
-  
-  'Pulmonary': 'Pulmonary',
-  'Pulm': 'Pulmonary',
-  'Respiratory': 'Pulmonary',
-  'Lungs': 'Pulmonary',
-  
-  'Gastrointestinal': 'Gastrointestinal',
-  'GI': 'Gastrointestinal',
-  'Gastro': 'Gastrointestinal',
-  'Digestive': 'Gastrointestinal',
-  
-  'Musculoskeletal': 'Musculoskeletal',
-  'MSK': 'Musculoskeletal',
-  'Ortho': 'Musculoskeletal',
-  'Orthopedic': 'Musculoskeletal',
-  
+  Cardiovascular: 'Cardiovascular',
+  Cardiac: 'Cardiovascular',
+  Cardiology: 'Cardiovascular',
+  Heart: 'Cardiovascular',
+
+  Pulmonary: 'Pulmonary',
+  Pulm: 'Pulmonary',
+  Respiratory: 'Pulmonary',
+  Lungs: 'Pulmonary',
+
+  Gastrointestinal: 'Gastrointestinal',
+  GI: 'Gastrointestinal',
+  Gastro: 'Gastrointestinal',
+  Digestive: 'Gastrointestinal',
+
+  Musculoskeletal: 'Musculoskeletal',
+  MSK: 'Musculoskeletal',
+  Ortho: 'Musculoskeletal',
+  Orthopedic: 'Musculoskeletal',
+
   'Infectious Disease': 'Infectious Disease',
-  'ID': 'Infectious Disease',
-  'Infectious': 'Infectious Disease',
-  'Infection': 'Infectious Disease',
-  
-  'Neurological': 'Neurological',
-  'Neuro': 'Neurological',
-  'Neurology': 'Neurological',
+  ID: 'Infectious Disease',
+  Infectious: 'Infectious Disease',
+  Infection: 'Infectious Disease',
+
+  Neurological: 'Neurological',
+  Neuro: 'Neurological',
+  Neurology: 'Neurological',
   'Nervous System': 'Neurological',
-  
-  'Psychiatry': 'Psychiatry',
-  'Psych': 'Psychiatry',
+
+  Psychiatry: 'Psychiatry',
+  Psych: 'Psychiatry',
   'Mental Health': 'Psychiatry',
-  'Behavioral': 'Psychiatry',
-  
-  'Reproductive': 'Reproductive',
+  Behavioral: 'Psychiatry',
+
+  Reproductive: 'Reproductive',
   'OB/GYN': 'Reproductive',
-  'OBGYN': 'Reproductive',
-  'Women\'s Health': 'Reproductive',
-  'Men\'s Health': 'Reproductive',
-  
-  'Endocrine': 'Endocrine',
-  'Endo': 'Endocrine',
-  'Endocrinology': 'Endocrine',
-  'Hormones': 'Endocrine',
-  
-  'HEENT': 'HEENT',
-  'ENT': 'HEENT',
-  'Eyes': 'HEENT',
-  'Ears': 'HEENT',
+  OBGYN: 'Reproductive',
+  "Women's Health": 'Reproductive',
+  "Men's Health": 'Reproductive',
+
+  Endocrine: 'Endocrine',
+  Endo: 'Endocrine',
+  Endocrinology: 'Endocrine',
+  Hormones: 'Endocrine',
+
+  HEENT: 'HEENT',
+  ENT: 'HEENT',
+  Eyes: 'HEENT',
+  Ears: 'HEENT',
   'Head and Neck': 'HEENT',
-  
+
   'Professional Practice': 'Professional Practice',
   'Prof Practice': 'Professional Practice',
-  'Ethics': 'Professional Practice',
+  Ethics: 'Professional Practice',
   'Practice Management': 'Professional Practice',
-  
-  'Hematology': 'Hematology',
-  'Heme': 'Hematology',
-  'Blood': 'Hematology',
-  'Oncology': 'Hematology',
-  
-  'Renal': 'Renal',
-  'Nephrology': 'Renal',
-  'Kidney': 'Renal',
-  
-  'Dermatology': 'Dermatology',
-  'Derm': 'Dermatology',
-  'Skin': 'Dermatology',
-  
-  'Genitourinary': 'Genitourinary',
-  'GU': 'Genitourinary',
-  'Urology': 'Genitourinary',
+
+  Hematology: 'Hematology',
+  Heme: 'Hematology',
+  Blood: 'Hematology',
+  Oncology: 'Hematology',
+
+  Renal: 'Renal',
+  Nephrology: 'Renal',
+  Kidney: 'Renal',
+
+  Dermatology: 'Dermatology',
+  Derm: 'Dermatology',
+  Skin: 'Dermatology',
+
+  Genitourinary: 'Genitourinary',
+  GU: 'Genitourinary',
+  Urology: 'Genitourinary',
 };
 
 /**
@@ -123,21 +123,21 @@ export const MIN_SYSTEMS_PER_BLOCK = 3;
 export function calculateTargetDistribution(sessionSize: number = 20): Record<string, number> {
   const distribution: Record<string, number> = {};
   let total = 0;
-  
+
   // Calculate raw distribution
   for (const [system, weight] of Object.entries(NCCPA_BLUEPRINT_WEIGHTS)) {
     const target = Math.round(sessionSize * weight);
     distribution[system] = target;
     total += target;
   }
-  
+
   // Adjust for rounding errors
   if (total !== sessionSize) {
     const diff = sessionSize - total;
     // Add/remove from highest weighted system
     distribution['Cardiovascular'] += diff;
   }
-  
+
   return distribution;
 }
 
@@ -147,7 +147,7 @@ export function calculateTargetDistribution(sessionSize: number = 20): Record<st
 export function normalizeSystemName(system: string): string {
   const normalized = SYSTEM_ALIASES[system];
   if (normalized) return normalized;
-  
+
   // Try case-insensitive match
   const lowerSystem = system.toLowerCase();
   for (const [alias, canonical] of Object.entries(SYSTEM_ALIASES)) {
@@ -155,7 +155,7 @@ export function normalizeSystemName(system: string): string {
       return canonical;
     }
   }
-  
+
   return system; // Return as-is if not found
 }
 
@@ -188,32 +188,30 @@ function selectWeightedSystem(
   avoidRepeat: number = 2
 ): string {
   // Filter out recently used systems if possible
-  let candidates = availableSystems.filter(
-    s => !recentSystems.slice(-avoidRepeat).includes(s)
-  );
-  
+  let candidates = availableSystems.filter((s) => !recentSystems.slice(-avoidRepeat).includes(s));
+
   // If too restrictive, allow recent systems
   if (candidates.length === 0) {
     candidates = availableSystems;
   }
-  
+
   // Calculate weights for candidates
   let totalWeight = 0;
   const weights: { system: string; weight: number }[] = [];
-  
+
   for (const system of candidates) {
     const weight = NCCPA_BLUEPRINT_WEIGHTS[system] || 0.05; // Default weight
     weights.push({ system, weight });
     totalWeight += weight;
   }
-  
+
   // Weighted random selection
   let random = Math.random() * totalWeight;
   for (const { system, weight } of weights) {
     random -= weight;
     if (random <= 0) return system;
   }
-  
+
   return candidates[0]; // Fallback
 }
 
@@ -231,7 +229,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 /**
  * Apply interleaving to a question set
- * 
+ *
  * Algorithm:
  * 1. Group questions by system
  * 2. Build sequence using weighted selection with no-repeat constraint
@@ -246,11 +244,7 @@ export function applyInterleaving<T extends QuestionWithSystem>(
     avoidRepeatWindow?: number;
   } = {}
 ): InterleavingResult<T> {
-  const {
-    blockSize = 20,
-    minSystems = MIN_SYSTEMS_PER_BLOCK,
-    avoidRepeatWindow = 2,
-  } = options;
+  const { blockSize = 20, minSystems = MIN_SYSTEMS_PER_BLOCK, avoidRepeatWindow = 2 } = options;
 
   // Group questions by normalized system
   const bySystem = new Map<string, T[]>();
@@ -274,22 +268,20 @@ export function applyInterleaving<T extends QuestionWithSystem>(
   // Build interleaved sequence
   while (result.length < targetSize) {
     // Select next system
-    const systemsWithQuestions = availableSystems.filter(
-      s => (bySystem.get(s)?.length || 0) > 0
-    );
-    
+    const systemsWithQuestions = availableSystems.filter((s) => (bySystem.get(s)?.length || 0) > 0);
+
     if (systemsWithQuestions.length === 0) break;
-    
+
     const selectedSystem = selectWeightedSystem(
       systemsWithQuestions,
       recentSystems,
       avoidRepeatWindow
     );
-    
+
     // Get next question from selected system
     const systemQuestions = bySystem.get(selectedSystem)!;
     const question = systemQuestions.shift()!;
-    
+
     result.push(question);
     recentSystems.push(selectedSystem);
     systemCounts[selectedSystem] = (systemCounts[selectedSystem] || 0) + 1;
@@ -298,13 +290,13 @@ export function applyInterleaving<T extends QuestionWithSystem>(
   // Calculate metrics
   const distinctSystems = Object.keys(systemCounts).length;
   const meetsMinSystemRequirement = distinctSystems >= minSystems;
-  
+
   // Calculate blueprint adherence (cosine similarity)
   const targetDist = calculateTargetDistribution(result.length);
   let dotProduct = 0;
   let targetMagnitude = 0;
   let actualMagnitude = 0;
-  
+
   for (const system of Object.keys(NCCPA_BLUEPRINT_WEIGHTS)) {
     const target = targetDist[system] || 0;
     const actual = systemCounts[system] || 0;
@@ -312,10 +304,11 @@ export function applyInterleaving<T extends QuestionWithSystem>(
     targetMagnitude += target * target;
     actualMagnitude += actual * actual;
   }
-  
-  const blueprintAdherence = targetMagnitude > 0 && actualMagnitude > 0
-    ? dotProduct / (Math.sqrt(targetMagnitude) * Math.sqrt(actualMagnitude))
-    : 0;
+
+  const blueprintAdherence =
+    targetMagnitude > 0 && actualMagnitude > 0
+      ? dotProduct / (Math.sqrt(targetMagnitude) * Math.sqrt(actualMagnitude))
+      : 0;
 
   return {
     questions: result,
@@ -340,18 +333,18 @@ export function validateInterleaving<T extends QuestionWithSystem>(
 } {
   const issues: string[] = [];
   const systemCounts: Record<string, number> = {};
-  
+
   for (const q of questions.slice(0, blockSize)) {
     const system = normalizeSystemName(q.system);
     systemCounts[system] = (systemCounts[system] || 0) + 1;
   }
-  
+
   const distinctSystems = Object.keys(systemCounts).length;
-  
+
   if (distinctSystems < minSystems) {
     issues.push(`Only ${distinctSystems} distinct systems (minimum ${minSystems} required)`);
   }
-  
+
   // Check for excessive repetition
   let lastSystem = '';
   let repeatCount = 0;
@@ -367,7 +360,7 @@ export function validateInterleaving<T extends QuestionWithSystem>(
     }
     lastSystem = system;
   }
-  
+
   return {
     isValid: issues.length === 0,
     issues,
@@ -382,24 +375,24 @@ export function getWeakSystemRecommendations(
   performanceBySystem: Record<string, { correct: number; total: number }>
 ): string[] {
   const weakSystems: { system: string; score: number; weight: number }[] = [];
-  
+
   for (const [system, { correct, total }] of Object.entries(performanceBySystem)) {
     if (total < 5) continue; // Not enough data
-    
+
     const accuracy = correct / total;
     const weight = NCCPA_BLUEPRINT_WEIGHTS[system] || 0.05;
-    
+
     // Score = (1 - accuracy) * blueprint_weight
     // Higher score = more important to improve
     const score = (1 - accuracy) * weight;
     weakSystems.push({ system, score, weight });
   }
-  
+
   // Sort by score descending
   weakSystems.sort((a, b) => b.score - a.score);
-  
+
   // Return top 3 weak systems
-  return weakSystems.slice(0, 3).map(s => s.system);
+  return weakSystems.slice(0, 3).map((s) => s.system);
 }
 
 export default {

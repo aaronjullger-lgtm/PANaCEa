@@ -74,7 +74,9 @@ const DdxTrainer = () => {
             className={`h-auto text-wrap justify-start p-4 ${
               isRevealed && dx.isCorrect ? 'bg-green-500 hover:bg-green-600 text-white' : ''
             } ${
-              isRevealed && selectedAnswer === dx.name && !dx.isCorrect ? 'bg-red-500 hover:bg-red-600 text-white' : ''
+              isRevealed && selectedAnswer === dx.name && !dx.isCorrect
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : ''
             }`}
           >
             {dx.name}
@@ -93,7 +95,9 @@ const DdxTrainer = () => {
             {Object.entries(problem.rationales).map(([dxName, rationale]) => (
               <Card key={dxName}>
                 <CardHeader>
-                  <CardTitle className={dxName === problem.correctDiagnosis ? 'text-green-600' : ''}>
+                  <CardTitle
+                    className={dxName === problem.correctDiagnosis ? 'text-green-600' : ''}
+                  >
                     {dxName}
                   </CardTitle>
                 </CardHeader>

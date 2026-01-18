@@ -3,6 +3,7 @@
 ## What's New? 🎉
 
 Your PANaCEa app now supports:
+
 - 🔐 **User Accounts** - Sign in to save your progress
 - ☁️ **Cloud Sync** - Access your data from any device
 - 📱 **Multi-Device** - Study on phone, tablet, or computer
@@ -23,18 +24,21 @@ Your PANaCEa app now supports:
 Choose one (all have generous free tiers):
 
 **Option A: Neon** (Recommended - Serverless)
+
 1. Visit https://neon.tech
 2. Create account
 3. Create new project
 4. Copy connection string
 
 **Option B: Supabase** (Great features)
+
 1. Visit https://supabase.com
 2. Create account
 3. Create new project
 4. Copy "Transaction" connection string
 
 **Option C: Railway** (Simple)
+
 1. Visit https://railway.app
 2. Create account
 3. Add PostgreSQL service
@@ -43,11 +47,13 @@ Choose one (all have generous free tiers):
 ### Step 3: Configure Your App (2 minutes)
 
 1. **Create environment file:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Edit `.env` with your keys:**
+
    ```env
    VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
    CLERK_SECRET_KEY=sk_test_your_secret_here
@@ -55,6 +61,7 @@ Choose one (all have generous free tiers):
    ```
 
 3. **Run database setup:**
+
    ```bash
    npx prisma migrate dev
    ```
@@ -69,18 +76,21 @@ That's it! 🎉
 ## Using the Feature
 
 ### First Time Sign-In
+
 1. Click "Sign In" button in the menu
 2. Create your account
 3. Your existing progress uploads automatically
 4. See "Synced" indicator when complete
 
 ### Daily Use
+
 - Study normally - sync happens automatically
 - Progress saves every few seconds
 - Works offline, syncs when back online
 - Sign out anytime without losing data
 
 ### On Another Device
+
 1. Open PANaCEa
 2. Sign in with same account
 3. Your progress appears instantly
@@ -89,23 +99,27 @@ That's it! 🎉
 ## Troubleshooting
 
 ### "Missing Publishable Key for Clerk!" error
+
 - This error appears when the app starts without proper Clerk configuration
-- **Solution:** 
+- **Solution:**
   1. Create `.env` file: `cp .env.example .env`
   2. Add your Clerk publishable key to `.env`
   3. Restart dev server: `Ctrl+C` then `npm run dev`
 
 ### "Sign In button doesn't appear"
+
 - Check `.env` file has correct keys
 - Restart dev server: `Ctrl+C` then `npm run dev`
 - Clear browser cache
 
 ### "Database connection failed"
+
 - Verify `DATABASE_URL` in `.env`
 - Check database service is running
 - Try connection string in database tool first
 
 ### "Data not syncing"
+
 - Check browser console for errors
 - Look for cloud icon in menu
 - Try signing out and back in
@@ -114,12 +128,14 @@ That's it! 🎉
 ## Need More Help?
 
 📚 **Detailed Guides:**
+
 - [Complete Setup Guide](./AUTHENTICATION_SETUP.md)
 - [Migration Guide](./MIGRATION_GUIDE.md)
 - [Feature Documentation](./CLOUD_SYNC_README.md)
 - [Technical Details](./IMPLEMENTATION_SUMMARY_AUTH.md)
 
 💬 **Get Support:**
+
 - Check documentation above
 - Review error messages
 - Create GitHub issue with details
@@ -127,6 +143,7 @@ That's it! 🎉
 ## Without Authentication
 
 **Don't want to set this up?** No problem!
+
 - App works fine without authentication
 - Data stays in your browser (localStorage)
 - All features work normally

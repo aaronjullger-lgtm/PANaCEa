@@ -1,70 +1,57 @@
-import type { EventContext } from '@cloudflare/workers-types';
+/**
+ * API Endpoint: /api/conditions/family/:canonicalName
+ *
+ * PUBLIC endpoint - Returns condition family members by canonical name
+ * Educational content accessible without authentication
+ */
+
+import { publicEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { z } from 'zod';
 
-export async function onRequestGet(context: EventContext<any, any, any>) {
-    const canonicalName = context.params.canonicalName as string | undefined;
+const FamilySchema = z.object({
+  params: z.object({
+    canonicalName: z.string().min(1, 'Canonical name is required'),
+  }),
+});
 
-    if (!canonicalName) {
-        return new Response(JSON.stringify({ error: 'Canonical name is required' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-        });
+export const onRequestGet = publicEndpoint(FamilySchema, async ({ env, validated }) => {
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    const decodedName = decodeURIComponent(validated.params.canonicalName);
+
+    const members = await prisma.medicalContent.findMany({
+      where: { canonicalName: { equals: decodedName, mode: 'insensitive' } },
+      select: {
+        id: true,
+        condition: true,
+        canonicalName: true,
+        relationshipType: true,
+        parentId: true,
+      },
+    });
+
+    if (members.length === 0) {
+      return {
+        error: 'Family not found',
+        statusCode: 404,
+      };
     }
 
-    const databaseUrl = context.env.DATABASE_URL;
-    if (!databaseUrl) {
-        return new Response(JSON.stringify({ error: 'DATABASE_URL is not configured' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    }
+    const parent = members.find(
+      (m) =>
+        m.condition.toLowerCase() === decodedName.toLowerCase() ||
+        m.canonicalName === m.condition ||
+        !m.parentId
+    );
 
-    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
-
-    try {
-        prisma = createEdgePrismaClient(databaseUrl);
-        const decodedName = decodeURIComponent(canonicalName);
-
-        const members = await prisma.medicalContent.findMany({
-            where: { canonicalName: { equals: decodedName, mode: 'insensitive' } },
-            select: {
-                id: true,
-                condition: true,
-                canonicalName: true,
-                relationshipType: true,
-                parentId: true,
-            },
-        });
-
-        if (members.length === 0) {
-            return new Response(JSON.stringify({ error: 'Family not found' }), {
-                status: 404,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-
-        const parent = members.find(
-            (m) =>
-                m.condition.toLowerCase() === decodedName.toLowerCase() ||
-                m.canonicalName === m.condition ||
-                !m.parentId,
-        );
-
-        return new Response(
-            JSON.stringify({
-                canonicalName: decodedName,
-                parent,
-                members: members.filter((m) => m.id !== parent?.id),
-            }),
-            { headers: { 'Content-Type': 'application/json' } },
-        );
-    } catch (error) {
-        console.error('Error fetching condition family:', error);
-        return new Response(JSON.stringify({ error: 'Failed to fetch condition family' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } finally {
-        await safePrismaDisconnect(prisma);
-    }
-}
+    return {
+      canonicalName: decodedName,
+      parent,
+      members: members.filter((m) => m.id !== parent?.id),
+    };
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+});

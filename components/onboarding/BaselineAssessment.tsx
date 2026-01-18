@@ -28,10 +28,30 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
   const [phase, setPhase] = useState<AssessmentPhase>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
-  
+
   // Predetermined mock answers for consistency (demo purposes only)
-  const mockAnswers = [true, false, true, true, false, true, false, true, true, false, 
-                       true, true, false, true, false, true, true, false, true, true];
+  const mockAnswers = [
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+  ];
 
   // Mock questions for demonstration
   // In production, these would be fetched from your question bank
@@ -61,19 +81,17 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
 
     // Mock system breakdown
     const systemBreakdown = {
-      'CV': { correct: 3, total: 4, accuracy: 75 },
-      'PULM': { correct: 2, total: 3, accuracy: 66.7 },
-      'GI': { correct: 4, total: 4, accuracy: 100 },
-      'NEURO': { correct: 1, total: 3, accuracy: 33.3 },
-      'RENAL': { correct: 2, total: 2, accuracy: 100 },
-      'MSK': { correct: 1, total: 2, accuracy: 50 },
-      'DERM': { correct: 1, total: 2, accuracy: 50 },
+      CV: { correct: 3, total: 4, accuracy: 75 },
+      PULM: { correct: 2, total: 3, accuracy: 66.7 },
+      GI: { correct: 4, total: 4, accuracy: 100 },
+      NEURO: { correct: 1, total: 3, accuracy: 33.3 },
+      RENAL: { correct: 2, total: 2, accuracy: 100 },
+      MSK: { correct: 1, total: 2, accuracy: 50 },
+      DERM: { correct: 1, total: 2, accuracy: 50 },
     };
 
     // Sort systems by accuracy
-    const sorted = Object.entries(systemBreakdown).sort(
-      ([, a], [, b]) => b.accuracy - a.accuracy
-    );
+    const sorted = Object.entries(systemBreakdown).sort(([, a], [, b]) => b.accuracy - a.accuracy);
 
     const results: BaselineResults = {
       totalQuestions,
@@ -81,11 +99,14 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
       accuracy,
       systemBreakdown,
       strongestSystems: sorted.slice(0, 3).map(([sys]) => sys),
-      weakestSystems: sorted.slice(-3).map(([sys]) => sys).reverse(),
+      weakestSystems: sorted
+        .slice(-3)
+        .map(([sys]) => sys)
+        .reverse(),
     };
 
     setPhase('results');
-    
+
     // Wait a moment before calling onComplete to show results
     setTimeout(() => {
       onComplete(results);
@@ -111,7 +132,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Welcome to PANaCEa
           </h2>
-          
+
           <p className="text-lg text-[var(--color-text-muted)] text-center mb-8">
             Let's establish your baseline with a brief diagnostic assessment
           </p>
@@ -192,7 +213,9 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           <div className="mb-6">
             <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
               <span>Baseline Assessment</span>
-              <span>{currentQuestion + 1} of {totalQuestions}</span>
+              <span>
+                {currentQuestion + 1} of {totalQuestions}
+              </span>
             </div>
             <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
               <motion.div
@@ -212,7 +235,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             <p className="text-[var(--color-text-muted)] mb-8">
               In a production app, this would display actual questions from your question bank.
             </p>
-            
+
             {/* Mock Answer Buttons */}
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
               <button
@@ -269,7 +292,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-2">
           Assessment Complete
         </h2>
-        
+
         <p className="text-[var(--color-text-muted)] text-center mb-8">
           Your personalized learning profile is being generated...
         </p>

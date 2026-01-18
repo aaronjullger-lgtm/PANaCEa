@@ -1,55 +1,62 @@
 /**
  * API Endpoint: /api/questions
- * 
+ *
  * Fetch questions for drill modes from the database
  * Uses tags array to filter by category (ventilator, physiology, anatomy)
+ *
+ * Sprint 3 Security: Updated to use secure middleware pattern
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
-import { authenticateRequest } from './_shared/auth';
-import { createEdgePrismaClient } from './_shared/prisma-edge';
+import { z } from 'zod';
+import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from './_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from './_shared/middleware';
+import { createEndpointLogger } from './_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+// ============================================================================
+// SCHEMAS
+// ============================================================================
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  try {
-    // Authenticate request
-    const env = context.env as Env;
-    const authResult = await authenticateRequest(context.request as any, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+const GetQuestionsSchema = z.object({
+  category: z.string().min(1).max(100),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
 
-    // Parse query parameters
+// ============================================================================
+// HANDLERS
+// ============================================================================
+
+/**
+ * GET /api/questions
+ * Fetch questions filtered by category and optional difficulty
+ */
+export const onRequestGet = authenticatedEndpoint(
+  GetQuestionsSchema,
+  async (context) => {
+    const log = createEndpointLogger('GET /api/questions', context.auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    // Parse query parameters manually since validation happens on body
     const url = new URL(context.request.url);
     const category = url.searchParams.get('category');
     const difficulty = url.searchParams.get('difficulty');
     const limitStr = url.searchParams.get('limit');
     const limit = limitStr ? parseInt(limitStr, 10) : 20;
 
-    // Validate query
+    // Validate category is present
     if (!category) {
-      return new Response(JSON.stringify({ error: 'Category parameter is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      log.warn('Missing category parameter');
+      return { status: 400, error: 'Category parameter is required' };
     }
 
-    // Create Prisma client
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
     try {
+      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
       // Build where clause
       // For drill questions, we use tags to filter by category
       const where: any = {
         tags: {
-          array_contains: category, // Prisma JSON filter for array contains
+          array_contains: category,
         },
       };
 
@@ -60,7 +67,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       // Fetch questions
       const questions = await prisma.question.findMany({
         where,
-        take: limit,
+        take: Math.min(limit, 100),
         orderBy: {
           createdAt: 'desc',
         },
@@ -77,25 +84,25 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         },
       });
 
-      // Return questions
-      return new Response(JSON.stringify({ questions }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
+      log.info('Questions fetched', { 
+        category, 
+        difficulty, 
+        count: questions.length 
       });
+
+      return {
+        data: { questions },
+      };
+    } catch (error) {
+      log.error('Error fetching questions', error);
+      return { status: 500, error: 'Internal server error' };
     } finally {
-      await prisma.$disconnect();
+      await safePrismaDisconnect(prisma);
     }
-  } catch (error) {
-    console.error('Error fetching questions:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
   }
-};
+);
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const onRequestOptions = withCors();

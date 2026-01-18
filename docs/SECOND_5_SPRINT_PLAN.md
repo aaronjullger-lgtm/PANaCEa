@@ -1,4 +1,5 @@
 # Second 5-Sprint Performance & Architecture Optimization
+
 **Date**: January 5, 2026  
 **Status**: 🟢 IN PROGRESS  
 **Context**: Follow-up to initial 5-sprint optimization (KV cache, optimistic UI, transitions)
@@ -10,6 +11,7 @@
 After initial performance optimization, comprehensive analysis reveals **critical architectural issues**:
 
 ### Issues Identified
+
 1. **8 TypeScript compilation errors** - Import paths, type mismatches, missing declarations
 2. **Missing database foreign key relationships** - 15+ junction tables lack proper indexes
 3. **KV cache incomplete** - Type definitions incomplete, CloudFlare Workers integration partial
@@ -17,6 +19,7 @@ After initial performance optimization, comprehensive analysis reveals **critica
 5. **No error monitoring** - Production errors not tracked, no alerting system
 
 ### Impact
+
 - **Build fails** with TypeScript errors (blocks deployment)
 - **Query performance**: 2-5x slower than optimal due to missing indexes
 - **Developer experience**: Type errors slow development, confuse AI assistants
@@ -27,9 +30,11 @@ After initial performance optimization, comprehensive analysis reveals **critica
 ## Sprint 1: TypeScript & Build Fixes ✅ STARTED
 
 ### Problem
+
 8 TypeScript compilation errors block production builds and create confusion in AI-assisted development.
 
 ### Files with Errors
+
 1. `App.tsx` - DDxCompareDrill import path incorrect
 2. `lib/utils/optimisticUI.ts` - Import path for types
 3. `functions/api/_shared/kv-cache.ts` - Missing KVNamespace type
@@ -39,6 +44,7 @@ After initial performance optimization, comprehensive analysis reveals **critica
 7. `services/geminiService.ts` - Async/await mismatch on buildConditionDefinition
 
 ### Solution Strategy
+
 1. **Fix import paths** - Correct relative paths for types and components
 2. **Add missing type definitions** - CloudFlare Workers types, UI component exports
 3. **Update Prisma calls** - Add required fields (id, updatedAt) for seed operations
@@ -47,8 +53,9 @@ After initial performance optimization, comprehensive analysis reveals **critica
 ### Implementation
 
 **✅ Already Fixed (3/8):**
+
 - lib/utils/optimisticUI.ts - Fixed import path
-- functions/api/_shared/kv-cache.ts - Added KVNamespace type definition
+- functions/api/\_shared/kv-cache.ts - Added KVNamespace type definition
 - App.tsx - Fixed DDxCompareDrill import path
 
 **Remaining (5/8):**
@@ -80,12 +87,13 @@ await prisma.procedure.upsert({
 // Remove 'difficulty' from MediaAsset creation
 // Delete the line: difficulty: 'medium',
 
-// scripts/images/process-curated-images.ts (line 324)  
+// scripts/images/process-curated-images.ts (line 324)
 // Remove 'difficulty' reference
 // Delete the line: difficulty: analysis.difficulty,
 ```
 
 **Validation:**
+
 ```bash
 npm run build  # Should complete without TypeScript errors
 ```
@@ -97,9 +105,11 @@ npm run build  # Should complete without TypeScript errors
 ## Sprint 2: Database Relationship & Index Optimization
 
 ### Problem
+
 Missing indexes and incomplete foreign key relationships cause slow queries and data integrity issues.
 
 ### Analysis Results
+
 - **15+ junction tables** without proper indexes on medicalContentId
 - **userId + timestamp** queries lack composite index (used in 20+ endpoints)
 - **system + conditionId** queries lack composite index (used in 10+ endpoints)
@@ -109,35 +119,35 @@ Missing indexes and incomplete foreign key relationships cause slow queries and 
 
 ```sql
 -- Composite index for user performance queries (20+ endpoints)
-CREATE INDEX "PerformanceRecord_userId_timestamp_idx" 
+CREATE INDEX "PerformanceRecord_userId_timestamp_idx"
   ON "PerformanceRecord"("userId", "timestamp" DESC);
 
 -- Composite index for condition queries
-CREATE INDEX "MedicalContent_system_conditionId_idx" 
+CREATE INDEX "MedicalContent_system_conditionId_idx"
   ON "MedicalContent"("system", "conditionId");
 
 -- Composite index for question attempts
-CREATE INDEX "QuestionAttempt_userId_system_createdAt_idx" 
+CREATE INDEX "QuestionAttempt_userId_system_createdAt_idx"
   ON "QuestionAttempt"("userId", "system", "createdAt" DESC);
 
 -- GIN index for array search (relatedSystems already has one, add these)
-CREATE INDEX "Drug_drugClass_gin_idx" 
+CREATE INDEX "Drug_drugClass_gin_idx"
   ON "Drug" USING GIN ("drugClass");
 
-CREATE INDEX "Drug_indications_gin_idx" 
+CREATE INDEX "Drug_indications_gin_idx"
   ON "Drug" USING GIN ("indications");
 
-CREATE INDEX "MedicalContent_buzzwords_gin_idx" 
+CREATE INDEX "MedicalContent_buzzwords_gin_idx"
   ON "MedicalContent" USING GIN ("buzzwords");
 
 -- Index for junction table queries
-CREATE INDEX "DrugConditionLink_medicalContentId_idx" 
+CREATE INDEX "DrugConditionLink_medicalContentId_idx"
   ON "DrugConditionLink"("medicalContentId");
 
-CREATE INDEX "LabConditionLink_medicalContentId_idx" 
+CREATE INDEX "LabConditionLink_medicalContentId_idx"
   ON "LabConditionLink"("medicalContentId");
 
-CREATE INDEX "ECGConditionLink_medicalContentId_idx" 
+CREATE INDEX "ECGConditionLink_medicalContentId_idx"
   ON "ECGConditionLink"("medicalContentId");
 
 -- More junction tables need medicalContentId indexes:
@@ -165,11 +175,11 @@ model AntibioticConditionLink {
   notes                   String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   AntibioticGuideline     AntibioticGuideline   @relation(fields: [antibioticId], references: [id], onDelete: Cascade)
   Condition               Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent          MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   @@unique([antibioticId, conditionId, relationshipType])
   @@index([antibioticId])
   @@index([conditionId])
@@ -188,11 +198,11 @@ model VitalSignConditionLink {
   significance            String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   VitalSignRange          VitalSignRange        @relation(fields: [vitalSignId], references: [id], onDelete: Cascade)
   Condition               Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent          MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   @@unique([vitalSignId, conditionId])
   @@index([vitalSignId])
   @@index([conditionId])
@@ -211,11 +221,11 @@ model ScoringSystemConditionLink {
   interpretation          String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   ScoringSystem           ScoringSystem         @relation(fields: [scoringSystemId], references: [id], onDelete: Cascade)
   Condition               Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent          MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   @@unique([scoringSystemId, conditionId])
   @@index([scoringSystemId])
   @@index([conditionId])
@@ -232,11 +242,11 @@ model PearlConditionLink {
   relevance               String                @default("high") // high, medium, low
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   ClinicalPearl           ClinicalPearl         @relation(fields: [pearlId], references: [id], onDelete: Cascade)
   Condition               Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent          MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   @@unique([pearlId, conditionId])
   @@index([pearlId])
   @@index([conditionId])
@@ -253,11 +263,11 @@ model DifferentialConditionLink {
   distinguishingFeatures  String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   DifferentialDiagnosis   DifferentialDiagnosis @relation(fields: [differentialId], references: [id], onDelete: Cascade)
   Condition               Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent          MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   @@unique([differentialId, conditionId])
   @@index([differentialId])
   @@index([conditionId])
@@ -276,10 +286,10 @@ model DrugInteraction {
   clinicalManagement      String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   Drug1                   Drug                  @relation("DrugInteraction1", fields: [drug1Id], references: [id], onDelete: Cascade)
   Drug2                   Drug                  @relation("DrugInteraction2", fields: [drug2Id], references: [id], onDelete: Cascade)
-  
+
   @@unique([drug1Id, drug2Id])
   @@index([drug1Id])
   @@index([drug2Id])
@@ -295,10 +305,10 @@ model ConditionRelation {
   notes                   String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now())
-  
+
   Condition1              Condition             @relation("ConditionRelation1", fields: [condition1Id], references: [id], onDelete: Cascade)
   Condition2              Condition             @relation("ConditionRelation2", fields: [condition2Id], references: [id], onDelete: Cascade)
-  
+
   @@unique([condition1Id, condition2Id, relationshipType])
   @@index([condition1Id])
   @@index([condition2Id])
@@ -309,24 +319,28 @@ model ConditionRelation {
 ### Migration Strategy
 
 1. **Create migration file:**
+
 ```bash
 npm run db:migrate:dev -- --name add_deep_relationships_and_indexes
 ```
 
 2. **Apply to production:**
+
 ```bash
 npm run db:migrate:deploy
 ```
 
 3. **Verify indexes:**
+
 ```sql
-SELECT indexname, tablename 
-FROM pg_indexes 
-WHERE schemaname = 'public' 
+SELECT indexname, tablename
+FROM pg_indexes
+WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
 ```
 
-**Impact**: 
+**Impact**:
+
 - 2-5x faster queries on hot paths
 - Rich relational queries for DDx, drug interactions, condition relationships
 - Data integrity enforced at database level
@@ -336,7 +350,9 @@ ORDER BY tablename, indexname;
 ## Sprint 3: KV Cache Production Integration
 
 ### Problem
+
 KV cache partially implemented but:
+
 - Type definitions incomplete (manual fallback type)
 - Not integrated into hot-path endpoints
 - No cache warming strategy
@@ -374,7 +390,7 @@ import { getCachedCondition } from '../_shared/kv-cache';
 export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
   const { env, params } = context;
   const conditionId = params.id as string;
-  
+
   // Use KV cache
   const condition = await getCachedCondition(env, conditionId, async () => {
     const prisma = createEdgePrismaClient(env.DATABASE_URL!);
@@ -386,7 +402,7 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
       await safePrismaDisconnect(prisma);
     }
   });
-  
+
   return Response.json(condition);
 };
 ```
@@ -398,7 +414,7 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
 export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
   const { env } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL!);
-  
+
   try {
     await warmCache(env, prisma);
     return Response.json({ success: true, message: 'Cache warmed' });
@@ -421,7 +437,7 @@ interface CacheMetrics {
 
 export function trackCacheHit(key: string, fetchTimeMs: number): void {
   if (typeof window === 'undefined') return;
-  
+
   const metrics = JSON.parse(localStorage.getItem('cache_metrics') || '{}');
   metrics[key] = metrics[key] || { hits: 0, misses: 0, totalTime: 0 };
   metrics[key].hits++;
@@ -450,7 +466,8 @@ id = "YOUR_PRODUCTION_KV_NAMESPACE_ID"  # Replace after creating
 crons = ["0 */6 * * *"]  # Every 6 hours
 ```
 
-**Impact**: 
+**Impact**:
+
 - 50-80% cache hit rate after warmup
 - 3-5x faster response times for cached data
 - Reduced database load
@@ -461,7 +478,9 @@ crons = ["0 */6 * * *"]  # Every 6 hours
 ## Sprint 4: Database Query Optimization
 
 ### Problem
+
 Queries lack optimization patterns:
+
 - N+1 queries in QuizView (loads conditions separately)
 - Missing eager loading with `include`
 - No query result caching at application level
@@ -474,8 +493,8 @@ Queries lack optimization patterns:
 ```typescript
 // services/questionService.ts - BEFORE
 const question = await prisma.question.findFirst({ where: { id } });
-const condition = await prisma.medicalContent.findFirst({ 
-  where: { conditionId: question.conditionId } 
+const condition = await prisma.medicalContent.findFirst({
+  where: { conditionId: question.conditionId },
 });
 
 // AFTER - Single query with include
@@ -515,10 +534,10 @@ export async function fetchSessionQuestions(
       },
     },
   });
-  
+
   // Preserve order from questionIds
   const orderMap = new Map(questions.map((q, i) => [q.id, q]));
-  return questionIds.map(id => orderMap.get(id)!).filter(Boolean);
+  return questionIds.map((id) => orderMap.get(id)!).filter(Boolean);
 }
 ```
 
@@ -535,23 +554,19 @@ interface CacheEntry<T> {
 
 class QueryCache {
   private cache = new Map<string, CacheEntry<any>>();
-  
-  async get<T>(
-    key: string,
-    fetchFn: () => Promise<T>,
-    ttl: number = CACHE_TTL
-  ): Promise<T> {
+
+  async get<T>(key: string, fetchFn: () => Promise<T>, ttl: number = CACHE_TTL): Promise<T> {
     const cached = this.cache.get(key);
-    
-    if (cached && (Date.now() - cached.timestamp) < ttl) {
+
+    if (cached && Date.now() - cached.timestamp < ttl) {
       return cached.data;
     }
-    
+
     const data = await fetchFn();
     this.cache.set(key, { data, timestamp: Date.now() });
     return data;
   }
-  
+
   invalidate(keyPattern: RegExp): void {
     for (const key of this.cache.keys()) {
       if (keyPattern.test(key)) {
@@ -571,7 +586,7 @@ export const queryCache = new QueryCache();
 export function createEdgePrismaClient(databaseUrl: string) {
   // Use connection pooling URL (not direct URL)
   const pooledUrl = databaseUrl.replace('?', '?pgbouncer=true&');
-  
+
   return new PrismaClient({
     datasources: { db: { url: pooledUrl } },
     // Optimize for edge runtime
@@ -601,6 +616,7 @@ logSlowQuery('question.findMany', Date.now() - start, { count: result.length });
 ```
 
 **Impact**:
+
 - 50-70% reduction in query count (eliminate N+1)
 - 2-3x faster page loads
 - Better connection utilization
@@ -611,7 +627,9 @@ logSlowQuery('question.findMany', Date.now() - start, { count: result.length });
 ## Sprint 5: Error Tracking & Monitoring
 
 ### Problem
+
 Production has no error tracking:
+
 - No centralized error collection
 - No alerting on critical failures
 - No performance monitoring
@@ -641,9 +659,9 @@ Sentry.init({
       blockAllMedia: true,
     }),
   ],
-  tracesSampleRate: 0.1,  // 10% of transactions
-  replaysSessionSampleRate: 0.1,  // 10% of sessions
-  replaysOnErrorSampleRate: 1.0,  // 100% of error sessions
+  tracesSampleRate: 0.1, // 10% of transactions
+  replaysSessionSampleRate: 0.1, // 10% of sessions
+  replaysOnErrorSampleRate: 1.0, // 100% of error sessions
 });
 ```
 
@@ -668,12 +686,12 @@ import * as Sentry from '@sentry/cloudflare';
 
 export function initSentry(request: Request, env: CloudflareEnv) {
   if (!env.SENTRY_DSN) return;
-  
+
   Sentry.init({
     dsn: env.SENTRY_DSN,
     tracesSampleRate: 0.1,
   });
-  
+
   Sentry.setContext('request', {
     url: request.url,
     method: request.method,
@@ -681,19 +699,16 @@ export function initSentry(request: Request, env: CloudflareEnv) {
   });
 }
 
-export async function handleApiError(
-  error: unknown,
-  context: string
-): Promise<Response> {
+export async function handleApiError(error: unknown, context: string): Promise<Response> {
   console.error(`[${context}]`, error);
-  
+
   // Send to Sentry
   Sentry.captureException(error, {
     tags: { context },
   });
-  
+
   return Response.json(
-    { 
+    {
       error: error instanceof Error ? error.message : 'Internal server error',
       context,
     },
@@ -714,17 +729,17 @@ interface PerformanceMark {
 
 class PerformanceMonitor {
   private marks = new Map<string, number>();
-  
+
   mark(name: string): void {
     this.marks.set(name, performance.now());
   }
-  
+
   measure(name: string, startMark: string): number {
     const start = this.marks.get(startMark);
     if (!start) return 0;
-    
+
     const duration = performance.now() - start;
-    
+
     // Send to analytics
     if (window.gtag) {
       window.gtag('event', 'timing_complete', {
@@ -733,7 +748,7 @@ class PerformanceMonitor {
         event_category: 'Performance',
       });
     }
-    
+
     return duration;
   }
 }
@@ -757,7 +772,7 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
     cache: false,
     timestamp: new Date().toISOString(),
   };
-  
+
   // Check database
   try {
     const prisma = createEdgePrismaClient(env.DATABASE_URL!);
@@ -767,7 +782,7 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
   } catch (error) {
     console.error('Database health check failed:', error);
   }
-  
+
   // Check KV cache
   try {
     await env.CACHE.put('health_check', 'ok', { expirationTtl: 60 });
@@ -776,9 +791,9 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
   } catch (error) {
     console.error('Cache health check failed:', error);
   }
-  
-  const allHealthy = Object.values(checks).every(v => v === true || typeof v === 'string');
-  
+
+  const allHealthy = Object.values(checks).every((v) => v === true || typeof v === 'string');
+
   return Response.json(checks, {
     status: allHealthy ? 200 : 503,
   });
@@ -791,23 +806,25 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
 // functions/api/cron/check-health.ts
 export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
   const { env } = context;
-  
+
   // Check error rate in last hour
   const errorRate = await getErrorRate(env, 3600);
-  
-  if (errorRate > 0.05) {  // > 5% error rate
+
+  if (errorRate > 0.05) {
+    // > 5% error rate
     await sendAlert(env, {
       severity: 'high',
       message: `Error rate is ${(errorRate * 100).toFixed(2)}%`,
       action: 'Check Sentry dashboard',
     });
   }
-  
+
   return Response.json({ success: true });
 };
 ```
 
 **Impact**:
+
 - Real-time error visibility
 - Session replay for debugging
 - Performance bottleneck identification
@@ -818,16 +835,19 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
 ## Implementation Roadmap
 
 ### Week 1: Foundational Fixes
+
 - ✅ Day 1-2: Sprint 1 (TypeScript fixes)
 - Day 3-4: Sprint 2 (Database relationships)
 - Day 5: Testing and validation
 
 ### Week 2: Performance & Monitoring
+
 - Day 1-2: Sprint 3 (KV cache integration)
 - Day 3-4: Sprint 4 (Query optimization)
 - Day 5: Sprint 5 (Error monitoring)
 
 ### Week 3: Testing & Rollout
+
 - Day 1-2: Integration testing
 - Day 3: Staging deployment
 - Day 4: Production rollout (gradual)
@@ -838,26 +858,31 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
 ## Success Metrics
 
 ### Sprint 1: TypeScript Fixes
+
 - ✅ 0 TypeScript compilation errors
 - ✅ Clean `npm run build` output
 - ✅ All imports resolve correctly
 
 ### Sprint 2: Database Optimization
+
 - 📊 2-5x faster query times on hot paths
 - 📊 0 missing foreign key errors in logs
 - 📊 95%+ query hit rate on indexed fields
 
 ### Sprint 3: KV Cache
+
 - 📊 50-80% cache hit rate after warmup
 - 📊 3-5x faster cached endpoint responses
 - 📊 50%+ reduction in database load
 
 ### Sprint 4: Query Optimization
+
 - 📊 50-70% reduction in total query count
 - 📊 <500ms p95 response time on all endpoints
 - 📊 <100 active database connections at peak
 
 ### Sprint 5: Error Monitoring
+
 - 📊 100% error capture rate (vs 0% baseline)
 - 📊 <5 minute alert latency
 - 📊 Session replay available for all critical errors
@@ -867,24 +892,30 @@ export const onRequestGet: PagesFunction<CloudflareEnv> = async (context) => {
 ## Risk Mitigation
 
 ### Database Migration Risks
+
 **Risk**: Schema changes break production
-**Mitigation**: 
+**Mitigation**:
+
 - Test migrations on staging first
 - Use `npx prisma migrate deploy` (not `db push`)
 - Keep rollback scripts ready
 - Monitor query performance post-migration
 
 ### Cache Consistency Risks
+
 **Risk**: Stale data served from cache
 **Mitigation**:
+
 - Use short TTLs (5-10 min) initially
 - Implement cache invalidation on writes
 - Add cache version headers
 - Monitor cache hit accuracy
 
 ### Error Monitoring Overhead
+
 **Risk**: Performance impact from Sentry
 **Mitigation**:
+
 - Use 10% sample rate for traces
 - Use 10% sample rate for sessions
 - Only capture errors above threshold
@@ -940,18 +971,21 @@ npm run db:studio
 ## Next Steps (Post-Sprint)
 
 ### Performance
+
 1. Implement Redis for sub-second caching
 2. Add CDN caching for static assets
 3. Implement service worker for offline mode
 4. Add request deduplication
 
 ### Developer Experience
+
 5. Generate TypeScript types from Prisma on watch
 6. Add pre-commit hooks for type checking
 7. Improve error messages with suggestions
 8. Add development tools panel
 
 ### Production Readiness
+
 9. Add rate limiting per user
 10. Implement graceful degradation
 11. Add feature flags system
@@ -970,6 +1004,7 @@ This 5-sprint plan addresses **critical architectural gaps** discovered after in
 5. 📡 **Sprint 5**: 100% error visibility, proactive monitoring
 
 **Combined Impact**:
+
 - **5-10x overall performance improvement** (compounding effects)
 - **Zero production blind spots** (full observability)
 - **Clean codebase** (type-safe, maintainable)

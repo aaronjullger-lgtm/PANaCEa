@@ -3,12 +3,12 @@
  * Supports polymorphic search across Conditions, Drugs, Treatments, Tests, and Concepts
  */
 
-export type SearchResultType = 
-  | 'condition' 
-  | 'drug' 
-  | 'treatment' 
-  | 'special_test' 
-  | 'physiology' 
+export type SearchResultType =
+  | 'condition'
+  | 'drug'
+  | 'treatment'
+  | 'special_test'
+  | 'physiology'
   | 'lab_test'
   | 'imaging'
   | 'surgery';

@@ -1,6 +1,6 @@
 /**
  * Smart Image Cropper
- * 
+ *
  * Crops images to remove annotations while preserving medical content.
  * Uses sharp for image processing.
  */
@@ -17,9 +17,9 @@ try {
 }
 
 interface CropRegion {
-  x: number;      // percentage from left (0-100)
-  y: number;      // percentage from top (0-100)  
-  width: number;  // percentage width (0-100)
+  x: number; // percentage from left (0-100)
+  y: number; // percentage from top (0-100)
+  width: number; // percentage width (0-100)
   height: number; // percentage height (0-100)
   reason: string;
 }
@@ -80,7 +80,6 @@ export async function cropImage(
       originalSize: { width: originalWidth, height: originalHeight },
       croppedSize: { width: cropWidth, height: cropHeight },
     };
-
   } catch (error) {
     return {
       success: false,
@@ -152,7 +151,6 @@ export async function resizeForQuiz(
       originalSize: { width: originalWidth, height: originalHeight },
       croppedSize: { width: result.width, height: result.height },
     };
-
   } catch (error) {
     return {
       success: false,
@@ -184,10 +182,10 @@ export async function processForQuiz(
 
   // Step 1: Crop if region provided
   if (cropRegion) {
-    const cropOutputPath = outputDir 
+    const cropOutputPath = outputDir
       ? path.join(outputDir, `cropped_${path.basename(inputPath)}`)
       : undefined;
-    
+
     result = await cropImage(inputPath, cropRegion, cropOutputPath);
     if (!result.success) {
       return result;

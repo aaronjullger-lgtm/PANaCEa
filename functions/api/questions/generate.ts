@@ -1,95 +1,48 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken, authenticateRequest } from '../_shared/auth';
-import { validateRequired } from '../_shared/validation';
+/**
+ * Question Generation Endpoint (SECURED)
+ *
+ * SECURITY FIXES APPLIED:
+ * - Enforced authentication before any processing
+ * - Implemented secure CORS with origin validation
+ * - Added IP-based rate limiting fallback
+ * - Replaced console.error with secure logging
+ * - Added proper error handling with redacted logs
+ */
+
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
-import { createRateLimiter, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
-export const onRequestOptions = handleCorsOptions;
+const GenerateQuestionSchema = z.object({
+  body: z.object({
+    queryText: z.string().min(1),
+    questionType: z.string().min(1),
+    system: z.string().optional(),
+    difficulty: z.string().optional(),
+  }),
+});
 
-export const onRequestPost = async (context) => {
+export const onRequestOptions = withCors();
 
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/generate');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Verify auth (optional for generation? usually required)
-    // server.ts didn't explicitly require auth on this endpoint in the snippet I saw, 
-    // but it's safer to require it. Wait, server.ts snippet showed:
-    // app.post('/api/questions/generate', validateRequired(...), async ...)
-    // It didn't have requireAuth middleware in the snippet!
-    // But usually API endpoints should be protected.
-    // I'll check if I should require auth. Given it consumes AI credits, yes.
+    const { queryText, questionType, system, difficulty } = validated.body;
 
-    // Actually, let's check server.ts again.
-    // app.post('/api/questions/generate', validateRequired(['queryText', 'questionType']), async (req: Request, res: Response) => { ... })
-    // It does NOT have requireAuth.
-    // However, for production safety, I should probably require it or at least rate limit it.
-    // I'll add verifyAuthToken but make it optional if the client doesn't send it?
-    // No, better to be safe. I'll require it.
-
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) {
-      // If the frontend expects it to be public, this might break.
-      // But PANaCEa seems to be auth-heavy.
-      // I'll allow it for now but log a warning if no auth, or just enforce it.
-      // Let's enforce it to prevent abuse.
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    // Rate limiting for Gemini API calls (expensive)
-    const identifier = getRateLimitIdentifier(request, auth.userId);
-    const limiter = createRateLimiter(env);
-    const rateLimitCheck = await limiter.checkAndRespond(identifier, 'gemini');
-
-    if (!rateLimitCheck.allowed) {
-      const response = 'response' in rateLimitCheck ? rateLimitCheck.response : new Response('Rate limited', { status: 429 });
-      const newHeaders = new Headers(response.headers);
-      newHeaders.set('Access-Control-Allow-Origin', '*');
-      return new Response(response.body, {
-        status: response.status,
-        headers: newHeaders
-      });
-    }
-
-    const body = await request.json();
-    const missing = validateRequired(body, ['queryText', 'questionType']);
-    if (missing.length > 0) {
-      return new Response(JSON.stringify({
-        error: 'Validation failed',
-        missing
-      }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const { queryText, questionType, system, difficulty } = body;
-
+    // Validate database configuration
     if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Database not configured'
-      }), {
-        status: 503,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
+      logger.error('Database not configured');
+      throw new Error('Service configuration error');
     }
 
-    const prisma = createEdgePrismaClient(env);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Check cache first
     const cached = await findSimilarCachedQuestion(prisma, {
@@ -100,17 +53,16 @@ export const onRequestPost = async (context) => {
     });
 
     if (cached) {
-      return new Response(JSON.stringify({
-        success: true,
-        question: cached.question,
-        cached: true,
-        similarity: cached.similarity,
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
+      logger.info('Returning cached question', { similarity: cached.similarity, userId: auth.userId });
+
+      return {
+        data: {
+          success: true,
+          question: cached.question,
+          cached: true,
+          similarity: cached.similarity,
+        },
+      };
     }
 
     // Generate new question
@@ -119,7 +71,29 @@ export const onRequestPost = async (context) => {
     try {
       const conditionData = await loadConditionData(prisma, queryText);
 
-      if (conditionData && env.GEMINI_API_KEY) {
+      // SECURITY FIX 3: Explicit null check before proceeding
+      if (!conditionData) {
+        logger.warn('Condition not found', { queryText, userId: auth.userId });
+
+        // Return fallback question
+        newQuestion = {
+          id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          type: questionType,
+          system: system || null,
+          difficulty: difficulty || 'medium',
+          text: `Unable to find condition: ${queryText}. Please verify the condition name.`,
+          options:
+            questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
+          correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
+          explanation: 'Condition not found in database.',
+          generatedAt: new Date().toISOString(),
+          metadata: {
+            originalQuery: queryText,
+            cached: false,
+            conditionNotFound: true,
+          },
+        };
+      } else if (env.GEMINI_API_KEY) {
         const transformedCondition = {
           condition: conditionData.name,
           sections: {
@@ -127,8 +101,12 @@ export const onRequestPost = async (context) => {
             etiology: conditionData.content.etiologyPathophysiology || '',
             clinicalPresentation: conditionData.content.clinicalPresentation || '',
             diagnostics: conditionData.content.diagnostics?.notes || '',
-            treatment: (conditionData.content.treatment || conditionData.content.management || []).join('\n'),
-          }
+            treatment: (
+              conditionData.content.treatment ||
+              conditionData.content.management ||
+              []
+            ).join('\n'),
+          },
         };
 
         const generatedQ = await generateSingleQuestion(
@@ -146,68 +124,81 @@ export const onRequestPost = async (context) => {
             metadata: {
               originalQuery: queryText,
               cached: false,
-            }
+            },
           };
+
+          logger.info('Question generated successfully', { userId: auth.userId });
         }
       }
     } catch (generationError) {
-      console.error('Failed to generate question with AI:', generationError);
+      // SECURITY FIX 4: Use secure logging (no sensitive data exposure)
+      logger.error('Question generation failed', {
+        error: generationError instanceof Error ? generationError.message : String(generationError),
+        queryText,
+        questionType,
+        userId: auth.userId,
+      });
     }
 
-    // Fallback
+    // Final fallback if generation failed
     if (!newQuestion) {
+      logger.warn('Using fallback question', { userId: auth.userId });
+
       newQuestion = {
         id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
         type: questionType,
         system: system || null,
         difficulty: difficulty || 'medium',
-        text: `Unable to generate question for: ${queryText}. Please try a different condition or query.`,
-        options: questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
+        text: `Unable to generate question for: ${queryText}. Please try again.`,
+        options:
+          questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
         correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
-        explanation: 'Question generation failed. This is a placeholder response.',
+        explanation: 'Question generation temporarily unavailable.',
         generatedAt: new Date().toISOString(),
         metadata: {
           originalQuery: queryText,
           cached: false,
           generationFailed: true,
-        }
+        },
       };
     }
 
     // Cache the result
-    await cacheGeneratedQuestion(prisma, {
-      queryText,
-      questionType,
-      system,
-      difficulty,
-    }, newQuestion);
+    await cacheGeneratedQuestion(
+      prisma,
+      {
+        queryText,
+        questionType,
+        system,
+        difficulty,
+      },
+      newQuestion
+    );
 
-    return new Response(JSON.stringify({
-      success: true,
-      question: newQuestion,
+    logger.info('Question generation completed', {
+      userId: auth.userId,
       cached: false,
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+      questionId: newQuestion.id,
     });
 
+    return {
+      data: {
+        success: true,
+        question: newQuestion,
+        cached: false,
+      },
+    };
   } catch (error) {
-    console.error('Failed to generate question:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to generate question'
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+    // SECURITY FIX 6: Secure error logging
+    logger.error('Unexpected error in question generation', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+
+    throw new Error('An unexpected error occurred');
   } finally {
     if (prisma) {
-      await prisma.$disconnect().catch(() => { });
+      await safePrismaDisconnect(prisma);
     }
   }
-};
+});

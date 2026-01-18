@@ -27,15 +27,15 @@ model QuestionFlag {
   description     String   @db.Text
   status          String   @default("pending") // pending, under_review, fixed, wont_fix
   priority        String   @default("medium") // low, medium, high, critical
-  
+
   assignedTo      String?
   reviewedBy      String?
   reviewedAt      DateTime?
   resolutionNote  String?  @db.Text
-  
+
   notificationSent Boolean  @default(false)
   notifiedAt      DateTime?
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -44,6 +44,7 @@ model QuestionFlag {
 ### API Endpoints
 
 #### Flag a Question
+
 ```typescript
 POST /api/questions/flag
 Content-Type: application/json
@@ -71,6 +72,7 @@ Response:
 ```
 
 #### Resolve a Flag (Admin)
+
 ```typescript
 POST /api/questions/flag/:flagId/resolve
 Content-Type: application/json
@@ -88,6 +90,7 @@ Response:
 ```
 
 #### Get All Flags (Admin)
+
 ```typescript
 GET /api/questions/flags?status=pending&priority=high
 
@@ -116,6 +119,7 @@ When a flag is resolved, users receive a personalized email:
 **Subject:** "PANaCEa - We Fixed Your Flagged Question #q_456"
 
 **Content:**
+
 - Personalized greeting with user's first name
 - Issue type badge (typo, incorrect answer, etc.)
 - Question preview
@@ -124,6 +128,7 @@ When a flag is resolved, users receive a personalized email:
 - Thank you message for contributing to quality
 
 **Technical Implementation:**
+
 - `lib/services/notificationService.ts` - Handles email composition and sending
 - `lib/email/emailSender.ts` - SMTP transport layer
 - Beautiful HTML templates with dark theme matching PANaCEa brand
@@ -131,6 +136,7 @@ When a flag is resolved, users receive a personalized email:
 ### React Components
 
 #### FlagQuestionModal
+
 ```typescript
 import { FlagQuestionModal } from '@/components/FlagQuestionModal';
 
@@ -147,6 +153,7 @@ import { FlagQuestionModal } from '@/components/FlagQuestionModal';
 ```
 
 #### useQuestionFlag Hook
+
 ```typescript
 import { useQuestionFlag } from '@/hooks/useQuestionFlag';
 
@@ -159,7 +166,7 @@ const handleFlag = async () => {
     flagType: 'incorrect_answer',
     description: 'The answer is wrong because...',
   });
-  
+
   if (result.success) {
     console.log('Question flagged!');
   }
@@ -223,7 +230,7 @@ model SemanticCache {
   lastUsedAt        DateTime @default(now())
   useCount          Int      @default(1)
   qualityScore      Float    @default(0)
-  
+
   @@index([questionType])
   @@index([system])
 }
@@ -344,7 +351,7 @@ model QuestionHistory {
   changeReason    String?  @db.Text
   validFrom       DateTime @default(now())
   validTo         DateTime?
-  
+
   @@unique([questionId, version])
   @@index([questionId, validFrom])
 }
@@ -371,10 +378,7 @@ const version = await saveQuestionVersion(
 );
 
 // Get question as it appeared at a specific date/time
-const historicalQuestion = await getQuestionAtTime(
-  'q_123',
-  new Date('2024-01-01T00:00:00Z')
-);
+const historicalQuestion = await getQuestionAtTime('q_123', new Date('2024-01-01T00:00:00Z'));
 
 // Get complete version history
 const history = await getQuestionHistory('q_123');
@@ -384,7 +388,7 @@ console.log(`Current version: ${history.currentVersion.version}`);
 // Compare two versions
 const diff = await compareQuestionVersions('q_123', 1, 3);
 console.log(`Changes: ${diff.differences.length}`);
-diff.differences.forEach(change => {
+diff.differences.forEach((change) => {
   console.log(`${change.field}: ${change.oldValue} → ${change.newValue}`);
 });
 
@@ -398,7 +402,7 @@ await revertQuestionToVersion(
 
 // Get audit trail
 const trail = await getQuestionAuditTrail('q_123');
-trail.forEach(entry => {
+trail.forEach((entry) => {
   console.log(`Version ${entry.version} by ${entry.changedBy}: ${entry.changeCount} changes`);
 });
 ```
@@ -406,6 +410,7 @@ trail.forEach(entry => {
 ### Use Cases
 
 #### Student Dispute Resolution
+
 ```typescript
 // Student claims answer was wrong on exam date
 const examDate = new Date('2024-11-15T10:00:00Z');
@@ -416,12 +421,13 @@ const current = await getQuestionHistory('q_402');
 const diff = compareVersions(questionAtExamTime, current.currentVersion);
 
 // If answer changed, student may have been correct
-if (diff.some(d => d.field === 'correctAnswer')) {
+if (diff.some((d) => d.field === 'correctAnswer')) {
   console.log('Answer was different at exam time!');
 }
 ```
 
 #### Content Quality Tracking
+
 ```typescript
 // Track how often a question has been modified
 const history = await getQuestionHistory('q_123');
@@ -433,12 +439,10 @@ if (history.versions.length > 5) {
 ```
 
 #### Regulatory Compliance
+
 ```typescript
 // Export all questions modified in a date range
-const modified = await getQuestionsModifiedInRange(
-  new Date('2024-01-01'),
-  new Date('2024-12-31')
-);
+const modified = await getQuestionsModifiedInRange(new Date('2024-01-01'), new Date('2024-12-31'));
 
 // Generate compliance report
 console.log(`${modified.length} questions modified this year`);
@@ -461,6 +465,7 @@ console.log(`${modified.length} questions modified this year`);
 See full documentation in [`docs/MULTI_REGION_DEPLOYMENT.md`](./MULTI_REGION_DEPLOYMENT.md)
 
 **Key Components:**
+
 - Primary database (write master) in primary region
 - Read replicas in US-West and US-East
 - Application servers in each region
@@ -524,11 +529,11 @@ model ContentBranch {
   description     String?  @db.Text
   baseBranch      String?
   status          String   @default("active") // active, merged, archived
-  
+
   createdBy       String
   createdAt       DateTime @default(now())
   mergedAt        DateTime?
-  
+
   changes         BranchChange[]
 }
 
@@ -540,10 +545,10 @@ model BranchChange {
   changeType      String   // create, update, delete
   contentData     Json
   previousData    Json?
-  
+
   createdBy       String
   createdAt       DateTime @default(now())
-  
+
   branch          ContentBranch @relation(fields: [branchId], references: [id])
 }
 ```
@@ -589,11 +594,7 @@ console.log(`Modified: ${diff.modified.length}`);
 console.log(`Deleted: ${diff.deleted.length}`);
 
 // Merge when ready
-const result = await mergeBranch(
-  '2026-diabetes-guidelines',
-  'admin_abc',
-  'main'
-);
+const result = await mergeBranch('2026-diabetes-guidelines', 'admin_abc', 'main');
 
 if (result.success) {
   console.log(`Merged ${result.mergedCount} changes`);
@@ -635,6 +636,7 @@ POST /api/branches/2026-guidelines/merge
 ### Conflict Resolution
 
 If content was modified in both branches:
+
 - **Automatic detection:** Service checks timestamps
 - **Manual resolution:** Admin reviews conflicts before merge
 - **Rollback option:** Can revert merge if issues found
@@ -689,7 +691,7 @@ function App() {
   return (
     <div>
       {/* Your app content */}
-      
+
       {/* Sync indicator appears when offline or pending operations exist */}
       <OfflineSyncIndicator />
     </div>
@@ -703,7 +705,7 @@ function App() {
 await syncPendingOperations(authToken, {
   strategy: 'newest-wins', // Options:
   // - 'client-wins': Always use client data
-  // - 'server-wins': Always use server data  
+  // - 'server-wins': Always use server data
   // - 'newest-wins': Use most recent timestamp
   // - 'merge': Merge non-conflicting fields
 });
@@ -712,6 +714,7 @@ await syncPendingOperations(authToken, {
 ### Storage
 
 Uses browser `localStorage` for pending operations:
+
 - **Key:** `panacea_pending_sync_ops`
 - **Format:** JSON array of operations
 - **Size limit:** ~5MB (typically holds 1000+ operations)
@@ -855,6 +858,7 @@ npm run test:integration -- offline-sync
 ### Dashboards
 
 Create admin dashboard showing:
+
 - Pending question flags by priority
 - Cache statistics
 - Sync status across all users
@@ -890,21 +894,25 @@ Create admin dashboard showing:
 ### Common Issues
 
 **Q: Emails not sending**
+
 - Check SMTP credentials
 - Verify firewall allows port 587
 - Test with simple email client
 
 **Q: Cache not hitting**
+
 - Lower similarity threshold temporarily
 - Add more term normalizations
 - Check cache entry count
 
 **Q: Sync queue growing**
+
 - Check network connectivity
 - Review failed operation logs
 - Increase retry attempts
 
 **Q: Merge conflicts in branches**
+
 - Review changes carefully
 - Use manual merge if needed
 - Consider smaller, more frequent merges
@@ -914,18 +922,21 @@ Create admin dashboard showing:
 ## Next Steps
 
 ### Short Term (1-2 weeks)
+
 - [ ] Create admin UI for managing flags
 - [ ] Add cache warmup script
 - [ ] Implement branch diff viewer
 - [ ] Add sync progress indicator
 
 ### Medium Term (1-2 months)
+
 - [ ] Vector embeddings for semantic cache
 - [ ] Automated branch testing
 - [ ] Offline data compression
 - [ ] Performance optimization
 
 ### Long Term (3-6 months)
+
 - [ ] Machine learning for flag prioritization
 - [ ] Intelligent cache prefetching
 - [ ] Multi-tenant branching

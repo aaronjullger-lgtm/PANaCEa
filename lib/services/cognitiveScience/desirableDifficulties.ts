@@ -1,22 +1,22 @@
 /**
  * Desirable Difficulties Engine
- * 
+ *
  * Implementation of Bjork's "Desirable Difficulties" research framework.
  * These are learning conditions that appear to slow learning but actually
  * enhance long-term retention and transfer.
- * 
+ *
  * Key Research:
  * - Bjork, R.A. (1994). Memory and metamemory considerations in training
  * - Bjork, E.L., & Bjork, R.A. (2011). Making things hard on yourself
  * - Roediger & Karpicke (2006). Testing effect research
- * 
+ *
  * Features:
  * 1. Spacing Effect - Optimal inter-study intervals
  * 2. Interleaving - Mix topics for discrimination learning
  * 3. Retrieval Practice - Testing as learning, not just assessment
  * 4. Variation - Variable practice conditions
  * 5. Generation Effect - Producing vs. reading information
- * 
+ *
  * @module lib/services/cognitiveScience/desirableDifficulties
  */
 
@@ -74,10 +74,10 @@ export function calculateOptimalSpacing(
   // Where S = stability, R = target retention, D = difficulty
   const decay = Math.pow(-1 / Math.log(targetRetention), 1 / difficultyFactor);
   const intervalDays = Math.max(1, Math.round(currentStability * decay));
-  
+
   const nextReviewDate = new Date();
   nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
-  
+
   return { intervalDays, nextReviewDate };
 }
 
@@ -92,25 +92,25 @@ export function calculateInterleavingSchedule(
   learnerProfile: LearnerProfile
 ): StudyBlock[] {
   const blocks: StudyBlock[] = [];
-  
+
   // Optimal block duration based on cognitive load capacity
   const baseBlockDuration = {
     low: 8,
     medium: 12,
     high: 18,
   }[learnerProfile.cognitiveLoadCapacity];
-  
+
   // Calculate interleaving intensity based on learner level
   // Beginners need more blocking, experts benefit more from interleaving
   const interleavingIntensity = Math.min(1, learnerProfile.totalQuestionsAnswered / 500);
-  
+
   const totalBlocks = Math.ceil(sessionLengthMinutes / baseBlockDuration);
-  
+
   for (let i = 0; i < totalBlocks; i++) {
     const isInterleavedBlock = Math.random() < interleavingIntensity;
-    
+
     let topicMix: { topic: string; weight: number }[];
-    
+
     if (isInterleavedBlock) {
       // Interleaved: Mix 2-4 topics
       const numTopics = Math.min(4, Math.max(2, Math.ceil(interleavingIntensity * 4)));
@@ -124,20 +124,22 @@ export function calculateInterleavingSchedule(
       const topic = topics[i % topics.length];
       topicMix = [{ topic, weight: 1 }];
     }
-    
+
     // Retrieval cue strength - weaker cues = stronger memories (desirable difficulty)
-    const retrievalCueStrength: 'strong' | 'medium' | 'weak' = 
-      learnerProfile.averageAccuracy > 0.8 ? 'weak' :
-      learnerProfile.averageAccuracy > 0.6 ? 'medium' : 'strong';
-    
+    const retrievalCueStrength: 'strong' | 'medium' | 'weak' =
+      learnerProfile.averageAccuracy > 0.8
+        ? 'weak'
+        : learnerProfile.averageAccuracy > 0.6
+          ? 'medium'
+          : 'strong';
+
     // Include generation prompts for advanced learners
-    const includeGenerationPrompts = 
-      learnerProfile.averageAccuracy > 0.7 && 
-      learnerProfile.totalQuestionsAnswered > 100;
-    
+    const includeGenerationPrompts =
+      learnerProfile.averageAccuracy > 0.7 && learnerProfile.totalQuestionsAnswered > 100;
+
     // Add breaks every 2-3 blocks (Pomodoro-inspired)
     const breakAfter = (i + 1) % 3 === 0 && i < totalBlocks - 1;
-    
+
     blocks.push({
       blockNumber: i + 1,
       durationMinutes: baseBlockDuration,
@@ -152,7 +154,7 @@ export function calculateInterleavingSchedule(
       breakDurationMinutes: breakAfter ? 5 : undefined,
     });
   }
-  
+
   return blocks;
 }
 
@@ -174,24 +176,24 @@ export function calculateRetrievalPracticeIntensity(
   // Higher intensity for lower retention
   const retentionGap = targetRetention - currentRetention;
   const baseIntensity = Math.max(0.3, Math.min(1, retentionGap * 2));
-  
+
   // Time decay increases need for practice
   const timeDecayFactor = 1 + Math.log(1 + timeSinceLastReview / 24) * 0.2;
-  
+
   const practiceIntensity = Math.min(1, baseIntensity * timeDecayFactor);
-  
+
   // More questions for lower retention
   const recommendedQuestionCount = Math.ceil(5 + practiceIntensity * 10);
-  
+
   // Successful retrieval strengthens memory more than restudying
   const successfulRetrievalBonus = 1.3 + practiceIntensity * 0.5;
-  
+
   return {
     practiceIntensity,
     recommendedQuestionCount,
     successfulRetrievalBonus,
-    failedRetrievalBenefit: 
-      "Failed retrieval attempts still strengthen memory when followed by feedback. " +
+    failedRetrievalBenefit:
+      'Failed retrieval attempts still strengthen memory when followed by feedback. ' +
       "The 'hypercorrection effect' means errors that surprise you are especially well-remembered.",
   };
 }
@@ -213,30 +215,34 @@ export function createGenerationPrompt(
 } {
   // Adjust prompt type based on learner level
   const promptTypes = ['cloze', 'free-recall', 'elaborative', 'self-explanation'] as const;
-  
+
   // Beginners: cloze (fill-in-blank), Advanced: self-explanation
   const typeIndex = Math.min(
     promptTypes.length - 1,
     Math.floor(learnerProfile.averageAccuracy * promptTypes.length * 0.8)
   );
   const promptType = promptTypes[typeIndex];
-  
+
   // Scaffolding inversely related to expertise
-  const scaffoldingLevel: 'none' | 'minimal' | 'moderate' | 'high' = 
-    learnerProfile.totalQuestionsAnswered > 500 ? 'none' :
-    learnerProfile.totalQuestionsAnswered > 200 ? 'minimal' :
-    learnerProfile.totalQuestionsAnswered > 50 ? 'moderate' : 'high';
-  
+  const scaffoldingLevel: 'none' | 'minimal' | 'moderate' | 'high' =
+    learnerProfile.totalQuestionsAnswered > 500
+      ? 'none'
+      : learnerProfile.totalQuestionsAnswered > 200
+        ? 'minimal'
+        : learnerProfile.totalQuestionsAnswered > 50
+          ? 'moderate'
+          : 'high';
+
   // Cognitive load estimation
   const expectedCognitiveLoad = difficulty * (1 - learnerProfile.averageAccuracy * 0.5);
-  
+
   const prompts: Record<typeof promptType, string> = {
-    'cloze': `Complete: The key feature of ${topic} is ______, which leads to ______.`,
+    cloze: `Complete: The key feature of ${topic} is ______, which leads to ______.`,
     'free-recall': `Without looking at notes, list everything you know about ${topic}.`,
-    'elaborative': `Explain WHY ${topic} works the way it does. Connect it to underlying principles.`,
+    elaborative: `Explain WHY ${topic} works the way it does. Connect it to underlying principles.`,
     'self-explanation': `A patient presents with symptoms of ${topic}. Explain your reasoning process for diagnosis step-by-step.`,
   };
-  
+
   return {
     prompt: prompts[promptType],
     promptType,
@@ -267,30 +273,30 @@ export function calculateVariationSchedule(
   rationale: string;
 } {
   const variations = [];
-  
+
   // Base condition (60% of practice for beginners, 30% for advanced)
   const basePercentage = Math.max(30, 60 - learnerProfile.totalQuestionsAnswered / 10);
-  
+
   variations.push({
     format: baseCondition.questionFormat,
     context: baseCondition.contextType,
     presentation: baseCondition.presentationMode,
     useForPercentage: basePercentage,
   });
-  
+
   // Format variations
   const formats = ['multiple-choice', 'true-false', 'fill-blank', 'short-answer', 'case-based'];
-  const otherFormats = formats.filter(f => f !== baseCondition.questionFormat);
-  
+  const otherFormats = formats.filter((f) => f !== baseCondition.questionFormat);
+
   // Context variations
   const contexts = ['clinical-vignette', 'lab-values', 'imaging', 'patient-quote', 'diagnostic'];
-  const otherContexts = contexts.filter(c => c !== baseCondition.contextType);
-  
+  const otherContexts = contexts.filter((c) => c !== baseCondition.contextType);
+
   // Add variations
   const remainingPercentage = 100 - basePercentage;
   const numVariations = Math.min(4, Math.ceil(learnerProfile.averageAccuracy * 5));
   const perVariation = remainingPercentage / numVariations;
-  
+
   for (let i = 0; i < numVariations; i++) {
     variations.push({
       format: otherFormats[i % otherFormats.length],
@@ -299,12 +305,12 @@ export function calculateVariationSchedule(
       useForPercentage: perVariation,
     });
   }
-  
+
   return {
     variations,
-    rationale: 
+    rationale:
       "Variable practice conditions create 'contextual interference' that makes learning feel harder " +
-      "but dramatically improves transfer to new situations - exactly what you need for the PANCE.",
+      'but dramatically improves transfer to new situations - exactly what you need for the PANCE.',
   };
 }
 
@@ -326,41 +332,42 @@ export function calculateOptimalDifficulty(
   // Optimal accuracy is around 85% for maximal learning
   const OPTIMAL_ACCURACY = 0.85;
   const TOLERANCE = 0.08; // +/- 8%
-  
-  const recentAccuracy = recentPerformance.length > 0
-    ? recentPerformance.reduce((sum, p) => sum + p.accuracy, 0) / recentPerformance.length
-    : learnerProfile.averageAccuracy;
-  
+
+  const recentAccuracy =
+    recentPerformance.length > 0
+      ? recentPerformance.reduce((sum, p) => sum + p.accuracy, 0) / recentPerformance.length
+      : learnerProfile.averageAccuracy;
+
   // Calculate current difficulty (inverse relationship with accuracy)
   const currentDifficulty = 10 * (1 - recentAccuracy);
-  
+
   let recommendedAdjustment: 'increase' | 'decrease' | 'maintain';
   let adjustmentMagnitude = 0;
   let explanation: string;
-  
+
   if (recentAccuracy > OPTIMAL_ACCURACY + TOLERANCE) {
     // Too easy - increase difficulty
     recommendedAdjustment = 'increase';
     adjustmentMagnitude = (recentAccuracy - OPTIMAL_ACCURACY) * 2;
-    explanation = 
+    explanation =
       `Your recent accuracy of ${(recentAccuracy * 100).toFixed(0)}% indicates the material is too easy. ` +
       `Research shows learning is maximized at ~85% accuracy. Increasing difficulty will accelerate your progress.`;
   } else if (recentAccuracy < OPTIMAL_ACCURACY - TOLERANCE) {
     // Too hard - decrease difficulty
     recommendedAdjustment = 'decrease';
     adjustmentMagnitude = (OPTIMAL_ACCURACY - recentAccuracy) * 2;
-    explanation = 
+    explanation =
       `Your recent accuracy of ${(recentAccuracy * 100).toFixed(0)}% suggests the material is too challenging. ` +
       `While struggle is beneficial, accuracy below 75% can be frustrating and inefficient.`;
   } else {
     // Goldilocks zone
     recommendedAdjustment = 'maintain';
     adjustmentMagnitude = 0;
-    explanation = 
+    explanation =
       `You're in the optimal learning zone! ${(recentAccuracy * 100).toFixed(0)}% accuracy means you're ` +
       `being challenged just enough to maximize learning without excessive frustration.`;
   }
-  
+
   return {
     targetAccuracy: OPTIMAL_ACCURACY,
     currentDifficulty,
@@ -380,25 +387,27 @@ export function createOptimizedStudyPlan(
 ): StudySessionPlan {
   // Get interleaving schedule
   const blocks = calculateInterleavingSchedule(topics, sessionDurationMinutes, learnerProfile);
-  
+
   // Calculate overall interleaving ratio
-  const interleavedBlocks = blocks.filter(b => b.topicMix.length > 1).length;
+  const interleavedBlocks = blocks.filter((b) => b.topicMix.length > 1).length;
   const interleavingRatio = interleavedBlocks / blocks.length;
-  
+
   // Calculate spacing multiplier based on learner level
   const spacingMultiplier = 1 + learnerProfile.averageAccuracy * 0.5;
-  
+
   // Generation prompt rate
-  const generationPromptRate = blocks.filter(b => b.includeGenerationPrompts).length / blocks.length;
-  
+  const generationPromptRate =
+    blocks.filter((b) => b.includeGenerationPrompts).length / blocks.length;
+
   // Estimate retention gain
   // Research shows these techniques can improve retention by 30-60%
   const baseRetentionGain = 0.3;
   const interleavingBonus = interleavingRatio * 0.15;
   const retrievalBonus = 0.1; // Testing effect
   const generationBonus = generationPromptRate * 0.1;
-  const estimatedRetentionGain = baseRetentionGain + interleavingBonus + retrievalBonus + generationBonus;
-  
+  const estimatedRetentionGain =
+    baseRetentionGain + interleavingBonus + retrievalBonus + generationBonus;
+
   // Collect difficulty adjustments
   const difficultyAdjustments: DifficultyAdjustment[] = [
     {
@@ -437,7 +446,7 @@ export function createOptimizedStudyPlan(
       researchCitation: 'Schmidt & Bjork (1992). New conceptualizations of practice',
     },
   ];
-  
+
   return {
     totalDurationMinutes: sessionDurationMinutes,
     blocks,

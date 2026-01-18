@@ -3,82 +3,69 @@
  * POST /api/streaks/record
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, StreakRecordSchema } from '../_shared/schemas';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+const RecordStreakSchema = z.object({
+  body: z.object({
+    date: z.string().optional(),
+    questionsAnswered: z.number().int().min(0),
+    accuracyPercent: z.number().min(0).max(100),
+    studyMinutes: z.number().int().min(0).optional(),
+  }),
+});
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
 /**
  * POST: Record daily study activity
  */
-export async function onRequestPost(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(RecordStreakSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/streaks/record');
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const authContext = await authenticateRequest(request, env);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    if (!authContext) {
-      return createErrorResponse('Unauthorized', 401);
-    }
+    const payload = validated.body;
 
-    // Validate request body with Zod schema
-    const validation = await validateRequest(request, StreakRecordSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
+    // Use provided date or today
+    const activityDate = payload.date ? new Date(payload.date) : new Date();
+    activityDate.setHours(0, 0, 0, 0); // Normalize to start of day
 
-    const { userId } = authContext;
-    const payload = validation.data;
-
-    if (!env.DATABASE_URL) {
-      return createErrorResponse('Database not configured', 500);
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    try {
-      // Use provided date or today
-      const activityDate = payload.date
-        ? new Date(payload.date)
-        : new Date();
-      activityDate.setHours(0, 0, 0, 0); // Normalize to start of day
-
-      const streak = await prisma.dailyStreak.upsert({
-        where: {
-          userId_date: {
-            userId,
-            date: activityDate
-          }
-        },
-        update: {
-          questionsAnswered: { increment: payload.questionsAnswered },
-          accuracyPercent: payload.accuracyPercent, // Update with latest accuracy? Or average?
-          studyMinutes: { increment: payload.studyMinutes ?? 0 }
-        },
-        create: {
-          userId,
+    const streak = await prisma.dailyStreak.upsert({
+      where: {
+        userId_date: {
+          userId: auth.userId,
           date: activityDate,
-          questionsAnswered: payload.questionsAnswered,
-          accuracyPercent: payload.accuracyPercent,
-          studyMinutes: payload.studyMinutes ?? 0
-        }
-      });
+        },
+      },
+      update: {
+        questionsAnswered: { increment: payload.questionsAnswered },
+        accuracyPercent: payload.accuracyPercent,
+        studyMinutes: { increment: payload.studyMinutes ?? 0 },
+      },
+      create: {
+        userId: auth.userId,
+        date: activityDate,
+        questionsAnswered: payload.questionsAnswered,
+        accuracyPercent: payload.accuracyPercent,
+        studyMinutes: payload.studyMinutes ?? 0,
+      },
+    });
 
-      const response = {
+    logger.info('Streak recorded', {
+      userId: auth.userId,
+      date: activityDate.toISOString().split('T')[0],
+      questionsAnswered: streak.questionsAnswered,
+      accuracyPercent: streak.accuracyPercent,
+    });
+
+    return {
+      data: {
         success: true,
         message: 'Activity recorded successfully',
         data: {
@@ -87,14 +74,16 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
           accuracyPercent: streak.accuracyPercent,
           studyMinutes: streak.studyMinutes,
         },
-      };
-
-      return createSuccessResponse(response, 201);
-    } finally {
-      await prisma.$disconnect();
-    }
+      },
+      status: 201,
+    };
   } catch (error) {
-    console.error('Streak record error:', error);
-    return createErrorResponse('Internal server error', 500);
+    logger.error('Streak record error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to record streak');
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-}
+});

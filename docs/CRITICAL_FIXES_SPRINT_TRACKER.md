@@ -15,16 +15,19 @@ This document tracks progress on the 5-sprint critical fixes plan addressing sec
 ## 🔴 Sprint A: Security & Stability (Week 1)
 
 ### 1. ✅ Prisma $disconnect() Audit - COMPLETE
+
 - **Status:** ALL 157 ENDPOINTS PASS
 - **Audit Script:** `scripts/audit-prisma-disconnect.ts`
 - **Result:** Zero issues found - all API endpoints properly handle disconnect
 
 ### 2. ✅ Zod Input Validation - SIGNIFICANT PROGRESS
+
 - **Status:** All critical admin endpoints validated + rate limiting enabled
 - **Audit Script:** `scripts/audit-zod-validation.ts`
 - **Progress:** 27% complete, 25 FAIL, 16 WARN
 
 **Fixed Endpoints (15 total):**
+
 - [x] `functions/api/questions/attempt.ts` - Using `QuestionAttemptSchema`
 - [x] `functions/api/drills/submit-review.ts` - Using `DrillSubmitReviewSchema`
 - [x] `functions/api/feedback/submit.ts` - Using `QuestionFeedbackSchema`
@@ -37,9 +40,11 @@ This document tracks progress on the 5-sprint critical fixes plan addressing sec
 - [x] `functions/api/sync.ts` - Using `SyncPayloadSchema`
 
 **Webhook Exception:**
+
 - `functions/api/webhooks/clerk.ts` - Uses Svix signature verification (correct pattern for webhooks)
 
 **New Schemas Added to `functions/api/_shared/schemas.ts`:**
+
 - `QuestionFeedbackSchema` - For question feedback/flag submissions
 - `DrillSubmitReviewSchema` - For drill review submissions
 - `SubmitExamAnswersSchema` - For batch exam answer submissions
@@ -49,6 +54,7 @@ This document tracks progress on the 5-sprint critical fixes plan addressing sec
 **Priority Endpoints Still Needing Validation (29 FAIL + 17 WARN):**
 
 Critical (Security-Sensitive):
+
 - [ ] `functions/api/admin/content/[id].ts` [PUT]
 - [ ] `functions/api/admin/content/create.ts` [POST]
 - [ ] `functions/api/admin/content/transition.ts` [POST]
@@ -58,6 +64,7 @@ Critical (Security-Sensitive):
 - [ ] `functions/api/webhooks/clerk.ts` [POST]
 
 High Priority:
+
 - [ ] `functions/api/questions/record.ts`
 - [ ] `functions/api/questions/session.ts`
 - [ ] `functions/api/questions/custom-session.ts`
@@ -66,9 +73,11 @@ High Priority:
 - [ ] `functions/api/analytics/profile.ts`
 
 Medium Priority (29 remaining):
+
 - See full list via: `npx tsx scripts/audit-zod-validation.ts`
 
 ### 3. ✅ Static File Removal - COMPLETE
+
 - [x] Confirmed `lib/conditionRegistry.ts` is deleted (per .clinerules)
 - [x] Removed `data/modes/polypharmacyData.ts.deprecated`
 - [x] `data/exports/pance-image-gap-analysis.json` - Generated output (keeping)
@@ -78,9 +87,11 @@ Medium Priority (29 remaining):
 ## 🟡 Sprint B: UX Consistency (Week 2)
 
 ### 4. ✅ Error Boundary Coverage - COMPLETE
+
 - **Status:** ALL views now wrapped with `WithGeminiErrorBoundary`
 
 **All Views WITH Error Boundaries (37 total):**
+
 - quiz, photo_drill, ecg_drill, derm_drill, imaging_drill
 - rapid_recall, ddx_compare, mini_lab, pharmacology
 - first_line_treatment, condition_drill, system_drill
@@ -94,6 +105,7 @@ Medium Priority (29 remaining):
 - reference_library
 
 **Fixed in this session:**
+
 - [x] `integrations`
 - [x] `medical_wordle`
 - [x] `social_dashboard`
@@ -106,6 +118,7 @@ Medium Priority (29 remaining):
 - [x] `reference_library`
 
 ### 5. 🟡 Loading State Consistency - AUDIT COMPLETE
+
 - **Status:** Audit complete, fixes needed
 - **Audit Script:** `scripts/audit-loading-states.ts` (newly created)
 - [x] Audit all data-fetching components
@@ -113,12 +126,14 @@ Medium Priority (29 remaining):
 - [ ] Ensure CLS = 0 per .clinerules
 
 **Audit Results:**
+
 - ✅ 5 components properly using SkeletonLoader
 - ⚠️ 67 components with spinner patterns
 - ❌ 13 components with "Loading..." text
 - 🔶 8 components with conditional loading needing review
 
 **Priority Components Verified (skeleton loaders already implemented):**
+
 - [x] `components/PhotoDrillSession.tsx` - Uses QuestionSkeleton ✅
 - [x] `components/analytics/AnalyticsDashboard.tsx` - Uses SkeletonLoader/SkeletonCard ✅
 - [ ] `components/drill/ConditionDrillSession.tsx`
@@ -131,9 +146,11 @@ Medium Priority (29 remaining):
 - [ ] `components/modes/PatientEncounterMode.tsx`
 
 **Key Files:**
+
 - `components/ui/SkeletonLoader.tsx` - Base component exists (SkeletonLoader, SkeletonText, SkeletonCard)
 
 ### 6. ✅ Offline Sync UI - COMPLETE (Already Implemented)
+
 - [ ] Add persistent offline status indicator (partially done - `OfflineSyncIndicator` exists)
 - [ ] Show pending sync count and last sync time
 - [ ] Improve commuter mode experience
@@ -143,23 +160,27 @@ Medium Priority (29 remaining):
 ## 🔵 Sprint C: Service Consolidation (Weeks 3-4)
 
 ### 7-9. Service File Organization - NOT STARTED
+
 - **Current State:** 75+ service files with overlap
 
 **Identified Overlapping Services:**
 
 Question Services (merge into `services/core/questionService.ts`):
+
 - `questionService.ts`
 - `enhancedQuestionService.ts`
 - `intelligentQuestionService.ts`
 - `adaptiveQuestionEngine.ts`
 
 Performance Services (merge into `services/analytics/performanceService.ts`):
+
 - `performanceService.ts`
 - `performancePredictionService.ts`
 - `panaceScorePredictor.ts`
 - `panceScorePredictorService.ts`
 
 Analytics Services (merge into `services/analytics/`):
+
 - `advancedUserAnalyticsEngine.ts`
 - `circadianAnalyticsService.ts`
 - `deepAnalyticsStore.ts`
@@ -167,6 +188,7 @@ Analytics Services (merge into `services/analytics/`):
 - `sessionAnalyticsSyncService.ts`
 
 **Target Structure:**
+
 ```
 services/
 ├── core/           # Unified core services
@@ -191,6 +213,7 @@ services/
 ## 🟢 Sprint D: Analytics Simplification (Week 5)
 
 ### 10. ✅ Analytics Tiered Experience - COMPLETE
+
 - [x] Quick Glance: 3 key metrics (readiness score, recent accuracy, questions due)
 - [x] Dashboard: System heatmap, weakness prescriber
 - [x] Deep Dive: Full FSRS insights
@@ -198,6 +221,7 @@ services/
 **Created Component:** `components/analytics/TieredAnalytics.tsx`
 
 **Features:**
+
 - Three progressive detail levels (Quick Glance → Dashboard → Deep Dive)
 - Animated tier switching with framer-motion
 - System weakness/strength analysis
@@ -211,6 +235,7 @@ services/
 ## 🟣 Sprint E: Magic Features (Weeks 6-7)
 
 ### 11. ✅ FSRS Visualization - COMPLETE
+
 - [x] Show memory decay curves to users (SVG-based curve rendering)
 - [x] Display stability/difficulty metrics visually
 - [x] "You will forget this" predictive alerts with urgency levels
@@ -218,6 +243,7 @@ services/
 **Created Component:** `components/analytics/FSRSDecayVisualization.tsx`
 
 **Features:**
+
 - Visual decay curves per card using SVG polylines
 - Urgency categorization: safe (≥85%), warning (70-85%), critical (<70%)
 - Current retention % with color-coded markers
@@ -227,6 +253,7 @@ services/
 - Card state tracking (new/learning/review/relearning)
 
 ### 12. ✅ On-Demand Mnemonics - COMPLETE
+
 - [x] Add "Generate Mnemonic" button
 - [x] Use Gemini API for personalized mnemonics
 - [x] Save to user's personal library
@@ -234,6 +261,7 @@ services/
 **Created Component:** `components/toolkit/MnemonicGenerator.tsx`
 
 **Features:**
+
 - Full modal and compact inline variants
 - AI-powered mnemonic generation via /api/ai/generate-mnemonic
 - Mnemonic types: acronym, story, visual, rhyme
@@ -243,6 +271,7 @@ services/
 - Fallback acronym generation when API unavailable
 
 ### 13. ✅ Question Flag Feedback Loop - COMPLETE
+
 - [x] Show users status of their flags
 - [x] "3 of your flags have been resolved" notification
 - [x] Improve trust in platform quality
@@ -250,6 +279,7 @@ services/
 **Created Component:** `components/questions/FlagFeedbackNotification.tsx`
 
 **Features:**
+
 - Banner notification for newly resolved flags
 - Compact badge variant for navbar integration
 - Full detail panel with all user flags
@@ -263,6 +293,7 @@ services/
 ## Audit Scripts Available
 
 1. **Prisma Disconnect Audit:**
+
    ```bash
    npx tsx scripts/audit-prisma-disconnect.ts
    ```

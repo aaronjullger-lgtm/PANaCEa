@@ -18,15 +18,17 @@ export const MedicalContentSchema = z.object({
   classic_patient: z.string().optional(),
   risks: z.string().optional(),
   prognosis: z.string().optional(),
-  
+
   // Structured fields
-  age_demographic: z.object({
-    typical: z.string().optional(),
-    range: z.string().optional()
-  }).optional(),
-  
+  age_demographic: z
+    .object({
+      typical: z.string().optional(),
+      range: z.string().optional(),
+    })
+    .optional(),
+
   synonyms: z.array(z.string()).optional(),
-  
+
   // Metadata
   version: z.number().optional(),
   last_updated: z.string().optional(),

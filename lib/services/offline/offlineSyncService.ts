@@ -31,10 +31,11 @@ export class OfflineSyncService {
   private storage: StorageLike;
 
   constructor(storage?: StorageLike) {
-    this.storage = storage
-      || (global as any).localStorage
-      || (globalThis as any).localStorage
-      || createMemoryStorage();
+    this.storage =
+      storage ||
+      (global as any).localStorage ||
+      (globalThis as any).localStorage ||
+      createMemoryStorage();
     this.loadQueue();
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => this.processQueue());
@@ -58,7 +59,11 @@ export class OfflineSyncService {
       this.storage.setItem(QUEUE_KEY, serialized);
 
       const globalStorage = (global as any)?.localStorage;
-      if (globalStorage && globalStorage !== this.storage && typeof globalStorage.setItem === 'function') {
+      if (
+        globalStorage &&
+        globalStorage !== this.storage &&
+        typeof globalStorage.setItem === 'function'
+      ) {
         // Mirror to a globally mocked storage (test environments sometimes provide a separate object).
         globalStorage.setItem(QUEUE_KEY, serialized);
       }

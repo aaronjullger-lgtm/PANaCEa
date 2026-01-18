@@ -32,7 +32,7 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
   const toggleLogExpanded = (logId: string) => {
-    setExpandedLogs(prev => {
+    setExpandedLogs((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(logId)) {
         newSet.delete(logId);
@@ -148,7 +148,10 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
           </div>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className="p-4 hover:bg-[var(--color-bg-tertiary)]/30 transition-colors">
+            <div
+              key={log.id}
+              className="p-4 hover:bg-[var(--color-bg-tertiary)]/30 transition-colors"
+            >
               <div className="flex items-start gap-4">
                 {/* Timeline Indicator */}
                 <div className="flex-shrink-0 pt-1">
@@ -162,7 +165,9 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${getChangeTypeColor(log.changeType)}`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${getChangeTypeColor(log.changeType)}`}
+                        >
                           {log.changeType.toUpperCase()}
                         </span>
                         <span className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -242,9 +247,7 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
                             <span className="font-medium text-[var(--color-text-primary)]">
                               IP Address:
                             </span>{' '}
-                            <span className="text-[var(--color-text-muted)]">
-                              {log.ipAddress}
-                            </span>
+                            <span className="text-[var(--color-text-muted)]">{log.ipAddress}</span>
                           </div>
                         )}
                         <div>

@@ -6,7 +6,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Lightbulb, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Lightbulb,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react';
 
 interface VideoVignettePlayerProps {
   videoUrl: string;
@@ -25,7 +34,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
   options,
   correctAnswerIndex,
   explanation,
-  onAnswer
+  onAnswer,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -174,7 +183,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                 onChange={handleSeek}
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer mb-4"
                 style={{
-                  background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`,
                 }}
               />
 
@@ -185,7 +194,11 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                     onClick={togglePlay}
                     className="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
                   >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5 ml-0.5" />
+                    )}
                   </button>
                   <button
                     onClick={handleRestart}
@@ -225,9 +238,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
         {/* Question & Options */}
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              {question}
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{question}</h3>
 
             <div className="space-y-3">
               {options.map((option, index) => (
@@ -270,18 +281,24 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                 : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
             }`}
           >
-            <h4 className={`text-xl font-bold mb-3 flex items-center gap-2 ${
-              selectedAnswer === correctAnswerIndex
-                ? 'text-green-800 dark:text-green-200'
-                : 'text-red-800 dark:text-red-200'
-            }`}>
-              {selectedAnswer === correctAnswerIndex 
-                ? <><CheckCircle className="w-6 h-6" /> Correct!</> 
-                : <><XCircle className="w-6 h-6" /> Incorrect</>}
+            <h4
+              className={`text-xl font-bold mb-3 flex items-center gap-2 ${
+                selectedAnswer === correctAnswerIndex
+                  ? 'text-green-800 dark:text-green-200'
+                  : 'text-red-800 dark:text-red-200'
+              }`}
+            >
+              {selectedAnswer === correctAnswerIndex ? (
+                <>
+                  <CheckCircle className="w-6 h-6" /> Correct!
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-6 h-6" /> Incorrect
+                </>
+              )}
             </h4>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-              {explanation}
-            </p>
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{explanation}</p>
           </motion.div>
         )}
       </AnimatePresence>

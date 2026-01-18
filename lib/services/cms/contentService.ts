@@ -1,6 +1,6 @@
 /**
  * Content Management Service
- * 
+ *
  * Handles content lifecycle with state machine:
  * DRAFT -> PENDING_REVIEW -> APPROVED -> PUBLISHED -> ARCHIVED
  */
@@ -198,7 +198,8 @@ export async function transitionStatus(
     conditionId: updated.conditionId,
     version: updated.version,
     changeType: getChangeType(newStatus),
-    changeDescription: options.description || `Status changed from ${content.status} to ${newStatus}`,
+    changeDescription:
+      options.description || `Status changed from ${content.status} to ${newStatus}`,
     changedFields: ['status'],
     oldValues: { status: content.status },
     newValues: { status: newStatus },
@@ -286,7 +287,9 @@ function validateTransition(from: ContentStatus, to: ContentStatus): void {
 /**
  * Get change type for audit log based on status
  */
-function getChangeType(status: ContentStatus): 'publish' | 'unpublish' | 'approve' | 'reject' | 'update' {
+function getChangeType(
+  status: ContentStatus
+): 'publish' | 'unpublish' | 'approve' | 'reject' | 'update' {
   switch (status) {
     case 'published':
       return 'publish';
@@ -333,7 +336,7 @@ export async function approveContent(
   if (!approverRoles.includes(options.userRole)) {
     throw new Error(`Role ${options.userRole} is not authorized to approve content`);
   }
-  
+
   return transitionStatus(prisma, contentId, 'approved', {
     ...options,
     description: options.reviewNotes || options.description || 'Content approved',
@@ -351,7 +354,7 @@ export async function rejectContent(
   if (!options.rejectionReason?.trim()) {
     throw new Error('Rejection reason is required');
   }
-  
+
   return transitionStatus(prisma, contentId, 'draft', {
     ...options,
     description: `Rejected: ${options.rejectionReason}`,
@@ -411,6 +414,6 @@ export function getAvailableTransitions(currentStatus: ContentStatus): ContentSt
     published: ['archived', 'draft'],
     archived: ['draft'],
   };
-  
+
   return allowedTransitions[currentStatus] || [];
 }

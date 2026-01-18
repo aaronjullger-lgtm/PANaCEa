@@ -1,6 +1,6 @@
 /**
  * Analytics Export Utility
- * 
+ *
  * Utility functions for exporting user performance analytics data.
  * Supports CSV and JSON formats.
  */
@@ -68,34 +68,34 @@ function generateFilename(prefix: string, extension: string): string {
  */
 function arrayToCSV(data: Record<string, unknown>[]): string {
   if (data.length === 0) return '';
-  
+
   // Get all unique keys
-  const keys = Array.from(
-    new Set(data.flatMap(obj => Object.keys(obj)))
-  );
-  
+  const keys = Array.from(new Set(data.flatMap((obj) => Object.keys(obj))));
+
   // Header row
   const header = keys.join(',');
-  
+
   // Data rows
-  const rows = data.map(obj =>
-    keys.map(key => {
-      const value = obj[key];
-      if (value === null || value === undefined) return '';
-      if (typeof value === 'string') {
-        // Escape quotes and wrap in quotes if contains comma or quote
-        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-          return `"${value.replace(/"/g, '""')}"`;
+  const rows = data.map((obj) =>
+    keys
+      .map((key) => {
+        const value = obj[key];
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string') {
+          // Escape quotes and wrap in quotes if contains comma or quote
+          if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
         }
-        return value;
-      }
-      if (typeof value === 'object') {
-        return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
-      }
-      return String(value);
-    }).join(',')
+        if (typeof value === 'object') {
+          return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+        }
+        return String(value);
+      })
+      .join(',')
   );
-  
+
   return [header, ...rows].join('\n');
 }
 
@@ -104,7 +104,7 @@ function arrayToCSV(data: Record<string, unknown>[]): string {
  */
 function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): AnalyticsSummary {
   const totalQuestions = performanceData.length;
-  const totalCorrect = performanceData.filter(r => r.isCorrect).length;
+  const totalCorrect = performanceData.filter((r) => r.isCorrect).length;
   const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
 
   // System breakdown
@@ -166,7 +166,7 @@ function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): Analytic
 
 /**
  * Export user analytics data in the specified format
- * 
+ *
  * @param performanceData - Array of performance records
  * @param format - Export format ('csv' or 'json')
  * @returns void - Downloads the file to user's device
@@ -188,11 +188,13 @@ export function exportUserAnalytics(
     downloadFile(jsonContent, filename, 'application/json');
   } else {
     // CSV format - flatten performance records for tabular view
-    const flatRecords = performanceData.map(record => ({
+    const flatRecords = performanceData.map((record) => ({
       timestamp: new Date(record.timestamp).toISOString(),
       date: new Date(record.timestamp).toISOString().split('T')[0],
       system: record.system || '',
-      systemName: record.system ? (ABBREVIATION_TO_TOPIC_MAP[record.system as SystemCode] || record.system) : '',
+      systemName: record.system
+        ? ABBREVIATION_TO_TOPIC_MAP[record.system as SystemCode] || record.system
+        : '',
       subcategory: record.subcategory || '',
       condition: record.condition || '',
       conditionId: record.conditionId || '',
@@ -216,13 +218,17 @@ export function exportSystemSummary(
   format: ExportFormat
 ): void {
   const summary = prepareAnalyticsSummary(performanceData);
-  
+
   if (format === 'json') {
-    const jsonContent = JSON.stringify({
-      exportDate: summary.exportDate,
-      overallAccuracy: summary.overallAccuracy,
-      systemBreakdown: summary.systemBreakdown,
-    }, null, 2);
+    const jsonContent = JSON.stringify(
+      {
+        exportDate: summary.exportDate,
+        overallAccuracy: summary.overallAccuracy,
+        systemBreakdown: summary.systemBreakdown,
+      },
+      null,
+      2
+    );
     const filename = generateFilename('panacea_system_summary', 'json');
     downloadFile(jsonContent, filename, 'application/json');
   } else {
@@ -240,12 +246,16 @@ export function exportDailyProgress(
   format: ExportFormat
 ): void {
   const summary = prepareAnalyticsSummary(performanceData);
-  
+
   if (format === 'json') {
-    const jsonContent = JSON.stringify({
-      exportDate: summary.exportDate,
-      dailyProgress: summary.dailyProgress,
-    }, null, 2);
+    const jsonContent = JSON.stringify(
+      {
+        exportDate: summary.exportDate,
+        dailyProgress: summary.dailyProgress,
+      },
+      null,
+      2
+    );
     const filename = generateFilename('panacea_daily_progress', 'json');
     downloadFile(jsonContent, filename, 'application/json');
   } else {

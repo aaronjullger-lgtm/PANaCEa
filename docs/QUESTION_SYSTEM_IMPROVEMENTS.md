@@ -7,24 +7,29 @@ This document outlines the improvements made to the question generation, storage
 ## Problems Addressed
 
 ### 1. Fragmented Question Tables
+
 **Before:** Questions scattered across 5+ tables with no unified tracking
 **After:** Clear hierarchy with proper FK relationships
 
 ### 2. Optional Condition Linkage
+
 **Before:** `conditionId` was nullable - questions could exist without medical context
 **After:** All questions MUST be linked to a condition via `medicalContentId`
 
 ### 3. No User Tracking
+
 **Before:** No way to know if a user had seen a specific question
 **After:** `UserQuestionSeen` junction table tracks every view
 
 ### 4. Weak Statistics
+
 **Before:** Basic `timesSeen/timesCorrect` counters easily out of sync
 **After:** Real-time aggregation from `QuestionAttempt` table
 
 ## Database Schema Changes
 
 ### New Table: `UserQuestionSeen`
+
 ```prisma
 model UserQuestionSeen {
   id              String   @id @default(uuid())
@@ -34,14 +39,14 @@ model UserQuestionSeen {
   firstSeenAt     DateTime @default(now())
   lastSeenAt      DateTime @default(now())
   timesShown      Int      @default(1)
-  
+
   // Performance tracking
   timesCorrect    Int      @default(0)
   timesIncorrect  Int      @default(0)
   avgTimeMs       Int?
-  
+
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, questionId, questionType])
   @@index([userId, questionType])
   @@index([questionId])
@@ -49,12 +54,15 @@ model UserQuestionSeen {
 ```
 
 ### Enhanced `QuestionAttempt`
+
 - Added FK to Question table
 - Added session tracking
 - Added timing data
 
 ### Question Quality Scoring
+
 All question types now have:
+
 - `qualityScore` (Float) - AI-assessed quality 0-100
 - `conditionAccuracy` (Float) - How well question tests the linked condition
 - `validatedAt` (DateTime) - When human validated
@@ -63,6 +71,7 @@ All question types now have:
 ## API Changes
 
 ### GET /api/questions/session
+
 Now excludes questions the user has already seen (unless in review mode).
 
 ```typescript
@@ -75,7 +84,9 @@ const questions = await getPooledQuestions({
 ```
 
 ### POST /api/questions/attempt
+
 Now automatically updates:
+
 1. `UserQuestionSeen` table
 2. `Question.timesSeen` counter
 3. User's accuracy for that condition
@@ -84,6 +95,7 @@ Now automatically updates:
 ## Generation Pipeline Improvements
 
 ### 1. Strict Validation
+
 ```typescript
 const generated = await generateQuestion(condition);
 
@@ -95,6 +107,7 @@ if (validation.score < 0.7) {
 ```
 
 ### 2. Condition Accuracy Check
+
 ```typescript
 // Verify the question tests the right condition
 const accuracyCheck = await checkConditionAccuracy(
@@ -110,6 +123,7 @@ if (accuracyCheck.score < 0.8) {
 ```
 
 ### 3. Duplicate Detection
+
 ```typescript
 // Semantic similarity check against existing questions
 const duplicates = await findDuplicateQuestions(generated.question);
@@ -210,12 +224,14 @@ if (duplicates.length > 0 && duplicates[0].similarity > 0.9) {
 ## Monitoring
 
 ### Key Metrics
+
 - Questions per condition (should be balanced)
 - Accuracy by condition (identifies problem questions)
 - Time per question by difficulty
 - Question flag rate (quality indicator)
 
 ### Alerts
+
 - Condition with < 5 questions
 - Question with > 30% flag rate
 - System with < 20 questions

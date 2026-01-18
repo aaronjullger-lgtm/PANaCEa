@@ -1,6 +1,6 @@
 /**
  * Buzzword Service - Database-First Implementation
- * 
+ *
  * PostgreSQL is the ONLY source of truth for buzzword data.
  * Errors propagate to UI for proper handling.
  */
@@ -18,12 +18,12 @@ export const buzzwordService = {
     if (buzzwordCache) return buzzwordCache;
 
     const response = await fetch('/api/buzzwords');
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch buzzwords: ${response.status}`);
     }
-    
+
     const data = await response.json();
     buzzwordCache = data;
     return data;
@@ -35,12 +35,12 @@ export const buzzwordService = {
    */
   getRandomBuzzwords: async (count: number = 10): Promise<BuzzwordEntry[]> => {
     const response = await fetch(`/api/buzzwords/random?count=${count}`);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch random buzzwords: ${response.status}`);
     }
-    
+
     return await response.json();
   },
 
@@ -51,7 +51,7 @@ export const buzzwordService = {
   getBuzzwordDictionary: async (): Promise<Record<string, string>> => {
     const buzzwords = await buzzwordService.getAllBuzzwords();
     const dict: Record<string, string> = {};
-    buzzwords.forEach(b => {
+    buzzwords.forEach((b) => {
       dict[b.buzzword] = b.condition;
     });
     return dict;
@@ -62,6 +62,6 @@ export const buzzwordService = {
    */
   getAllBuzzwordConditions: async (): Promise<string[]> => {
     const buzzwords = await buzzwordService.getAllBuzzwords();
-    return Array.from(new Set(buzzwords.map(b => b.condition))).sort();
-  }
+    return Array.from(new Set(buzzwords.map((b) => b.condition))).sort();
+  },
 };

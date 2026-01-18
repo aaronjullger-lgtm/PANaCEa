@@ -19,14 +19,14 @@ Following the 5-sprint "Magic Features" phase, this roadmap addresses the techni
 
 ### Metrics (January 10, 2026)
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Service files | 77 | 25 |
-| Zod validation | 27% | 100% |
-| Test coverage | 31% | 80% |
-| CLS score | Unknown | 0.0 |
+| Metric          | Current | Target |
+| --------------- | ------- | ------ |
+| Service files   | 77      | 25     |
+| Zod validation  | 27%     | 100%   |
+| Test coverage   | 31%     | 80%    |
+| CLS score       | Unknown | 0.0    |
 | API P95 latency | Unknown | <200ms |
-| Error rate | Unknown | <0.1% |
+| Error rate      | Unknown | <0.1%  |
 
 ### Critical Gaps Identified
 
@@ -41,6 +41,7 @@ Following the 5-sprint "Magic Features" phase, this roadmap addresses the techni
 ## Phase 6: Service Consolidation (2 weeks)
 
 ### Goal
+
 Reduce 77 services → 25 organized services with clear responsibilities.
 
 ### Target Structure
@@ -82,6 +83,7 @@ services/
 ### Consolidation Tasks
 
 #### Question Services (4 → 1)
+
 - [ ] Audit: `questionService.ts`
 - [ ] Audit: `enhancedQuestionService.ts`
 - [ ] Audit: `intelligentQuestionService.ts`
@@ -90,6 +92,7 @@ services/
 - [ ] Update all imports
 
 #### Performance Services (4 → 1)
+
 - [ ] Audit: `performanceService.ts`
 - [ ] Audit: `performancePredictionService.ts`
 - [ ] Audit: `panaceScorePredictor.ts`
@@ -98,6 +101,7 @@ services/
 - [ ] Update all imports
 
 #### Analytics Services (5 → 2)
+
 - [ ] Audit: `advancedUserAnalyticsEngine.ts`
 - [ ] Audit: `circadianAnalyticsService.ts`
 - [ ] Audit: `deepAnalyticsStore.ts`
@@ -107,6 +111,7 @@ services/
 - [ ] Update all imports
 
 ### Success Criteria
+
 - [ ] All 77 service files mapped to new structure
 - [ ] Zero duplicate function names
 - [ ] All imports updated
@@ -117,11 +122,13 @@ services/
 ## Phase 7: Validation Hardening (1 week)
 
 ### Goal
+
 100% Zod validation on all POST/PUT endpoints.
 
 ### Priority Order
 
 #### P0: Security-Critical (Admin)
+
 - [ ] `functions/api/admin/content/[id].ts`
 - [ ] `functions/api/admin/content/create.ts`
 - [ ] `functions/api/admin/content/transition.ts`
@@ -129,15 +136,18 @@ services/
 - [ ] `functions/api/admin/media/approve.ts`
 
 #### P1: User Data Endpoints
+
 - [ ] `functions/api/questions/record.ts`
 - [ ] `functions/api/questions/custom-session.ts`
 - [ ] `functions/api/analytics/session.ts`
 - [ ] `functions/api/analytics/profile.ts`
 
 #### P2: All Remaining POST/PUT
+
 - Remaining 20+ endpoints
 
 ### Schema Standards
+
 ```typescript
 // All schemas should:
 // 1. Use strict mode
@@ -145,12 +155,14 @@ services/
 // 3. Include bounds for numbers
 // 4. Use enums for finite options
 
-const ExampleSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1).max(100),
-  count: z.number().int().min(0).max(10000),
-  type: z.enum(['quiz', 'drill', 'exam']),
-}).strict();
+const ExampleSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().min(1).max(100),
+    count: z.number().int().min(0).max(10000),
+    type: z.enum(['quiz', 'drill', 'exam']),
+  })
+  .strict();
 ```
 
 ---
@@ -158,51 +170,58 @@ const ExampleSchema = z.object({
 ## Phase 8: Test Coverage (2 weeks)
 
 ### Goal
->80% coverage on critical paths.
+
+> 80% coverage on critical paths.
 
 ### Test Categories
 
 #### Unit Tests (50+ new)
+
 - FSRS calculations
 - Score predictions
 - Content parsing
 - Utility functions
 
 #### Integration Tests (20+ new)
+
 - Question session flow
 - User progress tracking
 - OSCE chat flow
 - Exam completion flow
 
 #### API Tests (30+ new)
+
 - All POST endpoints
 - Error responses
 - Auth flows
 - Rate limiting
 
 ### Coverage Targets
-| Category | Current | Target |
-|----------|---------|--------|
-| Services | 31% | 85% |
-| API Endpoints | 0% | 75% |
-| Components | ~10% | 50% |
+
+| Category      | Current | Target |
+| ------------- | ------- | ------ |
+| Services      | 31%     | 85%    |
+| API Endpoints | 0%      | 75%    |
+| Components    | ~10%    | 50%    |
 
 ---
 
 ## Phase 9: Observability (1 week)
 
 ### Goal
+
 Full production visibility.
 
 ### Deliverables
 
 1. **Structured Logging**
+
    ```typescript
    logger.info('question.generated', {
      userId: ctx.userId,
      system: 'cardiovascular',
      difficulty: 3,
-     durationMs: 245
+     durationMs: 245,
    });
    ```
 
@@ -226,6 +245,7 @@ Full production visibility.
 ## Phase 10: Performance & Caching (1 week)
 
 ### Goal
+
 Sub-200ms API responses for common operations.
 
 ### Caching Strategy
@@ -246,22 +266,25 @@ Sub-200ms API responses for common operations.
    - Connection pooling tuning
 
 ### Target Latencies
-| Operation | Current | Target |
-|-----------|---------|--------|
-| Get question | ~400ms | <100ms |
-| Submit answer | ~300ms | <150ms |
-| Load analytics | ~800ms | <200ms |
+
+| Operation      | Current | Target |
+| -------------- | ------- | ------ |
+| Get question   | ~400ms  | <100ms |
+| Submit answer  | ~300ms  | <150ms |
+| Load analytics | ~800ms  | <200ms |
 
 ---
 
 ## Risk Mitigation
 
 ### During Consolidation
+
 1. **Feature flags** for new service paths
 2. **Parallel running** old + new for 1 week
 3. **Rollback scripts** prepared
 
 ### Testing
+
 1. **Snapshot tests** before consolidation
 2. **Contract tests** for API stability
 3. **Load testing** before launch

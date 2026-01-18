@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
  * Production Database Migration Script
- * 
+ *
  * This script helps apply the database schema to a production database.
  * It's designed to be run locally with production database credentials.
- * 
+ *
  * Usage:
  *   1. Set DATABASE_URL in your .env file to your production database
  *   2. Run: npm run migrate:production
  *   or: npx tsx scripts/applyProductionMigration.ts
- * 
+ *
  * Safety Features:
  *   - Checks if tables already exist
  *   - Prompts for confirmation before applying
@@ -20,7 +20,6 @@
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 import { createInterface } from 'readline';
 import { execSync } from 'child_process';
-
 
 interface MigrationCheck {
   hasUserTable: boolean;
@@ -89,14 +88,14 @@ async function checkDatabaseState(): Promise<MigrationCheck> {
       ORDER BY table_name;
     `;
 
-    const existingTableNames = tables.map(t => t.table_name);
+    const existingTableNames = tables.map((t) => t.table_name);
     const hasUserTable = existingTableNames.includes('User');
     const hasAnyTables = existingTableNames.length > 0;
     const tableCount = existingTableNames.length;
 
     // Find missing tables
     const missingTables = EXPECTED_TABLES.filter(
-      expectedTable => !existingTableNames.includes(expectedTable)
+      (expectedTable) => !existingTableNames.includes(expectedTable)
     );
 
     console.log(`📊 Database Status:`);
@@ -106,12 +105,12 @@ async function checkDatabaseState(): Promise<MigrationCheck> {
 
     if (existingTableNames.length > 0) {
       console.log(`\n📋 Existing tables (${existingTableNames.length}):`);
-      existingTableNames.forEach(name => console.log(`   - ${name}`));
+      existingTableNames.forEach((name) => console.log(`   - ${name}`));
     }
 
     if (missingTables.length > 0) {
       console.log(`\n❌ Missing tables (${missingTables.length}):`);
-      missingTables.slice(0, 10).forEach(name => console.log(`   - ${name}`));
+      missingTables.slice(0, 10).forEach((name) => console.log(`   - ${name}`));
       if (missingTables.length > 10) {
         console.log(`   ... and ${missingTables.length - 10} more`);
       }
@@ -154,7 +153,7 @@ async function applyMigration(): Promise<void> {
 
   try {
     console.log('Running: npx prisma migrate deploy');
-    
+
     execSync('npx prisma migrate deploy', {
       cwd: process.cwd(),
       encoding: 'utf-8',
@@ -182,7 +181,7 @@ async function verifyMigration(): Promise<boolean> {
       return true;
     } else {
       console.log(`⚠️  Still missing ${check.missingTables.length} tables:`);
-      check.missingTables.slice(0, 5).forEach(name => console.log(`   - ${name}`));
+      check.missingTables.slice(0, 5).forEach((name) => console.log(`   - ${name}`));
       return false;
     }
   } catch (error) {
@@ -228,7 +227,9 @@ async function main() {
   if (!initialCheck.hasAnyTables) {
     console.log('\n📝 Database is empty. Ready for initial migration.');
   } else {
-    console.log(`\n📝 Database has ${initialCheck.tableCount} tables but is missing ${initialCheck.missingTables.length} expected tables.`);
+    console.log(
+      `\n📝 Database has ${initialCheck.tableCount} tables but is missing ${initialCheck.missingTables.length} expected tables.`
+    );
   }
 
   // Get confirmation

@@ -7,7 +7,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../../contexts/ToastContext';
-import { Clock, BookOpen, CheckCircle, Calendar, AlertCircle, Award, XCircle, Book } from 'lucide-react';
+import {
+  Clock,
+  BookOpen,
+  CheckCircle,
+  Calendar,
+  AlertCircle,
+  Award,
+  XCircle,
+  Book,
+} from 'lucide-react';
 
 interface Question {
   id: string;
@@ -49,45 +58,49 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     questionsCompleted: 0,
     totalQuestions: 25,
     score: 0,
-    dueDate: getQuarterEndDate(1)
+    dueDate: getQuarterEndDate(1),
   });
   const [showIntro, setShowIntro] = useState(true);
 
   const sampleQuestions: Question[] = [
     {
       id: '1',
-      question: 'A 62-year-old male with a history of hypertension presents with sudden onset chest pain radiating to the back. Blood pressure is 180/110 in the right arm and 140/90 in the left arm. What is the most appropriate next step?',
+      question:
+        'A 62-year-old male with a history of hypertension presents with sudden onset chest pain radiating to the back. Blood pressure is 180/110 in the right arm and 140/90 in the left arm. What is the most appropriate next step?',
       options: [
         'Obtain ECG and troponins',
         'CT angiography of the chest',
         'Administer aspirin and call cardiology',
-        'Obtain chest X-ray'
+        'Obtain chest X-ray',
       ],
       correctAnswerIndex: 1,
-      rationale: 'This presentation is classic for aortic dissection (BP differential between arms). CT angiography is the gold standard diagnostic test. While ECG and troponins are important, they would delay the critical diagnosis.',
+      rationale:
+        'This presentation is classic for aortic dissection (BP differential between arms). CT angiography is the gold standard diagnostic test. While ECG and troponins are important, they would delay the critical diagnosis.',
       references: [
         'ACC/AHA Guidelines on Thoracic Aortic Disease',
-        'UpToDate: Clinical features and diagnosis of acute aortic dissection'
+        'UpToDate: Clinical features and diagnosis of acute aortic dissection',
       ],
-      canUseResources: true
+      canUseResources: true,
     },
     {
       id: '2',
-      question: 'A 45-year-old woman with diabetes presents with a non-healing foot ulcer. Which of the following is the most important initial step in management?',
+      question:
+        'A 45-year-old woman with diabetes presents with a non-healing foot ulcer. Which of the following is the most important initial step in management?',
       options: [
         'Start broad-spectrum antibiotics',
         'Refer to podiatry',
         'Assess vascular status and perfusion',
-        'Debride the wound'
+        'Debride the wound',
       ],
       correctAnswerIndex: 2,
-      rationale: 'Before any intervention, assessing vascular status is critical. Poor perfusion will prevent healing regardless of other interventions. Use ankle-brachial index or refer for vascular studies.',
+      rationale:
+        'Before any intervention, assessing vascular status is critical. Poor perfusion will prevent healing regardless of other interventions. Use ankle-brachial index or refer for vascular studies.',
       references: [
         'ADA Standards of Medical Care: Diabetic Foot Care',
-        'Wound Healing Society Guidelines'
+        'Wound Healing Society Guidelines',
       ],
-      canUseResources: true
-    }
+      canUseResources: true,
+    },
   ];
 
   const currentQuestionData = sampleQuestions[currentQuestion];
@@ -97,7 +110,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     if (showFeedback || showIntro) return;
 
     const interval = setInterval(() => {
-      setTimeRemaining(prev => {
+      setTimeRemaining((prev) => {
         if (prev <= 1) {
           handleTimeout();
           return 0;
@@ -130,13 +143,13 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     }
 
     setShowFeedback(true);
-    
+
     // Update progress
     const isCorrect = selectedAnswer === currentQuestionData.correctAnswerIndex;
-    setQuarterlyProgress(prev => ({
+    setQuarterlyProgress((prev) => ({
       ...prev,
       questionsCompleted: prev.questionsCompleted + 1,
-      score: isCorrect ? prev.score + 1 : prev.score
+      score: isCorrect ? prev.score + 1 : prev.score,
     }));
   };
 
@@ -174,8 +187,10 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-2xl"
         >
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full 
-              flex items-center justify-center mx-auto mb-4">
+            <div
+              className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full 
+              flex items-center justify-center mx-auto mb-4"
+            >
               <Award className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -195,23 +210,35 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span><strong>Quarterly Format:</strong> Complete 25 questions every quarter (4 times per year)</span>
+                  <span>
+                    <strong>Quarterly Format:</strong> Complete 25 questions every quarter (4 times
+                    per year)
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span><strong>Open Book:</strong> You can use reference materials during the assessment</span>
+                  <span>
+                    <strong>Open Book:</strong> You can use reference materials during the
+                    assessment
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span><strong>Time Limit:</strong> 5 minutes per question (but you can use less)</span>
+                  <span>
+                    <strong>Time Limit:</strong> 5 minutes per question (but you can use less)
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span><strong>Flexible Schedule:</strong> Complete within the quarterly window</span>
+                  <span>
+                    <strong>Flexible Schedule:</strong> Complete within the quarterly window
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span><strong>Lower Stakes:</strong> Smaller assessments spread throughout the year</span>
+                  <span>
+                    <strong>Lower Stakes:</strong> Smaller assessments spread throughout the year
+                  </span>
                 </li>
               </ul>
             </div>
@@ -243,9 +270,12 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 <div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Score</div>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {quarterlyProgress.questionsCompleted > 0 
-                      ? Math.round((quarterlyProgress.score / quarterlyProgress.questionsCompleted) * 100)
-                      : 0}%
+                    {quarterlyProgress.questionsCompleted > 0
+                      ? Math.round(
+                          (quarterlyProgress.score / quarterlyProgress.questionsCompleted) * 100
+                        )
+                      : 0}
+                    %
                   </div>
                 </div>
               </div>
@@ -291,8 +321,10 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 
-                  bg-indigo-100 dark:bg-indigo-900/30 px-3 py-1 rounded-full">
+                <span
+                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 
+                  bg-indigo-100 dark:bg-indigo-900/30 px-3 py-1 rounded-full"
+                >
                   Open Book Question
                 </span>
                 <button
@@ -302,7 +334,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                   {isResourcesOpen ? 'Hide' : 'Show'} References
                 </button>
               </div>
-              
+
               <p className="text-lg text-gray-900 dark:text-white leading-relaxed">
                 {currentQuestionData.question}
               </p>
@@ -319,21 +351,23 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                       ? index === currentQuestionData.correctAnswerIndex
                         ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                         : index === selectedAnswer
-                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                        : 'border-gray-300 dark:border-gray-600 opacity-50'
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                          : 'border-gray-300 dark:border-gray-600 opacity-50'
                       : selectedAnswer === index
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                   } disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                      showFeedback && index === currentQuestionData.correctAnswerIndex
-                        ? 'border-green-500 bg-green-500'
-                        : selectedAnswer === index
-                        ? 'border-current'
-                        : 'border-gray-400'
-                    }`}>
+                    <div
+                      className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        showFeedback && index === currentQuestionData.correctAnswerIndex
+                          ? 'border-green-500 bg-green-500'
+                          : selectedAnswer === index
+                            ? 'border-current'
+                            : 'border-gray-400'
+                      }`}
+                    >
                       {selectedAnswer === index && !showFeedback && (
                         <div className="w-3 h-3 bg-current rounded-full" />
                       )}
@@ -364,7 +398,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                   className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
                     rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
                 >
-                  {currentQuestion < sampleQuestions.length - 1 ? 'Next Question' : 'Complete Assessment'}
+                  {currentQuestion < sampleQuestions.length - 1
+                    ? 'Next Question'
+                    : 'Complete Assessment'}
                 </button>
               )}
             </div>
@@ -383,15 +419,23 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
                 }`}
               >
-                <h4 className={`text-xl font-bold mb-3 ${
-                  selectedAnswer === currentQuestionData.correctAnswerIndex
-                    ? 'text-green-800 dark:text-green-200'
-                    : 'text-red-800 dark:text-red-200'
-                }`}>
+                <h4
+                  className={`text-xl font-bold mb-3 ${
+                    selectedAnswer === currentQuestionData.correctAnswerIndex
+                      ? 'text-green-800 dark:text-green-200'
+                      : 'text-red-800 dark:text-red-200'
+                  }`}
+                >
                   <span className="flex items-center gap-2">
-                    {selectedAnswer === currentQuestionData.correctAnswerIndex 
-                      ? <><CheckCircle className="w-5 h-5" /> Correct Answer!</> 
-                      : <><XCircle className="w-5 h-5" /> Incorrect</>}
+                    {selectedAnswer === currentQuestionData.correctAnswerIndex ? (
+                      <>
+                        <CheckCircle className="w-5 h-5" /> Correct Answer!
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-5 h-5" /> Incorrect
+                      </>
+                    )}
                   </span>
                 </h4>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
@@ -418,11 +462,14 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Book className="w-5 h-5" /> Quick Resources
             </h3>
-            
+
             {isResourcesOpen ? (
               <div className="space-y-3">
-                <a href="#" className="block p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg 
-                  hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                <a
+                  href="#"
+                  className="block p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg 
+                  hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                >
                   <div className="font-semibold text-blue-900 dark:text-blue-200 text-sm">
                     UpToDate
                   </div>
@@ -430,8 +477,11 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     Evidence-based clinical resource
                   </div>
                 </a>
-                <a href="#" className="block p-3 bg-green-50 dark:bg-green-900/20 rounded-lg 
-                  hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                <a
+                  href="#"
+                  className="block p-3 bg-green-50 dark:bg-green-900/20 rounded-lg 
+                  hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                >
                   <div className="font-semibold text-green-900 dark:text-green-200 text-sm">
                     Clinical Guidelines
                   </div>
@@ -439,8 +489,11 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     ACC/AHA, ADA, IDSA guidelines
                   </div>
                 </a>
-                <a href="#" className="block p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg 
-                  hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
+                <a
+                  href="#"
+                  className="block p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg 
+                  hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                >
                   <div className="font-semibold text-purple-900 dark:text-purple-200 text-sm">
                     Drug Reference
                   </div>
@@ -460,7 +513,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>Tip:</strong> PANRE-LA is open book, but time is limited. Use resources 
+                <strong>Tip:</strong> PANRE-LA is open book, but time is limited. Use resources
                 wisely to verify your clinical decision-making.
               </div>
             </div>
@@ -469,7 +522,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
       </div>
     </div>
   );
-};
+}
 
 /**
  * Calculate the end date for a given quarter
@@ -493,9 +546,7 @@ function getQuarterEndDate(quarter: QuarterlyBlock): string {
     1: `March 31, ${year}`,
     2: `June 30, ${year}`,
     3: `September 30, ${year}`,
-    4: `December 31, ${year}`
+    4: `December 31, ${year}`,
   };
   return endDates[quarter];
 }
-
-

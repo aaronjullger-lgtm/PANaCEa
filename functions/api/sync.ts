@@ -1,354 +1,355 @@
 /**
  * User data synchronization endpoint
  * Handles uploading local data and downloading cloud data
- * 
+ *
+ * Sprint 3 Security: Updated to use secure middleware pattern
+ *
  * DEPLOYMENT NOTE: Clock skew fix with leeway: 5 is active in auth.ts verifyToken call.
  * This ensures tokens are accepted within a 5-second clock tolerance window.
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from './_shared/auth';
-import { createEdgePrismaClient, type EdgePrismaClient } from './_shared/prisma-edge';
-import { 
-  validateRequest, 
-  SyncPayloadSchema, 
-  type SyncPerformanceRecordInput,
-  type SyncSRSItemInput,
-  type SyncSavedQuestionInput,
-  type SyncPayloadInput 
-} from './_shared/schemas';
+import { z } from 'zod';
+import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from './_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from './_shared/middleware';
+import { createEndpointLogger } from './_shared/secureLogger';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+// ============================================================================
+// SCHEMAS
+// ============================================================================
 
-interface SyncResponse {
-  success: boolean;
-  message?: string;
-  data?: {
-    performanceRecords: SyncPerformanceRecordInput[];
-    srsItems: SyncSRSItemInput[];
-    savedQuestions: SyncSavedQuestionInput[];
-  };
-}
+const GetSyncSchema = z.object({}).optional();
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+const SyncPerformanceRecordSchema = z.object({
+  id: z.string().uuid().optional(),
+  topic: z.string().max(200),
+  system: z.string().max(50).nullable().optional(),
+  focus: z.string().max(100),
+  difficulty: z.string().max(50),
+  isCorrect: z.boolean(),
+  timestamp: z.number(),
+  questionWordCount: z.number().int().nullable().optional(),
+  errorTag: z.string().max(100).nullable().optional(),
+  subcategoryName: z.string().max(200).nullable().optional(),
+  conditionName: z.string().max(200).nullable().optional(),
+});
+
+const SyncSRSItemSchema = z.object({
+  questionId: z.string().max(100),
+  interval: z.number(),
+  repetition: z.number().int(),
+  easiness: z.number(),
+  dueDate: z.string(),
+  lastReviewed: z.string(),
+  quality: z.number().int().min(0).max(5),
+  difficulty: z.string().max(50).optional(),
+  stabilityScore: z.number().optional(),
+  updatedAt: z.string().optional(),
+});
+
+const SyncSavedQuestionSchema = z.object({
+  questionId: z.string().max(100),
+  questionText: z.string().max(5000),
+  correctAnswer: z.string().max(500),
+  explanation: z.string().max(10000).optional(),
+  topic: z.string().max(200),
+  system: z.string().max(50).optional(),
+  type: z.enum(['saved', 'flagged', 'missed']),
+  userNote: z.string().max(2000).optional(),
+  repetitionLevel: z.number().int().optional(),
+  nextReviewDate: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+const PostSyncSchema = z.object({
+  userId: z.string().min(1).max(100),
+  performanceRecords: z.array(SyncPerformanceRecordSchema).max(1000).optional(),
+  srsItems: z.array(SyncSRSItemSchema).max(1000).optional(),
+  savedQuestions: z.array(SyncSavedQuestionSchema).max(500).optional(),
+});
+
+// ============================================================================
+// HELPERS
+// ============================================================================
 
 /**
- * Helper: Resolve Clerk ID to Internal DB ID
- * Uses Prisma ORM for database operations
+ * Resolve Clerk ID to Internal DB ID
  */
 async function resolveUserId(prisma: EdgePrismaClient, clerkId: string): Promise<string> {
-  try {
-    // 1. Try to find existing user
-    const existingUser = await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true },
-    });
+  const existingUser = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
 
-    if (existingUser) {
-      return existingUser.id;
-    }
+  if (existingUser) {
+    return existingUser.id;
+  }
 
-    // 2. User doesn't exist, create them
-    // Note: Using a placeholder email. Ideally, extract real email from auth context if available.
-    const newUser = await prisma.user.create({
-      data: {
-        clerkId,
-        email: `${clerkId}@placeholder.panacea.app`,
-      },
-      select: { id: true },
-    });
-
-    return newUser.id;
-  } catch (error) {
-    console.error('[SYNC] Error resolving user ID:', {
+  // User doesn't exist, create them
+  const newUser = await prisma.user.create({
+    data: {
       clerkId,
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    throw error;
-  }
+      email: `${clerkId}@placeholder.panacea.app`,
+    },
+    select: { id: true },
+  });
+
+  return newUser.id;
 }
 
-/**
- * GET: Fetch user's data from the cloud
- */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
-
-  // Initialize edge-compatible Prisma client
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    // Authentication handled by middleware with structured logging
-    const authContext = await authenticateRequest(request, env);
-
-    if (!authContext) {
-      console.error('[SYNC GET] Authentication failed');
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const { clerkId } = authContext;
-    // User ID resolution
-
-    // Resolve clerkId to internal userId
-    const internalUserId = await resolveUserId(prisma, clerkId);
-    // Fetch user data
-
-    // Fetch all user data (execute in parallel)
-    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
-      prisma.performanceRecord.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.sRSItem.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.savedQuestion.findMany({
-        where: { userId: internalUserId },
-      }),
-    ]);
-
-    // Data fetched successfully - logged by middleware
-
-    const response: SyncResponse = {
-      success: true,
-      message: 'Data retrieved successfully',
-      data: {
-        performanceRecords: performanceRecords.map(r => ({
-          ...r,
-          timestamp: Number(r.timestamp), // Handle BigInt if present
-        })),
-        srsItems,
-        savedQuestions,
-      },
-    };
-
-    return createSuccessResponse(response);
-  } catch (error) {
-    console.error('[SYNC GET] Error occurred:', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return createErrorResponse('Internal server error', 500);
-  } finally {
-    // Clean up Prisma connection asynchronously
-    await prisma.$disconnect().catch((err) => {
-      console.error('[SYNC GET] Error disconnecting Prisma:', err);
-    });
-  }
-}
+// ============================================================================
+// HANDLERS
+// ============================================================================
 
 /**
- * POST: Upload/merge local data to the cloud
+ * GET /api/sync
+ * Fetch user's data from the cloud
  */
-export async function onRequestPost(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
-  
-  // Validate request body with Zod schema first
-  const validation = await validateRequest(request, SyncPayloadSchema);
-  if (!validation.success) {
-    return (validation as { success: false; response: Response }).response;
+export const onRequestGet = authenticatedEndpoint(
+  GetSyncSchema,
+  async (context) => {
+    const log = createEndpointLogger('GET /api/sync', context.auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+      // Resolve clerkId to internal userId
+      const internalUserId = await resolveUserId(prisma, context.auth.userId);
+
+      // Fetch all user data in parallel
+      const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+        prisma.performanceRecord.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma.sRSItem.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma.savedQuestion.findMany({
+          where: { userId: internalUserId },
+        }),
+      ]);
+
+      log.info('Sync data retrieved', {
+        performanceRecords: performanceRecords.length,
+        srsItems: srsItems.length,
+        savedQuestions: savedQuestions.length,
+      });
+
+      return {
+        data: {
+          success: true,
+          message: 'Data retrieved successfully',
+          data: {
+            performanceRecords: performanceRecords.map((r) => ({
+              ...r,
+              timestamp: Number(r.timestamp),
+            })),
+            srsItems,
+            savedQuestions,
+          },
+        },
+      };
+    } catch (error) {
+      log.error('Sync GET failed', error);
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
+);
 
-  // Initialize edge-compatible Prisma client
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+/**
+ * POST /api/sync
+ * Upload/merge local data to the cloud
+ */
+export const onRequestPost = authenticatedEndpoint(
+  PostSyncSchema,
+  async (context) => {
+    const log = createEndpointLogger('POST /api/sync', context.auth.userId);
+    let prisma: EdgePrismaClient | null = null;
 
-  try {
-    // Authentication handled by middleware
-    const authContext = await authenticateRequest(request, env);
+    const payload = context.validated;
 
-    if (!authContext) {
-      console.error('[SYNC POST] Authentication failed');
-      return createErrorResponse('Unauthorized', 401);
+    // Verify user ID matches authenticated user
+    if (payload.userId !== context.auth.userId) {
+      log.warn('User ID mismatch', {
+        expected: context.auth.userId,
+        received: payload.userId,
+      });
+      return { status: 403, error: 'User ID mismatch' };
     }
 
-    const { clerkId } = authContext;
-    const payload = validation.data;
+    try {
+      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-    if (payload.userId !== clerkId) {
-      console.error('[SYNC POST] User ID mismatch:', { expected: clerkId, received: payload.userId });
-      return createErrorResponse('User ID mismatch', 403);
-    }
+      // Resolve user ID
+      const internalUserId = await resolveUserId(prisma, context.auth.userId);
 
-    // Resolve user ID
-    const internalUserId = await resolveUserId(prisma, clerkId);
+      // Process data in a transaction
+      await prisma.$transaction(async (tx: any) => {
+        // 1. Insert PerformanceRecords
+        if (payload.performanceRecords?.length) {
+          for (const record of payload.performanceRecords) {
+            const recordId = record.id || crypto.randomUUID();
+            await tx.performanceRecord.upsert({
+              where: { id: recordId },
+              create: {
+                id: recordId,
+                userId: internalUserId,
+                topic: record.topic,
+                system: record.system || null,
+                focus: record.focus,
+                difficulty: record.difficulty,
+                isCorrect: record.isCorrect,
+                timestamp: BigInt(record.timestamp),
+                questionWordCount: record.questionWordCount || null,
+                errorTag: record.errorTag || null,
+                subcategoryName: record.subcategoryName || null,
+                conditionName: record.conditionName || null,
+              },
+              update: {},
+            });
+          }
+        }
 
-    // Start database transaction
-    // Begin transaction with Prisma
-    await prisma.$transaction(async (tx) => {
-      // 1. Insert PerformanceRecords
-      if (payload.performanceRecords?.length) {
-        // Upsert performance records
-        for (const record of payload.performanceRecords) {
-          // Ensure we use a consistent ID for both where and create
-          const recordId = record.id || crypto.randomUUID();
-          await tx.performanceRecord.upsert({
-            where: { id: recordId },
-            create: {
-              id: recordId,
+        // 2. Upsert SRSItems with Conflict Resolution
+        if (payload.srsItems?.length) {
+          for (const item of payload.srsItems) {
+            const existing = await tx.sRSItem.findUnique({
+              where: {
+                userId_questionId: {
+                  userId: internalUserId,
+                  questionId: item.questionId,
+                },
+              },
+            });
+
+            // Last Write Wins based on updatedAt
+            if (
+              existing &&
+              item.updatedAt &&
+              new Date(existing.updatedAt) > new Date(item.updatedAt)
+            ) {
+              continue;
+            }
+
+            const data = {
               userId: internalUserId,
-              topic: record.topic,
-              system: record.system || null,
-              focus: record.focus,
-              difficulty: record.difficulty,
-              isCorrect: record.isCorrect,
-              timestamp: BigInt(record.timestamp),
-              questionWordCount: record.questionWordCount || null,
-              errorTag: record.errorTag || null,
-              subcategoryName: record.subcategoryName || null,
-              conditionName: record.conditionName || null,
-            },
-            update: {}, // Do nothing on conflict
-          });
-        }
-      }
+              questionId: item.questionId,
+              interval: item.interval,
+              repetition: item.repetition,
+              easiness: item.easiness,
+              dueDate: new Date(item.dueDate),
+              lastReviewed: new Date(item.lastReviewed),
+              quality: item.quality,
+              difficulty: item.difficulty,
+              stabilityScore: item.stabilityScore,
+              ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+            };
 
-      // 2. Upsert SRSItems with Conflict Resolution
-      if (payload.srsItems?.length) {
-        // Upsert SRS items
-        for (const item of payload.srsItems) {
-          const existing = await tx.sRSItem.findUnique({
-            where: {
-              userId_questionId: {
-                userId: internalUserId,
-                questionId: item.questionId,
+            if (existing) {
+              await tx.sRSItem.update({
+                where: { id: existing.id },
+                data,
+              });
+            } else {
+              await tx.sRSItem.create({ data });
+            }
+          }
+        }
+
+        // 3. Upsert SavedQuestions with Conflict Resolution
+        if (payload.savedQuestions?.length) {
+          for (const item of payload.savedQuestions) {
+            const existing = await tx.savedQuestion.findUnique({
+              where: {
+                userId_questionId_type: {
+                  userId: internalUserId,
+                  questionId: item.questionId,
+                  type: item.type,
+                },
               },
-            },
-          });
-
-          // Conflict Resolution: Last Write Wins based on updatedAt
-          if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
-            // Skip SRS item - server version is newer
-            continue;
-          }
-
-          const data = {
-            userId: internalUserId,
-            questionId: item.questionId,
-            interval: item.interval,
-            repetition: item.repetition,
-            easiness: item.easiness,
-            dueDate: new Date(item.dueDate),
-            lastReviewed: new Date(item.lastReviewed),
-            quality: item.quality,
-            difficulty: item.difficulty,
-            stabilityScore: item.stabilityScore,
-            // Only update updatedAt if provided, otherwise let Prisma handle it or use current time
-            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-          };
-
-          if (existing) {
-            await tx.sRSItem.update({
-              where: { id: existing.id },
-              data,
             });
-          } else {
-            await tx.sRSItem.create({
-              data,
-            });
-          }
-        }
-      }
 
-      // 3. Upsert SavedQuestions with Conflict Resolution
-      if (payload.savedQuestions?.length) {
-        // Upsert saved questions
-        for (const item of payload.savedQuestions) {
-          const existing = await tx.savedQuestion.findUnique({
-            where: {
-              userId_questionId_type: {
-                userId: internalUserId,
-                questionId: item.questionId,
-                type: item.type,
-              },
-            },
-          });
+            // Last Write Wins based on updatedAt
+            if (
+              existing &&
+              item.updatedAt &&
+              new Date(existing.updatedAt) > new Date(item.updatedAt)
+            ) {
+              continue;
+            }
 
-          // Conflict Resolution: Last Write Wins based on updatedAt
-          if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
-             // Skip saved question - server version is newer
-             continue;
-          }
+            const data = {
+              userId: internalUserId,
+              questionId: item.questionId,
+              questionText: item.questionText,
+              correctAnswer: item.correctAnswer,
+              explanation: item.explanation,
+              topic: item.topic,
+              system: item.system,
+              type: item.type,
+              userNote: item.userNote,
+              repetitionLevel: item.repetitionLevel,
+              nextReviewDate: item.nextReviewDate,
+              ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+            };
 
-          const data = {
-            userId: internalUserId,
-            questionId: item.questionId,
-            questionText: item.questionText,
-            correctAnswer: item.correctAnswer,
-            explanation: item.explanation,
-            topic: item.topic,
-            system: item.system,
-            type: item.type,
-            userNote: item.userNote,
-            repetitionLevel: item.repetitionLevel,
-            nextReviewDate: item.nextReviewDate,
-            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-          };
-
-          if (existing) {
-            await tx.savedQuestion.update({
-              where: { id: existing.id },
-              data,
-            });
-          } else {
-            await tx.savedQuestion.create({
-              data,
-            });
+            if (existing) {
+              await tx.savedQuestion.update({
+                where: { id: existing.id },
+                data,
+              });
+            } else {
+              await tx.savedQuestion.create({ data });
+            }
           }
         }
-      }
-    });
+      });
 
-    // Transaction completed, fetch updated data
+      // Fetch updated data
+      const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+        prisma.performanceRecord.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma.sRSItem.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma.savedQuestion.findMany({
+          where: { userId: internalUserId },
+        }),
+      ]);
 
-    // Return updated data
-    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
-      prisma.performanceRecord.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.sRSItem.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.savedQuestion.findMany({
-        where: { userId: internalUserId },
-      }),
-    ]);
+      log.info('Sync completed', {
+        performanceRecords: performanceRecords.length,
+        srsItems: srsItems.length,
+        savedQuestions: savedQuestions.length,
+      });
 
-    // Data synced successfully
-
-    const response: SyncResponse = {
-      success: true,
-      message: 'Data synced successfully',
-      data: {
-        performanceRecords: performanceRecords.map(r => ({
-          ...r,
-          timestamp: Number(r.timestamp),
-        })),
-        srsItems,
-        savedQuestions,
-      },
-    };
-
-    return createSuccessResponse(response);
-  } catch (error) {
-    console.error('[SYNC POST] Error occurred:', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return createErrorResponse('Internal server error', 500);
-  } finally {
-    // Clean up Prisma connection asynchronously
-    await prisma.$disconnect().catch((err) => {
-      console.error('[SYNC POST] Error disconnecting Prisma:', err);
-    });
+      return {
+        data: {
+          success: true,
+          message: 'Data synced successfully',
+          data: {
+            performanceRecords: performanceRecords.map((r) => ({
+              ...r,
+              timestamp: Number(r.timestamp),
+            })),
+            srsItems,
+            savedQuestions,
+          },
+        },
+      };
+    } catch (error) {
+      log.error('Sync POST failed', error);
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const onRequestOptions = withCors();

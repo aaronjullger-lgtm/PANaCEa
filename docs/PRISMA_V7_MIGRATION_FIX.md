@@ -1,15 +1,19 @@
 # Prisma v7 Migration Fix Summary
 
 ## Problem
+
 After upgrading to Prisma v7.2.0, scripts were failing with:
+
 ```
 PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`
 ```
 
 ## Root Cause
+
 Prisma v7 requires an adapter for PostgreSQL connections. The bare `new PrismaClient()` instantiation no longer works.
 
 ## Solution
+
 All scripts now use the Prisma v7 adapter pattern:
 
 ```typescript
@@ -36,6 +40,7 @@ const prisma = new PrismaClient({ adapter });
 ## Fixed Scripts
 
 ### Critical Scripts (Core Functionality)
+
 - ✅ `scripts/condition-doctor.ts` - Duplicate detection and content generation
 - ✅ `scripts/db/normalize-systems.ts` - System name normalization (NEW: comprehensive validation)
 - ✅ `scripts/gap-analysis.ts` - Content gap detection
@@ -43,19 +48,24 @@ const prisma = new PrismaClient({ adapter });
 - ✅ `scripts/cron/drift-detector.ts` - AI content drift detection
 
 ### Data Sync Scripts
+
 - ✅ `scripts/syncSpecialTestTable.ts` - Special test registry sync
 - ✅ `scripts/syncImagingTable.ts` - Imaging registry sync
 - ✅ `scripts/registry-to-db.ts` - Condition registry sync
 
 ### Generation & Automation
+
 - ✅ `scripts/generate_content.ts` - AI content generation
 - ✅ `scripts/automation/jobs/healthChecks.ts` - System health monitoring
 
 ### Helper Script Created
+
 - ✅ `scripts/helpers/prisma-client.ts` - Reusable Prisma client helper for future scripts
 
 ## Remaining Scripts (Low Priority)
+
 The following scripts still need updating but are less frequently used:
+
 - `scripts/checkPharmData.ts`
 - `scripts/syncFindingTable.ts`
 - `scripts/weekly-maintenance.ts`
@@ -65,6 +75,7 @@ The following scripts still need updating but are less frequently used:
 **Recommendation:** Update these on-demand when needed or create a batch migration script.
 
 ## Future Scripts
+
 For new scripts, use the helper:
 
 ```typescript
@@ -81,6 +92,7 @@ main()
 ```
 
 ## Enhanced normalize-systems.ts Features
+
 The normalization script now includes comprehensive validation:
 
 1. **Duplicate Detection** - Finds duplicate conditions across both tables
@@ -90,13 +102,16 @@ The normalization script now includes comprehensive validation:
 5. **Orphan Detection** - Identifies records without proper relationships
 
 ### Current Database Status
+
 - 42 duplicate conditions detected (need `condition-doctor.ts --merge-dupes`)
 - 16 orphaned Condition records (manual review needed)
 - 1,171 records ready for system name normalization
 - 95 conditions missing diagnostic/treatment fields (~7.6%)
 
 ## Testing
+
 All fixed scripts have been tested:
+
 ```bash
 # Test condition-doctor
 npx tsx scripts/condition-doctor.ts --analyze
@@ -109,6 +124,7 @@ npx tsx scripts/db/normalize-systems.ts
 ```
 
 ## References
+
 - Prisma v7 Migration Guide: https://pris.ly/d/config-datasource
 - Prisma PostgreSQL Adapter: https://www.prisma.io/docs/orm/overview/databases/postgresql
 - PANaCEa Copilot Instructions: `.github/copilot-instructions.md`

@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { 
-  TrendingDown, 
-  TrendingUp, 
+import {
+  TrendingDown,
+  TrendingUp,
   AlertTriangle,
   Target,
   BookOpen,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -36,19 +36,17 @@ const getAccuracyBg = (accuracy: number) => {
 
 // Format condition ID into display name
 const formatConditionName = (conditionId: string): string => {
-  return conditionId
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
+  return conditionId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps> = ({
   conditionStats,
   weakConditions,
-  onSelectCondition
+  onSelectCondition,
 }) => {
   // Sort conditions by accuracy for display
-  const sortedByAccuracy = useMemo(() => 
-    [...conditionStats].sort((a, b) => a.accuracy - b.accuracy),
+  const sortedByAccuracy = useMemo(
+    () => [...conditionStats].sort((a, b) => a.accuracy - b.accuracy),
     [conditionStats]
   );
 
@@ -59,9 +57,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
     return (
       <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 text-center">
         <BookOpen className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-        <p className="text-slate-600 dark:text-slate-400">
-          No condition-specific data yet.
-        </p>
+        <p className="text-slate-600 dark:text-slate-400">No condition-specific data yet.</p>
         <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
           Complete more practice questions to see condition breakdowns.
         </p>
@@ -77,14 +73,12 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-red-800 dark:text-red-300">
-                Focus Areas Identified
-              </h4>
+              <h4 className="font-medium text-red-800 dark:text-red-300">Focus Areas Identified</h4>
               <p className="text-sm text-red-700 dark:text-red-400 mt-1">
                 These conditions need extra attention (accuracy below 60%):
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                {weakConditions.slice(0, 5).map(c => (
+                {weakConditions.slice(0, 5).map((c) => (
                   <button
                     key={c.conditionId}
                     onClick={() => onSelectCondition?.(c.conditionId)}
@@ -129,7 +123,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs font-bold rounded ${getAccuracyBg(c.accuracy)} ${getAccuracyColor(c.accuracy)}`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-bold rounded ${getAccuracyBg(c.accuracy)} ${getAccuracyColor(c.accuracy)}`}
+                  >
                     {c.accuracy}%
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -166,7 +162,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs font-bold rounded ${getAccuracyBg(c.accuracy)} ${getAccuracyColor(c.accuracy)}`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-bold rounded ${getAccuracyBg(c.accuracy)} ${getAccuracyColor(c.accuracy)}`}
+                  >
                     {c.accuracy}%
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -185,9 +183,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
             All Conditions ({conditionStats.length})
           </h4>
         </div>
-        
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-          {conditionStats.map(c => (
+          {conditionStats.map((c) => (
             <button
               key={c.conditionId}
               onClick={() => onSelectCondition?.(c.conditionId)}

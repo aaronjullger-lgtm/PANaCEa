@@ -1,6 +1,6 @@
 /**
  * CognitiveStateIndicator
- * 
+ *
  * A compact visual indicator showing the user's current cognitive state
  * Used in QuizView to provide real-time feedback on fatigue, focus, and flow
  */
@@ -20,13 +20,13 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   compact = true,
 }) => {
   if (!cognitiveState) return null;
-  
+
   const { cognitiveLoad, fatigueLevel, flowState, attentionLevel } = cognitiveState;
-  
+
   // Determine overall state
-  const getOverallState = (): { 
-    label: string; 
-    color: string; 
+  const getOverallState = (): {
+    label: string;
+    color: string;
     icon: React.ReactNode;
     bg: string;
   } => {
@@ -69,9 +69,9 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
       icon: <Brain className="w-4 h-4" />,
     };
   };
-  
+
   const state = getOverallState();
-  
+
   if (compact) {
     return (
       <motion.div
@@ -84,7 +84,7 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
       </motion.div>
     );
   }
-  
+
   // Expanded view with all metrics
   return (
     <motion.div
@@ -96,12 +96,14 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
       <div className="flex items-center gap-2">
         <Brain className="w-5 h-5 text-blue-500" />
         <span className="font-medium text-[var(--color-text-primary)]">Cognitive State</span>
-        <div className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${state.bg} ${state.color} text-xs font-medium`}>
+        <div
+          className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${state.bg} ${state.color} text-xs font-medium`}
+        >
           {state.icon}
           <span>{state.label}</span>
         </div>
       </div>
-      
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 gap-3">
         <MetricBar label="Focus" value={attentionLevel} color="blue" />
@@ -124,9 +126,13 @@ const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) 
   // For inverted metrics, lower is better
   const displayValue = inverted ? 100 - value : value;
   const barColor = inverted
-    ? value > 60 ? 'bg-red-500' : value > 40 ? 'bg-amber-500' : 'bg-emerald-500'
+    ? value > 60
+      ? 'bg-red-500'
+      : value > 40
+        ? 'bg-amber-500'
+        : 'bg-emerald-500'
     : `bg-${color}-500`;
-  
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
@@ -139,7 +145,9 @@ const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) 
           animate={{ width: `${Math.min(100, displayValue)}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className={`h-full rounded-full ${inverted ? barColor : `bg-${color}-500`}`}
-          style={!inverted ? { backgroundColor: `var(--color-${color}, rgb(59, 130, 246))` } : undefined}
+          style={
+            !inverted ? { backgroundColor: `var(--color-${color}, rgb(59, 130, 246))` } : undefined
+          }
         />
       </div>
     </div>

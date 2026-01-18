@@ -1,18 +1,18 @@
 #!/usr/bin/env tsx
 /**
  * CONDITION DOCTOR - Comprehensive Condition Database Curator
- * 
+ *
  * Features:
  * 1. Add new high-yield conditions (2024/2025 Blueprint additions)
  * 2. Merge duplicate/triplicate conditions (cross-system deduplication)
  * 3. Fix technical formatting duplicates (snake_case normalization)
  * 4. AI-powered content generation for new conditions
- * 
+ *
  * Usage:
  *   npx tsx scripts/condition-doctor.ts [options]
  *   --dry-run          Preview changes without applying
  *   --add-new          Add new conditions only
- *   --merge-dupes      Merge duplicates only  
+ *   --merge-dupes      Merge duplicates only
  *   --analyze          Analyze and report without changes
  *   --limit=N          Limit AI calls
  */
@@ -60,7 +60,10 @@ if (apiKey) {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -99,7 +102,12 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     system: 'CV',
     subcategory: 'Cardiomyopathy',
     condition: 'Stress Cardiomyopathy',
-    aliases: ['Takotsubo Cardiomyopathy', 'Broken Heart Syndrome', 'Apical Ballooning Syndrome', 'Takotsubo Syndrome'],
+    aliases: [
+      'Takotsubo Cardiomyopathy',
+      'Broken Heart Syndrome',
+      'Apical Ballooning Syndrome',
+      'Takotsubo Syndrome',
+    ],
     panceYield: 3,
     notes: 'High-yield new addition for CV - classic post-emotional stress presentation',
   },
@@ -125,7 +133,13 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     system: 'ID',
     subcategory: 'Post-Infectious',
     condition: 'Long COVID',
-    aliases: ['PASC', 'Post-Acute Sequelae of SARS-CoV-2', 'Post-COVID Syndrome', 'Long-Haul COVID', 'Post-COVID Condition'],
+    aliases: [
+      'PASC',
+      'Post-Acute Sequelae of SARS-CoV-2',
+      'Post-COVID Syndrome',
+      'Long-Haul COVID',
+      'Post-COVID Condition',
+    ],
     relatedSystems: ['PULM', 'NEURO', 'CV'],
     panceYield: 3,
     notes: 'Now a recognized clinical entity for PANCE 2024',
@@ -134,7 +148,12 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     system: 'PULM',
     subcategory: 'Toxicology',
     condition: 'EVALI',
-    aliases: ['E-cigarette or Vaping Product Use-Associated Lung Injury', 'Vaping-Associated Lung Injury', 'VALI', 'Vape Lung'],
+    aliases: [
+      'E-cigarette or Vaping Product Use-Associated Lung Injury',
+      'Vaping-Associated Lung Injury',
+      'VALI',
+      'Vape Lung',
+    ],
     relatedSystems: ['OTHER'],
     panceYield: 3,
     notes: 'Critical pulmonary/emergency topic - vitamin E acetate association',
@@ -168,7 +187,13 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     system: 'PSYCH',
     subcategory: 'Substance Use - Stimulants',
     condition: 'Synthetic Cathinone Toxicity',
-    aliases: ['Bath Salts', 'Synthetic Cathinones', 'Bath Salts Intoxication', 'Flakka', 'MDPV Toxicity'],
+    aliases: [
+      'Bath Salts',
+      'Synthetic Cathinones',
+      'Bath Salts Intoxication',
+      'Flakka',
+      'MDPV Toxicity',
+    ],
     relatedSystems: ['OTHER'],
     panceYield: 2,
     notes: 'Toxicology/poisoning - sympathomimetic toxidrome',
@@ -189,7 +214,11 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     system: 'PULM',
     subcategory: 'Pediatric',
     condition: 'Bronchiolitis',
-    aliases: ['RSV Bronchiolitis', 'Respiratory Syncytial Virus Bronchiolitis', 'Viral Bronchiolitis'],
+    aliases: [
+      'RSV Bronchiolitis',
+      'Respiratory Syncytial Virus Bronchiolitis',
+      'Viral Bronchiolitis',
+    ],
     panceYield: 3,
     notes: 'RSV focus - supportive care, wheezing in infants < 2 years',
   },
@@ -271,7 +300,8 @@ const NEW_HIGH_YIELD_CONDITIONS: NewCondition[] = [
     aliases: ['LDCT Screening', 'Low-Dose CT Screening', 'Lung Cancer USPSTF'],
     relatedSystems: ['PULM'],
     panceYield: 3,
-    notes: 'USPSTF: Annual low-dose CT for adults 50-80 with 20+ pack-year history, currently smoking or quit within 15 years',
+    notes:
+      'USPSTF: Annual low-dose CT for adults 50-80 with 20+ pack-year history, currently smoking or quit within 15 years',
   },
   {
     system: 'OTHER',
@@ -315,7 +345,7 @@ const ACCENTED_NAME_CORRECTIONS: Array<{
   { informal: 'Guillain-Barre', formal: 'Guillain-Barré', wholeWordOnly: true },
   { informal: 'Behcet', formal: 'Behçet', wholeWordOnly: true },
   { informal: 'Lofgren', formal: 'Löfgren', wholeWordOnly: true },
-  
+
   // Apostrophe standardization - only fix missing apostrophes, not add to already-correct ones
   // These need very careful matching to avoid breaking other words
   { informal: 'Hashimoto Thyroiditis', formal: "Hashimoto's Thyroiditis", wholeWordOnly: false },
@@ -368,7 +398,7 @@ const DUPLICATE_GROUPS: DuplicateGroup[] = [
     ],
     aliases: ['HAP', 'Nosocomial Pneumonia', 'Healthcare-Associated Pneumonia'],
   },
-  
+
   // =====================================================
   // HIGH-YIELD DUPLICATES (2 entries each)
   // =====================================================
@@ -641,7 +671,7 @@ function deepMergeContent(records: any[]): {
 } {
   // Collect and dedupe buzzwords from all records
   const allBuzzwords = new Set<string>();
-  records.forEach(r => {
+  records.forEach((r) => {
     if (r.buzzwords && Array.isArray(r.buzzwords)) {
       r.buzzwords.forEach((b: string) => allBuzzwords.add(b));
     }
@@ -649,7 +679,7 @@ function deepMergeContent(records: any[]): {
 
   // Collect clinical pearls from all records
   let mergedPearls: string[] = [];
-  records.forEach(r => {
+  records.forEach((r) => {
     if (r.clinical_pearls) {
       if (Array.isArray(r.clinical_pearls)) {
         mergedPearls.push(...r.clinical_pearls);
@@ -664,27 +694,27 @@ function deepMergeContent(records: any[]): {
 
   // Get the most detailed gold_standard_dx (longest non-null)
   const goldStandards = records
-    .map(r => r.gold_standard_dx)
-    .filter(g => g && typeof g === 'string' && g.trim().length > 0);
+    .map((r) => r.gold_standard_dx)
+    .filter((g) => g && typeof g === 'string' && g.trim().length > 0);
   const bestGoldStandard = goldStandards.sort((a, b) => b.length - a.length)[0] || null;
 
   // Get the most detailed first_line_rx
   const firstLineRxs = records
-    .map(r => r.first_line_rx)
-    .filter(f => f && typeof f === 'string' && f.trim().length > 0);
+    .map((r) => r.first_line_rx)
+    .filter((f) => f && typeof f === 'string' && f.trim().length > 0);
   const bestFirstLineRx = firstLineRxs.sort((a, b) => b.length - a.length)[0] || null;
 
   // Get the best initial test
   const bestInitialTests = records
-    .map(r => r.best_initial_test)
-    .filter(t => t && typeof t === 'string' && t.trim().length > 0);
+    .map((r) => r.best_initial_test)
+    .filter((t) => t && typeof t === 'string' && t.trim().length > 0);
   const bestInitialTest = bestInitialTests.sort((a, b) => b.length - a.length)[0] || null;
 
   // Get longest overview, pathophysiology, diagnostics, treatment
   const getLongest = (field: string) => {
     const values = records
-      .map(r => r[field])
-      .filter(v => v && typeof v === 'string' && v.trim().length > 50);
+      .map((r) => r[field])
+      .filter((v) => v && typeof v === 'string' && v.trim().length > 50);
     return values.sort((a, b) => b.length - a.length)[0] || null;
   };
 
@@ -747,7 +777,10 @@ IMPORTANT:
   try {
     await tokenBucket.acquire();
     const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?|```/g, '').trim();
+    const text = result.response
+      .text()
+      .replace(/```json\n?|```/g, '')
+      .trim();
     return JSON.parse(text);
   } catch (err: any) {
     console.error(`   ❌ AI error: ${err.message}`);
@@ -789,8 +822,12 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
   let skipped = 0;
 
   for (const condition of NEW_HIGH_YIELD_CONDITIONS) {
-    const conditionId = generateConditionId(condition.system, condition.subcategory, condition.condition);
-    
+    const conditionId = generateConditionId(
+      condition.system,
+      condition.subcategory,
+      condition.condition
+    );
+
     // Check if exists in MedicalContent
     const existsContent = await prisma.medicalContent.findUnique({
       where: { conditionId },
@@ -948,10 +985,9 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
     if (!dryRun) {
       // DEEP MERGE - combine best content from all records
       const mergedContent = deepMergeContent(records);
-      const allRelatedSystems = [...new Set([
-        ...records.flatMap(r => r.relatedSystems),
-        ...group.relatedSystems,
-      ])];
+      const allRelatedSystems = [
+        ...new Set([...records.flatMap((r) => r.relatedSystems), ...group.relatedSystems]),
+      ];
 
       // Update primary record
       const canonicalConditionId = generateConditionId(
@@ -986,7 +1022,7 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
         });
         // Delete all duplicates including primary
         await prisma.medicalContent.deleteMany({
-          where: { id: { in: records.map(r => r.id) } },
+          where: { id: { in: records.map((r) => r.id) } },
         });
         console.log(`      🔀 Deep merged into existing canonical`);
       } else {
@@ -1009,7 +1045,9 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
               pathophysiology: mergedContent.pathophysiology || primary.pathophysiology,
               diagnostics: mergedContent.diagnostics || primary.diagnostics,
               treatment: mergedContent.treatment || primary.treatment,
-              synonyms: group.aliases ? [...new Set([...(primary.synonyms as string[] || []), ...group.aliases])] : primary.synonyms,
+              synonyms: group.aliases
+                ? [...new Set([...((primary.synonyms as string[]) || []), ...group.aliases])]
+                : primary.synonyms,
               updatedBy: 'condition-doctor',
             },
           });
@@ -1033,7 +1071,7 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
         where: {
           OR: [
             { name: { equals: group.canonicalName, mode: 'insensitive' } },
-            { name: { in: records.map(r => r.condition) } },
+            { name: { in: records.map((r) => r.condition) } },
           ],
         },
       });
@@ -1048,19 +1086,13 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
             name: group.canonicalName,
             system: group.canonicalSystem,
             subcategory: group.canonicalSubcategory,
-            relatedSystems: [...new Set([
-              ...primaryCond.relatedSystems,
-              ...group.relatedSystems,
-            ])],
-            aliases: [...new Set([
-              ...primaryCond.aliases,
-              ...(group.aliases || []),
-            ])],
+            relatedSystems: [...new Set([...primaryCond.relatedSystems, ...group.relatedSystems])],
+            aliases: [...new Set([...primaryCond.aliases, ...(group.aliases || [])])],
           },
         });
 
         await prisma.condition.deleteMany({
-          where: { id: { in: dupConds.map(c => c.id) } },
+          where: { id: { in: dupConds.map((c) => c.id) } },
         });
       }
 
@@ -1099,7 +1131,7 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
   for (const dup of sqlDuplicates) {
     const conditionName = dup.condition;
     const count = Number(dup.count);
-    
+
     // Find all records with this exact name
     const records = await prisma.medicalContent.findMany({
       where: { condition: conditionName },
@@ -1110,7 +1142,9 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
 
     console.log(`\n   📋 "${conditionName}" - Found ${records.length} duplicate records`);
     for (const r of records) {
-      console.log(`      - ${r.conditionId} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`);
+      console.log(
+        `      - ${r.conditionId} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`
+      );
     }
 
     if (!dryRun && records.length > 1) {
@@ -1122,9 +1156,11 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
       const mergedContent = deepMergeContent(records);
 
       // Collect all related systems
-      const allRelatedSystems = [...new Set(records.flatMap(r => [r.system, ...r.relatedSystems]))];
+      const allRelatedSystems = [
+        ...new Set(records.flatMap((r) => [r.system, ...r.relatedSystems])),
+      ];
       const primarySystem = primary.system;
-      const otherSystems = allRelatedSystems.filter(s => s !== primarySystem);
+      const otherSystems = allRelatedSystems.filter((s) => s !== primarySystem);
 
       // Update primary with merged data
       await prisma.medicalContent.update({
@@ -1154,11 +1190,13 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
 
       // Delete duplicate MedicalContent records
       await prisma.medicalContent.deleteMany({
-        where: { id: { in: duplicates.map(d => d.id) } },
+        where: { id: { in: duplicates.map((d) => d.id) } },
       });
 
       // Handle duplicate Condition records carefully (they may have foreign keys)
-      const dupCondIds = duplicates.map(d => d.conditionId).filter(id => id !== primary.conditionId);
+      const dupCondIds = duplicates
+        .map((d) => d.conditionId)
+        .filter((id) => id !== primary.conditionId);
       if (dupCondIds.length > 0) {
         // First, update any references to point to the primary
         try {
@@ -1167,20 +1205,22 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
             where: { conditionId: { in: dupCondIds } },
             data: { conditionId: primary.conditionId },
           });
-          
+
           // Update Question references
           await prisma.question.updateMany({
             where: { conditionId: { in: dupCondIds } },
             data: { conditionId: primary.conditionId },
           });
-          
+
           // Update PreGeneratedQuestion references
           await prisma.preGeneratedQuestion.updateMany({
             where: { conditionId: { in: dupCondIds } },
             data: { conditionId: primary.conditionId },
           });
         } catch (refError) {
-          console.log(`      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`);
+          console.log(
+            `      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`
+          );
         }
 
         // Now safe to delete the duplicate Condition records
@@ -1189,7 +1229,9 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
             where: { id: { in: dupCondIds } },
           });
         } catch (deleteError) {
-          console.log(`      ⚠️  Warning: Could not delete duplicate Condition records - ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`);
+          console.log(
+            `      ⚠️  Warning: Could not delete duplicate Condition records - ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`
+          );
         }
       }
 
@@ -1204,7 +1246,7 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
   // Also check the KNOWN_DUPLICATE_CONDITIONS list for stragglers
   for (const conditionName of KNOWN_DUPLICATE_CONDITIONS) {
     const normalized = normalizeConditionName(conditionName);
-    
+
     // Find all records with similar names
     const records = await prisma.medicalContent.findMany({
       where: {
@@ -1219,7 +1261,7 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
     if (records.length <= 1) continue;
 
     // Check if we already processed this in SQL duplicates
-    if (sqlDuplicates.some(d => d.condition === records[0].condition)) continue;
+    if (sqlDuplicates.some((d) => d.condition === records[0].condition)) continue;
 
     console.log(`\n   📋 ${conditionName} (fuzzy match) - Found ${records.length} records`);
     for (const r of records) {
@@ -1231,23 +1273,25 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
       const duplicates = records.slice(1);
 
       // Collect all related systems
-      const allRelatedSystems = [...new Set(records.flatMap(r => [r.system, ...r.relatedSystems]))];
+      const allRelatedSystems = [
+        ...new Set(records.flatMap((r) => [r.system, ...r.relatedSystems])),
+      ];
       const primarySystem = primary.system;
-      const otherSystems = allRelatedSystems.filter(s => s !== primarySystem);
+      const otherSystems = allRelatedSystems.filter((s) => s !== primarySystem);
 
       // Update primary with merged data
       await prisma.medicalContent.update({
         where: { id: primary.id },
         data: {
           relatedSystems: otherSystems,
-          buzzwords: [...new Set(records.flatMap(r => r.buzzwords))],
+          buzzwords: [...new Set(records.flatMap((r) => r.buzzwords))],
           updatedBy: 'condition-doctor',
         },
       });
 
       // Delete duplicates
       await prisma.medicalContent.deleteMany({
-        where: { id: { in: duplicates.map(d => d.id) } },
+        where: { id: { in: duplicates.map((d) => d.id) } },
       });
 
       console.log(`      ✅ Merged into ${primary.conditionId}`);
@@ -1280,12 +1324,14 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
     ORDER BY count DESC
   `;
 
-  console.log(`\n   Found ${conditionDuplicates.length} duplicate condition names in Condition table\n`);
+  console.log(
+    `\n   Found ${conditionDuplicates.length} duplicate condition names in Condition table\n`
+  );
 
   for (const dup of conditionDuplicates) {
     const conditionName = dup.name;
     const count = Number(dup.count);
-    
+
     // Find all Condition records with this exact name
     const records = await prisma.condition.findMany({
       where: { name: conditionName },
@@ -1296,7 +1342,9 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
 
     console.log(`\n   📋 "${conditionName}" - Found ${records.length} duplicate Condition records`);
     for (const r of records) {
-      console.log(`      - ${r.id} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`);
+      console.log(
+        `      - ${r.id} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`
+      );
     }
 
     if (!dryRun && records.length > 1) {
@@ -1305,10 +1353,12 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
       const duplicates = records.slice(1);
 
       // Collect all related systems and aliases
-      const allRelatedSystems = [...new Set(records.flatMap(r => [r.system, ...r.relatedSystems]))];
+      const allRelatedSystems = [
+        ...new Set(records.flatMap((r) => [r.system, ...r.relatedSystems])),
+      ];
       const primarySystem = primary.system;
-      const otherSystems = allRelatedSystems.filter(s => s !== primarySystem);
-      const allAliases = [...new Set(records.flatMap(r => r.aliases))];
+      const otherSystems = allRelatedSystems.filter((s) => s !== primarySystem);
+      const allAliases = [...new Set(records.flatMap((r) => r.aliases))];
 
       // Update primary with merged data
       await prisma.condition.update({
@@ -1321,19 +1371,19 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
       });
 
       // Update foreign key references to point to primary
-      const dupIds = duplicates.map(d => d.id);
-      
+      const dupIds = duplicates.map((d) => d.id);
+
       try {
         await prisma.questionSeed.updateMany({
           where: { conditionId: { in: dupIds } },
           data: { conditionId: primary.id },
         });
-        
+
         await prisma.question.updateMany({
           where: { conditionId: { in: dupIds } },
           data: { conditionId: primary.id },
         });
-        
+
         await prisma.preGeneratedQuestion.updateMany({
           where: { conditionId: { in: dupIds } },
           data: { conditionId: primary.id },
@@ -1345,7 +1395,9 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
           data: { conditionId: primary.id },
         });
       } catch (refError) {
-        console.log(`      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`);
+        console.log(
+          `      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`
+        );
       }
 
       // Now safe to delete duplicates
@@ -1356,7 +1408,9 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
         console.log(`      ✅ Merged ${records.length} Condition records into ${primary.id}`);
         merged++;
       } catch (deleteError) {
-        console.log(`      ❌ Failed to delete: ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`);
+        console.log(
+          `      ❌ Failed to delete: ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`
+        );
       }
     } else if (dryRun) {
       console.log(`      [DRY RUN] Would merge ${records.length} records`);
@@ -1393,7 +1447,7 @@ async function fixFormattingDuplicates(dryRun: boolean): Promise<number> {
 
       for (const record of records) {
         const newConditionId = record.conditionId.replace(incorrect, pattern.correctPattern);
-        
+
         // Check if correct version exists
         const correctExists = await prisma.medicalContent.findUnique({
           where: { conditionId: newConditionId },
@@ -1407,7 +1461,9 @@ async function fixFormattingDuplicates(dryRun: boolean): Promise<number> {
               where: { id: correctExists.id },
               data: {
                 buzzwords: [...new Set([...correctExists.buzzwords, ...record.buzzwords])],
-                relatedSystems: [...new Set([...correctExists.relatedSystems, ...record.relatedSystems])],
+                relatedSystems: [
+                  ...new Set([...correctExists.relatedSystems, ...record.relatedSystems]),
+                ],
               },
             });
             await prisma.medicalContent.delete({ where: { id: record.id } });
@@ -1441,7 +1497,7 @@ async function standardizeAccentedNames(dryRun: boolean): Promise<number> {
 
   for (const correction of ACCENTED_NAME_CORRECTIONS) {
     const { informal, formal, wholeWordOnly } = correction;
-    
+
     // Build regex pattern - whole word only uses word boundaries
     const regexPattern = wholeWordOnly
       ? new RegExp(`\\b${informal}\\b`, 'gi')
@@ -1457,8 +1513,8 @@ async function standardizeAccentedNames(dryRun: boolean): Promise<number> {
     });
 
     // Filter to only records that actually match our pattern
-    const matchingMedical = medicalRecords.filter(r => regexPattern.test(r.condition));
-    const matchingCondition = conditionRecords.filter(r => {
+    const matchingMedical = medicalRecords.filter((r) => regexPattern.test(r.condition));
+    const matchingCondition = conditionRecords.filter((r) => {
       regexPattern.lastIndex = 0; // Reset regex state
       return regexPattern.test(r.name);
     });
@@ -1473,7 +1529,7 @@ async function standardizeAccentedNames(dryRun: boolean): Promise<number> {
         for (const record of matchingMedical) {
           regexPattern.lastIndex = 0; // Reset regex state
           const newConditionName = record.condition.replace(regexPattern, formal);
-          
+
           if (newConditionName !== record.condition) {
             await prisma.medicalContent.update({
               where: { id: record.id },
@@ -1488,7 +1544,7 @@ async function standardizeAccentedNames(dryRun: boolean): Promise<number> {
         for (const record of matchingCondition) {
           regexPattern.lastIndex = 0; // Reset regex state
           const newName = record.name.replace(regexPattern, formal);
-          
+
           if (newName !== record.name) {
             await prisma.condition.update({
               where: { id: record.id },
@@ -1527,19 +1583,19 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
   });
 
   // Create map of condition IDs
-  const conditionMap = new Map(allConditions.map(c => [c.id, c]));
-  const conditionNameMap = new Map(allConditions.map(c => [c.name.toLowerCase(), c]));
+  const conditionMap = new Map(allConditions.map((c) => [c.id, c]));
+  const conditionNameMap = new Map(allConditions.map((c) => [c.name.toLowerCase(), c]));
 
   console.log(`\n   📋 MedicalContent records: ${allMedicalContent.length}`);
   console.log(`   📋 Condition records: ${allConditions.length}`);
 
   // Find MedicalContent records without corresponding Condition entry
   const orphanedContent: typeof allMedicalContent = [];
-  
+
   for (const mc of allMedicalContent) {
     const byId = conditionMap.has(mc.conditionId);
     const byName = conditionNameMap.has(mc.condition.toLowerCase());
-    
+
     if (!byId && !byName) {
       orphanedContent.push(mc);
     }
@@ -1549,7 +1605,7 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
 
   if (orphanedContent.length > 0 && !dryRun) {
     console.log('\n   Creating missing Condition entries...');
-    
+
     for (const mc of orphanedContent) {
       // Check if we can create a Condition for this
       const existingCondition = await prisma.condition.findUnique({
@@ -1581,8 +1637,8 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
   }
 
   // Find Condition records without corresponding MedicalContent
-  const conditionIds = new Set(allMedicalContent.map(mc => mc.conditionId));
-  const orphanedConditions = allConditions.filter(c => !conditionIds.has(c.id));
+  const conditionIds = new Set(allMedicalContent.map((mc) => mc.conditionId));
+  const orphanedConditions = allConditions.filter((c) => !conditionIds.has(c.id));
 
   console.log(`\n   🔍 Condition records without MedicalContent: ${orphanedConditions.length}`);
 
@@ -1629,9 +1685,9 @@ async function analyzeConditions(): Promise<void> {
   }
 
   const duplicateGroups = [...nameGroups.entries()].filter(([_, records]) => records.length > 1);
-  
+
   console.log(`\n   🔍 Potential duplicate groups: ${duplicateGroups.length}`);
-  
+
   if (duplicateGroups.length > 0) {
     console.log('\n   Top duplicates:');
     for (const [name, records] of duplicateGroups.slice(0, 10)) {
@@ -1668,13 +1724,19 @@ async function main(): Promise<void> {
   console.log('🩺 CONDITION DOCTOR');
   console.log('═'.repeat(70));
   console.log(`   Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
-  console.log(`   Options: ${[
-    addNewOnly && 'add-new',
-    mergeDupesOnly && 'merge-dupes',
-    analyzeOnly && 'analyze',
-    standardizeOnly && 'standardize',
-    syncOnly && 'sync'
-  ].filter(Boolean).join(', ') || 'all phases'}`);
+  console.log(
+    `   Options: ${
+      [
+        addNewOnly && 'add-new',
+        mergeDupesOnly && 'merge-dupes',
+        analyzeOnly && 'analyze',
+        standardizeOnly && 'standardize',
+        syncOnly && 'sync',
+      ]
+        .filter(Boolean)
+        .join(', ') || 'all phases'
+    }`
+  );
 
   try {
     if (analyzeOnly) {
@@ -1714,7 +1776,6 @@ async function main(): Promise<void> {
     console.log('\n' + '═'.repeat(70));
     console.log('✅ CONDITION DOCTOR - COMPLETE');
     console.log('═'.repeat(70) + '\n');
-
   } catch (err) {
     console.error('\n❌ Fatal error:', err);
     throw err;

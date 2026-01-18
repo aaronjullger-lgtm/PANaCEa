@@ -1,12 +1,12 @@
 /**
  * ExamReadinessCard.tsx
- * 
+ *
  * The primary dashboard card showing the user's Rolling 360 exam readiness.
  * Displays different states based on data confidence:
  * - Collecting: Progress bar toward first 50 questions
  * - Provisional: Score with yellow warning badge
  * - Confident: Score with pass probability meter
- * 
+ *
  * Contains the primary "Start Session" CTA button.
  */
 
@@ -26,7 +26,11 @@ const CALIBRATION_THRESHOLD = 60;
 
 const PlayIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -38,25 +42,41 @@ const ChartBarIcon = ({ className }: { className?: string }) => (
 
 const ExclamationTriangleIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const CheckCircleIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const ArrowTrendingUpIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M15.22 6.268a.75.75 0 01.968-.432l5.942 2.28a.75.75 0 01.431.97l-2.28 5.941a.75.75 0 11-1.4-.537l1.63-4.251-1.086.483a11.2 11.2 0 00-5.45 5.174.75.75 0 01-1.199.19L9 12.31l-6.22 6.22a.75.75 0 11-1.06-1.06l6.75-6.75a.75.75 0 011.06 0l3.606 3.606a12.694 12.694 0 015.68-4.973l1.086-.484-4.251-1.632a.75.75 0 01-.432-.97z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M15.22 6.268a.75.75 0 01.968-.432l5.942 2.28a.75.75 0 01.431.97l-2.28 5.941a.75.75 0 11-1.4-.537l1.63-4.251-1.086.483a11.2 11.2 0 00-5.45 5.174.75.75 0 01-1.199.19L9 12.31l-6.22 6.22a.75.75 0 11-1.06-1.06l6.75-6.75a.75.75 0 011.06 0l3.606 3.606a12.694 12.694 0 015.68-4.973l1.086-.484-4.251-1.632a.75.75 0 01-.432-.97z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const SparklesIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -72,16 +92,16 @@ function ExamReadinessSkeleton() {
         <div className="h-6 bg-slate-700 rounded-lg w-40" />
         <div className="h-5 bg-slate-700 rounded-full w-24" />
       </div>
-      
+
       {/* Score skeleton */}
       <div className="flex flex-col items-center mb-6">
         <div className="h-20 w-32 bg-slate-700 rounded-xl mb-2" />
         <div className="h-4 bg-slate-700 rounded w-24" />
       </div>
-      
+
       {/* Progress bar skeleton */}
       <div className="h-3 bg-slate-700 rounded-full mb-4" />
-      
+
       {/* Button skeleton */}
       <div className="h-14 bg-slate-700 rounded-xl" />
     </div>
@@ -153,8 +173,8 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
       {/* Message */}
       <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
         <p className="text-sm text-amber-200 text-center">
-          Answer <span className="font-semibold">{questionsNeeded} more questions</span> in Main Session 
-          to unlock your preliminary PANCE score prediction.
+          Answer <span className="font-semibold">{questionsNeeded} more questions</span> in Main
+          Session to unlock your preliminary PANCE score prediction.
         </p>
       </div>
 
@@ -205,14 +225,10 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           animate={{ scale: 1, opacity: 1 }}
           className="inline-block"
         >
-          <span className="text-6xl font-bold text-white">
-            {stats.predictedScore || '---'}
-          </span>
+          <span className="text-6xl font-bold text-white">{stats.predictedScore || '---'}</span>
           <span className="text-xl text-slate-400 ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-slate-400 mt-2">
-          Predicted PANCE Score
-        </p>
+        <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
       </div>
 
       {/* Accuracy */}
@@ -225,9 +241,7 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
         </div>
         <div className="w-px h-10 bg-slate-700" />
         <div className="text-center">
-          <span className="text-2xl font-semibold text-white">
-            {stats.totalInWindow}
-          </span>
+          <span className="text-2xl font-semibold text-white">{stats.totalInWindow}</span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>
@@ -286,10 +300,10 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <ChartBarIcon className="w-5 h-5 text-teal-400" />
           Exam Readiness
         </h3>
-        <span className={`px-3 py-1 text-sm rounded-full flex items-center gap-1
-          ${isPassing 
-            ? 'bg-teal-500/20 text-teal-300' 
-            : 'bg-red-500/20 text-red-300'}`}>
+        <span
+          className={`px-3 py-1 text-sm rounded-full flex items-center gap-1
+          ${isPassing ? 'bg-teal-500/20 text-teal-300' : 'bg-red-500/20 text-red-300'}`}
+        >
           {isPassing ? (
             <CheckCircleIcon className="w-4 h-4" />
           ) : (
@@ -311,9 +325,7 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           </span>
           <span className="text-xl text-slate-400 ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-slate-400 mt-2">
-          Predicted PANCE Score
-        </p>
+        <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
       </div>
 
       {/* Stats Grid */}
@@ -325,15 +337,15 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <p className="text-xs text-slate-400">Accuracy</p>
         </div>
         <div className="text-center">
-          <span className={`text-xl font-semibold ${isPassing ? 'text-teal-400' : 'text-amber-400'}`}>
+          <span
+            className={`text-xl font-semibold ${isPassing ? 'text-teal-400' : 'text-amber-400'}`}
+          >
             {passLikelihood.toFixed(0)}%
           </span>
           <p className="text-xs text-slate-400">Pass Chance</p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-semibold text-white">
-            {stats.totalInWindow}
-          </span>
+          <span className="text-xl font-semibold text-white">{stats.totalInWindow}</span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>
@@ -346,9 +358,11 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
         </div>
         <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
           <motion.div
-            className={`h-full ${isPassing 
-              ? 'bg-gradient-to-r from-teal-500 to-emerald-500' 
-              : 'bg-gradient-to-r from-red-500 to-orange-500'}`}
+            className={`h-full ${
+              isPassing
+                ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
+                : 'bg-gradient-to-r from-red-500 to-orange-500'
+            }`}
             initial={{ width: 0 }}
             animate={{ width: `${passLikelihood}%` }}
             transition={{ duration: 1, ease: 'easeOut' }}
@@ -360,9 +374,11 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
       {stats.blueprintAdherence !== null && (
         <div className="flex items-center justify-between text-sm bg-slate-700/30 rounded-lg px-4 py-2">
           <span className="text-slate-400">Blueprint Match</span>
-          <span className={`font-semibold ${
-            stats.blueprintAdherence >= 0.85 ? 'text-teal-400' : 'text-amber-400'
-          }`}>
+          <span
+            className={`font-semibold ${
+              stats.blueprintAdherence >= 0.85 ? 'text-teal-400' : 'text-amber-400'
+            }`}
+          >
             {(stats.blueprintAdherence * 100).toFixed(0)}%
           </span>
         </div>
@@ -409,7 +425,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   // Error state
   if (error) {
     return (
-      <div className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}>
+      <div
+        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}
+      >
         <p className="text-red-400 text-center">Failed to load exam readiness data</p>
       </div>
     );
@@ -424,7 +442,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   const isCalibrating = stats.totalInWindow < CALIBRATION_THRESHOLD;
 
   return (
-    <div className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}>
+    <div
+      className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+    >
       <AnimatePresence mode="wait">
         {/* Show Calibration Protocol UI for new users (< 60 questions) */}
         {isCalibrating && (
@@ -441,7 +461,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
             />
           </motion.div>
         )}
-        
+
         {/* Show provisional state (60-179 questions) */}
         {!isCalibrating && stats.scoreConfidence === 'provisional' && (
           <motion.div
@@ -450,14 +470,14 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <ProvisionalState 
-              stats={stats} 
+            <ProvisionalState
+              stats={stats}
               onStartSession={handleStartSession}
               isStarting={isGenerating}
             />
           </motion.div>
         )}
-        
+
         {stats.scoreConfidence === 'confident' && (
           <motion.div
             key="confident"
@@ -465,8 +485,8 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <ConfidentState 
-              stats={stats} 
+            <ConfidentState
+              stats={stats}
               onStartSession={handleStartSession}
               isStarting={isGenerating}
             />

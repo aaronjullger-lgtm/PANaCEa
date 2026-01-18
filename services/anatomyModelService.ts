@@ -1,9 +1,9 @@
 /**
  * Anatomy Model Service
- * 
+ *
  * Database-first service for loading and managing 3D anatomy models.
  * Models are stored in PostgreSQL via Prisma and served from Supabase Storage.
- * 
+ *
  * Architecture:
  * - Database: Anatomy3DModel table stores metadata, camera positions, clinical pearls
  * - Storage: GLB files hosted on Supabase Storage (never store blobs in DB)
@@ -19,7 +19,7 @@ import type {
 } from '../types/anatomy-model';
 
 // Map database enum to type system
-export type AnatomySystem3D = 
+export type AnatomySystem3D =
   | 'SKELETAL'
   | 'MUSCULAR'
   | 'NERVOUS'
@@ -86,9 +86,17 @@ const FALLBACK_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
     {
       id: 'heart-basic',
       name: 'Human Heart - Basic Anatomy',
-      description: 'Detailed 3D model of the human heart showing all four chambers, valves, and major vessels.',
+      description:
+        'Detailed 3D model of the human heart showing all four chambers, valves, and major vessels.',
       system: 'cardiovascular',
-      structures: ['left atrium', 'right atrium', 'left ventricle', 'right ventricle', 'aorta', 'pulmonary artery'],
+      structures: [
+        'left atrium',
+        'right atrium',
+        'left ventricle',
+        'right ventricle',
+        'aorta',
+        'pulmonary artery',
+      ],
       modelUrl: '/models/heart-basic.glb',
       format: 'glb',
       thumbnailUrl: '/thumbnails/heart-basic.png',
@@ -101,7 +109,8 @@ const FALLBACK_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
         license: 'Public Domain',
         url: 'https://3d.nih.gov/entries/3DPX-001234',
         dateAccessed: new Date().toISOString().split('T')[0],
-        citationText: 'NIH 3D Print Exchange. Human Heart Model. https://3d.nih.gov/entries/3DPX-001234.',
+        citationText:
+          'NIH 3D Print Exchange. Human Heart Model. https://3d.nih.gov/entries/3DPX-001234.',
       },
       clinicalRelevance: ['Coronary artery disease', 'Valve pathology', 'Cardiac surgery planning'],
       relatedConditions: ['myocardial-infarction', 'heart-failure'],
@@ -123,12 +132,14 @@ class AnatomyModelService {
   /**
    * Fetch models from the API with optional filters
    */
-  async fetchModelsFromAPI(options: {
-    system?: string;
-    highYieldOnly?: boolean;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<{ models: Anatomy3DModelDB[]; total: number; systems: any[] }> {
+  async fetchModelsFromAPI(
+    options: {
+      system?: string;
+      highYieldOnly?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<{ models: Anatomy3DModelDB[]; total: number; systems: any[] }> {
     try {
       const params = new URLSearchParams();
       if (options.system) params.set('system', options.system);
@@ -137,13 +148,13 @@ class AnatomyModelService {
       if (options.offset) params.set('offset', options.offset.toString());
 
       const response = await fetch(`/api/anatomy/models?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch models');
       }
@@ -178,7 +189,7 @@ class AnatomyModelService {
 
       // Group models by system
       const groupedSystems: Partial<Record<AnatomySystem, AnatomyModel[]>> = {};
-      
+
       for (const model of models) {
         const systemKey = model.system.toLowerCase() as AnatomySystem;
         if (!groupedSystems[systemKey]) {
@@ -266,7 +277,7 @@ class AnatomyModelService {
 
     try {
       const response = await fetch(`/api/anatomy/${modelId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           return this.getFallbackModel(modelId);
@@ -275,13 +286,13 @@ class AnatomyModelService {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         return this.getFallbackModel(modelId);
       }
 
       const model = this.dbModelToAnatomyModel(data.data.model);
-      
+
       // Add related conditions if available
       if (data.data.relatedConditions) {
         model.relatedConditions = data.data.relatedConditions.map((c: RelatedCondition) => c.id);
@@ -289,7 +300,7 @@ class AnatomyModelService {
 
       // Cache the model
       this.modelCache.set(modelId, model);
-      
+
       return model;
     } catch (error) {
       console.error('Error getting model:', error);
@@ -303,7 +314,7 @@ class AnatomyModelService {
   private getFallbackModel(modelId: string): AnatomyModel | null {
     for (const models of Object.values(FALLBACK_MODELS)) {
       if (models) {
-        const model = models.find(m => m.id === modelId);
+        const model = models.find((m) => m.id === modelId);
         if (model) {
           this.modelCache.set(modelId, model);
           return model;
@@ -318,16 +329,16 @@ class AnatomyModelService {
    */
   async getModelsBySystem(system: AnatomySystem): Promise<AnatomyModel[]> {
     try {
-      const { models } = await this.fetchModelsFromAPI({ 
+      const { models } = await this.fetchModelsFromAPI({
         system: system.toUpperCase(),
-        limit: 50 
+        limit: 50,
       });
-      
+
       if (models.length === 0) {
         return FALLBACK_MODELS[system] || [];
       }
 
-      return models.map(m => this.dbModelToAnatomyModel(m));
+      return models.map((m) => this.dbModelToAnatomyModel(m));
     } catch (error) {
       console.error('Error getting models by system:', error);
       return FALLBACK_MODELS[system] || [];
@@ -375,13 +386,13 @@ class AnatomyModelService {
     switch (format) {
       case 'AMA':
         return `${citation.author || citation.institution}. ${citation.title}. ${citation.source}. ${citation.url}. Accessed ${date}.`;
-      
+
       case 'APA':
         return `${citation.author || citation.institution}. (${new Date().getFullYear()}). ${citation.title}. ${citation.source}. Retrieved ${date}, from ${citation.url}`;
-      
+
       case 'MLA':
         return `"${citation.title}." ${citation.source}, ${citation.institution}, ${citation.url}. Accessed ${date}.`;
-      
+
       default:
         return citation.citationText?.replace('[DATE]', date) || '';
     }
@@ -390,13 +401,16 @@ class AnatomyModelService {
   /**
    * Get annotations for a specific structure within a model
    */
-  async getStructureAnnotations(modelId: string, structureName: string): Promise<ModelAnnotation[]> {
+  async getStructureAnnotations(
+    modelId: string,
+    structureName: string
+  ): Promise<ModelAnnotation[]> {
     const model = await this.getModel(modelId);
     if (!model || !model.annotations) {
       return [];
     }
 
-    return model.annotations.filter(a => a.structureName === structureName);
+    return model.annotations.filter((a) => a.structureName === structureName);
   }
 
   /**
@@ -413,7 +427,7 @@ class AnatomyModelService {
           if (
             model.name.toLowerCase().includes(queryLower) ||
             model.description.toLowerCase().includes(queryLower) ||
-            model.structures.some(s => s.toLowerCase().includes(queryLower))
+            model.structures.some((s) => s.toLowerCase().includes(queryLower))
           ) {
             results.push(model);
           }
@@ -430,7 +444,7 @@ class AnatomyModelService {
   async getHighYieldModels(): Promise<AnatomyModel[]> {
     try {
       const { models } = await this.fetchModelsFromAPI({ highYieldOnly: true, limit: 50 });
-      return models.map(m => this.dbModelToAnatomyModel(m));
+      return models.map((m) => this.dbModelToAnatomyModel(m));
     } catch (error) {
       console.error('Error getting high-yield models:', error);
       return [];

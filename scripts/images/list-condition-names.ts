@@ -8,7 +8,7 @@ const files = fs.readdirSync(BASE_PATH);
 const conditionNames = new Set<string>();
 for (const file of files) {
   if (!/\.(jpg|jpeg|png|gif|webp)$/i.test(file)) continue;
-  
+
   // Extract condition name (everything before the last underscore + number)
   const parts = file.replace(/\.[^.]+$/, '').split('_');
   // Remove numeric suffix
@@ -22,5 +22,5 @@ for (const file of files) {
 console.log('Unique condition names from ALL IMAGES folder:');
 console.log('='.repeat(50));
 const sorted = Array.from(conditionNames).sort();
-sorted.forEach(name => console.log(name));
+sorted.forEach((name) => console.log(name));
 console.log('\nTotal unique names:', sorted.length);

@@ -1,6 +1,6 @@
 /**
  * Character Detail Modal
- * 
+ *
  * Shows detailed view of a character with unlockable variants and accessories
  */
 
@@ -42,14 +42,14 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
 }) => {
   const character = getCharacterBySystem(system);
   const variants = getVariantsForSystem(system);
-  const compatibleAccessories = ORGAN_ACCESSORIES.filter(acc => 
+  const compatibleAccessories = ORGAN_ACCESSORIES.filter((acc) =>
     isAccessoryCompatible(acc.id, system)
   );
 
   if (!character) return null;
 
-  const unlockedVariants = variants.filter(v => progress.unlockedVariants.has(v.id));
-  const unlockedAccessories = compatibleAccessories.filter(a => 
+  const unlockedVariants = variants.filter((v) => progress.unlockedVariants.has(v.id));
+  const unlockedAccessories = compatibleAccessories.filter((a) =>
     progress.unlockedAccessories.has(a.id)
   );
 
@@ -94,7 +94,7 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
               Character Variants ({unlockedVariants.length}/{variants.length})
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {variants.map(variant => {
+              {variants.map((variant) => {
                 const isUnlocked = progress.unlockedVariants.has(variant.id);
                 const isActive = customization.activeVariant === variant.id;
 
@@ -107,8 +107,8 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                       isActive
                         ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
                         : isUnlocked
-                        ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
-                        : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-50 cursor-not-allowed'
+                          ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+                          : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-50 cursor-not-allowed'
                     }`}
                   >
                     {/* Active Badge */}
@@ -126,9 +126,7 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                     )}
 
                     {/* Icon */}
-                    <div className="text-3xl mb-2 text-center">
-                      {variant.icon}
-                    </div>
+                    <div className="text-3xl mb-2 text-center">{variant.icon}</div>
 
                     {/* Name */}
                     <div className="text-xs font-semibold text-[var(--color-text-primary)] text-center">
@@ -136,12 +134,17 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                     </div>
 
                     {/* Rarity */}
-                    <div className={`text-xs text-center mt-1 ${
-                      variant.rarity === 'legendary' ? 'text-amber-500' :
-                      variant.rarity === 'epic' ? 'text-purple-500' :
-                      variant.rarity === 'rare' ? 'text-blue-500' :
-                      'text-[var(--color-text-muted)]'
-                    }`}>
+                    <div
+                      className={`text-xs text-center mt-1 ${
+                        variant.rarity === 'legendary'
+                          ? 'text-amber-500'
+                          : variant.rarity === 'epic'
+                            ? 'text-purple-500'
+                            : variant.rarity === 'rare'
+                              ? 'text-blue-500'
+                              : 'text-[var(--color-text-muted)]'
+                      }`}
+                    >
                       {variant.rarity}
                     </div>
                   </button>
@@ -157,7 +160,7 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                 Accessories ({unlockedAccessories.length}/{compatibleAccessories.length})
               </h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {compatibleAccessories.map(accessory => {
+                {compatibleAccessories.map((accessory) => {
                   const isUnlocked = progress.unlockedAccessories.has(accessory.id);
                   const isEquipped = customization.equippedAccessories.includes(accessory.id);
 
@@ -170,8 +173,8 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                         isEquipped
                           ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
                           : isUnlocked
-                          ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
-                          : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-50 cursor-not-allowed'
+                            ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+                            : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-50 cursor-not-allowed'
                       }`}
                       title={isUnlocked ? accessory.name : 'Locked'}
                     >
@@ -190,13 +193,11 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                       )}
 
                       {/* Icon */}
-                      <div className="text-2xl text-center">
-                        {accessory.icon}
-                      </div>
+                      <div className="text-2xl text-center">{accessory.icon}</div>
 
                       {/* Name */}
                       <div className="text-xs font-medium text-[var(--color-text-primary)] text-center mt-1 truncate">
-                        {isUnlocked ? (accessory.name.split(' ')[0] || accessory.name) : '???'}
+                        {isUnlocked ? accessory.name.split(' ')[0] || accessory.name : '???'}
                       </div>
                     </button>
                   );

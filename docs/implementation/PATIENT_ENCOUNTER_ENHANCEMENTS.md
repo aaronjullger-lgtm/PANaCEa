@@ -7,9 +7,11 @@ The PatientEncounterMode has been significantly enhanced with research-backed fe
 ## New Components Created
 
 ### 1. EncounterSettings.tsx
+
 **Purpose:** Comprehensive customization system allowing students to tailor encounters to their specific learning needs.
 
 **Features:**
+
 - **Patient Demographics**: Age group, sex, acuity level
 - **Clinical Focus**: 12 specialties, 4 complexity levels
 - **Scenario Options**: Red herrings, differential diagnosis requirements
@@ -18,14 +20,17 @@ The PatientEncounterMode has been significantly enhanced with research-backed fe
 - **Time & Feedback**: Time limits, feedback preferences
 
 **Educational Rationale:**
+
 - Personalized learning increases engagement (self-determination theory)
 - Students can focus on weak areas for deliberate practice
 - Customizable difficulty prevents both boredom and excessive frustration (zone of proximal development)
 
 ### 2. ImagingViewer.tsx
+
 **Purpose:** Interactive medical imaging interpretation with real-world PACS-style interface.
 
 **Features:**
+
 - Zoom (50%-300%), rotate, pan controls
 - Supports X-ray, CT, MRI, Ultrasound, ECG
 - Requires student interpretation before revealing findings
@@ -33,6 +38,7 @@ The PatientEncounterMode has been significantly enhanced with research-backed fe
 - Dark theme optimized for image viewing
 
 **Educational Rationale:**
+
 - Active retrieval practice (testing effect)
 - Immediate feedback on interpretation accuracy
 - Authentic task design mirrors clinical practice
@@ -41,6 +47,7 @@ The PatientEncounterMode has been significantly enhanced with research-backed fe
 ## Integration Plan
 
 ### Phase 1: Settings Integration
+
 ```typescript
 // In PatientEncounterMode.tsx, add at landing view:
 const [settings, setSettings] = useState<EncounterSettings>(DEFAULT_ENCOUNTER_SETTINGS);
@@ -62,6 +69,7 @@ const [showSettings, setShowSettings] = useState(false);
 ```
 
 ### Phase 2: Imaging Integration
+
 ```typescript
 // Add imaging state
 const [currentImage, setCurrentImage] = useState<MedicalImage | null>(null);
@@ -88,9 +96,15 @@ const handleOrderTest = async () => {
 ```
 
 ### Phase 3: OSCE Chat History
+
 ```typescript
 // Import OSCE service
-import { saveChatMessage, getChatHistory, cleanupChatHistory, generateSessionId } from '@/services/osceService';
+import {
+  saveChatMessage,
+  getChatHistory,
+  cleanupChatHistory,
+  generateSessionId,
+} from '@/services/osceService';
 
 // Add session ID for chat history
 const [chatSessionId] = useState(() => generateSessionId());
@@ -98,11 +112,11 @@ const [chatSessionId] = useState(() => generateSessionId());
 // Save messages to database
 const handleAskQuestion = async () => {
   // ...existing code...
-  
+
   // Save to database for AI context
   await saveChatMessage(chatSessionId, 'user', currentQuestion);
   await saveChatMessage(chatSessionId, 'patient', response);
-  
+
   // Continue with existing logic
 };
 
@@ -121,6 +135,7 @@ useEffect(() => {
 ### 1. Gamification Elements
 
 **Implementation:**
+
 ```typescript
 // Achievement system
 interface Achievement {
@@ -138,29 +153,29 @@ const achievements: Achievement[] = [
     name: 'First Steps',
     description: 'Complete your first patient encounter',
     icon: '🎯',
-    unlocked: false
+    unlocked: false,
   },
   {
     id: 'perfect_diagnosis',
     name: 'Diagnostic Ace',
     description: 'Achieve 100% thoroughness score',
     icon: '⭐',
-    unlocked: false
+    unlocked: false,
   },
   {
     id: 'efficient_clinician',
     name: 'Efficient Clinician',
     description: 'Complete encounter with 90%+ efficiency',
     icon: '⚡',
-    unlocked: false
+    unlocked: false,
   },
   {
     id: 'week_streak',
     name: 'Dedicated Learner',
     description: 'Practice for 7 days in a row',
     icon: '🔥',
-    unlocked: false
-  }
+    unlocked: false,
+  },
 ];
 
 // Streak tracking
@@ -170,6 +185,7 @@ const [lastPracticeDate, setLastPracticeDate] = useState<Date | null>(null);
 ```
 
 **Educational Rationale:**
+
 - Gamification increases intrinsic motivation (Deci & Ryan, 2000)
 - Progress visualization enhances self-efficacy (Bandura, 1997)
 - Streak tracking promotes consistent practice (habit formation)
@@ -177,6 +193,7 @@ const [lastPracticeDate, setLastPracticeDate] = useState<Date | null>(null);
 ### 2. Spaced Repetition & Adaptive Learning
 
 **Implementation:**
+
 ```typescript
 // Connect to Student Insights API
 import { getStudentInsights } from '@/services/studentInsightsService';
@@ -188,7 +205,7 @@ useEffect(() => {
   async function loadInsights() {
     const data = await getStudentInsights();
     setInsights(data);
-    
+
     // Suggest focus areas based on weak performance
     if (data.weakAreas.length > 0) {
       setSuggestedFocusArea(data.weakAreas[0].system);
@@ -206,6 +223,7 @@ const getNextCaseDifficulty = () => {
 ```
 
 **Educational Rationale:**
+
 - Spaced repetition improves long-term retention (Ebbinghaus, 1885; Cepeda et al., 2006)
 - Adaptive difficulty maintains optimal challenge level (Csikszentmihalyi, 1990)
 - Personalized learning paths increase engagement and effectiveness (Pashler et al., 2008)
@@ -213,18 +231,19 @@ const getNextCaseDifficulty = () => {
 ### 3. Interactive Realism
 
 **Implementation:**
+
 ```typescript
 // Adapt patient responses based on communication style
 const getPatientResponse = (question: string, style: 'cooperative' | 'vague' | 'challenging') => {
   const baseResponse = getBaseResponse(question);
-  
+
   switch (style) {
     case 'cooperative':
       return baseResponse; // Clear, direct answers
-      
+
     case 'vague':
       return makeVague(baseResponse); // "I'm not sure... maybe..."
-      
+
     case 'challenging':
       return makeChallenging(baseResponse); // Evasive, anxious responses
   }
@@ -236,21 +255,22 @@ const [showTimeWarning, setShowTimeWarning] = useState(false);
 
 useEffect(() => {
   if (!settings.timeLimit) return;
-  
+
   const interval = setInterval(() => {
-    setTimeRemaining(prev => {
+    setTimeRemaining((prev) => {
       if (prev <= 60 && !showTimeWarning) {
         setShowTimeWarning(true);
       }
       return Math.max(0, prev - 1);
     });
   }, 1000);
-  
+
   return () => clearInterval(interval);
 }, [settings.timeLimit]);
 ```
 
 **Educational Rationale:**
+
 - Authentic tasks improve transfer to clinical practice (Lave & Wenger, 1991)
 - Time pressure simulates exam conditions (deliberate practice)
 - Challenging patients build communication skills (OSCE preparation)
@@ -258,6 +278,7 @@ useEffect(() => {
 ### 4. Evidence-Based Learning Features
 
 **Implementation:**
+
 ```typescript
 // Clinical reasoning pathway visualization
 interface ReasoningStep {
@@ -295,6 +316,7 @@ const ClinicalReasoningPath = () => (
 ```
 
 **Educational Rationale:**
+
 - Metacognitive reflection improves clinical reasoning (Schraw, 1998)
 - Explicit feedback on decision-making enhances learning (Hattie & Timperley, 2007)
 - Visualization aids understanding of diagnostic process
@@ -302,6 +324,7 @@ const ClinicalReasoningPath = () => (
 ## Performance Metrics & Analytics
 
 ### Tracked Metrics
+
 1. **Efficiency**: Questions asked vs. necessary questions
 2. **Thoroughness**: Essential questions covered
 3. **Accuracy**: Diagnostic correctness
@@ -310,6 +333,7 @@ const ClinicalReasoningPath = () => (
 6. **Imaging Interpretation**: Radiology accuracy
 
 ### Data Storage
+
 ```typescript
 // Store in database for longitudinal tracking
 interface EncounterPerformance {
@@ -364,22 +388,26 @@ interface EncounterPerformance {
 ## Implementation Priority
 
 ### Phase 1 (Immediate) ✅
+
 - [x] Create EncounterSettings component
 - [x] Create ImagingViewer component
 - [x] Document integration approach
 
 ### Phase 2 (Next)
+
 - [ ] Integrate settings modal into PatientEncounterMode
 - [ ] Add imaging workflow to diagnostic phase
 - [ ] Connect OSCE chat history API
 
 ### Phase 3 (Enhancement)
+
 - [ ] Implement achievement system
 - [ ] Add streak tracking
 - [ ] Create clinical reasoning visualization
 - [ ] Build adaptive difficulty system
 
 ### Phase 4 (Analytics)
+
 - [ ] Store performance data in database
 - [ ] Create longitudinal progress tracking
 - [ ] Generate personalized insights dashboard
@@ -388,18 +416,21 @@ interface EncounterPerformance {
 ## Success Metrics
 
 ### Student Engagement
+
 - Time spent in mode (target: 20+ min/session)
 - Sessions per week (target: 3+)
 - Completion rate (target: >80%)
 - Return rate (target: >60% within 7 days)
 
 ### Learning Effectiveness
+
 - Diagnostic accuracy improvement over time
 - Efficiency improvement (fewer unnecessary questions)
 - Transfer to exam performance (PANCE scores)
 - Student satisfaction ratings
 
 ### Technical Performance
+
 - Modal load time (<200ms)
 - Image viewer responsiveness (<100ms)
 - API response time (<500ms)

@@ -1,16 +1,16 @@
 #!/usr/bin/env tsx
 /**
  * Sync Condition Table from Registry
- * 
+ *
  * This script syncs the Condition table with the conditionRegistry.
  * The Condition table serves as the source of truth for what conditions exist.
  * MedicalContent generation is handled separately by automation scripts.
- * 
+ *
  * Workflow:
  * 1. Add condition to conditionRegistry.ts
  * 2. Run this script to sync Condition table
  * 3. Automation detects new conditions and generates MedicalContent
- * 
+ *
  * Usage: tsx scripts/syncConditionTable.ts
  */
 
@@ -55,10 +55,7 @@ async function syncCondition(meta: any): Promise<void> {
     // Check if condition exists in Condition table
     const existingCondition = await prisma.condition.findFirst({
       where: {
-        OR: [
-          { id: conditionId },
-          { name: meta.condition, system: meta.system },
-        ],
+        OR: [{ id: conditionId }, { name: meta.condition, system: meta.system }],
       },
     });
 
@@ -111,16 +108,18 @@ async function identifyOrphanedConditions(): Promise<void> {
   console.log('\n🔍 Checking for orphaned conditions in database...\n');
 
   try {
-    const registryIds = CONDITION_REGISTRY.map(meta => buildConditionDefinition(meta).id);
+    const registryIds = CONDITION_REGISTRY.map((meta) => buildConditionDefinition(meta).id);
     const dbConditions = await prisma.condition.findMany({
       select: { id: true, name: true, system: true },
     });
 
-    const orphaned = dbConditions.filter(c => !registryIds.includes(c.id));
+    const orphaned = dbConditions.filter((c) => !registryIds.includes(c.id));
 
     if (orphaned.length > 0) {
-      console.log(`⚠️  Found ${orphaned.length} orphaned conditions (in database but not in registry):`);
-      orphaned.forEach(c => {
+      console.log(
+        `⚠️  Found ${orphaned.length} orphaned conditions (in database but not in registry):`
+      );
+      orphaned.forEach((c) => {
         console.log(`   - ${c.name} (${c.system}) [ID: ${c.id}]`);
       });
       console.log('\n   These conditions will not receive automated content updates.');
@@ -174,17 +173,19 @@ async function main() {
       process.exit(1);
     } else {
       console.log('\n✅ Condition table sync completed successfully!');
-      
+
       if (report.created > 0) {
         console.log(`\n💡 ${report.created} new conditions added to database.`);
         console.log('   Next step: Run automation to generate content for new conditions:');
         console.log('   npm run automation:daily');
       }
-      
+
       if (report.unchanged > 0) {
-        console.log(`\n📝 ${report.unchanged} conditions already exist in database (preserved, not overwritten).`);
+        console.log(
+          `\n📝 ${report.unchanged} conditions already exist in database (preserved, not overwritten).`
+        );
       }
-      
+
       process.exit(0);
     }
   } catch (error: any) {

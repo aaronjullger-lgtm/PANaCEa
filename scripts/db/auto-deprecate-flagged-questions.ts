@@ -1,9 +1,9 @@
 /**
  * Auto-deprecate Questions with High Flag Rate
- * 
+ *
  * Automatically rejects questions with flagRate > 0.1 (10%+)
  * Part of Step 7: Question Quality Pipeline
- * 
+ *
  * Run: npx tsx scripts/db/auto-deprecate-flagged-questions.ts [--dry-run]
  */
 
@@ -24,11 +24,13 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
     evaluated: 0,
     deprecated: 0,
     skipped: 0,
-    errors: 0
+    errors: 0,
   };
 
   console.log('\n🔍 Finding questions with high flag rates...\n');
-  console.log(`Threshold: flagRate > ${FLAG_RATE_THRESHOLD * 100}% with ≥${MIN_SERVES_FOR_DEPRECATION} serves`);
+  console.log(
+    `Threshold: flagRate > ${FLAG_RATE_THRESHOLD * 100}% with ≥${MIN_SERVES_FOR_DEPRECATION} serves`
+  );
   console.log(`Mode: ${dryRun ? 'DRY RUN (no changes)' : 'LIVE (will update database)'}\n`);
 
   try {
@@ -38,8 +40,8 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
         flagRate: { gt: FLAG_RATE_THRESHOLD },
         timesServed: { gte: MIN_SERVES_FOR_DEPRECATION },
         validationStatus: {
-          in: ['pending', 'approved']
-        }
+          in: ['pending', 'approved'],
+        },
       },
       select: {
         id: true,
@@ -54,11 +56,11 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
         qualityScore: true,
         Condition: {
           select: {
-            name: true
-          }
-        }
+            name: true,
+          },
+        },
       },
-      orderBy: { flagRate: 'desc' }
+      orderBy: { flagRate: 'desc' },
     });
 
     stats.evaluated = flaggedQuestions.length;
@@ -74,13 +76,15 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
       try {
         const flagPercent = (question.flagRate * 100).toFixed(1);
         const conditionName = question.Condition?.name || 'N/A';
-        
+
         console.log(`📌 Question ID: ${question.id}`);
         console.log(`   System: ${question.system || 'N/A'}`);
         console.log(`   Condition: ${conditionName}`);
         console.log(`   Type: ${question.questionType}`);
         console.log(`   Difficulty: ${question.difficulty}`);
-        console.log(`   Flag Rate: ${flagPercent}% (${question.flagCount}/${question.timesServed})`);
+        console.log(
+          `   Flag Rate: ${flagPercent}% (${question.flagCount}/${question.timesServed})`
+        );
         console.log(`   Quality Score: ${question.qualityScore ?? 'N/A'}`);
         console.log(`   Current Status: ${question.validationStatus}`);
 
@@ -92,8 +96,8 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
               validationStatus: 'rejected',
               validatedAt: new Date(),
               validatedBy: 'system_auto_deprecation',
-              validationNotes: `Auto-deprecated: Flag rate ${flagPercent}% exceeds threshold (${FLAG_RATE_THRESHOLD * 100}%) after ${question.timesServed} serves. Flagged ${question.flagCount} times by users.`
-            }
+              validationNotes: `Auto-deprecated: Flag rate ${flagPercent}% exceeds threshold (${FLAG_RATE_THRESHOLD * 100}%) after ${question.timesServed} serves. Flagged ${question.flagCount} times by users.`,
+            },
           });
           console.log(`   ✅ Deprecated\n`);
           stats.deprecated++;
@@ -101,7 +105,6 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
           console.log(`   🔄 Would deprecate (dry run)\n`);
           stats.deprecated++;
         }
-
       } catch (error) {
         console.error(`   ❌ Error processing question ${question.id}:`, error);
         stats.errors++;
@@ -122,7 +125,6 @@ async function autoDeprecateFlaggedQuestions(dryRun: boolean = false): Promise<D
     } else {
       console.log('✅ Deprecation complete!\n');
     }
-
   } catch (error) {
     console.error('❌ Error during auto-deprecation:', error);
     throw error;
@@ -138,7 +140,7 @@ async function main() {
 
   try {
     const stats = await autoDeprecateFlaggedQuestions(dryRun);
-    
+
     if (stats.errors > 0) {
       process.exit(1);
     }

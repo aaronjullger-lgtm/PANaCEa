@@ -1,10 +1,10 @@
 /**
  * Circadian Optimization System
- * 
+ *
  * Optimizes study efficiency based on biological peaks and user's wake/sleep patterns.
  * Research basis: Memory consolidation varies with circadian rhythm, with peaks typically
  * occurring in late morning and early afternoon, and troughs in early afternoon (post-lunch dip).
- * 
+ *
  * References:
  * - Schmidt et al. (2007): "Time-of-day effects on memory"
  * - Valdez et al. (2012): "Circadian variations in cognitive performance"
@@ -12,7 +12,7 @@
 
 /**
  * Circadian phase classifications
- * 
+ *
  * Research basis:
  * - 2:00 PM threshold: Sessions before 2 PM show higher success rates
  * - Afternoon trough (2-4 PM): "Post-lunch dip" with reduced task-switching accuracy
@@ -77,7 +77,7 @@ const PHASE_BOUNDARIES = {
 
 /**
  * Stability modifiers for each circadian phase
- * 
+ *
  * Rationale:
  * - Peak times: Standard stability gains (1.0) - optimal encoding
  * - Trough times: Higher stability gains (1.15) - rewards effort during harder periods
@@ -86,7 +86,7 @@ const PHASE_BOUNDARIES = {
  */
 /**
  * Stability modifiers for each circadian phase
- * 
+ *
  * Research basis:
  * - Peak (9-12): Baseline (1.0x) - optimal encoding conditions
  * - Trough (14-16 / 2-4 PM): +15% bonus - rewards persistence during biological dip
@@ -94,11 +94,11 @@ const PHASE_BOUNDARIES = {
  * - Evening Recovery (18-21): +5% bonus - second wind studying
  */
 const PHASE_MODIFIERS: Record<CircadianPhase, number> = {
-  peak: 1.0,                 // 9-12: Optimal encoding
-  trough: 1.15,              // +15% S for studying during biological trough (2-4 PM)
-  neutral: 1.0,              // Standard periods
-  evening_recovery: 1.05,    // +5% for second wind studying (6-9 PM)
-  late_night: 1.20,          // +20% for late night (>11 PM) - exceptional retention
+  peak: 1.0, // 9-12: Optimal encoding
+  trough: 1.15, // +15% S for studying during biological trough (2-4 PM)
+  neutral: 1.0, // Standard periods
+  evening_recovery: 1.05, // +5% for second wind studying (6-9 PM)
+  late_night: 1.2, // +20% for late night (>11 PM) - exceptional retention
 };
 
 /**
@@ -106,24 +106,21 @@ const PHASE_MODIFIERS: Record<CircadianPhase, number> = {
  */
 function parseTimeToHours(timeStr: string): number {
   const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours + (minutes / 60);
+  return hours + minutes / 60;
 }
 
 /**
  * Calculate hours since wake time
  */
-function calculateHoursSinceWake(
-  currentHour: number,
-  wakeTimeStr: string
-): number {
+function calculateHoursSinceWake(currentHour: number, wakeTimeStr: string): number {
   const wakeHour = parseTimeToHours(wakeTimeStr);
   let hoursSinceWake = currentHour - wakeHour;
-  
+
   // Handle crossing midnight
   if (hoursSinceWake < 0) {
     hoursSinceWake += 24;
   }
-  
+
   return hoursSinceWake;
 }
 
@@ -152,7 +149,7 @@ function determinePhaseFromWake(hoursSinceWake: number): CircadianPhase {
 /**
  * Fallback phase determination based on clock time
  * Used when wake time is not available
- * 
+ *
  * Research-backed time windows:
  * - 9-12: Morning peak (optimal learning)
  * - 14-16 (2-4 PM): Afternoon trough ("post-lunch dip")
@@ -212,7 +209,7 @@ export function getLocalHour(timezone: string = getBrowserTimezone()): number {
 
 /**
  * Build full circadian context for a study session
- * 
+ *
  * @param userPrefs - Optional user circadian preferences
  * @param overrideTimezone - Override browser timezone (for testing)
  */
@@ -223,10 +220,10 @@ export function buildCircadianContext(
   const timezone = overrideTimezone || getBrowserTimezone();
   const localHour = getLocalHour(timezone);
   const now = new Date();
-  
+
   let hoursSinceWake: number | undefined;
   let circadianPhase: CircadianPhase;
-  
+
   // Calculate hours since wake if user has set wake time
   if (userPrefs?.typicalWakeTime) {
     hoursSinceWake = calculateHoursSinceWake(localHour, userPrefs.typicalWakeTime);
@@ -235,7 +232,7 @@ export function buildCircadianContext(
     // Fallback to clock-based estimation
     circadianPhase = determinePhaseFromClock(localHour);
   }
-  
+
   return {
     localHour,
     timezone,
@@ -248,15 +245,12 @@ export function buildCircadianContext(
 
 /**
  * Apply circadian modifier to FSRS stability calculation
- * 
+ *
  * @param baseStability - Raw stability from FSRS algorithm
  * @param context - Circadian context from buildCircadianContext
  * @returns Modified stability value
  */
-export function applyCircadianModifier(
-  baseStability: number,
-  context: CircadianContext
-): number {
+export function applyCircadianModifier(baseStability: number, context: CircadianContext): number {
   return baseStability * context.stabilityModifier;
 }
 
@@ -300,7 +294,8 @@ export function getStudyRecommendation(context: CircadianContext): {
     case 'trough':
       return {
         recommendation: 'acceptable',
-        message: 'Studying during your afternoon dip - extra effort will be rewarded with bonus stability!',
+        message:
+          'Studying during your afternoon dip - extra effort will be rewarded with bonus stability!',
         suggestedDuration: 20,
       };
     default:
@@ -329,9 +324,11 @@ export function serializeCircadianContext(context: CircadianContext): Record<str
 /**
  * Deserialize circadian context from stored data
  */
-export function deserializeCircadianContext(data: Record<string, unknown>): CircadianContext | null {
+export function deserializeCircadianContext(
+  data: Record<string, unknown>
+): CircadianContext | null {
   if (!data || typeof data.localHour !== 'number') return null;
-  
+
   return {
     localHour: data.localHour as number,
     timezone: (data.timezone as string) || 'UTC',

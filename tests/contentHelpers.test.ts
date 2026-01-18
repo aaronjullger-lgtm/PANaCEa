@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   hasCompleteContent,
   buildDatabaseContext,
-  calculateRelevanceScore
+  calculateRelevanceScore,
 } from '../lib/contentHelpers';
 import type { LoadedConditionData } from '../services/conditionDataLoader';
 
@@ -127,7 +127,9 @@ describe('Content Helpers', () => {
       expect(context).toContain('System: CV');
       expect(context).toContain('Subcategory: ECG');
       expect(context).toContain('Overview: Irregular heart rhythm');
-      expect(context).toContain('Etiology/Pathophysiology: Caused by abnormal electrical conduction');
+      expect(context).toContain(
+        'Etiology/Pathophysiology: Caused by abnormal electrical conduction'
+      );
       expect(context).toContain('Key Symptoms: Palpitations, Dyspnea, Fatigue');
       expect(context).toContain('Diagnostics: ECG shows irregularly irregular rhythm');
       expect(context).toContain('Treatment: Rate control; Rhythm control; Anticoagulation');

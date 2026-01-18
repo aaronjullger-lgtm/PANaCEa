@@ -1,9 +1,9 @@
 /**
  * Unified Loading Components
- * 
+ *
  * This is the CANONICAL location for all skeleton/loading state components.
  * All other skeleton implementations should re-export from here.
- * 
+ *
  * @module components/loading
  */
 

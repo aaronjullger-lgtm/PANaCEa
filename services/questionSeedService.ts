@@ -1,14 +1,14 @@
 /**
  * Question Seed Service
- * 
+ *
  * Task 111: "Vignette Permutation" Storage
  * - Store question seeds with variables for permutation
  * - Generate unique questions at runtime by picking random variables
  * - Ensure users never see the exact same text twice
  */
 
-import { prisma } from "../lib/prisma";
-import { v4 as uuidv4 } from "uuid";
+import { prisma } from '../lib/prisma';
+import { v4 as uuidv4 } from 'uuid';
 
 interface QuestionSeedData {
   conditionId: string;
@@ -54,7 +54,7 @@ export async function assembleQuestionFromSeed(seedId: string) {
   });
 
   if (!seed) {
-    throw new Error("Question seed not found");
+    throw new Error('Question seed not found');
   }
 
   // Parse variables
@@ -73,7 +73,7 @@ export async function assembleQuestionFromSeed(seedId: string) {
   let questionText = seed.template;
   for (const [key, value] of Object.entries(selectedVariables)) {
     // Replace all occurrences of {{variableName}} with the selected value
-    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, "g");
+    const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
     questionText = questionText.replace(placeholder, String(value));
   }
 
@@ -138,7 +138,7 @@ export async function assembleQuestionsFromSeeds(
 
   const seeds = await prisma.questionSeed.findMany({
     where,
-    orderBy: { usageCount: "asc" }, // Prefer less-used seeds
+    orderBy: { usageCount: 'asc' }, // Prefer less-used seeds
   });
 
   if (seeds.length === 0) {
@@ -162,22 +162,22 @@ export async function assembleQuestionsFromSeeds(
  */
 export async function createAppendicitisSeed() {
   const seed = await createQuestionSeed({
-    conditionId: "appendicitis",
-    questionType: "vignette",
-    system: "GI",
-    corePathology: "Appendicitis",
+    conditionId: 'appendicitis',
+    questionType: 'vignette',
+    system: 'GI',
+    corePathology: 'Appendicitis',
     variables: {
       Age: [10, 25, 60],
-      Sex: ["Male", "Female"],
-      Presentation: ["Classic", "Retrocecal"],
-      Vitals: ["Stable", "Septic"],
+      Sex: ['Male', 'Female'],
+      Presentation: ['Classic', 'Retrocecal'],
+      Vitals: ['Stable', 'Septic'],
     },
     template: `A {{Age}}-year-old {{Sex}} presents to the emergency department with right lower quadrant pain. The presentation is {{Presentation}}. Vital signs show {{Vitals}} hemodynamics. What is the most likely diagnosis?`,
-    correctAnswer: "Acute appendicitis",
+    correctAnswer: 'Acute appendicitis',
     explanation:
-      "Appendicitis typically presents with periumbilical pain that migrates to the right lower quadrant. Retrocecal appendicitis may have atypical presentations. Early recognition and surgical intervention are key to preventing perforation and sepsis.",
-    distractors: ["Cholecystitis", "Diverticulitis", "Mesenteric ischemia"],
-    difficulty: "medium",
+      'Appendicitis typically presents with periumbilical pain that migrates to the right lower quadrant. Retrocecal appendicitis may have atypical presentations. Early recognition and surgical intervention are key to preventing perforation and sepsis.',
+    distractors: ['Cholecystitis', 'Diverticulitis', 'Mesenteric ischemia'],
+    difficulty: 'medium',
   });
 
   return seed;
@@ -190,20 +190,20 @@ export async function getSeedStats() {
   const [totalSeeds, byCondition, bySystem, mostUsed, leastUsed] = await Promise.all([
     prisma.questionSeed.count(),
     prisma.questionSeed.groupBy({
-      by: ["conditionId"],
+      by: ['conditionId'],
       _count: true,
     }),
     prisma.questionSeed.groupBy({
-      by: ["system"],
+      by: ['system'],
       _count: true,
     }),
     prisma.questionSeed.findMany({
-      orderBy: { usageCount: "desc" },
+      orderBy: { usageCount: 'desc' },
       take: 5,
       select: { id: true, corePathology: true, usageCount: true },
     }),
     prisma.questionSeed.findMany({
-      orderBy: { usageCount: "asc" },
+      orderBy: { usageCount: 'asc' },
       take: 5,
       select: { id: true, corePathology: true, usageCount: true },
     }),
@@ -242,7 +242,7 @@ export async function previewSeedPermutations(seedId: string, limit: number = 10
   });
 
   if (!seed) {
-    throw new Error("Question seed not found");
+    throw new Error('Question seed not found');
   }
 
   const variables = seed.variables as Record<string, any[]>;
@@ -276,7 +276,7 @@ export async function previewSeedPermutations(seedId: string, limit: number = 10
 
     let questionText = seed.template;
     for (const [key, value] of Object.entries(selectedVariables)) {
-      const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, "g");
+      const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
       questionText = questionText.replace(placeholder, String(value));
     }
 

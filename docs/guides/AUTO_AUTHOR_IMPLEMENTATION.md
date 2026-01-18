@@ -9,12 +9,14 @@ The Auto-Author pipeline is now fully implemented and ready to generate AI conte
 ### 1. Core Service Layer (`lib/services/autoAuthor/`)
 
 **`types.ts`** - TypeScript interfaces
+
 - `GeneratedConditionContent` - Structure for AI-generated content
 - `ContentGenerationOptions` - Configuration for generation
 - `ContentGenerationResult` - Result wrapper
 - `AutoAuthorStats` - Pipeline statistics
 
 **`contentGenerator.ts`** - AI generation engine
+
 - `generateConditionContent()` - Single condition generation via Gemini
 - `batchGenerateContent()` - Batch processing with rate limiting
 - Retry logic (up to 3 attempts)
@@ -22,12 +24,14 @@ The Auto-Author pipeline is now fully implemented and ready to generate AI conte
 - PANCE-focused prompt engineering
 
 **`databaseService.ts`** - Prisma database operations
+
 - `findConditionsMissingContent()` - Detects conditions needing content
 - `saveGeneratedContent()` - Merges AI content with existing data
 - `getContentStats()` - Database analytics
 - Smart content preservation (never overwrites manual edits)
 
 **`index.ts`** - Main orchestrator
+
 - `autoAuthorMissingContent()` - Full pipeline execution
 - Progress tracking and reporting
 - Dry-run mode support
@@ -36,6 +40,7 @@ The Auto-Author pipeline is now fully implemented and ready to generate AI conte
 ### 2. Runner Script (`scripts/generateMissingContent.ts`)
 
 **Features:**
+
 - Command-line argument parsing (`--max-conditions`, `--delay`, `--dry-run`, `--extended`)
 - Environment variable configuration
 - Real-time progress display
@@ -45,6 +50,7 @@ The Auto-Author pipeline is now fully implemented and ready to generate AI conte
 ### 3. Testing & Validation
 
 **`scripts/testAutoAuthor.ts`** - Standalone test script
+
 - Tests AI generation without database
 - Validates JSON structure
 - Checks all required fields
@@ -53,6 +59,7 @@ The Auto-Author pipeline is now fully implemented and ready to generate AI conte
 ### 4. Documentation
 
 **`AUTO_AUTHOR_GUIDE.md`** - Comprehensive guide
+
 - Architecture overview
 - Usage examples
 - Error handling
@@ -118,7 +125,7 @@ Generated content follows this structure:
   riskFactors: string[];         // Key risk factors
   diagnosis: string;             // Diagnostic approach
   treatment: string;             // Treatment approach
-  
+
   // Extended fields (optional with --extended)
   etiologyPathophysiology?: string;
   epidemiology?: string;
@@ -147,7 +154,7 @@ import { autoAuthorMissingContent } from '../lib/services/autoAuthor';
 
 async function dailyContentGeneration() {
   const apiKey = process.env.GEMINI_API_KEY || '';
-  
+
   await autoAuthorMissingContent(apiKey, {
     maxConditions: 50,
     delayMs: 2000,
@@ -169,43 +176,52 @@ const result = await generateConditionContent(apiKey, options);
 
 // Create CMS draft for review
 if (result.success) {
-  await createDraft(prisma, {
-    conditionId: condition.id,
-    system: condition.system,
-    subcategory: 'Generated',
-    condition: condition.name,
-    content: result.content,
-  }, {
-    userId: 'auto-author-bot',
-    userRole: 'system',
-    description: 'AI-generated content',
-  });
+  await createDraft(
+    prisma,
+    {
+      conditionId: condition.id,
+      system: condition.system,
+      subcategory: 'Generated',
+      condition: condition.name,
+      content: result.content,
+    },
+    {
+      userId: 'auto-author-bot',
+      userRole: 'system',
+      description: 'AI-generated content',
+    }
+  );
 }
 ```
 
 ## Key Design Decisions
 
 ### 1. Content Preservation
+
 - **Never overwrites** existing content fields
 - **Merges** new fields with existing data
 - Allows manual edits to coexist with AI content
 
 ### 2. Retry Logic
+
 - Up to 3 attempts per condition
 - Exponential backoff (1s, 2s, 4s)
 - Graceful failure (continues to next condition)
 
 ### 3. Rate Limiting
+
 - Default 2000ms (2 seconds) between calls
 - Configurable via `--delay` flag
 - Prevents API quota exhaustion
 
 ### 4. Validation
+
 - Ensures all required fields are present
 - Validates arrays are not empty
 - Confirms JSON structure is correct
 
 ### 5. Progress Tracking
+
 - Real-time console output
 - Summary statistics at end
 - Error aggregation and reporting
@@ -213,16 +229,19 @@ if (result.success) {
 ## Performance Characteristics
 
 ### Speed
+
 - ~3-5 seconds per condition (including rate limit delay)
 - 100 conditions ≈ 5-8 minutes
 - Parallel processing possible (not implemented yet)
 
 ### Cost
+
 - Gemini Flash: ~$0.001 per condition
 - 100 conditions ≈ $0.10
 - 1000 conditions ≈ $1.00
 
 ### Accuracy
+
 - Based on Gemini 2.0 Flash Exp model
 - PANCE-focused prompts
 - Clinical accuracy validated through structured prompts
@@ -230,16 +249,19 @@ if (result.success) {
 ## Error Handling
 
 ### Recoverable Errors
+
 - API rate limits → Retry with backoff
 - Invalid JSON → Retry (different seed)
 - Network timeouts → Retry
 
 ### Non-Recoverable Errors
+
 - Missing API key → Exit immediately
 - Database connection failure → Exit immediately
 - Invalid command-line args → Show help and exit
 
 ### Error Logging
+
 ```
 ⚠️  Errors:
    1. Atrial Fibrillation: API rate limit exceeded
@@ -250,16 +272,19 @@ if (result.success) {
 ## Testing Strategy
 
 ### Unit Testing (Future)
+
 - Mock Gemini API responses
 - Test content validation logic
 - Test database merge logic
 
 ### Integration Testing
+
 - `npm run test:auto-author` - Live API test
 - Tests 3 sample conditions
 - Validates complete flow
 
 ### Manual Testing
+
 - `--dry-run` flag for safe testing
 - `--max-conditions=5` for quick validation
 - Prisma Studio for content inspection
@@ -267,6 +292,7 @@ if (result.success) {
 ## Monitoring & Observability
 
 ### Console Output
+
 ```
 [15/100] Acute Coronary Syndrome (CV)
    ✅ Generated and saved successfully
@@ -277,9 +303,10 @@ if (result.success) {
 ```
 
 ### Database Metrics
+
 ```sql
 -- Check content completeness
-SELECT 
+SELECT
   system,
   COUNT(*) as total,
   COUNT(CASE WHEN content->>'overview' IS NOT NULL THEN 1 END) as with_content
@@ -288,6 +315,7 @@ GROUP BY system;
 ```
 
 ### API Usage
+
 - Check Google Cloud Console for Gemini API usage
 - Monitor quota limits
 - Track cost per condition
@@ -295,16 +323,19 @@ GROUP BY system;
 ## Future Enhancements
 
 ### High Priority
+
 - [ ] Parallel batch processing (5-10 concurrent requests)
 - [ ] Content quality scoring
 - [ ] Integration with CMS approval workflow
 
 ### Medium Priority
+
 - [ ] Incremental content updates (refresh old content)
 - [ ] A/B testing different prompts
 - [ ] Content versioning and rollback
 
 ### Low Priority
+
 - [ ] Multi-language support
 - [ ] Custom prompt templates per system
 - [ ] Medical image/diagram suggestions
@@ -312,11 +343,13 @@ GROUP BY system;
 ## Dependencies
 
 **Required:**
+
 - `@google/generative-ai` - Gemini SDK
 - `@prisma/client` - Database ORM
 - `dotenv` - Environment variables
 
 **Environment:**
+
 - Node.js 18+
 - PostgreSQL database (via Prisma)
 - Gemini API key
@@ -324,6 +357,7 @@ GROUP BY system;
 ## Deployment Considerations
 
 ### Production Checklist
+
 - [ ] Set `GEMINI_API_KEY` in production environment
 - [ ] Configure `DATABASE_URL` for production DB
 - [ ] Set up monitoring/alerting for failures
@@ -331,14 +365,15 @@ GROUP BY system;
 - [ ] Review generated content periodically
 
 ### CI/CD Integration
+
 ```yaml
 # .github/workflows/auto-author.yml
 name: Auto-Author Content Generation
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM
-  workflow_dispatch:      # Manual trigger
+    - cron: '0 2 * * *' # Daily at 2 AM
+  workflow_dispatch: # Manual trigger
 
 jobs:
   generate:
@@ -372,6 +407,7 @@ jobs:
 ## Conclusion
 
 The Auto-Author pipeline is production-ready and provides:
+
 - ✅ Robust AI content generation
 - ✅ Smart database integration
 - ✅ Comprehensive error handling

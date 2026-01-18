@@ -1,4 +1,5 @@
 # Production Hardening Sprint
+
 ## PANaCEa Phase 5: Stability & Reliability
 
 > **Status:** IN PROGRESS  
@@ -16,20 +17,21 @@ This sprint focuses on hardening the application for production reliability. Bas
 
 ## 🔴 Critical Issues Identified
 
-| Issue | Risk Level | Status |
-|-------|-----------|--------|
-| Missing API endpoints causing 404 HTML responses | CRITICAL | 🟡 Partial Fix |
-| No database-level RLS security | CRITICAL | ❌ Not Started |
-| No health check endpoint for monitoring | HIGH | ✅ Implemented |
-| Edge caching not configured | HIGH | ❌ Not Started |
-| E2E test coverage < 20% | HIGH | ❌ Not Started |
-| Inconsistent API response formats | MEDIUM | ❌ Not Started |
+| Issue                                            | Risk Level | Status         |
+| ------------------------------------------------ | ---------- | -------------- |
+| Missing API endpoints causing 404 HTML responses | CRITICAL   | 🟡 Partial Fix |
+| No database-level RLS security                   | CRITICAL   | ❌ Not Started |
+| No health check endpoint for monitoring          | HIGH       | ✅ Implemented |
+| Edge caching not configured                      | HIGH       | ❌ Not Started |
+| E2E test coverage < 20%                          | HIGH       | ❌ Not Started |
+| Inconsistent API response formats                | MEDIUM     | ❌ Not Started |
 
 ---
 
 ## Sprint 1: API Resilience (Days 1-5)
 
 ### 1.1 Health Check Endpoint ✅
+
 **File:** `functions/api/health.ts`
 
 - [x] Database connectivity check
@@ -39,6 +41,7 @@ This sprint focuses on hardening the application for production reliability. Bas
 - [x] CORS headers
 
 ### 1.2 Missing Endpoint Audit
+
 **Goal:** Zero 404 HTML responses
 
 ```bash
@@ -47,9 +50,11 @@ grep -r "fetch.*\/api\/" --include="*.tsx" --include="*.ts" components/ hooks/ s
 ```
 
 **Known Missing Endpoints (Fixed):**
+
 - [x] `/api/analytics/performance-deltas` - Gap Analysis Dashboard
 
 **To Audit:**
+
 - [ ] `/api/recommendations/*`
 - [ ] `/api/questions/generate-batch`
 - [ ] `/api/questions/pool`
@@ -58,6 +63,7 @@ grep -r "fetch.*\/api\/" --include="*.tsx" --include="*.ts" components/ hooks/ s
 ### 1.3 Standardized API Response Format
 
 All API endpoints MUST return:
+
 ```typescript
 interface APIResponse<T> {
   success: boolean;
@@ -69,6 +75,7 @@ interface APIResponse<T> {
 ```
 
 **Files to update:**
+
 - [ ] `functions/api/_shared/response.ts` (create)
 - [ ] All endpoint files
 
@@ -77,6 +84,7 @@ interface APIResponse<T> {
 ## Sprint 2: Security Foundation (Days 6-10)
 
 ### 2.1 Supabase RLS Policies
+
 **Priority:** CRITICAL
 
 ```sql
@@ -124,12 +132,12 @@ id = "xxx" # Create via: wrangler kv:namespace create PANACEA_CACHE
 
 ### 3.2 Cache Strategy
 
-| Endpoint | TTL | Stale-While-Revalidate |
-|----------|-----|------------------------|
-| `/api/content/systems` | 1 hour | Yes |
-| `/api/conditions` | 1 hour | Yes |
-| `/api/drugs/classes` | 24 hours | Yes |
-| `/api/user/*` | No cache | No |
+| Endpoint               | TTL      | Stale-While-Revalidate |
+| ---------------------- | -------- | ---------------------- |
+| `/api/content/systems` | 1 hour   | Yes                    |
+| `/api/conditions`      | 1 hour   | Yes                    |
+| `/api/drugs/classes`   | 24 hours | Yes                    |
+| `/api/user/*`          | No cache | No                     |
 
 ---
 
@@ -172,16 +180,19 @@ jobs:
 ## Quick Wins Checklist
 
 ### Today
+
 - [x] Create `/api/health` endpoint
 - [x] Create `/api/analytics/performance-deltas` endpoint
 - [ ] Add CORS to all API response helpers
 
 ### This Week
+
 - [ ] Audit all frontend fetch calls
 - [ ] Create standardized response helper
 - [ ] Fix remaining 404 endpoints
 
 ### Next Week
+
 - [ ] RLS migration script
 - [ ] KV namespace setup
 - [ ] E2E test expansion
@@ -190,28 +201,28 @@ jobs:
 
 ## Success Metrics
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| API 500 Errors | Unknown | < 1/hour |
-| P95 Response Time | Unknown | < 200ms |
-| E2E Test Coverage | ~20% | 80% |
-| Lighthouse Performance | Unknown | > 90 |
-| Security Headers | Partial | A+ rating |
+| Metric                 | Current | Target    |
+| ---------------------- | ------- | --------- |
+| API 500 Errors         | Unknown | < 1/hour  |
+| P95 Response Time      | Unknown | < 200ms   |
+| E2E Test Coverage      | ~20%    | 80%       |
+| Lighthouse Performance | Unknown | > 90      |
+| Security Headers       | Partial | A+ rating |
 
 ---
 
 ## Files Created/Modified
 
-| Action | File |
-|--------|------|
-| CREATE | `functions/api/health.ts` |
-| CREATE | `functions/api/analytics/performance-deltas.ts` |
-| CREATE | `functions/api/_shared/response.ts` |
-| MODIFY | All API endpoints (response format) |
+| Action | File                                                     |
+| ------ | -------------------------------------------------------- |
+| CREATE | `functions/api/health.ts`                                |
+| CREATE | `functions/api/analytics/performance-deltas.ts`          |
+| CREATE | `functions/api/_shared/response.ts`                      |
+| MODIFY | All API endpoints (response format)                      |
 | CREATE | `prisma/migrations/XXXXX_add_rls_policies/migration.sql` |
-| CREATE | `e2e/main-session.spec.ts` |
-| MODIFY | `.github/workflows/ci.yml` |
+| CREATE | `e2e/main-session.spec.ts`                               |
+| MODIFY | `.github/workflows/ci.yml`                               |
 
 ---
 
-*Document created: 2026-01-15*
+_Document created: 2026-01-15_

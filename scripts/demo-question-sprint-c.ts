@@ -1,6 +1,6 @@
 /**
  * Demo: Question Generation Sprint C Utilities
- * 
+ *
  * Demonstrates:
  * - Step 6: FSRS Question Linking
  * - Step 7: Distractor Validation
@@ -88,7 +88,8 @@ These fields are added to the existing JSON structure (no schema change required
 
   const goodQuestion = {
     id: 'q_good_1',
-    question: 'A 55-year-old male with chest pain shows ST-elevation in leads II, III, and aVF. Which coronary artery is most likely affected?',
+    question:
+      'A 55-year-old male with chest pain shows ST-elevation in leads II, III, and aVF. Which coronary artery is most likely affected?',
     options: [
       'Left anterior descending artery',
       'Right coronary artery',
@@ -102,8 +103,12 @@ These fields are added to the existing JSON structure (no schema change required
   console.log(`   Question ID: ${goodQuestion.id}`);
   console.log(`   Score: ${goodResult.score}/100`);
   console.log(`   Valid: ${goodResult.isValid ? '✓ Yes' : '✗ No'}`);
-  console.log(`   Issues: ${goodResult.issues.length === 0 ? 'None' : goodResult.issues.join(', ')}`);
-  console.log(`   Warnings: ${goodResult.warnings.length === 0 ? 'None' : goodResult.warnings.length + ' warnings'}`);
+  console.log(
+    `   Issues: ${goodResult.issues.length === 0 ? 'None' : goodResult.issues.join(', ')}`
+  );
+  console.log(
+    `   Warnings: ${goodResult.warnings.length === 0 ? 'None' : goodResult.warnings.length + ' warnings'}`
+  );
 
   console.log(`\nDemo 2: Validate Poor Question (Expected: Low score)\n`);
 

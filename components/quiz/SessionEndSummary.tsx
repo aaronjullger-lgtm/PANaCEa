@@ -1,6 +1,6 @@
 /**
  * Session End Summary
- * 
+ *
  * Comprehensive summary displayed when ending a study session.
  * Shows performance metrics, PANCE distribution adherence, and recommendations.
  * Syncs session analytics to the database.
@@ -9,11 +9,11 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
-import { 
-  Trophy, 
-  Target, 
-  Clock, 
-  TrendingUp, 
+import {
+  Trophy,
+  Target,
+  Clock,
+  TrendingUp,
   TrendingDown,
   BarChart3,
   Award,
@@ -27,30 +27,30 @@ import {
   CloudOff,
 } from 'lucide-react';
 // Domain services
-import { 
-  getSessionSummary, 
+import {
+  getSessionSummary,
   calculateDistributionDrift,
   resetSessionDistribution,
-  PANCE_SYSTEM_PERCENTAGES 
+  PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
 
 // Session services
-import { 
-  analyzePatterns, 
+import {
+  analyzePatterns,
   resetAnswerPatterns,
-  calculateBehavioralCalibration, 
-  resetBehavioralRecords, 
+  calculateBehavioralCalibration,
+  resetBehavioralRecords,
   getBehavioralInsights,
-  resetMomentum, 
+  resetMomentum,
   getMomentumInsights,
   resetPauseTracking,
 } from '@/services/session';
 
 // Analytics services
-import { 
-  getPrediction, 
+import {
+  getPrediction,
   resetPrediction,
-  collectSessionAnalytics, 
+  collectSessionAnalytics,
   syncSessionAnalytics,
 } from '@/services/analytics';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
@@ -60,7 +60,7 @@ import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
 
 interface SessionEndSummaryProps {
-  isOpen?: boolean;  // For conditional rendering from parent
+  isOpen?: boolean; // For conditional rendering from parent
   performanceData: PerformanceRecord[];
   sessionDurationMs?: number;
   sessionStartTime?: number;
@@ -104,19 +104,19 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   const syncAttempted = useRef(false);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
   const [showReflection, setShowReflection] = React.useState(false);
-  
+
   // Use external summary if provided, otherwise calculate
   const summary = externalSummary || getSessionSummary();
   const drifts = calculateDistributionDrift();
   const patternAnalysis = analyzePatterns();
   const behavioralCalibration = calculateBehavioralCalibration();
-  
+
   // Calculate overall stats
   const overallStats = useMemo(() => {
     const total = performanceData.length;
-    const correct = performanceData.filter(p => p.isCorrect).length;
+    const correct = performanceData.filter((p) => p.isCorrect).length;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-    
+
     // Calculate streaks
     let maxStreak = 0;
     let currentStreak = 0;
@@ -132,26 +132,27 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
     }
     // Push final streak if it ended on a correct answer
     if (currentStreak > 0) streaks.push(currentStreak);
-    
+
     // Calculate average streak
-    const avgStreak = streaks.length > 0 
-      ? Math.round((streaks.reduce((a, b) => a + b, 0) / streaks.length) * 10) / 10
-      : 0;
-    
+    const avgStreak =
+      streaks.length > 0
+        ? Math.round((streaks.reduce((a, b) => a + b, 0) / streaks.length) * 10) / 10
+        : 0;
+
     // Calculate average time per question
-    const avgTimePerQuestionMs = performanceData.length > 0
-      ? performanceData.reduce((sum, p) => sum + (p.timeSpentMs || 0), 0) / performanceData.length
-      : 0;
-    
+    const avgTimePerQuestionMs =
+      performanceData.length > 0
+        ? performanceData.reduce((sum, p) => sum + (p.timeSpentMs || 0), 0) / performanceData.length
+        : 0;
+
     // Duration
-    const durationMinutes = sessionDurationMs 
-      ? Math.round(sessionDurationMs / 60000) 
+    const durationMinutes = sessionDurationMs
+      ? Math.round(sessionDurationMs / 60000)
       : summary.sessionDuration;
-    
-    const questionsPerMinute = durationMinutes > 0 
-      ? Math.round((total / durationMinutes) * 10) / 10 
-      : 0;
-    
+
+    const questionsPerMinute =
+      durationMinutes > 0 ? Math.round((total / durationMinutes) * 10) / 10 : 0;
+
     return {
       total,
       correct,
@@ -164,11 +165,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       questionsPerMinute,
     };
   }, [performanceData, sessionDurationMs, summary]);
-  
+
   // Calculate per-system performance
   const systemPerformance: SystemPerformance[] = useMemo(() => {
     const systemStats: Record<string, { correct: number; total: number }> = {};
-    
+
     for (const p of performanceData) {
       const system = p.topic;
       if (!systemStats[system]) {
@@ -177,7 +178,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       systemStats[system].total++;
       if (p.isCorrect) systemStats[system].correct++;
     }
-    
+
     return Object.entries(systemStats)
       .map(([system, stats]) => ({
         system,
@@ -186,47 +187,50 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         total: stats.total,
         accuracy: Math.round((stats.correct / stats.total) * 100),
         targetPercent: PANCE_SYSTEM_PERCENTAGES[system] || 0,
-        actualPercent: overallStats.total > 0 
-          ? Math.round((stats.total / overallStats.total) * 100) 
-          : 0,
+        actualPercent:
+          overallStats.total > 0 ? Math.round((stats.total / overallStats.total) * 100) : 0,
       }))
       .sort((a, b) => b.total - a.total);
   }, [performanceData, overallStats.total]);
-  
+
   // Identify weak areas
-  const weakAreas = systemPerformance.filter(s => s.accuracy < 60 && s.total >= 3);
-  const strongAreas = systemPerformance.filter(s => s.accuracy >= 80 && s.total >= 3);
-  
+  const weakAreas = systemPerformance.filter((s) => s.accuracy < 60 && s.total >= 3);
+  const strongAreas = systemPerformance.filter((s) => s.accuracy >= 80 && s.total >= 3);
+
   // Get grade/rating
   const getGrade = (accuracy: number) => {
-    if (accuracy >= 90) return { grade: 'A', color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' };
-    if (accuracy >= 80) return { grade: 'B', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' };
-    if (accuracy >= 70) return { grade: 'C', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' };
-    if (accuracy >= 60) return { grade: 'D', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' };
+    if (accuracy >= 90)
+      return { grade: 'A', color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' };
+    if (accuracy >= 80)
+      return { grade: 'B', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' };
+    if (accuracy >= 70)
+      return { grade: 'C', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' };
+    if (accuracy >= 60)
+      return { grade: 'D', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' };
     return { grade: 'F', color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30' };
   };
-  
+
   const grade = getGrade(overallStats.accuracy);
-  
+
   // Sync session analytics to database on mount
   useEffect(() => {
     if (syncAttempted.current || performanceData.length < 3) return;
     syncAttempted.current = true;
-    
+
     const syncToDatabase = async () => {
       try {
         setSyncStatus('pending');
-        
+
         // Get auth token
         const token = await getToken();
-        
+
         // Calculate final streak (current streak at end of session)
         let finalStreak = 0;
         for (let i = performanceData.length - 1; i >= 0; i--) {
           if (performanceData[i].isCorrect) finalStreak++;
           else break;
         }
-        
+
         // Collect all analytics
         const analytics = collectSessionAnalytics(
           sessionStartTime || Date.now() - (sessionDurationMs || 0),
@@ -238,10 +242,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           sessionSettings?.focus,
           'same' // All sessions are PANCE-level
         );
-        
+
         // Sync to database
         const result = await syncSessionAnalytics(analytics, token);
-        
+
         if (result.success) {
           setSyncStatus('synced');
           console.log('[SessionEndSummary] Analytics synced:', result.sessionId);
@@ -254,10 +258,17 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         console.error('[SessionEndSummary] Sync error:', error);
       }
     };
-    
+
     syncToDatabase();
-  }, [performanceData, sessionStartTime, sessionDurationMs, overallStats, sessionSettings, getToken]);
-  
+  }, [
+    performanceData,
+    sessionStartTime,
+    sessionDurationMs,
+    overallStats,
+    sessionSettings,
+    getToken,
+  ]);
+
   // Clean up all session data on unmount
   const handleClose = () => {
     resetSessionDistribution();
@@ -268,13 +279,13 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
     resetPauseTracking();
     onClose();
   };
-  
+
   // Get performance prediction
   const prediction = getPrediction();
-  
+
   // Don't render if not open
   if (!isOpen) return null;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -289,7 +300,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden"
       >
         {/* Header with Grade */}
-        <div className={`${grade.bg} p-6 text-center border-b border-slate-200 dark:border-slate-700`}>
+        <div
+          className={`${grade.bg} p-6 text-center border-b border-slate-200 dark:border-slate-700`}
+        >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -302,9 +315,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             Session Complete!
           </h2>
           <div className="flex items-center justify-center gap-4">
-            <div className={`text-5xl font-bold ${grade.color}`}>
-              {grade.grade}
-            </div>
+            <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
             <div className="text-left">
               <div className="text-3xl font-bold text-slate-700 dark:text-slate-200">
                 {overallStats.accuracy}%
@@ -338,7 +349,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Stats Grid */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -349,7 +360,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">Questions</div>
             </div>
-            
+
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
               <Clock className="w-6 h-6 mx-auto mb-2 text-purple-500" />
               <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
@@ -357,7 +368,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">Duration</div>
             </div>
-            
+
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
               <Zap className="w-6 h-6 mx-auto mb-2 text-amber-500" />
               <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
@@ -365,7 +376,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">Q/min</div>
             </div>
-            
+
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
               <Flame className="w-6 h-6 mx-auto mb-2 text-orange-500" />
               <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
@@ -374,7 +385,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <div className="text-xs text-slate-500 dark:text-slate-400">Best Streak</div>
             </div>
           </div>
-          
+
           {/* Distribution Score */}
           <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
             <div className="flex items-center justify-between mb-3">
@@ -384,11 +395,15 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                   PANCE Distribution Score
                 </span>
               </div>
-              <span className={`text-xl font-bold ${
-                summary.distributionScore >= 80 ? 'text-emerald-500' :
-                summary.distributionScore >= 60 ? 'text-amber-500' :
-                'text-red-500'
-              }`}>
+              <span
+                className={`text-xl font-bold ${
+                  summary.distributionScore >= 80
+                    ? 'text-emerald-500'
+                    : summary.distributionScore >= 60
+                      ? 'text-amber-500'
+                      : 'text-red-500'
+                }`}
+              >
                 {summary.distributionScore}/100
               </span>
             </div>
@@ -398,9 +413,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 animate={{ width: `${summary.distributionScore}%` }}
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className={`h-full rounded-full ${
-                  summary.distributionScore >= 80 ? 'bg-emerald-500' :
-                  summary.distributionScore >= 60 ? 'bg-amber-500' :
-                  'bg-red-500'
+                  summary.distributionScore >= 80
+                    ? 'bg-emerald-500'
+                    : summary.distributionScore >= 60
+                      ? 'bg-amber-500'
+                      : 'bg-red-500'
                 }`}
               />
             </div>
@@ -408,7 +425,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               How closely your session followed the official PANCE content blueprint
             </p>
           </div>
-          
+
           {/* System Breakdown */}
           {systemPerformance.length > 0 && (
             <div className="mb-6">
@@ -417,26 +434,32 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 Performance by System
               </h3>
               <div className="space-y-2">
-                {systemPerformance.slice(0, 8).map(sp => (
+                {systemPerformance.slice(0, 8).map((sp) => (
                   <div key={sp.system} className="flex items-center gap-3">
                     <span className="w-12 text-xs font-medium text-slate-600 dark:text-slate-400">
                       {sp.system}
                     </span>
                     <div className="flex-1 h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full rounded-full transition-all ${
-                          sp.accuracy >= 80 ? 'bg-emerald-400' :
-                          sp.accuracy >= 60 ? 'bg-amber-400' :
-                          'bg-red-400'
+                          sp.accuracy >= 80
+                            ? 'bg-emerald-400'
+                            : sp.accuracy >= 60
+                              ? 'bg-amber-400'
+                              : 'bg-red-400'
                         }`}
                         style={{ width: `${sp.accuracy}%` }}
                       />
                     </div>
-                    <span className={`w-12 text-xs font-bold text-right ${
-                      sp.accuracy >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                      sp.accuracy >= 60 ? 'text-amber-600 dark:text-amber-400' :
-                      'text-red-600 dark:text-red-400'
-                    }`}>
+                    <span
+                      className={`w-12 text-xs font-bold text-right ${
+                        sp.accuracy >= 80
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : sp.accuracy >= 60
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
                       {sp.accuracy}%
                     </span>
                     <span className="w-10 text-xs text-slate-400 text-right">
@@ -447,22 +470,20 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               </div>
             </div>
           )}
-          
+
           {/* Weak Areas Alert */}
           {weakAreas.length > 0 && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="font-medium text-amber-700 dark:text-amber-400">
-                  Focus Areas
-                </span>
+                <span className="font-medium text-amber-700 dark:text-amber-400">Focus Areas</span>
               </div>
               <p className="text-sm text-amber-600 dark:text-amber-500">
-                {weakAreas.map(w => w.name).join(', ')} — consider reviewing these topics
+                {weakAreas.map((w) => w.name).join(', ')} — consider reviewing these topics
               </p>
             </div>
           )}
-          
+
           {/* Strong Areas */}
           {strongAreas.length > 0 && (
             <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
@@ -473,13 +494,14 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 </span>
               </div>
               <p className="text-sm text-emerald-600 dark:text-emerald-500">
-                {strongAreas.map(s => s.name).join(', ')}
+                {strongAreas.map((s) => s.name).join(', ')}
               </p>
             </div>
           )}
 
           {/* Behavioral Insights Section */}
-          {(patternAnalysis.overallInsights.length > 0 || behavioralCalibration.insights.length > 0) && (
+          {(patternAnalysis.overallInsights.length > 0 ||
+            behavioralCalibration.insights.length > 0) && (
             <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="w-5 h-5 text-blue-500" />
@@ -489,19 +511,25 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               </div>
               <ul className="space-y-2">
                 {patternAnalysis.overallInsights.slice(0, 3).map((insight, i) => (
-                  <li key={`pattern-${i}`} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400">
+                  <li
+                    key={`pattern-${i}`}
+                    className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400"
+                  >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </li>
                 ))}
                 {behavioralCalibration.insights.slice(0, 2).map((insight, i) => (
-                  <li key={`behavior-${i}`} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400">
+                  <li
+                    key={`behavior-${i}`}
+                    className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400"
+                  >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </li>
                 ))}
               </ul>
-              
+
               {/* Answer change stats */}
               {(patternAnalysis.changedToCorrect > 0 || patternAnalysis.changedToWrong > 0) && (
                 <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
@@ -518,11 +546,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               )}
             </div>
           )}
-          
+
           {/* Sprint 4: Score Prediction Card */}
           {prediction && overallStats.total >= 5 && (
             <div className="mb-6">
-              <ScorePredictionCard 
+              <ScorePredictionCard
                 performanceData={performanceData}
                 avgTimePerQuestionMs={overallStats.avgTimePerQuestionMs}
                 maxStreak={overallStats.maxStreak}
@@ -530,18 +558,15 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               />
             </div>
           )}
-          
+
           {/* Sprint 4: Streak Visualization */}
           {performanceData.length >= 5 && (
             <div className="mb-6">
-              <StreakVisualization 
-                performanceData={performanceData}
-                maxDisplay={50}
-              />
+              <StreakVisualization performanceData={performanceData} maxDisplay={50} />
             </div>
           )}
         </div>
-        
+
         {/* Action Buttons */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row gap-3">
           {overallStats.incorrect > 0 && onReviewMissed && (
@@ -553,7 +578,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               Review {overallStats.incorrect} Missed
             </button>
           )}
-          
+
           {/* Metacognitive Reflection Button - Research shows 15-20% learning gains */}
           <button
             onClick={() => setShowReflection(true)}
@@ -562,7 +587,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             <BookOpen className="w-5 h-5" />
             Reflect
           </button>
-          
+
           {onStartNewSession && (
             <button
               onClick={() => {
@@ -580,7 +605,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               New Session
             </button>
           )}
-          
+
           <button
             onClick={handleClose}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
@@ -589,15 +614,18 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           </button>
         </div>
       </motion.div>
-      
+
       {/* Metacognitive Reflection Modal */}
       {showReflection && (
         <MetacognitiveReflection
           sessionPerformance={{
             totalQuestions: overallStats.total,
             correctAnswers: overallStats.correct,
-            missedSystems: weakAreas.map(w => w.name),
-            missedConditions: performanceData.filter(p => !p.isCorrect).map(p => p.condition || '').filter(Boolean),
+            missedSystems: weakAreas.map((w) => w.name),
+            missedConditions: performanceData
+              .filter((p) => !p.isCorrect)
+              .map((p) => p.condition || '')
+              .filter(Boolean),
             averageTimePerQuestion: overallStats.avgTimePerQuestionMs,
             difficulty: 'medium', // PANCE-level is always medium
           }}

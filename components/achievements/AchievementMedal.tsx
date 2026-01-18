@@ -56,7 +56,7 @@ export function AchievementMedal({
   // Icon mapping
   const getIcon = () => {
     if (!isUnlocked) return Lock;
-    
+
     switch (achievement.category) {
       case 'mastery':
         return Trophy;
@@ -90,19 +90,14 @@ export function AchievementMedal({
       >
         {/* Icon */}
         <Icon
-          className={`${iconSizes[size]} ${
-            isUnlocked ? '' : 'opacity-40'
-          }`}
+          className={`${iconSizes[size]} ${isUnlocked ? '' : 'opacity-40'}`}
           style={{ color: isUnlocked ? rarityColor : 'var(--color-text-muted)' }}
           strokeWidth={2}
         />
 
         {/* Progress ring for progressive achievements */}
         {!isUnlocked && progress > 0 && (
-          <svg
-            className="absolute inset-0 -rotate-90"
-            style={{ width: '100%', height: '100%' }}
-          >
+          <svg className="absolute inset-0 -rotate-90" style={{ width: '100%', height: '100%' }}>
             <circle
               cx="50%"
               cy="50%"

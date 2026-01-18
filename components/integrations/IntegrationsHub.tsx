@@ -1,6 +1,6 @@
 /**
  * Integrations Hub Component
- * 
+ *
  * Main component that combines all integration features:
  * - Anki Export
  * - Calendar Sync
@@ -49,12 +49,13 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
               <span className="text-sm font-medium">Back to Menu</span>
             </button>
           )}
-          
+
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Study Ecosystem Integrations
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Connect PANaCEa with your favorite study tools: Anki, Google Calendar, Todoist, Trello, Notion, and more.
+            Connect PANaCEa with your favorite study tools: Anki, Google Calendar, Todoist, Trello,
+            Notion, and more.
           </p>
         </div>
 
@@ -125,36 +126,25 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
 
           {activeTab === 'calendar' && (
             <div className="animate-fadeIn">
-              <CalendarSyncPanel
-                userExamDate={userExamDate}
-                onExamDateSaved={onExamDateSaved}
-              />
+              <CalendarSyncPanel userExamDate={userExamDate} onExamDateSaved={onExamDateSaved} />
             </div>
           )}
 
           {activeTab === 'todoist' && (
             <div className="animate-fadeIn">
-              <TodoistExportPanel
-                missedQuestions={missedQuestions}
-                userExamDate={userExamDate}
-              />
+              <TodoistExportPanel missedQuestions={missedQuestions} userExamDate={userExamDate} />
             </div>
           )}
 
           {activeTab === 'trello' && (
             <div className="animate-fadeIn">
-              <TrelloExportPanel
-                userExamDate={userExamDate}
-              />
+              <TrelloExportPanel userExamDate={userExamDate} />
             </div>
           )}
 
           {activeTab === 'widgets' && (
             <div className="animate-fadeIn">
-              <WidgetPanel
-                performanceData={performanceData}
-                missedQuestions={missedQuestions}
-              />
+              <WidgetPanel performanceData={performanceData} missedQuestions={missedQuestions} />
             </div>
           )}
         </div>
@@ -162,15 +152,13 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         {/* Feature Comparison */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-              Why Anki?
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Why Anki?</h3>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               Spaced repetition is proven to boost long-term retention. Export only what you missed
               to focus your review time efficiently.
             </p>
           </div>
-          
+
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Why Calendar Sync?
@@ -180,7 +168,7 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
               with automated daily study blocks.
             </p>
           </div>
-          
+
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Why Todoist?
@@ -190,17 +178,17 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
               cross-platform sync keep you organized everywhere.
             </p>
           </div>
-          
+
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Why Trello?
             </h3>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Visual progress tracking with Kanban boards. Drag cards as you complete topics and
-              see your progress at a glance.
+              Visual progress tracking with Kanban boards. Drag cards as you complete topics and see
+              your progress at a glance.
             </p>
           </div>
-          
+
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Why Widgets?

@@ -1,56 +1,43 @@
 /**
- * API Endpoint: /api/questions/pool-status
- * 
+ * GET /api/questions/pool-status
  * Get the status of the pre-generated question pool
  * Shows availability by system and overall health
- * 
- * MULTI-TENANT ARCHITECTURE:
- * Questions are permanent assets in the pool - they're never "consumed" globally.
- * Each user has their own history via UserQuestionSeen.
- * This endpoint shows:
- * - Total questions in pool (permanent library)
- * - Per-user: how many they've seen vs. fresh questions available
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import type { CloudflareContext } from '../_shared/types';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const PoolStatusSchema = z.object({
+  query: z.object({}),
+});
 
 const POOL_LOW_THRESHOLD = 20;
-const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
+const SYSTEMS = [
+  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU',
+];
 
-export const onRequestGet = async (context: CloudflareContext<Env>) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/questions/pool-status');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     // Get user ID for personal stats
     const user = await prisma.user.findUnique({
-      where: { clerkId: authResult.userId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     // Get counts by system (total in pool - multi-tenant: all questions are available)
     const systemCounts: Record<string, { total: number; userSeen: number; userFresh: number }> = {};
-    
+
     for (const system of SYSTEMS) {
-      const total = await prisma.preGeneratedQuestion.count({
-        where: { system },
-      });
-      
+      const total = await prisma.preGeneratedQuestion.count({ where: { system } });
+
       // Get user-specific counts if authenticated
       let userSeen = 0;
       if (user) {
@@ -58,18 +45,15 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
           where: { userId: user.id },
           select: { questionId: true },
         });
-        const seenIds = seenQuestions.map(h => h.questionId);
-        
+        const seenIds = seenQuestions.map((h) => h.questionId);
+
         if (seenIds.length > 0) {
           userSeen = await prisma.preGeneratedQuestion.count({
-            where: { 
-              system,
-              id: { in: seenIds },
-            },
+            where: { system, id: { in: seenIds } },
           });
         }
       }
-      
+
       systemCounts[system] = {
         total,
         userSeen,
@@ -87,8 +71,8 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
         where: { userId: user.id },
         select: { questionId: true },
       });
-      const allSeenIds = allSeenHistory.map(h => h.questionId);
-      
+      const allSeenIds = allSeenHistory.map((h) => h.questionId);
+
       if (allSeenIds.length > 0) {
         totalUserSeen = await prisma.preGeneratedQuestion.count({
           where: { id: { in: allSeenIds } },
@@ -100,48 +84,37 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     const mainQuestionCount = await prisma.question.count();
 
     // Identify systems that need more questions in the pool
-    const lowSystems = SYSTEMS.filter(s => systemCounts[s].total < POOL_LOW_THRESHOLD);
+    const lowSystems = SYSTEMS.filter((s) => systemCounts[s].total < POOL_LOW_THRESHOLD);
 
-    return new Response(JSON.stringify({
-      pool: {
-        total: totalInPool,
-        // Multi-tenant: all questions remain available
-        available: totalInPool,
+    logger.info('Pool status fetched', { userId: auth.userId, totalInPool, lowSystems });
+
+    return {
+      data: {
+        pool: {
+          total: totalInPool,
+          available: totalInPool,
+        },
+        user: user
+          ? {
+              seen: totalUserSeen,
+              fresh: totalInPool - totalUserSeen,
+              percentExplored: totalInPool > 0 ? Math.round((totalUserSeen / totalInPool) * 100) : 0,
+            }
+          : null,
+        mainTable: { total: mainQuestionCount },
+        bySystem: systemCounts,
+        health: {
+          threshold: POOL_LOW_THRESHOLD,
+          lowSystems,
+          overallHealthy: totalInPool >= POOL_LOW_THRESHOLD,
+          needsGeneration: lowSystems.length > 0 || totalInPool < POOL_LOW_THRESHOLD,
+        },
       },
-      user: user ? {
-        seen: totalUserSeen,
-        fresh: totalInPool - totalUserSeen,
-        percentExplored: totalInPool > 0 
-          ? Math.round((totalUserSeen / totalInPool) * 100) 
-          : 0,
-      } : null,
-      mainTable: {
-        total: mainQuestionCount,
-      },
-      bySystem: systemCounts,
-      health: {
-        threshold: POOL_LOW_THRESHOLD,
-        lowSystems,
-        overallHealthy: totalInPool >= POOL_LOW_THRESHOLD,
-        needsGeneration: lowSystems.length > 0 || totalInPool < POOL_LOW_THRESHOLD,
-      },
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    };
   } catch (error) {
-    console.error('Error fetching pool status:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error fetching pool status', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw new Error('Failed to fetch pool status');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

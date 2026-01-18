@@ -1,6 +1,6 @@
 /**
  * GeminiErrorBoundary
- * 
+ *
  * Specialized error boundary for Gemini API errors.
  * Provides user-friendly error messages and retry functionality.
  */
@@ -10,12 +10,21 @@ import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
 
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
-let addBreadcrumb: ((message: string, category: string, level?: 'error' | 'warning' | 'info' | 'debug' | 'fatal', data?: Record<string, unknown>) => void) | null = null;
+let addBreadcrumb:
+  | ((
+      message: string,
+      category: string,
+      level?: 'error' | 'warning' | 'info' | 'debug' | 'fatal',
+      data?: Record<string, unknown>
+    ) => void)
+  | null = null;
 if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry').then((sentry) => {
-    captureError = sentry.captureError;
-    addBreadcrumb = sentry.addBreadcrumb;
-  }).catch(() => {});
+  import('../lib/monitoring/sentry')
+    .then((sentry) => {
+      captureError = sentry.captureError;
+      addBreadcrumb = sentry.addBreadcrumb;
+    })
+    .catch(() => {});
 }
 
 export interface GeminiErrorInfo {
@@ -46,7 +55,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
   // Handle Response objects
   if (error instanceof Response) {
     const status = error.status;
-    
+
     if (status === 429) {
       return {
         type: 'rate_limit',
@@ -56,7 +65,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 60000, // Default 60 seconds
       };
     }
-    
+
     if (status === 503 || status === 502 || status === 504) {
       return {
         type: 'server_error',
@@ -66,7 +75,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 3000,
       };
     }
-    
+
     if (status === 408) {
       return {
         type: 'timeout',
@@ -76,7 +85,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 1000,
       };
     }
-    
+
     return {
       type: 'generic',
       status,
@@ -84,11 +93,11 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
       retryable: status >= 500,
     };
   }
-  
+
   // Handle Error objects
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('network') || message.includes('fetch')) {
       return {
         type: 'network',
@@ -97,7 +106,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 2000,
       };
     }
-    
+
     if (message.includes('timeout')) {
       return {
         type: 'timeout',
@@ -106,7 +115,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 1000,
       };
     }
-    
+
     if (message.includes('rate') || message.includes('429')) {
       return {
         type: 'rate_limit',
@@ -115,7 +124,7 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 60000,
       };
     }
-    
+
     if (message.includes('503') || message.includes('unavailable')) {
       return {
         type: 'server_error',
@@ -124,14 +133,14 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
         retryAfterMs: 3000,
       };
     }
-    
+
     return {
       type: 'generic',
       message: error.message || 'An unexpected error occurred',
       retryable: false,
     };
   }
-  
+
   return {
     type: 'generic',
     message: 'An unexpected error occurred',
@@ -157,9 +166,12 @@ function ErrorIcon({ type }: { type: GeminiErrorInfo['type'] }) {
   }
 }
 
-export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, GeminiErrorBoundaryState> {
+export class GeminiErrorBoundary extends Component<
+  GeminiErrorBoundaryProps,
+  GeminiErrorBoundaryState
+> {
   private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
-  
+
   constructor(props: GeminiErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -177,9 +189,9 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[GeminiErrorBoundary] Caught error:', error, errorInfo);
-    
+
     const errorType = this.state.errorInfo?.type || 'generic';
-    
+
     // Track Gemini API errors
     if (captureError) {
       captureError(error, {
@@ -196,15 +208,12 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
         level: errorType === 'rate_limit' ? 'warning' : 'error',
       });
     }
-    
+
     // Add breadcrumb for retry attempts
     if (this.state.retryCount > 0 && addBreadcrumb) {
-      addBreadcrumb(
-        `Gemini retry attempt ${this.state.retryCount}`,
-        'retry',
-        'info',
-        { errorType }
-      );
+      addBreadcrumb(`Gemini retry attempt ${this.state.retryCount}`, 'retry', 'info', {
+        errorType,
+      });
     }
   }
 
@@ -217,17 +226,17 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
   handleRetry = () => {
     const { errorInfo, retryCount } = this.state;
     const maxRetries = 3;
-    
+
     if (retryCount >= maxRetries) {
       console.warn('[GeminiErrorBoundary] Max retries exceeded');
       return;
     }
-    
+
     this.setState({ isRetrying: true });
-    
+
     // Apply exponential backoff
     const backoffMs = errorInfo?.retryAfterMs || Math.min(1000 * Math.pow(2, retryCount), 30000);
-    
+
     this.retryTimeoutId = setTimeout(() => {
       this.setState({
         hasError: false,
@@ -235,7 +244,7 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
         retryCount: retryCount + 1,
         isRetrying: false,
       });
-      
+
       this.props.onRetry?.();
     }, backoffMs);
   };
@@ -243,22 +252,22 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
   render() {
     const { hasError, errorInfo, retryCount, isRetrying } = this.state;
     const { children, fallback } = this.props;
-    
+
     if (!hasError) {
       return children;
     }
-    
+
     if (fallback) {
       return fallback;
     }
-    
+
     const maxRetries = 3;
     const canRetry = errorInfo?.retryable && retryCount < maxRetries;
-    
+
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
         <ErrorIcon type={errorInfo?.type || 'generic'} />
-        
+
         <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">
           {errorInfo?.type === 'rate_limit' && 'Rate Limit Reached'}
           {errorInfo?.type === 'server_error' && 'Service Unavailable'}
@@ -266,11 +275,11 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
           {errorInfo?.type === 'timeout' && 'Request Timed Out'}
           {errorInfo?.type === 'generic' && 'Something Went Wrong'}
         </h3>
-        
+
         <p className="mt-2 text-sm text-[var(--color-text-secondary)] max-w-md">
           {errorInfo?.message}
         </p>
-        
+
         {canRetry && (
           <button
             onClick={this.handleRetry}
@@ -281,13 +290,13 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
             {isRetrying ? 'Retrying...' : 'Try Again'}
           </button>
         )}
-        
+
         {retryCount > 0 && (
           <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">
             Retry attempt {retryCount} of {maxRetries}
           </p>
         )}
-        
+
         {!canRetry && retryCount >= maxRetries && (
           <p className="mt-4 text-sm text-[var(--color-text-secondary)]">
             Please refresh the page or try again later.
@@ -304,37 +313,38 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
 export function useGeminiRetry(maxRetries = 2) {
   const [retryCount, setRetryCount] = React.useState(0);
   const [isRetrying, setIsRetrying] = React.useState(false);
-  
-  const executeWithRetry = React.useCallback(async <T,>(
-    fn: () => Promise<T>
-  ): Promise<T> => {
-    let lastError: Error | null = null;
-    
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        setRetryCount(attempt);
-        const result = await fn();
-        setRetryCount(0);
-        return result;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-        const errorInfo = parseGeminiError(error);
-        
-        if (!errorInfo.retryable || attempt >= maxRetries) {
+
+  const executeWithRetry = React.useCallback(
+    async <T,>(fn: () => Promise<T>): Promise<T> => {
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          setRetryCount(attempt);
+          const result = await fn();
           setRetryCount(0);
-          throw lastError;
+          return result;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          const errorInfo = parseGeminiError(error);
+
+          if (!errorInfo.retryable || attempt >= maxRetries) {
+            setRetryCount(0);
+            throw lastError;
+          }
+
+          // Wait before retry with exponential backoff
+          const backoffMs = errorInfo.retryAfterMs || Math.min(1000 * Math.pow(2, attempt), 30000);
+          setIsRetrying(true);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+          setIsRetrying(false);
         }
-        
-        // Wait before retry with exponential backoff
-        const backoffMs = errorInfo.retryAfterMs || Math.min(1000 * Math.pow(2, attempt), 30000);
-        setIsRetrying(true);
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
-        setIsRetrying(false);
       }
-    }
-    
-    throw lastError || new Error('Max retries exceeded');
-  }, [maxRetries]);
-  
+
+      throw lastError || new Error('Max retries exceeded');
+    },
+    [maxRetries]
+  );
+
   return { executeWithRetry, retryCount, isRetrying };
 }

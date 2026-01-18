@@ -1,6 +1,6 @@
 /**
  * useRecentConditions - Track recently viewed conditions
- * 
+ *
  * Stores the last 10 viewed conditions in localStorage for quick access.
  */
 
@@ -72,9 +72,9 @@ export function useRecentConditions() {
   const addRecentCondition = useCallback((content: Partial<MedicalContentDisplay>) => {
     if (!content.id || !content.condition) return;
 
-    setRecentConditions(prev => {
+    setRecentConditions((prev) => {
       // Remove existing entry for this condition
-      const filtered = prev.filter(c => c.id !== content.id);
+      const filtered = prev.filter((c) => c.id !== content.id);
 
       // Add to top
       const newEntry: RecentCondition = {
@@ -101,7 +101,7 @@ export function useRecentConditions() {
    * Remove a specific condition from recent list
    */
   const removeRecentCondition = useCallback((id: string) => {
-    setRecentConditions(prev => prev.filter(c => c.id !== id));
+    setRecentConditions((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   return {

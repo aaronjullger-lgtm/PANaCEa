@@ -50,7 +50,10 @@ export async function getFullAnalyticsSnapshot(
   return {
     cognitive: advancedAnalytics.getCognitiveState(),
     comprehensive: advancedAnalytics.generateComprehensiveAnalytics(
-      userId, systemMastery, overallAccuracy, totalQuestions
+      userId,
+      systemMastery,
+      overallAccuracy,
+      totalQuestions
     ),
     testReadiness,
     userStats,
@@ -64,7 +67,7 @@ export async function getFullAnalyticsSnapshot(
 export function getQuickStatus() {
   const cognitive = advancedAnalytics.getCognitiveState();
   const breakCheck = advancedAnalytics.shouldSuggestBreak();
-  
+
   return {
     cognitiveLoad: cognitive.cognitiveLoad,
     fatigueLevel: cognitive.fatigueLevel,
@@ -150,32 +153,32 @@ export default {
   advancedAnalytics,
   circadianAnalytics,
   researchAnalytics,
-  
+
   // High-level API
   getFullAnalyticsSnapshot,
   getQuickStatus,
   getOptimalConditions,
   checkBreakNeeded,
-  
+
   // Cognitive
   getCognitiveState,
   recordCognitiveDataPoint,
   shouldSuggestBreak,
-  
+
   // Learning velocity
   getLearningVelocity,
   recordSessionVelocity,
-  
+
   // Time of day
   getPerformanceByTimeOfDay,
   getOptimalStudyTime,
   recordTimeOfDayAttempt,
   isLateNightStudying,
-  
+
   // FSRS
   calculatePersonalizedFSRS,
   getSystemFSRSAdjustments,
-  
+
   // Research-backed
   analyzeLearningEfficiency,
   analyzeMetacognition,
@@ -184,7 +187,7 @@ export default {
   analyzeStrengthsWeaknesses,
   assessTestReadiness,
   generateUserFriendlyStats,
-  
+
   // Comprehensive
   generateComprehensiveAnalytics,
   generateQuestionTargeting,

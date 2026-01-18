@@ -1,11 +1,11 @@
 /**
  * Comprehensive Smoke Test Suite for StudyPANaCEa
- * 
+ *
  * This test suite verifies that every study mode in the application loads correctly
  * and doesn't show critical errors (500, 401, blank screens).
- * 
+ *
  * RUNS AUTOMATICALLY with saved authentication from auth.setup.ts
- * 
+ *
  * HOW TO RUN:
  * - All modes: npx playwright test all-modes
  * - Single mode: npx playwright test all-modes -g "ECG"
@@ -17,7 +17,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Route Matrix - All Critical Paths in the App
- * 
+ *
  * Each route is tested for:
  * 1. Successful navigation
  * 2. Expected content loads (expectText or expectSelector)
@@ -26,101 +26,101 @@ import { test, expect } from '@playwright/test';
  * 5. No blank white screen
  */
 const routes = [
-  { 
-    name: 'Command Center', 
-    url: '/', 
+  {
+    name: 'Command Center',
+    url: '/',
     expectText: 'Command Center',
-    description: 'Main dashboard and navigation hub'
+    description: 'Main dashboard and navigation hub',
   },
-  { 
-    name: 'Quiz Mode', 
-    url: '/?view=quiz', 
+  {
+    name: 'Quiz Mode',
+    url: '/?view=quiz',
     expectText: 'Question',
-    description: 'Main question-based study session'
+    description: 'Main question-based study session',
   },
-  { 
-    name: 'Pharmacology Drill', 
-    url: '/?view=pharmacology', 
+  {
+    name: 'Pharmacology Drill',
+    url: '/?view=pharmacology',
     expectText: 'Pharmacology',
-    description: 'Tests /api/questions/pharmacology-drill endpoint'
+    description: 'Tests /api/questions/pharmacology-drill endpoint',
   },
-  { 
-    name: 'System Drill', 
-    url: '/?view=system_drill', 
+  {
+    name: 'System Drill',
+    url: '/?view=system_drill',
     expectText: 'System',
-    description: 'Tests /api/questions/system-drill endpoint'
+    description: 'Tests /api/questions/system-drill endpoint',
   },
-  { 
-    name: 'ECG Drill', 
-    url: '/?view=ecg_drill', 
+  {
+    name: 'ECG Drill',
+    url: '/?view=ecg_drill',
     expectText: 'ECG',
-    description: 'Tests /api/drills/media?modality=ecg (CRITICAL - had 500 errors)'
+    description: 'Tests /api/drills/media?modality=ecg (CRITICAL - had 500 errors)',
   },
-  { 
-    name: 'Derm Drill', 
-    url: '/?view=derm_drill', 
+  {
+    name: 'Derm Drill',
+    url: '/?view=derm_drill',
     expectText: 'Derm',
-    description: 'Dermatology photo interpretation'
+    description: 'Dermatology photo interpretation',
   },
-  { 
-    name: 'Imaging Drill (Radiology)', 
-    url: '/?view=imaging_drill', 
+  {
+    name: 'Imaging Drill (Radiology)',
+    url: '/?view=imaging_drill',
     expectText: 'Imaging',
-    description: 'Tests /api/drills/media?modality=radiology'
+    description: 'Tests /api/drills/media?modality=radiology',
   },
-  { 
-    name: 'Anatomy Review', 
-    url: '/?view=anatomy_review', 
+  {
+    name: 'Anatomy Review',
+    url: '/?view=anatomy_review',
     expectText: 'Anatomy',
-    description: 'Regional anatomy with clinical correlates'
+    description: 'Regional anatomy with clinical correlates',
   },
-  { 
-    name: 'Physiology Drill', 
-    url: '/?view=physiology_drill', 
+  {
+    name: 'Physiology Drill',
+    url: '/?view=physiology_drill',
     expectText: 'Physiology',
-    description: 'Physiology concepts and mechanisms'
+    description: 'Physiology concepts and mechanisms',
   },
-  { 
-    name: 'Mini Lab Drill', 
-    url: '/?view=mini_lab', 
+  {
+    name: 'Mini Lab Drill',
+    url: '/?view=mini_lab',
     expectText: 'Lab',
-    description: 'Laboratory value interpretation - Tests /api/drills/lab-cases'
+    description: 'Laboratory value interpretation - Tests /api/drills/lab-cases',
   },
-  { 
-    name: 'Rapid Recall', 
-    url: '/?view=rapid_recall', 
+  {
+    name: 'Rapid Recall',
+    url: '/?view=rapid_recall',
     expectText: 'Recall',
-    description: 'High-yield buzzwords and associations'
+    description: 'High-yield buzzwords and associations',
   },
-  { 
-    name: 'First Line Treatment', 
-    url: '/?view=first_line_treatment', 
+  {
+    name: 'First Line Treatment',
+    url: '/?view=first_line_treatment',
     expectText: 'First Line',
-    description: 'First-line treatment selection drill'
+    description: 'First-line treatment selection drill',
   },
-  { 
-    name: 'Guideline Drill', 
-    url: '/?view=guideline_drill', 
+  {
+    name: 'Guideline Drill',
+    url: '/?view=guideline_drill',
     expectText: 'Guideline',
-    description: 'Clinical guidelines and scoring systems'
+    description: 'Clinical guidelines and scoring systems',
   },
-  { 
-    name: 'Code Blue Speed', 
-    url: '/?view=code_blue_speed', 
+  {
+    name: 'Code Blue Speed',
+    url: '/?view=code_blue_speed',
     expectText: 'Code Blue',
-    description: 'ACLS/PALS rapid scenarios'
+    description: 'ACLS/PALS rapid scenarios',
   },
-  { 
-    name: 'Ventilator Hero', 
-    url: '/?view=ventilator_hero', 
+  {
+    name: 'Ventilator Hero',
+    url: '/?view=ventilator_hero',
     expectText: 'Ventilator',
-    description: 'Mechanical ventilation management'
+    description: 'Mechanical ventilation management',
   },
-  { 
-    name: 'Admin Media', 
-    url: '/?view=admin_media', 
+  {
+    name: 'Admin Media',
+    url: '/?view=admin_media',
     expectText: 'Media',
-    description: 'Admin content management for media assets'
+    description: 'Admin content management for media assets',
   },
 ];
 
@@ -129,27 +129,31 @@ const routes = [
  */
 async function checkForCriticalErrors(page: any, routeName: string) {
   const pageContent = await page.textContent('body');
-  
+
   // Check for 500 errors
   if (pageContent.includes('500') && pageContent.includes('Internal Server Error')) {
     throw new Error(`❌ 500 Internal Server Error detected on ${routeName}`);
   }
-  
+
   // Check for 401 errors
   if (pageContent.includes('401') && pageContent.includes('Unauthorized')) {
     throw new Error(`❌ 401 Unauthorized detected on ${routeName}`);
   }
-  
+
   // Check for blank white screen (body has very little content)
   const bodyText = pageContent.trim();
   if (bodyText.length < 50 && !bodyText.includes('Loading')) {
-    throw new Error(`❌ Blank screen detected on ${routeName} (content length: ${bodyText.length})`);
+    throw new Error(
+      `❌ Blank screen detected on ${routeName} (content length: ${bodyText.length})`
+    );
   }
-  
+
   // Check for React error boundaries
-  if (pageContent.includes('Something went wrong') || 
-      pageContent.includes('Error boundary') ||
-      pageContent.includes('Uncaught')) {
+  if (
+    pageContent.includes('Something went wrong') ||
+    pageContent.includes('Error boundary') ||
+    pageContent.includes('Uncaught')
+  ) {
     throw new Error(`❌ React error boundary triggered on ${routeName}`);
   }
 }
@@ -158,7 +162,6 @@ async function checkForCriticalErrors(page: any, routeName: string) {
  * Parameterized Test - Runs for each route
  */
 test.describe('Smoke Tests - All Study Modes', () => {
-  
   // Before each test, ensure we're starting fresh
   test.beforeEach(async ({ page }) => {
     // Set longer timeout for pages that need to load data
@@ -171,45 +174,45 @@ test.describe('Smoke Tests - All Study Modes', () => {
       console.log(`\n🧪 Testing: ${route.name}`);
       console.log(`📍 URL: ${route.url}`);
       console.log(`📝 Description: ${route.description}`);
-      
+
       // Navigate to the route
       const response = await page.goto(route.url);
-      
+
       // Check HTTP status
       if (response) {
         const status = response.status();
         console.log(`📊 HTTP Status: ${status}`);
-        
+
         // Fail on server errors
         if (status >= 500) {
           throw new Error(`❌ Server returned ${status} error`);
         }
-        
+
         // Fail on unauthorized
         if (status === 401) {
           throw new Error(`❌ Authentication failed (401 Unauthorized)`);
         }
       }
-      
+
       // Wait for page to be in ready state
       await page.waitForLoadState('domcontentloaded');
-      
+
       // Check for critical errors in page content
       await checkForCriticalErrors(page, route.name);
-      
+
       // Verify expected content is present
       if (route.expectText) {
         console.log(`🔍 Looking for text: "${route.expectText}"`);
-        
+
         const element = page.getByText(route.expectText, { exact: false }).first();
-        
-        await expect(element).toBeVisible({ 
+
+        await expect(element).toBeVisible({
           timeout: 15000, // 15 seconds to load content
         });
-        
+
         console.log(`✅ Found expected text: "${route.expectText}"`);
       }
-      
+
       console.log(`✅ ${route.name} - PASSED\n`);
     });
   }
@@ -217,69 +220,70 @@ test.describe('Smoke Tests - All Study Modes', () => {
 
 /**
  * Additional Critical API Endpoint Tests
- * 
+ *
  * These tests specifically check backend endpoints that have had issues
  */
 test.describe('Critical API Endpoint Tests', () => {
-  
   test('Media API (/api/drills/media?modality=ecg) returns valid data', async ({ request }) => {
     console.log('\n🧪 Testing Media API endpoint directly...');
-    
+
     const response = await request.get('/api/drills/media?modality=ecg');
-    
+
     console.log(`📊 Status: ${response.status()}`);
-    
+
     // Should not return 500
     expect(response.status()).not.toBe(500);
-    
+
     // Should return 200 or 404 (empty results)
     expect([200, 404]).toContain(response.status());
-    
+
     // Should return JSON
     const contentType = response.headers()['content-type'];
     expect(contentType).toContain('application/json');
-    
+
     if (response.status() === 200) {
       const data = await response.json();
       console.log(`✅ Returned ${Array.isArray(data) ? data.length : 0} media items`);
     }
-    
+
     console.log('✅ Media API endpoint - PASSED\n');
   });
-  
-  test('Pharmacology API (/api/questions/pharmacology-drill) returns valid data', async ({ request }) => {
+
+  test('Pharmacology API (/api/questions/pharmacology-drill) returns valid data', async ({
+    request,
+  }) => {
     console.log('\n🧪 Testing Pharmacology API endpoint directly...');
-    
+
     const response = await request.post('/api/questions/pharmacology-drill', {
-      data: { drugClass: 'beta-blockers' }
+      data: { drugClass: 'beta-blockers' },
     });
-    
+
     console.log(`📊 Status: ${response.status()}`);
-    
+
     // Should not return 500
     expect(response.status()).not.toBe(500);
-    
+
     // Should not be unauthorized
     expect(response.status()).not.toBe(401);
-    
+
     console.log('✅ Pharmacology API endpoint - PASSED\n');
   });
-  
+
   test('System Drill API (/api/questions/system-drill) returns valid data', async ({ request }) => {
     console.log('\n🧪 Testing System Drill API endpoint directly...');
-    
+
     const response = await request.post('/api/questions/system-drill', {
-      data: { system: 'CV' }
+      data: { system: 'CV' },
     });
-    
+
     console.log(`📊 Status: ${response.status()}`);
-    
+
     // Should not return 500
     expect(response.status()).not.toBe(500);
-    
+
     // Should not be unauthorized
     expect(response.status()).not.toBe(401);
-    
+
     console.log('✅ System Drill API endpoint - PASSED\n');
   });
 });

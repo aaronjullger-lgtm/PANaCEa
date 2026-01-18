@@ -1,6 +1,6 @@
 /**
  * MedicalContentBrowser - Modern medical content library browser
- * 
+ *
  * Refactored from ClinicalLibrary.tsx to use:
  * - MedicalContentCard with dark sportsbook aesthetic
  * - ContentGrid responsive layout
@@ -99,14 +99,16 @@ const FilterBar: React.FC<{
 /**
  * MedicalContentBrowser Component
  */
-export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({ 
-  onSelectCondition 
+export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
+  onSelectCondition,
 }) => {
   const { getToken, isSignedIn } = useAuth();
-  
+
   // State
   const [content, setContent] = useState<Partial<MedicalContentDisplay>[]>([]);
-  const [selectedContent, setSelectedContent] = useState<Partial<MedicalContentDisplay> | null>(null);
+  const [selectedContent, setSelectedContent] = useState<Partial<MedicalContentDisplay> | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({});
@@ -121,7 +123,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
         const token = await getToken();
         const response = await fetch('/api/content/systems', {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
+            Authorization: token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json',
           },
         });
@@ -145,7 +147,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     setError(null);
 
@@ -159,7 +161,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
       const token = await getToken();
       const response = await fetch(`/api/content/library?${params.toString()}`, {
         headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
       });
@@ -242,11 +244,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
         {/* Error State */}
         {error && (
           <div className="mb-6">
-            <ErrorState
-              title="Failed to load content"
-              message={error}
-              onRetry={fetchContent}
-            />
+            <ErrorState title="Failed to load content" message={error} onRetry={fetchContent} />
           </div>
         )}
 
@@ -270,7 +268,9 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
                     <ErrorState
                       title="No conditions found"
                       message="Try adjusting your filters or search terms"
-                      onRetry={() => handleFilterChange({ system: null, subcategory: null, search: '' })}
+                      onRetry={() =>
+                        handleFilterChange({ system: null, subcategory: null, search: '' })
+                      }
                     />
                   }
                 >
@@ -280,10 +280,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
                       onClick={() => handleSelectCondition(item)}
                       className="cursor-pointer"
                     >
-                      <MedicalContentCard
-                        content={item}
-                        compact
-                      />
+                      <MedicalContentCard content={item} compact />
                     </div>
                   ))}
                 </ContentGrid>
@@ -311,10 +308,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
 
               {/* Full Detail Card */}
               <div className="flex justify-center">
-                <MedicalContentCard
-                  content={selectedContent}
-                  compact={false}
-                />
+                <MedicalContentCard content={selectedContent} compact={false} />
               </div>
             </motion.div>
           )}

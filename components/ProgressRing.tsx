@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ProgressRingProps {
@@ -21,11 +20,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      <svg
-        className="transform -rotate-90"
-        width={size}
-        height={size}
-      >
+      <svg className="transform -rotate-90" width={size} height={size}>
         <circle
           className="text-[var(--color-border)]"
           stroke="currentColor"

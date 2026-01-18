@@ -1,25 +1,23 @@
 /**
  * Deep Session Analysis API
- * 
+ *
  * POST /api/intelligence/analyze-session
- * 
+ *
  * Provides deep analysis of a study session including:
  * - Learning pattern insights
  * - Error classification
  * - Knowledge gap detection
  * - Cognitive state assessment
  * - Personalized recommendations
- * 
+ *
  * This endpoint powers the intelligent session analytics and
  * generates actionable insights for improving study effectiveness.
  */
 
-import { authenticateRequest, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest } from '../_shared/schemas';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
-
-export const onRequestOptions = handleCorsOptions;
 
 // Zod schema for session attempt
 const SessionAttemptSchema = z.object({
@@ -36,13 +34,17 @@ const SessionAttemptSchema = z.object({
 });
 
 // Zod schema for analyze session request
-const AnalyzeSessionRequestSchema = z.object({
-  sessionId: z.string().optional(),
-  attempts: z.array(SessionAttemptSchema).min(1, 'At least one attempt required'),
-  sessionStartTime: z.number(),
-  sessionEndTime: z.number(),
-  mode: z.string().optional(),
+const AnalyzeSessionSchema = z.object({
+  body: z.object({
+    sessionId: z.string().optional(),
+    attempts: z.array(SessionAttemptSchema).min(1, 'At least one attempt required'),
+    sessionStartTime: z.number(),
+    sessionEndTime: z.number(),
+    mode: z.string().optional(),
+  }),
 });
+
+export const onRequestOptions = withCors();
 
 // ============================================================================
 // Types
@@ -59,14 +61,6 @@ interface SessionAttempt {
   correctAnswer: string;
   difficulty: string;
   timestamp: number;
-}
-
-interface AnalyzeSessionRequest {
-  sessionId?: string;
-  attempts: SessionAttempt[];
-  sessionStartTime: number;
-  sessionEndTime: number;
-  mode?: string;
 }
 
 interface ErrorClassification {
@@ -121,38 +115,38 @@ interface SessionAnalysisResponse {
     sessionScore: number;
     accuracyBySystem: Record<string, { correct: number; total: number; accuracy: number }>;
     difficultyCurve: { questionNumber: number; difficulty: string; correct: boolean }[];
-    
+
     // Learning patterns
     learningEfficiency: number;
     retentionStrength: number;
     spacingEffectiveness: number;
-    
+
     // Error analysis
     errorClassifications: ErrorClassification[];
     errorDistribution: Record<string, number>;
     dominantErrorType: string;
-    
+
     // Concept states
     conceptsAnalyzed: number;
     conceptRetentionSummaries: ConceptRetentionSummary[];
     conceptsNeedingReview: number;
     conceptsOverdue: number;
-    
+
     // Knowledge gaps
     knowledgeGaps: KnowledgeGap[];
     criticalGapsCount: number;
     totalBlockedConcepts: number;
-    
+
     // Cognitive state
     cognitiveState: CognitiveStateSnapshot;
     shouldTakeBreak: boolean;
     breakReason?: string;
-    
+
     // Predictions
     predictedRetention7Days: number;
     predictedRetention30Days: number;
     estimatedTimeToMastery: number;
-    
+
     // Insights and recommendations
     insights: LearningInsight[];
     prioritizedRecommendations: string[];
@@ -164,7 +158,7 @@ interface SessionAnalysisResponse {
 // Error Type Constants
 // ============================================================================
 
-type ErrorTypeValue = 
+type ErrorTypeValue =
   | 'knowledge_gap'
   | 'incomplete_learning'
   | 'interference'
@@ -227,7 +221,7 @@ function classifyError(
 
   // Check for previous correct on same concept
   const previousCorrect = previousAttempts.some(
-    p => p.conditionId === attempt.conditionId && p.wasCorrect
+    (p) => p.conditionId === attempt.conditionId && p.wasCorrect
   );
   if (previousCorrect) {
     indicators.push('Previously answered similar correctly');
@@ -236,7 +230,7 @@ function classifyError(
   }
 
   // Never seen this concept + slow = knowledge gap
-  const neverSeen = !previousAttempts.some(p => p.conditionId === attempt.conditionId);
+  const neverSeen = !previousAttempts.some((p) => p.conditionId === attempt.conditionId);
   if (neverSeen && attempt.responseTimeMs > 60000) {
     indicators.push('First encounter with concept');
     indicators.push('Long deliberation time');
@@ -283,11 +277,11 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
   const veryRecent = attempts.slice(-5);
 
   // Calculate accuracy
-  const recentAccuracy = veryRecent.filter(a => a.wasCorrect).length / veryRecent.length;
+  const recentAccuracy = veryRecent.filter((a) => a.wasCorrect).length / veryRecent.length;
 
   // Calculate response time trends
   const avgResponseTime = recent.reduce((sum, a) => sum + a.responseTimeMs, 0) / recent.length;
-  const answerChangeRate = recent.filter(a => a.answerChanged).length / recent.length;
+  const answerChangeRate = recent.filter((a) => a.answerChanged).length / recent.length;
 
   // Cognitive load
   let cognitiveLoad = 50;
@@ -301,9 +295,11 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
   else if (recentAccuracy > 0.85) cognitiveLoad -= 10;
 
   // Attention level from response consistency
-  const responseTimes = veryRecent.map(a => a.responseTimeMs);
+  const responseTimes = veryRecent.map((a) => a.responseTimeMs);
   const avgRecentTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-  const variance = responseTimes.reduce((sum, t) => sum + Math.pow(t - avgRecentTime, 2), 0) / responseTimes.length;
+  const variance =
+    responseTimes.reduce((sum, t) => sum + Math.pow(t - avgRecentTime, 2), 0) /
+    responseTimes.length;
   const normalizedVariance = variance / (avgRecentTime * avgRecentTime);
   const attentionLevel = Math.max(20, Math.min(100, 80 - normalizedVariance * 100));
 
@@ -313,13 +309,13 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
   // Fatigue from session length and error clustering
   const sessionMinutes = (attempts[attempts.length - 1].timestamp - attempts[0].timestamp) / 60000;
   let fatigueLevel = Math.min(100, sessionMinutes * 0.8);
-  
+
   // Check for declining performance
   if (attempts.length >= 20) {
     const early = attempts.slice(0, 10);
     const late = attempts.slice(-10);
-    const earlyAccuracy = early.filter(a => a.wasCorrect).length / early.length;
-    const lateAccuracy = late.filter(a => a.wasCorrect).length / late.length;
+    const earlyAccuracy = early.filter((a) => a.wasCorrect).length / early.length;
+    const lateAccuracy = late.filter((a) => a.wasCorrect).length / late.length;
     if (lateAccuracy < earlyAccuracy - 0.15) {
       fatigueLevel += 20;
     }
@@ -327,7 +323,12 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
 
   // Flow state
   let flowState = 50;
-  if (recentAccuracy >= 0.7 && recentAccuracy <= 0.9 && cognitiveLoad >= 40 && cognitiveLoad <= 70) {
+  if (
+    recentAccuracy >= 0.7 &&
+    recentAccuracy <= 0.9 &&
+    cognitiveLoad >= 40 &&
+    cognitiveLoad <= 70
+  ) {
     flowState = 80 + (recentAccuracy - 0.7) * 100;
   } else if (recentAccuracy > 0.9 && cognitiveLoad < 40) {
     flowState = 40; // Too easy
@@ -353,8 +354,8 @@ function generateInsights(
   const insights: LearningInsight[] = [];
 
   // Accuracy insights
-  const totalAccuracy = attempts.filter(a => a.wasCorrect).length / attempts.length;
-  
+  const totalAccuracy = attempts.filter((a) => a.wasCorrect).length / attempts.length;
+
   if (totalAccuracy >= 0.85) {
     insights.push({
       category: 'strength',
@@ -375,7 +376,9 @@ function generateInsights(
   // System-specific insights
   const systemAccuracies = Object.entries(accuracyBySystem);
   const weakSystems = systemAccuracies.filter(([, data]) => data.accuracy < 0.6 && data.total >= 3);
-  const strongSystems = systemAccuracies.filter(([, data]) => data.accuracy >= 0.85 && data.total >= 3);
+  const strongSystems = systemAccuracies.filter(
+    ([, data]) => data.accuracy >= 0.85 && data.total >= 3
+  );
 
   if (weakSystems.length > 0) {
     insights.push({
@@ -450,7 +453,7 @@ function generateInsights(
     insights.push({
       category: 'strength',
       title: 'In the Zone',
-      description: 'You\'re in a great learning flow state right now',
+      description: "You're in a great learning flow state right now",
       impact: 'medium',
       action: 'Continue while flow state lasts!',
     });
@@ -477,7 +480,7 @@ function generateRecommendations(
   const recommendations: string[] = [];
 
   // Based on warnings and weaknesses
-  const warnings = insights.filter(i => i.category === 'warning' || i.category === 'weakness');
+  const warnings = insights.filter((i) => i.category === 'warning' || i.category === 'weakness');
   for (const warning of warnings) {
     if (warning.action) {
       recommendations.push(warning.action);
@@ -490,16 +493,19 @@ function generateRecommendations(
     errorCounts[err.errorType] = (errorCounts[err.errorType] || 0) + 1;
   }
 
-  const dominantError = Object.entries(errorCounts).sort(([,a], [,b]) => b - a)[0];
+  const dominantError = Object.entries(errorCounts).sort(([, a], [, b]) => b - a)[0];
   if (dominantError && dominantError[1] >= 2) {
     const remediations: Record<string, string> = {
       [ERROR_TYPES.KNOWLEDGE_GAP]: 'Focus on foundational content before advanced topics',
-      [ERROR_TYPES.INTERFERENCE]: 'Practice distinguishing similar conditions with side-by-side comparisons',
-      [ERROR_TYPES.OVERTHINKING]: 'Set a personal rule: only change answer if you find concrete evidence',
+      [ERROR_TYPES.INTERFERENCE]:
+        'Practice distinguishing similar conditions with side-by-side comparisons',
+      [ERROR_TYPES.OVERTHINKING]:
+        'Set a personal rule: only change answer if you find concrete evidence',
       [ERROR_TYPES.CARELESS]: 'Use a mental checklist before submitting each answer',
-      [ERROR_TYPES.TIME_PRESSURE]: 'Practice untimed first to build confidence, then add time limits',
+      [ERROR_TYPES.TIME_PRESSURE]:
+        'Practice untimed first to build confidence, then add time limits',
     };
-    
+
     if (remediations[dominantError[0]]) {
       recommendations.push(remediations[dominantError[0]]);
     }
@@ -534,9 +540,12 @@ function determineNextSessionFocus(
 
   // Prioritize concepts with knowledge gaps
   const gapConcepts = errorClassifications
-    .filter(e => e.errorType === ERROR_TYPES.KNOWLEDGE_GAP || e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING)
-    .map(e => e.conceptId);
-  
+    .filter(
+      (e) =>
+        e.errorType === ERROR_TYPES.KNOWLEDGE_GAP || e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
+    )
+    .map((e) => e.conceptId);
+
   const uniqueGapConcepts = [...new Set(gapConcepts)].slice(0, 3);
   for (const concept of uniqueGapConcepts) {
     focus.push(`Deep dive: ${concept}`);
@@ -544,9 +553,9 @@ function determineNextSessionFocus(
 
   // Add review for interference patterns
   const interferenceConcepts = errorClassifications
-    .filter(e => e.errorType === ERROR_TYPES.INTERFERENCE)
-    .map(e => e.conceptId);
-  
+    .filter((e) => e.errorType === ERROR_TYPES.INTERFERENCE)
+    .map((e) => e.conceptId);
+
   if (interferenceConcepts.length >= 2) {
     focus.push('Comparison drill for confused concepts');
   }
@@ -555,48 +564,25 @@ function determineNextSessionFocus(
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// ============================================================================
 // Main Handler
 // ============================================================================
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/intelligence/analyze-session', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    // Authenticate
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Validate and parse request
-    const validation = await validateRequest(context.request, AnalyzeSessionRequestSchema);
-    if (validation.success === false) {
-      return validation.response;
-    }
-    const body = validation.data as AnalyzeSessionRequest;
-    const { attempts, sessionStartTime, sessionEndTime } = body;
+    const { attempts, sessionStartTime, sessionEndTime, mode } = validated.body;
 
     // Calculate basic metrics
-    const totalCorrect = attempts.filter(a => a.wasCorrect).length;
+    const totalCorrect = attempts.filter((a) => a.wasCorrect).length;
     const sessionScore = Math.round((totalCorrect / attempts.length) * 100);
 
     // Calculate accuracy by system
-    const accuracyBySystem: Record<string, { correct: number; total: number; accuracy: number }> = {};
+    const accuracyBySystem: Record<string, { correct: number; total: number; accuracy: number }> =
+      {};
     for (const attempt of attempts) {
       const system = attempt.system || 'unknown';
       if (!accuracyBySystem[system]) {
@@ -608,7 +594,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       }
     }
     for (const system of Object.keys(accuracyBySystem)) {
-      accuracyBySystem[system].accuracy = accuracyBySystem[system].correct / accuracyBySystem[system].total;
+      accuracyBySystem[system].accuracy =
+        accuracyBySystem[system].correct / accuracyBySystem[system].total;
     }
 
     // Build difficulty curve
@@ -619,12 +606,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }));
 
     // Classify errors
-    const avgResponseTime = attempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / attempts.length;
-    const incorrectAttempts = attempts.filter(a => !a.wasCorrect);
+    const avgResponseTime =
+      attempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / attempts.length;
+    const incorrectAttempts = attempts.filter((a) => !a.wasCorrect);
     const errorClassifications: ErrorClassification[] = [];
-    
+
     for (const attempt of incorrectAttempts) {
-      const previousAttempts = attempts.filter(a => a.timestamp < attempt.timestamp);
+      const previousAttempts = attempts.filter((a) => a.timestamp < attempt.timestamp);
       const classification = classifyError(attempt, previousAttempts, avgResponseTime);
       errorClassifications.push(classification);
     }
@@ -636,17 +624,18 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     // Find dominant error type
-    const dominantErrorType = Object.entries(errorDistribution)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'none';
+    const dominantErrorType =
+      Object.entries(errorDistribution).sort(([, a], [, b]) => b - a)[0]?.[0] || 'none';
 
     // Calculate cognitive state
     const cognitiveState = calculateCognitiveState(attempts);
 
     // Should take break?
-    const shouldTakeBreak = cognitiveState.fatigueLevel > 75 || 
-                           cognitiveState.attentionLevel < 40 ||
-                           (cognitiveState.cognitiveLoad > 85 && cognitiveState.flowState < 30);
-    
+    const shouldTakeBreak =
+      cognitiveState.fatigueLevel > 75 ||
+      cognitiveState.attentionLevel < 40 ||
+      (cognitiveState.cognitiveLoad > 85 && cognitiveState.flowState < 30);
+
     let breakReason: string | undefined;
     if (shouldTakeBreak) {
       if (cognitiveState.fatigueLevel > 75) {
@@ -659,9 +648,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     // Generate concept retention summaries (simplified - would integrate with learningPatternEngine)
-    const conceptsAnalyzed = new Set(attempts.map(a => a.conditionId).filter(Boolean)).size;
+    const conceptsAnalyzed = new Set(attempts.map((a) => a.conditionId).filter(Boolean)).size;
     const conceptRetentionSummaries: ConceptRetentionSummary[] = [];
-    
+
     // Group by concept and calculate trends
     const conceptAttempts: Record<string, SessionAttempt[]> = {};
     for (const attempt of attempts) {
@@ -674,12 +663,14 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     for (const [conceptId, conceptAtts] of Object.entries(conceptAttempts)) {
-      const accuracy = conceptAtts.filter(a => a.wasCorrect).length / conceptAtts.length;
-      const trend: 'improving' | 'stable' | 'declining' = 
-        conceptAtts.length >= 3 
-          ? (conceptAtts.slice(-2).every(a => a.wasCorrect) ? 'improving' 
-             : conceptAtts.slice(-2).every(a => !a.wasCorrect) ? 'declining' 
-             : 'stable')
+      const accuracy = conceptAtts.filter((a) => a.wasCorrect).length / conceptAtts.length;
+      const trend: 'improving' | 'stable' | 'declining' =
+        conceptAtts.length >= 3
+          ? conceptAtts.slice(-2).every((a) => a.wasCorrect)
+            ? 'improving'
+            : conceptAtts.slice(-2).every((a) => !a.wasCorrect)
+              ? 'declining'
+              : 'stable'
           : 'stable';
 
       conceptRetentionSummaries.push({
@@ -687,19 +678,28 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         system: conceptAtts[0]?.system || 'unknown',
         currentRetention: Math.round(accuracy * 100),
         reviewUrgency: accuracy < 0.5 ? 'overdue' : accuracy < 0.7 ? 'due' : 'stable',
-        nextOptimalReview: new Date(Date.now() + (accuracy > 0.8 ? 7 : accuracy > 0.6 ? 3 : 1) * 86400000).toISOString(),
-        consecutiveCorrect: conceptAtts.slice().reverse().findIndex(a => !a.wasCorrect),
+        nextOptimalReview: new Date(
+          Date.now() + (accuracy > 0.8 ? 7 : accuracy > 0.6 ? 3 : 1) * 86400000
+        ).toISOString(),
+        consecutiveCorrect: conceptAtts
+          .slice()
+          .reverse()
+          .findIndex((a) => !a.wasCorrect),
         accuracyTrend: trend,
       });
     }
 
     // Knowledge gaps (simplified)
     const knowledgeGaps: KnowledgeGap[] = errorClassifications
-      .filter(e => e.errorType === ERROR_TYPES.KNOWLEDGE_GAP || e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING)
-      .map(e => ({
+      .filter(
+        (e) =>
+          e.errorType === ERROR_TYPES.KNOWLEDGE_GAP ||
+          e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
+      )
+      .map((e) => ({
         conceptId: e.conceptId,
-        conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        system: attempts.find(a => a.conditionId === e.conceptId)?.system || 'unknown',
+        conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        system: attempts.find((a) => a.conditionId === e.conceptId)?.system || 'unknown',
         gapType: e.errorType,
         severity: e.confidence > 70 ? 'significant' : 'moderate',
         blocksCount: 0, // Would calculate from concept graph
@@ -708,24 +708,37 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     // Calculate learning metrics
     const learningEfficiency = Math.round(
-      (sessionScore * 0.4 + (100 - cognitiveState.cognitiveLoad) * 0.3 + cognitiveState.flowState * 0.3)
+      sessionScore * 0.4 +
+        (100 - cognitiveState.cognitiveLoad) * 0.3 +
+        cognitiveState.flowState * 0.3
     );
     const retentionStrength = Math.round(
-      sessionScore * 0.5 + 
-      (conceptRetentionSummaries.filter(c => c.accuracyTrend === 'improving').length / Math.max(1, conceptRetentionSummaries.length)) * 50
+      sessionScore * 0.5 +
+        (conceptRetentionSummaries.filter((c) => c.accuracyTrend === 'improving').length /
+          Math.max(1, conceptRetentionSummaries.length)) *
+          50
     );
     const spacingEffectiveness = 70; // Would calculate from actual spacing data
 
     // Predictions (simplified)
     const predictedRetention7Days = Math.round(retentionStrength * 0.85);
     const predictedRetention30Days = Math.round(retentionStrength * 0.65);
-    const estimatedTimeToMastery = Math.max(0, Math.round((80 - sessionScore) / 10 * 3)); // hours
+    const estimatedTimeToMastery = Math.max(0, Math.round(((80 - sessionScore) / 10) * 3)); // hours
 
     // Generate insights
-    const insights = generateInsights(attempts, errorClassifications, cognitiveState, accuracyBySystem);
+    const insights = generateInsights(
+      attempts,
+      errorClassifications,
+      cognitiveState,
+      accuracyBySystem
+    );
 
     // Generate recommendations
-    const prioritizedRecommendations = generateRecommendations(insights, errorClassifications, accuracyBySystem);
+    const prioritizedRecommendations = generateRecommendations(
+      insights,
+      errorClassifications,
+      accuracyBySystem
+    );
 
     // Determine next session focus
     const nextSessionFocus = determineNextSessionFocus(accuracyBySystem, errorClassifications);
@@ -735,7 +748,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       await prisma.studySession.create({
         data: {
           id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-          userId: auth,
+          userId: auth.userId,
           startedAt: new Date(sessionStartTime),
           endedAt: new Date(sessionEndTime),
           totalQuestions: attempts.length,
@@ -743,12 +756,18 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
           accuracy: totalCorrect / attempts.length,
           totalTimeMs: sessionEndTime - sessionStartTime,
           avgTimePerQuestion: Math.round(avgResponseTime),
-          systemsCovered: [...new Set(attempts.map(a => a.system).filter(Boolean))] as string[],
-          mode: body.mode,
+          systemsCovered: [...new Set(attempts.map((a) => a.system).filter(Boolean))] as string[],
+          mode,
         },
       });
-    } catch (dbError) {
-      console.warn('[AnalyzeSession] Failed to save session to database:', dbError);
+
+      log.info('Session analytics saved', {
+        sessionScore,
+        totalQuestions: attempts.length,
+        correctCount: totalCorrect,
+      });
+    } catch (dbError: any) {
+      log.warn('Failed to save session to database', { error: dbError.message });
       // Continue with analysis even if DB save fails
     }
 
@@ -766,10 +785,14 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         dominantErrorType,
         conceptsAnalyzed,
         conceptRetentionSummaries,
-        conceptsNeedingReview: conceptRetentionSummaries.filter(c => c.reviewUrgency !== 'stable').length,
-        conceptsOverdue: conceptRetentionSummaries.filter(c => c.reviewUrgency === 'overdue').length,
+        conceptsNeedingReview: conceptRetentionSummaries.filter((c) => c.reviewUrgency !== 'stable')
+          .length,
+        conceptsOverdue: conceptRetentionSummaries.filter((c) => c.reviewUrgency === 'overdue')
+          .length,
         knowledgeGaps,
-        criticalGapsCount: knowledgeGaps.filter(g => g.severity === 'significant' || g.severity === 'critical').length,
+        criticalGapsCount: knowledgeGaps.filter(
+          (g) => g.severity === 'significant' || g.severity === 'critical'
+        ).length,
         totalBlockedConcepts: knowledgeGaps.reduce((sum, g) => sum + g.blocksCount, 0),
         cognitiveState,
         shouldTakeBreak,
@@ -787,17 +810,19 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-
-  } catch (error) {
-    console.error('[AnalyzeSession] Error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  } catch (error: any) {
+    log.error('Session analysis error', { error: error.message });
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error.message || 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

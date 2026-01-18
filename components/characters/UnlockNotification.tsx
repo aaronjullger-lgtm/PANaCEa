@@ -1,13 +1,18 @@
 /**
  * Unlock Notification Component
- * 
+ *
  * Displays a notification when new characters or accessories are unlocked
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
-import { getVariantById, getAccessoryById, type OrganVariantId, type OrganAccessoryId } from '@/config/organ-characters';
+import {
+  getVariantById,
+  getAccessoryById,
+  type OrganVariantId,
+  type OrganAccessoryId,
+} from '@/config/organ-characters';
 
 interface UnlockNotificationProps {
   variants: OrganVariantId[];
@@ -36,16 +41,13 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
             <Sparkles className="w-6 h-6" />
             <h3 className="font-bold text-lg">New Unlock{totalUnlocks > 1 ? 's' : ''}!</h3>
           </div>
-          <button
-            onClick={onDismiss}
-            className="text-white/80 hover:text-white transition-colors"
-          >
+          <button onClick={onDismiss} className="text-white/80 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-2">
-          {variants.map(variantId => {
+          {variants.map((variantId) => {
             const variant = getVariantById(variantId);
             if (!variant) return null;
 
@@ -65,7 +67,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
             );
           })}
 
-          {accessories.map(accessoryId => {
+          {accessories.map((accessoryId) => {
             const accessory = getAccessoryById(accessoryId);
             if (!accessory) return null;
 

@@ -1,29 +1,29 @@
 // scripts/generateBasicScienceLinks.ts
 // Generates basic science links for clinical and lab cases using Gemini API
 
-import fs from "fs";
-import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ClinicalCase, LabCase, BasicScienceLink } from "../src/types/content";
+import fs from 'fs';
+import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { ClinicalCase, LabCase, BasicScienceLink } from '../src/types/content';
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-pro";
-const CLINICAL_CASES_FILE = path.resolve("src/data/clinicalCases.json");
-const LAB_CASES_FILE = path.resolve("src/data/labCases.json");
+const MODEL_NAME = 'gemini-2.5-pro';
+const CLINICAL_CASES_FILE = path.resolve('src/data/clinicalCases.json');
+const LAB_CASES_FILE = path.resolve('src/data/labCases.json');
 const BATCH_SIZE = 10; // Process in batches to handle rate limits
 const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 
 // ======================================================
 // API KEY
 // ======================================================
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
-  console.error("   Please set your API key before running this script:");
-  console.error("   export GEMINI_API_KEY=your_key_here");
+  console.error('[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required');
+  console.error('   Please set your API key before running this script:');
+  console.error('   export GEMINI_API_KEY=your_key_here');
   process.exit(1);
 }
 
@@ -48,7 +48,7 @@ function sleep(ms: number): Promise<void> {
  */
 function cleanJsonResponse(text: string): string {
   // Remove markdown code blocks
-  let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  let cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
   // Remove any leading/trailing whitespace
   cleaned = cleaned.trim();
   return cleaned;
@@ -88,23 +88,25 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const cleanedText = cleanJsonResponse(text);
-    
+
     let links;
     try {
       links = JSON.parse(cleanedText);
     } catch (parseError) {
-      throw new Error(`JSON parse failed for "${diagnosis}". Raw response: ${cleanedText.substring(0, 200)}...`);
+      throw new Error(
+        `JSON parse failed for "${diagnosis}". Raw response: ${cleanedText.substring(0, 200)}...`
+      );
     }
 
     // Validate structure
     if (!Array.isArray(links)) {
-      throw new Error("Response is not an array");
+      throw new Error('Response is not an array');
     }
 
     // Validate each link
     for (const link of links) {
       if (!link.title || !link.conceptId) {
-        throw new Error("Link missing required fields: title or conceptId");
+        throw new Error('Link missing required fields: title or conceptId');
       }
     }
 
@@ -121,7 +123,7 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
  */
 async function processCasesInBatches<T extends { id: string; correctDiagnosis: string }>(
   cases: T[],
-  caseType: "clinical" | "lab"
+  caseType: 'clinical' | 'lab'
 ): Promise<T[]> {
   const updatedCases: T[] = [];
   const totalBatches = Math.ceil(cases.length / BATCH_SIZE);
@@ -160,64 +162,60 @@ async function processCasesInBatches<T extends { id: string; correctDiagnosis: s
 
 async function main() {
   try {
-    console.log("\n🚀 Starting Basic Science Links Generation\n");
-    console.log("=".repeat(60));
+    console.log('\n🚀 Starting Basic Science Links Generation\n');
+    console.log('='.repeat(60));
 
     // ======================================================
     // PROCESS CLINICAL CASES
     // ======================================================
-    console.log("\n📋 PROCESSING CLINICAL CASES");
-    console.log("=".repeat(60));
+    console.log('\n📋 PROCESSING CLINICAL CASES');
+    console.log('='.repeat(60));
 
     if (!fs.existsSync(CLINICAL_CASES_FILE)) {
       console.error(`[ERROR] Error: Clinical cases file not found at ${CLINICAL_CASES_FILE}`);
       process.exit(1);
     }
 
-    const clinicalCasesData = fs.readFileSync(CLINICAL_CASES_FILE, "utf-8");
+    const clinicalCasesData = fs.readFileSync(CLINICAL_CASES_FILE, 'utf-8');
     const clinicalCases: ClinicalCase[] = JSON.parse(clinicalCasesData);
     console.log(`[INFO] Loaded ${clinicalCases.length} clinical cases`);
 
     const updatedClinicalCases = await processCasesInBatches<ClinicalCase>(
       clinicalCases,
-      "clinical"
+      'clinical'
     );
 
     // Save updated clinical cases
-    fs.writeFileSync(
-      CLINICAL_CASES_FILE,
-      JSON.stringify(updatedClinicalCases, null, 2),
-      "utf-8"
-    );
+    fs.writeFileSync(CLINICAL_CASES_FILE, JSON.stringify(updatedClinicalCases, null, 2), 'utf-8');
     console.log(`\n✅ Updated clinical cases saved to ${CLINICAL_CASES_FILE}`);
 
     // ======================================================
     // PROCESS LAB CASES
     // ======================================================
-    console.log("\n📋 PROCESSING LAB CASES");
-    console.log("=".repeat(60));
+    console.log('\n📋 PROCESSING LAB CASES');
+    console.log('='.repeat(60));
 
     if (!fs.existsSync(LAB_CASES_FILE)) {
       console.error(`[ERROR] Error: Lab cases file not found at ${LAB_CASES_FILE}`);
       process.exit(1);
     }
 
-    const labCasesData = fs.readFileSync(LAB_CASES_FILE, "utf-8");
+    const labCasesData = fs.readFileSync(LAB_CASES_FILE, 'utf-8');
     const labCases: LabCase[] = JSON.parse(labCasesData);
     console.log(`[INFO] Loaded ${labCases.length} lab cases`);
 
-    const updatedLabCases = await processCasesInBatches<LabCase>(labCases, "lab");
+    const updatedLabCases = await processCasesInBatches<LabCase>(labCases, 'lab');
 
     // Save updated lab cases
-    fs.writeFileSync(LAB_CASES_FILE, JSON.stringify(updatedLabCases, null, 2), "utf-8");
+    fs.writeFileSync(LAB_CASES_FILE, JSON.stringify(updatedLabCases, null, 2), 'utf-8');
     console.log(`\n✅ Updated lab cases saved to ${LAB_CASES_FILE}`);
 
     // ======================================================
     // SUMMARY
     // ======================================================
-    console.log("\n" + "=".repeat(60));
-    console.log("✨ GENERATION COMPLETE!");
-    console.log("=".repeat(60));
+    console.log('\n' + '='.repeat(60));
+    console.log('✨ GENERATION COMPLETE!');
+    console.log('='.repeat(60));
     console.log(`\n[INFO] Summary:`);
     console.log(`   - Clinical cases: ${updatedClinicalCases.length} cases processed`);
     console.log(`   - Lab cases: ${updatedLabCases.length} cases processed`);
@@ -235,9 +233,9 @@ async function main() {
     console.log(`   - Clinical: ${clinicalWithLinks}/${updatedClinicalCases.length}`);
     console.log(`   - Lab: ${labWithLinks}/${updatedLabCases.length}`);
 
-    console.log("\n✅ All done!\n");
+    console.log('\n✅ All done!\n');
   } catch (error) {
-    console.error("\n[ERROR] Fatal error:", error);
+    console.error('\n[ERROR] Fatal error:', error);
     process.exit(1);
   }
 }

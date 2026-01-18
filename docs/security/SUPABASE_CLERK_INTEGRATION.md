@@ -49,24 +49,20 @@ import { useSupabase } from './hooks/useSupabase';
 
 function MyComponent() {
   const supabase = useSupabase();
-  
+
   const fetchData = async () => {
     // Supabase client automatically includes Clerk token
-    const { data, error } = await supabase
-      .from('my_table')
-      .select('*');
-    
+    const { data, error } = await supabase.from('my_table').select('*');
+
     if (error) {
       console.error('Error:', error);
       return;
     }
-    
+
     console.log('Data:', data);
   };
-  
-  return (
-    <button onClick={fetchData}>Fetch Data</button>
-  );
+
+  return <button onClick={fetchData}>Fetch Data</button>;
 }
 ```
 
@@ -130,9 +126,7 @@ For server-side operations (Node.js/Express), continue using the existing `supab
 import { supabaseAdmin } from '../lib/supabase';
 
 // Server-side operations that bypass RLS
-const { data, error } = await supabaseAdmin
-  .from('users')
-  .select('*');
+const { data, error } = await supabaseAdmin.from('users').select('*');
 ```
 
 **Important**: Only use `supabaseAdmin` for trusted server-side operations. It bypasses all RLS policies.
@@ -201,7 +195,8 @@ SELECT auth.jwt()->>'org_role' AS org_role;
 ### Issue: RLS policies not working
 
 **Cause**: JWT claims not accessible  
-**Solution**: 
+**Solution**:
+
 1. Verify token is being sent in Authorization header
 2. Check that JWT claims are present: `SELECT auth.jwt()`
 3. Ensure RLS is enabled: `ALTER TABLE my_table ENABLE ROW LEVEL SECURITY;`
@@ -238,5 +233,6 @@ If you were using the deprecated Clerk Integration with JWT templates:
 ## Support
 
 For issues or questions:
+
 - Check existing [GitHub Issues](https://github.com/aaronjullger-lgtm/PANaCEa/issues)
 - Create a new issue with the `supabase` and `authentication` labels

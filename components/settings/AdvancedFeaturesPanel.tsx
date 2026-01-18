@@ -5,13 +5,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Heart, 
-  Watch, 
-  Camera, 
-  Brain, 
-  Stethoscope, 
-  GraduationCap, 
+import {
+  Heart,
+  Watch,
+  Camera,
+  Brain,
+  Stethoscope,
+  GraduationCap,
   Globe,
   Vibrate,
   TrendingDown,
@@ -22,14 +22,10 @@ import {
   BookOpen,
   Bell,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
 } from 'lucide-react';
 import type { AttendingPersona } from '@/services/ai';
-import { 
-  ATTENDING_PERSONAS, 
-  loadPreferredPersona, 
-  savePreferredPersona 
-} from '@/services/ai';
+import { ATTENDING_PERSONAS, loadPreferredPersona, savePreferredPersona } from '@/services/ai';
 import type { SpanishMode } from '@/services/domain';
 
 interface AdvancedFeaturesPanelProps {
@@ -43,7 +39,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
   onOpenWellnessCheck,
   onOpenARMode,
   onOpenForgettingCurve,
-  onOpenPANRELA
+  onOpenPANRELA,
 }) => {
   const [wellnessChecksEnabled, setWellnessChecksEnabled] = useState(true);
   const [watchNotificationsEnabled, setWatchNotificationsEnabled] = useState(false);
@@ -114,7 +110,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Wellness Check Reminders</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Wellness Check Reminders
+              </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Get gentle reminders to take breaks during intense study sessions
               </p>
@@ -127,13 +125,19 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
               }`}
             >
-              {wellnessChecksEnabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+              {wellnessChecksEnabled ? (
+                <ToggleRight className="w-6 h-6" />
+              ) : (
+                <ToggleLeft className="w-6 h-6" />
+              )}
             </button>
           </div>
 
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Circadian Performance Analytics</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Circadian Performance Analytics
+              </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Track when you perform best to optimize study schedule
               </p>
@@ -146,7 +150,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
               }`}
             >
-              {circadianTrackingEnabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+              {circadianTrackingEnabled ? (
+                <ToggleRight className="w-6 h-6" />
+              ) : (
+                <ToggleLeft className="w-6 h-6" />
+              )}
             </button>
           </div>
 
@@ -171,7 +179,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Apple Watch Micro-Dosing</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Apple Watch Micro-Dosing
+              </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Receive hourly flashcards on your Apple Watch
               </p>
@@ -188,7 +198,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
               }`}
             >
-              {watchNotificationsEnabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+              {watchNotificationsEnabled ? (
+                <ToggleRight className="w-6 h-6" />
+              ) : (
+                <ToggleLeft className="w-6 h-6" />
+              )}
             </button>
           </div>
 
@@ -224,7 +238,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           )}
 
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Virtual Attending Persona</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Virtual Attending Persona
+            </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Choose who gives you feedback after questions
             </p>
@@ -267,8 +283,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           OSCE & Practical Skills
         </h3>
         <div className="grid grid-cols-1 gap-3">
-          <button className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
-            hover:border-green-400 transition-colors text-left">
+          <button
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            hover:border-green-400 transition-colors text-left"
+          >
             <div className="flex items-center gap-3">
               <Video className="w-5 h-5 text-green-600 dark:text-green-400" />
               <div>
@@ -279,8 +297,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               </div>
             </div>
           </button>
-          <button className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
-            hover:border-green-400 transition-colors text-left">
+          <button
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            hover:border-green-400 transition-colors text-left"
+          >
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
               <div>
@@ -291,15 +311,17 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               </div>
             </div>
           </button>
-          <button className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
-            hover:border-green-400 transition-colors text-left">
+          <button
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            hover:border-green-400 transition-colors text-left"
+          >
             <div className="flex items-center gap-3">
               <List className="w-5 h-5 text-green-600 dark:text-green-400" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Differential Diagnosis Ranker</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Prioritization training
-                </p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Differential Diagnosis Ranker
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Prioritization training</p>
               </div>
             </div>
           </button>
@@ -323,8 +345,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               PANRE-LA Simulator
             </button>
           )}
-          <button className="w-full p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
-            hover:border-indigo-400 transition-colors text-left">
+          <button
+            className="w-full p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            hover:border-indigo-400 transition-colors text-left"
+          >
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <div>
@@ -346,7 +370,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
         </h3>
         <div className="space-y-4">
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Medical Spanish Mode</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Medical Spanish Mode
+            </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Learn clinical Spanish vocabulary in context
             </p>
@@ -371,7 +397,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Haptic Feedback (Mobile)</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Haptic Feedback (Mobile)
+              </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Vibration patterns for correct/incorrect answers
               </p>

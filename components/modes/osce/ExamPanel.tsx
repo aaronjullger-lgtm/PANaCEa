@@ -41,13 +41,16 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
   const [recentFinding, setRecentFinding] = useState<ExamFinding | null>(null);
 
   // Get examined regions for highlighting
-  const examinedRegions = completedExams.map(e => e.region);
-  
+  const examinedRegions = completedExams.map((e) => e.region);
+
   // Get regions with abnormal findings
-  const findingsMap = completedExams.reduce((acc, e) => {
-    if (e.isAbnormal) acc[e.region] = e.finding;
-    return acc;
-  }, {} as Record<BodyRegion, string>);
+  const findingsMap = completedExams.reduce(
+    (acc, e) => {
+      if (e.isAbnormal) acc[e.region] = e.finding;
+      return acc;
+    },
+    {} as Record<BodyRegion, string>
+  );
 
   // Handle region selection
   const handleRegionClick = useCallback((region: BodyRegion) => {
@@ -58,57 +61,66 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
   const availableManeuvers = selectedRegion ? EXAM_MANEUVERS[selectedRegion] || [] : [];
 
   // Perform an exam maneuver
-  const performManeuver = useCallback(async (maneuver: ExamManeuver) => {
-    if (!selectedRegion) return;
-    
-    setIsPerformingExam(true);
-    
-    // Simulate exam time (would be real-time in actual implementation)
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Generate finding - in real implementation, this would come from the case data
-    let finding = 'Within normal limits';
-    let isAbnormal = false;
-    
-    // Check if case data has this finding
-    if (caseData?.physicalExamData) {
-      const examData = caseData.physicalExamData;
-      // Check for matching finding in case data
-      const regionKey = Object.keys(examData).find(key => 
-        key.toLowerCase().includes(selectedRegion.replace('_', ' ')) ||
-        key.toLowerCase().includes(maneuver.name.toLowerCase())
-      );
-      if (regionKey) {
-        finding = examData[regionKey];
-        isAbnormal = !/normal|unremarkable|negative|clear|soft|non.?tender/i.test(finding);
+  const performManeuver = useCallback(
+    async (maneuver: ExamManeuver) => {
+      if (!selectedRegion) return;
+
+      setIsPerformingExam(true);
+
+      // Simulate exam time (would be real-time in actual implementation)
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // Generate finding - in real implementation, this would come from the case data
+      let finding = 'Within normal limits';
+      let isAbnormal = false;
+
+      // Check if case data has this finding
+      if (caseData?.physicalExamData) {
+        const examData = caseData.physicalExamData;
+        // Check for matching finding in case data
+        const regionKey = Object.keys(examData).find(
+          (key) =>
+            key.toLowerCase().includes(selectedRegion.replace('_', ' ')) ||
+            key.toLowerCase().includes(maneuver.name.toLowerCase())
+        );
+        if (regionKey) {
+          finding = examData[regionKey];
+          isAbnormal = !/normal|unremarkable|negative|clear|soft|non.?tender/i.test(finding);
+        }
       }
-    }
 
-    const examFinding: ExamFinding = {
-      maneuverId: maneuver.id,
-      maneuverName: maneuver.name,
-      region: selectedRegion,
-      finding,
-      isAbnormal,
-      performedAt: Date.now(),
-    };
+      const examFinding: ExamFinding = {
+        maneuverId: maneuver.id,
+        maneuverName: maneuver.name,
+        region: selectedRegion,
+        finding,
+        isAbnormal,
+        performedAt: Date.now(),
+      };
 
-    onExamPerformed(examFinding);
-    setRecentFinding(examFinding);
-    setIsPerformingExam(false);
+      onExamPerformed(examFinding);
+      setRecentFinding(examFinding);
+      setIsPerformingExam(false);
 
-    // Clear recent finding after a few seconds
-    setTimeout(() => setRecentFinding(null), 3000);
-  }, [selectedRegion, caseData, onExamPerformed]);
+      // Clear recent finding after a few seconds
+      setTimeout(() => setRecentFinding(null), 3000);
+    },
+    [selectedRegion, caseData, onExamPerformed]
+  );
 
   // Category icons
   const getCategoryIcon = (category?: string) => {
     switch (category) {
-      case 'inspection': return <Eye className="w-4 h-4" />;
-      case 'palpation': return <Hand className="w-4 h-4" />;
-      case 'auscultation': return <Stethoscope className="w-4 h-4" />;
-      case 'percussion': return <Activity className="w-4 h-4" />;
-      default: return <Activity className="w-4 h-4" />;
+      case 'inspection':
+        return <Eye className="w-4 h-4" />;
+      case 'palpation':
+        return <Hand className="w-4 h-4" />;
+      case 'auscultation':
+        return <Stethoscope className="w-4 h-4" />;
+      case 'percussion':
+        return <Activity className="w-4 h-4" />;
+      default:
+        return <Activity className="w-4 h-4" />;
     }
   };
 
@@ -122,7 +134,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setBodyView(v => v === 'anterior' ? 'posterior' : 'anterior')}
+            onClick={() => setBodyView((v) => (v === 'anterior' ? 'posterior' : 'anterior'))}
             className="flex items-center gap-1 px-2 py-1 text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition"
           >
             <RotateCcw className="w-4 h-4" />
@@ -150,7 +162,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
             view={bodyView}
             size="md"
           />
-          
+
           {/* Legend */}
           <div className="mt-4 space-y-1 text-xs">
             <div className="flex items-center gap-2">
@@ -189,10 +201,10 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
               </div>
 
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {availableManeuvers.map(maneuver => {
-                  const isCompleted = completedExams.some(e => e.maneuverId === maneuver.id);
-                  const finding = completedExams.find(e => e.maneuverId === maneuver.id);
-                  
+                {availableManeuvers.map((maneuver) => {
+                  const isCompleted = completedExams.some((e) => e.maneuverId === maneuver.id);
+                  const finding = completedExams.find((e) => e.maneuverId === maneuver.id);
+
                   return (
                     <button
                       key={maneuver.id}
@@ -206,33 +218,47 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
                           : 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
-                      <span className={`${
-                        isCompleted
-                          ? finding?.isAbnormal ? 'text-orange-500' : 'text-emerald-500'
-                          : 'text-slate-400'
-                      }`}>
+                      <span
+                        className={`${
+                          isCompleted
+                            ? finding?.isAbnormal
+                              ? 'text-orange-500'
+                              : 'text-emerald-500'
+                            : 'text-slate-400'
+                        }`}
+                      >
                         {getCategoryIcon(maneuver.category)}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className={`text-sm font-medium ${
-                          isCompleted
-                            ? finding?.isAbnormal ? 'text-orange-700 dark:text-orange-300' : 'text-emerald-700 dark:text-emerald-300'
-                            : 'text-slate-700 dark:text-slate-200'
-                        }`}>
+                        <div
+                          className={`text-sm font-medium ${
+                            isCompleted
+                              ? finding?.isAbnormal
+                                ? 'text-orange-700 dark:text-orange-300'
+                                : 'text-emerald-700 dark:text-emerald-300'
+                              : 'text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
                           {maneuver.name}
                         </div>
                         {isCompleted && finding && (
-                          <div className={`text-xs mt-0.5 truncate ${
-                            finding.isAbnormal ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'
-                          }`}>
+                          <div
+                            className={`text-xs mt-0.5 truncate ${
+                              finding.isAbnormal
+                                ? 'text-orange-600 dark:text-orange-400'
+                                : 'text-emerald-600 dark:text-emerald-400'
+                            }`}
+                          >
                             {finding.finding}
                           </div>
                         )}
                       </div>
                       {isCompleted ? (
-                        <Check className={`w-4 h-4 ${
-                          finding?.isAbnormal ? 'text-orange-500' : 'text-emerald-500'
-                        }`} />
+                        <Check
+                          className={`w-4 h-4 ${
+                            finding?.isAbnormal ? 'text-orange-500' : 'text-emerald-500'
+                          }`}
+                        />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-slate-400" />
                       )}
@@ -266,9 +292,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg ${
-              recentFinding.isAbnormal
-                ? 'bg-orange-500 text-white'
-                : 'bg-emerald-500 text-white'
+              recentFinding.isAbnormal ? 'bg-orange-500 text-white' : 'bg-emerald-500 text-white'
             }`}
           >
             <div className="flex items-start gap-2">
@@ -306,10 +330,10 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
           </span>
           <div className="flex items-center gap-3">
             <span className="text-emerald-500">
-              {completedExams.filter(e => !e.isAbnormal).length} normal
+              {completedExams.filter((e) => !e.isAbnormal).length} normal
             </span>
             <span className="text-orange-500">
-              {completedExams.filter(e => e.isAbnormal).length} abnormal
+              {completedExams.filter((e) => e.isAbnormal).length} abnormal
             </span>
           </div>
         </div>

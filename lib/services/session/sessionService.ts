@@ -1,8 +1,7 @@
-
-import { createEdgePrismaClient } from "../../../functions/api/_shared/prisma-edge";
-import { ContentService } from "../content/contentService";
-import type { Env } from "../../../functions/api/_shared/auth";
-import type { Prisma } from "@prisma/client";
+import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
+import { ContentService } from '../content/contentService';
+import type { Env } from '../../../functions/api/_shared/auth';
+import type { Prisma } from '@prisma/client';
 
 // Interfaces moved from session.ts to be used in the service
 export interface SessionQuestionRequest {
@@ -45,40 +44,39 @@ export interface SessionAnalytics {
 }
 
 const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
-  'Cardiovascular': 11,
-  'Pulmonary': 9,
-  'Gastrointestinal': 9,
-  'Musculoskeletal': 9,
-  'HEENT': 8,
-  'Reproductive': 8,
-  'Neurological': 7,
-  'Psychiatry': 7,
-  'Endocrine': 6,
-  'Dermatology': 5,
-  'Genitourinary': 5,
-  'Hematology': 4,
+  Cardiovascular: 11,
+  Pulmonary: 9,
+  Gastrointestinal: 9,
+  Musculoskeletal: 9,
+  HEENT: 8,
+  Reproductive: 8,
+  Neurological: 7,
+  Psychiatry: 7,
+  Endocrine: 6,
+  Dermatology: 5,
+  Genitourinary: 5,
+  Hematology: 4,
   'Infectious Disease': 4,
-  'Nephrology': 4,
+  Nephrology: 4,
   'Emergency Medicine': 2,
-  'General': 2, // Fallback for uncategorized
+  General: 2, // Fallback for uncategorized
 };
 
 const SYSTEM_ALIASES: Record<string, string> = {
-  'CV': 'Cardiovascular',
-  'PULM': 'Pulmonary',
-  'GI': 'Gastrointestinal',
-  'MSK': 'Musculoskeletal',
-  'NEURO': 'Neurological',
-  'PSYCH': 'Psychiatry',
-  'ENDO': 'Endocrine',
-  'DERM': 'Dermatology',
-  'GU': 'Genitourinary',
-  'HEME': 'Hematology',
-  'ID': 'Infectious Disease',
-  'RENAL': 'Nephrology',
-  'EM': 'Emergency Medicine',
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  MSK: 'Musculoskeletal',
+  NEURO: 'Neurological',
+  PSYCH: 'Psychiatry',
+  ENDO: 'Endocrine',
+  DERM: 'Dermatology',
+  GU: 'Genitourinary',
+  HEME: 'Hematology',
+  ID: 'Infectious Disease',
+  RENAL: 'Nephrology',
+  EM: 'Emergency Medicine',
 };
-
 
 export class SessionService {
   private prisma: ReturnType<typeof createEdgePrismaClient>;
@@ -97,14 +95,22 @@ export class SessionService {
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
     // All questions are now PANCE-level - no difficulty filtering needed
-    const { userId, count = 10, system, conditionId, mode, excludeQuestionIds = [], minSystems = 3 } = params;
+    const {
+      userId,
+      count = 10,
+      system,
+      conditionId,
+      mode,
+      excludeQuestionIds = [],
+      minSystems = 3,
+    } = params;
 
     // Use UserQuestionSeen for comprehensive tracking (replaces UserQuestionHistory)
     const seenRecords = await this.prisma.userQuestionSeen.findMany({
       where: { userId },
       select: { questionId: true, questionType: true },
     });
-    const seenIds = new Set([...seenRecords.map(r => r.questionId), ...excludeQuestionIds]);
+    const seenIds = new Set([...seenRecords.map((r) => r.questionId), ...excludeQuestionIds]);
 
     const questions: EnrichedQuestion[] = [];
     const analytics: SessionAnalytics = {
@@ -121,7 +127,7 @@ export class SessionService {
     // All questions are PANCE-level - no difficulty filtering
     if (!system && !conditionId) {
       const systemQuotas = this.calculateNCCPAQuotas(count, minSystems);
-      
+
       for (const [targetSystem, targetCount] of Object.entries(systemQuotas)) {
         const poolQ = await this.fetchFromPool(userId, seenIds, {
           count: targetCount,
@@ -226,40 +232,43 @@ export class SessionService {
   private calculateNCCPAQuotas(totalCount: number, minSystems: number = 3): Record<string, number> {
     const systems = Object.keys(NCCPA_BLUEPRINT_WEIGHTS);
     const totalWeight = Object.values(NCCPA_BLUEPRINT_WEIGHTS).reduce((a, b) => a + b, 0);
-    
+
     // Calculate proportional quotas
     const quotas: Record<string, number> = {};
     let remaining = totalCount;
-    
+
     // Shuffle systems to add randomness in which systems get included
     const shuffledSystems = this.shuffleArray([...systems]);
-    
+
     // Ensure minimum diversity: pick at least minSystems
-    const selectedSystems = shuffledSystems.slice(0, Math.max(minSystems, Math.min(totalCount, systems.length)));
-    
+    const selectedSystems = shuffledSystems.slice(
+      0,
+      Math.max(minSystems, Math.min(totalCount, systems.length))
+    );
+
     for (const system of selectedSystems) {
       const weight = NCCPA_BLUEPRINT_WEIGHTS[system] || 2;
       // Calculate weighted portion, but ensure at least 1 question per selected system
       const portion = Math.max(1, Math.round((weight / totalWeight) * totalCount));
       quotas[system] = Math.min(portion, remaining);
       remaining -= quotas[system];
-      
+
       if (remaining <= 0) break;
     }
-    
+
     // Distribute any remaining to highest-weight systems
     if (remaining > 0) {
       const sortedByWeight = Object.entries(NCCPA_BLUEPRINT_WEIGHTS)
         .sort(([, a], [, b]) => b - a)
         .map(([s]) => s);
-      
+
       for (const system of sortedByWeight) {
         if (remaining <= 0) break;
         quotas[system] = (quotas[system] || 0) + 1;
         remaining--;
       }
     }
-    
+
     return quotas;
   }
 
@@ -274,28 +283,28 @@ export class SessionService {
     }
   ): Promise<{ questions: EnrichedQuestion[] }> {
     const { count, system, conditionId, difficulty } = options;
-  
+
     const where: Prisma.PreGeneratedQuestionWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
-  
+
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
       where,
       take: count * 3,
       orderBy: { generatedAt: 'asc' },
     });
-  
+
     const questions: EnrichedQuestion[] = [];
-  
+
     for (const q of poolQuestions) {
       if (questions.length >= count) break;
       if (seenIds.has(q.id)) continue;
-  
+
       const data = q.questionData as Record<string, unknown>;
       const optionsData = data.options || data.answers || data.choices;
       const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
-      
+
       questions.push({
         id: q.id,
         question: (data.question || data.vignette || '') as string,
@@ -329,12 +338,12 @@ export class SessionService {
     }
   ): Promise<EnrichedQuestion[]> {
     const { count, system, conditionId, difficulty } = options;
-  
+
     const where: Prisma.QuestionSeedWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
-  
+
     const seeds = await this.prisma.questionSeed.findMany({
       where,
       orderBy: { usageCount: 'asc' },
@@ -347,17 +356,17 @@ export class SessionService {
         },
       },
     });
-  
+
     const questions: EnrichedQuestion[] = [];
-  
+
     for (const seed of seeds) {
       if (questions.length >= count) break;
-  
+
       const expandedQuestion = await this.expandSeedToQuestion(seed);
       if (expandedQuestion && !seenIds.has(expandedQuestion.id)) {
         questions.push(expandedQuestion);
         seenIds.add(expandedQuestion.id);
-  
+
         await this.prisma.questionSeed.update({
           where: { id: seed.id },
           data: {
@@ -367,28 +376,26 @@ export class SessionService {
         });
       }
     }
-  
+
     return questions;
   }
-  
-  private async expandSeedToQuestion(
-    seed: any,
-  ): Promise<EnrichedQuestion | null> {
+
+  private async expandSeedToQuestion(seed: any): Promise<EnrichedQuestion | null> {
     try {
       const variables = seed.variables as Record<string, string[]>;
-      
+
       let question = seed.template;
       for (const [key, values] of Object.entries(variables)) {
         const randomValue = values[Math.floor(Math.random() * values.length)];
         question = question.replace(new RegExp(`\\{${key}\\}`, 'g'), randomValue);
       }
-  
+
       const distractors = seed.distractors as string[];
       const shuffledOptions = this.shuffleArray([seed.correctAnswer, ...distractors.slice(0, 3)]);
       const correctIndex = shuffledOptions.indexOf(seed.correctAnswer);
-  
+
       const id = `seed-${seed.id}-${Date.now()}`;
-  
+
       return {
         id,
         question,
@@ -421,12 +428,12 @@ export class SessionService {
     }
   ): Promise<EnrichedQuestion[]> {
     const { count, system, conditionId, difficulty } = options;
-  
+
     const where: Prisma.QuestionWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
-  
+
     const dbQuestions = await this.prisma.question.findMany({
       where,
       take: count * 3,
@@ -440,17 +447,17 @@ export class SessionService {
         },
       },
     });
-  
+
     const questions: EnrichedQuestion[] = [];
     const questionIdsToUpdate: string[] = [];
-  
+
     for (const q of dbQuestions) {
       if (questions.length >= count) break;
       if (seenIds.has(q.id)) continue;
-  
-      const options = Array.isArray(q.options) ? q.options as string[] : [];
-      const correctIndex = options.findIndex(opt => opt === q.correctAnswer);
-  
+
+      const options = Array.isArray(q.options) ? (q.options as string[]) : [];
+      const correctIndex = options.findIndex((opt) => opt === q.correctAnswer);
+
       questions.push({
         id: q.id,
         question: q.question,
@@ -469,31 +476,29 @@ export class SessionService {
       seenIds.add(q.id);
       questionIdsToUpdate.push(q.id);
     }
-  
+
     if (questionIdsToUpdate.length > 0) {
       await this.prisma.question.updateMany({
         where: { id: { in: questionIdsToUpdate } },
         data: { timesSeen: { increment: 1 } },
       });
     }
-  
+
     return questions;
   }
 
-  private async generateNewQuestions(
-    options: {
-      count: number;
-      system?: string;
-      conditionId?: string;
-      difficulty?: string;
-    }
-  ): Promise<EnrichedQuestion[]> {
+  private async generateNewQuestions(options: {
+    count: number;
+    system?: string;
+    conditionId?: string;
+    difficulty?: string;
+  }): Promise<EnrichedQuestion[]> {
     const { count, system, conditionId, difficulty } = options;
-  
+
     const where: Prisma.MedicalContentWhereInput = { status: 'published' };
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
-  
+
     const contentRecords = await this.prisma.medicalContent.findMany({
       where,
       take: count,
@@ -502,21 +507,21 @@ export class SessionService {
         Condition: true,
       },
     });
-  
+
     if (contentRecords.length === 0) {
       return [];
     }
-  
+
     const questions: EnrichedQuestion[] = [];
-  
+
     for (const content of contentRecords) {
       if (questions.length >= count) break;
-  
+
       try {
         const generated = await this.generateQuestionFromContent(content, difficulty);
         if (generated) {
           questions.push(generated);
-  
+
           await this.prisma.preGeneratedQuestion.create({
             data: {
               id: generated.id,
@@ -541,10 +546,10 @@ export class SessionService {
         console.error('[Session] Failed to generate question:', error);
       }
     }
-  
+
     return questions;
   }
-  
+
   private async generateQuestionFromContent(
     content: any,
     difficulty?: string
@@ -553,7 +558,7 @@ export class SessionService {
     const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
     // Using gemini-2.5-pro for higher quality PANCE-style questions
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro-preview-05-06' });
-  
+
     const prompt = `Generate a PANCE-style multiple choice question about ${content.condition}.
 
 Condition Overview: ${content.overview || 'N/A'}
@@ -571,16 +576,16 @@ Return ONLY valid JSON:
   "rationale": "Why the correct answer is correct",
   "pearls": ["Pearl 1", "Pearl 2", "Pearl 3"]
 }`;
-  
+
     try {
       const result = await model.generateContent(prompt);
       const text = result.response.text();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
-  
+
       const data = JSON.parse(jsonMatch[0]);
       const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  
+
       return {
         id,
         question: data.question,
@@ -606,24 +611,24 @@ Return ONLY valid JSON:
     questions: EnrichedQuestion[]
   ): Promise<EnrichedQuestion[]> {
     const conditionIds = questions
-      .map(q => q.conditionId)
+      .map((q) => q.conditionId)
       .filter((id): id is string => Boolean(id));
-  
+
     if (conditionIds.length === 0) return questions;
-  
+
     const contentMap = await this.contentService.getConditionsContent(conditionIds);
-  
-    return questions.map(q => {
+
+    return questions.map((q) => {
       if (!q.conditionId) return q;
-      
+
       const content = contentMap.get(q.conditionId);
       if (!content) return q;
-      
+
       return {
         ...q,
         condition: q.condition || content.condition,
         subcategory: q.subcategory || (content as any).subcategory,
-        pearls: q.pearls.length > 0 ? q.pearls : (content.clinical_pearls || []),
+        pearls: q.pearls.length > 0 ? q.pearls : content.clinical_pearls || [],
       };
     });
   }
@@ -632,22 +637,19 @@ Return ONLY valid JSON:
    * Record questions as seen in UserQuestionSeen table
    * Uses upsert to increment timesShown for repeat views
    */
-  private async recordQuestionSeen(
-    userId: string,
-    questions: EnrichedQuestion[]
-  ): Promise<void> {
+  private async recordQuestionSeen(userId: string, questions: EnrichedQuestion[]): Promise<void> {
     const now = new Date();
-    
+
     // Map source to questionType enum value
     const sourceToType: Record<string, string> = {
-      'pool': 'pre_generated',
-      'main': 'question',
-      'seed': 'seed',
-      'generated': 'pre_generated',
+      pool: 'pre_generated',
+      main: 'question',
+      seed: 'seed',
+      generated: 'pre_generated',
     };
-    
+
     // Use transactions for bulk upsert
-    const upsertPromises = questions.map(q => 
+    const upsertPromises = questions.map((q) =>
       this.prisma.userQuestionSeen.upsert({
         where: {
           userId_questionId_questionType: {
@@ -672,7 +674,7 @@ Return ONLY valid JSON:
         },
       })
     );
-    
+
     await Promise.all(upsertPromises);
   }
 
@@ -684,13 +686,13 @@ Return ONLY valid JSON:
     }
     return result;
   }
-  
+
   private calculateAvgDifficulty(questions: EnrichedQuestion[]): number {
     const difficultyMap: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
     const total = questions.reduce((sum, q) => sum + (difficultyMap[q.difficulty] || 2), 0);
     return questions.length > 0 ? total / questions.length : 2;
   }
-  
+
   private calculateSystemDistribution(questions: EnrichedQuestion[]): Record<string, number> {
     const dist: Record<string, number> = {};
     for (const q of questions) {

@@ -1,11 +1,11 @@
 /**
  * CompressedConditionCard - Minimal card component for library grid
- * 
+ *
  * Displays:
  * - Condition name (Teko display font)
  * - Subcategory badge
  * - PANCE yield indicator
- * 
+ *
  * Uses PANaCEa's glassmorphism design with hover effects
  */
 
@@ -43,20 +43,16 @@ export const CompressedConditionCard: React.FC<CompressedConditionCardProps> = (
       `}
     >
       {/* Condition Name - Teko Display Font */}
-      <h3 
+      <h3
         className="font-bold text-xl text-[var(--color-text-primary)] mb-1 tracking-wide"
         style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
       >
         {condition}
       </h3>
-      
+
       {/* Subcategory Badge */}
-      {subcategory && (
-        <p className="text-sm text-[var(--color-text-muted)] mb-2">
-          {subcategory}
-        </p>
-      )}
-      
+      {subcategory && <p className="text-sm text-[var(--color-text-muted)] mb-2">{subcategory}</p>}
+
       {/* Yield Badge */}
       <div className="mt-2">
         <YieldBadge yield={panceYield} size="sm" />

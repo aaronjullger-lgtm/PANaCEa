@@ -21,10 +21,10 @@ async function verify() {
 
   for (const record of samples) {
     console.log(`\n📋 ${record.conditionId}:`);
-    
+
     for (const [field, value] of Object.entries(record)) {
       if (field === 'conditionId' || !value) continue;
-      
+
       try {
         const parsed = JSON.parse(value as string);
         if (Array.isArray(parsed)) {
@@ -46,7 +46,9 @@ async function verify() {
   console.log('╚═══════════════════════════════════════════════╝\n');
   console.log(`   ✅ Successful parses: ${successes}`);
   console.log(`   ❌ Failed parses: ${failures}`);
-  console.log(`\n${failures === 0 ? '🎉 All data properly normalized!' : '⚠️  Some fields still need fixing'}\n`);
+  console.log(
+    `\n${failures === 0 ? '🎉 All data properly normalized!' : '⚠️  Some fields still need fixing'}\n`
+  );
 
   await prisma.$disconnect();
 }

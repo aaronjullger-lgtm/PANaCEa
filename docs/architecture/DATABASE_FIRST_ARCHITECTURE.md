@@ -11,12 +11,14 @@ PANaCEa has been refactored to use a **database-first architecture** where all m
 **Location**: `services/conditionDataLoader.ts`
 
 **Changes**:
+
 - ✅ Removed ALL filesystem (`fs`) operations
 - ✅ All functions now query Prisma exclusively
 - ✅ No file-based fallbacks
 - ✅ Requires `DATABASE_URL` environment variable
 
 **Functions**:
+
 ```typescript
 // Load condition data by ID (on-demand, not bulk)
 loadConditionData(conditionId: string): Promise<LoadedConditionData | null>
@@ -30,6 +32,7 @@ getConditionsBySystem(system: string): Promise<string[]>
 
 **Multi-System Support**:
 The `getConditionsBySystem()` function now queries both:
+
 - Primary system match: `{ system: 'CV' }`
 - Related system match: `{ relatedSystems: { has: 'CV' } }`
 
@@ -37,7 +40,8 @@ This allows conditions like Sarcoidosis (primary: PULM) to appear in DERM and HE
 
 ### 2. Frontend Services - Database First with Fallbacks
 
-**Location**: 
+**Location**:
+
 - `lib/utils/dataLoader.ts`
 - `lib/loadConditions.ts`
 - `lib/api/contentService.ts`
@@ -46,6 +50,7 @@ This allows conditions like Sarcoidosis (primary: PULM) to appear in DERM and HE
 - `lib/utils/apiConfig.ts` (shared API URL utility)
 
 **Changes**:
+
 - ✅ All services try database API endpoint first
 - ✅ Graceful fallback to empty datasets if API unavailable
 - ✅ No static JSON file imports (prevents build failures)
@@ -53,6 +58,7 @@ This allows conditions like Sarcoidosis (primary: PULM) to appear in DERM and HE
 - ✅ Shared API URL configuration utility
 
 **Pattern**:
+
 ```typescript
 import { getApiEndpoint, API_ENDPOINTS } from './utils/apiConfig';
 
@@ -67,7 +73,7 @@ async function loadData() {
   } catch (error) {
     console.warn('Database API unavailable');
   }
-  
+
   // 2. Return empty - content loaded on-demand
   return {};
 }
@@ -78,6 +84,7 @@ async function loadData() {
 **Location**: `lib/services/cms/contentService.ts`
 
 **Changes**:
+
 - ✅ `ContentData` interface includes `relatedSystems?: string[]`
 - ✅ `createDraft()` persists `relatedSystems` array
 - ✅ All content operations preserve multi-system tags
@@ -93,17 +100,17 @@ model MedicalContent {
   system      String
   subcategory String
   condition   String
-  
+
   // Multi-system tagging
   relatedSystems String[] @default([])
-  
+
   // Content stored as JSONB
   content Json
-  
+
   // Workflow state
   status  String @default("draft")
   version Int    @default(1)
-  
+
   // Indexes for efficient queries
   @@index([conditionId])
   @@index([system])
@@ -115,12 +122,15 @@ model MedicalContent {
 ## Efficiency & Cost Optimization
 
 ### On-Demand Loading
+
 - **No bulk loads**: Content fetched individually via `loadConditionData()`
 - **Lazy initialization**: Frontend services load data only when needed
 - **Smart caching**: Client-side caching reduces repeat queries
 
 ### Indexed Queries
+
 All database queries use indexed fields:
+
 - `conditionId` (unique index)
 - `system` (index)
 - `relatedSystems` (index)
@@ -129,18 +139,21 @@ All database queries use indexed fields:
 ### Query Patterns
 
 **Single Condition** (most efficient):
+
 ```typescript
 const condition = await loadConditionData('CV__ecg__atrial_fibrillation');
 // Uses unique index on conditionId
 ```
 
 **System Filtering** (efficient):
+
 ```typescript
 const conditions = await getConditionsBySystem('CV');
 // Uses indexes on system + relatedSystems
 ```
 
 **List All IDs** (use sparingly):
+
 ```typescript
 const allIds = await getAllConditionIds();
 // Returns only IDs, not full content
@@ -149,6 +162,7 @@ const allIds = await getAllConditionIds();
 ## Error Handling
 
 ### Missing Database Connection
+
 ```typescript
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL not configured');
@@ -157,6 +171,7 @@ if (!process.env.DATABASE_URL) {
 ```
 
 ### Database Query Failures
+
 ```typescript
 try {
   const result = await prisma.medicalContent.findUnique(...);
@@ -168,6 +183,7 @@ try {
 ```
 
 ### Frontend API Unavailable
+
 ```typescript
 try {
   const response = await fetch('/api/content/all');
@@ -181,12 +197,14 @@ return {}; // Empty dataset - load on-demand
 ## Testing
 
 ### Test Coverage
+
 - ✅ `tests/conditionDataLoader.test.ts` - 10 tests, all passing
 - Tests database-only behavior
 - Tests multi-system queries
 - Tests error conditions
 
 ### Running Tests
+
 ```bash
 npm test -- tests/conditionDataLoader.test.ts
 ```
@@ -196,12 +214,14 @@ npm test -- tests/conditionDataLoader.test.ts
 ### For Developers
 
 **Old (File-Based)**:
+
 ```typescript
 const content = loadConditionContentFile();
 const condition = content[conditionId];
 ```
 
 **New (Database-First)**:
+
 ```typescript
 const condition = await loadConditionData(conditionId);
 ```
@@ -209,6 +229,7 @@ const condition = await loadConditionData(conditionId);
 ### For Scripts
 
 Scripts that previously used JSON files should:
+
 1. Import from `services/conditionDataLoader`
 2. Use async/await for database queries
 3. Ensure `DATABASE_URL` is set
@@ -216,11 +237,13 @@ Scripts that previously used JSON files should:
 ## Environment Variables
 
 ### Required
+
 ```bash
 DATABASE_URL="postgresql://user:pass@host:5432/db?pgbouncer=true"
 ```
 
 ### Optional
+
 ```bash
 DIRECT_DATABASE_URL="postgresql://..." # For migrations (bypass pooler)
 VITE_API_URL="http://localhost:3001"   # API base URL (defaults to localhost:3001)
@@ -229,6 +252,7 @@ VITE_API_URL="http://localhost:3001"   # API base URL (defaults to localhost:300
 ### API Configuration
 
 The `lib/utils/apiConfig.ts` utility provides centralized API URL management:
+
 - Automatically detects browser vs server environment
 - Uses `VITE_API_URL` environment variable
 - Falls back to `http://localhost:3001`
@@ -245,12 +269,14 @@ const url = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 ## Production Deployment
 
 ### Cloudflare Pages
+
 1. Set `DATABASE_URL` environment variable
 2. Build succeeds with no JSON file dependencies
 3. Frontend uses `/api/content/all` endpoint
 4. Serverless functions query database directly
 
 ### Traditional Node Server
+
 1. Set `DATABASE_URL` in `.env`
 2. Run `npm run dev:all` for full stack
 3. Backend (`server.ts`) handles database queries
@@ -259,16 +285,19 @@ const url = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 ## Performance Considerations
 
 ### Connection Pooling
+
 - Use Supabase "Transaction" mode for serverless
 - Add `?pgbouncer=true` to connection string
 - Prisma Accelerate extension for edge runtime
 
 ### Query Optimization
+
 - Always filter by `status: 'published'`
 - Use indexes for all WHERE clauses
 - Fetch only needed fields with `select`
 
 ### Caching Strategy
+
 - Client-side: Cache API responses in memory
 - Server-side: Consider Redis for hot paths
 - Database: Prisma Accelerate provides query caching
@@ -276,16 +305,19 @@ const url = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 ## Troubleshooting
 
 ### Build Fails
+
 - Ensure no static JSON imports remain
 - Check TypeScript types are correct
 - Run `npm run build` to verify
 
 ### Database Connection Issues
+
 - Verify `DATABASE_URL` is set correctly
 - Check Supabase project is active
 - Test connection with `npx prisma db pull`
 
 ### Missing Content
+
 - Verify content is `published` in database
 - Check `conditionId` format is correct
 - Use `npx prisma studio` to inspect data

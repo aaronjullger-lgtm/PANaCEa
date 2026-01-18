@@ -1,50 +1,73 @@
 /**
  * API: Get OSCE chat history for a session
  * GET /api/osce/history?sessionId={sessionId}
- * 
- * Query params:
- * - sessionId: string (required)
- * - limit: number (optional, default 100)
+ *
+ * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { IDSchema } from '../_shared/schemas';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+// Schema for history query params
+const OSCEHistoryQuerySchema = z.object({
+  query: z.object({
+    sessionId: IDSchema,
+    limit: z.coerce.number().int().min(1).max(500).default(100),
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestGet = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withLogging(),
+  async (context: any) => {
+    const { env, auth } = context;
+    const log = createEndpointLogger('/api/osce/history', auth.userId);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const url = new URL(context.request.url);
+      const sessionId = url.searchParams.get('sessionId');
+      const limitParam = url.searchParams.get('limit') || '100';
 
-  try {
-    const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
-    const limitParam = url.searchParams.get('limit') || '100';
-    const limit = Math.min(parseInt(limitParam, 10), 500);
+      // Validate query params
+      const validation = OSCEHistoryQuerySchema.safeParse({
+        query: {
+          sessionId: sessionId || '',
+          limit: limitParam,
+        },
+      });
 
-    if (!sessionId) {
-      return createErrorResponse('Missing sessionId parameter', 400);
+      if (!validation.success) {
+        log.warn('Validation failed', { errors: validation.error.issues });
+        return {
+          status: 400,
+          error: `Validation failed: ${validation.error.issues.map((e) => e.message).join('; ')}`,
+        };
+      }
+
+      const { sessionId: validSessionId, limit } = validation.data.query;
+      log.info('Fetching OSCE history', { sessionId: validSessionId, limit });
+
+      const history = await prisma.encounterChatHistory.findMany({
+        where: { sessionId: validSessionId },
+        orderBy: { timestamp: 'asc' },
+        take: limit,
+      });
+
+      log.info('History fetched successfully', { count: history.length });
+      return { data: { history } };
+    } catch (error: any) {
+      log.error('Error fetching chat history', error);
+      return { status: 500, error: 'Failed to fetch chat history' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    const history = await prisma.encounterChatHistory.findMany({
-      where: { sessionId },
-      orderBy: { timestamp: 'asc' },
-      take: limit
-    });
-
-    return createSuccessResponse({ history });
-  } catch (error: any) {
-    console.error('Error fetching chat history:', error);
-    return createErrorResponse('Failed to fetch chat history', 500);
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

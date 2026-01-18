@@ -1,6 +1,6 @@
 /**
  * Wake-Time Settings Component
- * 
+ *
  * Allows users to configure their sleep-wake schedule for personalized
  * circadian-adjusted study recommendations.
  */
@@ -47,7 +47,8 @@ const CHRONOTYPE_INFO: Record<Chronotype, { label: string; emoji: string; descri
   intermediate: {
     label: 'Intermediate',
     emoji: '⚖️',
-    description: 'The optimal 7:30-8:30 AM wake window. Associated with highest academic performance.',
+    description:
+      'The optimal 7:30-8:30 AM wake window. Associated with highest academic performance.',
   },
   moderate_late: {
     label: 'Moderate Late',
@@ -136,9 +137,7 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
     <div className="space-y-6">
       {/* Current Status Banner */}
       {showCurrentStatus && currentStatus && (
-        <div
-          className={`rounded-xl p-4 text-white ${STATE_COLORS[currentStatus.cognitiveState]}`}
-        >
+        <div className={`rounded-xl p-4 text-white ${STATE_COLORS[currentStatus.cognitiveState]}`}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-lg">
@@ -169,9 +168,7 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-4xl">{chronotypeInfo.emoji}</span>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">
-              {chronotypeInfo.label}
-            </h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white">{chronotypeInfo.label}</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {chronotypeInfo.description}
             </p>
@@ -284,8 +281,8 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
                   slot.priority === 'high'
                     ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500'
                     : slot.priority === 'medium'
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400'
-                    : 'bg-slate-50 dark:bg-slate-700/50 border-l-4 border-slate-300'
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400'
+                      : 'bg-slate-50 dark:bg-slate-700/50 border-l-4 border-slate-300'
                 }`}
               >
                 <div>
@@ -301,8 +298,8 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
                     slot.priority === 'high'
                       ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200'
                       : slot.priority === 'medium'
-                      ? 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
-                      : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                        ? 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
+                        : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
                   }`}
                 >
                   {slot.state}

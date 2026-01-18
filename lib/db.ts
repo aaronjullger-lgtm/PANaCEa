@@ -1,7 +1,7 @@
 /**
  * Database client for Prisma with Accelerate Extension
  * Provides a singleton instance of PrismaClient for Cloudflare Functions
- * 
+ *
  * Uses Prisma Accelerate extension for Edge runtime compatibility and caching.
  */
 
@@ -11,9 +11,11 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 let prisma: ReturnType<typeof createPrismaClient> | null = null;
 
 function createPrismaClient(databaseUrl?: string) {
-  return new PrismaClient({
-    datasourceUrl: databaseUrl || process.env.DATABASE_URL,
-  }).$extends(withAccelerate());
+  // Edge client with Accelerate reads from DATABASE_URL env
+  if (databaseUrl) {
+    process.env.DATABASE_URL = databaseUrl;
+  }
+  return new PrismaClient().$extends(withAccelerate());
 }
 
 /**

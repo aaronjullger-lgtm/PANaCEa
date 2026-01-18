@@ -1,9 +1,9 @@
 /**
  * Advanced Spaced Repetition System (SRS) Service
- * 
+ *
  * Implements SM-2 algorithm with PANaCEa-specific enhancements for
  * medical exam learning and high-stakes reasoning tasks.
- * 
+ *
  * Based on SuperMemo SM-2 with custom modifiers for:
  * - Red zone performance tracking
  * - Confusion pair detection
@@ -60,14 +60,14 @@ export interface SRSItem {
   id: string;
   userId: string;
   questionId: string;
-  interval: number;        // Days until next review
-  repetition: number;      // Number of successful reviews
-  easiness: number;        // EF (Easiness Factor), minimum 1.3
+  interval: number; // Days until next review
+  repetition: number; // Number of successful reviews
+  easiness: number; // EF (Easiness Factor), minimum 1.3
   dueDate: Date;
   lastReviewed: Date;
-  quality: number;         // Last quality response (0-5)
-  difficulty: number;      // Normalized 0-1 difficulty
-  stabilityScore: number;  // Research variable for forgetting curve
+  quality: number; // Last quality response (0-5)
+  difficulty: number; // Normalized 0-1 difficulty
+  stabilityScore: number; // Research variable for forgetting curve
   createdAt: Date;
   updatedAt: Date;
 
@@ -79,13 +79,13 @@ export interface SRSItem {
 }
 
 export interface SRSUpdateInput {
-  quality: number;         // 0-5 scale
-  timeToAnswer: number;    // Milliseconds
-  isInRedZone?: boolean;   // Performance < 75%
+  quality: number; // 0-5 scale
+  timeToAnswer: number; // Milliseconds
+  isInRedZone?: boolean; // Performance < 75%
   isConfusionPair?: boolean;
   streakLevel?: number;
   isGoldMastery?: boolean;
-  baselineTime?: number;   // Expected time for this question
+  baselineTime?: number; // Expected time for this question
 }
 
 export interface SRSScheduleResult {
@@ -241,7 +241,11 @@ function calculateNewEasiness(currentEF: number, quality: number): number {
 /**
  * Calculate base interval according to SM-2 rules
  */
-function calculateBaseInterval(repetition: number, previousInterval: number, easiness: number): number {
+function calculateBaseInterval(
+  repetition: number,
+  previousInterval: number,
+  easiness: number
+): number {
   if (repetition === 1) {
     return 1; // 1 day
   } else if (repetition === 2) {
@@ -257,7 +261,7 @@ function calculateBaseInterval(repetition: number, previousInterval: number, eas
 
 /**
  * Get the next questions due for review
- * 
+ *
  * @param userId - User identifier
  * @param limit - Maximum number of questions to return
  * @returns Array of questions sorted by priority
@@ -270,7 +274,9 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
 
-    const overdueDays = Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    const overdueDays = Math.floor(
+      (now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     // Calculate priority based on overdue days and difficulty
     let priority = overdueDays;
@@ -300,9 +306,7 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
   }
 
   // Sort by priority (highest first) and return top N
-  return results
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, limit);
+  return results.sort((a, b) => b.priority - a.priority).slice(0, limit);
 }
 
 /**
@@ -327,13 +331,13 @@ export function getDueCount(userId: string): number {
  * Get due cards with optional rotation filter support.
  * When filterTags are provided (rotation mode), returns ALL cards sorted by difficulty,
  * IGNORING the due date. Otherwise, returns only cards due for review.
- * 
+ *
  * Note: This function provides the infrastructure for rotation mode. To fully implement
  * tag filtering, you'll need to either:
  * 1. Add a 'tags' or 'system' property to SRSItem interface
  * 2. Pass a filter function as a parameter
  * 3. Filter the results at the call site using question metadata
- * 
+ *
  * @param userId - User identifier
  * @param filterTags - Optional array of tags/systems to filter by (e.g., ['Surgery', 'CV'])
  *                     When provided, enables rotation mode (ignores due dates, sorts by difficulty)
@@ -380,7 +384,7 @@ export function getDueCards(
 
 /**
  * Update review outcome and compute next schedule
- * 
+ *
  * @param userId - User identifier
  * @param questionId - Question that was reviewed
  * @param input - Review outcome data
@@ -407,7 +411,9 @@ export async function updateReviewOutcome(
       stability: item.fsrsStability || 0,
       difficulty: item.fsrsDifficulty || 0,
       state: item.fsrsState || FSRSState.New,
-      elapsed_days: item.fsrsLastReview ? (new Date().getTime() - new Date(item.fsrsLastReview).getTime()) / 86400000 : 0,
+      elapsed_days: item.fsrsLastReview
+        ? (new Date().getTime() - new Date(item.fsrsLastReview).getTime()) / 86400000
+        : 0,
       scheduled_days: item.interval,
       reps: item.repetition,
       lapses: 0,
@@ -418,7 +424,10 @@ export async function updateReviewOutcome(
 
     const interval = Math.max(1, Math.round(newCard.scheduled_days));
     // Keep legacy easiness updated for backward compatibility/fallback
-    const easiness = Math.max(MINIMUM_EASINESS_FACTOR, item.easiness + (0.1 - (5 - input.quality) * (0.08 + (5 - input.quality) * 0.02)));
+    const easiness = Math.max(
+      MINIMUM_EASINESS_FACTOR,
+      item.easiness + (0.1 - (5 - input.quality) * (0.08 + (5 - input.quality) * 0.02))
+    );
 
     const now = new Date();
     const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
@@ -465,7 +474,10 @@ export async function updateReviewOutcome(
     }
 
     // Fast wrong answer: anchoring bias penalty
-    if (input.quality <= 2 && input.timeToAnswer < input.baselineTime * FAST_WRONG_THRESHOLD_MULTIPLIER) {
+    if (
+      input.quality <= 2 &&
+      input.timeToAnswer < input.baselineTime * FAST_WRONG_THRESHOLD_MULTIPLIER
+    ) {
       adjustedQuality = Math.max(0, adjustedQuality - 1);
       modifiersApplied.push('anchoring_bias');
     }
@@ -534,7 +546,9 @@ export async function updateReviewOutcome(
     stability: item.fsrsStability ?? 0,
     difficulty: item.fsrsDifficulty ?? 0,
     state: item.fsrsState ?? FSRSState.New,
-    elapsed_days: (now.getTime() - (item.fsrsLastReview || item.lastReviewed).getTime()) / (1000 * 60 * 60 * 24),
+    elapsed_days:
+      (now.getTime() - (item.fsrsLastReview || item.lastReviewed).getTime()) /
+      (1000 * 60 * 60 * 24),
     scheduled_days: item.interval,
     reps: item.repetition,
     lapses: 0,
@@ -690,13 +704,14 @@ export function loadSRSItemsFromCloud(cloudItems: SRSItem[]): void {
     const existing = localItems.get(cloudItem.questionId);
 
     // Ensure dates are properly compared as timestamps
-    const cloudUpdatedTime = typeof cloudItem.updatedAt === 'string'
-      ? new Date(cloudItem.updatedAt).getTime()
-      : cloudItem.updatedAt.getTime();
+    const cloudUpdatedTime =
+      typeof cloudItem.updatedAt === 'string'
+        ? new Date(cloudItem.updatedAt).getTime()
+        : cloudItem.updatedAt.getTime();
     const existingUpdatedTime = existing
-      ? (typeof existing.updatedAt === 'string'
+      ? typeof existing.updatedAt === 'string'
         ? new Date(existing.updatedAt).getTime()
-        : existing.updatedAt.getTime())
+        : existing.updatedAt.getTime()
       : 0;
 
     // If no local item, or cloud item is newer, use cloud data
@@ -832,7 +847,7 @@ export interface ForgettingCurvePoint {
 /**
  * Calculate forgetting curve data for visualization.
  * Based on Ebbinghaus forgetting curve adapted for spaced repetition.
- * 
+ *
  * @param item - The SRS item to analyze
  * @returns Array of data points for plotting the forgetting curve
  */
@@ -868,7 +883,7 @@ export function calculateForgettingCurve(item: SRSItem): ForgettingCurvePoint[] 
 
 /**
  * Get retention statistics for a collection of SRS items.
- * 
+ *
  * @param items - Array of SRS items to analyze
  * @returns Statistics about retention levels
  */
@@ -887,7 +902,7 @@ export function getRetentionStats(items: SRSItem[]): {
   let solidItems = 0;
   let masteredItems = 0;
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const daysSinceReview = Math.floor(
       (Date.now() - item.lastReviewed.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -940,7 +955,7 @@ export interface PriorityOverride {
 /**
  * Get the next question to review with priority mode support.
  * Supports different study modes: standard review, cram mode, maintenance, etc.
- * 
+ *
  * @param userId - User ID to filter items
  * @param priorityOverride - Optional priority mode configuration
  * @returns Next question to review or null if none available
@@ -950,9 +965,7 @@ export function getNextReviewWithPriority(
   priorityOverride?: PriorityOverride
 ): NextQuestionResult | null {
   const items = loadSRSItems();
-  const userItems = Array.from(items.values()).filter(
-    (item) => item.userId === userId
-  );
+  const userItems = Array.from(items.values()).filter((item) => item.userId === userId);
 
   if (userItems.length === 0) {
     return null;
@@ -967,7 +980,7 @@ export function getNextReviewWithPriority(
   switch (mode) {
     case 'cram':
       // Cram mode: Focus on items due soon, prioritize overdue and difficult items
-      candidateItems = userItems.filter(item => {
+      candidateItems = userItems.filter((item) => {
         const daysToDue = Math.floor(
           (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -977,18 +990,18 @@ export function getNextReviewWithPriority(
 
     case 'maintenance':
       // Maintenance mode: Only review items that are actually due
-      candidateItems = userItems.filter(item => item.dueDate <= now);
+      candidateItems = userItems.filter((item) => item.dueDate <= now);
       break;
 
     case 'weak_areas':
       // Weak areas mode: Focus on low-easiness items regardless of due date
-      candidateItems = userItems.filter(item => item.easiness < 2.0);
+      candidateItems = userItems.filter((item) => item.easiness < 2.0);
       break;
 
     case 'standard':
     default:
       // Standard mode: Include items due within the next day
-      candidateItems = userItems.filter(item => {
+      candidateItems = userItems.filter((item) => {
         const daysToDue = Math.floor(
           (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -1008,7 +1021,7 @@ export function getNextReviewWithPriority(
     hard: priorityOverride?.hardWeight || (mode === 'weak_areas' ? 2.0 : 1.0),
   };
 
-  const scoredItems = candidateItems.map(item => {
+  const scoredItems = candidateItems.map((item) => {
     const overdueDays = Math.max(
       0,
       Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -1068,7 +1081,7 @@ export function getNextReviewWithPriority(
 
 /**
  * Get a batch of questions for a cram session.
- * 
+ *
  * @param userId - User ID to filter items
  * @param count - Number of items to retrieve
  * @param priorityMode - Priority mode for selection
@@ -1080,9 +1093,7 @@ export function getCramSessionQuestions(
   priorityMode: PriorityMode = 'cram'
 ): string[] {
   const items = loadSRSItems();
-  const userItems = Array.from(items.values()).filter(
-    (item) => item.userId === userId
-  );
+  const userItems = Array.from(items.values()).filter((item) => item.userId === userId);
 
   if (userItems.length === 0) {
     return [];
@@ -1098,10 +1109,8 @@ export function getCramSessionQuestions(
 
   // Get all candidate items and score them
   const now = new Date();
-  const candidateItems = userItems.filter(item => {
-    const daysToDue = Math.floor(
-      (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
+  const candidateItems = userItems.filter((item) => {
+    const daysToDue = Math.floor((item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     // Apply mode-specific filtering
     switch (priorityMode) {
@@ -1117,7 +1126,7 @@ export function getCramSessionQuestions(
   });
 
   // Score and sort items
-  const scoredItems = candidateItems.map(item => {
+  const scoredItems = candidateItems.map((item) => {
     const overdueDays = Math.max(
       0,
       Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -1215,7 +1224,9 @@ export async function fetchNextVariantCard(): Promise<VariantNextResponse | null
  * Submit an SRS review using the variant-aware Second Chance API.
  * This updates both SRSItem and UserTopicProgress, and triggers variant generation on incorrect answers.
  */
-export async function submitVariantReview(payload: VariantSubmitPayload): Promise<VariantSubmitResponse | null> {
+export async function submitVariantReview(
+  payload: VariantSubmitPayload
+): Promise<VariantSubmitResponse | null> {
   try {
     const response = await fetch('/api/srs/submit', {
       method: 'POST',
@@ -1242,4 +1253,3 @@ export async function submitVariantReview(payload: VariantSubmitPayload): Promis
     return null;
   }
 }
-

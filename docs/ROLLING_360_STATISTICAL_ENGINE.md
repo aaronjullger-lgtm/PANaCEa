@@ -6,10 +6,10 @@
 
 The Rolling 360 system provides **two distinct statistical layers** to optimize both user-facing metrics and spaced repetition scheduling:
 
-| Layer | Purpose | Data Window | Updates |
-|-------|---------|-------------|---------|
+| Layer                        | Purpose                          | Data Window                     | Updates                      |
+| ---------------------------- | -------------------------------- | ------------------------------- | ---------------------------- |
 | **Form Layer** (User-Facing) | Dashboard scores, exam readiness | Last 360 Main Session questions | On every Main Session answer |
-| **Growth Layer** (Backend) | FSRS scheduling, card due dates | Lifetime history | On every answer (any mode) |
+| **Growth Layer** (Backend)   | FSRS scheduling, card due dates  | Lifetime history                | On every answer (any mode)   |
 
 ---
 
@@ -64,12 +64,12 @@ CREATE TABLE UserRolling360Stats (
 
 ```sql
 -- Fast Rolling 360 window queries
-CREATE INDEX idx_attempts_user_main_time 
+CREATE INDEX idx_attempts_user_main_time
 ON QuestionAttempt(userId, isMainSession, answeredAt DESC)
 WHERE isMainSession = true;
 
 -- System distribution queries
-CREATE INDEX idx_attempts_user_system_time 
+CREATE INDEX idx_attempts_user_system_time
 ON QuestionAttempt(userId, system, answeredAt DESC)
 WHERE isMainSession = true;
 ```
@@ -131,28 +131,28 @@ function enforceInterleaving(questions: Question[]): Question[] {
   const available = [...questions];
   let lastSystem: string | null = null;
   let consecutiveCount = 0;
-  
+
   while (available.length > 0) {
     // Find next valid question
-    const validIndex = available.findIndex(q => {
+    const validIndex = available.findIndex((q) => {
       if (q.system !== lastSystem) return true;
       return consecutiveCount < MAX_CONSECUTIVE;
     });
-    
+
     if (validIndex === -1) break;
-    
+
     const question = available.splice(validIndex, 1)[0];
-    
+
     if (question.system === lastSystem) {
       consecutiveCount++;
     } else {
       lastSystem = question.system;
       consecutiveCount = 1;
     }
-    
+
     result.push(question);
   }
-  
+
   return result;
 }
 ```
@@ -164,6 +164,7 @@ function enforceInterleaving(questions: Question[]): Question[] {
 ### The Problem
 
 FSRS wants to show overdue cards to strengthen memory, but this could:
+
 - Bias toward difficult topics (more reviews needed)
 - Break PANCE Blueprint distribution
 - Create imbalanced "exam simulation" scores
@@ -182,14 +183,14 @@ FSRS wants to show overdue cards to strengthen memory, but this could:
 async selectQuestions(userId, sessionSize = 20) {
   const stats = await getRolling360Stats(userId);
   const deficits = calculateDeficits(stats);
-  
+
   // Priority A: Fix deficits with FSRS cards from those systems
   const deficitCards = await getOverdueFSRSCards({
     userId,
     systems: deficits.map(d => d.system),
     limit: deficits.reduce((sum, d) => sum + d.deficitQuestions, 0)
   });
-  
+
   // Priority B: Fill with any due FSRS cards
   const remainingSlots = sessionSize - deficitCards.length;
   const dueCards = await getOverdueFSRSCards({
@@ -197,7 +198,7 @@ async selectQuestions(userId, sessionSize = 20) {
     excludeQuestions: deficitCards.map(c => c.questionId),
     limit: remainingSlots
   });
-  
+
   // Priority C: New questions for data-sparse systems
   const newCards = await getNewQuestions({
     userId,
@@ -205,7 +206,7 @@ async selectQuestions(userId, sessionSize = 20) {
     prioritizeSparse: true,
     limit: remainingSlots - dueCards.length
   });
-  
+
   // Combine and interleave
   return shuffleWithInterleaving([...deficitCards, ...dueCards, ...newCards]);
 }
@@ -217,11 +218,11 @@ async selectQuestions(userId, sessionSize = 20) {
 
 Not all Rolling 360 scores are equally reliable. We communicate confidence:
 
-| Level | Questions in Window | Display |
-|-------|---------------------|---------|
-| `collecting` | 0-49 | "Building your profile..." |
-| `provisional` | 50-179 | "Score is provisional" |
-| `confident` | 180-360 | "Confident prediction" |
+| Level         | Questions in Window | Display                    |
+| ------------- | ------------------- | -------------------------- |
+| `collecting`  | 0-49                | "Building your profile..." |
+| `provisional` | 50-179              | "Score is provisional"     |
+| `confident`   | 180-360             | "Confident prediction"     |
 
 ```typescript
 function getScoreConfidence(totalInWindow: number): string {
@@ -240,6 +241,7 @@ function getScoreConfidence(totalInWindow: number): string {
 Returns pre-computed Rolling 360 statistics.
 
 **Response:**
+
 ```json
 {
   "scoreConfidence": "provisional",
@@ -266,6 +268,7 @@ Returns pre-computed Rolling 360 statistics.
 Generates a new study session using the Priority Waterfall.
 
 **Request:**
+
 ```json
 {
   "mode": "mainSession",
@@ -274,6 +277,7 @@ Generates a new study session using the Priority Waterfall.
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "uuid",
@@ -346,19 +350,19 @@ npx tsx scripts/test-selector.ts
 
 ## Files Reference
 
-| File | Purpose |
-|------|---------|
-| `lib/services/rolling360Service.ts` | Core Rolling 360 calculation |
-| `lib/services/mainSessionQuestionSelector.ts` | Priority Waterfall algorithm |
-| `functions/api/user/rolling-360-stats.ts` | Dashboard stats endpoint |
-| `functions/api/study/session/generate.ts` | Session generation endpoint |
-| `prisma/migrations/20260114_add_rolling_360/` | Schema migration |
-| `scripts/test-selector.ts` | Verification test |
-| `hooks/useRolling360Stats.ts` | React SWR hook for dashboard |
-| `hooks/useSessionGenerator.ts` | Session generation hook |
-| `components/dashboard/Rolling360/ExamReadinessCard.tsx` | Main score card with Start button |
-| `components/dashboard/Rolling360/SystemPerformanceWidget.tsx` | System weakness visualization |
-| `components/dashboard/Rolling360/index.ts` | Component exports |
+| File                                                          | Purpose                           |
+| ------------------------------------------------------------- | --------------------------------- |
+| `lib/services/rolling360Service.ts`                           | Core Rolling 360 calculation      |
+| `lib/services/mainSessionQuestionSelector.ts`                 | Priority Waterfall algorithm      |
+| `functions/api/user/rolling-360-stats.ts`                     | Dashboard stats endpoint          |
+| `functions/api/study/session/generate.ts`                     | Session generation endpoint       |
+| `prisma/migrations/20260114_add_rolling_360/`                 | Schema migration                  |
+| `scripts/test-selector.ts`                                    | Verification test                 |
+| `hooks/useRolling360Stats.ts`                                 | React SWR hook for dashboard      |
+| `hooks/useSessionGenerator.ts`                                | Session generation hook           |
+| `components/dashboard/Rolling360/ExamReadinessCard.tsx`       | Main score card with Start button |
+| `components/dashboard/Rolling360/SystemPerformanceWidget.tsx` | System weakness visualization     |
+| `components/dashboard/Rolling360/index.ts`                    | Component exports                 |
 
 ---
 

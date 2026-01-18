@@ -1,41 +1,45 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
-import { CloudflareContext } from '../_shared/types';
+/**
+ * Drug Library API  
+ * GET /api/drugs?limit=50&offset=0&search=beta
+ * 
+ * Public endpoint for browsing drug library with pagination
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: CloudflareContext) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const limitParam = url.searchParams.get('limit');
-  const offsetParam = url.searchParams.get('offset');
-  const search = url.searchParams.get('search');
-  
-  // Default to reasonable batch size to avoid 5MB limit
-  const limit = limitParam ? Math.min(Number(limitParam), 100) : 50;
-  const offset = offsetParam ? Number(offsetParam) : 0;
+const DrugLibrarySchema = z.object({
+  query: z.object({
+    limit: z.string().optional().transform(val => val ? Math.min(Number(val), 100) : 50),
+    offset: z.string().optional().transform(val => val ? Number(val) : 0),
+    search: z.string().max(200).optional(),
+  }),
+});
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+export const onRequestOptions = withCors();
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) => {
+  const { env, validated } = context;
+  const logger = createEndpointLogger('/api/drugs');
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
   try {
+    const { limit, offset, search } = validated.query;
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     // Build where clause for search
-    const where = search ? {
-      OR: [
-        { genericName: { contains: search, mode: 'insensitive' as const } },
-        { brandName: { contains: search, mode: 'insensitive' as const } },
-        { drugClass: { hasSome: [search] } },
-      ]
-    } : {};
+    const where = search
+      ? {
+          OR: [
+            { genericName: { contains: search, mode: 'insensitive' as const } },
+            { brandName: { contains: search, mode: 'insensitive' as const } },
+            { drugClass: { hasSome: [search] } },
+          ],
+        }
+      : {};
 
     // Fetch paginated results with limited fields to reduce response size
     const [drugs, total] = await Promise.all([
@@ -59,32 +63,38 @@ export async function onRequestGet(context: CloudflareContext) {
       }),
       prisma.drug.count({ where }),
     ]);
-    
-    return new Response(JSON.stringify({
-      drugs,
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + drugs.length < total,
-      }
-    }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+
+    logger.info('Drug library fetched', {
+      search: search?.substring(0, 50),
+      limit,
+      offset,
+      total,
+      returned: drugs.length,
+    });
+
+    return {
+      data: {
+        drugs,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + drugs.length < total,
+        },
+      },
+      headers: {
         'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
-      }
+      },
+    };
+  } catch (error) {
+    logger.error('Drug library error', {
+      error: error instanceof Error ? error.message : String(error),
+      search: validated.query.search?.substring(0, 50),
+      limit: validated.query.limit,
+      offset: validated.query.offset,
     });
-  } catch (error: any) {
-    console.error('Error fetching drugs:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch drugs', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    throw new Error('Failed to fetch drugs');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

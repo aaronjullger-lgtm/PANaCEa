@@ -1,6 +1,6 @@
 /**
  * Specialized Error Boundaries for Drill Components
- * 
+ *
  * Provides graceful degradation for drill sessions:
  * - API errors: Show retry option with cached questions
  * - Network errors: Enable offline mode
@@ -9,22 +9,24 @@
 
 import React, { Component, ErrorInfo, ReactNode, useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  AlertTriangle, 
-  RefreshCw, 
-  WifiOff, 
-  DollarSign, 
+import {
+  AlertTriangle,
+  RefreshCw,
+  WifiOff,
+  DollarSign,
   ArrowLeft,
   BookOpen,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
 if (import.meta.env.PROD) {
-  import('../../lib/monitoring/sentry').then((sentry) => {
-    captureError = sentry.captureError;
-  }).catch(() => {});
+  import('../../lib/monitoring/sentry')
+    .then((sentry) => {
+      captureError = sentry.captureError;
+    })
+    .catch(() => {});
 }
 
 // ============================================================================
@@ -51,7 +53,7 @@ interface DrillErrorBoundaryState {
 
 function detectErrorType(error: Error): 'api' | 'network' | 'budget' | 'unknown' {
   const message = error.message.toLowerCase();
-  
+
   // Budget/rate limit errors
   if (
     message.includes('rate limit') ||
@@ -61,7 +63,7 @@ function detectErrorType(error: Error): 'api' | 'network' | 'budget' | 'unknown'
   ) {
     return 'budget';
   }
-  
+
   // Network errors
   if (
     message.includes('network') ||
@@ -72,7 +74,7 @@ function detectErrorType(error: Error): 'api' | 'network' | 'budget' | 'unknown'
   ) {
     return 'network';
   }
-  
+
   // API errors (4xx, 5xx)
   if (
     message.includes('401') ||
@@ -83,7 +85,7 @@ function detectErrorType(error: Error): 'api' | 'network' | 'budget' | 'unknown'
   ) {
     return 'api';
   }
-  
+
   return 'unknown';
 }
 
@@ -109,15 +111,15 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
       <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-6">
         <AlertTriangle className="w-8 h-8 text-red-500" />
       </div>
-      
+
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
         Unable to Load Questions
       </h2>
-      
+
       <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
         We're having trouble connecting to our question service. This might be temporary.
       </p>
-      
+
       <div className="flex gap-3">
         <button
           onClick={onRetry}
@@ -126,7 +128,7 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
           <RefreshCw className="w-4 h-4" />
           Try Again
         </button>
-        
+
         <button
           onClick={onReturnHome}
           className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
@@ -135,12 +137,10 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
           Return Home
         </button>
       </div>
-      
+
       {error && process.env.NODE_ENV === 'development' && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-slate-500 cursor-pointer">
-            Technical Details
-          </summary>
+          <summary className="text-sm text-slate-500 cursor-pointer">Technical Details</summary>
           <pre className="mt-2 p-3 bg-slate-100 dark:bg-slate-800 rounded text-xs overflow-auto">
             {error.message}
           </pre>
@@ -152,20 +152,20 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
 
 function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbackProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -175,32 +175,30 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6">
         <WifiOff className="w-8 h-8 text-amber-500" />
       </div>
-      
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-        You're Offline
-      </h2>
-      
+
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">You're Offline</h2>
+
       <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-md">
         No internet connection detected. Some features require connectivity.
       </p>
-      
+
       {isOnline && (
         <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-2 rounded-lg mb-4">
           Connection restored! Click retry to continue.
         </div>
       )}
-      
+
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 max-w-md">
         <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-medium mb-2">
           <BookOpen className="w-4 h-4" />
           Offline Mode Available
         </div>
         <p className="text-sm text-blue-600 dark:text-blue-400">
-          You can continue studying with previously cached questions. 
-          Your progress will sync when you reconnect.
+          You can continue studying with previously cached questions. Your progress will sync when
+          you reconnect.
         </p>
       </div>
-      
+
       <div className="flex gap-3">
         <button
           onClick={onRetry}
@@ -214,7 +212,7 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
           <RefreshCw className="w-4 h-4" />
           Retry
         </button>
-        
+
         <button
           onClick={onReturnHome}
           className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
@@ -237,16 +235,16 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
       <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-6">
         <DollarSign className="w-8 h-8 text-purple-500" />
       </div>
-      
+
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
         Hourly Limit Reached
       </h2>
-      
+
       <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-md">
-        You've been studying hard! To ensure fair access for everyone, 
-        there's a temporary cooldown period.
+        You've been studying hard! To ensure fair access for everyone, there's a temporary cooldown
+        period.
       </p>
-      
+
       <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mb-6 max-w-md">
         <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-medium mb-2">
           <Clock className="w-4 h-4" />
@@ -259,7 +257,7 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
           <li>• Return in about an hour</li>
         </ul>
       </div>
-      
+
       <button
         onClick={onReturnHome}
         className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -281,15 +279,15 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
       <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
         <AlertTriangle className="w-8 h-8 text-slate-500" />
       </div>
-      
+
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
         Something Went Wrong
       </h2>
-      
+
       <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
         An unexpected error occurred. Please try again or return to the dashboard.
       </p>
-      
+
       <div className="flex gap-3">
         <button
           onClick={onRetry}
@@ -298,7 +296,7 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
           <RefreshCw className="w-4 h-4" />
           Try Again
         </button>
-        
+
         <button
           onClick={onReturnHome}
           className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
@@ -307,12 +305,10 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
           Return Home
         </button>
       </div>
-      
+
       {error && process.env.NODE_ENV === 'development' && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-slate-500 cursor-pointer">
-            Technical Details
-          </summary>
+          <summary className="text-sm text-slate-500 cursor-pointer">Technical Details</summary>
           <pre className="mt-2 p-3 bg-slate-100 dark:bg-slate-800 rounded text-xs overflow-auto">
             {error.message}
             {'\n\n'}
@@ -328,7 +324,10 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
 // Main Error Boundary Class
 // ============================================================================
 
-export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, DrillErrorBoundaryState> {
+export class DrillErrorBoundary extends Component<
+  DrillErrorBoundaryProps,
+  DrillErrorBoundaryState
+> {
   constructor(props: DrillErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -349,7 +348,7 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log to console in development
     console.error('[DrillErrorBoundary] Caught error:', error, errorInfo);
-    
+
     // Send to error tracking
     if (captureError) {
       captureError(error, {
@@ -373,7 +372,7 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
       error: null,
       errorType: 'unknown',
     });
-    
+
     if (this.props.onReset) {
       this.props.onReset();
     }
@@ -385,7 +384,7 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
       error: null,
       errorType: 'unknown',
     });
-    
+
     if (this.props.onReturnHome) {
       this.props.onReturnHome();
     } else {
@@ -432,22 +431,22 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
 
 export function useDrillError() {
   const [error, setError] = useState<Error | null>(null);
-  
+
   const reportError = useCallback((err: Error | string) => {
     const errorObj = typeof err === 'string' ? new Error(err) : err;
     setError(errorObj);
   }, []);
-  
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
-  
+
   const throwError = useCallback(() => {
     if (error) {
       throw error;
     }
   }, [error]);
-  
+
   return {
     error,
     hasError: error !== null,

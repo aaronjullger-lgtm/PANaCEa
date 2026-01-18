@@ -1,20 +1,27 @@
 /**
  * On-Demand Mnemonic Generator
- * 
+ *
  * Allows users to generate personalized mnemonics using AI.
  * Features:
  * - "Generate Mnemonic" button
  * - Uses Gemini API for personalized mnemonics
  * - Save to user's personal library
- * 
+ *
  * @see docs/CRITICAL_FIXES_SPRINT_TRACKER.md - Sprint E
  */
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Lightbulb, Sparkles, Save, Copy, RefreshCw, X,
-  Check, BookmarkPlus, Brain
+import {
+  Lightbulb,
+  Sparkles,
+  Save,
+  Copy,
+  RefreshCw,
+  X,
+  Check,
+  BookmarkPlus,
+  Brain,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -58,23 +65,35 @@ const generateMnemonic = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ concept, context, existingMnemonics }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to generate mnemonic');
     }
-    
+
     return await response.json();
   } catch (error) {
     // Fallback: generate a simple acronym-based mnemonic
-    const words = concept.split(' ').filter(w => w.length > 0);
-    const acronym = words.map(w => w[0].toUpperCase()).join('');
-    
+    const words = concept.split(' ').filter((w) => w.length > 0);
+    const acronym = words.map((w) => w[0].toUpperCase()).join('');
+
     return {
-      mnemonic: `${acronym} - ${words.map((w, i) => {
-        const acroWord = ['Always', 'Be', 'Carefully', 'Diagnosing', 'Each', 
-          'Finding', 'Gets', 'Help', 'In', 'Just'][i % 10];
-        return `${w[0].toUpperCase()}${w.slice(1)} (${acroWord})`;
-      }).join(', ')}`,
+      mnemonic: `${acronym} - ${words
+        .map((w, i) => {
+          const acroWord = [
+            'Always',
+            'Be',
+            'Carefully',
+            'Diagnosing',
+            'Each',
+            'Finding',
+            'Gets',
+            'Help',
+            'In',
+            'Just',
+          ][i % 10];
+          return `${w[0].toUpperCase()}${w.slice(1)} (${acroWord})`;
+        })
+        .join(', ')}`,
       explanation: 'Auto-generated acronym mnemonic',
       type: 'acronym',
     };
@@ -89,11 +108,9 @@ const TypeBadge: React.FC<{ type: GeneratedMnemonic['type'] }> = ({ type }) => {
     visual: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     rhyme: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
   };
-  
+
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[type]}`}>
-      {type}
-    </span>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[type]}`}>{type}</span>
   );
 };
 
@@ -116,11 +133,11 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
   const handleGenerate = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
-    
+
     try {
       const result = await generateMnemonic(concept, context, previousMnemonics);
       setMnemonic(result);
-      setPreviousMnemonics(prev => [...prev, result.mnemonic]);
+      setPreviousMnemonics((prev) => [...prev, result.mnemonic]);
       setIsSaved(false);
     } catch (err) {
       setError('Failed to generate mnemonic. Please try again.');
@@ -139,7 +156,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
 
   const handleSave = useCallback(async () => {
     if (!mnemonic || !userId) return;
-    
+
     const saved: SavedMnemonic = {
       id: `mnem_${Date.now()}`,
       concept,
@@ -148,12 +165,12 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
       createdAt: new Date(),
       isFavorite: false,
     };
-    
+
     // Save to localStorage for now (would save to DB in production)
     const existing = JSON.parse(localStorage.getItem('panceai_mnemonics') || '[]');
     existing.push(saved);
     localStorage.setItem('panceai_mnemonics', JSON.stringify(existing));
-    
+
     setIsSaved(true);
     onSave?.(saved);
   }, [mnemonic, userId, concept, system, onSave]);
@@ -213,9 +230,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
           <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-purple-500" />
-              <h3 className="font-semibold text-[var(--color-text-primary)]">
-                Mnemonic Generator
-              </h3>
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Mnemonic Generator</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -229,11 +244,11 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
           <div className="p-4 space-y-4">
             {/* Concept Display */}
             <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg">
-              <div className="text-xs text-[var(--color-text-muted)] mb-1">Creating mnemonic for:</div>
+              <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                Creating mnemonic for:
+              </div>
               <div className="font-medium text-[var(--color-text-primary)]">{concept}</div>
-              {system && (
-                <div className="text-xs text-[var(--color-accent)] mt-1">{system}</div>
-              )}
+              {system && <div className="text-xs text-[var(--color-accent)] mt-1">{system}</div>}
             </div>
 
             {/* Loading State */}
@@ -278,8 +293,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                       onClick={handleSave}
                       disabled={isSaved}
                       className={`p-1.5 rounded-lg transition-colors ${
-                        isSaved 
-                          ? 'text-green-500 bg-green-100 dark:bg-green-900/30' 
+                        isSaved
+                          ? 'text-green-500 bg-green-100 dark:bg-green-900/30'
                           : 'hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                       }`}
                       title="Save to library"
@@ -300,9 +315,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                 </div>
 
                 {mnemonic.explanation && (
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    {mnemonic.explanation}
-                  </p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{mnemonic.explanation}</p>
                 )}
               </motion.div>
             )}
@@ -326,8 +339,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
 
             {/* Tips */}
             <div className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] p-3 rounded-lg">
-              <strong>💡 Tip:</strong> Click "Try Another" for different mnemonic styles. 
-              Save your favorites to build a personal memory library!
+              <strong>💡 Tip:</strong> Click "Try Another" for different mnemonic styles. Save your
+              favorites to build a personal memory library!
             </div>
           </div>
         </motion.div>
@@ -341,8 +354,6 @@ export const MnemonicButton: React.FC<{
   concept: string;
   context?: string;
   system?: string;
-}> = (props) => (
-  <MnemonicGenerator {...props} compact />
-);
+}> = (props) => <MnemonicGenerator {...props} compact />;
 
 export default MnemonicGenerator;

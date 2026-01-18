@@ -11,6 +11,7 @@ This document summarizes the deployment infrastructure that has been implemented
 ### 1. Process Management
 
 #### PM2 Configuration (`ecosystem.config.js`)
+
 - **Server Process:** Backend API server (port 3001)
 - **Worker Process:** Background job processor
 - **Features:**
@@ -20,6 +21,7 @@ This document summarizes the deployment infrastructure that has been implemented
   - Environment-specific configuration (dev/production)
 
 #### Systemd Service Files (`deployment/systemd/`)
+
 - `panacea-server.service` - Backend API server
 - `panacea-worker.service` - Background job worker
 - **Security Features:**
@@ -31,6 +33,7 @@ This document summarizes the deployment infrastructure that has been implemented
 ### 2. Job Scheduling
 
 #### Cron Configuration (`deployment/cron/`)
+
 - **Daily Scheduler (Midnight):** Schedules jobs for the next day
 - **Health Check (3 AM):** Audits content quality
 - **Cleanup (Sunday 4 AM):** Removes old jobs from database
@@ -41,7 +44,9 @@ This document summarizes the deployment infrastructure that has been implemented
 All scripts in `deployment/scripts/`:
 
 #### `deploy.sh`
+
 Main deployment script that:
+
 - Backs up database
 - Installs dependencies
 - Generates Prisma client
@@ -50,7 +55,9 @@ Main deployment script that:
 - Starts workers with PM2
 
 #### `monitor.sh`
+
 System monitoring script that displays:
+
 - PM2 process status
 - Database connectivity
 - Job queue statistics
@@ -59,7 +66,9 @@ System monitoring script that displays:
 - **Supports:** `--watch` flag for continuous monitoring
 
 #### `verify-deployment.sh`
+
 Pre-deployment verification that checks:
+
 - Prerequisites (Node.js, npm, npx)
 - Application files
 - Worker scripts
@@ -70,14 +79,18 @@ Pre-deployment verification that checks:
 - Logs directory
 
 #### `init-migrations.sh`
+
 Database migration setup that:
+
 - Validates environment configuration
 - Checks database connectivity
 - Creates initial migration
 - Generates Prisma client
 
 #### `job-stats.ts`
+
 Displays job queue statistics:
+
 - Pending, processing, completed, failed counts
 - Recent failed jobs with errors
 - Real-time queue health
@@ -87,6 +100,7 @@ Displays job queue statistics:
 Enhanced existing scripts:
 
 #### `scripts/backgroundWorker.ts`
+
 - Polls job queue every 5 seconds
 - Processes different job types:
   - Question generation
@@ -99,12 +113,14 @@ Enhanced existing scripts:
 - Automatic retry with exponential backoff
 
 #### `scripts/scheduleJobs.ts`
+
 - Schedules recurring jobs
 - Prevents duplicate scheduling
 - Configurable job priorities
 - Cleanup of old jobs
 
 #### `scripts/contentHealthChecker.ts`
+
 - Audits content quality
 - Detects missing explanations
 - Identifies broken media links
@@ -112,6 +128,7 @@ Enhanced existing scripts:
 - Generates comprehensive reports
 
 #### `scripts/cleanupJobs.ts` (NEW)
+
 - Removes old completed/failed jobs
 - Configurable retention period (default: 30 days)
 - Dry-run mode for testing
@@ -120,7 +137,9 @@ Enhanced existing scripts:
 ### 5. Documentation
 
 #### `deployment/README.md`
+
 Comprehensive guide covering:
+
 - Directory structure
 - Quick start instructions
 - Three deployment methods (PM2, systemd, manual)
@@ -129,7 +148,9 @@ Comprehensive guide covering:
 - Performance tuning
 
 #### `deployment/MIGRATION_GUIDE.md`
+
 Database migration instructions:
+
 - Initial setup
 - Development vs production migrations
 - Creating custom migrations
@@ -138,7 +159,9 @@ Database migration instructions:
 - Troubleshooting
 
 #### `deployment/DEPLOYMENT_CHECKLIST.md`
+
 Step-by-step checklist:
+
 - Pre-deployment tasks
 - Deployment steps
 - Post-deployment verification
@@ -147,7 +170,9 @@ Step-by-step checklist:
 - Success criteria
 
 #### Updated `.env.example`
+
 Added worker configuration:
+
 ```env
 BACKGROUND_WORKER_ENABLED=true
 JOB_QUEUE_POLL_INTERVAL=5000
@@ -193,11 +218,13 @@ PANaCEa/
 ### Quick Start
 
 1. **Verify Setup:**
+
    ```bash
    ./deployment/scripts/verify-deployment.sh
    ```
 
 2. **Deploy:**
+
    ```bash
    ./deployment/scripts/deploy.sh
    ```
@@ -210,6 +237,7 @@ PANaCEa/
 ### Detailed Deployment
 
 Follow the comprehensive guide:
+
 ```bash
 # Read the deployment checklist
 cat deployment/DEPLOYMENT_CHECKLIST.md
@@ -242,6 +270,7 @@ Before deploying:
 ### Option 1: PM2 (Recommended for Production)
 
 **Pros:**
+
 - Easy to use
 - Built-in monitoring
 - Automatic restarts
@@ -249,6 +278,7 @@ Before deploying:
 - Load balancing support
 
 **Setup:**
+
 ```bash
 npm install -g pm2
 pm2 start ecosystem.config.js --env production
@@ -259,12 +289,14 @@ pm2 startup
 ### Option 2: Systemd (Linux Servers)
 
 **Pros:**
+
 - System-level integration
 - Starts on boot
 - Journal logging
 - Resource limits
 
 **Setup:**
+
 ```bash
 sudo cp deployment/systemd/*.service /etc/systemd/system/
 sudo systemctl enable panacea-server panacea-worker
@@ -274,11 +306,13 @@ sudo systemctl start panacea-server panacea-worker
 ### Option 3: Manual (Development)
 
 **Pros:**
+
 - Simple
 - No additional dependencies
 - Easy debugging
 
 **Setup:**
+
 ```bash
 # Terminal 1
 npm run dev:server
@@ -307,6 +341,7 @@ Three recurring jobs via cron:
    - Maintains performance
 
 **Install:**
+
 ```bash
 crontab -e
 # Add lines from deployment/cron/panacea.cron
@@ -345,6 +380,7 @@ npm run health-check
 ## Security Considerations
 
 ✅ **Implemented:**
+
 - Systemd services run as non-root user
 - Restricted file system access
 - Environment variables in .env (not version controlled)
@@ -352,6 +388,7 @@ npm run health-check
 - Separate log files for each component
 
 ⚠️ **Production Recommendations:**
+
 - Enable HTTPS/SSL
 - Configure firewall rules
 - Set up rate limiting
@@ -404,18 +441,23 @@ npm run cleanupJobs -- --dry-run
 ### Common Issues
 
 **"DATABASE_URL not found"**
+
 - Solution: Create `.env` from `.env.example` and set DATABASE_URL
 
 **"Port already in use"**
+
 - Solution: Change PORT in `.env` or kill existing process
 
 **"Worker not processing jobs"**
+
 - Solution: Check worker logs, verify DATABASE_URL, restart worker
 
 **"Permission denied"**
+
 - Solution: Set proper ownership/permissions on files and directories
 
 For detailed troubleshooting, see:
+
 - `deployment/README.md` - Troubleshooting section
 - `deployment/MIGRATION_GUIDE.md` - Database issues
 - `deployment/DEPLOYMENT_CHECKLIST.md` - Quick fixes
@@ -471,6 +513,7 @@ For detailed troubleshooting, see:
 **Deployment infrastructure is ready for use!**
 
 For questions or issues:
+
 1. Check relevant documentation in `deployment/` directory
 2. Review troubleshooting sections
 3. Test in staging environment first

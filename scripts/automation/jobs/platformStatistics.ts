@@ -1,16 +1,16 @@
 /**
  * Platform Statistics Job
- * 
+ *
  * Sprint: Statistics Improvement Plan - Step 1
  * Schedule: Daily at 2 AM UTC
- * 
+ *
  * Collects platform-wide metrics and stores in PlatformStatistics table:
  * - Daily/Weekly/Monthly Active Users (DAU/WAU/MAU)
  * - Retention rates (7-day, 30-day)
  * - Question answering metrics
  * - Session metrics
  * - FSRS card metrics
- * 
+ *
  * This enables historical trend tracking and fast dashboard loading.
  */
 
@@ -23,25 +23,28 @@ import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
 function getDateRanges(targetDate: Date) {
   const today = new Date(targetDate);
   today.setHours(0, 0, 0, 0);
-  
+
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
-  
+
   const monthAgo = new Date(today);
   monthAgo.setDate(monthAgo.getDate() - 30);
-  
+
   return { today, yesterday, weekAgo, monthAgo };
 }
 
 /**
  * Calculate DAU/WAU/MAU from QuestionAttempt data
  */
-async function calculateActiveUsers(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
+async function calculateActiveUsers(
+  prisma: PrismaClient,
+  ranges: ReturnType<typeof getDateRanges>
+) {
   const { today, weekAgo, monthAgo } = ranges;
-  
+
   // DAU: Users who attempted questions yesterday
   const dauResult = await prisma.questionAttempt.groupBy({
     by: ['userId'],
@@ -53,7 +56,7 @@ async function calculateActiveUsers(prisma: PrismaClient, ranges: ReturnType<typ
     },
   });
   const dau = dauResult.length;
-  
+
   // WAU: Users who attempted questions in last 7 days
   const wauResult = await prisma.questionAttempt.groupBy({
     by: ['userId'],
@@ -65,7 +68,7 @@ async function calculateActiveUsers(prisma: PrismaClient, ranges: ReturnType<typ
     },
   });
   const wau = wauResult.length;
-  
+
   // MAU: Users who attempted questions in last 30 days
   const mauResult = await prisma.questionAttempt.groupBy({
     by: ['userId'],
@@ -77,16 +80,19 @@ async function calculateActiveUsers(prisma: PrismaClient, ranges: ReturnType<typ
     },
   });
   const mau = mauResult.length;
-  
+
   return { dau, wau, mau };
 }
 
 /**
  * Calculate new vs. returning users
  */
-async function calculateUserCohorts(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
+async function calculateUserCohorts(
+  prisma: PrismaClient,
+  ranges: ReturnType<typeof getDateRanges>
+) {
   const { today, yesterday } = ranges;
-  
+
   // Get users active yesterday
   const activeUserIds = await prisma.questionAttempt.findMany({
     where: {
@@ -98,10 +104,10 @@ async function calculateUserCohorts(prisma: PrismaClient, ranges: ReturnType<typ
     select: { userId: true },
     distinct: ['userId'],
   });
-  
+
   let newUsers = 0;
   let returningUsers = 0;
-  
+
   // Check if each user had activity before yesterday
   for (const { userId } of activeUserIds) {
     const priorActivity = await prisma.questionAttempt.findFirst({
@@ -110,14 +116,14 @@ async function calculateUserCohorts(prisma: PrismaClient, ranges: ReturnType<typ
         createdAt: { lt: yesterday },
       },
     });
-    
+
     if (priorActivity) {
       returningUsers++;
     } else {
       newUsers++;
     }
   }
-  
+
   return { newUsers, returningUsers };
 }
 
@@ -126,7 +132,7 @@ async function calculateUserCohorts(prisma: PrismaClient, ranges: ReturnType<typ
  */
 async function calculateRetention(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
   const { today, yesterday, weekAgo, monthAgo } = ranges;
-  
+
   // 7-day retention: Users active 7 days ago who were also active yesterday
   const users7DaysAgo = await prisma.questionAttempt.findMany({
     where: {
@@ -138,7 +144,7 @@ async function calculateRetention(prisma: PrismaClient, ranges: ReturnType<typeo
     select: { userId: true },
     distinct: ['userId'],
   });
-  
+
   let retained7Day = 0;
   for (const { userId } of users7DaysAgo) {
     const recentActivity = await prisma.questionAttempt.findFirst({
@@ -152,11 +158,9 @@ async function calculateRetention(prisma: PrismaClient, ranges: ReturnType<typeo
     });
     if (recentActivity) retained7Day++;
   }
-  
-  const retention7Day = users7DaysAgo.length > 0 
-    ? retained7Day / users7DaysAgo.length 
-    : null;
-  
+
+  const retention7Day = users7DaysAgo.length > 0 ? retained7Day / users7DaysAgo.length : null;
+
   // 30-day retention: Users active 30 days ago who were also active yesterday
   const users30DaysAgo = await prisma.questionAttempt.findMany({
     where: {
@@ -168,7 +172,7 @@ async function calculateRetention(prisma: PrismaClient, ranges: ReturnType<typeo
     select: { userId: true },
     distinct: ['userId'],
   });
-  
+
   let retained30Day = 0;
   for (const { userId } of users30DaysAgo) {
     const recentActivity = await prisma.questionAttempt.findFirst({
@@ -182,20 +186,21 @@ async function calculateRetention(prisma: PrismaClient, ranges: ReturnType<typeo
     });
     if (recentActivity) retained30Day++;
   }
-  
-  const retention30Day = users30DaysAgo.length > 0 
-    ? retained30Day / users30DaysAgo.length 
-    : null;
-  
+
+  const retention30Day = users30DaysAgo.length > 0 ? retained30Day / users30DaysAgo.length : null;
+
   return { retention7Day, retention30Day };
 }
 
 /**
  * Calculate question answering metrics
  */
-async function calculateQuestionMetrics(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
+async function calculateQuestionMetrics(
+  prisma: PrismaClient,
+  ranges: ReturnType<typeof getDateRanges>
+) {
   const { today, yesterday } = ranges;
-  
+
   const attempts = await prisma.questionAttempt.findMany({
     where: {
       createdAt: {
@@ -204,14 +209,12 @@ async function calculateQuestionMetrics(prisma: PrismaClient, ranges: ReturnType
       },
     },
   });
-  
+
   const questionsAnswered = attempts.length;
-  const questionsCorrect = attempts.filter(a => a.wasCorrect).length;
+  const questionsCorrect = attempts.filter((a) => a.wasCorrect).length;
   const questionsIncorrect = questionsAnswered - questionsCorrect;
-  const averageAccuracy = questionsAnswered > 0 
-    ? questionsCorrect / questionsAnswered 
-    : null;
-  
+  const averageAccuracy = questionsAnswered > 0 ? questionsCorrect / questionsAnswered : null;
+
   return {
     questionsAnswered,
     questionsCorrect,
@@ -223,9 +226,12 @@ async function calculateQuestionMetrics(prisma: PrismaClient, ranges: ReturnType
 /**
  * Calculate session metrics
  */
-async function calculateSessionMetrics(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
+async function calculateSessionMetrics(
+  prisma: PrismaClient,
+  ranges: ReturnType<typeof getDateRanges>
+) {
   const { today, yesterday } = ranges;
-  
+
   const sessions = await prisma.studySession.findMany({
     where: {
       createdAt: {
@@ -234,22 +240,23 @@ async function calculateSessionMetrics(prisma: PrismaClient, ranges: ReturnType<
       },
     },
   });
-  
+
   const sessionsStarted = sessions.length;
   // Legacy fields status/durationMs removed; approximate completed sessions via endedAt presence
-  const sessionsCompleted = sessions.filter(s => !!s.endedAt).length;
-  
+  const sessionsCompleted = sessions.filter((s) => !!s.endedAt).length;
+
   const durations = sessions
     // Use totalTimeMs as the closest available duration metric
-    .filter(s => s.totalTimeMs && s.totalTimeMs > 0)
-    .map(s => s.totalTimeMs);
-  
-  const averageSessionDuration = durations.length > 0
-    ? Math.floor(durations.reduce((sum, d) => sum + d, 0) / durations.length)
-    : null;
-  
+    .filter((s) => s.totalTimeMs && s.totalTimeMs > 0)
+    .map((s) => s.totalTimeMs);
+
+  const averageSessionDuration =
+    durations.length > 0
+      ? Math.floor(durations.reduce((sum, d) => sum + d, 0) / durations.length)
+      : null;
+
   const totalStudyTime = durations.reduce((sum, d) => sum + d, 0);
-  
+
   return {
     sessionsStarted,
     sessionsCompleted,
@@ -261,9 +268,12 @@ async function calculateSessionMetrics(prisma: PrismaClient, ranges: ReturnType<
 /**
  * Calculate FSRS card metrics
  */
-async function calculateFSRSMetrics(prisma: PrismaClient, ranges: ReturnType<typeof getDateRanges>) {
+async function calculateFSRSMetrics(
+  prisma: PrismaClient,
+  ranges: ReturnType<typeof getDateRanges>
+) {
   const { today, yesterday } = ranges;
-  
+
   // Get all user progress records updated yesterday
   const progressRecords = await prisma.userProgress.findMany({
     where: {
@@ -276,26 +286,26 @@ async function calculateFSRSMetrics(prisma: PrismaClient, ranges: ReturnType<typ
       fsrsCard: true,
     },
   });
-  
+
   let fsrsCardsReviewed = 0;
   let fsrsCardsMature = 0;
   let totalRetention = 0;
   let retentionCount = 0;
-  
+
   for (const record of progressRecords) {
     if (record.fsrsCard && typeof record.fsrsCard === 'object') {
       const card = record.fsrsCard as any;
-      
+
       // Count as reviewed if it has a due date or reps
       if (card.reps !== undefined && card.reps > 0) {
         fsrsCardsReviewed++;
       }
-      
+
       // Count as mature if stability > 21 days
       if (card.stability !== undefined && card.stability > 21) {
         fsrsCardsMature++;
       }
-      
+
       // Calculate retention (approximation based on stability)
       if (card.stability !== undefined && card.stability > 0) {
         // Simple retention approximation: stability / (stability + 1)
@@ -305,11 +315,9 @@ async function calculateFSRSMetrics(prisma: PrismaClient, ranges: ReturnType<typ
       }
     }
   }
-  
-  const fsrsAverageRetention = retentionCount > 0
-    ? totalRetention / retentionCount
-    : null;
-  
+
+  const fsrsAverageRetention = retentionCount > 0 ? totalRetention / retentionCount : null;
+
   return {
     fsrsCardsReviewed,
     fsrsCardsMature,
@@ -323,30 +331,24 @@ async function calculateFSRSMetrics(prisma: PrismaClient, ranges: ReturnType<typ
 export async function runPlatformStatisticsJob(targetDate: Date = new Date()) {
   console.log('🚀 Platform Statistics Job Starting...');
   console.log(`📅 Target Date: ${targetDate.toISOString().split('T')[0]}`);
-  
+
   try {
     const ranges = getDateRanges(targetDate);
     const dateString = ranges.yesterday.toISOString().split('T')[0];
-    
+
     console.log('\n📊 Calculating metrics...');
-    
+
     // Calculate all metrics in parallel
-    const [
-      activeUsers,
-      userCohorts,
-      retention,
-      questionMetrics,
-      sessionMetrics,
-      fsrsMetrics,
-    ] = await Promise.all([
-      calculateActiveUsers(prisma, ranges),
-      calculateUserCohorts(prisma, ranges),
-      calculateRetention(prisma, ranges),
-      calculateQuestionMetrics(prisma, ranges),
-      calculateSessionMetrics(prisma, ranges),
-      calculateFSRSMetrics(prisma, ranges),
-    ]);
-    
+    const [activeUsers, userCohorts, retention, questionMetrics, sessionMetrics, fsrsMetrics] =
+      await Promise.all([
+        calculateActiveUsers(prisma, ranges),
+        calculateUserCohorts(prisma, ranges),
+        calculateRetention(prisma, ranges),
+        calculateQuestionMetrics(prisma, ranges),
+        calculateSessionMetrics(prisma, ranges),
+        calculateFSRSMetrics(prisma, ranges),
+      ]);
+
     console.log('\n✅ Metrics calculated:');
     console.log(`   DAU: ${activeUsers.dau}`);
     console.log(`   WAU: ${activeUsers.wau}`);
@@ -354,10 +356,12 @@ export async function runPlatformStatisticsJob(targetDate: Date = new Date()) {
     console.log(`   New Users: ${userCohorts.newUsers}`);
     console.log(`   Returning Users: ${userCohorts.returningUsers}`);
     console.log(`   Questions Answered: ${questionMetrics.questionsAnswered}`);
-    console.log(`   Average Accuracy: ${questionMetrics.averageAccuracy ? (questionMetrics.averageAccuracy * 100).toFixed(1) + '%' : 'N/A'}`);
+    console.log(
+      `   Average Accuracy: ${questionMetrics.averageAccuracy ? (questionMetrics.averageAccuracy * 100).toFixed(1) + '%' : 'N/A'}`
+    );
     console.log(`   Sessions Started: ${sessionMetrics.sessionsStarted}`);
     console.log(`   FSRS Cards Reviewed: ${fsrsMetrics.fsrsCardsReviewed}`);
-    
+
     // Upsert platform statistics
     const stats = await prisma.platformStatistics.upsert({
       where: { date: ranges.yesterday },
@@ -404,11 +408,10 @@ export async function runPlatformStatisticsJob(targetDate: Date = new Date()) {
         fsrsAverageRetention: fsrsMetrics.fsrsAverageRetention,
       },
     });
-    
+
     console.log('\n✅ Platform statistics saved successfully!');
     console.log(`   ID: ${stats.id}`);
     console.log(`   Date: ${stats.date}`);
-    
   } catch (error) {
     console.error('❌ Platform statistics job failed:', error);
     throw error;

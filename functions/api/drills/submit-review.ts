@@ -1,23 +1,28 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
-import { validateRequest, DrillSubmitReviewSchema } from '../_shared/schemas';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { authenticateRequest } from '../_shared/auth';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { calculateParTime } from '../../../lib/utils/questionComplexity';
 import { updateReviewOutcome } from '../../../lib/services/srsService';
 import { FSRS, Rating } from '../../../lib/fsrs';
 import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
 import { CloudflareContext } from '../_shared/types';
-import { 
-  deriveImplicitRating, 
+import {
+  deriveImplicitRating,
   serializeImplicitMetrics,
-  type ImplicitBehaviorMetrics 
+  type ImplicitBehaviorMetrics,
 } from '../../../lib/implicit-metrics';
-import { 
-  buildCircadianContext, 
+import {
+  buildCircadianContext,
   applyCircadianModifier,
-  serializeCircadianContext 
+  serializeCircadianContext,
 } from '../../../lib/circadian';
 import { propagateRecallToSiblings } from '../../../lib/services/semanticSiblingService';
-import { applyAttemptToUserStatistics, updateTimingAggregates } from '../../../lib/services/userStatisticsService';
+import {
+  applyAttemptToUserStatistics,
+  updateTimingAggregates,
+} from '../../../lib/services/userStatisticsService';
+import { z } from 'zod';
 
 /**
  * Question data structure from PreGeneratedQuestion.questionData field
@@ -38,7 +43,21 @@ interface QuestionData {
 }
 
 function findSelectedOption(
-  pool: Array<{ value?: string; text?: string; label?: string; conditionId?: string; condition_id?: string; conditionRef?: string; medicalContentId?: string; condition?: string; conditionName?: string; id?: string }> | string[] | undefined,
+  pool:
+    | Array<{
+        value?: string;
+        text?: string;
+        label?: string;
+        conditionId?: string;
+        condition_id?: string;
+        conditionRef?: string;
+        medicalContentId?: string;
+        condition?: string;
+        conditionName?: string;
+        id?: string;
+      }>
+    | string[]
+    | undefined,
   selectedAnswer: string
 ) {
   if (!Array.isArray(pool)) return null;
@@ -51,11 +70,22 @@ function findSelectedOption(
       continue;
     }
 
-    const label = option.value ?? option.text ?? option.label ?? option.conditionName ?? option.condition ?? option.id;
+    const label =
+      option.value ??
+      option.text ??
+      option.label ??
+      option.conditionName ??
+      option.condition ??
+      option.id;
     if (label === selectedAnswer) {
       return {
         label,
-        conditionId: option.conditionId ?? option.condition_id ?? option.conditionRef ?? option.medicalContentId ?? option.id,
+        conditionId:
+          option.conditionId ??
+          option.condition_id ??
+          option.conditionRef ??
+          option.medicalContentId ??
+          option.id,
         conditionName: option.conditionName ?? option.condition ?? label,
       };
     }
@@ -64,33 +94,36 @@ function findSelectedOption(
   return null;
 }
 
-export const onRequestOptions = handleCorsOptions;
+// Define Zod schema for request validation
+const DrillSubmitReviewSchema = z.object({
+  questionId: z.string().uuid(),
+  selectedAnswer: z.union([z.string(), z.number()]),
+  timeSpentMs: z.number().int().min(0).max(3600000),
+  timeToFirstClick: z.number().int().min(0).optional(),
+  answerSwitches: z.number().int().min(0).optional(),
+  totalDwellTime: z.number().int().min(0).optional(),
+  timezone: z.string().optional(),
+  wakeTimeHHMM: z.string().optional(),
+});
 
-export const onRequestPost = async (context: CloudflareContext) => {
-  const { request, env } = context;
+export const onRequestOptions = async (context: any) => {
+  return authenticatedEndpoint(DrillSubmitReviewSchema, async (context) => {
+    // This will be handled by the middleware
+    return { data: { message: 'Method not allowed' }, status: 405 };
+  })(context);
+};
+
+export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, async (context) => {
+  const { request, env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/drills/submit-review');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
+    logger.addContext({ userId: auth.userId });
 
-    // Validate request body with Zod schema
-    const validation = await validateRequest(request, DrillSubmitReviewSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-
-    const { 
-      questionId, 
-      selectedAnswer, 
+    const {
+      questionId,
+      selectedAnswer,
       timeSpentMs,
       // Implicit behavior metrics (Phase 2)
       timeToFirstClick,
@@ -98,7 +131,7 @@ export const onRequestPost = async (context: CloudflareContext) => {
       totalDwellTime,
       timezone,
       wakeTimeHHMM,
-    } = validation.data;
+    } = validated;
 
     const normalizedSelectedAnswer =
       typeof selectedAnswer === 'string'
@@ -108,34 +141,24 @@ export const onRequestPost = async (context: CloudflareContext) => {
           : '';
 
     if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      logger.error('Database not configured');
+      return { status: 500, error: 'Database not configured' };
     }
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
-      where: { clerkId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ 
+      return {
+        status: 404,
         error: 'User not found',
         message: 'Your user account has not been synced yet.',
-      }), {
-        status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      };
     }
 
     const userId = user.id;
@@ -143,13 +166,7 @@ export const onRequestPost = async (context: CloudflareContext) => {
     const question = await prisma.preGeneratedQuestion.findUnique({ where: { id: questionId } });
 
     if (!question) {
-      return new Response(JSON.stringify({ error: 'Question not found' }), {
-        status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      return { status: 404, error: 'Question not found' };
     }
 
     const qData = (question.questionData as QuestionData) || {};
@@ -169,19 +186,34 @@ export const onRequestPost = async (context: CloudflareContext) => {
       }
     }
 
-    const isCorrect = correctAnswer !== null
-      ? normalizedSelectedAnswer === correctAnswer
-      : (qData.options || qData.choices || []).some((opt: unknown) => {
-          if (typeof opt === 'string') return opt === normalizedSelectedAnswer;
-          if (typeof opt === 'object' && opt !== null) {
-            const optObj = opt as { value?: string; text?: string; label?: string };
-            const val = optObj.value ?? optObj.text ?? optObj.label;
-            return val === normalizedSelectedAnswer;
-          }
-          return false;
-        });
+    const isCorrect =
+      correctAnswer !== null
+        ? normalizedSelectedAnswer === correctAnswer
+        : (qData.options || qData.choices || []).some((opt: unknown) => {
+            if (typeof opt === 'string') return opt === normalizedSelectedAnswer;
+            if (typeof opt === 'object' && opt !== null) {
+              const optObj = opt as { value?: string; text?: string; label?: string };
+              const val = optObj.value ?? optObj.text ?? optObj.label;
+              return val === normalizedSelectedAnswer;
+            }
+            return false;
+          });
 
-    const optionPool = (qData.options || qData.choices) as Array<{ value?: string; text?: string; label?: string; conditionId?: string; condition_id?: string; conditionRef?: string; medicalContentId?: string; condition?: string; conditionName?: string; id?: string }> | string[] | undefined;
+    const optionPool = (qData.options || qData.choices) as
+      | Array<{
+          value?: string;
+          text?: string;
+          label?: string;
+          conditionId?: string;
+          condition_id?: string;
+          conditionRef?: string;
+          medicalContentId?: string;
+          condition?: string;
+          conditionName?: string;
+          id?: string;
+        }>
+      | string[]
+      | undefined;
     const selectedMeta = findSelectedOption(optionPool, normalizedSelectedAnswer);
 
     const parTimeMs = calculateParTime({
@@ -210,12 +242,10 @@ export const onRequestPost = async (context: CloudflareContext) => {
     // Derive rating from implicit behavior instead of buttons
     const implicitResult = deriveImplicitRating(behaviorMetrics);
     const rating = implicitResult.rating;
-    
+
     // Legacy quality mapping for backward compatibility
-    const quality = rating === Rating.Again ? 1 
-      : rating === Rating.Hard ? 2 
-      : rating === Rating.Easy ? 5 
-      : 4;
+    const quality =
+      rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
 
     // Feed into FSRS with dynamic baseline
     const srsResult = updateReviewOutcome(userId, questionId, {
@@ -237,7 +267,7 @@ export const onRequestPost = async (context: CloudflareContext) => {
 
       await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
     } catch (statsError) {
-      console.warn('Failed to update user statistics after review', statsError);
+      logger.warn('Failed to update user statistics after review', statsError);
     }
 
     // If question has conditionId, also update UserProgress with review history
@@ -259,20 +289,22 @@ export const onRequestPost = async (context: CloudflareContext) => {
           stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
           difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
           state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
-          elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
-          scheduled_days: typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
+          elapsed_days:
+            typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
+          scheduled_days:
+            typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
           reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,
           lapses: typeof fsrsCardData.lapses === 'number' ? fsrsCardData.lapses : 0,
-          last_review: typeof fsrsCardData.last_review === 'string' ? new Date(fsrsCardData.last_review) : new Date(),
+          last_review:
+            typeof fsrsCardData.last_review === 'string'
+              ? new Date(fsrsCardData.last_review)
+              : new Date(),
         };
 
         const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
 
         // Apply circadian modifier to stability
-        const modifiedStability = applyCircadianModifier(
-          rawCard.stability,
-          circadianContext
-        );
+        const modifiedStability = applyCircadianModifier(rawCard.stability, circadianContext);
 
         const updatedCard = {
           ...rawCard,
@@ -289,20 +321,19 @@ export const onRequestPost = async (context: CloudflareContext) => {
 
         // Propagate recall to semantic siblings (Phase 2: KAR3L)
         try {
-          const siblingBoosts = await propagateRecallToSiblings(
-            question.conditionId,
-            rating
+          const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
+        // Store boost records for future application (logged for now)
+        if (siblingBoosts.length > 0) {
+          logger.info(
+            `KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings of ${question.conditionId}`
           );
-          // Store boost records for future application (logged for now)
-          if (siblingBoosts.length > 0) {
-            console.log(`KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings of ${question.conditionId}`);
-          }
+        }
         } catch (siblingError) {
           // Don't fail if sibling propagation fails
-          console.warn('KAR3L propagation error:', siblingError);
+          logger.warn('KAR3L propagation error:', siblingError);
         }
       } catch (progressError) {
-        console.warn('Failed to update UserProgress:', progressError);
+        logger.warn('Failed to update UserProgress:', progressError);
         // Don't fail the entire request if progress update fails
       }
     }
@@ -314,7 +345,9 @@ export const onRequestPost = async (context: CloudflareContext) => {
         if (question.medicalContentId) correctWhere.push({ id: question.medicalContentId });
         if (question.conditionId) correctWhere.push({ conditionId: question.conditionId });
         if (typeof qData.condition === 'string') {
-          correctWhere.push({ condition: { equals: qData.condition, mode: 'insensitive' as const } });
+          correctWhere.push({
+            condition: { equals: qData.condition, mode: 'insensitive' as const },
+          });
         }
 
         const selectedWhere: Array<Record<string, unknown>> = [];
@@ -323,7 +356,9 @@ export const onRequestPost = async (context: CloudflareContext) => {
           selectedWhere.push({ conditionId: selectedMeta.conditionId });
         }
         if (selectedMeta?.conditionName) {
-          selectedWhere.push({ condition: { equals: selectedMeta.conditionName, mode: 'insensitive' as const } });
+          selectedWhere.push({
+            condition: { equals: selectedMeta.conditionName, mode: 'insensitive' as const },
+          });
         }
 
         const [correctContent, selectedContent] = await Promise.all([
@@ -369,12 +404,12 @@ export const onRequestPost = async (context: CloudflareContext) => {
           });
         }
       } catch (confusionError) {
-        console.warn('Failed to record confusion pair', confusionError);
+        logger.warn('Failed to record confusion pair', confusionError);
       }
     }
 
-    return new Response(
-      JSON.stringify({
+    return {
+      data: {
         success: true,
         isCorrect,
         quality,
@@ -392,26 +427,14 @@ export const onRequestPost = async (context: CloudflareContext) => {
           stabilityModifier: circadianContext.stabilityModifier,
           localHour: circadianContext.localHour,
         },
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error('submit-review error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to submit review', details: error?.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
       },
-    });
+    };
+  } catch (error: any) {
+    logger.error('submit-review error:', error);
+    return { status: 500, error: 'Failed to submit review', details: error?.message };
   } finally {
     if (prisma) {
-      await prisma.$disconnect().catch(() => {});
+      await safePrismaDisconnect(prisma);
     }
   }
-};
+});

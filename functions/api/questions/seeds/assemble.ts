@@ -1,4 +1,4 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
 import { assembleQuestionsFromSeeds } from '../../_shared/question-seeds';
 import { validateRequest } from '../../_shared/schemas';
@@ -6,18 +6,20 @@ import { z } from 'zod';
 
 // Zod schema for assemble request
 const AssembleRequestSchema = z.object({
-  filter: z.object({
-    system: z.string().optional(),
-    difficulty: z.string().optional(),
-    type: z.string().optional(),
-  }).optional().default({}),
+  filter: z
+    .object({
+      system: z.string().optional(),
+      difficulty: z.string().optional(),
+      type: z.string().optional(),
+    })
+    .optional()
+    .default({}),
   count: z.number().int().min(1).max(100).optional().default(10),
 });
 
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context) => {
-
   const { request, env } = context;
 
   try {
@@ -25,10 +27,10 @@ export const onRequestPost = async (context) => {
     if (!authResult) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
@@ -40,16 +42,19 @@ export const onRequestPost = async (context) => {
     const { filter, count } = validation.data;
 
     if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Database not configured' 
-      }), {
-        status: 503,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Database not configured',
+        }),
+        {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         }
-      });
+      );
     }
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -57,26 +62,28 @@ export const onRequestPost = async (context) => {
       const questions = await assembleQuestionsFromSeeds(prisma, filter || {}, count || 10);
 
       return new Response(JSON.stringify({ success: true, questions }), {
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     } finally {
-      await prisma.$disconnect();
+      await safePrismaDisconnect(prisma);
     }
-
   } catch (error) {
     console.error('Failed to assemble questions from seeds:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message || 'Failed to assemble questions from seeds' 
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Failed to assemble questions from seeds',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
-    });
+    );
   }
 };

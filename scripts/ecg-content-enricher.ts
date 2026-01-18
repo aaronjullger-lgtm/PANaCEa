@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
  * ECG CONTENT ENRICHER
- * 
+ *
  * Populates empty MedicalContent fields for ECG conditions using AI.
  * Specifically targets pathophysiology, clinicalPearls, boardYieldFacts, etc.
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && npx tsx scripts/ecg-content-enricher.ts
  */
@@ -32,24 +32,26 @@ let currentDelay = RATE_LIMIT.baseDelayMs;
 
 async function rateLimitedDelay(): Promise<void> {
   apiCallCount++;
-  
+
   // Periodic cooldown
   if (apiCallCount % RATE_LIMIT.callsBeforeCooldown === 0) {
-    console.log(`  ⏳ Cooldown after ${apiCallCount} API calls (${RATE_LIMIT.cooldownMs / 1000}s)...`);
-    await new Promise(r => setTimeout(r, RATE_LIMIT.cooldownMs));
+    console.log(
+      `  ⏳ Cooldown after ${apiCallCount} API calls (${RATE_LIMIT.cooldownMs / 1000}s)...`
+    );
+    await new Promise((r) => setTimeout(r, RATE_LIMIT.cooldownMs));
     currentDelay = RATE_LIMIT.baseDelayMs;
   } else {
-    await new Promise(r => setTimeout(r, currentDelay));
+    await new Promise((r) => setTimeout(r, currentDelay));
   }
 }
 
 interface ECGContent {
   pathophysiology: string;
-  symptoms: string;          // clinicalPresentation -> symptoms
-  diagnostics: string;       // diagnosticWorkup -> diagnostics
-  treatment: string;         // management -> treatment
-  differentialDiagnosis: string;  // String, not array
-  clinical_pearls: string[];      // Json field
+  symptoms: string; // clinicalPresentation -> symptoms
+  diagnostics: string; // diagnosticWorkup -> diagnostics
+  treatment: string; // management -> treatment
+  differentialDiagnosis: string; // String, not array
+  clinical_pearls: string[]; // Json field
   buzzwords: string[];
   classic_patient: string;
   gold_standard_dx: string;
@@ -60,10 +62,15 @@ interface ECGContent {
   prognosis: string;
 }
 
-async function generateECGContent(conditionName: string, overview: string): Promise<ECGContent | null> {
+async function generateECGContent(
+  conditionName: string,
+  overview: string
+): Promise<ECGContent | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  console.log(`   🔑 API Key present: ${apiKey ? 'Yes (' + apiKey.substring(0, 8) + '...)' : 'NO'}`);
-  
+  console.log(
+    `   🔑 API Key present: ${apiKey ? 'Yes (' + apiKey.substring(0, 8) + '...)' : 'NO'}`
+  );
+
   if (!apiKey) {
     console.error('❌ GEMINI_API_KEY not found in environment. Make sure .env file exists.');
     return null;
@@ -125,19 +132,22 @@ IMPORTANT:
   try {
     await rateLimitedDelay();
     const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?|```/g, '').trim();
+    const text = result.response
+      .text()
+      .replace(/```json\n?|```/g, '')
+      .trim();
     consecutiveErrors = 0;
     return JSON.parse(text);
   } catch (err: any) {
     consecutiveErrors++;
     console.error(`   ❌ AI error: ${err.message}`);
-    
+
     if (err.message?.includes('429') || err.message?.includes('rate')) {
       currentDelay = Math.min(currentDelay * 2, RATE_LIMIT.maxDelayMs);
       console.log(`   ⏳ Rate limited - increasing delay to ${currentDelay}ms`);
-      await new Promise(r => setTimeout(r, currentDelay));
+      await new Promise((r) => setTimeout(r, currentDelay));
     }
-    
+
     return null;
   }
 }
@@ -149,15 +159,15 @@ async function enrichECGConditions(): Promise<void> {
 
   // Get all ECG conditions with their MedicalContent
   const ecgConditions = await prisma.condition.findMany({
-    where: { id: { contains: 'ecg' } }
+    where: { id: { contains: 'ecg' } },
   });
 
-  const ecgIds = ecgConditions.map(c => c.id);
+  const ecgIds = ecgConditions.map((c) => c.id);
   const medicalContents = await prisma.medicalContent.findMany({
-    where: { conditionId: { in: ecgIds } }
+    where: { conditionId: { in: ecgIds } },
   });
 
-  const mcMap = new Map(medicalContents.map(mc => [mc.conditionId, mc]));
+  const mcMap = new Map(medicalContents.map((mc) => [mc.conditionId, mc]));
 
   console.log(`Found ${ecgConditions.length} ECG conditions\n`);
 
@@ -167,7 +177,7 @@ async function enrichECGConditions(): Promise<void> {
 
   for (const cond of ecgConditions) {
     const mc = mcMap.get(cond.id);
-    
+
     if (!mc) {
       console.log(`⚠️ ${cond.name} - No MedicalContent record (skipping)`);
       skipped++;
@@ -186,7 +196,7 @@ async function enrichECGConditions(): Promise<void> {
     console.log(`   ID: ${cond.id}`);
 
     const content = await generateECGContent(cond.name, mc.overview || '');
-    
+
     if (!content) {
       console.log(`   ❌ Failed to generate content`);
       errors++;
@@ -216,13 +226,13 @@ async function enrichECGConditions(): Promise<void> {
           updatedAt: new Date(),
         },
       });
-      
+
       console.log(`   ✅ Updated with:`);
       console.log(`      - Pathophysiology: ${content.pathophysiology?.length || 0} chars`);
       console.log(`      - Clinical Pearls: ${content.clinical_pearls?.length || 0} items`);
       console.log(`      - Buzzwords: ${content.buzzwords?.length || 0} items`);
       console.log(`      - Diagnostics: ${content.diagnostics?.length || 0} chars`);
-      
+
       enriched++;
     } catch (err: any) {
       console.log(`   ❌ Update error: ${err.message}`);

@@ -37,9 +37,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               Streak Freeze Insurance
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Protect your study streak
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Protect your study streak</p>
           </div>
         </div>
         <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
@@ -78,12 +76,8 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-slate-600 dark:text-slate-400" />
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                1 Streak Freeze
-              </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Protects one missed day
-              </p>
+              <p className="font-semibold text-gray-900 dark:text-white">1 Streak Freeze</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Protects one missed day</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -157,8 +151,14 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       {/* Earn More Coins */}
       <div className="mt-3 text-center">
         <p className="text-xs text-gray-600 dark:text-gray-400">
-          Earn <span className="font-bold text-yellow-600">{STREAK_FREEZE_CONFIG.coinsPerQuestion}</span> coins per question, 
-          <span className="font-bold text-yellow-600"> {STREAK_FREEZE_CONFIG.coinsPerCorrectAnswer}</span> coins for correct answers
+          Earn{' '}
+          <span className="font-bold text-yellow-600">{STREAK_FREEZE_CONFIG.coinsPerQuestion}</span>{' '}
+          coins per question,
+          <span className="font-bold text-yellow-600">
+            {' '}
+            {STREAK_FREEZE_CONFIG.coinsPerCorrectAnswer}
+          </span>{' '}
+          coins for correct answers
         </p>
       </div>
     </div>

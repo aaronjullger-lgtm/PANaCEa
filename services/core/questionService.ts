@@ -1,17 +1,17 @@
 /**
  * Core Question Service (Consolidated)
- * 
+ *
  * Single entry point for all question-related operations.
- * Consolidates: questionService, enhancedQuestionService, 
+ * Consolidates: questionService, enhancedQuestionService,
  * intelligentQuestionService, adaptiveQuestionEngine
- * 
+ *
  * ENHANCED: Now includes Sprint A & B utilities integration
  * - Condition resolver with fuzzy matching
  * - NCCPA blueprint weighting
  * - Question deduplication
  * - Adaptive difficulty
  * - Session interleaving
- * 
+ *
  * @module services/core/questionService
  */
 
@@ -117,40 +117,40 @@ export interface IntelligentQuestionRequest {
  * System code mapping - single source of truth
  */
 export const SYSTEM_CODE_MAP: Record<string, string> = {
-  'CV': 'Cardiovascular',
-  'PULM': 'Pulmonary',
-  'GI': 'Gastrointestinal',
-  'NEURO': 'Neurology',
-  'MSK': 'Musculoskeletal',
-  'DERM': 'Dermatology',
-  'HEME': 'Hematology',
-  'ENDO': 'Endocrine',
-  'HEENT': 'Head & Neck',
-  'RENAL': 'Renal',
-  'REPRO': 'Reproductive',
-  'PSYCH': 'Psychiatry',
-  'ID': 'Infectious Disease',
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  NEURO: 'Neurology',
+  MSK: 'Musculoskeletal',
+  DERM: 'Dermatology',
+  HEME: 'Hematology',
+  ENDO: 'Endocrine',
+  HEENT: 'Head & Neck',
+  RENAL: 'Renal',
+  REPRO: 'Reproductive',
+  PSYCH: 'Psychiatry',
+  ID: 'Infectious Disease',
 };
 
 /**
  * Reverse mapping: full name to code
  */
 export const SYSTEM_NAME_TO_CODE: Record<string, string> = {
-  'cardiovascular': 'CV',
-  'pulmonary': 'PULM',
-  'gastrointestinal': 'GI',
-  'neurology': 'NEURO',
-  'musculoskeletal': 'MSK',
-  'dermatology': 'DERM',
-  'hematology': 'HEME',
-  'endocrine': 'ENDO',
+  cardiovascular: 'CV',
+  pulmonary: 'PULM',
+  gastrointestinal: 'GI',
+  neurology: 'NEURO',
+  musculoskeletal: 'MSK',
+  dermatology: 'DERM',
+  hematology: 'HEME',
+  endocrine: 'ENDO',
   'head & neck': 'HEENT',
-  'heent': 'HEENT',
-  'renal': 'RENAL',
-  'reproductive': 'REPRO',
-  'psychiatry': 'PSYCH',
+  heent: 'HEENT',
+  renal: 'RENAL',
+  reproductive: 'REPRO',
+  psychiatry: 'PSYCH',
   'infectious disease': 'ID',
-  'infectious': 'ID',
+  infectious: 'ID',
 };
 
 // ============================================================================
@@ -175,30 +175,29 @@ export function convertPoolQuestion(poolQ: {
   conditionId?: string;
 }): Question {
   // Convert correctAnswer letter (A, B, C, D) to index
-  const letterToIndex: Record<string, number> = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
   let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
-  
+
   // If correctAnswer is not a letter, try to find it in options
   if (correctIndex === undefined || isNaN(correctIndex)) {
-    correctIndex = poolQ.options.findIndex(opt => 
-      opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
+    correctIndex = poolQ.options.findIndex(
+      (opt) => opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
     );
     if (correctIndex === -1) correctIndex = 0;
   }
 
   // Derive condition name from tags or system
   const condition = poolQ.tags?.[0] || poolQ.system;
-  
+
   // Use conditionId if available, otherwise generate from condition name
   // TODO: Integrate resolveConditionId here once we refactor to async pipeline
-  const conditionId = poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
+  const conditionId =
+    poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
 
   return {
     id: poolQ.id,
-    question: poolQ.vignette 
-      ? `${poolQ.vignette}\n\n${poolQ.question}` 
-      : poolQ.question,
-    options: poolQ.options.map(opt => 
+    question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
+    options: poolQ.options.map((opt) =>
       // Remove letter prefix if present (e.g., "A. Option" -> "Option")
       opt.replace(/^[A-D]\.\s*/, '')
     ),
@@ -232,9 +231,10 @@ export function getSystemDisplayName(code: string): string {
  */
 export function extractPearlsFromRationale(rationale: string): string[] {
   const pearls: string[] = [];
-  
+
   // Pattern 1: "Key Takeaway:" or "Clinical Pearl:" followed by content
-  const keyTakeawayPattern = /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
+  const keyTakeawayPattern =
+    /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
   let match;
   while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
     const pearl = match[1].trim();
@@ -242,7 +242,7 @@ export function extractPearlsFromRationale(rationale: string): string[] {
       pearls.push(pearl);
     }
   }
-  
+
   // Pattern 2: Bullet points that look like pearls
   const bulletPattern = /^[•\-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
@@ -251,20 +251,26 @@ export function extractPearlsFromRationale(rationale: string): string[] {
       pearls.push(pearl);
     }
   }
-  
+
   // Pattern 3: Sentences with clinical keywords
-  const clinicalKeywords = ['classic presentation', 'gold standard', 'first-line', 'diagnostic criteria', 'pathognomonic'];
+  const clinicalKeywords = [
+    'classic presentation',
+    'gold standard',
+    'first-line',
+    'diagnostic criteria',
+    'pathognomonic',
+  ];
   const sentences = rationale.split(/[.!?]\s+/);
   for (const sentence of sentences) {
     const normalized = sentence.toLowerCase();
-    if (clinicalKeywords.some(kw => normalized.includes(kw))) {
+    if (clinicalKeywords.some((kw) => normalized.includes(kw))) {
       const pearl = sentence.trim();
       if (pearl.length > 20 && pearl.length < 300) {
         pearls.push(pearl);
       }
     }
   }
-  
+
   // Deduplicate and limit to top 5 pearls
   return Array.from(new Set(pearls)).slice(0, 5);
 }
@@ -273,13 +279,13 @@ export function extractPearlsFromRationale(rationale: string): string[] {
  * Calculate difficulty score from string
  */
 export function difficultyToNumber(difficulty: string): number {
-  const map: Record<string, number> = { 
-    'easy': 25, 
-    'easier': 25,
-    'medium': 50, 
-    'same': 50,
-    'hard': 75,
-    'harder': 75,
+  const map: Record<string, number> = {
+    easy: 25,
+    easier: 25,
+    medium: 50,
+    same: 50,
+    hard: 75,
+    harder: 75,
   };
   return map[difficulty.toLowerCase()] ?? 50;
 }
@@ -296,13 +302,13 @@ export function getOptimalDifficulty(
     if (baseDifficulty === 'medium') return 'easy';
     return 'easy';
   }
-  
+
   if (adaptiveState.shouldAdjust === 'harder') {
     if (baseDifficulty === 'easy') return 'medium';
     if (baseDifficulty === 'medium') return 'hard';
     return 'hard';
   }
-  
+
   return baseDifficulty;
 }
 
@@ -312,10 +318,10 @@ export function getOptimalDifficulty(
 
 /**
  * Get questions with the optimal strategy based on user context
- * 
+ *
  * This is the recommended unified entry point that automatically
  * chooses between pool, enhanced, or intelligent question fetching.
- * 
+ *
  * NEW: Now uses Sprint A & B enhancements when prisma + userId provided
  */
 export async function getOptimalQuestions(
@@ -332,10 +338,10 @@ export async function getOptimalQuestions(
     useEnhanced?: boolean;
   } = {}
 ): Promise<Question[]> {
-  const { 
-    count = 10, 
-    getToken, 
-    systemMastery = [], 
+  const {
+    count = 10,
+    getToken,
+    systemMastery = [],
     previousQuestionIds = [],
     useIntelligent = false,
     prisma,
@@ -348,9 +354,12 @@ export async function getOptimalQuestions(
     try {
       const { getEnhancedQuestionBatch } = await import('./enhancedQuestionPool');
       const result = await getEnhancedQuestionBatch(prisma, userId, settings, count);
-      
+
       if (result.questions.length >= count * 0.8) {
-        console.log('[Core QuestionService] Using enhanced pool with Sprint A & B:', result.metadata);
+        console.log(
+          '[Core QuestionService] Using enhanced pool with Sprint A & B:',
+          result.metadata
+        );
         return result.questions;
       }
     } catch (error) {
@@ -368,7 +377,7 @@ export async function getOptimalQuestions(
         previousQuestionIds,
         getToken
       );
-      
+
       if (result.questions.length >= count * 0.8) {
         console.log('[Core QuestionService] Using intelligent selection');
         return result.questions;
@@ -389,29 +398,33 @@ export async function getOptimalQuestions(
 
 export default {
   // Pool management
-  getQuestion: async (...args: Parameters<typeof import('../questionService').getQuestion>) => 
+  getQuestion: async (...args: Parameters<typeof import('../questionService').getQuestion>) =>
     (await import('../questionService')).getQuestion(...args),
-  getQuestionBatch: async (...args: Parameters<typeof import('../questionService').getQuestionBatch>) => 
-    (await import('../questionService')).getQuestionBatch(...args),
-  getPoolStatus: () => import('../questionService').then(m => m.getPoolStatus()),
-  refreshPoolStatus: async (...args: Parameters<typeof import('../questionService').refreshPoolStatus>) => 
-    (await import('../questionService')).refreshPoolStatus(...args),
-  
+  getQuestionBatch: async (
+    ...args: Parameters<typeof import('../questionService').getQuestionBatch>
+  ) => (await import('../questionService')).getQuestionBatch(...args),
+  getPoolStatus: () => import('../questionService').then((m) => m.getPoolStatus()),
+  refreshPoolStatus: async (
+    ...args: Parameters<typeof import('../questionService').refreshPoolStatus>
+  ) => (await import('../questionService')).refreshPoolStatus(...args),
+
   // Enhanced generation
-  generateEnhancedQuestion: async (...args: Parameters<typeof import('../enhancedQuestionService').generateEnhancedQuestion>) => 
-    (await import('../enhancedQuestionService')).generateEnhancedQuestion(...args),
-  
+  generateEnhancedQuestion: async (
+    ...args: Parameters<typeof import('../enhancedQuestionService').generateEnhancedQuestion>
+  ) => (await import('../enhancedQuestionService')).generateEnhancedQuestion(...args),
+
   // Intelligent selection
-  getIntelligentQuestions: async (...args: Parameters<typeof import('../intelligentQuestionService').getIntelligentQuestions>) => 
-    (await import('../intelligentQuestionService')).getIntelligentQuestions(...args),
-  
+  getIntelligentQuestions: async (
+    ...args: Parameters<typeof import('../intelligentQuestionService').getIntelligentQuestions>
+  ) => (await import('../intelligentQuestionService')).getIntelligentQuestions(...args),
+
   // Adaptive algorithms
   calculateAdaptiveState: (await import('../adaptiveQuestionEngine')).calculateAdaptiveState,
   selectOptimalQuestions: (await import('../adaptiveQuestionEngine')).selectOptimalQuestions,
-  
+
   // Unified
   getOptimalQuestions,
-  
+
   // Utilities
   convertPoolQuestion,
   normalizeToSystemCode,
@@ -419,7 +432,7 @@ export default {
   extractPearlsFromRationale,
   difficultyToNumber,
   getOptimalDifficulty,
-  
+
   // Constants
   SYSTEM_CODE_MAP,
   SYSTEM_NAME_TO_CODE,

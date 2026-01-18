@@ -1,6 +1,6 @@
 /**
  * RadialProgress Component
- * 
+ *
  * Circular progress indicator with customizable colors and animations.
  * Perfect for displaying accuracy, completion percentages, or any metric 0-100%.
  */
@@ -45,30 +45,31 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
 }) => {
   // Clamp value between 0 and 100
   const clampedValue = Math.max(0, Math.min(100, value));
-  
+
   // Memoize calculations for performance
   const { radius, circumference, offset, progressColor, fontSize } = useMemo(() => {
     const r = (size - strokeWidth) / 2;
     const circ = 2 * Math.PI * r;
     const off = circ - (clampedValue / 100) * circ;
-    
+
     // Determine color based on value if not explicitly set
-    const pColor = color === 'var(--color-accent)' && value !== undefined
-      ? value >= 80
-        ? '#10b981' // green
-        : value >= 60
-        ? '#f59e0b' // amber
-        : '#ef4444' // red
-      : color;
-    
+    const pColor =
+      color === 'var(--color-accent)' && value !== undefined
+        ? value >= 80
+          ? '#10b981' // green
+          : value >= 60
+            ? '#f59e0b' // amber
+            : '#ef4444' // red
+        : color;
+
     // Responsive font size based on circle size
     const fs = size < 80 ? 'text-sm' : size < 120 ? 'text-xl' : 'text-2xl';
-    
+
     return { radius: r, circumference: circ, offset: off, progressColor: pColor, fontSize: fs };
   }, [size, strokeWidth, clampedValue, value, color]);
 
   return (
-    <div 
+    <div
       className={`inline-flex flex-col items-center gap-2 ${className}`}
       role="progressbar"
       aria-valuenow={clampedValue}
@@ -76,12 +77,7 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
       aria-valuemax={100}
       aria-label={ariaLabel || `${label || 'Progress'}: ${clampedValue}%`}
     >
-      <svg
-        width={size}
-        height={size}
-        className="transform -rotate-90"
-        aria-hidden="true"
-      >
+      <svg width={size} height={size} className="transform -rotate-90" aria-hidden="true">
         {/* Background track */}
         <circle
           cx={size / 2}
@@ -92,7 +88,7 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
           strokeWidth={strokeWidth}
           className="opacity-30"
         />
-        
+
         {/* Progress ring */}
         <motion.circle
           cx={size / 2}
@@ -127,11 +123,7 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
       </svg>
 
       {/* Optional label */}
-      {label && (
-        <span className="text-xs text-[var(--color-text-muted)] font-medium">
-          {label}
-        </span>
-      )}
+      {label && <span className="text-xs text-[var(--color-text-muted)] font-medium">{label}</span>}
     </div>
   );
 };
@@ -139,7 +131,9 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
 /**
  * Compact variant for inline use
  */
-export const RadialProgressCompact: React.FC<Omit<RadialProgressProps, 'size' | 'showValue' | 'label'>> = (props) => {
+export const RadialProgressCompact: React.FC<
+  Omit<RadialProgressProps, 'size' | 'showValue' | 'label'>
+> = (props) => {
   return <RadialProgress {...props} size={60} strokeWidth={6} showValue={true} />;
 };
 

@@ -60,7 +60,7 @@ export function useSRSItems(): UseSRSItemsResult {
       }
 
       const data = await response.json();
-      
+
       // Convert date strings back to Date objects
       const items = data.items.map((item: any) => ({
         ...item,
@@ -121,9 +121,12 @@ export function useSRSItems(): UseSRSItemsResult {
   useEffect(() => {
     if (!isSignedIn) return;
 
-    const syncInterval = setInterval(() => {
-      syncToCloud();
-    }, 5 * 60 * 1000); // 5 minutes
+    const syncInterval = setInterval(
+      () => {
+        syncToCloud();
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
 
     return () => clearInterval(syncInterval);
   }, [isSignedIn, syncToCloud]);

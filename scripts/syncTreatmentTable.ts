@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { TREATMENT_REGISTRY } from '../treatmentRegistry';
+import { TREATMENT_REGISTRY } from '../src/registries/treatmentRegistry';
 
 config();
 const prisma = new PrismaClient();
@@ -27,13 +27,9 @@ export async function syncAllTreatments(): Promise<string> {
         create: {
           name: treatment.name,
           displayName: treatment.displayName ?? treatment.name,
-          aliases: treatment.aliases ?? [],
           category: treatment.category,
           type: null,
           description: null,
-          mechanism: null,
-          dosing: null,
-          sideEffects: [],
           indications: [],
           contraindications: [],
           complications: [],

@@ -1,6 +1,6 @@
 /**
  * SystemProgressBar - Shows overall mastery progress for a system
- * 
+ *
  * Displays:
  * - Overall mastery percentage
  * - Breakdown by mastery level (new, learning, developing, competent, mastered)
@@ -35,7 +35,7 @@ interface SystemProgressBarProps {
  */
 function calculateMasteryScore(stats: MasteryStats): number {
   if (stats.total === 0) return 0;
-  
+
   const weights = {
     new: 0,
     learning: 15,
@@ -88,15 +88,16 @@ export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
     return (
       <div className="flex items-center gap-2">
         <div className="flex-1 h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden flex">
-          {segments.map((seg) => (
-            seg.count > 0 && (
-              <div
-                key={seg.key}
-                className={`${seg.color} transition-all`}
-                style={{ width: `${(seg.count / stats.total) * 100}%` }}
-              />
-            )
-          ))}
+          {segments.map(
+            (seg) =>
+              seg.count > 0 && (
+                <div
+                  key={seg.key}
+                  className={`${seg.color} transition-all`}
+                  style={{ width: `${(seg.count / stats.total) * 100}%` }}
+                />
+              )
+          )}
         </div>
         <span className={`text-xs font-bold ${scoreColor}`}>{score}%</span>
       </div>
@@ -120,23 +121,26 @@ export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
 
       {/* Progress bar */}
       <div className="h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden flex mb-3">
-        {segments.map((seg) => (
-          seg.count > 0 && (
-            <div
-              key={seg.key}
-              className={`${seg.color} transition-all duration-500`}
-              style={{ width: `${(seg.count / stats.total) * 100}%` }}
-              title={`${seg.key}: ${seg.count}`}
-            />
-          )
-        ))}
+        {segments.map(
+          (seg) =>
+            seg.count > 0 && (
+              <div
+                key={seg.key}
+                className={`${seg.color} transition-all duration-500`}
+                style={{ width: `${(seg.count / stats.total) * 100}%` }}
+                title={`${seg.key}: ${seg.count}`}
+              />
+            )
+        )}
       </div>
 
       {/* Stats row */}
       <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
         <div className="flex items-center gap-1">
           <BookOpen className="w-3 h-3" />
-          <span>{studied} / {stats.total} studied</span>
+          <span>
+            {studied} / {stats.total} studied
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <Award className="w-3 h-3 text-blue-400" />

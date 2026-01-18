@@ -1,6 +1,6 @@
 /**
  * Step 6: Content Completeness Dashboard
- * 
+ *
  * This script generates a comprehensive report on content quality and completeness
  * for each condition in the database, helping prioritize enrichment efforts.
  */
@@ -60,26 +60,23 @@ function hasContent(value: any): boolean {
 
 function calculateCompletenessScore(content: any): CompletenessScore {
   // Required fields: 60 points max (15 points each)
-  const requiredPresent = REQUIRED_FIELDS.filter(f => hasContent(content[f]));
+  const requiredPresent = REQUIRED_FIELDS.filter((f) => hasContent(content[f]));
   const requiredScore = (requiredPresent.length / REQUIRED_FIELDS.length) * 60;
 
   // High-yield fields: 40 points max
-  const highYieldPresent = HIGH_YIELD_FIELDS.filter(f => hasContent(content[f]));
+  const highYieldPresent = HIGH_YIELD_FIELDS.filter((f) => hasContent(content[f]));
   const highYieldScore = (highYieldPresent.length / HIGH_YIELD_FIELDS.length) * 40;
 
   const totalScore = Math.round(requiredScore + highYieldScore);
 
   const missingFields = [
-    ...REQUIRED_FIELDS.filter(f => !hasContent(content[f])),
-    ...HIGH_YIELD_FIELDS.filter(f => !hasContent(content[f])),
+    ...REQUIRED_FIELDS.filter((f) => !hasContent(content[f])),
+    ...HIGH_YIELD_FIELDS.filter((f) => !hasContent(content[f])),
   ];
 
-  const presentFields = [
-    ...requiredPresent,
-    ...highYieldPresent,
-  ];
+  const presentFields = [...requiredPresent, ...highYieldPresent];
 
-  // Priority = PANCE yield * (100 - score) 
+  // Priority = PANCE yield * (100 - score)
   // Higher yield + lower completeness = higher priority
   const panceYield = content.pance_yield || 1;
   const priority = Math.round(panceYield * (100 - totalScore));
@@ -140,31 +137,32 @@ async function analyzeContentCompleteness(): Promise<CompletenessScore[]> {
 function generateSystemStats(scores: CompletenessScore[]): SystemStats[] {
   const systemMap = new Map<string, CompletenessScore[]>();
 
-  scores.forEach(score => {
+  scores.forEach((score) => {
     if (!systemMap.has(score.system)) {
       systemMap.set(score.system, []);
     }
     systemMap.get(score.system)!.push(score);
   });
 
-  return Array.from(systemMap.entries()).map(([system, conditions]) => {
-    const highYield = conditions.filter(c => (c.pance_yield || 0) >= 3);
-    
-    return {
-      system,
-      totalConditions: conditions.length,
-      avgScore: Math.round(
-        conditions.reduce((sum, c) => sum + c.score, 0) / conditions.length
-      ),
-      missingRequiredFields: conditions.filter(c =>
-        REQUIRED_FIELDS.some(f => c.missingFields.includes(f))
-      ).length,
-      highYieldCount: highYield.length,
-      highYieldAvgScore: highYield.length > 0
-        ? Math.round(highYield.reduce((sum, c) => sum + c.score, 0) / highYield.length)
-        : 0,
-    };
-  }).sort((a, b) => a.avgScore - b.avgScore); // Lowest scores first (need most work)
+  return Array.from(systemMap.entries())
+    .map(([system, conditions]) => {
+      const highYield = conditions.filter((c) => (c.pance_yield || 0) >= 3);
+
+      return {
+        system,
+        totalConditions: conditions.length,
+        avgScore: Math.round(conditions.reduce((sum, c) => sum + c.score, 0) / conditions.length),
+        missingRequiredFields: conditions.filter((c) =>
+          REQUIRED_FIELDS.some((f) => c.missingFields.includes(f))
+        ).length,
+        highYieldCount: highYield.length,
+        highYieldAvgScore:
+          highYield.length > 0
+            ? Math.round(highYield.reduce((sum, c) => sum + c.score, 0) / highYield.length)
+            : 0,
+      };
+    })
+    .sort((a, b) => a.avgScore - b.avgScore); // Lowest scores first (need most work)
 }
 
 function printDashboard(scores: CompletenessScore[], systemStats: SystemStats[]): void {
@@ -174,11 +172,11 @@ function printDashboard(scores: CompletenessScore[], systemStats: SystemStats[])
 
   // Overall stats
   const avgScore = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
-  const missingRequired = scores.filter(s =>
-    REQUIRED_FIELDS.some(f => s.missingFields.includes(f))
+  const missingRequired = scores.filter((s) =>
+    REQUIRED_FIELDS.some((f) => s.missingFields.includes(f))
   ).length;
-  const perfect = scores.filter(s => s.score === 100).length;
-  const critical = scores.filter(s => s.score < 50).length;
+  const perfect = scores.filter((s) => s.score === 100).length;
+  const critical = scores.filter((s) => s.score < 50).length;
 
   console.log(`\n📈 Overall Statistics:`);
   console.log(`  Total conditions:              ${scores.length}`);
@@ -189,26 +187,28 @@ function printDashboard(scores: CompletenessScore[], systemStats: SystemStats[])
 
   // System breakdown
   console.log(`\n🏥 System Breakdown (sorted by avg score):`);
-  console.log(`${'System'.padEnd(18)} ${'Total'.padStart(5)} ${'Avg'.padStart(4)} ${'Missing'.padStart(8)} ${'High Yield'.padStart(11)} ${'HY Avg'.padStart(7)}`);
+  console.log(
+    `${'System'.padEnd(18)} ${'Total'.padStart(5)} ${'Avg'.padStart(4)} ${'Missing'.padStart(8)} ${'High Yield'.padStart(11)} ${'HY Avg'.padStart(7)}`
+  );
   console.log('-'.repeat(80));
-  
-  systemStats.forEach(stat => {
+
+  systemStats.forEach((stat) => {
     const emoji = stat.avgScore >= 90 ? '✅' : stat.avgScore >= 70 ? '⚠️ ' : '🔴';
     console.log(
       `${emoji} ${stat.system.padEnd(15)} ${stat.totalConditions.toString().padStart(5)} ` +
-      `${stat.avgScore.toString().padStart(4)} ${stat.missingRequiredFields.toString().padStart(8)} ` +
-      `${stat.highYieldCount.toString().padStart(11)} ${stat.highYieldAvgScore.toString().padStart(7)}`
+        `${stat.avgScore.toString().padStart(4)} ${stat.missingRequiredFields.toString().padStart(8)} ` +
+        `${stat.highYieldCount.toString().padStart(11)} ${stat.highYieldAvgScore.toString().padStart(7)}`
     );
   });
 
   // Top 50 priority conditions to enrich
   console.log(`\n🎯 Top 50 Priority Conditions (High PANCE Yield + Low Completeness):`);
-  console.log(`${'Rank'.padStart(4)} ${'Priority'.padStart(8)} ${'Score'.padStart(5)} ${'System'.padEnd(8)} ${'Condition'.padEnd(40)}`);
+  console.log(
+    `${'Rank'.padStart(4)} ${'Priority'.padStart(8)} ${'Score'.padStart(5)} ${'System'.padEnd(8)} ${'Condition'.padEnd(40)}`
+  );
   console.log('-'.repeat(80));
 
-  const topPriority = scores
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, 50);
+  const topPriority = scores.sort((a, b) => b.priority - a.priority).slice(0, 50);
 
   topPriority.forEach((item, index) => {
     const rank = (index + 1).toString().padStart(4);
@@ -216,16 +216,17 @@ function printDashboard(scores: CompletenessScore[], systemStats: SystemStats[])
     const score = item.score.toString().padStart(5);
     const system = item.system.substring(0, 8).padEnd(8);
     const condition = item.condition.substring(0, 40).padEnd(40);
-    const yieldEmoji = (item.pance_yield || 0) >= 5 ? '🔥' : (item.pance_yield || 0) >= 3 ? '⭐' : '  ';
-    
+    const yieldEmoji =
+      (item.pance_yield || 0) >= 5 ? '🔥' : (item.pance_yield || 0) >= 3 ? '⭐' : '  ';
+
     console.log(`${rank} ${priority} ${score} ${system} ${yieldEmoji} ${condition}`);
   });
 
   // Missing field frequency
   console.log(`\n📋 Most Common Missing Fields:`);
   const fieldCounts = new Map<string, number>();
-  scores.forEach(score => {
-    score.missingFields.forEach(field => {
+  scores.forEach((score) => {
+    score.missingFields.forEach((field) => {
       fieldCounts.set(field, (fieldCounts.get(field) || 0) + 1);
     });
   });
@@ -238,7 +239,9 @@ function printDashboard(scores: CompletenessScore[], systemStats: SystemStats[])
     const percentage = Math.round((count / scores.length) * 100);
     const bar = '█'.repeat(Math.floor(percentage / 5));
     const required = REQUIRED_FIELDS.includes(field) ? ' 🔴' : '';
-    console.log(`  ${(index + 1).toString().padStart(2)}. ${field.padEnd(25)} ${count.toString().padStart(4)} (${percentage}%)${required} ${bar}`);
+    console.log(
+      `  ${(index + 1).toString().padStart(2)}. ${field.padEnd(25)} ${count.toString().padStart(4)} (${percentage}%)${required} ${bar}`
+    );
   });
 
   console.log('\n' + '='.repeat(80) + '\n');
@@ -252,8 +255,9 @@ async function exportToCSV(scores: CompletenessScore[], filename: string): Promi
     'Priority,Score,PANCE Yield,System,Subcategory,Condition,Missing Fields',
     ...scores
       .sort((a, b) => b.priority - a.priority)
-      .map(s => 
-        `${s.priority},${s.score},${s.pance_yield || 0},"${s.system}","${s.subcategory}","${s.condition}","${s.missingFields.join(', ')}"`
+      .map(
+        (s) =>
+          `${s.priority},${s.score},${s.pance_yield || 0},"${s.system}","${s.subcategory}","${s.condition}","${s.missingFields.join(', ')}"`
       ),
   ].join('\n');
 
@@ -265,7 +269,8 @@ async function exportToCSV(scores: CompletenessScore[], filename: string): Promi
 async function main() {
   const args = process.argv.slice(2);
   const exportCSV = args.includes('--csv');
-  const csvFile = args.find(arg => arg.startsWith('--file='))?.split('=')[1] || 'content-completeness.csv';
+  const csvFile =
+    args.find((arg) => arg.startsWith('--file='))?.split('=')[1] || 'content-completeness.csv';
 
   console.log('🏥 PANaCEa Database: Content Completeness Dashboard\n');
 
@@ -283,7 +288,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);
   })

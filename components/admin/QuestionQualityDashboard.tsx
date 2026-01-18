@@ -1,6 +1,6 @@
 /**
  * Question Quality Dashboard
- * 
+ *
  * Admin component for monitoring question quality metrics:
  * - Quality score distribution
  * - Validation status breakdown
@@ -88,21 +88,21 @@ export function QuestionQualityDashboard() {
   const fetchStats = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const params = new URLSearchParams();
       if (systemFilter) params.set('system', systemFilter);
       if (statusFilter) params.set('validationStatus', statusFilter);
-      
+
       const token = await getToken();
-      const response = await fetch(`/api/analytics/question-quality?${params}` , {
+      const response = await fetch(`/api/analytics/question-quality?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch quality stats');
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -211,19 +211,37 @@ export function QuestionQualityDashboard() {
           title="Avg Quality Score"
           value={`${stats.overview.avgQualityScore}%`}
           icon={TrendingUp}
-          color={stats.overview.avgQualityScore >= 70 ? 'green' : stats.overview.avgQualityScore >= 50 ? 'yellow' : 'red'}
+          color={
+            stats.overview.avgQualityScore >= 70
+              ? 'green'
+              : stats.overview.avgQualityScore >= 50
+                ? 'yellow'
+                : 'red'
+          }
         />
         <StatCard
           title="Avg Flag Rate"
           value={`${(stats.overview.avgFlagRate * 100).toFixed(1)}%`}
           icon={Flag}
-          color={stats.overview.avgFlagRate <= 0.05 ? 'green' : stats.overview.avgFlagRate <= 0.1 ? 'yellow' : 'red'}
+          color={
+            stats.overview.avgFlagRate <= 0.05
+              ? 'green'
+              : stats.overview.avgFlagRate <= 0.1
+                ? 'yellow'
+                : 'red'
+          }
         />
         <StatCard
           title="Overall Accuracy"
           value={`${stats.overview.overallAccuracy}%`}
           icon={CheckCircle}
-          color={stats.overview.overallAccuracy >= 60 ? 'green' : stats.overview.overallAccuracy >= 40 ? 'yellow' : 'red'}
+          color={
+            stats.overview.overallAccuracy >= 60
+              ? 'green'
+              : stats.overview.overallAccuracy >= 40
+                ? 'yellow'
+                : 'red'
+          }
         />
       </div>
 
@@ -235,18 +253,24 @@ export function QuestionQualityDashboard() {
           <div className="space-y-3">
             {stats.statusBreakdown.map((item) => {
               const Icon = STATUS_ICONS[item.status as keyof typeof STATUS_ICONS] || Clock;
-              const percentage = stats.overview.totalQuestions > 0
-                ? (item.count / stats.overview.totalQuestions) * 100
-                : 0;
-              
+              const percentage =
+                stats.overview.totalQuestions > 0
+                  ? (item.count / stats.overview.totalQuestions) * 100
+                  : 0;
+
               return (
                 <div key={item.status} className="flex items-center gap-3">
-                  <Icon className={`w-5 h-5 ${
-                    item.status === 'approved' ? 'text-green-500' :
-                    item.status === 'rejected' ? 'text-red-500' :
-                    item.status === 'needs_revision' ? 'text-orange-500' :
-                    'text-yellow-500'
-                  }`} />
+                  <Icon
+                    className={`w-5 h-5 ${
+                      item.status === 'approved'
+                        ? 'text-green-500'
+                        : item.status === 'rejected'
+                          ? 'text-red-500'
+                          : item.status === 'needs_revision'
+                            ? 'text-orange-500'
+                            : 'text-yellow-500'
+                    }`}
+                  />
                   <span className="flex-1 capitalize">{item.status.replace('_', ' ')}</span>
                   <span className="font-mono text-sm">{item.count}</span>
                   <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
@@ -275,7 +299,7 @@ export function QuestionQualityDashboard() {
                 fair: 'bg-yellow-500',
                 poor: 'bg-red-500',
               };
-              
+
               return (
                 <div key={tier} className="flex items-center gap-3">
                   <span className="w-20 capitalize text-sm">{tier}</span>
@@ -321,7 +345,9 @@ export function QuestionQualityDashboard() {
                       {system.avgQualityScore ? `${system.avgQualityScore}%` : '-'}
                     </td>
                     <td className="text-right font-mono">
-                      {system.avgFlagRate !== null ? `${(system.avgFlagRate * 100).toFixed(1)}%` : '-'}
+                      {system.avgFlagRate !== null
+                        ? `${(system.avgFlagRate * 100).toFixed(1)}%`
+                        : '-'}
                     </td>
                   </tr>
                 ))}
@@ -341,7 +367,10 @@ export function QuestionQualityDashboard() {
           ) : (
             <div className="space-y-2">
               {stats.topFlagged.map((q) => (
-                <div key={q.id} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <div
+                  key={q.id}
+                  className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"
+                >
                   <span className="text-xs font-mono truncate flex-1">{q.id.slice(0, 8)}...</span>
                   <span className="text-xs text-slate-500">{q.system}</span>
                   <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded">

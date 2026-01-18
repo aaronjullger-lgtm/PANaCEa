@@ -6,38 +6,53 @@ import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 // import { GUIDELINES_DATABASE } from '../data/guidelinesData';
 
 // Configuration
-const INPUT_FILE = path.resolve("conditionContent.final.json");
-const OUTPUT_FILE = path.resolve("conditionContent.final.json");
-const MISSING_LOG = path.resolve("missing_registry_items.json");
+const INPUT_FILE = path.resolve('conditionContent.final.json');
+const OUTPUT_FILE = path.resolve('conditionContent.final.json');
+const MISSING_LOG = path.resolve('missing_registry_items.json');
 
 // Load Local Data
-const clinicalCasesPath = path.resolve("src/data/clinicalCases.json");
-const labCasesPath = path.resolve("src/data/labCases.json");
+const clinicalCasesPath = path.resolve('src/data/clinicalCases.json');
+const labCasesPath = path.resolve('src/data/labCases.json');
 
-const clinicalCases = fs.existsSync(clinicalCasesPath) ? JSON.parse(fs.readFileSync(clinicalCasesPath, 'utf8')) : [];
+const clinicalCases = fs.existsSync(clinicalCasesPath)
+  ? JSON.parse(fs.readFileSync(clinicalCasesPath, 'utf8'))
+  : [];
 // const labCases = fs.existsSync(labCasesPath) ? JSON.parse(fs.readFileSync(labCasesPath, 'utf8')) : [];
 
 // --- CRITICAL FIX: Correct Normalization ---
 // Must match conditionRegistry.ts: lowercase, spaces->underscores, keep alphanumeric+_
 function normalize(s: string): string {
-  return s.toLowerCase().trim()
-    .replace(/\s+/g, '_')           
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
 }
 
 function findConditionId(name: string): string | undefined {
   const normName = normalize(name);
-  
+
   // 1. Exact ID Match (if passed an ID like "CV__ecg__afib")
-  if (CONDITION_REGISTRY.some(c => `${c.system}__${normalize(c.subcategory)}__${normalize(c.condition)}` === name)) return name;
+  if (
+    CONDITION_REGISTRY.some(
+      (c) => `${c.system}__${normalize(c.subcategory)}__${normalize(c.condition)}` === name
+    )
+  )
+    return name;
 
   // 2. Condition Name Match
-  const exact = CONDITION_REGISTRY.find(c => normalize(c.condition) === normName);
-  if (exact) return `${exact.system}__${normalize(exact.subcategory)}__${normalize(exact.condition)}`;
+  const exact = CONDITION_REGISTRY.find((c) => normalize(c.condition) === normName);
+  if (exact)
+    return `${exact.system}__${normalize(exact.subcategory)}__${normalize(exact.condition)}`;
 
   // 3. Alias Match
-  const aliasMatch = CONDITION_REGISTRY.find(c => c.aliases?.some(a => normalize(a) === normName));
-  if (aliasMatch) return `${aliasMatch.system}__${normalize(aliasMatch.subcategory)}__${normalize(aliasMatch.condition)}`;
+  const aliasMatch = CONDITION_REGISTRY.find((c) => {
+    if (!c.aliases) return false;
+    const aliasArray = Array.isArray(c.aliases) ? c.aliases : [c.aliases];
+    return aliasArray.some((a) => normalize(a) === normName);
+  });
+  if (aliasMatch)
+    return `${aliasMatch.system}__${normalize(aliasMatch.subcategory)}__${normalize(aliasMatch.condition)}`;
 
   return undefined;
 }
@@ -45,7 +60,7 @@ function findConditionId(name: string): string | undefined {
 // --- MAIN ---
 
 async function main() {
-  console.log("🚜 Starting Master Harvest (Fixed IDs)...");
+  console.log('🚜 Starting Master Harvest (Fixed IDs)...');
 
   // 1. Load Content & Index by ID
   let rawContent: any[] = [];
@@ -53,11 +68,11 @@ async function main() {
     const raw = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
     rawContent = Array.isArray(raw) ? raw : Object.values(raw);
   }
-  
+
   const contentMap = new Map();
   // Index existing content
   rawContent.forEach((c: any) => contentMap.set(c.conditionId, c));
-  
+
   console.log(`   - Loaded ${contentMap.size} existing conditions.`);
 
   // 2. Registry Alignment (Create Stubs)
@@ -69,10 +84,17 @@ async function main() {
         conditionId: id,
         condition: meta.condition,
         content: {
-          overview: "", diagnostics: "", etiologyPathophysiology: "",
-          symptoms: [], treatment: [], examFindings: [], riskFactors: [], 
-          management: [], complications: [], basicScienceLinks: []
-        }
+          overview: '',
+          diagnostics: '',
+          etiologyPathophysiology: '',
+          symptoms: [],
+          treatment: [],
+          examFindings: [],
+          riskFactors: [],
+          management: [],
+          complications: [],
+          basicScienceLinks: [],
+        },
       });
       addedCount++;
     }
@@ -80,7 +102,9 @@ async function main() {
   console.log(`   - Added ${addedCount} missing registry stubs.`);
 
   // 3. HARVEST DATA
-  let txCount = 0, caseCount = 0, buzzCount = 0;
+  let txCount = 0,
+    caseCount = 0,
+    buzzCount = 0;
 
   // A. Treatments
   // for (const tx of FIRST_LINE_TREATMENTS) {
@@ -88,7 +112,7 @@ async function main() {
   //   if (id && contentMap.has(id)) {
   //     const entry = contentMap.get(id);
   //     const text = `**First-Line**: ${tx.firstLine}. ${tx.explanation} ${tx.pearl ? `\n* **Pearl**: ${tx.pearl}` : ''}`;
-      
+
   //     if (!entry.content.treatment) entry.content.treatment = [];
   //     if (!JSON.stringify(entry.content.treatment).includes(tx.firstLine)) {
   //       entry.content.treatment.unshift(text);
@@ -103,14 +127,16 @@ async function main() {
     const id = findConditionId(cCase.correctDiagnosis);
     if (id && contentMap.has(id)) {
       const entry = contentMap.get(id);
-      
+
       // Inject Presentation Clues
-      const clueText = cCase.presentationClues.map((c: any) => `* ${c.description} (${c.type})`).join("\n");
+      const clueText = cCase.presentationClues
+        .map((c: any) => `* ${c.description} (${c.type})`)
+        .join('\n');
       const fullText = `**Classic Case**: ${cCase.vignette}\n\n**Key Clues**:\n${clueText}`;
-      
-      if (!entry.content.clinicalPresentation) entry.content.clinicalPresentation = "";
+
+      if (!entry.content.clinicalPresentation) entry.content.clinicalPresentation = '';
       if (!entry.content.clinicalPresentation.includes(cCase.vignette.substring(0, 20))) {
-        entry.content.clinicalPresentation = fullText + "\n\n" + entry.content.clinicalPresentation;
+        entry.content.clinicalPresentation = fullText + '\n\n' + entry.content.clinicalPresentation;
         caseCount++;
       }
     }
@@ -122,7 +148,7 @@ async function main() {
   //   if (id && contentMap.has(id)) {
   //     const entry = contentMap.get(id);
   //     const text = `**${buzz.buzzword}**: ${buzz.explanation || 'Classic finding'}`;
-      
+
   //     if (!entry.content.examFindings) entry.content.examFindings = [];
   //     if (!JSON.stringify(entry.content.examFindings).includes(buzz.buzzword)) {
   //       entry.content.examFindings.push(text);

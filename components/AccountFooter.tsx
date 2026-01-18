@@ -17,11 +17,11 @@ interface AccountFooterProps {
   onOpenSettings?: () => void;
 }
 
-export function AccountFooter({ 
-  isSyncing, 
-  lastSyncTime, 
+export function AccountFooter({
+  isSyncing,
+  lastSyncTime,
   syncError,
-  onOpenSettings 
+  onOpenSettings,
 }: AccountFooterProps) {
   const { isSignedIn, user, isLoaded } = useUser();
   const { signOut } = useClerk();
@@ -81,7 +81,9 @@ export function AccountFooter({
             whileTap={{ scale: 0.98 }}
           >
             <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
-              {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
+              {user?.firstName?.charAt(0) ||
+                user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() ||
+                'S'}
             </div>
             <span className="text-sm font-semibold text-[var(--color-text-primary)] hidden sm:inline">
               {user?.firstName || 'Student'}
@@ -89,14 +91,12 @@ export function AccountFooter({
           </motion.button>
 
           {/* Right: Sync Status (Non-clickable indicator) */}
-          <div 
+          <div
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] ${syncStatus.color}`}
             title={syncError || 'Cloud sync status'}
           >
             {syncStatus.icon}
-            <span className="text-xs font-medium hidden sm:inline">
-              {syncStatus.text}
-            </span>
+            <span className="text-xs font-medium hidden sm:inline">{syncStatus.text}</span>
           </div>
         </div>
       </motion.footer>
@@ -132,7 +132,9 @@ export function AccountFooter({
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-lg ring-2 ring-white/30 dark:ring-white/20">
-                    {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
+                    {user?.firstName?.charAt(0) ||
+                      user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() ||
+                      'S'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[var(--color-text-primary)] truncate">

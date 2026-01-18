@@ -26,7 +26,7 @@ async function restoreMedicalContentFromCSV() {
 
   try {
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
-    
+
     // Parse CSV with headers
     const records = parse(csvContent, {
       columns: true,
@@ -36,56 +36,60 @@ async function restoreMedicalContentFromCSV() {
         if (value === '' || value === 'NULL') {
           return null;
         }
-        
+
         // Parse JSON fields (including arrays)
-        if (context.column === 'content' || 
-            context.column === 'metadata' || 
-            context.column === 'references' || 
-            context.column === 'tags' ||
-            context.column === 'relatedSystems' ||
-            context.column === 'buzzwords' ||
-            context.column === 'complications' ||
-            context.column === 'riskFactors' ||
-            context.column === 'symptoms' ||
-            context.column === 'physicalExam' ||
-            context.column === 'differentialDiagnosis') {
+        if (
+          context.column === 'content' ||
+          context.column === 'metadata' ||
+          context.column === 'references' ||
+          context.column === 'tags' ||
+          context.column === 'relatedSystems' ||
+          context.column === 'buzzwords' ||
+          context.column === 'complications' ||
+          context.column === 'riskFactors' ||
+          context.column === 'symptoms' ||
+          context.column === 'physicalExam' ||
+          context.column === 'differentialDiagnosis'
+        ) {
           try {
             return JSON.parse(value);
           } catch {
             return value;
           }
         }
-        
+
         // Parse boolean fields
         if (context.column === 'isPublished') {
           return value === 'true' || value === '1' || value === 't';
         }
-        
+
         // Parse integer fields
         if (context.column === 'version') {
           return parseInt(value, 10);
         }
-        
+
         // Parse date fields
-        if (context.column === 'createdAt' || 
-            context.column === 'updatedAt' || 
-            context.column === 'publishedAt' ||
-            context.column === 'approvedAt') {
+        if (
+          context.column === 'createdAt' ||
+          context.column === 'updatedAt' ||
+          context.column === 'publishedAt' ||
+          context.column === 'approvedAt'
+        ) {
           return value ? new Date(value) : null;
         }
-        
+
         return value;
-      }
+      },
     }) as any[];
 
     console.log(`📊 Found ${records.length} MedicalContent records in CSV`);
 
     // Check for existing records to avoid duplicates
     const existingRecords = await prisma.medicalContent.findMany({
-      select: { id: true, conditionId: true }
+      select: { id: true, conditionId: true },
     });
-    const existingIds = new Set(existingRecords.map(r => r.id));
-    const existingConditionIds = new Set(existingRecords.map(r => r.conditionId));
+    const existingIds = new Set(existingRecords.map((r) => r.id));
+    const existingConditionIds = new Set(existingRecords.map((r) => r.conditionId));
 
     console.log(`📋 Found ${existingIds.size} existing records in database`);
 
@@ -115,7 +119,7 @@ async function restoreMedicalContentFromCSV() {
           data: rec as any,
         });
         successCount++;
-        
+
         // Add to tracking sets
         existingIds.add(rec.id);
         if (rec.conditionId) {
@@ -135,7 +139,6 @@ async function restoreMedicalContentFromCSV() {
       console.log(`⚠️  ${errorCount} records failed to restore`);
     }
     console.log('\n🎉 MedicalContent restoration complete!');
-
   } catch (error: any) {
     console.error('❌ Error reading or parsing CSV:', error.message);
     process.exit(1);

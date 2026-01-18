@@ -37,6 +37,9 @@ export { default as SyllabusDecompiler } from './SyllabusDecompiler';
 export { TieredAnalytics, default as TieredAnalyticsDefault } from './TieredAnalytics';
 
 // FSRS Decay Visualization (Sprint E: Magic Features)
-export { FSRSDecayVisualization, default as FSRSDecayVisualizationDefault } from './FSRSDecayVisualization';
+export {
+  FSRSDecayVisualization,
+  default as FSRSDecayVisualizationDefault,
+} from './FSRSDecayVisualization';
 
 // DayCellPopover - import directly from './DayCellPopover' if needed

@@ -26,15 +26,12 @@ interface PatientCase {
   labs?: string;
 }
 
-export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
-  patientCase,
-  onComplete
-}) => {
+export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, onComplete }) => {
   const [soapNote, setSOAPNote] = useState<SOAPNote>({
     subjective: '',
     objective: '',
     assessment: '',
-    plan: ''
+    plan: '',
   });
   const [isGrading, setIsGrading] = useState(false);
   const [gradingResult, setGradingResult] = useState<GradingResult | null>(null);
@@ -42,7 +39,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
   const handleSubmit = async () => {
     setIsGrading(true);
-    
+
     try {
       const studentNote = `Subjective (S):\n${soapNote.subjective}\n\nObjective (O):\n${soapNote.objective}\n\nAssessment (A):\n${soapNote.assessment}\n\nPlan (P):\n${soapNote.plan}`;
 
@@ -55,7 +52,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
       // Fire-and-forget analytics event; failures are handled inside the helper
       void storeSoapGradingEvent(patientCase.id, result);
     } catch (error) {
-      console.error("Grading failed:", error);
+      console.error('Grading failed:', error);
       // Handle error appropriately in UI
     } finally {
       setIsGrading(false);
@@ -64,10 +61,13 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
   const getSectionGuidance = (section: keyof SOAPNote): string => {
     const guidance = {
-      subjective: "Document patient's chief complaint, history of present illness (HPI), past medical history, medications, allergies, and social history. Use patient's own words when appropriate.",
-      objective: "Record vital signs, physical exam findings, and relevant lab/imaging results. Be specific and objective. Include pertinent negatives.",
-      assessment: "List differential diagnoses ranked by likelihood. State your primary diagnosis clearly. Include ICD-10 codes if known.",
-      plan: "Detail treatment plan, medications (dose, route, frequency), follow-up instructions, patient education, and when to return. Include billing elements."
+      subjective:
+        "Document patient's chief complaint, history of present illness (HPI), past medical history, medications, allergies, and social history. Use patient's own words when appropriate.",
+      objective:
+        'Record vital signs, physical exam findings, and relevant lab/imaging results. Be specific and objective. Include pertinent negatives.',
+      assessment:
+        'List differential diagnoses ranked by likelihood. State your primary diagnosis clearly. Include ICD-10 codes if known.',
+      plan: 'Detail treatment plan, medications (dose, route, frequency), follow-up instructions, patient education, and when to return. Include billing elements.',
     };
     return guidance[section];
   };
@@ -107,10 +107,8 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
         {/* Patient Case */}
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Patient Case
-            </h3>
-            
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Patient Case</h3>
+
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -122,18 +120,14 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  History
-                </h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">History</h4>
                 <p className="text-gray-600 dark:text-gray-400 text-sm whitespace-pre-line">
                   {patientCase.history}
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Vitals
-                </h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Vitals</h4>
                 <p className="text-gray-600 dark:text-gray-400 text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                   {patientCase.vitals}
                 </p>
@@ -150,9 +144,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
               {patientCase.labs && (
                 <div>
-                  <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Labs
-                  </h4>
+                  <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Labs</h4>
                   <p className="text-gray-600 dark:text-gray-400 text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                     {patientCase.labs}
                   </p>
@@ -261,7 +253,13 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={isGrading || !soapNote.subjective || !soapNote.objective || !soapNote.assessment || !soapNote.plan}
+              disabled={
+                isGrading ||
+                !soapNote.subjective ||
+                !soapNote.objective ||
+                !soapNote.assessment ||
+                !soapNote.plan
+              }
               className="w-full mt-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white
                 rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
@@ -318,8 +316,8 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                     Grading Results
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Your SOAP note has been evaluated by a strict board-style examiner, focusing on safety,
-                    completeness, and clear clinical reasoning.
+                    Your SOAP note has been evaluated by a strict board-style examiner, focusing on
+                    safety, completeness, and clear clinical reasoning.
                   </p>
                   {gradingResult.totalScore >= 90 && (
                     <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-900/20 px-3 py-1 text-xs font-semibold text-green-700 dark:text-green-300">
@@ -329,10 +327,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                   )}
                 </div>
                 <div className="flex items-center gap-4">
-                  <svg
-                    className="w-24 h-24 -rotate-90"
-                    viewBox="0 0 100 100"
-                  >
+                  <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
                     <circle
                       className="text-gray-200 dark:text-gray-700"
                       stroke="currentColor"
@@ -352,16 +347,18 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                       cx="50"
                       cy="50"
                       strokeDasharray={2 * Math.PI * 45}
-                      strokeDashoffset={
-                        2 * Math.PI * 45 * (1 - gradingResult.totalScore / 100)
-                      }
+                      strokeDashoffset={2 * Math.PI * 45 * (1 - gradingResult.totalScore / 100)}
                     />
                   </svg>
                   <div className="text-center">
-                    <div className={`text-4xl font-bold ${getScoreColor(gradingResult.totalScore)}`}>
+                    <div
+                      className={`text-4xl font-bold ${getScoreColor(gradingResult.totalScore)}`}
+                    >
                       {gradingResult.totalScore}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Total Score / 100</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Score / 100
+                    </div>
                   </div>
                 </div>
               </div>
@@ -369,12 +366,14 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
             {/* Section Scores */}
             <div className="grid md:grid-cols-4 gap-4 mb-6">
-              {([
-                ['subjective', gradingResult.breakdown.subjective],
-                ['objective', gradingResult.breakdown.objective],
-                ['assessment', gradingResult.breakdown.assessment],
-                ['plan', gradingResult.breakdown.plan],
-              ] as const).map(([section, score]) => (
+              {(
+                [
+                  ['subjective', gradingResult.breakdown.subjective],
+                  ['objective', gradingResult.breakdown.objective],
+                  ['assessment', gradingResult.breakdown.assessment],
+                  ['plan', gradingResult.breakdown.plan],
+                ] as const
+              ).map(([section, score]) => (
                 <div key={section} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1 capitalize">
                     {section}
@@ -388,12 +387,16 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
             {/* Scoring Explanation */}
             <div className="mb-6 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 text-sm text-gray-700 dark:text-gray-300">
-              <h4 className="font-semibold mb-1 text-gray-900 dark:text-white">How your score is calculated</h4>
+              <h4 className="font-semibold mb-1 text-gray-900 dark:text-white">
+                How your score is calculated
+              </h4>
               <p>
-                Each SOAP section contributes up to <strong>25 points</strong>. The four section scores always add up to your{' '}
-                <strong>{computeSectionTotal(gradingResult)} / 100</strong> total, which is what you see displayed as{' '}
-                <strong>{gradingResult.totalScore} / 100</strong>. Use the Missed Concepts and Suggestions lists below as
-                a focused checklist for what to improve on your next attempt.
+                Each SOAP section contributes up to <strong>25 points</strong>. The four section
+                scores always add up to your{' '}
+                <strong>{computeSectionTotal(gradingResult)} / 100</strong> total, which is what you
+                see displayed as <strong>{gradingResult.totalScore} / 100</strong>. Use the Missed
+                Concepts and Suggestions lists below as a focused checklist for what to improve on
+                your next attempt.
               </p>
             </div>
 
@@ -407,7 +410,10 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                 </div>
                 <ul className="space-y-2">
                   {gradingResult.feedback.strengths.map((item, i) => (
-                    <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                    <li
+                      key={i}
+                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                    >
                       <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
@@ -423,7 +429,10 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                 </div>
                 <ul className="space-y-2">
                   {gradingResult.feedback.missedConcepts.map((item, i) => (
-                    <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                    <li
+                      key={i}
+                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                    >
                       <span className="text-red-600 dark:text-red-400 mt-1">!</span>
                       {item}
                     </li>
@@ -437,11 +446,16 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">Style & Phrasing Suggestions</h4>
+                  <h4 className="font-bold text-gray-900 dark:text-white">
+                    Style & Phrasing Suggestions
+                  </h4>
                 </div>
                 <ul className="space-y-2">
                   {gradingResult.feedback.suggestions.map((item, i) => (
-                    <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                    <li
+                      key={i}
+                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                    >
                       <span className="text-purple-600 dark:text-purple-400 mt-1">→</span>
                       {item}
                     </li>
@@ -457,6 +471,5 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 };
 
 // Grading configuration
-
 
 export default SOAPNoteTrainer;

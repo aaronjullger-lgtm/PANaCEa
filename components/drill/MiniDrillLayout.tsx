@@ -28,7 +28,7 @@ interface MiniDrillLayoutProps {
 
 /**
  * MiniDrillLayout - Shared layout wrapper for mini drill modes
- * 
+ *
  * Provides consistent header, scoring, streak display, and footer
  * with responsive design for mobile/tablet/desktop.
  */
@@ -45,7 +45,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   footer,
 }) => {
   const isMobile = useIsMobile();
-  
+
   // Animation variants
   const flashVariants = {
     initial: { opacity: 0 },
@@ -215,19 +215,23 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   isAnswered,
   onSelect,
 }) => {
-  let buttonClasses = 
+  let buttonClasses =
     'w-full text-left p-4 min-h-[56px] rounded-lg sm:rounded-xl transition-all duration-200 border text-sm sm:text-base';
-  
+
   if (isAnswered) {
     if (isCorrect === true) {
-      buttonClasses += ' bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400';
+      buttonClasses +=
+        ' bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400';
     } else if (isSelected) {
-      buttonClasses += ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
+      buttonClasses +=
+        ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
     } else {
-      buttonClasses += ' bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-muted)] opacity-60';
+      buttonClasses +=
+        ' bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-muted)] opacity-60';
     }
   } else {
-    buttonClasses += ' bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)] cursor-pointer';
+    buttonClasses +=
+      ' bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)] cursor-pointer';
   }
 
   return (
@@ -299,12 +303,17 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex-1">
-            <div className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+            <div
+              className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+            >
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
             {!isCorrect && correctAnswer && (
               <div className="text-sm text-[var(--color-text-secondary)] mt-1">
-                Correct answer: <span className="font-semibold text-[var(--color-text-primary)]">{correctAnswer}</span>
+                Correct answer:{' '}
+                <span className="font-semibold text-[var(--color-text-primary)]">
+                  {correctAnswer}
+                </span>
               </div>
             )}
           </div>
@@ -331,7 +340,10 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
         {pearl && (
           <div className="text-sm text-amber-900 dark:text-amber-300/90 bg-amber-100 dark:bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-300 dark:border-amber-700/30 flex items-start gap-2">
             <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span><span className="font-medium">Pearl: </span>{pearl}</span>
+            <span>
+              <span className="font-medium">Pearl: </span>
+              {pearl}
+            </span>
           </div>
         )}
       </div>
@@ -380,17 +392,13 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       className={`relative p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} text-left shadow-xl overflow-hidden group`}
     >
       <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
+
       <div className="relative z-10">
         <div className="mb-2 sm:mb-3 p-2 sm:p-2.5 bg-foreground/20 rounded-lg sm:rounded-xl w-fit">
           {icon}
         </div>
-        <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">
-          {title}
-        </h3>
-        <p className="text-white/80 text-xs sm:text-sm line-clamp-2">
-          {description}
-        </p>
+        <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">{title}</h3>
+        <p className="text-white/80 text-xs sm:text-sm line-clamp-2">{description}</p>
       </div>
 
       <ArrowRight className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 sm:w-5 sm:h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />

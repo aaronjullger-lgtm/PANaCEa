@@ -1,47 +1,41 @@
 /**
  * POST /api/srs/sync
  * Sync SRS items from localStorage to database for authenticated users
+ * 
+ * Security: Authenticated endpoint with Zod validation
+ * Sprint: Security Hardening Sprint 3 - Middleware Pattern
  */
 
-import { authenticateRequest, createErrorResponse, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { validateRequest, SRSSyncSchema, type SRSItemInput } from '../_shared/schemas';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { SRSSyncSchema } from '../_shared/schemas';
+import { logger } from '../_shared/secureLogger';
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+// Handle CORS preflight
+export const onRequestOptions = withCors();
 
-  // Authenticate request
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  if (!env.DATABASE_URL) {
-    return createErrorResponse('Database not configured', 500);
-  }
-
-  // Validate request body with Zod schema
-  const validation = await validateRequest(request, SRSSyncSchema);
-  if (!validation.success) {
-    return (validation as { success: false; response: Response }).response;
-  }
-
+// POST handler with authentication + validation
+export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context) => {
+  const { env, auth, validated } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
-      where: { clerkId: authContext.userId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return createErrorResponse('User not found. Please refresh and try again.', 404);
+      logger.warn('SRS sync: User not found in database', { clerkId: auth.userId });
+      return {
+        status: 404,
+        error: 'User not found. Please refresh and try again.',
+      };
     }
 
     const userId = user.id;
-    const { items } = validation.data;
-
+    const { items } = validated;
     const now = new Date();
 
     let synced = 0;
@@ -109,28 +103,38 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
           synced++;
         }
       } catch (itemError) {
-        console.error(`[SRS Sync] Error syncing item ${item.questionId}:`, itemError);
+        logger.error('SRS sync: Error syncing individual item', itemError, {
+          questionId: item.questionId,
+          userId: auth.userId,
+        });
         // Continue with other items
       }
     }
 
-    return new Response(
-      JSON.stringify({
+    logger.info('SRS sync completed', {
+      userId: auth.userId,
+      synced,
+      skipped,
+      total: items.length,
+    });
+
+    return {
+      status: 200,
+      data: {
         success: true,
         synced,
         skipped,
         total: items.length,
         timestamp: now.toISOString(),
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('[SRS Sync] Error:', error);
-    return createErrorResponse('Sync failed', 500);
+    logger.error('SRS sync failed', error, { userId: auth.userId });
+    return {
+      status: 500,
+      error: 'Sync failed',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

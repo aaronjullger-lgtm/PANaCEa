@@ -1,6 +1,6 @@
 /**
  * System Comparison Component
- * 
+ *
  * Visualization showing performance by organ system.
  * Supports bar chart and radar/spider chart toggle.
  */
@@ -15,7 +15,7 @@ import { BarChart3, Radar, TrendingUp, TrendingDown } from 'lucide-react';
 export interface SystemMasterySummary {
   system: string;
   questionsAnswered: number;
-  masteryScore: number;   // normalized 0-1
+  masteryScore: number; // normalized 0-1
   changeFromLastPeriod?: number; // percentage change
 }
 
@@ -68,24 +68,21 @@ const SYSTEM_NAMES: Record<string, string> = {
 // Component
 // ============================================================================
 
-const SystemComparison: React.FC<SystemComparisonProps> = ({ 
-  summary,
-  onSystemClick,
-}) => {
+const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemClick }) => {
   const [viewMode, setViewMode] = useState<'bar' | 'radar'>('bar');
-  
+
   // Sort by mastery score (lowest first to highlight areas needing work)
   const sortedSummary = [...summary].sort((a, b) => a.masteryScore - b.masteryScore);
-  
+
   // Find lowest performing system
   const lowestSystem = sortedSummary[0];
-  
+
   const handleSystemClick = (system: string) => {
     if (onSystemClick) {
       onSystemClick(system);
     }
   };
-  
+
   return (
     <div className="card-premium-glass card-noise-texture p-5 rounded-2xl">
       {/* Header */}
@@ -97,8 +94,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
           <button
             onClick={() => setViewMode('bar')}
             className={`p-1.5 rounded-lg transition-colors ${
-              viewMode === 'bar' 
-                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100' 
+              viewMode === 'bar'
+                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
             title="Bar chart view"
@@ -108,8 +105,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
           <button
             onClick={() => setViewMode('radar')}
             className={`p-1.5 rounded-lg transition-colors ${
-              viewMode === 'radar' 
-                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100' 
+              viewMode === 'radar'
+                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
             title="Radar chart view"
@@ -118,31 +115,35 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Lowest performer callout */}
       {lowestSystem && lowestSystem.questionsAnswered > 0 && (
         <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-amber-600 dark:text-amber-500" />
             <span className="text-sm text-slate-900 dark:text-slate-100">
-              <strong>{SYSTEM_NAMES[lowestSystem.system] || lowestSystem.system}</strong> needs the most work ({(lowestSystem.masteryScore * 100).toFixed(0)}%)
+              <strong>{SYSTEM_NAMES[lowestSystem.system] || lowestSystem.system}</strong> needs the
+              most work ({(lowestSystem.masteryScore * 100).toFixed(0)}%)
             </span>
             {lowestSystem.changeFromLastPeriod !== undefined && (
-              <span className={`ml-auto flex items-center gap-0.5 text-xs font-medium ${
-                lowestSystem.changeFromLastPeriod > 0 ? 'text-green-500' : 'text-red-500'
-              }`}>
+              <span
+                className={`ml-auto flex items-center gap-0.5 text-xs font-medium ${
+                  lowestSystem.changeFromLastPeriod > 0 ? 'text-green-500' : 'text-red-500'
+                }`}
+              >
                 {lowestSystem.changeFromLastPeriod > 0 ? (
                   <TrendingUp className="w-3 h-3" />
                 ) : (
                   <TrendingDown className="w-3 h-3" />
                 )}
-                {lowestSystem.changeFromLastPeriod > 0 ? '+' : ''}{lowestSystem.changeFromLastPeriod.toFixed(0)}%
+                {lowestSystem.changeFromLastPeriod > 0 ? '+' : ''}
+                {lowestSystem.changeFromLastPeriod.toFixed(0)}%
               </span>
             )}
           </div>
         </div>
       )}
-      
+
       {/* Bar Chart View - Slim Mode with label above bar */}
       {viewMode === 'bar' && (
         <div className="space-y-4">
@@ -150,7 +151,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
             const colorClass = SYSTEM_COLORS[item.system] || 'bg-slate-500';
             const systemName = SYSTEM_NAMES[item.system] || item.system;
             const percentage = item.masteryScore * 100;
-            
+
             return (
               <button
                 key={item.system}
@@ -164,19 +165,22 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                   </span>
                   <div className="flex items-center gap-2">
                     {item.changeFromLastPeriod !== undefined && (
-                      <span className={`flex items-center gap-0.5 text-xs ${
-                        item.changeFromLastPeriod > 0 
-                          ? 'text-green-500' 
-                          : item.changeFromLastPeriod < 0
-                          ? 'text-red-500'
-                          : 'text-slate-500'
-                      }`}>
+                      <span
+                        className={`flex items-center gap-0.5 text-xs ${
+                          item.changeFromLastPeriod > 0
+                            ? 'text-green-500'
+                            : item.changeFromLastPeriod < 0
+                              ? 'text-red-500'
+                              : 'text-slate-500'
+                        }`}
+                      >
                         {item.changeFromLastPeriod > 0 ? (
                           <TrendingUp className="w-3 h-3" />
                         ) : item.changeFromLastPeriod < 0 ? (
                           <TrendingDown className="w-3 h-3" />
                         ) : null}
-                        {item.changeFromLastPeriod > 0 ? '+' : ''}{item.changeFromLastPeriod.toFixed(0)}%
+                        {item.changeFromLastPeriod > 0 ? '+' : ''}
+                        {item.changeFromLastPeriod.toFixed(0)}%
                       </span>
                     )}
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
@@ -196,7 +200,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
           })}
         </div>
       )}
-      
+
       {/* Radar Chart View (Simplified CSS-based) */}
       {viewMode === 'radar' && (
         <div className="flex items-center justify-center py-8">
@@ -212,14 +216,14 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                 }}
               />
             ))}
-            
+
             {/* System labels around the circle */}
             {sortedSummary.slice(0, 8).map((item, idx) => {
               const angle = (idx / 8) * 2 * Math.PI - Math.PI / 2;
               const radius = 140;
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
-              
+
               return (
                 <div
                   key={item.system}
@@ -234,7 +238,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                 </div>
               );
             })}
-            
+
             {/* Data points */}
             {sortedSummary.slice(0, 8).map((item, idx) => {
               const angle = (idx / 8) * 2 * Math.PI - Math.PI / 2;
@@ -242,7 +246,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
               const colorClass = SYSTEM_COLORS[item.system] || 'bg-slate-500';
-              
+
               return (
                 <div
                   key={`point-${item.system}`}
@@ -267,12 +271,27 @@ export default SystemComparison;
 
 // Generate mock data for development/testing
 export function generateMockSystemData(): SystemMasterySummary[] {
-  const systems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
-  
-  return systems.map(system => ({
+  const systems = [
+    'CV',
+    'PULM',
+    'GI',
+    'NEURO',
+    'MSK',
+    'DERM',
+    'HEME',
+    'ENDO',
+    'HEENT',
+    'RENAL',
+    'REPRO',
+    'PSYCH',
+    'ID',
+    'GU',
+  ];
+
+  return systems.map((system) => ({
     system,
     questionsAnswered: Math.floor(Math.random() * 100) + 10,
     masteryScore: 0.3 + Math.random() * 0.6,
-    changeFromLastPeriod: Math.random() > 0.5 ? (Math.random() * 20 - 5) : undefined,
+    changeFromLastPeriod: Math.random() > 0.5 ? Math.random() * 20 - 5 : undefined,
   }));
 }

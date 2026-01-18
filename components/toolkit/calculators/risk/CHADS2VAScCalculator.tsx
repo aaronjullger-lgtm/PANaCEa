@@ -1,9 +1,9 @@
 /**
  * CHA₂DS₂-VASc Calculator
- * 
+ *
  * Stroke risk stratification in patients with atrial fibrillation.
  * Guides anticoagulation therapy decision-making.
- * 
+ *
  * Score interpretation:
  * - 0: Low risk (no anticoagulation, consider aspirin or nothing)
  * - 1: Low-moderate risk (consider anticoagulation vs aspirin)
@@ -35,7 +35,26 @@ export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     (female ? 1 : 0);
 
   const getInterpretation = (): CalculatorResult => {
-    const annualStrokeRisk = score === 0 ? 0 : score === 1 ? 1.3 : score === 2 ? 2.2 : score === 3 ? 3.2 : score === 4 ? 4.0 : score === 5 ? 6.7 : score === 6 ? 9.8 : score === 7 ? 9.6 : score === 8 ? 12.5 : 15.2;
+    const annualStrokeRisk =
+      score === 0
+        ? 0
+        : score === 1
+          ? 1.3
+          : score === 2
+            ? 2.2
+            : score === 3
+              ? 3.2
+              : score === 4
+                ? 4.0
+                : score === 5
+                  ? 6.7
+                  : score === 6
+                    ? 9.8
+                    : score === 7
+                      ? 9.6
+                      : score === 8
+                        ? 12.5
+                        : 15.2;
 
     if (score === 0) {
       return {
@@ -49,7 +68,8 @@ export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       return {
         score,
         interpretation: 'Low-Moderate Risk',
-        recommendation: 'Consider oral anticoagulation (preferred) or aspirin based on shared decision-making.',
+        recommendation:
+          'Consider oral anticoagulation (preferred) or aspirin based on shared decision-making.',
         riskLevel: 'moderate',
         details: `Annual stroke risk: ${annualStrokeRisk}%. Current guidelines favor anticoagulation over aspirin, but patient preferences and bleeding risk should be considered.`,
       };
@@ -57,7 +77,8 @@ export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       return {
         score,
         interpretation: 'Moderate-High Risk',
-        recommendation: 'Oral anticoagulation recommended (warfarin or DOAC such as apixaban, rivaroxaban, edoxaban, dabigatran).',
+        recommendation:
+          'Oral anticoagulation recommended (warfarin or DOAC such as apixaban, rivaroxaban, edoxaban, dabigatran).',
         riskLevel: 'high',
         details: `Annual stroke risk: ${annualStrokeRisk}%. DOACs are preferred over warfarin for most patients due to lower bleeding risk and no need for INR monitoring.`,
       };

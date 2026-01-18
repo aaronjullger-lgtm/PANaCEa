@@ -3,10 +3,16 @@
  * POST /api/admin/content/create
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+  type Env,
+} from '../../_shared/auth';
 import { canEditContent, type UserRole } from '../../_shared/rbac';
 import { createDraft } from '../../../../lib/services/cms/contentService';
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateRequest, AdminContentCreateSchema } from '../../_shared/schemas';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
@@ -26,7 +32,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true }
+      select: { id: true, role: true },
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
@@ -38,7 +44,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     if (!validation.success) {
       return (validation as { success: false; response: Response }).response;
     }
-    const { conditionId, system, subcategory, condition, content, description } = (validation as { success: true; data: any }).data;
+    const { conditionId, system, subcategory, condition, content, description } = (
+      validation as { success: true; data: any }
+    ).data;
 
     // Check if conditionId already exists
     const existing = await prisma.medicalContent.findUnique({
@@ -50,9 +58,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     // Get client IP and user agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const newContent = await createDraft(
@@ -78,6 +85,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     console.error('Error creating content:', error);
     return createErrorResponse(error.message || 'Failed to create content', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

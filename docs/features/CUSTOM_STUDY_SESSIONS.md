@@ -3,6 +3,7 @@
 ## Overview
 
 This document outlines the design for two interconnected but distinct features:
+
 1. **Custom Study Session Builder** - Multi-select content filters with Quizlet-style session behavior
 2. **Bring Your Own Notes (BYON)** - Upload personal study materials and generate quizzes from them
 
@@ -13,6 +14,7 @@ Both features share a common trait: **NO FSRS TRACKING** - sessions are ephemera
 ## Feature 1: Custom Study Session Builder
 
 ### User Story
+
 > "As a PA student, I want to create a focused study session where I can select multiple systems, subcategories, and conditions, then choose what aspects (anatomy, pharmacology, pathophysiology, management) to be tested on."
 
 ### Key Behaviors
@@ -90,14 +92,14 @@ Both features share a common trait: **NO FSRS TRACKING** - sessions are ephemera
 export interface CustomSessionConfig {
   systems: SystemCode[];
   subcategories: string[];
-  conditions: string[];  // condition IDs
+  conditions: string[]; // condition IDs
   focusAreas: FocusArea[];
   questionsPerIncrement: number;
   difficulty: 'easier' | 'same' | 'harder';
   retryMissedQuestions: boolean;
 }
 
-export type FocusArea = 
+export type FocusArea =
   | 'anatomy'
   | 'pathophysiology'
   | 'diagnosis'
@@ -110,7 +112,7 @@ export interface CustomSessionState {
   currentIncrement: number;
   questionsAnswered: number;
   correctCount: number;
-  retryQueue: Question[];  // Missed questions to retry
+  retryQueue: Question[]; // Missed questions to retry
   sessionQuestions: Question[];
   isRetryPhase: boolean;
 }
@@ -126,19 +128,19 @@ export const customSessionService = {
   async generateSessionQuestions(
     config: CustomSessionConfig
   ): Promise<Question[]>;
-  
+
   /**
    * Track session state (localStorage only - ephemeral)
    */
   getSessionState(): CustomSessionState | null;
   saveSessionState(state: CustomSessionState): void;
   clearSessionState(): void;
-  
+
   /**
    * Handle answer submission (no FSRS, just track for retry)
    */
   submitAnswer(questionId: string, isCorrect: boolean): void;
-  
+
   /**
    * Get retry queue questions
    */
@@ -152,11 +154,11 @@ export const customSessionService = {
 // POST /api/questions/custom-session
 export async function onRequestPost(context: any) {
   const { config } = await context.request.json();
-  
+
   // 1. Query questions from pool matching filters
   // 2. Apply focus area filters
   // 3. Return shuffled subset
-  
+
   // Focus areas map to question metadata tags:
   // - anatomy → questions about anatomy/physiology
   // - pathophysiology → questions about disease mechanisms
@@ -185,6 +187,7 @@ components/custom-study/
 ## Feature 2: Bring Your Own Notes (BYON)
 
 ### User Story
+
 > "As a PA student, I want to upload my lecture notes or slides and have the AI generate practice questions from them so I can study for my specific exams."
 
 ### Key Behaviors
@@ -247,11 +250,11 @@ model UserUploadedMaterial {
   extractedText String? @db.Text
   createdAt    DateTime @default(now())
   expiresAt    DateTime // 1 month from creation
-  
+
   questions    UserGeneratedQuestion[]
-  
+
   user         User     @relation(fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([expiresAt])
 }
@@ -265,9 +268,9 @@ model UserGeneratedQuestion {
   rationale     String?  @db.Text
   focusArea     String?  // anatomy, pharm, etc.
   createdAt     DateTime @default(now())
-  
+
   material      UserUploadedMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
-  
+
   @@index([materialId])
 }
 ```
@@ -285,7 +288,7 @@ export const userMaterialsService = {
     file: File,
     title: string
   ): Promise<UserUploadedMaterial>;
-  
+
   /**
    * Generate questions from uploaded material
    */
@@ -296,17 +299,17 @@ export const userMaterialsService = {
       focusAreas: FocusArea[];
     }
   ): Promise<UserGeneratedQuestion[]>;
-  
+
   /**
    * Get user's materials
    */
   async getUserMaterials(userId: string): Promise<UserUploadedMaterial[]>;
-  
+
   /**
    * Delete material and associated questions
    */
   async deleteMaterial(materialId: string): Promise<void>;
-  
+
   /**
    * Cleanup expired materials (cron job)
    */
@@ -341,6 +344,7 @@ components/user-materials/
 ## Implementation Plan
 
 ### Phase 1: Custom Study Session Builder (1 week)
+
 - [ ] Create types and interfaces
 - [ ] Build ContentFilterStep component with cascading multi-select
 - [ ] Build FocusAreaStep component
@@ -352,6 +356,7 @@ components/user-materials/
 - [ ] Add route and navigation
 
 ### Phase 2: Bring Your Own Notes (1 week)
+
 - [ ] Add Prisma models for user materials
 - [ ] Run database migration
 - [ ] Create Supabase storage bucket for user uploads
@@ -364,6 +369,7 @@ components/user-materials/
 - [ ] Add route and navigation
 
 ### Phase 3: Integration (2 days)
+
 - [ ] Allow BYON questions in Custom Study Sessions
 - [ ] Add "My Materials" as a content source option
 - [ ] Polish UI/UX
@@ -381,7 +387,7 @@ components/user-materials/
 ├── Rapid Recall
 ├── Question Mode
 │   ├── By System
-│   ├── By Subcategory  
+│   ├── By Subcategory
 │   └── By Condition
 ├── ⭐ Custom Study Session  ← NEW
 ├── ⭐ My Study Materials    ← NEW

@@ -1,6 +1,7 @@
 # Service Consolidation - Cleanup Guide
 
 ## Summary
+
 Successfully migrated **44 component/hook files** to use centralized barrel exports (`@/services/core`, `@/services/analytics`, `@/services/session`, `@/services/domain`, `@/services/ai`).
 
 ---
@@ -8,6 +9,7 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 ## Services Fully Exported by Barrels (Safe to Move to `_internal/`)
 
 ### Core Services (`services/core/`)
+
 - ✅ **questionService.ts** - Re-exported via `core/questionService.ts` (consolidated)
 - ✅ **attemptService.ts** - Exported as `attemptService`
 - ✅ **questionPoolService.ts** - Exported as `questionPoolService`
@@ -19,6 +21,7 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 - ✅ **conditionContentService.ts** - Exported as `conditionContentService`
 
 ### Analytics Services (`services/analytics/`)
+
 - ✅ **performanceService.ts** - Consolidated re-export (Phase 6)
 - ✅ **performancePredictionService.ts** - Exported via `analytics/performanceService.ts`
 - ✅ **panceScorePredictorService.ts** - Exported via `analytics/performanceService.ts`
@@ -30,6 +33,7 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 - ✅ **sessionAnalyticsSyncService.ts** - Exported as session sync functions
 
 ### Session Services (`services/session/`)
+
 - ✅ **sessionMomentumService.ts** - Exported via `session/sessionService.ts`
 - ✅ **realTimeSessionOptimizer.ts** - Exported via `session/sessionService.ts`
 - ✅ **answerPatternService.ts** - Exported via `session/index.ts` (**NEW**)
@@ -37,6 +41,7 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 - ✅ **smartPauseService.ts** - Exported via `session/index.ts` (**NEW**)
 
 ### Domain Services (`services/domain/`)
+
 - ✅ **adaptiveFSRSService.ts** - Exported as `fsrsService`
 - ✅ **examService.ts** - Exported as `examService`
 - ✅ **panceDistributionService.ts** - Exported as `panceDistribution`
@@ -57,6 +62,7 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 - ✅ **conceptDependencyService.ts** - Exported as `conceptDependency`
 
 ### AI Services (`services/ai/`)
+
 - ✅ **geminiService.ts** - Exported as namespace `geminiService`
 - ✅ **automatedContentPipeline.ts** - Exported as `contentPipeline`
 - ✅ **batchGeneratorService.ts** - Exported as `batchGenerator`
@@ -74,12 +80,14 @@ Successfully migrated **44 component/hook files** to use centralized barrel expo
 These services are not yet exported via barrels. Components still import them directly:
 
 ### Utility Services
+
 - ⚠️ **CoachingService.ts** - Used by ExplanationPanel
 - ⚠️ **dailyTriadService.ts** - Used by DailyTriad component
 - ⚠️ **anatomyModelService.ts** - Used by AnatomyModelViewer
 - ⚠️ **medicalSpanishService.ts** - Used by AdvancedFeaturesPanel
 
 ### Supporting Services
+
 - ⚠️ **feedbackService.ts** - Used by QuizView
 - ⚠️ **userProfileService.ts**
 - ⚠️ **studyGroupService.ts**
@@ -105,6 +113,7 @@ These services are not yet exported via barrels. Components still import them di
 ## Recommended Actions
 
 ### Phase 1: Move Fully Exported Services (Immediate)
+
 ```bash
 mkdir -p services/_internal/{core,analytics,session,domain,ai}
 
@@ -167,9 +176,11 @@ mv services/virtualAttendingService.ts services/_internal/ai/
 ```
 
 ### Phase 2: Update Barrel File Paths
+
 After moving files, update all barrel imports from `'../serviceName'` to `'../_internal/category/serviceName'`.
 
 ### Phase 3: Add Remaining Services to Barrels (Optional)
+
 Create additional exports in barrels for the ⚠️ services, then move them to `_internal/`.
 
 ---
@@ -177,7 +188,9 @@ Create additional exports in barrels for the ⚠️ services, then move them to 
 ## Migration Impact
 
 ### Files Successfully Refactored (44 total)
+
 **Components (37)**
+
 - ✅ QuizView.tsx
 - ✅ quiz/SessionEndSummary.tsx
 - ✅ quiz/MomentumIndicator.tsx
@@ -203,14 +216,17 @@ Create additional exports in barrels for the ⚠️ services, then move them to 
 - ✅ settings/AdvancedFeaturesPanel.tsx
 
 **Hooks (2)**
+
 - ✅ hooks/useDatabaseStats.ts
 - ✅ hooks/useAdvancedAnalytics.ts
 
 **Barrel Files Enhanced (2)**
+
 - ✅ services/session/index.ts - Added answerPattern, behavioral, smartPause exports
 - ✅ services/analytics/index.ts - Added predictPANCEScore, formatHour exports
 
 ### Zero TypeScript Errors ✅
+
 All refactored imports compile successfully with no errors.
 
 ---

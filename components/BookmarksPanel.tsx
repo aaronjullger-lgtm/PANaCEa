@@ -23,38 +23,38 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  
+
   // Extract all unique tags
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    bookmarkedQuestions.forEach(q => {
-      q.tags?.forEach(tag => tags.add(tag));
+    bookmarkedQuestions.forEach((q) => {
+      q.tags?.forEach((tag) => tags.add(tag));
     });
     return Array.from(tags);
   }, [bookmarkedQuestions]);
-  
+
   // Filter bookmarks
   const filteredBookmarks = useMemo(() => {
-    return bookmarkedQuestions.filter(q => {
+    return bookmarkedQuestions.filter((q) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           q.question.toLowerCase().includes(query) ||
           q.condition.toLowerCase().includes(query) ||
           q.topic.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
-      
+
       // Tag filter
       if (selectedTag && !q.tags?.includes(selectedTag)) {
         return false;
       }
-      
+
       return true;
     });
   }, [bookmarkedQuestions, searchQuery, selectedTag]);
-  
+
   // Sort by most recently bookmarked
   const sortedBookmarks = useMemo(() => {
     return [...filteredBookmarks].sort((a, b) => {
@@ -63,21 +63,21 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
       return bTime - aTime;
     });
   }, [filteredBookmarks]);
-  
+
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Unknown';
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return date.toLocaleDateString();
   };
-  
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -103,7 +103,8 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               <div>
                 <h2 className="text-2xl font-bold">Your Bookmarks</h2>
                 <p className="text-amber-100 text-sm">
-                  {bookmarkedQuestions.length} question{bookmarkedQuestions.length !== 1 ? 's' : ''} saved
+                  {bookmarkedQuestions.length} question{bookmarkedQuestions.length !== 1 ? 's' : ''}{' '}
+                  saved
                 </p>
               </div>
             </div>
@@ -116,7 +117,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
             </button>
           </div>
         </div>
-        
+
         {/* Search and Filters */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-3">
           {/* Search Bar */}
@@ -130,7 +131,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
             />
           </div>
-          
+
           {/* Tag Filters */}
           {allTags.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -145,7 +146,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               >
                 All
               </button>
-              {allTags.map(tag => (
+              {allTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
@@ -161,7 +162,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Bookmarks List */}
         <div className="flex-1 overflow-y-auto p-4">
           {sortedBookmarks.length === 0 ? (
@@ -172,14 +173,12 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               <p className="text-slate-600 dark:text-slate-400 text-lg mb-2">
                 {bookmarkedQuestions.length === 0
                   ? 'No bookmarks yet'
-                  : 'No bookmarks match your search'
-                }
+                  : 'No bookmarks match your search'}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-500">
                 {bookmarkedQuestions.length === 0
                   ? 'Bookmark important questions while studying to find them quickly later'
-                  : 'Try adjusting your search or filters'
-                }
+                  : 'Try adjusting your search or filters'}
               </p>
             </div>
           ) : (
@@ -196,7 +195,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                   >
                     <div className="flex items-start gap-3">
                       <BookmarkCheck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-1" />
-                      
+
                       <div className="flex-1 min-w-0">
                         {/* Condition and Topic */}
                         <div className="flex items-center gap-2 mb-2">
@@ -207,16 +206,23 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                             {question.condition}
                           </span>
                         </div>
-                        
+
                         {/* Question Preview */}
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        <p
+                          className="text-sm text-slate-600 dark:text-slate-400 mb-2 overflow-hidden"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
                           {question.question}
                         </p>
-                        
+
                         {/* Tags */}
                         {question.tags && question.tags.length > 0 && (
                           <div className="flex items-center gap-1 mb-2">
-                            {question.tags.map(tag => (
+                            {question.tags.map((tag) => (
                               <span
                                 key={tag}
                                 className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs rounded"
@@ -226,7 +232,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                             ))}
                           </div>
                         )}
-                        
+
                         {/* Metadata */}
                         <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                           <div className="flex items-center gap-1">
@@ -235,7 +241,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Actions */}
                       <div className="flex flex-col gap-2">
                         <button

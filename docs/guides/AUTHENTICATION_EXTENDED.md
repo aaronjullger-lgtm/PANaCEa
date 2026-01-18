@@ -5,6 +5,7 @@ This guide covers the extended authentication and gamification features added to
 ## Overview
 
 The extended authentication system includes:
+
 - **Role-Based Access Control (RBAC)** - User, Admin, and Superadmin roles
 - **Achievement System** - 25+ achievements with unlock animations
 - **Streak Tracking** - Daily study streaks with flame visualization
@@ -62,12 +63,14 @@ if (hasRole(userRole, 'admin')) {
 Protected route example: `/pages/admin/AdminDashboard.tsx`
 
 Features:
+
 - Platform statistics (users, activity, accuracy)
 - User management access
 - Role management (superadmin only)
 - System settings
 
 Usage:
+
 ```typescript
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
@@ -81,6 +84,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 ### Achievement Definitions
 
 25+ achievements across 5 categories:
+
 - **Performance** - Accuracy and streak milestones
 - **Consistency** - Daily study streaks
 - **Mastery** - System-level mastery achievements
@@ -131,6 +135,7 @@ function MyComponent() {
 ### Achievement Components
 
 **AchievementMedal** - Circular medal with tooltip
+
 ```typescript
 <AchievementMedal
   achievementId="perfect_10"
@@ -141,6 +146,7 @@ function MyComponent() {
 ```
 
 **AchievementsDashboard** - Full achievements view
+
 ```typescript
 <AchievementsDashboard
   userAchievements={achievements}
@@ -152,6 +158,7 @@ function MyComponent() {
 ```
 
 **UnlockAnimation** - Celebration animation
+
 ```typescript
 <UnlockAnimation
   achievementId="legendary_100"
@@ -167,6 +174,7 @@ function MyComponent() {
 ### Streak Levels
 
 Daily streaks are visualized with flame intensity:
+
 - **Level 0** - No streak (gray)
 - **Level 1** - 3+ days (orange)
 - **Level 2** - 7+ days (amber)
@@ -199,6 +207,7 @@ function MyComponent() {
 ### Streak Components
 
 **StreakFlame** - Full streak display with animation
+
 ```typescript
 <StreakFlame
   streak={currentStreak}
@@ -209,6 +218,7 @@ function MyComponent() {
 ```
 
 **StreakBadge** - Compact header display
+
 ```typescript
 <StreakBadge
   streak={currentStreak}
@@ -221,6 +231,7 @@ function MyComponent() {
 ## Baseline Assessment
 
 First-time user onboarding component that:
+
 1. Explains the purpose of baseline assessment
 2. Presents 20 mixed-topic questions
 3. Analyzes performance by system
@@ -249,11 +260,14 @@ interface BaselineResults {
   totalQuestions: number;
   correctAnswers: number;
   accuracy: number;
-  systemBreakdown: Record<string, {
-    correct: number;
-    total: number;
-    accuracy: number;
-  }>;
+  systemBreakdown: Record<
+    string,
+    {
+      correct: number;
+      total: number;
+      accuracy: number;
+    }
+  >;
   weakestSystems: string[];
   strongestSystems: string[];
 }
@@ -274,6 +288,7 @@ interface BaselineResults {
 ### Usage
 
 **Full Widget**
+
 ```typescript
 <ExamCountdown
   examDate={user.examDate}
@@ -283,6 +298,7 @@ interface BaselineResults {
 ```
 
 **Compact Badge**
+
 ```typescript
 <ExamCountdownBadge examDate={user.examDate} />
 ```
@@ -296,7 +312,7 @@ interface BaselineResults {
 ```prisma
 model User {
   // ... existing fields ...
-  
+
   // Authentication
   emailVerified      DateTime?
   role               String    @default("user")
@@ -304,11 +320,11 @@ model User {
   resetTokenExpiry   DateTime?
   verifyToken        String?
   verifyTokenExpiry  DateTime?
-  
+
   // Onboarding
   hasCompletedBaseline Boolean @default(false)
   examDate            DateTime?
-  
+
   // Relations
   achievements       UserAchievement[]
   streaks            DailyStreak[]
@@ -324,9 +340,9 @@ model UserAchievement {
   achievementId String
   unlockedAt    DateTime @default(now())
   progress      Int      @default(100)
-  
+
   user User @relation(fields: [userId], references: [id])
-  
+
   @@unique([userId, achievementId])
 }
 
@@ -337,9 +353,9 @@ model DailyStreak {
   questionsAnswered Int
   accuracyPercent   Float
   studyMinutes      Int
-  
+
   user User @relation(fields: [userId], references: [id])
-  
+
   @@unique([userId, date])
 }
 
@@ -352,7 +368,7 @@ model MasteryProgress {
   masteryTier   String   @default("bronze")
   accuracy      Float
   attempts      Int
-  
+
   @@unique([userId, conditionName, systemCode, subcategory])
 }
 
@@ -441,21 +457,21 @@ import { UnlockAnimation } from './components/achievements/UnlockAnimation';
 import { StreakBadge } from './components/achievements/StreakFlame';
 
 function App() {
-  const { 
-    achievements, 
-    streak, 
-    getNextUnlock, 
+  const {
+    achievements,
+    streak,
+    getNextUnlock,
     clearUnlock,
-    recordSession 
+    recordSession
   } = useAchievements();
-  
+
   const nextUnlock = getNextUnlock();
 
   return (
     <>
       {/* Header with streak */}
       <header>
-        <StreakBadge 
+        <StreakBadge
           streak={streak.currentStreak}
           isActiveToday={streak.isActiveToday}
         />
@@ -482,10 +498,10 @@ function App() {
 // After quiz completion
 function handleQuizComplete(results) {
   const { questionsAnswered, correctAnswers, totalQuestions } = results;
-  
+
   // This automatically checks and unlocks achievements
   recordSession(questionsAnswered, correctAnswers, totalQuestions);
-  
+
   // Continue with your existing logic
   saveResults(results);
 }
@@ -524,10 +540,10 @@ function OnboardingFlow() {
       onComplete={(results) => {
         // Save baseline results
         saveBaselineResults(results);
-        
+
         // Unlock baseline achievement
         unlockAchievement('baseline_complete');
-        
+
         setShowBaseline(false);
       }}
       onSkip={() => setShowBaseline(false)}
@@ -597,6 +613,7 @@ npx prisma migrate deploy
 ## Professional Styling Guidelines
 
 All UI components follow these principles:
+
 - ✅ No emojis or cartoon elements
 - ✅ Professional medical platform aesthetic
 - ✅ Clean, minimal design
@@ -619,6 +636,7 @@ All UI components follow these principles:
 ## Support
 
 For issues or questions:
+
 - Check the troubleshooting section in `AUTHENTICATION_SETUP.md`
 - Review browser console for errors
 - Verify database connections

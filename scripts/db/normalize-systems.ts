@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 /**
  * Database System Name Normalization Script
- * 
+ *
  * Fixes the mismatch between short codes (CV, PULM, GI) and full labels
  * (Cardiovascular, Pulmonary, Gastrointestinal) in the database.
- * 
+ *
  * The NCCPA Blueprint uses FULL LABELS, so we standardize on those.
- * 
+ *
  * Usage: npx tsx scripts/db/normalize-systems.ts
  *        npx tsx scripts/db/normalize-systems.ts --dry-run
  */
@@ -85,94 +85,94 @@ export const CANONICAL_SYSTEMS = [
  */
 export const SYSTEM_NORMALIZATION: Record<string, string> = {
   // Cardiovascular
-  'CV': 'Cardiovascular',
-  'Cardiac': 'Cardiovascular',
-  'Cardiology': 'Cardiovascular',
-  'Heart': 'Cardiovascular',
-  
+  CV: 'Cardiovascular',
+  Cardiac: 'Cardiovascular',
+  Cardiology: 'Cardiovascular',
+  Heart: 'Cardiovascular',
+
   // Pulmonary
-  'PULM': 'Pulmonary',
-  'Respiratory': 'Pulmonary',
-  'Lungs': 'Pulmonary',
-  
+  PULM: 'Pulmonary',
+  Respiratory: 'Pulmonary',
+  Lungs: 'Pulmonary',
+
   // Gastrointestinal
-  'GI': 'Gastrointestinal',
-  'Gastro': 'Gastrointestinal',
-  'Digestive': 'Gastrointestinal',
-  
+  GI: 'Gastrointestinal',
+  Gastro: 'Gastrointestinal',
+  Digestive: 'Gastrointestinal',
+
   // Neurological
-  'NEURO': 'Neurological',
-  'Neuro': 'Neurological',
-  'Neurology': 'Neurological',
+  NEURO: 'Neurological',
+  Neuro: 'Neurological',
+  Neurology: 'Neurological',
   'Nervous System': 'Neurological',
-  
+
   // Musculoskeletal
-  'MSK': 'Musculoskeletal',
-  'Ortho': 'Musculoskeletal',
-  'Orthopedic': 'Musculoskeletal',
-  'Orthopedics': 'Musculoskeletal',
-  
+  MSK: 'Musculoskeletal',
+  Ortho: 'Musculoskeletal',
+  Orthopedic: 'Musculoskeletal',
+  Orthopedics: 'Musculoskeletal',
+
   // Dermatology
-  'DERM': 'Dermatology',
-  'Derm': 'Dermatology',
-  'Skin': 'Dermatology',
-  
+  DERM: 'Dermatology',
+  Derm: 'Dermatology',
+  Skin: 'Dermatology',
+
   // Hematology
-  'HEME': 'Hematology',
-  'Heme': 'Hematology',
-  'Blood': 'Hematology',
-  'Oncology': 'Hematology',
+  HEME: 'Hematology',
+  Heme: 'Hematology',
+  Blood: 'Hematology',
+  Oncology: 'Hematology',
   'Hematology/Oncology': 'Hematology',
-  
+
   // Endocrine
-  'ENDO': 'Endocrine',
-  'Endo': 'Endocrine',
-  'Endocrinology': 'Endocrine',
-  'Hormones': 'Endocrine',
-  
+  ENDO: 'Endocrine',
+  Endo: 'Endocrine',
+  Endocrinology: 'Endocrine',
+  Hormones: 'Endocrine',
+
   // HEENT (already canonical but add variants)
-  'ENT': 'HEENT',
-  'Eyes': 'HEENT',
-  'Ears': 'HEENT',
+  ENT: 'HEENT',
+  Eyes: 'HEENT',
+  Ears: 'HEENT',
   'Head and Neck': 'HEENT',
-  
+
   // Renal
-  'RENAL': 'Renal',
-  'Nephrology': 'Renal',
-  'Kidney': 'Renal',
-  
+  RENAL: 'Renal',
+  Nephrology: 'Renal',
+  Kidney: 'Renal',
+
   // Reproductive - CRITICAL: Merge OB into Reproductive
-  'REPRO': 'Reproductive',
-  'Repro': 'Reproductive',
-  'OB': 'Reproductive',
+  REPRO: 'Reproductive',
+  Repro: 'Reproductive',
+  OB: 'Reproductive',
   'OB/GYN': 'Reproductive',
-  'OBGYN': 'Reproductive',
-  'Obstetrics': 'Reproductive',
-  'Gynecology': 'Reproductive',
-  'Women\'s Health': 'Reproductive',
-  'Men\'s Health': 'Reproductive',
-  
+  OBGYN: 'Reproductive',
+  Obstetrics: 'Reproductive',
+  Gynecology: 'Reproductive',
+  "Women's Health": 'Reproductive',
+  "Men's Health": 'Reproductive',
+
   // Psychiatry
-  'PSYCH': 'Psychiatry',
-  'Psych': 'Psychiatry',
+  PSYCH: 'Psychiatry',
+  Psych: 'Psychiatry',
   'Mental Health': 'Psychiatry',
-  'Behavioral': 'Psychiatry',
+  Behavioral: 'Psychiatry',
   'Behavioral Health': 'Psychiatry',
-  
+
   // Infectious Disease
-  'ID': 'Infectious Disease',
-  'Infectious': 'Infectious Disease',
-  'Infection': 'Infectious Disease',
-  'Infections': 'Infectious Disease',
-  
+  ID: 'Infectious Disease',
+  Infectious: 'Infectious Disease',
+  Infection: 'Infectious Disease',
+  Infections: 'Infectious Disease',
+
   // Genitourinary
-  'GU': 'Genitourinary',
-  'Urology': 'Genitourinary',
-  'Urinary': 'Genitourinary',
-  
+  GU: 'Genitourinary',
+  Urology: 'Genitourinary',
+  Urinary: 'Genitourinary',
+
   // Professional Practice
   'Prof Practice': 'Professional Practice',
-  'Ethics': 'Professional Practice',
+  Ethics: 'Professional Practice',
   'Practice Management': 'Professional Practice',
 };
 
@@ -196,17 +196,17 @@ async function normalizeTable(
 
   // Get current system distribution
   let currentSystems: { system: string; _count: { id: number } }[];
-  
+
   if (tableName === 'medicalContent') {
-    currentSystems = await prisma.medicalContent.groupBy({
+    currentSystems = (await prisma.medicalContent.groupBy({
       by: ['system'],
       _count: { id: true },
-    }) as any;
+    })) as any;
   } else {
-    currentSystems = await prisma.condition.groupBy({
+    currentSystems = (await prisma.condition.groupBy({
       by: ['system'],
       _count: { id: true },
-    }) as any;
+    })) as any;
   }
 
   console.log(`  Current systems: ${currentSystems.length}`);
@@ -220,7 +220,7 @@ async function normalizeTable(
 
     // Find canonical mapping
     const canonical = SYSTEM_NORMALIZATION[system];
-    
+
     if (!canonical) {
       // Unknown system - report it
       console.log(`  ⚠️  Unknown system: "${system}" (${_count.id} records)`);
@@ -270,7 +270,7 @@ async function validateAndReport() {
 
   console.log('MedicalContent system distribution:');
   console.log('─'.repeat(50));
-  
+
   let nonCanonicalCount = 0;
   for (const { system, _count } of contentSystems) {
     const isCanonical = CANONICAL_SYSTEMS.includes(system as any);
@@ -281,7 +281,7 @@ async function validateAndReport() {
 
   console.log('─'.repeat(50));
   console.log(`  Total: ${contentSystems.reduce((sum, s) => sum + s._count.id, 0)} conditions`);
-  
+
   if (nonCanonicalCount > 0) {
     console.log(`  ⚠️  ${nonCanonicalCount} records still have non-canonical system names`);
   } else {
@@ -297,13 +297,13 @@ async function validateAndReport() {
 
   console.log('\nCondition registry distribution:');
   console.log('─'.repeat(50));
-  
+
   for (const { system, _count } of conditionSystems) {
     const isCanonical = CANONICAL_SYSTEMS.includes(system as any);
     const icon = isCanonical ? '✅' : '⚠️';
     console.log(`  ${icon} ${system.padEnd(25)} ${String(_count.id).padStart(6)} conditions`);
   }
-  
+
   console.log('─'.repeat(50));
 }
 
@@ -323,8 +323,10 @@ async function checkSpecificConditions() {
 
   if (placentalAbruption) {
     const icon = placentalAbruption.system === 'Reproductive' ? '✅' : '⚠️';
-    console.log(`  ${icon} Placental Abruption: system="${placentalAbruption.system}", subcategory="${placentalAbruption.subcategory}"`);
-    
+    console.log(
+      `  ${icon} Placental Abruption: system="${placentalAbruption.system}", subcategory="${placentalAbruption.subcategory}"`
+    );
+
     if (placentalAbruption.system !== 'Reproductive') {
       console.log(`     → Should be: system="Reproductive", subcategory="Obstetric Emergencies"`);
     }
@@ -335,12 +337,7 @@ async function checkSpecificConditions() {
   // Check for orphaned OB conditions
   const obConditions = await prisma.medicalContent.findMany({
     where: {
-      OR: [
-        { system: 'OB' },
-        { system: 'OB/GYN' },
-        { system: 'OBGYN' },
-        { system: 'Obstetrics' },
-      ],
+      OR: [{ system: 'OB' }, { system: 'OB/GYN' }, { system: 'OBGYN' }, { system: 'Obstetrics' }],
     },
     select: { condition: true, system: true },
     take: 10,
@@ -375,7 +372,9 @@ async function checkDuplicates() {
   `;
 
   if (contentDuplicates.length > 0) {
-    console.log(`  ⚠️  Found ${contentDuplicates.length} duplicate condition names in MedicalContent:`);
+    console.log(
+      `  ⚠️  Found ${contentDuplicates.length} duplicate condition names in MedicalContent:`
+    );
     for (const dup of contentDuplicates) {
       console.log(`     - "${dup.condition}" (${dup.count} entries)`);
       stats.duplicatesFound += Number(dup.count) - 1;
@@ -395,7 +394,9 @@ async function checkDuplicates() {
   `;
 
   if (conditionDuplicates.length > 0) {
-    console.log(`\n  ⚠️  Found ${conditionDuplicates.length} duplicate condition names in Condition table:`);
+    console.log(
+      `\n  ⚠️  Found ${conditionDuplicates.length} duplicate condition names in Condition table:`
+    );
     for (const dup of conditionDuplicates) {
       console.log(`     - "${dup.name}" (${dup.count} entries)`);
       stats.duplicatesFound += Number(dup.count) - 1;
@@ -422,19 +423,19 @@ async function syncConditionTables(dryRun: boolean) {
     select: { id: true, name: true, system: true },
   });
 
-  const conditionMap = new Map(allConditions.map(c => [c.id, c]));
-  const conditionNameMap = new Map(allConditions.map(c => [c.name.toLowerCase(), c]));
+  const conditionMap = new Map(allConditions.map((c) => [c.id, c]));
+  const conditionNameMap = new Map(allConditions.map((c) => [c.name.toLowerCase(), c]));
 
   console.log(`   📋 MedicalContent records: ${allMedicalContent.length}`);
   console.log(`   📋 Condition records: ${allConditions.length}`);
 
   // Find MedicalContent records without corresponding Condition entry
   const orphanedContent: typeof allMedicalContent = [];
-  
+
   for (const mc of allMedicalContent) {
     const byId = conditionMap.has(mc.conditionId);
     const byName = conditionNameMap.has(mc.condition.toLowerCase());
-    
+
     if (!byId && !byName) {
       orphanedContent.push(mc);
     }
@@ -454,7 +455,7 @@ async function syncConditionTables(dryRun: boolean) {
       }
     } else {
       console.log('   ✏️  Creating missing Condition entries...');
-      
+
       for (const mc of orphanedContent) {
         try {
           await prisma.condition.create({
@@ -482,8 +483,8 @@ async function syncConditionTables(dryRun: boolean) {
   }
 
   // Find Condition records without corresponding MedicalContent
-  const contentIdSet = new Set(allMedicalContent.map(mc => mc.conditionId));
-  const orphanedConditions = allConditions.filter(c => !contentIdSet.has(c.id));
+  const contentIdSet = new Set(allMedicalContent.map((mc) => mc.conditionId));
+  const orphanedConditions = allConditions.filter((c) => !contentIdSet.has(c.id));
 
   stats.orphanedConditions = orphanedConditions.length;
   console.log(`\n   🔍 Condition records without MedicalContent: ${orphanedConditions.length}`);
@@ -508,7 +509,7 @@ async function checkContentQuality() {
   console.log('\n📊 Checking content quality...\n');
 
   const total = await prisma.medicalContent.count();
-  
+
   const missingFields = await prisma.medicalContent.count({
     where: {
       OR: [
@@ -534,31 +535,45 @@ async function checkContentQuality() {
   });
 
   console.log('   🔍 Missing Critical Fields:');
-  console.log(`      • gold_standard_dx:   ${missingGoldStandard} (${((missingGoldStandard/total)*100).toFixed(1)}%)`);
-  console.log(`      • first_line_rx:      ${missingFirstLine} (${((missingFirstLine/total)*100).toFixed(1)}%)`);
-  console.log(`      • best_initial_test:  ${missingBestInitial} (${((missingBestInitial/total)*100).toFixed(1)}%)`);
-  console.log(`      • overview:           ${missingOverview} (${((missingOverview/total)*100).toFixed(1)}%)`);
+  console.log(
+    `      • gold_standard_dx:   ${missingGoldStandard} (${((missingGoldStandard / total) * 100).toFixed(1)}%)`
+  );
+  console.log(
+    `      • first_line_rx:      ${missingFirstLine} (${((missingFirstLine / total) * 100).toFixed(1)}%)`
+  );
+  console.log(
+    `      • best_initial_test:  ${missingBestInitial} (${((missingBestInitial / total) * 100).toFixed(1)}%)`
+  );
+  console.log(
+    `      • overview:           ${missingOverview} (${((missingOverview / total) * 100).toFixed(1)}%)`
+  );
 
   if (missingFields > total * 0.1) {
-    stats.errors.push(`Warning: ${missingFields} records (${((missingFields/total)*100).toFixed(1)}%) missing critical fields`);
+    stats.errors.push(
+      `Warning: ${missingFields} records (${((missingFields / total) * 100).toFixed(1)}%) missing critical fields`
+    );
   }
 
   // Check buzzwords
   const allRecords = await prisma.medicalContent.findMany({
     select: { id: true, buzzwords: true },
   });
-  
-  const emptyBuzzwords = allRecords.filter(r => !r.buzzwords || r.buzzwords.length === 0).length;
+
+  const emptyBuzzwords = allRecords.filter((r) => !r.buzzwords || r.buzzwords.length === 0).length;
   console.log(`\n   🏷️  Buzzwords Status:`);
-  console.log(`      • With buzzwords:    ${total - emptyBuzzwords} (${(((total - emptyBuzzwords)/total)*100).toFixed(1)}%)`);
-  console.log(`      • Without buzzwords: ${emptyBuzzwords} (${((emptyBuzzwords/total)*100).toFixed(1)}%)`);
+  console.log(
+    `      • With buzzwords:    ${total - emptyBuzzwords} (${(((total - emptyBuzzwords) / total) * 100).toFixed(1)}%)`
+  );
+  console.log(
+    `      • Without buzzwords: ${emptyBuzzwords} (${((emptyBuzzwords / total) * 100).toFixed(1)}%)`
+  );
 }
 
 async function main() {
   console.log('═'.repeat(60));
   console.log('🔧 DATABASE SYSTEM NAME NORMALIZATION');
   console.log('═'.repeat(60));
-  
+
   if (isDryRun) {
     console.log('\n⚠️  DRY RUN MODE - No changes will be made\n');
   }
@@ -596,13 +611,13 @@ async function main() {
     console.log('\n' + '═'.repeat(60));
     console.log('📈 NORMALIZATION SUMMARY');
     console.log('═'.repeat(60));
-    
+
     const totalUpdates = contentReport.updates.length + conditionReport.updates.length;
     const totalErrors = contentReport.errors.length + conditionReport.errors.length;
-    
+
     console.log(`\n  System Names:`);
     console.log(`    • Renamed: ${totalUpdates} records`);
-    
+
     console.log(`\n  Table Integrity:`);
     console.log(`    • Duplicates found: ${stats.duplicatesFound}`);
     console.log(`    • Orphaned MedicalContent: ${stats.orphanedContent}`);
@@ -610,10 +625,10 @@ async function main() {
     if (!isDryRun && stats.missingConditions > 0) {
       console.log(`    • Conditions created: ${stats.missingConditions}`);
     }
-    
+
     console.log(`\n  Status:`);
     console.log(`    • Errors encountered: ${totalErrors + stats.errors.length}`);
-    
+
     if (stats.errors.length > 0) {
       console.log('\n  ⚠️  Warnings:');
       for (const error of stats.errors.slice(0, 5)) {
@@ -623,19 +638,22 @@ async function main() {
         console.log(`    ... and ${stats.errors.length - 5} more`);
       }
     }
-    
+
     if (isDryRun) {
       console.log('\n💡 Run without --dry-run to apply changes');
     } else {
       console.log('\n✅ Normalization complete!');
       if (stats.orphanedConditions > 0) {
-        console.log('⚠️  Note: Some Condition records have no MedicalContent - manual review recommended');
+        console.log(
+          '⚠️  Note: Some Condition records have no MedicalContent - manual review recommended'
+        );
       }
       if (stats.duplicatesFound > 0) {
-        console.log('⚠️  Note: Duplicates detected - consider running condition-doctor.ts for deduplication');
+        console.log(
+          '⚠️  Note: Duplicates detected - consider running condition-doctor.ts for deduplication'
+        );
       }
     }
-
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     process.exit(1);

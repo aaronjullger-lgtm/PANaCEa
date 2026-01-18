@@ -1,13 +1,18 @@
-
 import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 
 const badEntries = [];
 
-CONDITION_REGISTRY.forEach(item => {
-  if (item.condition.includes('_') || (item.condition === item.condition.toLowerCase() && item.condition.length > 3)) {
+CONDITION_REGISTRY.forEach((item) => {
+  if (
+    item.condition.includes('_') ||
+    (item.condition === item.condition.toLowerCase() && item.condition.length > 3)
+  ) {
     badEntries.push({ type: 'condition', value: item.condition });
   }
-  if (item.subcategory.includes('_') || (item.subcategory === item.subcategory.toLowerCase() && item.subcategory.length > 3)) {
+  if (
+    item.subcategory.includes('_') ||
+    (item.subcategory === item.subcategory.toLowerCase() && item.subcategory.length > 3)
+  ) {
     badEntries.push({ type: 'subcategory', value: item.subcategory });
   }
 });

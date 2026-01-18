@@ -23,7 +23,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
   const [includePearls, setIncludePearls] = useState(true);
   const [includeAnswers, setIncludeAnswers] = useState(false);
   const [groupBySystem, setGroupBySystem] = useState(true);
-  
+
   const generateHTML = () => {
     let html = `
 <!DOCTYPE html>
@@ -202,10 +202,10 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
   <div class="header">
     <h1>${title}</h1>
     <div class="subtitle">
-      Generated from PANaCEa • ${new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      Generated from PANaCEa • ${new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       })}
     </div>
     <div class="subtitle" style="margin-top: 0.5rem;">
@@ -213,12 +213,12 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     </div>
   </div>
 `;
-    
+
     // Group questions by system if enabled
     const questionsBySystem: Record<string, Question[]> = {};
-    
+
     if (groupBySystem) {
-      questions.forEach(q => {
+      questions.forEach((q) => {
         const system = q.system || q.topic || 'Other';
         if (!questionsBySystem[system]) {
           questionsBySystem[system] = [];
@@ -228,23 +228,23 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     } else {
       questionsBySystem['All Questions'] = questions;
     }
-    
+
     // Generate HTML for each system group
-    Object.keys(questionsBySystem).sort().forEach((system, sysIndex) => {
-      const systemQuestions = questionsBySystem[system];
-      
-      if (groupBySystem) {
-        html += `  <div class="system-group">
+    Object.keys(questionsBySystem)
+      .sort()
+      .forEach((system, sysIndex) => {
+        const systemQuestions = questionsBySystem[system];
+
+        if (groupBySystem) {
+          html += `  <div class="system-group">
     <div class="system-header">${system}</div>
 `;
-      }
-      
-      systemQuestions.forEach((question, index) => {
-        const questionNumber = groupBySystem 
-          ? `${sysIndex + 1}.${index + 1}`
-          : `${index + 1}`;
-        
-        html += `    <div class="question-block">
+        }
+
+        systemQuestions.forEach((question, index) => {
+          const questionNumber = groupBySystem ? `${sysIndex + 1}.${index + 1}` : `${index + 1}`;
+
+          html += `    <div class="question-block">
       <div class="question-header">
         <span class="question-number">Question ${questionNumber}</span>
         <span class="condition-tag">${question.condition}</span>
@@ -254,66 +254,66 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
       
       <ol class="options" type="A">
 `;
-        
-        question.options.forEach((option, optIndex) => {
-          const label = String.fromCharCode(65 + optIndex); // A, B, C, D
-          html += `        <li class="option">
+
+          question.options.forEach((option, optIndex) => {
+            const label = String.fromCharCode(65 + optIndex); // A, B, C, D
+            html += `        <li class="option">
           <span class="option-label">${label}.</span> ${option}
         </li>
 `;
-        });
-        
-        html += `      </ol>
+          });
+
+          html += `      </ol>
 `;
-        
-        if (includeAnswers) {
-          const correctLetter = String.fromCharCode(65 + question.correctAnswerIndex);
-          html += `      <div class="correct-answer">
+
+          if (includeAnswers) {
+            const correctLetter = String.fromCharCode(65 + question.correctAnswerIndex);
+            html += `      <div class="correct-answer">
         → Correct Answer: ${correctLetter}. ${question.options[question.correctAnswerIndex]}
       </div>
 `;
-        }
-        
-        if (includeRationale) {
-          html += `      <div class="rationale">
+          }
+
+          if (includeRationale) {
+            html += `      <div class="rationale">
         <div class="rationale-title">Rationale</div>
         <div>${question.rationale}</div>
       </div>
 `;
-        }
-        
-        if (includePearls && question.pearls && question.pearls.length > 0) {
-          html += `      <div class="pearls">
+          }
+
+          if (includePearls && question.pearls && question.pearls.length > 0) {
+            html += `      <div class="pearls">
         <div class="pearls-title">Clinical Pearls</div>
 `;
-          question.pearls.forEach(pearl => {
-            html += `        <div class="pearl-item">${pearl}</div>
+            question.pearls.forEach((pearl) => {
+              html += `        <div class="pearl-item">${pearl}</div>
 `;
-          });
-          html += `      </div>
+            });
+            html += `      </div>
+`;
+          }
+
+          html += `    </div>
+`;
+        });
+
+        if (groupBySystem) {
+          html += `  </div>
 `;
         }
-        
-        html += `    </div>
-`;
       });
-      
-      if (groupBySystem) {
-        html += `  </div>
-`;
-      }
-    });
-    
+
     html += `  <div class="footer">
     Generated with PANaCEa - AI-Powered PANCE Exam Preparation<br>
     Study smart, not just hard
   </div>
 </body>
 </html>`;
-    
+
     return html;
   };
-  
+
   const handlePrint = () => {
     const html = generateHTML();
     const printWindow = window.open('', '_blank');
@@ -325,7 +325,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
       }, 250);
     }
   };
-  
+
   const handleDownload = () => {
     const html = generateHTML();
     const blob = new Blob([html], { type: 'text/html' });
@@ -338,7 +338,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -368,7 +368,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
             </div>
           </div>
         </div>
-        
+
         <div className="p-6">
           {/* Options */}
           <div className="space-y-4 mb-6">
@@ -376,7 +376,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
               <Settings className="w-5 h-5" />
               <span className="font-semibold">Customize Your Guide</span>
             </div>
-            
+
             <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
               <input
                 type="checkbox"
@@ -386,10 +386,12 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
               />
               <div className="flex-1">
                 <div className="font-medium text-slate-900 dark:text-white">Include Answers</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Show correct answers in the guide</div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  Show correct answers in the guide
+                </div>
               </div>
             </label>
-            
+
             <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
               <input
                 type="checkbox"
@@ -399,10 +401,12 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
               />
               <div className="flex-1">
                 <div className="font-medium text-slate-900 dark:text-white">Include Rationale</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Detailed explanations for each question</div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  Detailed explanations for each question
+                </div>
               </div>
             </label>
-            
+
             <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
               <input
                 type="checkbox"
@@ -411,11 +415,15 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
                 className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 dark:text-white">Include Clinical Pearls</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Key takeaways and mnemonics</div>
+                <div className="font-medium text-slate-900 dark:text-white">
+                  Include Clinical Pearls
+                </div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  Key takeaways and mnemonics
+                </div>
               </div>
             </label>
-            
+
             <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
               <input
                 type="checkbox"
@@ -425,11 +433,13 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
               />
               <div className="flex-1">
                 <div className="font-medium text-slate-900 dark:text-white">Group by System</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Organize questions by organ system</div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  Organize questions by organ system
+                </div>
               </div>
             </label>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button

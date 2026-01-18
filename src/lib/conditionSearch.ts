@@ -1,4 +1,4 @@
-import type { SystemCode } from "../../types.ts";
+import type { SystemCode } from '../../types';
 
 export interface ConditionSearchFilters {
   system?: SystemCode;
@@ -16,13 +16,62 @@ export interface ConditionSearchResult {
 }
 
 const FALLBACK_CONDITIONS: ConditionSearchResult[] = [
-  { id: 'afib', condition: 'Atrial Fibrillation', system: 'cardiology' as SystemCode, subcategory: 'arrhythmia', aliases: ['afib'], score: 1 },
-  { id: 'stemi', condition: 'STEMI', system: 'cardiology' as SystemCode, subcategory: 'acs', aliases: ['myocardial infarction'], score: 1 },
-  { id: 'pneumonia', condition: 'Pneumonia', system: 'pulmonology' as SystemCode, subcategory: 'infection', aliases: ['pna'], score: 1 },
-  { id: 'diabetes', condition: 'Diabetes Mellitus', system: 'endocrine' as SystemCode, subcategory: 'metabolic', aliases: ['diabetes'], score: 1 },
-  { id: 'gout', condition: 'Gout', system: 'rheumatology' as SystemCode, subcategory: 'crystal arthropathy', aliases: [], score: 1 },
-  { id: 'psoriasis', condition: 'Psoriasis', system: 'dermatology' as SystemCode, subcategory: 'inflammatory', aliases: [], score: 1 },
-  { id: 'pneumothorax', condition: 'Pneumothorax', system: 'pulmonology' as SystemCode, subcategory: 'air leak', aliases: [], score: 1 },
+  {
+    id: 'afib',
+    condition: 'Atrial Fibrillation',
+    system: 'cardiology' as SystemCode,
+    subcategory: 'arrhythmia',
+    aliases: ['afib'],
+    score: 1,
+  },
+  {
+    id: 'stemi',
+    condition: 'STEMI',
+    system: 'cardiology' as SystemCode,
+    subcategory: 'acs',
+    aliases: ['myocardial infarction'],
+    score: 1,
+  },
+  {
+    id: 'pneumonia',
+    condition: 'Pneumonia',
+    system: 'pulmonology' as SystemCode,
+    subcategory: 'infection',
+    aliases: ['pna'],
+    score: 1,
+  },
+  {
+    id: 'diabetes',
+    condition: 'Diabetes Mellitus',
+    system: 'endocrine' as SystemCode,
+    subcategory: 'metabolic',
+    aliases: ['diabetes'],
+    score: 1,
+  },
+  {
+    id: 'gout',
+    condition: 'Gout',
+    system: 'rheumatology' as SystemCode,
+    subcategory: 'crystal arthropathy',
+    aliases: [],
+    score: 1,
+  },
+  {
+    id: 'psoriasis',
+    condition: 'Psoriasis',
+    system: 'dermatology' as SystemCode,
+    subcategory: 'inflammatory',
+    aliases: [],
+    score: 1,
+  },
+  {
+    id: 'pneumothorax',
+    condition: 'Pneumothorax',
+    system: 'pulmonology' as SystemCode,
+    subcategory: 'air leak',
+    aliases: [],
+    score: 1,
+  },
 ];
 
 function levenshteinDistance(a: string, b: string): number {
@@ -35,7 +84,7 @@ function levenshteinDistance(a: string, b: string): number {
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost,
+        matrix[i - 1][j - 1] + cost
       );
     }
   }
@@ -76,8 +125,9 @@ export async function searchConditions(
   const query = rawQuery.trim();
   if (!query) return [];
 
-  const isTestEnv = typeof process !== 'undefined'
-    && (process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST_WORKER_ID));
+  const isTestEnv =
+    typeof process !== 'undefined' &&
+    (process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST_WORKER_ID));
   if (isTestEnv) {
     // Short-circuit network calls during Vitest runs to avoid invalid URL errors
     return fallbackSearch(query, filters.limit);
@@ -114,7 +164,6 @@ export async function searchConditions(
       return results;
     }
     return fallbackSearch(query, filters.limit);
-
   } catch (error) {
     console.error('Error searching conditions:', error);
     return fallbackSearch(query, filters.limit);
@@ -150,10 +199,10 @@ export async function getSystemOptions(): Promise<SystemCode[]> {
  */
 export async function getSubcategoryOptions(system?: SystemCode): Promise<string[]> {
   try {
-    const url = system 
+    const url = system
       ? `/api/conditions?system=${system}&includeContent=false`
       : '/api/conditions?includeContent=false';
-    
+
     const response = await fetch(url);
     if (!response.ok) {
       console.error('Failed to fetch subcategories');

@@ -1,44 +1,36 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+/**
+ * GET /api/buzzwords
+ * Returns all buzzwords for reference (public endpoint)
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { publicEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: any) {
+const BuzzwordsSchema = z.object({});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = publicEndpoint(BuzzwordsSchema, async (context) => {
   const { env } = context;
-  
-    if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
-
+  const logger = createEndpointLogger('/api/buzzwords');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     const buzzwords = await prisma.buzzword.findMany({
-      orderBy: { buzzword: 'asc' }
+      orderBy: { buzzword: 'asc' },
     });
-    
-    return new Response(JSON.stringify(buzzwords), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+
+    logger.info('Fetched buzzwords', { count: buzzwords.length });
+
+    return { data: buzzwords };
+  } catch (error) {
+    logger.error('Error fetching buzzwords', {
+      error: error instanceof Error ? error.message : String(error),
     });
-  } catch (error: any) {
-    console.error('Error fetching buzzwords:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch buzzwords', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    throw new Error('Failed to fetch buzzwords');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

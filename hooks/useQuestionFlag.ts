@@ -82,10 +82,7 @@ export function useQuestionFlags() {
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
 
-  const fetchFlags = async (filters?: {
-    status?: string;
-    priority?: string;
-  }): Promise<void> => {
+  const fetchFlags = async (filters?: { status?: string; priority?: string }): Promise<void> => {
     setLoading(true);
     setError(null);
 

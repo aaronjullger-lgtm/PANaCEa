@@ -1,15 +1,15 @@
 #!/usr/bin/env npx tsx
 /**
  * Imaging Study Filler - Fill empty fields in ImagingStudy table
- * 
+ *
  * Updates existing ImagingStudy records to fill empty fields with AI-generated content.
  * Also creates ImagingConditionLink entries to link studies to conditions with example images.
- * 
+ *
  * Fields to fill:
  *   - allergyProtocol, contrastAgent, contrastType, normalFindings, pregnancySafety
  *   - preparation, protocol, radiationDose, renalConsiderations, reportTemplate, scanDuration
  *   - alternativeTo[], boardYieldFacts[], commonMistakes[], testQuestionTips[], whenToAvoid[], keyFindings
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/imaging-study-filler.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/imaging-study-filler.ts --update-existing
@@ -28,7 +28,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -36,16 +36,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -68,8 +68,8 @@ interface ImagingFillContent {
   renalConsiderations: string;
   reportTemplate: string;
   scanDuration: string;
-  
-  // Array fields  
+
+  // Array fields
   alternativeTo: string[];
   boardYieldFacts: string[];
   commonMistakes: string[];
@@ -78,7 +78,7 @@ interface ImagingFillContent {
   firstLineFor: string[];
   classicSigns: string[];
   indications: string[];
-  
+
   // JSON field
   keyFindings: Record<string, string>;
 }
@@ -88,18 +88,18 @@ async function generateImagingContent(study: any): Promise<ImagingFillContent> {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not set');
   }
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
+  const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
-  
+
   await rateLimiter.acquire();
-  
+
   const prompt = `Generate comprehensive clinical content for the imaging study "${study.name}" (${study.modality}) for PANCE/PA education.
 
 Current info:
@@ -147,12 +147,12 @@ Return ONLY valid JSON.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error(`Failed to parse JSON for ${study.name}`);
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -178,10 +178,10 @@ function needsUpdate(record: any): boolean {
     !record.keyFindings,
     !record.firstLineFor || record.firstLineFor.length === 0,
     !record.classicSigns || record.classicSigns.length === 0,
-    !record.indications || record.indications.length === 0
+    !record.indications || record.indications.length === 0,
   ];
-  
-  return emptyFields.some(empty => empty);
+
+  return emptyFields.some((empty) => empty);
 }
 
 async function updateImagingStudy(id: string, content: ImagingFillContent): Promise<void> {
@@ -200,49 +200,55 @@ async function updateImagingStudy(id: string, content: ImagingFillContent): Prom
       reportTemplate: content.reportTemplate,
       scanDuration: content.scanDuration,
       alternativeTo: ensureArray(content.alternativeTo, 'No standard alternatives'),
-      boardYieldFacts: ensureArray(content.boardYieldFacts, 'Review indications and contraindications'),
+      boardYieldFacts: ensureArray(
+        content.boardYieldFacts,
+        'Review indications and contraindications'
+      ),
       commonMistakes: ensureArray(content.commonMistakes, 'Ensure appropriate clinical indication'),
-      testQuestionTips: ensureArray(content.testQuestionTips, 'Know first-line imaging for common presentations'),
+      testQuestionTips: ensureArray(
+        content.testQuestionTips,
+        'Know first-line imaging for common presentations'
+      ),
       whenToAvoid: ensureArray(content.whenToAvoid, 'Avoid if not clinically indicated'),
       keyFindings: content.keyFindings || {},
       firstLineFor: ensureArray(content.firstLineFor, 'Review clinical guidelines'),
       classicSigns: ensureArray(content.classicSigns, 'Review characteristic findings'),
-      indications: ensureArray(content.indications, 'Review clinical indications')
-    }
+      indications: ensureArray(content.indications, 'Review clinical indications'),
+    },
   });
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : undefined;
-  
+
   console.log('🏥 Imaging Study Filler - Fill Empty Fields');
   console.log(`   Mode: ${dryRun ? 'DRY RUN' : 'UPDATE'}`);
   if (batchSize) console.log(`   Batch size: ${batchSize}`);
   console.log('');
-  
+
   const allStudies = await prisma.imagingStudy.findMany();
   console.log(`📊 Found ${allStudies.length} imaging studies\n`);
-  
+
   let updated = 0;
   let skipped = 0;
   let failed = 0;
   let processed = 0;
-  
+
   for (const study of allStudies) {
     if (batchSize && processed >= batchSize) {
       console.log(`\n⏸️  Batch limit reached (${batchSize})`);
       break;
     }
-    
+
     if (!needsUpdate(study)) {
       console.log(`  ⏭️  Skipped: ${study.name} (already complete)`);
       skipped++;
       continue;
     }
-    
+
     try {
       if (dryRun) {
         console.log(`  📝 Would update: ${study.name}`);
@@ -260,14 +266,14 @@ async function main() {
       failed++;
     }
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log('📊 Imaging Study Filler Summary:');
   console.log(`   Updated: ${updated}`);
   console.log(`   Skipped: ${skipped}`);
   console.log(`   Failed:  ${failed}`);
   console.log(`   Total processed: ${processed}`);
-  
+
   await prisma.$disconnect();
 }
 

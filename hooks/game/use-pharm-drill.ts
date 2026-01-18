@@ -13,7 +13,7 @@ export interface PharmQuestion {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
-export type PharmQuestionType = 
+export type PharmQuestionType =
   | 'mechanism'
   | 'side_effect'
   | 'contraindication'
@@ -24,7 +24,7 @@ export type PharmQuestionType =
 
 export type PharmDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
-export type PharmCategory = 
+export type PharmCategory =
   | 'mechanism'
   | 'side_effect'
   | 'contraindication'
@@ -67,7 +67,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [status, setStatus] = useState<PharmDrillStatus>('landing');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Track if we're currently fetching to prevent duplicate requests
   const isFetchingRef = useRef(false);
 
@@ -76,53 +76,58 @@ export function usePharmDrill(): UsePharmDrillReturn {
   /**
    * Fetch questions from the API
    */
-  const fetchQuestions = useCallback(async (category: PharmCategory, count: number = INITIAL_QUEUE_SIZE): Promise<PharmQuestion[]> => {
-    if (isFetchingRef.current) return [];
-    
-    isFetchingRef.current = true;
-    setIsLoading(true);
-    setError(null);
+  const fetchQuestions = useCallback(
+    async (
+      category: PharmCategory,
+      count: number = INITIAL_QUEUE_SIZE
+    ): Promise<PharmQuestion[]> => {
+      if (isFetchingRef.current) return [];
 
-    try {
-      const params = new URLSearchParams({
-        count: count.toString(),
-      });
+      isFetchingRef.current = true;
+      setIsLoading(true);
+      setError(null);
 
-      // Map category to API question type
-      if (category !== 'random') {
-        params.append('category', category);
+      try {
+        const params = new URLSearchParams({
+          count: count.toString(),
+        });
+
+        // Map category to API question type
+        if (category !== 'random') {
+          params.append('category', category);
+        }
+
+        const response = await fetch(`/api/drills/pharm?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch questions: ${response.statusText}`);
+        }
+
+        const questions: PharmQuestion[] = await response.json();
+        return questions;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';
+        setError(errorMessage);
+        console.error('Error fetching pharm questions:', err);
+        return [];
+      } finally {
+        setIsLoading(false);
+        isFetchingRef.current = false;
       }
-
-      const response = await fetch(`/api/drills/pharm?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch questions: ${response.statusText}`);
-      }
-
-      const questions: PharmQuestion[] = await response.json();
-      return questions;
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';
-      setError(errorMessage);
-      console.error('Error fetching pharm questions:', err);
-      return [];
-    } finally {
-      setIsLoading(false);
-      isFetchingRef.current = false;
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Refill the question queue when running low
    */
   const refillQueue = useCallback(async () => {
     const remainingQuestions = queue.length - currentIndex;
-    
+
     if (remainingQuestions <= REFILL_THRESHOLD && !isFetchingRef.current) {
       const newQuestions = await fetchQuestions(selectedCategory, INITIAL_QUEUE_SIZE);
       if (newQuestions.length > 0) {
-        setQueue(prev => [...prev, ...newQuestions]);
+        setQueue((prev) => [...prev, ...newQuestions]);
       }
     }
   }, [queue.length, currentIndex, selectedCategory, fetchQuestions]);
@@ -134,27 +139,30 @@ export function usePharmDrill(): UsePharmDrillReturn {
     }
   }, [currentIndex, status, refillQueue]);
 
-  const startSession = useCallback(async (category: PharmCategory) => {
-    setSelectedCategory(category);
-    setIsLoading(true);
-    
-    const initialQuestions = await fetchQuestions(category, INITIAL_QUEUE_SIZE);
-    
-    if (initialQuestions.length === 0) {
-      setError('Failed to load questions. Please try again.');
-      setStatus('landing');
-      return;
-    }
-    
-    setQueue(initialQuestions);
-    setCurrentIndex(0);
-    setScore(0);
-    setStreak(0);
-    setTotalAttempts(0);
-    setUserAnswerIndex(null);
-    setIsCorrect(null);
-    setStatus('playing');
-  }, [fetchQuestions]);
+  const startSession = useCallback(
+    async (category: PharmCategory) => {
+      setSelectedCategory(category);
+      setIsLoading(true);
+
+      const initialQuestions = await fetchQuestions(category, INITIAL_QUEUE_SIZE);
+
+      if (initialQuestions.length === 0) {
+        setError('Failed to load questions. Please try again.');
+        setStatus('landing');
+        return;
+      }
+
+      setQueue(initialQuestions);
+      setCurrentIndex(0);
+      setScore(0);
+      setStreak(0);
+      setTotalAttempts(0);
+      setUserAnswerIndex(null);
+      setIsCorrect(null);
+      setStatus('playing');
+    },
+    [fetchQuestions]
+  );
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -171,27 +179,30 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setIsCorrect(null);
   }, []);
 
-  const submitAnswer = useCallback((answerIndex: number) => {
-    if (!currentQuestion || status !== 'playing') return;
+  const submitAnswer = useCallback(
+    (answerIndex: number) => {
+      if (!currentQuestion || status !== 'playing') return;
 
-    setUserAnswerIndex(answerIndex);
-    setTotalAttempts(prev => prev + 1);
-    
-    const correct = answerIndex === currentQuestion.correctAnswerIndex;
-    setIsCorrect(correct);
+      setUserAnswerIndex(answerIndex);
+      setTotalAttempts((prev) => prev + 1);
 
-    if (correct) {
-      setScore(prev => prev + 1);
-      setStreak(prev => prev + 1);
-    } else {
-      setStreak(0);
-    }
+      const correct = answerIndex === currentQuestion.correctAnswerIndex;
+      setIsCorrect(correct);
 
-    setStatus('feedback');
-  }, [currentQuestion, status]);
+      if (correct) {
+        setScore((prev) => prev + 1);
+        setStreak((prev) => prev + 1);
+      } else {
+        setStreak(0);
+      }
+
+      setStatus('feedback');
+    },
+    [currentQuestion, status]
+  );
 
   const nextQuestion = useCallback(() => {
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex((prev) => prev + 1);
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
@@ -199,15 +210,15 @@ export function usePharmDrill(): UsePharmDrillReturn {
 
   const reset = useCallback(async () => {
     setIsLoading(true);
-    
+
     const newQuestions = await fetchQuestions(selectedCategory, INITIAL_QUEUE_SIZE);
-    
+
     if (newQuestions.length === 0) {
       setError('Failed to load questions. Please try again.');
       setStatus('landing');
       return;
     }
-    
+
     setQueue(newQuestions);
     setCurrentIndex(0);
     setScore(0);

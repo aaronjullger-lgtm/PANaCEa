@@ -103,6 +103,7 @@ Sprint 2 focused on adding **strategic database indexes** to optimize query perf
 ### ✅ Table Statistics (6)
 
 24-29. **ANALYZE** run on:
+
 - QuestionAttempt
 - PerformanceRecord
 - MedicalContent
@@ -117,14 +118,14 @@ Sprint 2 focused on adding **strategic database indexes** to optimize query perf
 
 ## Performance Impact Estimates
 
-| Query Type | Before | After | Improvement |
-|------------|--------|-------|-------------|
-| Analytics dashboard (userId + system + date range) | 800-1200ms | 200-350ms | **3-4x faster** |
-| Drill initialization (system + conditionId) | 300-500ms | 100-150ms | **3x faster** |
-| Array searches (buzzwords, drug classes) | 600-900ms | 80-150ms | **6-8x faster** |
-| Junction table reverse lookups | 400-700ms | 150-200ms | **2.5-3x faster** |
-| Approved content queries | 200-350ms | 130-220ms | **1.5x faster** |
-| User performance queries | 500-800ms | 150-250ms | **3-4x faster** |
+| Query Type                                         | Before     | After     | Improvement       |
+| -------------------------------------------------- | ---------- | --------- | ----------------- |
+| Analytics dashboard (userId + system + date range) | 800-1200ms | 200-350ms | **3-4x faster**   |
+| Drill initialization (system + conditionId)        | 300-500ms  | 100-150ms | **3x faster**     |
+| Array searches (buzzwords, drug classes)           | 600-900ms  | 80-150ms  | **6-8x faster**   |
+| Junction table reverse lookups                     | 400-700ms  | 150-200ms | **2.5-3x faster** |
+| Approved content queries                           | 200-350ms  | 130-220ms | **1.5x faster**   |
+| User performance queries                           | 500-800ms  | 150-250ms | **3-4x faster**   |
 
 **Overall Expected Impact**: 2-5x faster queries on hot paths, with the biggest wins on analytics and array-based searches.
 
@@ -132,10 +133,10 @@ Sprint 2 focused on adding **strategic database indexes** to optimize query perf
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                               | Purpose                                 |
+| ------------------------------------------------------------------ | --------------------------------------- |
 | `prisma/migrations/20260105_add_performance_indexes/migration.sql` | SQL migration with 27 index definitions |
-| `scripts/migrations/apply-performance-indexes.ts` | Node.js script to apply indexes |
+| `scripts/migrations/apply-performance-indexes.ts`                  | Node.js script to apply indexes         |
 
 ---
 
@@ -146,6 +147,7 @@ npx tsx scripts/migrations/apply-performance-indexes.ts
 ```
 
 **Output**:
+
 ```
 📊 Applying performance indexes...
   ✅ Created 15 composite/junction indexes
@@ -165,15 +167,18 @@ npx tsx scripts/migrations/apply-performance-indexes.ts
 ## Skipped Indexes (3)
 
 ### 1. Condition.isHighYield Index
+
 **Reason**: `isHighYield` column doesn't exist on `Condition` table  
 **Note**: This column exists on related tables (Drug, LabTest, Procedure)  
 **Action**: No action needed - high-yield filtering happens at MedicalContent level
 
 ### 2. StudySession.completedAt Index
+
 **Reason**: `completedAt` column doesn't exist on `StudySession` table  
 **Action**: Check if StudySession uses different column name or if column needs to be added
 
 ### 3. Drug.name Trigram Index
+
 **Reason**: Column structure different than expected  
 **Action**: May need schema verification for text search on Drug names
 
@@ -186,6 +191,7 @@ npm run build
 ```
 
 **Result**: ✅ **CLEAN BUILD** (11.28s)
+
 - No compilation errors
 - All modules transformed successfully
 - PWA assets generated
@@ -196,16 +202,19 @@ npm run build
 ## Database State
 
 ### Indexes Added
+
 - **27 new indexes** across 10 tables
 - **1 PostgreSQL extension** enabled (pg_trgm)
 - **6 tables analyzed** for query planner statistics
 
 ### Storage Impact
+
 - Estimated index size: **~150-250 MB** (depending on data volume)
 - Trade-off: Slower writes, **2-5x faster reads**
 - Recommended for read-heavy workloads (PANCE study app fits this profile)
 
 ### Maintenance
+
 - Indexes are automatically maintained by PostgreSQL
 - ANALYZE should be run periodically (weekly recommended)
 - Can be run via: `ANALYZE "TableName";`
@@ -215,16 +224,18 @@ npm run build
 ## Query Optimization Examples
 
 ### Before (No Indexes)
+
 ```sql
-SELECT * FROM "QuestionAttempt" 
-WHERE "userId" = '...' 
-  AND "system" = 'CV' 
-ORDER BY "createdAt" DESC 
+SELECT * FROM "QuestionAttempt"
+WHERE "userId" = '...'
+  AND "system" = 'CV'
+ORDER BY "createdAt" DESC
 LIMIT 50;
 -- Execution time: ~800ms (seq scan)
 ```
 
 ### After (With Composite Index)
+
 ```sql
 -- Same query
 -- Execution time: ~200ms (index scan)
@@ -232,13 +243,15 @@ LIMIT 50;
 ```
 
 ### Array Search (Before)
+
 ```sql
-SELECT * FROM "Drug" 
+SELECT * FROM "Drug"
 WHERE 'beta-blocker' = ANY("drugClass");
 -- Execution time: ~600ms (seq scan + array ops)
 ```
 
 ### Array Search (After)
+
 ```sql
 -- Same query
 -- Execution time: ~80ms (GIN index scan)
@@ -250,18 +263,21 @@ WHERE 'beta-blocker' = ANY("drugClass");
 ## Next Steps
 
 ### Sprint 3: KV Cache Integration (Starting Now)
+
 - Complete CloudFlare KV cache integration
 - Add cache warming worker
 - Implement cache metrics tracking
 - Configure wrangler.toml for production
 
 ### Sprint 4: Query Optimization (Pending)
+
 - Eliminate N+1 queries in QuizView
 - Add eager loading with `include`
 - Implement application-level result caching
 - Optimize connection pooling
 
 ### Sprint 5: Error Monitoring (Pending)
+
 - Integrate Sentry
 - Add error boundaries
 - Implement structured logging
@@ -286,6 +302,7 @@ WHERE 'beta-blocker' = ANY("drugClass");
 ## Troubleshooting
 
 ### If indexes cause slowdowns:
+
 ```sql
 -- Drop specific index
 DROP INDEX IF EXISTS "IndexName";
@@ -295,6 +312,7 @@ CREATE INDEX CONCURRENTLY "IndexName" ON "TableName"(columns);
 ```
 
 ### If query planner ignores indexes:
+
 ```sql
 -- Update statistics
 ANALYZE "TableName";
@@ -304,6 +322,7 @@ EXPLAIN ANALYZE SELECT ...;
 ```
 
 ### If write performance degrades:
+
 - Indexes slow down INSERT/UPDATE/DELETE operations
 - Monitor write latency
 - Consider removing least-used indexes

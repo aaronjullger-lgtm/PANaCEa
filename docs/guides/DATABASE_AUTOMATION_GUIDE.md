@@ -23,6 +23,7 @@ npm run db:automate:skip-gen
 PANaCEa has two complementary automation systems:
 
 ### 1. **Content Automation** (`npm run db:automate`)
+
 - Validates data quality
 - Checks content completeness
 - Generates missing content with AI
@@ -30,6 +31,7 @@ PANaCEa has two complementary automation systems:
 - Validates relationships
 
 ### 2. **Orchestration** (`npm run db:orchestrate`) ⭐ NEW
+
 - **Bi-directional sync** between code and database
 - Syncs local TypeScript registries → Database
 - Captures AI-generated records → Back to local files
@@ -43,6 +45,7 @@ PANaCEa has two complementary automation systems:
 ### Orchestration
 
 **`npm run db:orchestrate`** ⭐ NEW
+
 - **Bi-directional sync** workflow
 - Phase 1: Sync local registries → Database
 - Phase 2: Validate database integrity
@@ -51,47 +54,56 @@ PANaCEa has two complementary automation systems:
 - See [ORCHESTRATION_GUIDE.md](./ORCHESTRATION_GUIDE.md)
 
 **`npm run db:sync-to-registry`**
+
 - Back-sync database records to local TypeScript files
 - Captures AI-generated or admin panel-created records
 - Creates `.bak` backups before modifying files
 
 **`npm run db:automate`**
+
 - Runs all database automation tasks in sequence
 - Validates data integrity, checks content quality, generates missing content
 - Saves detailed logs to `logs/automation-*.json`
 - Generates reports in `reports/` directory
 
 **`npm run db:automate:quick`**
+
 - Runs only critical validation tasks (faster execution)
 - Skips duplicate detection and content generation
 
 **`npm run db:automate:skip-gen`**
+
 - Runs all checks but skips AI content generation
 - Useful for CI/CD pipelines or when Gemini API unavailable
 
 ### Individual Tools
 
 **`npm run db:validate`**
+
 - Validates required fields, data formats, enum values
 - Checks: MedicalContent, Condition, Drug, LabTest, User tables
 - Output: `reports/validation-report-*.json`
 
 **`npm run db:quality`**
+
 - Checks content completeness and section requirements
 - Verifies minimum content lengths, placeholder text, formatting
 - Output: `reports/quality-report-*.json`
 
 **`npm run db:relationships`**
+
 - Validates foreign key references and data integrity
 - Checks User references, Condition consistency, LabCase relationships
 - Output: `reports/relationship-validation-*.json`
 
 **`npm run db:deduplicate`**
+
 - Finds duplicate conditions using similarity scoring
 - Generates merge scripts for duplicate groups
 - Output: `reports/duplicates-*.json` + `scripts/merge_duplicates.ts`
 
 **`npm run db:generate-content`**
+
 - AI-powered content generation for missing sections
 - Uses Google Gemini API with context-aware prompts
 - Flags: `--dry-run`, `--limit=N`, `--force`
@@ -99,11 +111,13 @@ PANaCEa has two complementary automation systems:
 ### Backup & Restore
 
 **`npm run db:backup`**
+
 - Comprehensive backup of all 58 database tables
 - Saves to `backups/{timestamp}/` with JSON files per table
 - Includes metadata and timestamp tracking
 
 **`npm run db:restore`**
+
 - Restores from backup directory
 - Uses upsert strategy to prevent duplicates
 - Prompts for backup timestamp selection
@@ -166,14 +180,17 @@ All tools generate timestamped JSON reports in `reports/`:
 ### Environment Variables
 
 Required for content generation:
+
 - `GEMINI_API_KEY` or `VITE_GEMINI_API_KEY` - Google Gemini API key
 
 Required for database operations:
+
 - `DATABASE_URL` - PostgreSQL connection string
 
 ### Gemini API Settings
 
 Content generation uses:
+
 - Model: `gemini-2.0-flash-exp`
 - Temperature: `0.3` (consistent, focused output)
 - Rate limit: `1 request/second`
@@ -182,6 +199,7 @@ Content generation uses:
 ### Validation Rules
 
 **Required Fields**:
+
 - `MedicalContent`: conditionId, name, status, overview, symptoms, diagnosis, treatment
 - `Condition`: conditionId, name, system
 - `Drug`: drugId, name, class
@@ -189,6 +207,7 @@ Content generation uses:
 - `User`: id, email
 
 **Minimum Content Lengths**:
+
 - Overview: 200 characters
 - Pathophysiology: 200 characters
 - Symptoms: 3 items
@@ -197,24 +216,28 @@ Content generation uses:
 - Complications: 2 items
 
 **Valid Enums**:
+
 - Status: `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `PUBLISHED`, `ARCHIVED`
 - PANCE Systems: `CV`, `PULM`, `GI`, `NEURO`, `MSK`, `DERM`, `HEME`, `ENDO`, etc.
 
 ## Usage Examples
 
 ### Daily Quality Check
+
 ```bash
 # Run quick validation before deployment
 npm run db:automate:quick
 ```
 
 ### Weekly Full Audit
+
 ```bash
 # Complete validation and content generation
 npm run db:automate
 ```
 
 ### Find and Fix Issues
+
 ```bash
 # 1. Validate data
 npm run db:validate
@@ -233,6 +256,7 @@ npm run db:generate-content -- --limit=10
 ```
 
 ### Handle Duplicates
+
 ```bash
 # 1. Find duplicates
 npm run db:deduplicate
@@ -245,6 +269,7 @@ tsx scripts/merge_duplicates.ts
 ```
 
 ### Emergency Recovery
+
 ```bash
 # Before major changes
 npm run db:backup
@@ -274,12 +299,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - run: npm install
       - run: npm run db:automate:skip-gen
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      
+
       - name: Upload Reports
         uses: actions/upload-artifact@v3
         if: always()
@@ -291,20 +316,24 @@ jobs:
 ## Troubleshooting
 
 ### "No Gemini API key found"
+
 - Set `GEMINI_API_KEY` or `VITE_GEMINI_API_KEY` environment variable
 - Or use `--skip-generation` flag to skip content generation
 
 ### "Database connection failed"
+
 - Verify `DATABASE_URL` in `.env`
 - Check database is running and accessible
 - Run `npx prisma db push` to sync schema
 
 ### "Critical task failed"
+
 - Orchestrator continues with remaining tasks
 - Check logs in `logs/automation-*.json`
 - Review specific report in `reports/` for details
 
 ### Large Number of Issues
+
 - Start with `db:validate` to find data integrity issues
 - Use `db:quality` to identify incomplete content
 - Generate content in batches: `--limit=50`
@@ -313,16 +342,19 @@ jobs:
 ## Best Practices
 
 1. **Run validation before major deployments**
+
    ```bash
    npm run db:automate:quick
    ```
 
 2. **Regular audits** (weekly/monthly)
+
    ```bash
    npm run db:automate
    ```
 
 3. **Always backup before bulk operations**
+
    ```bash
    npm run db:backup
    npm run db:generate-content -- --limit=100
@@ -358,7 +390,7 @@ if (record.name.length < 5) {
     table: 'MedicalContent',
     recordId: record.id,
     field: 'name',
-    message: 'Condition name should be at least 5 characters'
+    message: 'Condition name should be at least 5 characters',
   });
 }
 ```
@@ -384,15 +416,16 @@ const records = await prisma.medicalContent.findMany({
   where: {
     system: 'CV', // Filter by system
     status: 'PUBLISHED',
-    pathophysiology: null
+    pathophysiology: null,
   },
-  take: 50
+  take: 50,
 });
 ```
 
 ## Support
 
 For issues or questions:
+
 1. Check this guide and individual script documentation
 2. Review recent reports in `reports/` and logs in `logs/`
 3. Check Prisma schema for data model details

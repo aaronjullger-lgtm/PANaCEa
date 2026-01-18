@@ -6,14 +6,14 @@ This document explains how to set up automated background jobs for data analysis
 
 ## 📋 Overview of Available Automations
 
-| Job | Frequency | Purpose | Setup Required |
-|-----|-----------|---------|----------------|
-| Question Pool Replenish | Daily | Keep question pool above minimum threshold | Cloudflare Cron |
-| User Analytics Aggregation | Daily | Compile performance metrics | Cloudflare Cron |
-| Daily Study Prescription | Daily (6 AM) | Generate personalized study plans | Cloudflare Cron |
-| Drift Detection | Weekly | Flag stale AI content | GitHub Actions |
-| Database Cleanup | Weekly | Remove orphaned records | GitHub Actions |
-| Full Analytics Report | Monthly | Comprehensive user insights | GitHub Actions |
+| Job                        | Frequency    | Purpose                                    | Setup Required  |
+| -------------------------- | ------------ | ------------------------------------------ | --------------- |
+| Question Pool Replenish    | Daily        | Keep question pool above minimum threshold | Cloudflare Cron |
+| User Analytics Aggregation | Daily        | Compile performance metrics                | Cloudflare Cron |
+| Daily Study Prescription   | Daily (6 AM) | Generate personalized study plans          | Cloudflare Cron |
+| Drift Detection            | Weekly       | Flag stale AI content                      | GitHub Actions  |
+| Database Cleanup           | Weekly       | Remove orphaned records                    | GitHub Actions  |
+| Full Analytics Report      | Monthly      | Comprehensive user insights                | GitHub Actions  |
 
 ---
 
@@ -51,7 +51,7 @@ export async function scheduled(
   ctx: ExecutionContext
 ): Promise<void> {
   const hour = new Date(event.scheduledTime).getUTCHours();
-  
+
   switch (hour) {
     case 2:
       // 2 AM UTC - Analytics Aggregation
@@ -71,21 +71,21 @@ export async function scheduled(
 async function aggregateDailyAnalytics(env: Env) {
   await fetch(`${env.APP_URL}/api/cron/aggregate-analytics`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${env.CRON_SECRET}` }
+    headers: { Authorization: `Bearer ${env.CRON_SECRET}` },
   });
 }
 
 async function replenishQuestionPool(env: Env) {
   await fetch(`${env.APP_URL}/api/cron/replenish-pool`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${env.CRON_SECRET}` }
+    headers: { Authorization: `Bearer ${env.CRON_SECRET}` },
   });
 }
 
 async function generateStudyPrescriptions(env: Env) {
   await fetch(`${env.APP_URL}/api/cron/daily-prescription`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${env.CRON_SECRET}` }
+    headers: { Authorization: `Bearer ${env.CRON_SECRET}` },
   });
 }
 ```
@@ -93,6 +93,7 @@ async function generateStudyPrescriptions(env: Env) {
 ### Step 3: Add Cron Secret to Environment
 
 In Cloudflare Pages dashboard:
+
 1. Go to Settings → Environment Variables
 2. Add `CRON_SECRET` with a secure random string
 3. This prevents unauthorized cron endpoint access
@@ -110,30 +111,30 @@ name: AI Content Drift Detection
 
 on:
   schedule:
-    - cron: '0 4 * * 0'  # Every Sunday at 4 AM UTC
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 4 * * 0' # Every Sunday at 4 AM UTC
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   drift-detection:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run drift detection
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx ts-node scripts/cron/drift-detector.ts
-      
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
@@ -151,25 +152,25 @@ name: Weekly Database Cleanup
 
 on:
   schedule:
-    - cron: '0 3 * * 1'  # Every Monday at 3 AM UTC
+    - cron: '0 3 * * 1' # Every Monday at 3 AM UTC
   workflow_dispatch:
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run cleanup scripts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -187,25 +188,25 @@ name: Monthly Analytics Report
 
 on:
   schedule:
-    - cron: '0 5 1 * *'  # First day of month at 5 AM UTC
+    - cron: '0 5 1 * *' # First day of month at 5 AM UTC
   workflow_dispatch:
 
 jobs:
   analytics:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Generate monthly report
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -221,20 +222,20 @@ jobs:
 
 Go to your GitHub repo → Settings → Secrets and variables → Actions:
 
-| Secret Name | Description | Where to Get |
-|-------------|-------------|--------------|
-| `DATABASE_URL` | PostgreSQL connection string | Supabase dashboard → Settings → Database |
-| `GEMINI_API_KEY` | Google AI API key | Google AI Studio |
-| `CLERK_SECRET_KEY` | Clerk backend key | Clerk dashboard |
+| Secret Name        | Description                  | Where to Get                             |
+| ------------------ | ---------------------------- | ---------------------------------------- |
+| `DATABASE_URL`     | PostgreSQL connection string | Supabase dashboard → Settings → Database |
+| `GEMINI_API_KEY`   | Google AI API key            | Google AI Studio                         |
+| `CLERK_SECRET_KEY` | Clerk backend key            | Clerk dashboard                          |
 
 ### Cloudflare Environment Variables
 
 Go to Cloudflare Pages → Your project → Settings → Environment Variables:
 
-| Variable | Description |
-|----------|-------------|
-| `CRON_SECRET` | Random string for cron auth |
-| `APP_URL` | Your production URL (e.g., `https://panacea.pages.dev`) |
+| Variable      | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| `CRON_SECRET` | Random string for cron auth                             |
+| `APP_URL`     | Your production URL (e.g., `https://panacea.pages.dev`) |
 
 ---
 
@@ -249,40 +250,40 @@ import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
-  
+
   // Verify cron secret
   const auth = request.headers.get('Authorization');
   if (auth !== `Bearer ${env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     // Aggregate daily user statistics
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const users = await prisma.user.findMany({
-      select: { id: true }
+      select: { id: true },
     });
-    
+
     for (const user of users) {
       const attempts = await prisma.questionAttempt.count({
         where: {
           userId: user.id,
-          createdAt: { gte: today }
-        }
+          createdAt: { gte: today },
+        },
       });
-      
+
       const correct = await prisma.questionAttempt.count({
         where: {
           userId: user.id,
           createdAt: { gte: today },
-          isCorrect: true
-        }
+          isCorrect: true,
+        },
       });
-      
+
       // Store daily stats (create DailyUserStats table if needed)
       await prisma.sessionAnalytics.create({
         data: {
@@ -291,10 +292,10 @@ export async function onRequestPost(context: any) {
           questionsAnswered: attempts,
           correctAnswers: correct,
           accuracy: attempts > 0 ? (correct / attempts) * 100 : 0,
-        }
+        },
       });
     }
-    
+
     return new Response(JSON.stringify({ success: true, usersProcessed: users.length }));
   } finally {
     await prisma.$disconnect();
@@ -309,62 +310,64 @@ import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
-  
+
   // Verify cron secret
   const auth = request.headers.get('Authorization');
   if (auth !== `Bearer ${env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     // Get active users (logged in last 7 days)
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    
+
     const activeUsers = await prisma.user.findMany({
       where: {
-        lastActiveAt: { gte: weekAgo }
+        lastActiveAt: { gte: weekAgo },
       },
       include: {
-        userProgress: true
-      }
+        userProgress: true,
+      },
     });
-    
+
     for (const user of activeUsers) {
       // Calculate weak areas based on UserProgress
       const weakSystems = user.userProgress
-        .filter(p => p.stability < 2 || p.retrievability < 0.8)
+        .filter((p) => p.stability < 2 || p.retrievability < 0.8)
         .slice(0, 5);
-      
+
       // Generate daily prescription
       await prisma.dailyPrescription.upsert({
         where: {
           userId_date: {
             userId: user.id,
-            date: new Date()
-          }
+            date: new Date(),
+          },
         },
         update: {
-          weakAreas: weakSystems.map(s => s.system),
+          weakAreas: weakSystems.map((s) => s.system),
           recommendedQuestions: 20,
-          focusSystems: weakSystems.map(s => s.system).slice(0, 3),
+          focusSystems: weakSystems.map((s) => s.system).slice(0, 3),
         },
         create: {
           userId: user.id,
           date: new Date(),
-          weakAreas: weakSystems.map(s => s.system),
+          weakAreas: weakSystems.map((s) => s.system),
           recommendedQuestions: 20,
-          focusSystems: weakSystems.map(s => s.system).slice(0, 3),
-        }
+          focusSystems: weakSystems.map((s) => s.system).slice(0, 3),
+        },
       });
     }
-    
-    return new Response(JSON.stringify({ 
-      success: true, 
-      prescriptionsGenerated: activeUsers.length 
-    }));
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        prescriptionsGenerated: activeUsers.length,
+      })
+    );
   } finally {
     await prisma.$disconnect();
   }
@@ -378,42 +381,50 @@ import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
-  
+
   // Verify cron secret
   const auth = request.headers.get('Authorization');
   if (auth !== `Bearer ${env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     const MIN_POOL_SIZE = 100;
-    
+
     // Count active questions by system
-    const systems = ['cardiovascular', 'pulmonary', 'gastrointestinal', 'neurological', 'musculoskeletal'];
-    
+    const systems = [
+      'cardiovascular',
+      'pulmonary',
+      'gastrointestinal',
+      'neurological',
+      'musculoskeletal',
+    ];
+
     const poolStats: Record<string, number> = {};
-    
+
     for (const system of systems) {
       const count = await prisma.question.count({
-        where: { 
+        where: {
           system,
-          status: 'active'
-        }
+          status: 'active',
+        },
       });
       poolStats[system] = count;
-      
+
       if (count < MIN_POOL_SIZE) {
         // Flag for generation (actual generation would call Gemini)
         console.log(`[Cron] ${system} pool low: ${count}/${MIN_POOL_SIZE}`);
       }
     }
-    
-    return new Response(JSON.stringify({ 
-      success: true, 
-      poolStats 
-    }));
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        poolStats,
+      })
+    );
   } finally {
     await prisma.$disconnect();
   }
@@ -471,16 +482,19 @@ After setup, monitor automation health via:
 ## 🚨 Troubleshooting
 
 ### Cron jobs not running
+
 - Verify `CRON_SECRET` is set in Cloudflare
 - Check Cloudflare Pages deployment logs
 - Ensure `wrangler.toml` has correct cron syntax
 
 ### GitHub Actions failing
+
 - Check secrets are correctly named and valued
 - Verify `DATABASE_URL` allows external connections
 - Check Node.js version matches local dev
 
 ### Missing data in analytics
+
 - Ensure `SessionAnalytics` table exists in schema
 - Run Prisma migrations: `npx prisma migrate deploy`
 - Check user IDs exist in `User` table

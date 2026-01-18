@@ -1,6 +1,6 @@
 /**
  * Export Controls Component
- * 
+ *
  * Provides CSV and JSON export functionality for performance data.
  */
 
@@ -32,36 +32,36 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string): 
     console.warn('No data to export');
     return;
   }
-  
+
   // Get all unique keys from the data
-  const keys = Array.from(
-    new Set(data.flatMap(obj => Object.keys(obj)))
-  );
-  
+  const keys = Array.from(new Set(data.flatMap((obj) => Object.keys(obj))));
+
   // Build CSV content
   const header = keys.join(',');
-  const rows = data.map(obj => 
-    keys.map(key => {
-      const value = obj[key];
-      // Handle strings with commas or quotes
-      if (typeof value === 'string') {
-        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-          return `"${value.replace(/"/g, '""')}"`;
+  const rows = data.map((obj) =>
+    keys
+      .map((key) => {
+        const value = obj[key];
+        // Handle strings with commas or quotes
+        if (typeof value === 'string') {
+          if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
         }
-        return value;
-      }
-      if (value === null || value === undefined) {
-        return '';
-      }
-      if (typeof value === 'object') {
-        return JSON.stringify(value).replace(/"/g, '""');
-      }
-      return String(value);
-    }).join(',')
+        if (value === null || value === undefined) {
+          return '';
+        }
+        if (typeof value === 'object') {
+          return JSON.stringify(value).replace(/"/g, '""');
+        }
+        return String(value);
+      })
+      .join(',')
   );
-  
+
   const csvContent = [header, ...rows].join('\n');
-  
+
   // Create and download file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   downloadBlob(blob, filename);
@@ -109,21 +109,21 @@ const ExportControls: React.FC<ExportControlsProps> = ({
   userId,
 }) => {
   const [lastExported, setLastExported] = useState<'csv' | 'json' | null>(null);
-  
+
   const handleExportCSV = () => {
     const filename = generateFilename(filePrefix, 'csv', userId);
     exportToCSV(data, filename);
     setLastExported('csv');
     setTimeout(() => setLastExported(null), 2000);
   };
-  
+
   const handleExportJSON = () => {
     const filename = generateFilename(filePrefix, 'json', userId);
     exportToJSON(data, filename);
     setLastExported('json');
     setTimeout(() => setLastExported(null), 2000);
   };
-  
+
   return (
     <div className="flex items-center gap-2">
       <button
@@ -133,8 +133,8 @@ const ExportControls: React.FC<ExportControlsProps> = ({
           data.length === 0
             ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
             : lastExported === 'csv'
-            ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
-            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
         }`}
       >
         {lastExported === 'csv' ? (
@@ -144,7 +144,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
         )}
         Export CSV
       </button>
-      
+
       <button
         onClick={handleExportJSON}
         disabled={data.length === 0}
@@ -152,15 +152,11 @@ const ExportControls: React.FC<ExportControlsProps> = ({
           data.length === 0
             ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
             : lastExported === 'json'
-            ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
-            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
         }`}
       >
-        {lastExported === 'json' ? (
-          <Check className="w-4 h-4" />
-        ) : (
-          <FileJson className="w-4 h-4" />
-        )}
+        {lastExported === 'json' ? <Check className="w-4 h-4" /> : <FileJson className="w-4 h-4" />}
         Export JSON
       </button>
     </div>

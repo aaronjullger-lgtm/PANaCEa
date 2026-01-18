@@ -1,17 +1,17 @@
 /**
  * Custom Session Summary
- * 
+ *
  * Displays detailed statistics at the end of a custom study session.
  * Shows performance breakdown by system and focus area.
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Trophy, 
-  Target, 
-  Clock, 
-  TrendingUp, 
+import {
+  Trophy,
+  Target,
+  Clock,
+  TrendingUp,
   TrendingDown,
   RotateCcw,
   Home,
@@ -34,11 +34,9 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return minutes > 0 
-      ? `${minutes}m ${remainingSeconds}s`
-      : `${remainingSeconds}s`;
+    return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
   };
-  
+
   // Get grade emoji based on accuracy
   const getGradeEmoji = (accuracy: number) => {
     if (accuracy >= 90) return '🌟';
@@ -47,7 +45,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
     if (accuracy >= 60) return '📚';
     return '💪';
   };
-  
+
   return (
     <div className="max-w-2xl mx-auto p-4">
       <motion.div
@@ -61,7 +59,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <h1 className="text-2xl font-bold mb-1">Session Complete!</h1>
           <p className="text-blue-100">Great work on your custom study session</p>
         </div>
-        
+
         {/* Main Stats */}
         <div className="p-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -90,7 +88,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               color="purple"
             />
           </div>
-          
+
           {/* Performance Summary */}
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             {/* Strong Areas */}
@@ -101,7 +99,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   <span className="font-medium">Strong Areas</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {summary.strongAreas.map(area => (
+                  {summary.strongAreas.map((area) => (
                     <span
                       key={area}
                       className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full text-sm"
@@ -112,7 +110,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                 </div>
               </div>
             )}
-            
+
             {/* Weak Areas */}
             {summary.weakAreas.length > 0 && (
               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
@@ -121,7 +119,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   <span className="font-medium">Needs Review</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {summary.weakAreas.map(area => (
+                  {summary.weakAreas.map((area) => (
                     <span
                       key={area}
                       className="px-2 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full text-sm"
@@ -133,7 +131,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               </div>
             )}
           </div>
-          
+
           {/* System Breakdown */}
           {summary.systemBreakdown.length > 0 && (
             <div className="mb-6">
@@ -141,7 +139,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                 Performance by System
               </h3>
               <div className="space-y-2">
-                {summary.systemBreakdown.map(system => (
+                {summary.systemBreakdown.map((system) => (
                   <div key={system.system} className="flex items-center gap-3">
                     <div className="w-32 text-sm text-slate-600 dark:text-slate-400 truncate">
                       {system.systemName}
@@ -155,8 +153,8 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                           system.accuracy >= 80
                             ? 'bg-green-500'
                             : system.accuracy >= 60
-                            ? 'bg-amber-500'
-                            : 'bg-red-500'
+                              ? 'bg-amber-500'
+                              : 'bg-red-500'
                         }`}
                       />
                     </div>
@@ -168,7 +166,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               </div>
             </div>
           )}
-          
+
           {/* Focus Area Breakdown */}
           {summary.focusAreaBreakdown.length > 0 && (
             <div className="mb-6">
@@ -176,7 +174,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                 Performance by Focus Area
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {summary.focusAreaBreakdown.map(fa => (
+                {summary.focusAreaBreakdown.map((fa) => (
                   <div
                     key={fa.focusArea}
                     className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl"
@@ -187,13 +185,15 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                     <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
                       {FOCUS_AREA_META[fa.focusArea]?.label || fa.focusArea}
                     </div>
-                    <div className={`text-lg font-bold ${
-                      fa.accuracy >= 80
-                        ? 'text-green-600 dark:text-green-400'
-                        : fa.accuracy >= 60
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}>
+                    <div
+                      className={`text-lg font-bold ${
+                        fa.accuracy >= 80
+                          ? 'text-green-600 dark:text-green-400'
+                          : fa.accuracy >= 60
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
                       {fa.accuracy.toFixed(0)}%
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               </div>
             </div>
           )}
-          
+
           {/* Info Banner */}
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-700 dark:text-blue-300 text-sm mb-6">
             <div className="flex items-center gap-2 mb-1">
@@ -209,11 +209,11 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               <span className="font-medium">Practice Session</span>
             </div>
             <p>
-              This was a custom practice session. Results are not saved to your spaced repetition 
+              This was a custom practice session. Results are not saved to your spaced repetition
               schedule. Want to solidify this knowledge? Try the regular Question Mode!
             </p>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
@@ -256,7 +256,7 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
     purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20',
     red: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20',
   };
-  
+
   return (
     <div className={`p-3 rounded-xl ${colorClasses[color]}`}>
       <div className="flex items-center gap-1 mb-1">{icon}</div>

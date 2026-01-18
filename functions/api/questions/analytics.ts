@@ -1,27 +1,21 @@
 /**
  * Question Analytics API
- * 
- * Comprehensive analytics for questions:
- * - Question performance statistics
- * - Difficulty analysis
- * - System/condition coverage
- * - Flag/issue tracking
- * - Generation quality metrics
+ * GET: Comprehensive analytics for questions (performance, difficulty, coverage, quality)
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+const AnalyticsGetSchema = z.object({
+  query: z.object({
+    view: z.string().optional(),
+    system: z.string().optional(),
+    detailed: z.string().optional(),
+    questionId: z.string().optional(),
+  }),
+});
 
 interface QuestionStats {
   questionId: string;
@@ -56,36 +50,18 @@ interface PoolStats {
   };
 }
 
-interface QualityMetrics {
-  flaggedCount: number;
-  resolvedCount: number;
-  avgResolutionTimeHours: number;
-  topFlagReasons: Array<{ reason: string; count: number }>;
-  questionsWithIssues: number;
-}
+export const onRequestOptions = withCors();
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
-
-/**
- * GET: Get question analytics
- */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(AnalyticsGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/questions/analytics');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Auth is optional for basic stats, required for detailed analytics
-    const auth = await authenticateRequest(context.request, context.env);
-    
-    const url = new URL(context.request.url);
-    const view = url.searchParams.get('view') || 'overview'; // overview, system, pool, quality
-    const system = url.searchParams.get('system');
-    const detailed = url.searchParams.get('detailed') === 'true';
-
-    if (detailed && !auth) {
-      return createErrorResponse('Authentication required for detailed analytics', 401);
-    }
+    const view = validated.query?.view || 'overview';
+    const system = validated.query?.system || null;
+    const detailed = validated.query?.detailed === 'true';
+    const questionId = validated.query?.questionId || null;
 
     let response: Record<string, unknown> = {};
 
@@ -103,31 +79,36 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         response = await getQualityMetrics(prisma);
         break;
       case 'question':
-        const questionId = url.searchParams.get('questionId');
         if (!questionId) {
-          return createErrorResponse('questionId required', 400);
+          return { data: { error: 'questionId required' }, status: 400 };
         }
         response = await getQuestionDetails(prisma, questionId);
         break;
       default:
-        return createErrorResponse('Invalid view parameter', 400);
+        return { data: { error: 'Invalid view parameter' }, status: 400 };
     }
 
-    return createSuccessResponse({
-      view,
-      timestamp: new Date().toISOString(),
-      ...response,
-    });
+    logger.info('Question analytics fetched', { userId: auth.userId, view, system });
+
+    return {
+      data: {
+        view,
+        timestamp: new Date().toISOString(),
+        ...response,
+      },
+    };
   } catch (error) {
-    console.error('[QuestionAnalytics] Error:', error);
-    return createErrorResponse('Failed to fetch analytics', 500);
+    logger.error('Error fetching question analytics', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch analytics');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 // Analytics Helper Functions
-
 async function getOverviewStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   system: string | null
@@ -173,20 +154,16 @@ async function getOverviewStats(
 async function getSystemBreakdown(
   prisma: ReturnType<typeof createEdgePrismaClient>
 ): Promise<Record<string, unknown>> {
-  // Get question counts by system
   const questionsBySystem = await prisma.question.groupBy({
     by: ['system'],
     _count: { id: true },
   });
 
-  // Get attempt stats by system
   const attemptsBySystem = await prisma.questionAttempt.groupBy({
     by: ['system'],
     _count: { id: true },
-    _sum: { wasCorrect: false }, // Will need to calculate differently
   });
 
-  // Get correct counts separately
   const correctBySystem = await prisma.questionAttempt.groupBy({
     by: ['system'],
     where: { wasCorrect: true },
@@ -194,21 +171,18 @@ async function getSystemBreakdown(
   });
 
   const correctMap = new Map<string | null, number>(
-    correctBySystem.map(c => [c.system, c._count.id])
+    correctBySystem.map((c) => [c.system, c._count.id])
   );
   const attemptsMap = new Map<string | null, number>(
-    attemptsBySystem.map(a => [a.system, a._count.id])
+    attemptsBySystem.map((a) => [a.system, a._count.id])
   );
 
-  const systems: SystemStats[] = questionsBySystem.map(qs => {
+  const systems: SystemStats[] = questionsBySystem.map((qs) => {
     const system = qs.system;
     const questionCount = qs._count.id;
     const totalAttempts: number = attemptsMap.get(system) || 0;
     const correctAttempts: number = correctMap.get(system) || 0;
     const accuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
-
-    // Coverage score: ratio of questions with attempts
-    // Would need a more complex query for this - simplifying for now
     const coverageScore = totalAttempts > 0 ? Math.min(100, (totalAttempts / questionCount) * 10) : 0;
 
     return {
@@ -217,7 +191,7 @@ async function getSystemBreakdown(
       totalAttempts,
       correctAttempts,
       accuracy: Math.round(accuracy * 100) / 100,
-      avgDifficulty: 0.5, // Placeholder - would need actual difficulty data
+      avgDifficulty: 0.5,
       coverageScore: Math.round(coverageScore * 100) / 100,
     };
   });
@@ -236,14 +210,7 @@ async function getPoolStats(
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [
-    totalPregen,
-    usedPregen,
-    last24h,
-    last7d,
-    last30d,
-    bySystem,
-  ] = await Promise.all([
+  const [totalPregen, usedPregen, last24h, last7d, last30d, bySystem] = await Promise.all([
     prisma.preGeneratedQuestion.count(),
     prisma.preGeneratedQuestion.count({ where: { usedAt: { not: null } } }),
     prisma.preGeneratedQuestion.count({ where: { createdAt: { gte: oneDayAgo } } }),
@@ -255,16 +222,13 @@ async function getPoolStats(
     }),
   ]);
 
-  // Get used counts by system
   const usedBySystem = await prisma.preGeneratedQuestion.groupBy({
     by: ['system'],
     where: { usedAt: { not: null } },
     _count: { id: true },
   });
 
-  const usedMap = new Map<string, number>(
-    usedBySystem.map(u => [u.system, u._count.id])
-  );
+  const usedMap = new Map<string, number>(usedBySystem.map((u) => [u.system, u._count.id]));
 
   const systemBreakdown: Record<string, { total: number; used: number; unused: number }> = {};
   for (const s of bySystem) {
@@ -297,15 +261,9 @@ async function getPoolStats(
 async function getQualityMetrics(
   prisma: ReturnType<typeof createEdgePrismaClient>
 ): Promise<Record<string, unknown>> {
-  const [
-    totalFlags,
-    resolvedFlags,
-    pendingFlags,
-    flagsByType,
-  ] = await Promise.all([
+  const [totalFlags, resolvedFlags, flagsByType] = await Promise.all([
     prisma.questionFlag.count(),
     prisma.questionFlag.count({ where: { status: 'resolved' } }),
-    prisma.questionFlag.count({ where: { status: 'pending' } }),
     prisma.questionFlag.groupBy({
       by: ['flagType'],
       _count: { id: true },
@@ -313,11 +271,10 @@ async function getQualityMetrics(
   ]);
 
   const topReasons = flagsByType
-    .map(f => ({ reason: f.flagType, count: f._count.id }))
+    .map((f) => ({ reason: f.flagType, count: f._count.id }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Get unique questions with flags
   const uniqueFlagged = await prisma.questionFlag.findMany({
     distinct: ['questionId'],
     select: { questionId: true },
@@ -327,7 +284,6 @@ async function getQualityMetrics(
     quality: {
       totalFlags,
       resolvedFlags,
-      pendingFlags,
       resolutionRate: totalFlags > 0 ? Math.round((resolvedFlags / totalFlags) * 100) : 100,
       uniqueQuestionsWithIssues: uniqueFlagged.length,
     },
@@ -345,9 +301,7 @@ async function getQuestionDetails(
   questionId: string
 ): Promise<Record<string, unknown>> {
   const [question, attempts, flags] = await Promise.all([
-    prisma.question.findUnique({
-      where: { id: questionId },
-    }),
+    prisma.question.findUnique({ where: { id: questionId } }),
     prisma.questionAttempt.findMany({
       where: { questionId },
       orderBy: { createdAt: 'desc' },
@@ -364,17 +318,11 @@ async function getQuestionDetails(
   }
 
   const totalAttempts = attempts.length;
-  const correctAttempts = attempts.filter(a => a.wasCorrect).length;
+  const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
   const accuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
-
-  // Calculate time stats
-  const timesMs = attempts.filter(a => a.timeSpentMs).map(a => a.timeSpentMs!);
+  const timesMs = attempts.filter((a) => a.timeSpentMs).map((a) => a.timeSpentMs!);
   const avgTimeMs = timesMs.length > 0 ? timesMs.reduce((a, b) => a + b, 0) / timesMs.length : 0;
-
-  // Determine difficulty based on accuracy
-  let difficultyRating: 'easy' | 'medium' | 'hard' = 'medium';
-  if (accuracy >= 80) difficultyRating = 'easy';
-  else if (accuracy < 50) difficultyRating = 'hard';
+  const difficultyRating: 'easy' | 'medium' | 'hard' = accuracy >= 80 ? 'easy' : accuracy < 50 ? 'hard' : 'medium';
 
   return {
     question: {
@@ -393,11 +341,11 @@ async function getQuestionDetails(
     },
     flags: {
       count: flags.length,
-      pending: flags.filter(f => f.status === 'pending').length,
-      resolved: flags.filter(f => f.status === 'resolved').length,
-      types: [...new Set(flags.map(f => f.flagType))],
+      pending: flags.filter((f) => f.status === 'pending').length,
+      resolved: flags.filter((f) => f.status === 'resolved').length,
+      types: [...new Set(flags.map((f) => f.flagType))],
     },
-    recentAttempts: attempts.slice(0, 10).map(a => ({
+    recentAttempts: attempts.slice(0, 10).map((a) => ({
       wasCorrect: a.wasCorrect,
       timeSpentMs: a.timeSpentMs,
       createdAt: a.createdAt,
@@ -411,55 +359,40 @@ async function getTopQuestions(
   type: 'best' | 'worst',
   limit: number
 ): Promise<QuestionStats[]> {
-  // Get questions with their attempt stats
   const attempts = await prisma.questionAttempt.groupBy({
     by: ['questionId'],
     where: system ? { system } : undefined,
     _count: { id: true },
-    _sum: { wasCorrect: false }, // Will calculate separately
   });
 
-  // Get correct counts
   const correctCounts = await prisma.questionAttempt.groupBy({
     by: ['questionId'],
-    where: {
-      ...(system ? { system } : {}),
-      wasCorrect: true,
-    },
+    where: { ...(system ? { system } : {}), wasCorrect: true },
     _count: { id: true },
   });
 
-  const correctMap = new Map<string, number>(
-    correctCounts.map(c => [c.questionId, c._count.id])
-  );
+  const correctMap = new Map<string, number>(correctCounts.map((c) => [c.questionId, c._count.id]));
 
-  // Calculate accuracy for each question
   const stats = attempts
-    .filter(a => a._count.id >= 5) // Minimum 5 attempts for meaningful data
-    .map(a => {
+    .filter((a) => a._count.id >= 5)
+    .map((a) => {
       const totalAttempts = a._count.id;
       const correctAttempts: number = correctMap.get(a.questionId) || 0;
       const accuracy = (correctAttempts / totalAttempts) * 100;
-
-      let difficultyRating: 'easy' | 'medium' | 'hard' = 'medium';
-      if (accuracy >= 80) difficultyRating = 'easy';
-      else if (accuracy < 50) difficultyRating = 'hard';
+      const difficultyRating: 'easy' | 'medium' | 'hard' = accuracy >= 80 ? 'easy' : accuracy < 50 ? 'hard' : 'medium';
 
       return {
         questionId: a.questionId,
         totalAttempts,
         correctAttempts,
         accuracy: Math.round(accuracy * 100) / 100,
-        avgTimeMs: 0, // Would need additional query
-        flagCount: 0, // Would need additional query
+        avgTimeMs: 0,
+        flagCount: 0,
         difficultyRating,
       };
     });
 
-  // Sort by accuracy
-  if (type === 'best') {
-    return stats.sort((a, b) => b.accuracy - a.accuracy).slice(0, limit);
-  } else {
-    return stats.sort((a, b) => a.accuracy - b.accuracy).slice(0, limit);
-  }
+  return type === 'best'
+    ? stats.sort((a, b) => b.accuracy - a.accuracy).slice(0, limit)
+    : stats.sort((a, b) => a.accuracy - b.accuracy).slice(0, limit);
 }

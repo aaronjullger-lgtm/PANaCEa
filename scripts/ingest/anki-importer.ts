@@ -1,28 +1,27 @@
-
 /**
  * Anki Deck Importer
  * Sprint 9: Multimodal Content Expansion - Import .apkg files to question pool
- * 
+ *
  * NOTE: Requires optional dependencies: npm install better-sqlite3 adm-zip @types/better-sqlite3 @types/adm-zip
- * 
+ *
  * Converts Anki decks into our question format with:
  * - SQLite extraction from .apkg files
  * - Card template parsing (cloze, basic, image occlusion)
  * - Tag mapping to organ systems
  * - Deduplication against existing questions
- * 
+ *
  * Usage: npx ts-node scripts/ingest/anki-importer.ts --file ./decks/MyDeck.apkg
  */
 
-import { PrismaClient } from "@prisma/client";
-import fs from "fs";
-import path from "path";
+import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
 // @ts-ignore
-import Database from "better-sqlite3";
+import Database from 'better-sqlite3';
 // @ts-ignore
-import AdmZip from "adm-zip";
-import { createHash } from "crypto";
-import crypto from "crypto";
+import AdmZip from 'adm-zip';
+import { createHash } from 'crypto';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -51,10 +50,10 @@ interface AnkiModel {
 interface ParsedCard {
   front: string;
   back: string;
-  type: "basic" | "cloze" | "image_occlusion";
+  type: 'basic' | 'cloze' | 'image_occlusion';
   tags: string[];
   system?: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: 'easy' | 'medium' | 'hard';
   mediaFiles: string[];
 }
 
@@ -71,39 +70,39 @@ interface ImportStats {
 // =============================================================================
 
 const TAG_TO_SYSTEM: Record<string, string> = {
-  "cardio": "cardiovascular",
-  "cardiac": "cardiovascular",
-  "heart": "cardiovascular",
-  "pulm": "pulmonary",
-  "lung": "pulmonary",
-  "resp": "pulmonary",
-  "gi": "gastrointestinal",
-  "gastro": "gastrointestinal",
-  "liver": "gastrointestinal",
-  "msk": "musculoskeletal",
-  "ortho": "musculoskeletal",
-  "bone": "musculoskeletal",
-  "neuro": "neurological",
-  "brain": "neurological",
-  "psych": "psychiatry",
-  "mental": "psychiatry",
-  "endo": "endocrine",
-  "thyroid": "endocrine",
-  "diabetes": "endocrine",
-  "derm": "dermatology",
-  "skin": "dermatology",
-  "renal": "genitourinary",
-  "kidney": "genitourinary",
-  "gu": "genitourinary",
-  "heme": "hematology",
-  "blood": "hematology",
-  "id": "infectious_disease",
-  "infection": "infectious_disease",
-  "heent": "heent",
-  "eye": "heent",
-  "ent": "heent",
-  "repro": "reproductive",
-  "obgyn": "reproductive",
+  cardio: 'cardiovascular',
+  cardiac: 'cardiovascular',
+  heart: 'cardiovascular',
+  pulm: 'pulmonary',
+  lung: 'pulmonary',
+  resp: 'pulmonary',
+  gi: 'gastrointestinal',
+  gastro: 'gastrointestinal',
+  liver: 'gastrointestinal',
+  msk: 'musculoskeletal',
+  ortho: 'musculoskeletal',
+  bone: 'musculoskeletal',
+  neuro: 'neurological',
+  brain: 'neurological',
+  psych: 'psychiatry',
+  mental: 'psychiatry',
+  endo: 'endocrine',
+  thyroid: 'endocrine',
+  diabetes: 'endocrine',
+  derm: 'dermatology',
+  skin: 'dermatology',
+  renal: 'genitourinary',
+  kidney: 'genitourinary',
+  gu: 'genitourinary',
+  heme: 'hematology',
+  blood: 'hematology',
+  id: 'infectious_disease',
+  infection: 'infectious_disease',
+  heent: 'heent',
+  eye: 'heent',
+  ent: 'heent',
+  repro: 'reproductive',
+  obgyn: 'reproductive',
 };
 
 // =============================================================================
@@ -115,7 +114,7 @@ class AnkiImporter {
   private mediaMap: Map<string, string> = new Map();
 
   constructor() {
-    this.tempDir = path.join(process.cwd(), ".anki-temp");
+    this.tempDir = path.join(process.cwd(), '.anki-temp');
   }
 
   /**
@@ -137,9 +136,9 @@ class AnkiImporter {
       await this.extractApkg(filePath);
 
       // 2. Open SQLite database
-      const dbPath = path.join(this.tempDir, "collection.anki2");
+      const dbPath = path.join(this.tempDir, 'collection.anki2');
       if (!fs.existsSync(dbPath)) {
-        throw new Error("Invalid .apkg file - collection.anki2 not found");
+        throw new Error('Invalid .apkg file - collection.anki2 not found');
       }
 
       const db = new Database(dbPath, { readonly: true });
@@ -187,7 +186,6 @@ class AnkiImporter {
           if (parsed.system) {
             stats.bySystem[parsed.system] = (stats.bySystem[parsed.system] || 0) + 1;
           }
-
         } catch (err) {
           stats.errors++;
           console.error(`  Error processing note ${note.id}:`, err);
@@ -195,7 +193,6 @@ class AnkiImporter {
       }
 
       db.close();
-
     } finally {
       // Cleanup temp directory
       this.cleanup();
@@ -219,9 +216,9 @@ class AnkiImporter {
     zip.extractAllTo(this.tempDir, true);
 
     // Load media mapping if exists
-    const mediaPath = path.join(this.tempDir, "media");
+    const mediaPath = path.join(this.tempDir, 'media');
     if (fs.existsSync(mediaPath)) {
-      const mediaJson = JSON.parse(fs.readFileSync(mediaPath, "utf-8"));
+      const mediaJson = JSON.parse(fs.readFileSync(mediaPath, 'utf-8'));
       for (const [id, filename] of Object.entries(mediaJson)) {
         this.mediaMap.set(id, filename as string);
       }
@@ -234,7 +231,7 @@ class AnkiImporter {
   private loadModels(db: any): Map<number, AnkiModel> {
     const models = new Map<number, AnkiModel>();
 
-    const row = db.prepare("SELECT models FROM col").get() as { models: string };
+    const row = db.prepare('SELECT models FROM col').get() as { models: string };
     const modelsJson = JSON.parse(row.models);
 
     for (const [id, model] of Object.entries(modelsJson)) {
@@ -248,7 +245,7 @@ class AnkiImporter {
    * Load all notes from database
    */
   private loadNotes(db: any): AnkiNote[] {
-    const stmt = db.prepare("SELECT id, guid, mid, mod, tags, flds, sfld FROM notes");
+    const stmt = db.prepare('SELECT id, guid, mid, mod, tags, flds, sfld FROM notes');
     return stmt.all() as AnkiNote[];
   }
 
@@ -256,8 +253,8 @@ class AnkiImporter {
    * Parse a note into our card format
    */
   private parseNote(note: AnkiNote, model: AnkiModel): ParsedCard | null {
-    const fields = note.flds.split("\x1f");
-    const tags = note.tags.trim().split(" ").filter(Boolean);
+    const fields = note.flds.split('\x1f');
+    const tags = note.tags.trim().split(' ').filter(Boolean);
 
     // Map tags to organ system
     const system = this.mapTagsToSystem(tags);
@@ -270,25 +267,25 @@ class AnkiImporter {
     let back: string;
     const mediaFiles: string[] = [];
 
-    if (type === "cloze") {
+    if (type === 'cloze') {
       // Extract cloze deletions
       const parsed = this.parseCloze(fields[0]);
       front = parsed.question;
       back = parsed.answer;
-    } else if (type === "image_occlusion") {
+    } else if (type === 'image_occlusion') {
       // Handle image occlusion
       front = this.stripHtml(fields[0]);
-      back = fields[1] ? this.stripHtml(fields[1]) : "";
+      back = fields[1] ? this.stripHtml(fields[1]) : '';
       // Extract media references
       const mediaMatches = fields[0].match(/src="([^"]+)"/g) || [];
       for (const match of mediaMatches) {
-        const filename = match.replace('src="', "").replace('"', "");
+        const filename = match.replace('src="', '').replace('"', '');
         mediaFiles.push(filename);
       }
     } else {
       // Basic card
       front = this.stripHtml(fields[0]);
-      back = fields[1] ? this.stripHtml(fields[1]) : "";
+      back = fields[1] ? this.stripHtml(fields[1]) : '';
     }
 
     // Skip if content is too short
@@ -313,18 +310,24 @@ class AnkiImporter {
   /**
    * Detect card type from model
    */
-  private detectCardType(model: AnkiModel, fields: string[]): "basic" | "cloze" | "image_occlusion" {
-    if (model.name.toLowerCase().includes("cloze") || model.type === 1) {
-      return "cloze";
+  private detectCardType(
+    model: AnkiModel,
+    fields: string[]
+  ): 'basic' | 'cloze' | 'image_occlusion' {
+    if (model.name.toLowerCase().includes('cloze') || model.type === 1) {
+      return 'cloze';
     }
-    if (model.name.toLowerCase().includes("occlusion") || model.name.toLowerCase().includes("image")) {
-      return "image_occlusion";
+    if (
+      model.name.toLowerCase().includes('occlusion') ||
+      model.name.toLowerCase().includes('image')
+    ) {
+      return 'image_occlusion';
     }
     // Check for cloze syntax in content
-    if (fields[0] && fields[0].includes("{{c")) {
-      return "cloze";
+    if (fields[0] && fields[0].includes('{{c')) {
+      return 'cloze';
     }
-    return "basic";
+    return 'basic';
   }
 
   /**
@@ -340,14 +343,14 @@ class AnkiImporter {
     let match;
     while ((match = clozeRegex.exec(content)) !== null) {
       const answer = match[1];
-      const hint = match[2] || "[...]";
+      const hint = match[2] || '[...]';
       answers.push(answer);
       question = question.replace(match[0], `___${hint}___`);
     }
 
     return {
       question: this.stripHtml(question),
-      answer: answers.join("; "),
+      answer: answers.join('; '),
     };
   }
 
@@ -356,13 +359,13 @@ class AnkiImporter {
    */
   private stripHtml(html: string): string {
     return html
-      .replace(/<[^>]*>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
-      .replace(/\s+/g, " ")
+      .replace(/\s+/g, ' ')
       .trim();
   }
 
@@ -384,17 +387,21 @@ class AnkiImporter {
   /**
    * Estimate difficulty based on content
    */
-  private estimateDifficulty(front: string, back: string, type: string): "easy" | "medium" | "hard" {
+  private estimateDifficulty(
+    front: string,
+    back: string,
+    type: string
+  ): 'easy' | 'medium' | 'hard' {
     const totalLength = front.length + back.length;
     const clozeCount = (front.match(/___/g) || []).length;
 
     if (totalLength > 500 || clozeCount > 3) {
-      return "hard";
+      return 'hard';
     }
     if (totalLength > 200 || clozeCount > 1) {
-      return "medium";
+      return 'medium';
     }
-    return "easy";
+    return 'easy';
   }
 
   /**
@@ -402,7 +409,7 @@ class AnkiImporter {
    */
   private generateContentHash(front: string, back: string): string {
     const normalized = `${front.toLowerCase().trim()}|${back.toLowerCase().trim()}`;
-    return createHash("md5").update(normalized).digest("hex");
+    return createHash('md5').update(normalized).digest('hex');
   }
 
   /**
@@ -415,11 +422,11 @@ class AnkiImporter {
       vignette: card.front, // Mapping front to vignette as well since it's required
       question: card.front,
       options: this.generateOptionsFromCard(card),
-      correctAnswer: "A", // For flashcards, A is always correct
+      correctAnswer: 'A', // For flashcards, A is always correct
       explanation: card.back,
-      system: card.system || "general",
+      system: card.system || 'general',
       difficulty: card.difficulty,
-      source: "anki_import",
+      source: 'anki_import',
       // contentHash removed
       tags: card.tags,
       // metadata stored in options or lost if not in schema (schema has tags: Json?)
@@ -437,22 +444,17 @@ class AnkiImporter {
   private generateOptionsFromCard(card: ParsedCard): string[] {
     // For now, create a simple true/false or single correct answer format
     // In production, you might want to use AI to generate distractors
-    if (card.type === "basic") {
+    if (card.type === 'basic') {
       return [
         card.back,
-        "This is an incorrect option",
-        "This is another incorrect option",
-        "None of the above",
+        'This is an incorrect option',
+        'This is another incorrect option',
+        'None of the above',
       ];
     }
 
     // For cloze, the answer is the correct option
-    return [
-      card.back,
-      "Incorrect answer 1",
-      "Incorrect answer 2",
-      "Incorrect answer 3",
-    ];
+    return [card.back, 'Incorrect answer 1', 'Incorrect answer 2', 'Incorrect answer 3'];
   }
 
   /**
@@ -471,58 +473,57 @@ class AnkiImporter {
 
 async function main() {
   const args = process.argv.slice(2);
-  const fileIndex = args.indexOf("--file");
+  const fileIndex = args.indexOf('--file');
 
   if (fileIndex === -1 || !args[fileIndex + 1]) {
-    console.log("Usage: npx ts-node scripts/ingest/anki-importer.ts --file <path-to-apkg>");
-    console.log("\nOptions:");
-    console.log("  --file <path>   Path to .apkg file to import");
-    console.log("  --dry-run       Preview import without saving");
+    console.log('Usage: npx ts-node scripts/ingest/anki-importer.ts --file <path-to-apkg>');
+    console.log('\nOptions:');
+    console.log('  --file <path>   Path to .apkg file to import');
+    console.log('  --dry-run       Preview import without saving');
     process.exit(1);
   }
 
   const filePath = args[fileIndex + 1];
-  const dryRun = args.includes("--dry-run");
+  const dryRun = args.includes('--dry-run');
 
   if (!fs.existsSync(filePath)) {
     console.error(`Error: File not found: ${filePath}`);
     process.exit(1);
   }
 
-  if (!filePath.endsWith(".apkg")) {
-    console.error("Error: File must be an .apkg file");
+  if (!filePath.endsWith('.apkg')) {
+    console.error('Error: File must be an .apkg file');
     process.exit(1);
   }
 
-  console.log("🎴 Anki Deck Importer");
-  console.log("━".repeat(50));
+  console.log('🎴 Anki Deck Importer');
+  console.log('━'.repeat(50));
 
   if (dryRun) {
-    console.log("⚠️  DRY RUN MODE - No changes will be saved\n");
+    console.log('⚠️  DRY RUN MODE - No changes will be saved\n');
   }
 
   try {
     const importer = new AnkiImporter();
     const stats = await importer.importDeck(filePath);
 
-    console.log("\n📊 Import Results");
-    console.log("━".repeat(50));
+    console.log('\n📊 Import Results');
+    console.log('━'.repeat(50));
     console.log(`  Total notes:  ${stats.totalNotes}`);
     console.log(`  Imported:     ${stats.imported}`);
     console.log(`  Duplicates:   ${stats.duplicates}`);
     console.log(`  Errors:       ${stats.errors}`);
 
     if (Object.keys(stats.bySystem).length > 0) {
-      console.log("\n  By System:");
+      console.log('\n  By System:');
       for (const [system, count] of Object.entries(stats.bySystem)) {
         console.log(`    ${system}: ${count}`);
       }
     }
 
-    console.log("\n✅ Import complete!");
-
+    console.log('\n✅ Import complete!');
   } catch (error) {
-    console.error("\n❌ Import failed:", error);
+    console.error('\n❌ Import failed:', error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

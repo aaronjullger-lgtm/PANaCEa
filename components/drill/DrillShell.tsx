@@ -23,13 +23,13 @@ interface DrillShellProps {
 
 /**
  * DrillShell - Standardized wrapper for all diagnostic drill modes
- * 
+ *
  * Provides:
  * - Consistent breadcrumb navigation
  * - Clear exit/back buttons
  * - Optional header content for scores/stats
  * - Responsive layout
- * 
+ *
  * Usage:
  * ```tsx
  * <DrillShell
@@ -106,20 +106,14 @@ const DrillShell: React.FC<DrillShellProps> = ({
               </div>
 
               {/* Header Content (Scores, Streaks, etc.) */}
-              {headerContent && (
-                <div className="flex items-center gap-4">
-                  {headerContent}
-                </div>
-              )}
+              {headerContent && <div className="flex items-center gap-4">{headerContent}</div>}
             </div>
           </div>
         </motion.header>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 relative">
-        {children}
-      </main>
+      <main className="flex-1 relative">{children}</main>
 
       {/* Optional Footer - can be added by child components if needed */}
     </div>

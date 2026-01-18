@@ -1,15 +1,21 @@
 /**
  * API: Get content health reports
  * GET /api/admin/health/reports
- * 
+ *
  * Query parameters:
  * - latest: Get only the latest report (default true)
  * - limit: Number of reports to return (default 10)
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+  type Env,
+} from '../../_shared/auth';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -28,7 +34,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { role: true }
+      select: { role: true },
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
@@ -66,6 +72,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     console.error('Error fetching health reports:', error);
     return createErrorResponse('Failed to fetch health reports', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

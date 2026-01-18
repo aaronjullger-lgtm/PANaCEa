@@ -24,13 +24,20 @@ interface ValidationIssue {
 
 const issues: ValidationIssue[] = [];
 
-function addIssue(table: string, id: string, field: string, issue: string, severity: 'error' | 'warning' | 'info' = 'error', condition?: string) {
+function addIssue(
+  table: string,
+  id: string,
+  field: string,
+  issue: string,
+  severity: 'error' | 'warning' | 'info' = 'error',
+  condition?: string
+) {
   issues.push({ table, id, condition, field, issue, severity });
 }
 
 async function validateMedicalContent() {
   console.log('📋 Validating MedicalContent...');
-  
+
   const records = await prisma.medicalContent.findMany();
   console.log(`   Found ${records.length} records`);
 
@@ -43,7 +50,14 @@ async function validateMedicalContent() {
     for (const field of requiredStringFields) {
       const value = record[field as keyof typeof record];
       if (!value || (typeof value === 'string' && value.trim() === '')) {
-        addIssue('MedicalContent', record.id, field, 'Missing required field', 'error', record.condition);
+        addIssue(
+          'MedicalContent',
+          record.id,
+          field,
+          'Missing required field',
+          'error',
+          record.condition
+        );
       }
     }
 
@@ -51,9 +65,23 @@ async function validateMedicalContent() {
     for (const field of requiredArrayFields) {
       const value = record[field as keyof typeof record];
       if (!Array.isArray(value)) {
-        addIssue('MedicalContent', record.id, field, 'Field should be an array', 'error', record.condition);
+        addIssue(
+          'MedicalContent',
+          record.id,
+          field,
+          'Field should be an array',
+          'error',
+          record.condition
+        );
       } else if (value.length === 0) {
-        addIssue('MedicalContent', record.id, field, 'Empty array - content missing', 'warning', record.condition);
+        addIssue(
+          'MedicalContent',
+          record.id,
+          field,
+          'Empty array - content missing',
+          'warning',
+          record.condition
+        );
       }
     }
 
@@ -61,34 +89,92 @@ async function validateMedicalContent() {
     for (const field of requiredObjectFields) {
       const value = record[field as keyof typeof record];
       if (!value || (typeof value === 'string' && value.trim().length < 50)) {
-        addIssue('MedicalContent', record.id, field, 'Missing or insufficient content (< 50 chars)', 'error', record.condition);
+        addIssue(
+          'MedicalContent',
+          record.id,
+          field,
+          'Missing or insufficient content (< 50 chars)',
+          'error',
+          record.condition
+        );
       }
     }
 
     // Check status enum
     const validStatuses = ['draft', 'pending_review', 'approved', 'published', 'archived'];
     if (!validStatuses.includes(record.status)) {
-      addIssue('MedicalContent', record.id, 'status', `Invalid status: ${record.status}`, 'error', record.condition);
+      addIssue(
+        'MedicalContent',
+        record.id,
+        'status',
+        `Invalid status: ${record.status}`,
+        'error',
+        record.condition
+      );
     }
 
     // Check system is valid PANCE system
-    const validSystems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU', 'PRO'];
+    const validSystems = [
+      'CV',
+      'PULM',
+      'GI',
+      'NEURO',
+      'MSK',
+      'DERM',
+      'HEME',
+      'ENDO',
+      'HEENT',
+      'RENAL',
+      'REPRO',
+      'PSYCH',
+      'ID',
+      'GU',
+      'PRO',
+    ];
     if (!validSystems.includes(record.system)) {
-      addIssue('MedicalContent', record.id, 'system', `Invalid PANCE system: ${record.system}`, 'error', record.condition);
+      addIssue(
+        'MedicalContent',
+        record.id,
+        'system',
+        `Invalid PANCE system: ${record.system}`,
+        'error',
+        record.condition
+      );
     }
 
     // Check conditionId format (should be system__subcategory__condition)
     if (record.conditionId && !record.conditionId.includes('__')) {
-      addIssue('MedicalContent', record.id, 'conditionId', 'Invalid format - should use double underscore separator', 'warning', record.condition);
+      addIssue(
+        'MedicalContent',
+        record.id,
+        'conditionId',
+        'Invalid format - should use double underscore separator',
+        'warning',
+        record.condition
+      );
     }
 
     // Check dates
     if (record.publishedAt && !record.publishedBy) {
-      addIssue('MedicalContent', record.id, 'publishedBy', 'Published date set but no publishedBy', 'warning', record.condition);
+      addIssue(
+        'MedicalContent',
+        record.id,
+        'publishedBy',
+        'Published date set but no publishedBy',
+        'warning',
+        record.condition
+      );
     }
 
     if (record.approvedAt && !record.approvedBy) {
-      addIssue('MedicalContent', record.id, 'approvedBy', 'Approved date set but no approvedBy', 'warning', record.condition);
+      addIssue(
+        'MedicalContent',
+        record.id,
+        'approvedBy',
+        'Approved date set but no approvedBy',
+        'warning',
+        record.condition
+      );
     }
   }
 
@@ -97,7 +183,7 @@ async function validateMedicalContent() {
 
 async function validateConditions() {
   console.log('📋 Validating Conditions...');
-  
+
   const records = await prisma.condition.findMany();
   console.log(`   Found ${records.length} records`);
 
@@ -110,11 +196,25 @@ async function validateConditions() {
     }
 
     if (!rec.system) {
-      addIssue('Condition', rec.id, 'system', 'Missing PANCE system classification', 'error', displayName);
+      addIssue(
+        'Condition',
+        rec.id,
+        'system',
+        'Missing PANCE system classification',
+        'error',
+        displayName
+      );
     }
 
     if (!rec.category && !rec.subcategory) {
-      addIssue('Condition', rec.id, 'category', 'Missing both category and subcategory', 'warning', displayName);
+      addIssue(
+        'Condition',
+        rec.id,
+        'category',
+        'Missing both category and subcategory',
+        'warning',
+        displayName
+      );
     }
   }
 
@@ -123,7 +223,7 @@ async function validateConditions() {
 
 async function validateDrugs() {
   console.log('📋 Validating Drugs...');
-  
+
   const records = await prisma.drug.findMany();
   console.log(`   Found ${records.length} records`);
 
@@ -144,7 +244,14 @@ async function validateDrugs() {
     }
 
     if (!rec.indications || (Array.isArray(rec.indications) && rec.indications.length === 0)) {
-      addIssue('Drug', rec.id, 'indications', 'Missing or empty indications', 'warning', displayName);
+      addIssue(
+        'Drug',
+        rec.id,
+        'indications',
+        'Missing or empty indications',
+        'warning',
+        displayName
+      );
     }
   }
 
@@ -153,7 +260,7 @@ async function validateDrugs() {
 
 async function validateLabTests() {
   console.log('📋 Validating LabTests...');
-  
+
   const records = await prisma.labTest.findMany();
   console.log(`   Found ${records.length} records`);
 
@@ -166,7 +273,14 @@ async function validateLabTests() {
     }
 
     if (!rec.normalRange && !rec.normalRangeText && !rec.typicalNormalRange) {
-      addIssue('LabTest', rec.id, 'normalRange', 'Missing normal range information', 'warning', displayName);
+      addIssue(
+        'LabTest',
+        rec.id,
+        'normalRange',
+        'Missing normal range information',
+        'warning',
+        displayName
+      );
     }
 
     if (!rec.category) {
@@ -179,7 +293,7 @@ async function validateLabTests() {
 
 async function validateUsers() {
   console.log('📋 Validating Users...');
-  
+
   const records = await prisma.user.findMany();
   console.log(`   Found ${records.length} records`);
 
@@ -199,18 +313,18 @@ async function validateUsers() {
 async function generateReport() {
   console.log('\n📊 Generating Validation Report...\n');
 
-  const errorCount = issues.filter(i => i.severity === 'error').length;
-  const warningCount = issues.filter(i => i.severity === 'warning').length;
-  const infoCount = issues.filter(i => i.severity === 'info').length;
+  const errorCount = issues.filter((i) => i.severity === 'error').length;
+  const warningCount = issues.filter((i) => i.severity === 'warning').length;
+  const infoCount = issues.filter((i) => i.severity === 'info').length;
 
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log('DATABASE VALIDATION REPORT');
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log(`Total Issues: ${issues.length}`);
   console.log(`  🔴 Errors: ${errorCount}`);
   console.log(`  🟡 Warnings: ${warningCount}`);
   console.log(`  🔵 Info: ${infoCount}`);
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
 
   if (issues.length === 0) {
     console.log('\n✅ No issues found! Database is valid.\n');
@@ -218,8 +332,14 @@ async function generateReport() {
   }
 
   // Group by table and severity
-  const byTable: { [key: string]: { errors: ValidationIssue[], warnings: ValidationIssue[], info: ValidationIssue[] } } = {};
-  
+  const byTable: {
+    [key: string]: {
+      errors: ValidationIssue[];
+      warnings: ValidationIssue[];
+      info: ValidationIssue[];
+    };
+  } = {};
+
   for (const issue of issues) {
     if (!byTable[issue.table]) {
       byTable[issue.table] = { errors: [], warnings: [], info: [] };
@@ -231,11 +351,12 @@ async function generateReport() {
 
   // Print by table
   for (const [table, tableIssues] of Object.entries(byTable)) {
-    if (tableIssues.errors.length + tableIssues.warnings.length + tableIssues.info.length === 0) continue;
+    if (tableIssues.errors.length + tableIssues.warnings.length + tableIssues.info.length === 0)
+      continue;
 
     console.log(`\n${table}:`);
     console.log('-'.repeat(80));
-    
+
     if (tableIssues.errors.length > 0) {
       console.log(`\n  🔴 ERRORS (${tableIssues.errors.length}):`);
       for (const issue of tableIssues.errors.slice(0, 10)) {
@@ -280,12 +401,24 @@ async function generateReport() {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportPath = path.join(reportDir, `validation-report-${timestamp}.json`);
-  
-  fs.writeFileSync(reportPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    summary: { total: issues.length, errors: errorCount, warnings: warningCount, info: infoCount },
-    issues: issues
-  }, null, 2));
+
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: {
+          total: issues.length,
+          errors: errorCount,
+          warnings: warningCount,
+          info: infoCount,
+        },
+        issues: issues,
+      },
+      null,
+      2
+    )
+  );
 
   console.log(`\n📄 Detailed report saved to: ${reportPath}\n`);
 }

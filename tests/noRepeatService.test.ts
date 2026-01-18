@@ -88,9 +88,7 @@ describe('No-Repeat Service', () => {
     });
 
     it('should filter by system when provided', async () => {
-      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([
-        { questionId: 'q-1' },
-      ]);
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([{ questionId: 'q-1' }]);
 
       await getUserSeenQuestions('user-1', { system: 'CV' });
 

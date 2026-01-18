@@ -1,9 +1,9 @@
 /**
  * Drill Statistics Service
- * 
+ *
  * Centralized service for tracking drill mode statistics and progress.
  * Uses localStorage with in-memory caching for performance.
- * 
+ *
  * Features:
  * - Per-drill statistics tracking
  * - Session history
@@ -93,11 +93,14 @@ export interface DrillStatistics {
   /** Session history (last 10 sessions) */
   recentSessions: DrillSession[];
   /** Per-category stats (for system/subcategory drills) */
-  categoryStats?: Record<string, {
-    attempts: number;
-    correct: number;
-    accuracy: number;
-  }>;
+  categoryStats?: Record<
+    string,
+    {
+      attempts: number;
+      correct: number;
+      accuracy: number;
+    }
+  >;
 }
 
 export interface DrillProgress {
@@ -138,11 +141,7 @@ function loadAllStats(): Record<DrillType, DrillStatistics> {
   const now = Date.now();
 
   // Check cache
-  if (
-    cachedStats &&
-    now - cacheTimestamp < CACHE_TTL &&
-    raw === cachedStorageValue
-  ) {
+  if (cachedStats && now - cacheTimestamp < CACHE_TTL && raw === cachedStorageValue) {
     return cachedStats;
   }
 
@@ -423,9 +422,7 @@ export function exportDrillStats(): string {
 /**
  * Calculate next difficulty level based on performance
  */
-export function calculateNextDifficulty(
-  stats: DrillStatistics
-): 'easy' | 'medium' | 'hard' {
+export function calculateNextDifficulty(stats: DrillStatistics): 'easy' | 'medium' | 'hard' {
   // Need at least 10 attempts to progress
   if (stats.totalAttempts < 10) return 'easy';
 
@@ -532,9 +529,7 @@ export function getDrillPerformanceSummary() {
   const weakestDrill = drills.reduce((min, d) =>
     d.averageAccuracy < min.averageAccuracy && d.totalSessions > 0 ? d : min
   );
-  const mostPracticed = drills.reduce((max, d) =>
-    d.totalSessions > max.totalSessions ? d : max
-  );
+  const mostPracticed = drills.reduce((max, d) => (d.totalSessions > max.totalSessions ? d : max));
 
   const needsReview = getDrillsDueForReview();
 
@@ -554,7 +549,7 @@ export function getDrillPerformanceSummary() {
  * Get category breakdown for system/subcategory drills
  */
 export function getCategoryBreakdown(
-  drillType: 'system_drill' | 'subcategory_drill'
+  drillType: 'system_drill' | 'subcategory_drill' | 'pharmacology'
 ): Array<{ category: string; attempts: number; accuracy: number }> {
   const stats = getDrillStats(drillType);
   if (!stats.categoryStats) return [];
@@ -578,16 +573,15 @@ export function getSimulationStats() {
   const antibioticStats = getDrillStats('antibiotic_mode');
 
   // Code Blue: Calculate survival rate (accuracy) and best time
-  const codeBlueSurvivalRate = codeBlueStats.totalSessions > 0
-    ? Math.round(codeBlueStats.averageAccuracy)
-    : 0;
-  
+  const codeBlueSurvivalRate =
+    codeBlueStats.totalSessions > 0 ? Math.round(codeBlueStats.averageAccuracy) : 0;
+
   // Extract best time from recent sessions metadata if available
   let codeBluebestTime: number | null = null;
   if (codeBlueStats.recentSessions.length > 0) {
     const timesInSeconds = codeBlueStats.recentSessions
-      .filter(s => s.metadata?.completionTime)
-      .map(s => s.metadata!.completionTime as number);
+      .filter((s) => s.metadata?.completionTime)
+      .map((s) => s.metadata!.completionTime as number);
     if (timesInSeconds.length > 0) {
       codeBluebestTime = Math.min(...timesInSeconds);
     }
@@ -597,9 +591,8 @@ export function getSimulationStats() {
   const fluidsCasesSolved = fluidsStats.totalSessions;
 
   // Antibiotics: Coverage mastery (accuracy %)
-  const antibioticCoverageMastery = antibioticStats.totalSessions > 0
-    ? Math.round(antibioticStats.averageAccuracy)
-    : 0;
+  const antibioticCoverageMastery =
+    antibioticStats.totalSessions > 0 ? Math.round(antibioticStats.averageAccuracy) : 0;
 
   return {
     codeBlue: {

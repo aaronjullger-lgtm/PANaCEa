@@ -1,11 +1,11 @@
 /**
  * Data Visualization Components - Usage Examples
- * 
+ *
  * This file demonstrates how to use the new visualization components:
  * - RadialProgress: Circular progress indicators for percentages
  * - TrendSparkline: Small line charts showing performance trends
  * - ActivityHeatmap: GitHub-style contribution calendar (already existed, enhanced)
- * 
+ *
  * All components are designed to be lightweight, accessible, and visually appealing.
  */
 
@@ -27,7 +27,7 @@ export const AccuracyCard = () => {
       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
         Current Accuracy
       </h3>
-      
+
       <RadialProgress
         value={accuracy}
         size={120}
@@ -48,20 +48,12 @@ export const CustomColorAccuracy = () => {
     <div className="flex gap-6">
       {/* Auto color based on value */}
       <RadialProgress value={85} label="Excellent" />
-      
+
       {/* Custom color */}
-      <RadialProgress
-        value={65}
-        color="#f59e0b"
-        label="Good"
-      />
-      
+      <RadialProgress value={65} color="#f59e0b" label="Good" />
+
       {/* Danger zone */}
-      <RadialProgress
-        value={45}
-        color="#ef4444"
-        label="Needs Work"
-      />
+      <RadialProgress value={45} color="#ef4444" label="Needs Work" />
     </div>
   );
 };
@@ -104,13 +96,11 @@ export const SystemComparisonCard = () => {
 
 export const RecentFormCard = ({ sessionAccuracies }: { sessionAccuracies: number[] }) => {
   // Example: Last 10 sessions: [75, 80, 78, 85, 88, 82, 90, 87, 92, 95]
-  
+
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
-        Recent Form
-      </h3>
-      
+      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Recent Form</h3>
+
       <TrendSparkline
         data={sessionAccuracies}
         width={200}
@@ -134,14 +124,10 @@ export const InlinePerformanceTrend = () => {
   return (
     <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Performance Trend
-        </h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Last 8 sessions
-        </p>
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Performance Trend</h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Last 8 sessions</p>
       </div>
-      
+
       <TrendSparkline
         data={recentScores}
         width={150}
@@ -180,9 +166,7 @@ export const CompactTrendBadge = () => {
 
   return (
     <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-      <span className="text-xs font-medium text-green-700 dark:text-green-400">
-        Trending Up
-      </span>
+      <span className="text-xs font-medium text-green-700 dark:text-green-400">Trending Up</span>
       <TrendSparklineCompact data={recentScores} colorScheme="success" />
     </div>
   );
@@ -192,23 +176,20 @@ export const CompactTrendBadge = () => {
 // Example 9: ActivityHeatmap - Study Calendar
 // ============================================================================
 
-export const StudyActivityCalendar = ({ performanceData }: { performanceData: PerformanceRecord[] }) => {
+export const StudyActivityCalendar = ({
+  performanceData,
+}: {
+  performanceData: PerformanceRecord[];
+}) => {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Study Activity
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Last 13 weeks
-        </p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Study Activity</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Last 13 weeks</p>
       </div>
-      
-      <ActivityHeatmap
-        performanceData={performanceData}
-        weeks={13}
-      />
-      
+
+      <ActivityHeatmap performanceData={performanceData} weeks={13} />
+
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
         Click any day to view detailed statistics
       </p>
@@ -231,9 +212,7 @@ export const ComprehensiveDashboardCard = ({
 }) => {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-        Performance Overview
-      </h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Performance Overview</h2>
 
       {/* Top Row: Radial Progress + Trend */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -266,10 +245,7 @@ export const ComprehensiveDashboardCard = ({
 
       {/* Bottom: Activity Heatmap */}
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-        <ActivityHeatmap
-          performanceData={performanceData}
-          weeks={8}
-        />
+        <ActivityHeatmap performanceData={performanceData} weeks={8} />
       </div>
     </div>
   );
@@ -300,8 +276,11 @@ export const StatisticsTab = ({
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
               Recent Form
             </span>
-            <span className={`text-xl font-bold ${recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
-              {recentTrend >= 0 ? '+' : ''}{recentTrend}%
+            <span
+              className={`text-xl font-bold ${recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}
+            >
+              {recentTrend >= 0 ? '+' : ''}
+              {recentTrend}%
             </span>
           </div>
           {recentSessionAccuracies.length > 0 && (
@@ -321,12 +300,8 @@ export const StatisticsTab = ({
           <span className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">
             Active Streak
           </span>
-          <div className="text-4xl font-bold text-orange-500">
-            {currentStreak}
-          </div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            questions in a row
-          </span>
+          <div className="text-4xl font-bold text-orange-500">{currentStreak}</div>
+          <span className="text-xs text-gray-500 dark:text-gray-400">questions in a row</span>
         </div>
 
         {/* Overall Accuracy with Radial */}
@@ -362,7 +337,7 @@ export const MobileStatsCard = ({
       {/* Compact Layout */}
       <div className="flex items-center justify-between mb-3">
         <RadialProgressCompact value={accuracy} />
-        
+
         <div className="flex-1 ml-4">
           <TrendSparkline
             data={recentScores}
@@ -391,31 +366,31 @@ export const MobileStatsCard = ({
 
 /**
  * BEST PRACTICES:
- * 
+ *
  * 1. RadialProgress:
  *    - Use for percentages (0-100)
  *    - Size 100-140px for main displays, 60px for compact
  *    - Auto color works great for accuracy (green/amber/red)
  *    - Animate on mount for visual impact
- * 
+ *
  * 2. TrendSparkline:
  *    - Best with 5-20 data points
  *    - Width 120-250px, height 40-70px
  *    - Use 'auto' colorScheme for accuracy data
  *    - showTrend={true} adds directional indicator
- * 
+ *
  * 3. ActivityHeatmap:
  *    - 8-13 weeks is optimal display
  *    - Automatically handles click interactions
  *    - Respects theme (light/dark mode)
  *    - Mobile responsive out of the box
- * 
+ *
  * 4. Performance:
  *    - All components use Framer Motion for animations
  *    - SVG-based (lightweight, scalable)
  *    - No external chart libraries needed
  *    - useMemo() for expensive calculations
- * 
+ *
  * 5. Accessibility:
  *    - Semantic HTML where possible
  *    - Color + text indicators (not color alone)

@@ -116,9 +116,9 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
 
 // Add icon components to navigation items
 export const getNavigationWithIcons = (): NavigationCategory[] => {
-  return NAVIGATION_STRUCTURE.map(category => ({
+  return NAVIGATION_STRUCTURE.map((category) => ({
     ...category,
-    items: category.items.map(item => ({
+    items: category.items.map((item) => ({
       ...item,
       iconComponent: ICON_MAP[item.icon],
     })),

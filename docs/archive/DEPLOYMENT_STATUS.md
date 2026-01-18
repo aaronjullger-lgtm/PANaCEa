@@ -3,6 +3,7 @@
 ## ✅ ISSUE RESOLVED
 
 ### Original Problem
+
 > "Variables cannot be added to a Worker that only has static assets"
 
 This error appears when Cloudflare Pages doesn't detect any backend code in your project.
@@ -32,9 +33,11 @@ When you deploy this project to Cloudflare Pages:
 ## The Error Will Disappear When You:
 
 1. **Deploy your project**:
+
    ```bash
    npx wrangler pages deploy .
    ```
+
    OR push to GitHub if you're using automatic deployments
 
 2. **After deployment**, the error message will be **GONE**
@@ -55,7 +58,7 @@ When you deploy this project to Cloudflare Pages:
 ✅ CORS headers are configured  
 ✅ All tests passing (209/209)  
 ✅ Build successful  
-✅ Cloudflare Pages auto-detects functions (no manual configuration needed)  
+✅ Cloudflare Pages auto-detects functions (no manual configuration needed)
 
 ## Why Your Setup is Correct
 
@@ -78,6 +81,7 @@ Cloudflare Pages uses a **convention-based system**:
 ## Expected Result
 
 After deployment:
+
 - ✅ No more "static assets only" error
 - ✅ Can add environment variables
 - ✅ Function available at `/geminiProxy`

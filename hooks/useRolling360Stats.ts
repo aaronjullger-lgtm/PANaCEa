@@ -1,10 +1,10 @@
 /**
  * useRolling360Stats Hook
- * 
+ *
  * React hook for consuming Rolling 360 statistics on the dashboard.
- * Provides real-time exam readiness metrics based on the last 360 
+ * Provides real-time exam readiness metrics based on the last 360
  * Main Session questions.
- * 
+ *
  * Features:
  * - SWR caching with automatic revalidation
  * - Optimistic updates after answering questions
@@ -113,7 +113,7 @@ async function fetchRolling360Stats(url: string, token: string | null): Promise<
 
   const response = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
@@ -247,10 +247,7 @@ export function useSystemWeaknesses(): {
 /**
  * Hook for optimistic update after answering a question
  */
-export function useOptimisticRolling360Update(): (
-  isCorrect: boolean,
-  system: string
-) => void {
+export function useOptimisticRolling360Update(): (isCorrect: boolean, system: string) => void {
   const { stats, mutate } = useRolling360Stats();
 
   return (isCorrect: boolean, system: string) => {
@@ -270,7 +267,7 @@ export function useOptimisticRolling360Update(): (
     if (isCorrect) {
       newSystemStats[system].correct += 1;
     }
-    newSystemStats[system].accuracy = 
+    newSystemStats[system].accuracy =
       (newSystemStats[system].correct / newSystemStats[system].total) * 100;
 
     // Calculate predicted score (same formula as backend)

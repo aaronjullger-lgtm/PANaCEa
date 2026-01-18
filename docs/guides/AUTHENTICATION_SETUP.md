@@ -5,6 +5,7 @@ This guide will walk you through setting up user authentication and cloud synchr
 ## Overview
 
 The system now includes:
+
 - **User Authentication**: Powered by Clerk for secure sign-in/sign-up
 - **Cloud Sync**: Automatic synchronization of user progress across devices
 - **Offline Support**: Continue studying offline, sync when back online
@@ -29,6 +30,7 @@ The system now includes:
 ### 1.2 Get Your API Keys
 
 After creating the application:
+
 1. Go to "API Keys" in the left sidebar
 2. Copy your **Publishable Key** (starts with `pk_test_` or `pk_live_`)
 3. Copy your **Secret Key** (starts with `sk_test_` or `sk_live_`)
@@ -67,6 +69,7 @@ CLERK_SECRET_KEY=sk_test_your_secret_key_here
 Use a managed PostgreSQL service like:
 
 #### Neon (Free tier, serverless)
+
 1. Go to [https://neon.tech](https://neon.tech)
 2. Create a new project
 3. Copy the connection string
@@ -76,6 +79,7 @@ Use a managed PostgreSQL service like:
    ```
 
 #### Supabase (Free tier)
+
 1. Go to [https://supabase.com](https://supabase.com)
 2. Create a new project
 3. Go to Settings > Database
@@ -83,6 +87,7 @@ Use a managed PostgreSQL service like:
 5. Add to `.env`
 
 #### Railway (Free tier)
+
 1. Go to [https://railway.app](https://railway.app)
 2. Create new project
 3. Add PostgreSQL service
@@ -130,6 +135,7 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` and:
+
 1. Click the "Sign In" button
 2. Create a new account or sign in
 3. Start a study session
@@ -138,17 +144,20 @@ Visit `http://localhost:3000` and:
 ## Features
 
 ### Authentication
+
 - **Sign In/Sign Up**: Users can create accounts using email, Google, or other configured methods
 - **User Profile**: View and manage account settings
 - **Secure Sessions**: JWT-based authentication with automatic token refresh
 
 ### Data Synchronization
+
 - **Automatic Sync**: Progress syncs automatically when signed in
 - **Manual Sync**: Force sync anytime from the profile menu
 - **Conflict Resolution**: Latest data takes precedence in case of conflicts
 - **Offline Support**: Study offline, data syncs when connection restored
 
 ### Data Migration
+
 - **First-Time Sign In**: Local data automatically uploads to cloud
 - **No Data Loss**: Existing progress preserved during migration
 - **Merge Logic**: Cloud and local data intelligently merged
@@ -158,7 +167,8 @@ Visit `http://localhost:3000` and:
 ### Authentication Issues
 
 **Problem**: Error "Missing Publishable Key for Clerk!" when starting the application
-- **Solution**: 
+
+- **Solution**:
   1. Copy `.env.example` to `.env`: `cp .env.example .env`
   2. Get your Clerk publishable key from https://dashboard.clerk.com
   3. Add it to `.env` as: `VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here`
@@ -166,10 +176,12 @@ Visit `http://localhost:3000` and:
 - **Note**: This error is intentional to ensure proper configuration before the app starts
 
 **Problem**: "Sign In" button doesn't appear
+
 - **Solution**: Check that `VITE_CLERK_PUBLISHABLE_KEY` is set in `.env`
 - Restart dev server after adding environment variables
 
 **Problem**: Sign-in modal doesn't open
+
 - **Solution**: Check browser console for errors
 - Verify Clerk keys are correct
 - Ensure Clerk application is active (not paused)
@@ -177,22 +189,26 @@ Visit `http://localhost:3000` and:
 ### Database Issues
 
 **Problem**: `P1001: Can't reach database server`
+
 - **Solution**: Check DATABASE_URL is correct
 - Verify database is running
 - Check firewall/security group settings (for cloud databases)
 
 **Problem**: `P1010: User does not have permission`
+
 - **Solution**: Grant necessary permissions to database user
 - For Prisma: User needs CREATE, ALTER, DROP permissions
 
 ### Sync Issues
 
 **Problem**: Data not syncing to cloud
+
 - **Solution**: Check browser console for API errors
 - Verify authentication token is valid
 - Check network tab for failed requests to `/api/sync`
 
 **Problem**: "Sync error" message appears
+
 - **Solution**: Check Cloudflare Function logs
 - Verify DATABASE_URL is accessible from Cloudflare Workers
 - Consider using Prisma Data Proxy for serverless environments
@@ -218,6 +234,7 @@ To use a different auth provider (Auth0, Firebase, etc.):
 ### Scaling Considerations
 
 For high-traffic scenarios:
+
 - Use connection pooling (PgBouncer)
 - Enable Prisma Data Proxy
 - Implement Redis caching for frequently accessed data
@@ -237,9 +254,11 @@ For high-traffic scenarios:
 The current JWT verification in `/functions/api/sync.ts` is simplified for demonstration. Before deploying to production, you MUST implement proper JWT signature verification using:
 
 - **Option 1 (Recommended)**: Use `@clerk/backend` SDK
+
   ```bash
   npm install @clerk/backend
   ```
+
   Then use `clerkClient.verifyToken()` in your API functions
 
 - **Option 2**: Use `jsonwebtoken` library with proper key verification
@@ -253,22 +272,26 @@ Without proper verification, authentication tokens can be forged, compromising u
 ## Support
 
 For issues:
+
 1. Check the troubleshooting section above
 2. Review browser console and network tab
 3. Check Cloudflare Pages function logs
 4. Review Prisma error messages
 
 For Clerk-specific issues:
+
 - [Clerk Documentation](https://clerk.com/docs)
 - [Clerk Discord Community](https://clerk.com/discord)
 
 For Prisma issues:
+
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Prisma Discord Community](https://pris.ly/discord)
 
 ## Next Steps
 
 After setup:
+
 1. Customize authentication UI in `AuthButton.tsx`
 2. Add more sync strategies (debouncing, batch uploads)
 3. Implement offline queue for failed syncs

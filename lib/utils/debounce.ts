@@ -1,6 +1,6 @@
 /**
  * Debounce utility for delaying function execution
- * 
+ *
  * Creates a debounced version of the provided function that delays its execution
  * until after the specified delay has elapsed since the last time it was invoked.
  */

@@ -2,7 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 import { useAuth } from '@clerk/clerk-react';
-import { Check, X, Edit2, Trash2, Save, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Check,
+  X,
+  Edit2,
+  Trash2,
+  Save,
+  RefreshCw,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 
 interface PreGeneratedQuestion {
   id: string;
@@ -22,7 +32,7 @@ interface PreGeneratedQuestion {
   generatedAt: string;
 }
 
-type QuestionWithEditState = PreGeneratedQuestion & { 
+type QuestionWithEditState = PreGeneratedQuestion & {
   isEditing?: boolean;
   isExpanded?: boolean;
   editedQuestion?: string;
@@ -44,24 +54,29 @@ const QuestionCurationPanel = () => {
     try {
       const token = await getToken();
       // Use curation mode to get raw pre-generated questions for admin review
-      const response = await fetch(`${getApiEndpoint(API_ENDPOINTS.QUESTIONS_POOL)}?mode=curation`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${getApiEndpoint(API_ENDPOINTS.QUESTIONS_POOL)}?mode=curation`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch questions for curation.');
       }
       const data = await response.json();
       // Handle both array response and object with questions property
-      const questionArray = Array.isArray(data) ? data : (data.questions || []);
-      setQuestions(questionArray.map((q: PreGeneratedQuestion) => ({ 
-        ...q, 
-        isEditing: false,
-        isExpanded: false,
-        editedQuestion: q.questionData?.question || q.questionData?.vignette || '',
-        editedOptions: q.questionData?.options || [],
-        editedRationale: q.questionData?.rationale || q.questionData?.explanation || '',
-        editedCorrectIndex: q.questionData?.correctAnswerIndex ?? 0,
-      })));
+      const questionArray = Array.isArray(data) ? data : data.questions || [];
+      setQuestions(
+        questionArray.map((q: PreGeneratedQuestion) => ({
+          ...q,
+          isEditing: false,
+          isExpanded: false,
+          editedQuestion: q.questionData?.question || q.questionData?.vignette || '',
+          editedOptions: q.questionData?.options || [],
+          editedRationale: q.questionData?.rationale || q.questionData?.explanation || '',
+          editedCorrectIndex: q.questionData?.correctAnswerIndex ?? 0,
+        }))
+      );
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errMsg);
@@ -75,7 +90,11 @@ const QuestionCurationPanel = () => {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  const handleAction = async (questionId: string, action: 'approve' | 'delete' | 'update', payload?: any) => {
+  const handleAction = async (
+    questionId: string,
+    action: 'approve' | 'delete' | 'update',
+    payload?: any
+  ) => {
     try {
       const token = await getToken();
       const response = await fetch(getApiEndpoint(API_ENDPOINTS.QUESTIONS_CURATE), {
@@ -92,12 +111,16 @@ const QuestionCurationPanel = () => {
         throw new Error(errorData.error || `Failed to ${action} question.`);
       }
 
-      toast.success(`Question successfully ${action === 'approve' ? 'approved' : action === 'delete' ? 'deleted' : 'updated'}.`);
-      
+      toast.success(
+        `Question successfully ${action === 'approve' ? 'approved' : action === 'delete' ? 'deleted' : 'updated'}.`
+      );
+
       if (action === 'approve' || action === 'delete') {
-        setQuestions(prev => prev.filter(q => q.id !== questionId));
+        setQuestions((prev) => prev.filter((q) => q.id !== questionId));
       } else {
-        setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, isEditing: false } : q));
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === questionId ? { ...q, isEditing: false } : q))
+        );
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -106,21 +129,17 @@ const QuestionCurationPanel = () => {
   };
 
   const toggleEdit = (id: string) => {
-    setQuestions(prev =>
-      prev.map(q => (q.id === id ? { ...q, isEditing: !q.isEditing } : q))
-    );
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, isEditing: !q.isEditing } : q)));
   };
 
   const toggleExpand = (id: string) => {
-    setQuestions(prev =>
-      prev.map(q => (q.id === id ? { ...q, isExpanded: !q.isExpanded } : q))
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, isExpanded: !q.isExpanded } : q))
     );
   };
 
   const handleFieldChange = (id: string, field: string, value: any) => {
-    setQuestions(prev =>
-      prev.map(q => (q.id === id ? { ...q, [field]: value } : q))
-    );
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
   };
 
   const handleSave = (q: QuestionWithEditState) => {
@@ -132,16 +151,16 @@ const QuestionCurationPanel = () => {
         rationale: q.editedRationale,
         system: q.system,
         difficulty: q.difficulty,
-      }
+      },
     });
   };
 
-  const filteredQuestions = questions.filter(q => {
+  const filteredQuestions = questions.filter((q) => {
     if (filter === 'all') return true;
     return q.system === filter;
   });
 
-  const systems = [...new Set(questions.map(q => q.system).filter(Boolean))];
+  const systems = [...new Set(questions.map((q) => q.system).filter(Boolean))];
 
   if (isLoading) {
     return (
@@ -202,20 +221,20 @@ const QuestionCurationPanel = () => {
           <button
             onClick={() => setFilter('all')}
             className={`px-3 py-1 text-sm rounded-full transition-colors ${
-              filter === 'all' 
-                ? 'bg-blue-600 text-white' 
+              filter === 'all'
+                ? 'bg-blue-600 text-white'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             All
           </button>
-          {systems.map(system => (
+          {systems.map((system) => (
             <button
               key={system}
               onClick={() => setFilter(system!)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filter === system 
-                  ? 'bg-blue-600 text-white' 
+                filter === system
+                  ? 'bg-blue-600 text-white'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -233,25 +252,28 @@ const QuestionCurationPanel = () => {
       ) : (
         <div className="space-y-4">
           {filteredQuestions.map((q) => {
-            const questionText = q.editedQuestion || q.questionData?.question || q.questionData?.vignette || '';
+            const questionText =
+              q.editedQuestion || q.questionData?.question || q.questionData?.vignette || '';
             const options = q.editedOptions || q.questionData?.options || [];
-            const rationale = q.editedRationale || q.questionData?.rationale || q.questionData?.explanation || '';
+            const rationale =
+              q.editedRationale || q.questionData?.rationale || q.questionData?.explanation || '';
             const correctIndex = q.editedCorrectIndex ?? q.questionData?.correctAnswerIndex ?? 0;
 
             return (
-              <div 
-                key={q.id} 
+              <div
+                key={q.id}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl overflow-hidden"
               >
                 {/* Card Header */}
-                <div 
+                <div
                   className="p-4 cursor-pointer hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   onClick={() => !q.isEditing && toggleExpand(q.id)}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-[var(--color-text-primary)] font-medium line-clamp-2">
-                        {questionText.substring(0, 200)}{questionText.length > 200 ? '...' : ''}
+                        {questionText.substring(0, 200)}
+                        {questionText.length > 200 ? '...' : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -260,14 +282,22 @@ const QuestionCurationPanel = () => {
                           {q.system}
                         </span>
                       )}
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        q.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                        q.difficulty === 'hard' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                        'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 text-xs rounded ${
+                          q.difficulty === 'easy'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : q.difficulty === 'hard'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                        }`}
+                      >
                         {q.difficulty}
                       </span>
-                      {q.isExpanded ? <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" /> : <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />}
+                      {q.isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -280,7 +310,9 @@ const QuestionCurationPanel = () => {
                       {q.isEditing ? (
                         <textarea
                           value={q.editedQuestion}
-                          onChange={(e) => handleFieldChange(q.id, 'editedQuestion', e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange(q.id, 'editedQuestion', e.target.value)
+                          }
                           className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                           rows={4}
                         />
@@ -293,10 +325,12 @@ const QuestionCurationPanel = () => {
                         {options.map((opt, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <button
-                              onClick={() => q.isEditing && handleFieldChange(q.id, 'editedCorrectIndex', index)}
+                              onClick={() =>
+                                q.isEditing && handleFieldChange(q.id, 'editedCorrectIndex', index)
+                              }
                               className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                                index === correctIndex 
-                                  ? 'bg-green-500 text-white' 
+                                index === correctIndex
+                                  ? 'bg-green-500 text-white'
                                   : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)]'
                               } ${q.isEditing ? 'cursor-pointer' : ''}`}
                               disabled={!q.isEditing}
@@ -316,7 +350,9 @@ const QuestionCurationPanel = () => {
                                 className="flex-1 p-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
                             ) : (
-                              <span className={`${index === correctIndex ? 'text-green-600 dark:text-green-400 font-medium' : 'text-[var(--color-text-secondary)]'}`}>
+                              <span
+                                className={`${index === correctIndex ? 'text-green-600 dark:text-green-400 font-medium' : 'text-[var(--color-text-secondary)]'}`}
+                              >
                                 {opt}
                               </span>
                             )}
@@ -326,11 +362,15 @@ const QuestionCurationPanel = () => {
 
                       {/* Rationale */}
                       <div className="pt-3 border-t border-[var(--color-border)]">
-                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">Rationale:</h4>
+                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
+                          Rationale:
+                        </h4>
                         {q.isEditing ? (
                           <textarea
                             value={q.editedRationale}
-                            onChange={(e) => handleFieldChange(q.id, 'editedRationale', e.target.value)}
+                            onChange={(e) =>
+                              handleFieldChange(q.id, 'editedRationale', e.target.value)
+                            }
                             className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                             rows={4}
                           />
@@ -362,21 +402,30 @@ const QuestionCurationPanel = () => {
                       ) : (
                         <>
                           <button
-                            onClick={(e) => { e.stopPropagation(); toggleEdit(q.id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleEdit(q.id);
+                            }}
                             className="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Edit2 className="w-4 h-4" />
                             Edit
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleAction(q.id, 'delete'); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction(q.id, 'delete');
+                            }}
                             className="px-4 py-2 text-sm font-medium text-red-600 hover:text-white hover:bg-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
                             Delete
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleAction(q.id, 'approve'); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction(q.id, 'approve');
+                            }}
                             className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Check className="w-4 h-4" />

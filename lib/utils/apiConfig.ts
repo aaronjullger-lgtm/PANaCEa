@@ -1,6 +1,6 @@
 /**
  * API Configuration Utility
- * 
+ *
  * Provides consistent API URL resolution across client and server contexts.
  * Centralizes configuration to avoid duplication and maintenance issues.
  */
@@ -8,29 +8,29 @@
 /**
  * Get the API base URL for backend requests
  * Works in both browser and server environments
- * 
+ *
  * @returns The API base URL (e.g., "http://localhost:3001" or production URL)
  */
 export function getApiUrl(): string {
   // Browser environment
   if (typeof window !== 'undefined') {
-    // Use VITE_API_URL if provided, otherwise default to empty string 
+    // Use VITE_API_URL if provided, otherwise default to empty string
     // to use relative paths (which works with Vite proxy and Cloudflare)
-    return (import.meta as any).env?.VITE_API_URL || "";
+    return (import.meta as any).env?.VITE_API_URL || '';
   }
-  
+
   // Server/Node environment
-  if (typeof process !== "undefined") {
-    return process.env.VITE_API_URL || "http://localhost:3001";
+  if (typeof process !== 'undefined') {
+    return process.env.VITE_API_URL || 'http://localhost:3001';
   }
-  
+
   // Fallback
-  return "";
+  return '';
 }
 
 /**
  * Get the full API endpoint URL
- * 
+ *
  * @param path - The API endpoint path (e.g., "/api/content/all")
  * @returns The complete URL
  */

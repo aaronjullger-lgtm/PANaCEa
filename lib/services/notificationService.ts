@@ -21,17 +21,17 @@ export interface FlagResolvedNotification {
 export async function sendFlagResolvedNotification(
   notification: FlagResolvedNotification
 ): Promise<boolean> {
-  const { userEmail, userFirstName, questionId, questionText, flagType, resolutionNote } = notification;
-  
+  const { userEmail, userFirstName, questionId, questionText, flagType, resolutionNote } =
+    notification;
+
   const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
-  
+
   // Truncate question text if too long for email
-  const truncatedQuestion = questionText.length > 200 
-    ? questionText.substring(0, 200) + '...' 
-    : questionText;
-  
+  const truncatedQuestion =
+    questionText.length > 200 ? questionText.substring(0, 200) + '...' : questionText;
+
   const subject = `PANaCEa - We Fixed Your Flagged Question #${questionId.substring(0, 8)}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -76,7 +76,9 @@ export async function sendFlagResolvedNotification(
                     </p>
                   </div>
                   
-                  ${resolutionNote ? `
+                  ${
+                    resolutionNote
+                      ? `
                   <!-- Resolution Note -->
                   <div style="margin: 20px 0; padding: 16px; background-color: #065f46; border-radius: 8px;">
                     <p style="margin: 0 0 8px; font-size: 13px; color: #6ee7b7; font-weight: 600;">
@@ -86,7 +88,9 @@ export async function sendFlagResolvedNotification(
                       ${resolutionNote}
                     </p>
                   </div>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                   
                   <table role="presentation" style="width: 100%; margin: 30px 0;">
                     <tr>
@@ -139,7 +143,7 @@ function formatFlagType(flagType: string): string {
     outdated: 'Outdated Information',
     other: 'Other Issue',
   };
-  
+
   return types[flagType] || flagType;
 }
 
@@ -160,13 +164,14 @@ export async function sendAdminFlagNotification(
 ): Promise<boolean> {
   const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
   const adminUrl = `${appUrl}/admin/flags/${questionFlag.id}`;
-  
-  const truncatedQuestion = questionFlag.questionText.length > 200 
-    ? questionFlag.questionText.substring(0, 200) + '...' 
-    : questionFlag.questionText;
-  
+
+  const truncatedQuestion =
+    questionFlag.questionText.length > 200
+      ? questionFlag.questionText.substring(0, 200) + '...'
+      : questionFlag.questionText;
+
   const subject = `PANaCEa - New Question Flag: ${formatFlagType(questionFlag.flagType)}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -200,11 +205,15 @@ export async function sendAdminFlagNotification(
                     <p style="margin: 0 0 8px; font-size: 13px; color: #94a3b8;">
                       <strong>Flag Type:</strong> ${formatFlagType(questionFlag.flagType)}
                     </p>
-                    ${questionFlag.userFirstName ? `
+                    ${
+                      questionFlag.userFirstName
+                        ? `
                     <p style="margin: 0 0 8px; font-size: 13px; color: #94a3b8;">
                       <strong>Reported by:</strong> ${questionFlag.userFirstName}
                     </p>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                     <p style="margin: 0; font-size: 13px; color: #94a3b8;">
                       <strong>Question ID:</strong> #${questionFlag.questionId.substring(0, 8)}
                     </p>

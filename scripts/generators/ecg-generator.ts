@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
  * ECG Pattern Generator - Create comprehensive ECG pattern database
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ecg-generator.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ecg-generator.ts
@@ -20,32 +20,97 @@ const ECG_PATTERNS = [
   { name: 'Sinus Bradycardia', category: 'Bradyarrhythmia', isEmergency: false, panceYield: 3 },
   { name: 'Sinus Tachycardia', category: 'Tachyarrhythmia', isEmergency: false, panceYield: 3 },
   { name: 'Sinus Arrhythmia', category: 'Normal Variant', isEmergency: false, panceYield: 2 },
-  
+
   // Supraventricular arrhythmias
-  { name: 'Supraventricular Tachycardia', category: 'Arrhythmia', isEmergency: true, panceYield: 3 },
-  { name: 'Multifocal Atrial Tachycardia', category: 'Arrhythmia', isEmergency: false, panceYield: 2 },
-  { name: 'Premature Atrial Contractions', category: 'Arrhythmia', isEmergency: false, panceYield: 2 },
+  {
+    name: 'Supraventricular Tachycardia',
+    category: 'Arrhythmia',
+    isEmergency: true,
+    panceYield: 3,
+  },
+  {
+    name: 'Multifocal Atrial Tachycardia',
+    category: 'Arrhythmia',
+    isEmergency: false,
+    panceYield: 2,
+  },
+  {
+    name: 'Premature Atrial Contractions',
+    category: 'Arrhythmia',
+    isEmergency: false,
+    panceYield: 2,
+  },
   { name: 'Junctional Rhythm', category: 'Arrhythmia', isEmergency: false, panceYield: 2 },
   { name: 'Wandering Atrial Pacemaker', category: 'Arrhythmia', isEmergency: false, panceYield: 1 },
-  
+
   // AV Blocks
-  { name: 'First Degree AV Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 3 },
-  { name: 'Second Degree AV Block Mobitz I', category: 'Conduction Abnormality', isEmergency: false, panceYield: 3 },
-  { name: 'Second Degree AV Block Mobitz II', category: 'Conduction Abnormality', isEmergency: true, panceYield: 3 },
-  
+  {
+    name: 'First Degree AV Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 3,
+  },
+  {
+    name: 'Second Degree AV Block Mobitz I',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 3,
+  },
+  {
+    name: 'Second Degree AV Block Mobitz II',
+    category: 'Conduction Abnormality',
+    isEmergency: true,
+    panceYield: 3,
+  },
+
   // Bundle Branch Blocks
-  { name: 'Right Bundle Branch Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 3 },
-  { name: 'Left Bundle Branch Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 3 },
-  { name: 'Left Anterior Fascicular Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 2 },
-  { name: 'Left Posterior Fascicular Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 2 },
-  { name: 'Bifascicular Block', category: 'Conduction Abnormality', isEmergency: false, panceYield: 2 },
-  
+  {
+    name: 'Right Bundle Branch Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 3,
+  },
+  {
+    name: 'Left Bundle Branch Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 3,
+  },
+  {
+    name: 'Left Anterior Fascicular Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 2,
+  },
+  {
+    name: 'Left Posterior Fascicular Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 2,
+  },
+  {
+    name: 'Bifascicular Block',
+    category: 'Conduction Abnormality',
+    isEmergency: false,
+    panceYield: 2,
+  },
+
   // Ventricular arrhythmias
-  { name: 'Premature Ventricular Contractions', category: 'Arrhythmia', isEmergency: false, panceYield: 3 },
+  {
+    name: 'Premature Ventricular Contractions',
+    category: 'Arrhythmia',
+    isEmergency: false,
+    panceYield: 3,
+  },
   { name: 'Torsades de Pointes', category: 'Arrhythmia', isEmergency: true, panceYield: 3 },
   { name: 'Idioventricular Rhythm', category: 'Arrhythmia', isEmergency: true, panceYield: 2 },
-  { name: 'Accelerated Idioventricular Rhythm', category: 'Arrhythmia', isEmergency: false, panceYield: 2 },
-  
+  {
+    name: 'Accelerated Idioventricular Rhythm',
+    category: 'Arrhythmia',
+    isEmergency: false,
+    panceYield: 2,
+  },
+
   // Ischemia/Infarction
   { name: 'Lateral STEMI', category: 'Ischemia', isEmergency: true, panceYield: 3 },
   { name: 'Posterior STEMI', category: 'Ischemia', isEmergency: true, panceYield: 3 },
@@ -53,38 +118,58 @@ const ECG_PATTERNS = [
   { name: 'NSTEMI Pattern', category: 'Ischemia', isEmergency: true, panceYield: 3 },
   { name: 'Wellens Syndrome', category: 'Ischemia', isEmergency: true, panceYield: 2 },
   { name: 'De Winter T Waves', category: 'Ischemia', isEmergency: true, panceYield: 2 },
-  
+
   // Other cardiac conditions
   { name: 'Pericarditis', category: 'Pericardial', isEmergency: false, panceYield: 3 },
   { name: 'Cardiac Tamponade', category: 'Pericardial', isEmergency: true, panceYield: 2 },
   { name: 'Myocarditis', category: 'Myocardial', isEmergency: true, panceYield: 2 },
-  { name: 'Hypertrophic Cardiomyopathy', category: 'Structural', isEmergency: false, panceYield: 2 },
-  { name: 'Left Ventricular Hypertrophy', category: 'Hypertrophy', isEmergency: false, panceYield: 3 },
-  { name: 'Right Ventricular Hypertrophy', category: 'Hypertrophy', isEmergency: false, panceYield: 2 },
+  {
+    name: 'Hypertrophic Cardiomyopathy',
+    category: 'Structural',
+    isEmergency: false,
+    panceYield: 2,
+  },
+  {
+    name: 'Left Ventricular Hypertrophy',
+    category: 'Hypertrophy',
+    isEmergency: false,
+    panceYield: 3,
+  },
+  {
+    name: 'Right Ventricular Hypertrophy',
+    category: 'Hypertrophy',
+    isEmergency: false,
+    panceYield: 2,
+  },
   { name: 'Right Atrial Enlargement', category: 'Hypertrophy', isEmergency: false, panceYield: 2 },
   { name: 'Left Atrial Enlargement', category: 'Hypertrophy', isEmergency: false, panceYield: 2 },
-  
+
   // Pulmonary
   { name: 'Pulmonary Embolism Pattern', category: 'Pulmonary', isEmergency: true, panceYield: 3 },
-  
+
   // Electrolyte abnormalities
   { name: 'Hypokalemia', category: 'Electrolyte', isEmergency: true, panceYield: 3 },
   { name: 'Hypercalcemia', category: 'Electrolyte', isEmergency: false, panceYield: 2 },
   { name: 'Hypocalcemia', category: 'Electrolyte', isEmergency: false, panceYield: 2 },
   { name: 'Hypomagnesemia', category: 'Electrolyte', isEmergency: false, panceYield: 2 },
-  
+
   // Drug effects
   { name: 'Digoxin Effect', category: 'Drug Effect', isEmergency: false, panceYield: 3 },
   { name: 'Digoxin Toxicity', category: 'Drug Effect', isEmergency: true, panceYield: 3 },
   { name: 'Beta Blocker Effect', category: 'Drug Effect', isEmergency: false, panceYield: 2 },
-  { name: 'Tricyclic Antidepressant Toxicity', category: 'Drug Effect', isEmergency: true, panceYield: 2 },
-  
+  {
+    name: 'Tricyclic Antidepressant Toxicity',
+    category: 'Drug Effect',
+    isEmergency: true,
+    panceYield: 2,
+  },
+
   // Paced rhythms
   { name: 'Ventricular Paced Rhythm', category: 'Pacemaker', isEmergency: false, panceYield: 2 },
   { name: 'Atrial Paced Rhythm', category: 'Pacemaker', isEmergency: false, panceYield: 2 },
   { name: 'Dual Chamber Paced Rhythm', category: 'Pacemaker', isEmergency: false, panceYield: 2 },
   { name: 'Pacemaker Malfunction', category: 'Pacemaker', isEmergency: true, panceYield: 2 },
-  
+
   // Other
   { name: 'Brugada Syndrome', category: 'Channelopathy', isEmergency: true, panceYield: 2 },
   { name: 'Early Repolarization', category: 'Normal Variant', isEmergency: false, panceYield: 2 },
@@ -93,19 +178,19 @@ const ECG_PATTERNS = [
 ];
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function generateECGContent(pattern: typeof ECG_PATTERNS[0]): Promise<any> {
+async function generateECGContent(pattern: (typeof ECG_PATTERNS)[0]): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY not set');
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
+  const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
-    generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
   });
-  
+
   const prompt = `Generate comprehensive ECG pattern data for "${pattern.name}" (Category: ${pattern.category}).
 
 Return JSON with these fields:
@@ -155,36 +240,36 @@ Focus on PANCE-relevant content. Return ONLY valid JSON.`;
 
 async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
-  const limit = process.argv.find(a => a.startsWith('--limit='));
+  const limit = process.argv.find((a) => a.startsWith('--limit='));
   const maxPatterns = limit ? parseInt(limit.split('=')[1]) : ECG_PATTERNS.length;
-  
+
   console.log('🫀 ECG Pattern Generator');
   console.log(`   Mode: ${dryRun ? 'DRY RUN' : 'CREATE'}`);
   console.log(`   Limit: ${maxPatterns}\n`);
-  
+
   // Get existing patterns
   const existing = await prisma.eCGPattern.findMany({ select: { name: true } });
-  const existingNames = new Set(existing.map(e => e.name));
+  const existingNames = new Set(existing.map((e) => e.name));
   console.log(`📊 Existing patterns: ${existingNames.size}`);
-  
+
   // Filter to new patterns only
-  const newPatterns = ECG_PATTERNS.filter(p => !existingNames.has(p.name)).slice(0, maxPatterns);
+  const newPatterns = ECG_PATTERNS.filter((p) => !existingNames.has(p.name)).slice(0, maxPatterns);
   console.log(`📝 New patterns to create: ${newPatterns.length}\n`);
-  
+
   if (newPatterns.length === 0) {
     console.log('✅ All patterns already exist!');
     await prisma.$disconnect();
     return;
   }
-  
+
   let created = 0;
   let failed = 0;
-  
+
   for (const pattern of newPatterns) {
     try {
       console.log(`  🔄 Generating: ${pattern.name}...`);
       const content = await generateECGContent(pattern);
-      
+
       if (!dryRun) {
         await prisma.eCGPattern.create({
           data: {
@@ -224,7 +309,7 @@ async function main(): Promise<void> {
             testQuestionTips: content.testQuestionTips || [],
             mnemonics: content.mnemonics || [],
             updatedAt: new Date(),
-          }
+          },
         });
         console.log(`  ✅ Created: ${pattern.name}`);
       } else {
@@ -232,19 +317,20 @@ async function main(): Promise<void> {
       }
       created++;
       await sleep(1500);
-      
     } catch (error) {
-      console.log(`  ❌ Failed: ${pattern.name} - ${error instanceof Error ? error.message : error}`);
+      console.log(
+        `  ❌ Failed: ${pattern.name} - ${error instanceof Error ? error.message : error}`
+      );
       failed++;
     }
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log('📊 ECG Generator Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Failed:  ${failed}`);
   console.log(`   Total ECG patterns: ${existingNames.size + (dryRun ? 0 : created)}`);
-  
+
   await prisma.$disconnect();
 }
 

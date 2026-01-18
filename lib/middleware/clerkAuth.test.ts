@@ -28,11 +28,7 @@ describe('requireAuth middleware', () => {
   });
 
   it('should return 401 when Authorization header is missing', async () => {
-    await requireAuth(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      mockNext
-    );
+    await requireAuth(mockRequest as AuthenticatedRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -47,11 +43,7 @@ describe('requireAuth middleware', () => {
       authorization: 'InvalidFormat',
     };
 
-    await requireAuth(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      mockNext
-    );
+    await requireAuth(mockRequest as AuthenticatedRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -69,11 +61,7 @@ describe('requireAuth middleware', () => {
       authorization: 'Bearer invalid_token',
     };
 
-    await requireAuth(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      mockNext
-    );
+    await requireAuth(mockRequest as AuthenticatedRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -96,11 +84,7 @@ describe('requireAuth middleware', () => {
 
     process.env.CLERK_SECRET_KEY = 'sk_test_mock_key';
 
-    await requireAuth(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      mockNext
-    );
+    await requireAuth(mockRequest as AuthenticatedRequest, mockResponse as Response, mockNext);
 
     expect(mockRequest.auth).toEqual({
       userId: 'user_123',
@@ -118,11 +102,7 @@ describe('requireAuth middleware', () => {
       authorization: 'Bearer expired_token',
     };
 
-    await requireAuth(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      mockNext
-    );
+    await requireAuth(mockRequest as AuthenticatedRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({

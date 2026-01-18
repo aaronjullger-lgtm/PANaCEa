@@ -1,6 +1,6 @@
 /**
  * EnhancedFeedbackPanel - Rich feedback with database-linked reference data
- * 
+ *
  * Extends the basic FeedbackPanel with:
  * - "Deep Dive" links to relevant reference data
  * - Related concept cards (physiology, anatomy, etc.)
@@ -96,13 +96,13 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
       setIsLoadingRelated(true);
       try {
         const token = await getToken();
-        
+
         // Use the dedicated related-content API
         const response = await fetch('/api/drills/related-content', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
+            Authorization: token ? `Bearer ${token}` : '',
           },
           body: JSON.stringify({
             category,
@@ -119,12 +119,14 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
               setRelatedData(result.data.primary);
             }
             if (result.data.related && result.data.related.length > 0) {
-              setRelatedReferences(result.data.related.map((item: any) => ({
-                type: category as RelatedReference['type'],
-                id: item.id,
-                name: item.displayName || item.name,
-                preview: item.description?.slice(0, 100) || item.normalRange || item.category,
-              })));
+              setRelatedReferences(
+                result.data.related.map((item: any) => ({
+                  type: category as RelatedReference['type'],
+                  id: item.id,
+                  name: item.displayName || item.name,
+                  preview: item.description?.slice(0, 100) || item.normalRange || item.category,
+                }))
+              );
             }
           }
         } else {
@@ -170,13 +172,18 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
               ) : (
                 <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
               )}
-              <span className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+              <span
+                className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+              >
                 {isCorrect ? 'Correct!' : 'Incorrect'}
               </span>
             </div>
             {!isCorrect && correctAnswer && (
               <div className="text-sm text-[var(--color-text-secondary)] mt-1 ml-7">
-                Correct answer: <span className="font-semibold text-[var(--color-text-primary)]">{correctAnswer}</span>
+                Correct answer:{' '}
+                <span className="font-semibold text-[var(--color-text-primary)]">
+                  {correctAnswer}
+                </span>
               </div>
             )}
           </div>
@@ -221,7 +228,10 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {pearl && (
           <div className="text-sm text-amber-900 dark:text-amber-300/90 bg-amber-100 dark:bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-300 dark:border-amber-700/30 flex items-start gap-2">
             <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span><span className="font-medium">Pearl: </span>{pearl}</span>
+            <span>
+              <span className="font-medium">Pearl: </span>
+              {pearl}
+            </span>
           </div>
         )}
 
@@ -263,8 +273,13 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                         {relatedData && (
                           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
                             <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded-lg ${TYPE_COLORS[category || 'physiology']}`}>
-                                {React.createElement(TYPE_ICONS[category || 'physiology'] || Brain, { className: 'w-5 h-5' })}
+                              <div
+                                className={`p-2 rounded-lg ${TYPE_COLORS[category || 'physiology']}`}
+                              >
+                                {React.createElement(
+                                  TYPE_ICONS[category || 'physiology'] || Brain,
+                                  { className: 'w-5 h-5' }
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-semibold text-[var(--color-text-primary)]">
@@ -275,7 +290,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                     {relatedData.description}
                                   </p>
                                 )}
-                                
+
                                 {/* Key Points */}
                                 {relatedData.keyPoints && relatedData.keyPoints.length > 0 && (
                                   <div className="mt-3">
@@ -283,30 +298,35 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                       Key Points
                                     </h5>
                                     <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
-                                      {relatedData.keyPoints.slice(0, 3).map((point: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-2">
-                                          <span className="text-blue-500 mt-1">•</span>
-                                          <span>{point}</span>
-                                        </li>
-                                      ))}
+                                      {relatedData.keyPoints
+                                        .slice(0, 3)
+                                        .map((point: string, i: number) => (
+                                          <li key={i} className="flex items-start gap-2">
+                                            <span className="text-blue-500 mt-1">•</span>
+                                            <span>{point}</span>
+                                          </li>
+                                        ))}
                                     </ul>
                                   </div>
                                 )}
 
                                 {/* Clinical Pearls */}
-                                {relatedData.clinicalPearls && relatedData.clinicalPearls.length > 0 && (
-                                  <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                                    <h5 className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1">
-                                      <Lightbulb className="w-3 h-3" />
-                                      Clinical Pearls
-                                    </h5>
-                                    <ul className="text-sm text-amber-900 dark:text-amber-300 space-y-1">
-                                      {relatedData.clinicalPearls.slice(0, 2).map((pearl: string, i: number) => (
-                                        <li key={i}>• {pearl}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
+                                {relatedData.clinicalPearls &&
+                                  relatedData.clinicalPearls.length > 0 && (
+                                    <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                                      <h5 className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1">
+                                        <Lightbulb className="w-3 h-3" />
+                                        Clinical Pearls
+                                      </h5>
+                                      <ul className="text-sm text-amber-900 dark:text-amber-300 space-y-1">
+                                        {relatedData.clinicalPearls
+                                          .slice(0, 2)
+                                          .map((pearl: string, i: number) => (
+                                            <li key={i}>• {pearl}</li>
+                                          ))}
+                                      </ul>
+                                    </div>
+                                  )}
 
                                 {/* Key Equations (for physiology) */}
                                 {relatedData.keyEquations && (
@@ -315,14 +335,20 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                       Key Equations
                                     </h5>
                                     <div className="text-sm text-blue-900 dark:text-blue-300 font-mono">
-                                      {Array.isArray(relatedData.keyEquations) 
-                                        ? relatedData.keyEquations.slice(0, 2).map((eq: any, i: number) => (
-                                            <div key={i}>{typeof eq === 'string' ? eq : eq.formula || eq.equation}</div>
-                                          ))
-                                        : typeof relatedData.keyEquations === 'object' && relatedData.keyEquations.formula
+                                      {Array.isArray(relatedData.keyEquations)
+                                        ? relatedData.keyEquations
+                                            .slice(0, 2)
+                                            .map((eq: any, i: number) => (
+                                              <div key={i}>
+                                                {typeof eq === 'string'
+                                                  ? eq
+                                                  : eq.formula || eq.equation}
+                                              </div>
+                                            ))
+                                        : typeof relatedData.keyEquations === 'object' &&
+                                            relatedData.keyEquations.formula
                                           ? relatedData.keyEquations.formula
-                                          : null
-                                      }
+                                          : null}
                                     </div>
                                   </div>
                                 )}
@@ -342,7 +368,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
                                 {onDeepDive && (
                                   <button
-                                    onClick={() => onDeepDive(category || 'physiology', relatedData.id)}
+                                    onClick={() =>
+                                      onDeepDive(category || 'physiology', relatedData.id)
+                                    }
                                     className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                                   >
                                     View full reference

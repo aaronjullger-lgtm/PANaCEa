@@ -36,9 +36,11 @@ scripts/
 Each entity type has a specialized generation method with clinically accurate prompts:
 
 #### 1. Lab Tests (`generateLabContent`)
+
 **Prompt**: "Write the clinical details for the lab test: {name}"
 
 **Output**:
+
 ```json
 {
   "description": "2-3 sentences explaining the test",
@@ -49,9 +51,11 @@ Each entity type has a specialized generation method with clinically accurate pr
 ```
 
 #### 2. Imaging Studies (`generateImagingContent`)
+
 **Prompt**: "Write the clinical details for the imaging study: {name}"
 
 **Output**:
+
 ```json
 {
   "description": "2-3 sentences about the modality",
@@ -62,9 +66,11 @@ Each entity type has a specialized generation method with clinically accurate pr
 ```
 
 #### 3. Treatments (`generateTreatmentContent`)
+
 **Prompt**: "Write the clinical details for the treatment/drug: {name}"
 
 **Output**:
+
 ```json
 {
   "description": "2-3 sentences describing the treatment",
@@ -75,9 +81,11 @@ Each entity type has a specialized generation method with clinically accurate pr
 ```
 
 #### 4. Physiology Concepts (`generatePhysiologyContent`)
+
 **Prompt**: "Explain the physiology concept: {name}"
 
 **Output**:
+
 ```json
 {
   "description": "2-3 sentences defining the concept",
@@ -87,6 +95,7 @@ Each entity type has a specialized generation method with clinically accurate pr
 ```
 
 #### 5. Conditions (Existing)
+
 Uses the existing `generateConditionContent` method with extended fields.
 
 ### Quality Validation
@@ -104,13 +113,14 @@ The script runs in **sequential stages** to prevent API overwhelm:
 
 ```
 Stage 1: Conditions      → Process up to N conditions
-Stage 2: Lab Tests       → Process up to N lab tests  
+Stage 2: Lab Tests       → Process up to N lab tests
 Stage 3: Imaging Studies → Process up to N imaging studies
 Stage 4: Treatments      → Process up to N treatments
 Stage 5: Physiology      → Process up to N physiology concepts
 ```
 
 Each stage:
+
 1. Queries database for entities with `null` or empty required fields
 2. Generates content via Gemini API
 3. Validates content quality
@@ -148,13 +158,13 @@ tsx scripts/generateMissingContent.ts --dry-run
 
 ### Command Line Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--stage=N` | Process only stage N (1-5) | All stages |
-| `--max-per-stage=N` | Max entities per stage | 50 |
-| `--delay=MS` | Delay between API calls (ms) | 2000 |
-| `--dry-run` | Preview without saving | false |
-| `--extended` | Include extended fields for conditions | false |
+| Option              | Description                            | Default    |
+| ------------------- | -------------------------------------- | ---------- |
+| `--stage=N`         | Process only stage N (1-5)             | All stages |
+| `--max-per-stage=N` | Max entities per stage                 | 50         |
+| `--delay=MS`        | Delay between API calls (ms)           | 2000       |
+| `--dry-run`         | Preview without saving                 | false      |
+| `--extended`        | Include extended fields for conditions | false      |
 
 ## The "Magic Button" Workflow
 
@@ -163,6 +173,7 @@ tsx scripts/generateMissingContent.ts --dry-run
 **Monday Morning**: You notice "Lithium" is missing from your app.
 
 **Step 1**: Add to registry (30 seconds)
+
 ```typescript
 // treatmentRegistry.ts
 {
@@ -173,17 +184,21 @@ tsx scripts/generateMissingContent.ts --dry-run
 ```
 
 **Step 2**: Sync to database (5 seconds)
+
 ```bash
 npm run sync:all-registries
 ```
+
 ✅ "Lithium" row created in `Treatment` table with category/type, but empty description/mechanism/indications
 
 **Step 3**: Generate content (30 seconds)
+
 ```bash
 tsx scripts/generateMissingContent.ts --stage=4
 ```
 
 **Output**:
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║         STAGE 4: Treatments                                ║
@@ -203,6 +218,7 @@ Treatments:
 
 **Step 4**: Result
 "Lithium" now has:
+
 - Description: "Lithium is a mood stabilizer used primarily in the treatment of bipolar disorder..."
 - Mechanism of Action: "Lithium modulates neurotransmitter activity by affecting serotonin and norepinephrine..."
 - Common Indications: ["Bipolar disorder (acute mania)", "Maintenance therapy for bipolar", "Augmentation for treatment-resistant depression"]
@@ -244,7 +260,9 @@ npm run automation:daily        # Generate questions/cases
 ## Quality Safeguards
 
 ### 1. Content Validation
+
 Every generated piece of content passes through validators:
+
 - ✅ Minimum length requirements
 - ✅ Required fields present
 - ✅ No AI refusal language
@@ -252,23 +270,29 @@ Every generated piece of content passes through validators:
 - ✅ Arrays are actual arrays (not stringified)
 
 ### 2. Retry Logic
+
 Generation methods include exponential backoff:
+
 - Attempt 1: Immediate
 - Attempt 2: 1 second delay
 - Attempt 3: 2 second delay
 
 ### 3. Error Handling
+
 Failed generations don't block the pipeline:
+
 ```
 [5/20] Lithium
    ❌ Generation failed: API rate limit exceeded
-   
+
 [6/20] Metformin
    ✅ Generated and saved
 ```
 
 ### 4. Validation Failures
+
 Content that fails quality checks is rejected:
+
 ```
 [8/20] Aspirin
    ❌ Quality validation failed
@@ -279,14 +303,16 @@ Content that fails quality checks is rejected:
 ## Performance
 
 ### API Costs
+
 - **Model**: Gemini 2.0 Flash Exp (free tier available)
 - **Rate Limit**: 2 second delay between calls = 30 requests/minute
 - **Batch Size**: Default 50 per stage = ~3-4 minutes per stage
 
 ### Batch Processing
+
 ```
 Stage 1 (Conditions):       50 entities × 2s = 1.7 minutes
-Stage 2 (Labs):            50 entities × 2s = 1.7 minutes  
+Stage 2 (Labs):            50 entities × 2s = 1.7 minutes
 Stage 3 (Imaging):         50 entities × 2s = 1.7 minutes
 Stage 4 (Treatments):      50 entities × 2s = 1.7 minutes
 Stage 5 (Physiology):      50 entities × 2s = 1.7 minutes
@@ -297,7 +323,9 @@ Total:                     250 entities    = ~8.5 minutes
 ## Monitoring & Debugging
 
 ### Stage Summary
+
 At the end of each run:
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║              Universal Auto-Author Summary                 ║
@@ -321,7 +349,9 @@ Overall:
 ```
 
 ### Dry Run for Planning
+
 Preview what would be processed:
+
 ```bash
 tsx scripts/generateMissingContent.ts --dry-run
 
@@ -339,12 +369,14 @@ Found 18 lab tests missing content
 ## Future Enhancements
 
 ### Potential Additions
+
 1. **Physical Exam Findings**: Add `generateFindingContent` for PhysicalExamFinding table
 2. **Practice Guidelines**: Generate summaries for PracticeGuideline table
 3. **Special Tests**: Extend to SpecialTest table
 4. **Differential Diagnoses**: Auto-populate DifferentialDiagnosis workup/pearls
 
 ### AI Model Upgrades
+
 - Switch to Gemini Pro for higher quality
 - Enable multi-modal for image-based content
 - Fine-tune prompts based on validation failures
@@ -352,9 +384,11 @@ Found 18 lab tests missing content
 ## Files Changed
 
 ### New Files
+
 - None (all changes to existing files)
 
 ### Modified Files
+
 1. `lib/services/autoAuthor/types.ts`
    - Added: `GeneratedLabContent`, `GeneratedImagingContent`, `GeneratedTreatmentContent`, `GeneratedPhysiologyContent`
    - Made `ContentGenerationResult` generic
@@ -379,11 +413,13 @@ Found 18 lab tests missing content
 ## Dependencies
 
 ### Required
+
 - `@google/generative-ai` - Gemini API client
 - `@prisma/client` - Database ORM
 - `dotenv` - Environment variables
 
 ### Environment Variables
+
 ```bash
 # Required
 GEMINI_API_KEY=your_key_here
@@ -397,6 +433,7 @@ DATABASE_URL=your_connection_string
 ## Testing
 
 ### Quick Test (Single Entity)
+
 ```bash
 # 1. Manually create a test entry
 psql -d panacea -c "INSERT INTO \"LabTest\" (id, name, category, \"commonAbnormalities\", \"typicalUse\") VALUES (gen_random_uuid(), 'Test Lab', 'Test Category', '{}', NULL);"
@@ -409,6 +446,7 @@ psql -d panacea -c "SELECT name, \"typicalUse\" FROM \"LabTest\" WHERE name = 'T
 ```
 
 ### Validation Test
+
 ```bash
 # Run with dry-run to verify detection logic
 tsx scripts/generateMissingContent.ts --dry-run
@@ -419,6 +457,7 @@ tsx scripts/generateMissingContent.ts --dry-run
 ## Support
 
 For issues or questions:
+
 1. Check validation errors in console output
 2. Run with `--dry-run` to preview
 3. Test single stage with `--stage=N`

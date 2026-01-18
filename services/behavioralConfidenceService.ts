@@ -1,12 +1,12 @@
 /**
  * Behavioral Confidence Inference Service
- * 
+ *
  * Automatically infers user confidence from behavioral signals:
  * - Time spent on question (relative to par time)
  * - Number of answer changes
  * - Use of elimination feature
  * - Hesitation patterns
- * 
+ *
  * This removes the need for explicit confidence input while still
  * capturing valuable calibration data for learning analytics.
  */
@@ -42,9 +42,9 @@ export interface InferredConfidenceResult {
  */
 export function inferConfidence(signals: BehaviorSignals): InferredConfidenceResult {
   let score = 50; // Start neutral
-  
+
   const timeRatio = signals.timeSpentMs / signals.parTimeMs;
-  
+
   // Time signal analysis
   let timeSignal: 'fast' | 'normal' | 'slow' = 'normal';
   if (timeRatio < 0.5) {
@@ -65,26 +65,26 @@ export function inferConfidence(signals: BehaviorSignals): InferredConfidenceRes
     score -= 10;
     timeSignal = 'slow';
   }
-  
+
   // Answer changes indicate uncertainty
   if (signals.answerChangeCount > 0) {
     score -= 15 * Math.min(signals.answerChangeCount, 3);
   }
-  
+
   // Elimination usage indicates methodical approach but also uncertainty
   // Using elimination is smart test-taking, but suggests not immediately certain
   if (signals.eliminatedCount > 0) {
     score -= 5 * Math.min(signals.eliminatedCount, 2);
   }
-  
+
   // Quick initial selection with no changes = high confidence behavior
   if (signals.quickInitialSelection && signals.answerChangeCount === 0) {
     score += 10;
   }
-  
+
   // Clamp score
   score = Math.max(0, Math.min(100, score));
-  
+
   // Determine confidence level
   let confidence: InferredConfidence;
   if (score >= 65) {
@@ -94,7 +94,7 @@ export function inferConfidence(signals: BehaviorSignals): InferredConfidenceRes
   } else {
     confidence = 'low';
   }
-  
+
   return {
     confidence,
     score,
@@ -140,7 +140,7 @@ export function recordBehavioralConfidence(
   wasCorrect: boolean
 ): BehavioralConfidenceRecord {
   const result = inferConfidence(signals);
-  
+
   const record: BehavioralConfidenceRecord = {
     inferredConfidence: result.confidence,
     confidenceScore: result.score,
@@ -151,12 +151,12 @@ export function recordBehavioralConfidence(
     eliminatedCount: signals.eliminatedCount,
     timestamp: Date.now(),
   };
-  
+
   // Store in session
   const records = getBehavioralRecords();
   records.push(record);
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  
+
   return record;
 }
 
@@ -172,35 +172,33 @@ export function calculateBehavioralCalibration(): {
   insights: string[];
 } {
   const records = getBehavioralRecords();
-  
+
   const stats = {
     high: { correct: 0, total: 0, accuracy: null as number | null },
     medium: { correct: 0, total: 0, accuracy: null as number | null },
     low: { correct: 0, total: 0, accuracy: null as number | null },
   };
-  
-  records.forEach(r => {
+
+  records.forEach((r) => {
     stats[r.inferredConfidence].total++;
     if (r.wasCorrect) stats[r.inferredConfidence].correct++;
   });
-  
+
   // Calculate accuracies
   for (const level of ['high', 'medium', 'low'] as const) {
     if (stats[level].total >= 3) {
-      stats[level].accuracy = Math.round(
-        (stats[level].correct / stats[level].total) * 100
-      );
+      stats[level].accuracy = Math.round((stats[level].correct / stats[level].total) * 100);
     }
   }
-  
+
   // Calculate calibration score
   // Well-calibrated: high confidence → high accuracy, low confidence → lower accuracy
   const insights: string[] = [];
   let calibrationScore: number | null = null;
-  
+
   if (records.length >= 10) {
     let score = 50;
-    
+
     // High confidence should have high accuracy (>75%)
     if (stats.high.accuracy !== null) {
       if (stats.high.accuracy >= 80) {
@@ -211,25 +209,26 @@ export function calculateBehavioralCalibration(): {
         insights.push('Consider slowing down - quick answers are often wrong');
       }
     }
-    
+
     // Low confidence having decent accuracy = underconfidence
     if (stats.low.accuracy !== null && stats.low.accuracy >= 60) {
       score += 10;
       insights.push('Trust yourself more - you know more than you think');
     }
-    
+
     // Answer changes with low accuracy = need to trust first instinct
-    const changedRecords = records.filter(r => r.answerChangeCount > 0);
+    const changedRecords = records.filter((r) => r.answerChangeCount > 0);
     if (changedRecords.length >= 5) {
-      const changedAccuracy = changedRecords.filter(r => r.wasCorrect).length / changedRecords.length;
+      const changedAccuracy =
+        changedRecords.filter((r) => r.wasCorrect).length / changedRecords.length;
       if (changedAccuracy < 0.5) {
         insights.push('When you change answers, you often change to wrong ones');
       }
     }
-    
+
     calibrationScore = Math.max(0, Math.min(100, score));
   }
-  
+
   return {
     ...stats,
     calibrationScore,
@@ -257,41 +256,43 @@ export function getBehavioralInsights(): {
   staminaFade: number | null;
 } | null {
   const records = getBehavioralRecords();
-  
+
   if (records.length < 5) return null;
-  
+
   // Average confidence score
   const avgConfidence = records.reduce((sum, r) => sum + r.confidenceScore, 0) / records.length;
-  
+
   // Rushing tendency (how often under 60% of par)
-  const rushingRecords = records.filter(r => r.timeSpentMs < r.parTimeMs * 0.6);
+  const rushingRecords = records.filter((r) => r.timeSpentMs < r.parTimeMs * 0.6);
   const rushingTendency = rushingRecords.length / records.length;
-  
+
   // Accuracy when rushing
-  const rushingAccuracy = rushingRecords.length >= 3
-    ? (rushingRecords.filter(r => r.wasCorrect).length / rushingRecords.length) * 100
-    : null;
-  
+  const rushingAccuracy =
+    rushingRecords.length >= 3
+      ? (rushingRecords.filter((r) => r.wasCorrect).length / rushingRecords.length) * 100
+      : null;
+
   // Accuracy when deliberate (over par)
-  const deliberateRecords = records.filter(r => r.timeSpentMs > r.parTimeMs);
-  const deliberateAccuracy = deliberateRecords.length >= 3
-    ? (deliberateRecords.filter(r => r.wasCorrect).length / deliberateRecords.length) * 100
-    : null;
-  
+  const deliberateRecords = records.filter((r) => r.timeSpentMs > r.parTimeMs);
+  const deliberateAccuracy =
+    deliberateRecords.length >= 3
+      ? (deliberateRecords.filter((r) => r.wasCorrect).length / deliberateRecords.length) * 100
+      : null;
+
   // Stamina/fatigue analysis
   let early10Accuracy: number | null = null;
   let late10Accuracy: number | null = null;
   let staminaFade: number | null = null;
-  
+
   if (records.length >= 20) {
     const early10 = records.slice(0, 10);
     const late10 = records.slice(-10);
-    
-    early10Accuracy = (early10.filter(r => r.wasCorrect).length / 10) * 100;
-    late10Accuracy = (late10.filter(r => r.wasCorrect).length / 10) * 100;
+
+    early10Accuracy = (early10.filter((r) => r.wasCorrect).length / 10) * 100;
+    late10Accuracy = (late10.filter((r) => r.wasCorrect).length / 10) * 100;
     staminaFade = late10Accuracy - early10Accuracy; // Negative = fatigue
   }
-  
+
   return {
     avgConfidence,
     rushingTendency,

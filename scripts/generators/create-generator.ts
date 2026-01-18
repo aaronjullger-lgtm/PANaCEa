@@ -1,15 +1,15 @@
 #!/usr/bin/env tsx
 /**
  * Generator Generator - Creates new table generator scripts from templates
- * 
+ *
  * Analyzes the Prisma schema and creates complete, working generator scripts
  * based on proven patterns from:
  *   - clinical-guideline-generator.ts (best JSON handling, retry logic)
  *   - imaging-study-doctor.ts (rate limiting, batch processing)
  *   - drug-doctor-enhanced.ts (gap analysis, deduplication)
  *   - condition-link-generator.ts (relationship tables)
- * 
- * Usage: 
+ *
+ * Usage:
  *   npx tsx scripts/generators/create-generator.ts <TableName>
  *   npx tsx scripts/generators/create-generator.ts Procedure
  *   npx tsx scripts/generators/create-generator.ts --list   # Show all tables
@@ -22,16 +22,16 @@ import * as path from 'path';
 const prisma = new PrismaClient();
 
 const args = process.argv.slice(2);
-const TABLE_NAME = args.find(a => !a.startsWith('--'));
+const TABLE_NAME = args.find((a) => !a.startsWith('--'));
 const LIST_TABLES = args.includes('--list');
 
 if (LIST_TABLES || !TABLE_NAME) {
   const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
   const models = schemaContent.match(/model\s+(\w+)\s*{/g);
-  
+
   console.log('\n📋 Available tables:\n');
-  models?.forEach(m => {
+  models?.forEach((m) => {
     const name = m.replace('model ', '').replace(' {', '');
     console.log(`   npx tsx scripts/generators/create-generator.ts ${name}`);
   });
@@ -275,29 +275,29 @@ main().catch(console.error);
 
 async function analyzeSchema() {
   console.log(`\n🔍 Analyzing schema for table: ${TABLE_NAME}\n`);
-  
+
   // Read the schema file
   const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
-  
+
   // Find the model definition
   const modelRegex = new RegExp(`model ${TABLE_NAME}\\s*{([^}]+)}`, 's');
   const match = schemaContent.match(modelRegex);
-  
+
   if (!match) {
     console.error(`❌ Table ${TABLE_NAME} not found in schema!`);
     console.log('\n💡 Available tables:');
     const models = schemaContent.match(/model\s+(\w+)\s*{/g);
-    models?.forEach(m => console.log(`   - ${m.replace('model ', '').replace(' {', '')}`));
+    models?.forEach((m) => console.log(`   - ${m.replace('model ', '').replace(' {', '')}`));
     process.exit(1);
   }
-  
+
   const modelContent = match[1];
   const fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }> = [];
-  
+
   // Parse fields
-  const fieldLines = modelContent.split('\n').filter(l => l.trim() && !l.trim().startsWith('@@'));
-  
+  const fieldLines = modelContent.split('\n').filter((l) => l.trim() && !l.trim().startsWith('@@'));
+
   for (const line of fieldLines) {
     const fieldMatch = line.match(/^\s*(\w+)\s+(\w+)(\[\])?(\\?)?/);
     if (fieldMatch && !['id', 'createdAt', 'updatedAt'].includes(fieldMatch[1])) {
@@ -305,92 +305,107 @@ async function analyzeSchema() {
         name: fieldMatch[1],
         type: fieldMatch[2],
         isOptional: !!fieldMatch[4],
-        isArray: !!fieldMatch[3]
+        isArray: !!fieldMatch[3],
       });
     }
   }
-  
+
   return { fields };
 }
 
-function generateInterfaceFields(fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }>) {
-  return fields.map(f => {
-    let tsType = 'string';
-    if (f.type === 'Int' || f.type === 'Float') tsType = 'number';
-    if (f.type === 'Boolean') tsType = 'boolean';
-    if (f.type === 'Json') tsType = 'any';
-    if (f.isArray) tsType += '[]';
-    
-    return `  ${f.name}${f.isOptional ? '?' : ''}: ${tsType};`;
-  }).join('\n');
+function generateInterfaceFields(
+  fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }>
+) {
+  return fields
+    .map((f) => {
+      let tsType = 'string';
+      if (f.type === 'Int' || f.type === 'Float') tsType = 'number';
+      if (f.type === 'Boolean') tsType = 'boolean';
+      if (f.type === 'Json') tsType = 'any';
+      if (f.isArray) tsType += '[]';
+
+      return `  ${f.name}${f.isOptional ? '?' : ''}: ${tsType};`;
+    })
+    .join('\n');
 }
 
-function generateJSONStructure(fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }>) {
+function generateJSONStructure(
+  fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }>
+) {
   const lines: string[] = ['{'];
-  
+
   fields.forEach((f, idx) => {
     const isLast = idx === fields.length - 1;
     let example = '"value"';
-    
+
     if (f.type === 'Int') example = '0';
     if (f.type === 'Boolean') example = 'true';
     if (f.isArray && f.type === 'String') example = '["item1", "item2"]';
     if (f.isArray && f.type === 'Int') example = '[1, 2, 3]';
-    
+
     lines.push(`  "${f.name}": ${example}${isLast ? '' : ','}`);
   });
-  
+
   lines.push('}');
   return lines.join('\n');
 }
 
 function generateItemsList(tableName: string) {
   const examples = {
-    'Procedure': `    { name: 'Central Line Placement', category: 'Critical Care' },
+    Procedure: `    { name: 'Central Line Placement', category: 'Critical Care' },
     { name: 'Lumbar Puncture', category: 'Neurology' },
     { name: 'Thoracentesis', category: 'Pulmonology' },
     { name: 'Paracentesis', category: 'Gastroenterology' },
     { name: 'Joint Aspiration', category: 'Orthopedics' }`,
-    'PhysicalExam': `    { name: 'Cardiovascular Exam', category: 'Cardiology' },
+    PhysicalExam: `    { name: 'Cardiovascular Exam', category: 'Cardiology' },
     { name: 'Respiratory Exam', category: 'Pulmonology' },
     { name: 'Abdominal Exam', category: 'Gastroenterology' },
     { name: 'Neurological Exam', category: 'Neurology' },
     { name: 'Musculoskeletal Exam', category: 'Orthopedics' }`,
-    'DiagnosticTest': `    { name: 'Complete Blood Count', category: 'Laboratory' },
+    DiagnosticTest: `    { name: 'Complete Blood Count', category: 'Laboratory' },
     { name: 'Basic Metabolic Panel', category: 'Laboratory' },
     { name: 'Urinalysis', category: 'Laboratory' },
     { name: 'Electrocardiogram', category: 'Cardiology' },
-    { name: 'Chest X-Ray', category: 'Radiology' }`
+    { name: 'Chest X-Ray', category: 'Radiology' }`,
   };
-  
-  return examples[tableName] || `    { name: 'Example Item 1', category: 'Category A' },
+
+  return (
+    examples[tableName] ||
+    `    { name: 'Example Item 1', category: 'Category A' },
     { name: 'Example Item 2', category: 'Category B' },
-    { name: 'Example Item 3', category: 'Category C' }`;
+    { name: 'Example Item 3', category: 'Category C' }`
+  );
 }
 
 async function generateScript() {
   const { fields } = await analyzeSchema();
-  
+
   console.log(`✅ Found ${fields.length} fields\n`);
-  
+
   const tableLower = TABLE_NAME.charAt(0).toLowerCase() + TABLE_NAME.slice(1);
-  
-  let script = GENERATOR_TEMPLATE
-    .replace(/{{TABLE_NAME}}/g, TABLE_NAME)
+
+  let script = GENERATOR_TEMPLATE.replace(/{{TABLE_NAME}}/g, TABLE_NAME)
     .replace(/{{TABLE_NAME_LOWER}}/g, tableLower)
     .replace('{{INTERFACE_FIELDS}}', generateInterfaceFields(fields))
     .replace('{{JSON_STRUCTURE}}', generateJSONStructure(fields))
     .replace('{{SIMPLIFIED_JSON_STRUCTURE}}', generateJSONStructure(fields))
     .replace('{{ITEMS_LIST}}', generateItemsList(TABLE_NAME));
-  
-  const outputPath = path.join(process.cwd(), 'scripts', 'generators', `${tableLower}-generator.ts`);
+
+  const outputPath = path.join(
+    process.cwd(),
+    'scripts',
+    'generators',
+    `${tableLower}-generator.ts`
+  );
   fs.writeFileSync(outputPath, script);
-  
+
   console.log(`✅ Generated: ${outputPath}\n`);
   console.log('📝 Next steps:');
   console.log(`   1. Edit ${tableLower}-generator.ts to add your items list`);
   console.log(`   2. Customize the prompt template if needed`);
-  console.log(`   3. Run: unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx ${outputPath}`);
+  console.log(
+    `   3. Run: unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx ${outputPath}`
+  );
 }
 
 generateScript().catch(console.error);

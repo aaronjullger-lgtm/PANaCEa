@@ -30,6 +30,7 @@ deployment/
 ```
 
 This will check:
+
 - Node.js and npm installed
 - All required files present
 - Database connectivity
@@ -42,6 +43,7 @@ This will check:
 ```
 
 This will:
+
 - Backup the database
 - Install dependencies
 - Generate Prisma client
@@ -66,6 +68,7 @@ This will:
 PM2 provides process management with automatic restarts and log management.
 
 **Setup:**
+
 ```bash
 # Install PM2 globally
 npm install -g pm2
@@ -81,6 +84,7 @@ pm2 startup
 ```
 
 **Management:**
+
 ```bash
 pm2 status              # View process status
 pm2 logs                # View logs
@@ -105,6 +109,7 @@ sudo systemctl start panacea-server panacea-worker
 ```
 
 **Management:**
+
 ```bash
 sudo systemctl status panacea-server
 sudo systemctl restart panacea-worker
@@ -149,6 +154,7 @@ See `deployment/cron/README.md` for more details.
 Copy `.env.example` to `.env` and configure:
 
 **Required:**
+
 ```env
 DATABASE_URL=postgresql://user:pass@host:5432/db
 CLERK_SECRET_KEY=sk_...
@@ -157,6 +163,7 @@ GEMINI_API_KEY=AIza...
 ```
 
 **Optional (with defaults):**
+
 ```env
 BACKGROUND_WORKER_ENABLED=true
 JOB_QUEUE_POLL_INTERVAL=5000
@@ -186,6 +193,7 @@ npx prisma migrate status
 ### View Logs
 
 **PM2:**
+
 ```bash
 pm2 logs                    # All logs
 pm2 logs panacea-server     # Server logs only
@@ -193,12 +201,14 @@ pm2 logs panacea-worker     # Worker logs only
 ```
 
 **Systemd:**
+
 ```bash
 sudo journalctl -u panacea-server -f
 sudo journalctl -u panacea-worker -f
 ```
 
 **Direct:**
+
 ```bash
 tail -f logs/panacea-server-out.log
 tail -f logs/panacea-worker-error.log
@@ -232,6 +242,7 @@ cat content-health-report.json | jq .
 ### Common Issues
 
 **1. Database Connection Failed**
+
 ```bash
 # Check DATABASE_URL
 cat .env | grep DATABASE_URL
@@ -241,6 +252,7 @@ npx tsx -e "import { PrismaClient } from '@prisma/client'; const p = new PrismaC
 ```
 
 **2. Worker Not Processing Jobs**
+
 ```bash
 # Check if worker is running
 pm2 status
@@ -255,6 +267,7 @@ npx tsx deployment/scripts/job-stats.ts
 ```
 
 **3. Port Already in Use**
+
 ```bash
 # Find what's using the port
 lsof -i :3001
@@ -267,6 +280,7 @@ PORT=3002
 ```
 
 **4. Prisma Client Not Generated**
+
 ```bash
 # Generate Prisma client
 npx prisma generate
@@ -291,6 +305,7 @@ DEBUG=*
 If deployment fails:
 
 **1. Stop New Services**
+
 ```bash
 pm2 stop all
 # or
@@ -298,12 +313,14 @@ sudo systemctl stop panacea-server panacea-worker
 ```
 
 **2. Restore Database**
+
 ```bash
 # Restore from backup
 psql -U user -d panacea < backup_YYYYMMDD_HHMMSS.sql
 ```
 
 **3. Deploy Previous Version**
+
 ```bash
 git checkout <previous-commit>
 npm install
@@ -326,6 +343,7 @@ pm2 restart all
 ## Performance Tuning
 
 ### Database Optimization
+
 ```sql
 -- Create indexes
 CREATE INDEX idx_job_priority ON "BackgroundJob"(priority DESC, status, scheduledFor);
@@ -336,6 +354,7 @@ ANALYZE "MedicalContent";
 ```
 
 ### Multiple Workers
+
 ```bash
 # Scale workers with PM2
 pm2 scale panacea-worker 4
@@ -348,6 +367,7 @@ pm2 start npm --name "worker-2" -- run worker
 ### Connection Pooling
 
 Update Prisma configuration:
+
 ```typescript
 // lib/prisma.ts
 const prisma = new PrismaClient({
@@ -370,6 +390,7 @@ const prisma = new PrismaClient({
 ## Support
 
 For issues:
+
 1. Check logs: `pm2 logs` or `sudo journalctl -u panacea-*`
 2. Run verification: `./deployment/scripts/verify-deployment.sh`
 3. Review troubleshooting section above

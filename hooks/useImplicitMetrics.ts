@@ -1,14 +1,14 @@
 /**
  * useImplicitMetrics - Hook for tracking behavioral metrics during drills
- * 
+ *
  * Tracks:
  * - Time to first answer selection
  * - Number of answer switches (changing selected answer)
  * - Total dwell time on question
  * - Browser timezone for circadian context
- * 
+ *
  * Used to derive FSRS rating without explicit user buttons (Phase 2: Zero-Friction)
- * 
+ *
  * Sprint C Integration: Automatically POSTs metrics to /api/user/behavior-metrics
  * after submitAnswer is called, enabling backend persistence for personalization.
  */
@@ -50,7 +50,11 @@ export interface UseImplicitMetricsReturn {
   /** Call when user selects/changes answer */
   recordAnswerSelection: (answer: string | number) => void;
   /** Call when answer is submitted - returns final metrics and POSTs to API */
-  submitAnswer: (questionId: string, wasCorrect: boolean, questionType?: string) => Promise<QuestionImplicitMetrics>;
+  submitAnswer: (
+    questionId: string,
+    wasCorrect: boolean,
+    questionType?: string
+  ) => Promise<QuestionImplicitMetrics>;
   /** Reset for next question */
   reset: () => void;
   /** Get metrics formatted for API submission */
@@ -84,23 +88,23 @@ function createInitialMetrics(): QuestionImplicitMetrics {
 
 /**
  * Hook for tracking implicit behavioral metrics during drill questions
- * 
+ *
  * @example
  * ```tsx
  * const { metrics, startQuestion, recordAnswerSelection, submitAnswer, reset, getApiPayload } = useImplicitMetrics();
- * 
+ *
  * // When question loads
  * useEffect(() => {
  *   startQuestion();
  *   return () => reset();
  * }, [questionId]);
- * 
+ *
  * // When user selects answer
  * const handleSelect = (answer: string) => {
  *   recordAnswerSelection(answer);
  *   setSelectedAnswer(answer);
  * };
- * 
+ *
  * // When submitting
  * const handleSubmit = async () => {
  *   const finalMetrics = await submitAnswer(questionId, wasCorrect, 'multiple_choice');
@@ -122,7 +126,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
   const startQuestion = useCallback(() => {
     const now = Date.now();
     startTimeRef.current = now;
-    
+
     setMetrics({
       ...createInitialMetrics(),
       questionStartTime: new Date(now).toISOString(),
@@ -133,7 +137,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       clearInterval(dwellIntervalRef.current);
     }
     dwellIntervalRef.current = setInterval(() => {
-      setMetrics(prev => ({
+      setMetrics((prev) => ({
         ...prev,
         totalDwellTime: Date.now() - startTimeRef.current,
       }));
@@ -144,7 +148,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
    * Record when user selects or changes their answer
    */
   const recordAnswerSelection = useCallback((answer: string | number) => {
-    setMetrics(prev => {
+    setMetrics((prev) => {
       const now = Date.now();
       const isFirstSelection = prev.timeToFirstClick === null;
       const isSwitch = prev.selectedAnswer !== null && prev.selectedAnswer !== answer;
@@ -152,9 +156,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       return {
         ...prev,
         // Record time to first click only on first selection
-        timeToFirstClick: isFirstSelection 
-          ? now - startTimeRef.current 
-          : prev.timeToFirstClick,
+        timeToFirstClick: isFirstSelection ? now - startTimeRef.current : prev.timeToFirstClick,
         // Increment switch count if changing from a previous answer
         answerSwitches: isSwitch ? prev.answerSwitches + 1 : prev.answerSwitches,
         // Track previous and current answer
@@ -170,76 +172,79 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
    * Finalize and return metrics when answer is submitted
    * Also POSTs metrics to /api/user/behavior-metrics for backend persistence
    */
-  const submitAnswer = useCallback(async (
-    questionId: string, 
-    wasCorrect: boolean,
-    questionType?: string
-  ): Promise<QuestionImplicitMetrics> => {
-    const now = Date.now();
-    
-    // Stop dwell tracking
-    if (dwellIntervalRef.current) {
-      clearInterval(dwellIntervalRef.current);
-      dwellIntervalRef.current = null;
-    }
+  const submitAnswer = useCallback(
+    async (
+      questionId: string,
+      wasCorrect: boolean,
+      questionType?: string
+    ): Promise<QuestionImplicitMetrics> => {
+      const now = Date.now();
 
-    const finalMetrics: QuestionImplicitMetrics = {
-      ...metrics,
-      totalDwellTime: now - startTimeRef.current,
-      submitTime: new Date(now).toISOString(),
-    };
-
-    setMetrics(finalMetrics);
-
-    // POST metrics to API asynchronously (don't block UI)
-    setIsSubmitting(true);
-    setSubmissionError(null);
-    
-    try {
-      const token = await getToken();
-      
-      const payload = {
-        questionId,
-        questionType,
-        timeToFirstClick: finalMetrics.timeToFirstClick ?? 0,
-        dwellTime: finalMetrics.totalDwellTime,
-        totalResponseTime: finalMetrics.totalDwellTime,
-        answerChanges: finalMetrics.answerSwitches,
-        wasCorrect,
-        // Additional optional fields can be added here
-        // optionHovers, scrollDepth, hesitationEvents, etc.
-      };
-
-      const response = await fetch('/api/user/behavior-metrics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+      // Stop dwell tracking
+      if (dwellIntervalRef.current) {
+        clearInterval(dwellIntervalRef.current);
+        dwellIntervalRef.current = null;
       }
 
-      console.debug('[useImplicitMetrics] Metrics posted successfully:', {
-        questionId,
-        timeToFirstClick: finalMetrics.timeToFirstClick,
-        dwellTime: finalMetrics.totalDwellTime,
-        answerSwitches: finalMetrics.answerSwitches,
-      });
-    } catch (error) {
-      // Log error but don't block the user experience
-      console.error('[useImplicitMetrics] Failed to post metrics:', error);
-      setSubmissionError(error instanceof Error ? error : new Error('Failed to submit metrics'));
-    } finally {
-      setIsSubmitting(false);
-    }
+      const finalMetrics: QuestionImplicitMetrics = {
+        ...metrics,
+        totalDwellTime: now - startTimeRef.current,
+        submitTime: new Date(now).toISOString(),
+      };
 
-    return finalMetrics;
-  }, [metrics, getToken]);
+      setMetrics(finalMetrics);
+
+      // POST metrics to API asynchronously (don't block UI)
+      setIsSubmitting(true);
+      setSubmissionError(null);
+
+      try {
+        const token = await getToken();
+
+        const payload = {
+          questionId,
+          questionType,
+          timeToFirstClick: finalMetrics.timeToFirstClick ?? 0,
+          dwellTime: finalMetrics.totalDwellTime,
+          totalResponseTime: finalMetrics.totalDwellTime,
+          answerChanges: finalMetrics.answerSwitches,
+          wasCorrect,
+          // Additional optional fields can be added here
+          // optionHovers, scrollDepth, hesitationEvents, etc.
+        };
+
+        const response = await fetch('/api/user/behavior-metrics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        console.debug('[useImplicitMetrics] Metrics posted successfully:', {
+          questionId,
+          timeToFirstClick: finalMetrics.timeToFirstClick,
+          dwellTime: finalMetrics.totalDwellTime,
+          answerSwitches: finalMetrics.answerSwitches,
+        });
+      } catch (error) {
+        // Log error but don't block the user experience
+        console.error('[useImplicitMetrics] Failed to post metrics:', error);
+        setSubmissionError(error instanceof Error ? error : new Error('Failed to submit metrics'));
+      } finally {
+        setIsSubmitting(false);
+      }
+
+      return finalMetrics;
+    },
+    [metrics, getToken]
+  );
 
   /**
    * Reset for next question

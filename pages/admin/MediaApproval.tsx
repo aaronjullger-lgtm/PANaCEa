@@ -1,30 +1,44 @@
 /**
  * Media Approval Page
- * 
+ *
  * Admin interface for reviewing and approving uploaded medical images and educational resources.
  * Implements the "Upload -> AI Check -> Human Approve -> Live" workflow.
- * 
+ *
  * Features:
  * - Gallery view of pending media with filters
  * - Full preview with AI metadata and quality scores
  * - Batch approval/rejection actions
  * - Search and filter capabilities
- * 
+ *
  * SECURITY NOTE:
  * ---------------
  * Client-side access checks in this component are for UI/UX purposes only.
  * All administrative operations are protected server-side via:
  *   - /api/media/pending - requireAdmin() middleware
- *   - /api/media/approve - requireAdmin() middleware  
+ *   - /api/media/approve - requireAdmin() middleware
  *   - /api/media/stats - requireAdmin() middleware
- * 
+ *
  * The server validates Clerk JWT tokens and verifies admin role in database
  * before allowing any data modification. Client-side checks prevent unnecessary
  * API calls but do NOT provide security.
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw, FileText, Video, Music, Image } from 'lucide-react';
+import {
+  X,
+  Check,
+  ThumbsDown,
+  Eye,
+  AlertCircle,
+  TrendingUp,
+  Filter,
+  Search,
+  RefreshCw,
+  FileText,
+  Video,
+  Music,
+  Image,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, useUser } from '@clerk/clerk-react';
 
@@ -89,7 +103,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
-  
+
   // Get authenticated user from Clerk
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -105,13 +119,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       const params = new URLSearchParams({
         includeStats: 'true',
       });
-      
+
       if (filter !== 'all') {
         params.append('category', filter);
       }
 
       const token = await getToken();
-      const response = await fetch(`/api/admin/media/pending?${params}` , {
+      const response = await fetch(`/api/admin/media/pending?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       const data = await response.json();
@@ -143,8 +157,8 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       });
 
       if (response.ok) {
-        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
-        setSelectedItems(prev => {
+        setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
+        setSelectedItems((prev) => {
           const next = new Set(prev);
           next.delete(mediaId);
           return next;
@@ -174,8 +188,8 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       });
 
       if (response.ok) {
-        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
-        setSelectedItems(prev => {
+        setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
+        setSelectedItems((prev) => {
           const next = new Set(prev);
           next.delete(mediaId);
           return next;
@@ -191,7 +205,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   };
 
   const handleBatchApprove = async () => {
-    const promises = Array.from(selectedItems).map(id => handleApprove(id));
+    const promises = Array.from(selectedItems).map((id) => handleApprove(id));
     await Promise.all(promises);
     setSelectedItems(new Set());
     setBatchMode(false);
@@ -202,7 +216,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   };
 
   const toggleSelection = (id: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -221,21 +235,25 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   };
 
   const getMediaTypeIcon = (mediaType: string) => {
-    const iconClass = "w-5 h-5";
+    const iconClass = 'w-5 h-5';
     switch (mediaType) {
-      case 'pdf': return <FileText className={iconClass} />;
-      case 'video': return <Video className={iconClass} />;
-      case 'audio': return <Music className={iconClass} />;
-      default: return <Image className={iconClass} />;
+      case 'pdf':
+        return <FileText className={iconClass} />;
+      case 'video':
+        return <Video className={iconClass} />;
+      case 'audio':
+        return <Music className={iconClass} />;
+      default:
+        return <Image className={iconClass} />;
     }
   };
 
-  const filteredMedia = pendingMedia.filter(media => {
+  const filteredMedia = pendingMedia.filter((media) => {
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       return (
         media.filename.toLowerCase().includes(search) ||
-        media.tags.some(tag => tag.toLowerCase().includes(search)) ||
+        media.tags.some((tag) => tag.toLowerCase().includes(search)) ||
         media.description?.toLowerCase().includes(search)
       );
     }
@@ -288,7 +306,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
           >
             {batchMode ? 'Cancel Batch' : 'Batch Mode'}
           </button>
-          
+
           {batchMode && selectedItems.size > 0 && (
             <>
               <button
@@ -395,19 +413,21 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-500" />
-          {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams', 'pdf', 'video'].map(category => (
-            <button
-              key={category}
-              onClick={() => setFilter(category)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filter === category
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
-              }`}
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </button>
-          ))}
+          {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams', 'pdf', 'video'].map(
+            (category) => (
+              <button
+                key={category}
+                onClick={() => setFilter(category)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === category
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
+                }`}
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -420,13 +440,15 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
               All caught up!
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              {searchTerm ? 'No media matches your search.' : 'No pending media to review at this time.'}
+              {searchTerm
+                ? 'No media matches your search.'
+                : 'No pending media to review at this time.'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
-              {filteredMedia.map(media => (
+              {filteredMedia.map((media) => (
                 <motion.div
                   key={media.id}
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -451,7 +473,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                         />
                       </div>
                     )}
-                    
+
                     {media.mediaType === 'image' ? (
                       <img
                         src={media.thumbnailUrl || media.originalUrl}
@@ -463,7 +485,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                         {getMediaTypeIcon(media.mediaType)}
                       </div>
                     )}
-                    
+
                     <div className="absolute top-2 right-2 flex gap-2">
                       <span
                         className={`${getQualityBadgeColor(media.qualityScore)} text-white text-xs font-bold px-2 py-1 rounded`}
@@ -491,7 +513,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                     )}
 
                     <div className="flex flex-wrap gap-1 mb-3">
-                      {media.tags.slice(0, 3).map(tag => (
+                      {media.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
                           className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded"
@@ -550,9 +572,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Media Details
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Media Details</h2>
                 <button
                   onClick={() => setSelectedMedia(null)}
                   className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -617,7 +637,8 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Duration</p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {Math.floor(selectedMedia.duration / 60)}:{(selectedMedia.duration % 60).toString().padStart(2, '0')}
+                        {Math.floor(selectedMedia.duration / 60)}:
+                        {(selectedMedia.duration % 60).toString().padStart(2, '0')}
                       </p>
                     </div>
                   )}
@@ -659,17 +680,22 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                     {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Diagnostic Quality: <span className="font-medium">
+                    Diagnostic Quality:{' '}
+                    <span className="font-medium">
                       {selectedMedia.aiMetadata.assessment.aiAnalysis.diagnosticQuality}
                     </span>
                   </p>
                   {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Clinical Features:</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Clinical Features:
+                      </p>
                       <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                        {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map((feature, idx) => (
-                          <li key={idx}>{feature}</li>
-                        ))}
+                        {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map(
+                          (feature, idx) => (
+                            <li key={idx}>{feature}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -692,7 +718,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
                   {selectedMedia.aiMetadata.assessment.recommendations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Recommendations</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        Recommendations
+                      </h3>
                       <ul className="list-disc list-inside text-blue-600 dark:text-blue-400">
                         {selectedMedia.aiMetadata.assessment.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
@@ -733,9 +761,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white dark:bg-[#1F283A] rounded-lg max-w-md w-full p-6"
           >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Reject Media
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Reject Media</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Please provide a reason for rejection:
             </p>

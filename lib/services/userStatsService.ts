@@ -12,7 +12,10 @@ interface AccuracySummary {
 }
 
 /** Compute overall accuracy using ranked attempts only */
-export async function calculateTotalAccuracy(prisma: PrismaLike, userId: string): Promise<AccuracySummary> {
+export async function calculateTotalAccuracy(
+  prisma: PrismaLike,
+  userId: string
+): Promise<AccuracySummary> {
   const attempts = await prisma.questionAttempt.findMany({
     where: { userId, isRankedAttempt: true },
     select: { wasCorrect: true },
@@ -26,7 +29,10 @@ export async function calculateTotalAccuracy(prisma: PrismaLike, userId: string)
 }
 
 /** Derive a lightweight predicted score (currently scaled off ranked accuracy) */
-export async function calculatePredictedScore(prisma: PrismaLike, userId: string): Promise<{ predictedScore: number; accuracy: number }> {
+export async function calculatePredictedScore(
+  prisma: PrismaLike,
+  userId: string
+): Promise<{ predictedScore: number; accuracy: number }> {
   const { accuracy } = await calculateTotalAccuracy(prisma, userId);
   // Simple scaling: center around 500 with +/-150 swing based on accuracy percentage
   const predictedScore = Math.round(500 + (accuracy - 50) * 3);
@@ -34,7 +40,10 @@ export async function calculatePredictedScore(prisma: PrismaLike, userId: string
 }
 
 /** Build weakness heatmap stats, filtered to ranked attempts */
-export async function getWeaknessHeatmap(prisma: PrismaLike, userId: string): Promise<Array<{ system: string; correct: number; total: number; accuracy: number }>> {
+export async function getWeaknessHeatmap(
+  prisma: PrismaLike,
+  userId: string
+): Promise<Array<{ system: string; correct: number; total: number; accuracy: number }>> {
   const attempts = await prisma.questionAttempt.findMany({
     where: { userId, isRankedAttempt: true, system: { not: null } },
     select: { system: true, wasCorrect: true },
@@ -61,6 +70,9 @@ export async function getWeaknessHeatmap(prisma: PrismaLike, userId: string): Pr
 }
 
 /** Convenience wrapper used by APIs to refresh global accuracy after a ranked attempt */
-export async function updateGlobalAccuracy(prisma: PrismaLike, userId: string): Promise<AccuracySummary> {
+export async function updateGlobalAccuracy(
+  prisma: PrismaLike,
+  userId: string
+): Promise<AccuracySummary> {
   return calculateTotalAccuracy(prisma, userId);
 }

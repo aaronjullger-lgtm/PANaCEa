@@ -6,30 +6,40 @@ export interface EncounterSettings {
   patientAge: 'pediatric' | 'adult' | 'geriatric' | 'random';
   patientSex: 'male' | 'female' | 'random';
   acuity: 'low' | 'medium' | 'high' | 'critical' | 'random';
-  
+
   // Scenario focus
-  focusArea: 'all' | 'cardiology' | 'pulmonology' | 'gastroenterology' | 'neurology' | 
-             'musculoskeletal' | 'dermatology' | 'hematology' | 'endocrinology' | 
-             'psychiatry' | 'infectious disease' | 'reproductive';
-  
+  focusArea:
+    | 'all'
+    | 'cardiology'
+    | 'pulmonology'
+    | 'gastroenterology'
+    | 'neurology'
+    | 'musculoskeletal'
+    | 'dermatology'
+    | 'hematology'
+    | 'endocrinology'
+    | 'psychiatry'
+    | 'infectious disease'
+    | 'reproductive';
+
   // Difficulty & realism
   complexity: 'straightforward' | 'moderate' | 'complex' | 'zebra';
   includeRedHerrings: boolean;
   requireDifferential: boolean;
-  
+
   // Time constraints
   timeLimit: number | null; // minutes, null = no limit
   showTimer: boolean;
-  
+
   // Imaging & diagnostics
   imagingAvailable: boolean;
   labsAvailable: boolean;
   requireInterpretation: boolean;
-  
+
   // Language & communication
   patientLanguage: 'english' | 'spanish' | 'mixed';
   communicationStyle: 'cooperative' | 'vague' | 'challenging';
-  
+
   // Feedback preferences
   realTimeFeedback: boolean;
   showQuestionRelevance: boolean;
@@ -53,7 +63,7 @@ export const DEFAULT_ENCOUNTER_SETTINGS: EncounterSettings = {
   communicationStyle: 'cooperative',
   realTimeFeedback: false,
   showQuestionRelevance: true,
-  detailedAAR: true
+  detailedAAR: true,
 };
 
 interface EncounterSettingsModalProps {
@@ -67,7 +77,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
   settings,
   onUpdate,
   onClose,
-  onStart
+  onStart,
 }) => {
   const updateSetting = <K extends keyof EncounterSettings>(
     key: K,
@@ -119,7 +129,9 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientAge}
-                  onChange={(e) => updateSetting('patientAge', e.target.value as EncounterSettings['patientAge'])}
+                  onChange={(e) =>
+                    updateSetting('patientAge', e.target.value as EncounterSettings['patientAge'])
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -135,7 +147,9 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientSex}
-                  onChange={(e) => updateSetting('patientSex', e.target.value as EncounterSettings['patientSex'])}
+                  onChange={(e) =>
+                    updateSetting('patientSex', e.target.value as EncounterSettings['patientSex'])
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -150,7 +164,9 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.acuity}
-                  onChange={(e) => updateSetting('acuity', e.target.value as EncounterSettings['acuity'])}
+                  onChange={(e) =>
+                    updateSetting('acuity', e.target.value as EncounterSettings['acuity'])
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -178,7 +194,9 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.focusArea}
-                  onChange={(e) => updateSetting('focusArea', e.target.value as EncounterSettings['focusArea'])}
+                  onChange={(e) =>
+                    updateSetting('focusArea', e.target.value as EncounterSettings['focusArea'])
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="all">All Systems</option>
@@ -202,7 +220,9 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.complexity}
-                  onChange={(e) => updateSetting('complexity', e.target.value as EncounterSettings['complexity'])}
+                  onChange={(e) =>
+                    updateSetting('complexity', e.target.value as EncounterSettings['complexity'])
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="straightforward">Straightforward (Common)</option>
@@ -303,7 +323,12 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientLanguage}
-                  onChange={(e) => updateSetting('patientLanguage', e.target.value as EncounterSettings['patientLanguage'])}
+                  onChange={(e) =>
+                    updateSetting(
+                      'patientLanguage',
+                      e.target.value as EncounterSettings['patientLanguage']
+                    )
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="english">English</option>
@@ -318,7 +343,12 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.communicationStyle}
-                  onChange={(e) => updateSetting('communicationStyle', e.target.value as EncounterSettings['communicationStyle'])}
+                  onChange={(e) =>
+                    updateSetting(
+                      'communicationStyle',
+                      e.target.value as EncounterSettings['communicationStyle']
+                    )
+                  }
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="cooperative">Cooperative (Standard)</option>
@@ -349,7 +379,12 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                     max="60"
                     step="5"
                     value={settings.timeLimit || 0}
-                    onChange={(e) => updateSetting('timeLimit', e.target.value === '0' ? null : parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting(
+                        'timeLimit',
+                        e.target.value === '0' ? null : parseInt(e.target.value)
+                      )
+                    }
                     className="flex-1"
                   />
                   <span className="text-sm font-medium text-slate-900 dark:text-white w-20">

@@ -14,6 +14,7 @@ PANaCEa now has a **fully autonomous, context-aware content management system** 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 # Ensure environment variables are set in .env
 DATABASE_URL=postgresql://...
@@ -48,9 +49,11 @@ npm run dev:all
 ## 📚 System Components
 
 ### 1. Automated Content Pipeline
+
 **Purpose**: Complete automation of content lifecycle
 
 **Features**:
+
 - Process existing repository photos
 - Identify content gaps across site
 - Source new content from databases
@@ -59,6 +62,7 @@ npm run dev:all
 - Optimize and cleanup database
 
 **Run Manually**:
+
 ```bash
 npm run orchestrate:full
 ```
@@ -67,6 +71,7 @@ npm run orchestrate:full
 Scheduled every 6 hours when server is running
 
 **Output Example**:
+
 ```
 🚀 Starting Automated Content Pipeline...
 
@@ -104,31 +109,34 @@ Scheduled every 6 hours when server is running
 ```
 
 ### 2. Context-Aware Orchestrator
+
 **Purpose**: Intelligent maintenance of ALL site components
 
 **What It Understands**:
 
-| Component | Why It's Needed | What Quality Means |
-|-----------|----------------|-------------------|
-| Photo Drill | Visual diagnosis training | 100% accurate pathology, clear findings |
-| Patient Encounter | Clinical reasoning | Realistic cases, proper workup |
-| Pharm Drill | Safe prescribing | Current FDA info, accurate dosing |
-| First Line Treatment | Evidence-based care | Latest guidelines, contraindications |
-| Lab Cases | Result interpretation | Accurate ranges, clinical correlation |
-| Grand Rounds | Advanced learning | Complex cases, expert analysis |
-| Antibiotic Mode | Stewardship | Current resistance, appropriate use |
-| Fluid & Electrolyte | Critical care | Accurate calculations, protocols |
-| Code Blue | Emergency response | AHA algorithms, precise timing |
-| Guidelines | Current practice | Latest recommendations, sources |
-| Condition Drill | Disease knowledge | Pathophysiology, clinical features |
-| Buzzword Bank | Pattern recognition | Classic presentations, pearls |
+| Component            | Why It's Needed           | What Quality Means                      |
+| -------------------- | ------------------------- | --------------------------------------- |
+| Photo Drill          | Visual diagnosis training | 100% accurate pathology, clear findings |
+| Patient Encounter    | Clinical reasoning        | Realistic cases, proper workup          |
+| Pharm Drill          | Safe prescribing          | Current FDA info, accurate dosing       |
+| First Line Treatment | Evidence-based care       | Latest guidelines, contraindications    |
+| Lab Cases            | Result interpretation     | Accurate ranges, clinical correlation   |
+| Grand Rounds         | Advanced learning         | Complex cases, expert analysis          |
+| Antibiotic Mode      | Stewardship               | Current resistance, appropriate use     |
+| Fluid & Electrolyte  | Critical care             | Accurate calculations, protocols        |
+| Code Blue            | Emergency response        | AHA algorithms, precise timing          |
+| Guidelines           | Current practice          | Latest recommendations, sources         |
+| Condition Drill      | Disease knowledge         | Pathophysiology, clinical features      |
+| Buzzword Bank        | Pattern recognition       | Classic presentations, pearls           |
 
 **Run Manually**:
+
 ```bash
 npm run orchestrate:context-aware
 ```
 
 **Output Example**:
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║     Context-Aware Site Maintenance System                 ║
@@ -174,9 +182,11 @@ npm run orchestrate:context-aware
 ```
 
 ### 3. Process Existing Photos
+
 **Purpose**: One-time processing of repository images
 
 **What It Does**:
+
 1. Analyzes each image in `/public`
 2. Checks clinical relevance
 3. Suggests proper naming
@@ -185,11 +195,13 @@ npm run orchestrate:context-aware
 6. Uploads approved images to database
 
 **Run**:
+
 ```bash
 npm run media:process-existing
 ```
 
 **Output Example**:
+
 ```
 🚀 Processing Existing Photos in Repository...
 
@@ -247,6 +259,7 @@ The system maintains a **complete map** of the site:
 Each content type has **strict quality standards**:
 
 **Clinical Images**:
+
 - ✅ Must have: Clear pathology, proper labeling, context, verification
 - ✅ Must be accurate: Diagnosis, findings, clinical significance
 - ✅ Must be current: Yes
@@ -254,6 +267,7 @@ Each content type has **strict quality standards**:
 - ✅ Update frequency: Continuous
 
 **Drug Information**:
+
 - ✅ Must have: Mechanism, indications, contraindications, interactions, dosing
 - ✅ Must be accurate: FDA approval status, safety warnings, dosages
 - ✅ Must be current: Yes (REALTIME)
@@ -261,6 +275,7 @@ Each content type has **strict quality standards**:
 - ✅ Update frequency: Daily
 
 **Clinical Guidelines**:
+
 - ✅ Must have: Source, publication date, recommendations, evidence level
 - ✅ Must be accurate: Recommendations, contradictions with other guidelines
 - ✅ Must be current: Yes
@@ -272,18 +287,22 @@ Each content type has **strict quality standards**:
 Content needs are prioritized intelligently:
 
 **CRITICAL** - Immediate action required
+
 - Critical accuracy components with <50% completeness
 - Examples: Missing ECGs for common conditions, outdated drug dosing
 
 **HIGH** - Should be addressed soon
+
 - High-usage features with content gaps
 - Examples: Patient encounter cases for top diagnoses
 
 **MEDIUM** - Address when possible
+
 - Moderate gaps in less critical areas
 - Examples: Additional lab case examples
 
 **LOW** - Nice to have
+
 - Complete components needing minor improvements
 - Examples: Additional buzzwords for rare conditions
 
@@ -359,6 +378,7 @@ The orchestrator provides detailed logging:
 ### Admin Dashboard
 
 Visit `/admin/media` to:
+
 - See approval statistics
 - Review pending images
 - Approve/reject with one click
@@ -373,10 +393,10 @@ Edit `services/imageQualityService.ts`:
 
 ```typescript
 const QUALITY_THRESHOLDS = {
-  MIN_WIDTH: 800,        // Minimum image width
-  MIN_HEIGHT: 600,       // Minimum image height
+  MIN_WIDTH: 800, // Minimum image width
+  MIN_HEIGHT: 600, // Minimum image height
   MIN_QUALITY_SCORE: 70, // Auto-approval threshold
-  MAX_FILE_SIZE_MB: 10,  // Maximum file size
+  MAX_FILE_SIZE_MB: 10, // Maximum file size
 };
 ```
 
@@ -398,37 +418,45 @@ Edit `services/contentOrchestrator.ts`:
 
 ```typescript
 // Run every 6 hours (adjustable)
-setInterval(() => {
-  runAutomatedPipeline().catch(console.error);
-}, 6 * 60 * 60 * 1000); // Change hours as needed
+setInterval(
+  () => {
+    runAutomatedPipeline().catch(console.error);
+  },
+  6 * 60 * 60 * 1000
+); // Change hours as needed
 ```
 
 ## 🎯 Benefits
 
 ### Autonomous Operation
+
 - ✅ No manual intervention required
 - ✅ Runs continuously in background
 - ✅ Self-correcting and self-optimizing
 
 ### Context Intelligence
+
 - ✅ Understands what each component needs
 - ✅ Knows why content is needed
 - ✅ Applies appropriate quality standards
 - ✅ Manages dependencies automatically
 
 ### Quality Guaranteed
+
 - ✅ 100% validation for critical content
 - ✅ AI analysis + peer review process
 - ✅ Audit trail for all changes
 - ✅ Automatic quality re-assessment
 
 ### Scalable
+
 - ✅ Handles all site components
 - ✅ Grows with platform needs
 - ✅ Prioritizes intelligently
 - ✅ Efficient resource usage
 
 ### Cost Effective
+
 - ✅ 90% reduction in manual work
 - ✅ Reuses validated content
 - ✅ Optimizes API usage

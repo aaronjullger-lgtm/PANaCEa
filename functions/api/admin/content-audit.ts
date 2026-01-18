@@ -1,25 +1,17 @@
 /**
  * Content Audit API - Admin-only endpoint to find incomplete MedicalContent entries
- * 
+ *
  * GET /api/admin/content-audit
  * Returns statistics on content completeness and lists incomplete conditions
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
-
-interface CloudflareEnv {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
 // Required fields that MUST have content (not empty/null)
-const REQUIRED_FIELDS = [
-  'overview',
-  'symptoms', 
-  'treatment',
-  'diagnostics',
-] as const;
+const REQUIRED_FIELDS = ['overview', 'symptoms', 'treatment', 'diagnostics'] as const;
 
 // High-yield fields that should have content or explicit N/A
 const HIGH_YIELD_FIELDS = [
@@ -40,8 +32,8 @@ const HIGH_YIELD_FIELDS = [
   'differentialDiagnosis',
 ] as const;
 
-type RequiredField = typeof REQUIRED_FIELDS[number];
-type HighYieldField = typeof HIGH_YIELD_FIELDS[number];
+type RequiredField = (typeof REQUIRED_FIELDS)[number];
+type HighYieldField = (typeof HIGH_YIELD_FIELDS)[number];
 
 interface FieldStats {
   total: number;
@@ -106,10 +98,10 @@ function calculateCompleteness(content: Record<string, unknown>): {
 } {
   const missingRequired: string[] = [];
   const missingHighYield: string[] = [];
-  
+
   let filledRequired = 0;
   let filledHighYield = 0;
-  
+
   for (const field of REQUIRED_FIELDS) {
     const value = content[field];
     if (isFieldFilled(value) || isExplicitNA(value)) {
@@ -118,7 +110,7 @@ function calculateCompleteness(content: Record<string, unknown>): {
       missingRequired.push(field);
     }
   }
-  
+
   for (const field of HIGH_YIELD_FIELDS) {
     const value = content[field];
     if (isFieldFilled(value) || isExplicitNA(value)) {
@@ -127,11 +119,11 @@ function calculateCompleteness(content: Record<string, unknown>): {
       missingHighYield.push(field);
     }
   }
-  
+
   // Score: 60% weight on required fields, 40% on high-yield
   const requiredScore = (filledRequired / REQUIRED_FIELDS.length) * 60;
   const highYieldScore = (filledHighYield / HIGH_YIELD_FIELDS.length) * 40;
-  
+
   return {
     score: Math.round(requiredScore + highYieldScore),
     missingRequired,
@@ -146,68 +138,65 @@ function getPriority(
 ): 'critical' | 'high' | 'medium' | 'low' {
   const yieldScore = panceYield ?? 1;
   const totalMissing = missingRequiredCount * 2 + missingHighYieldCount;
-  
+
   // Critical: High-yield conditions missing required fields
   if (yieldScore >= 4 && missingRequiredCount > 0) return 'critical';
-  
+
   // High: Either high-yield with many missing OR any condition missing required
   if (yieldScore >= 3 && totalMissing > 5) return 'high';
   if (missingRequiredCount >= 2) return 'high';
-  
+
   // Medium: Missing several high-yield fields
   if (totalMissing > 8) return 'medium';
-  
+
   return 'low';
 }
 
-export async function onRequestGet(context: { request: Request; env: CloudflareEnv }): Promise<Response> {
-  const { request, env } = context;
-  
-  // Authenticate
-  const auth = await authenticateRequest(request, env);
-  if (!auth) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  
+const ContentAuditSchema = z.object({
+  query: z.object({
+    system: z.string().optional(),
+    limit: z.string().optional(),
+    includeComplete: z.string().optional(),
+  }).optional(),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/admin/content-audit');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     // Check admin role from database
     const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { role: true },
+      where: { clerkId: auth.userId },
+      select: { role: true, id: true },
     });
-    
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
+
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && user.role !== 'admin' && user.role !== 'superadmin')) {
+      logger.warn('Non-admin attempted content audit', {
+        userId: auth.userId,
+        role: user?.role,
       });
+
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
     }
-  } catch (roleErr) {
-    console.error('[content-audit] Role check error:', roleErr);
-    return new Response(JSON.stringify({ error: 'Failed to verify permissions' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  
-  try {
+
     // Parse query params
-    const url = new URL(request.url);
-    const systemFilter = url.searchParams.get('system');
-    const limit = parseInt(url.searchParams.get('limit') || '100');
-    const includeComplete = url.searchParams.get('includeComplete') === 'true';
-    
+    const systemFilter = validated.query?.system;
+    const limit = parseInt(validated.query?.limit || '100');
+    const includeComplete = validated.query?.includeComplete === 'true';
+
     // Fetch all MedicalContent
     const whereClause: Record<string, unknown> = {};
     if (systemFilter) {
       whereClause.system = systemFilter;
     }
-    
+
     const allContent = await prisma.medicalContent.findMany({
       where: whereClause,
       select: {
@@ -239,7 +228,7 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
         content: true, // JSONB for display_priority
       },
     });
-    
+
     // Initialize field stats
     const fieldStats: Record<string, FieldStats> = {};
     const allFields = [...REQUIRED_FIELDS, ...HIGH_YIELD_FIELDS];
@@ -252,17 +241,19 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
         percentComplete: 0,
       };
     }
-    
+
     // Analyze each condition
     const incompleteConditions: AuditResult['incompleteConditions'] = [];
     let fullyComplete = 0;
     let partiallyComplete = 0;
     let criticalMissing = 0;
-    
+
     for (const content of allContent) {
       // Calculate completeness
-      const { score, missingRequired, missingHighYield } = calculateCompleteness(content as Record<string, unknown>);
-      
+      const { score, missingRequired, missingHighYield } = calculateCompleteness(
+        content as Record<string, unknown>
+      );
+
       // Update field stats
       for (const field of allFields) {
         const value = (content as Record<string, unknown>)[field];
@@ -274,7 +265,7 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
           fieldStats[field].missing++;
         }
       }
-      
+
       // Categorize
       if (score === 100) {
         fullyComplete++;
@@ -297,7 +288,7 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
         } else {
           partiallyComplete++;
         }
-        
+
         incompleteConditions.push({
           id: content.id,
           conditionId: content.conditionId,
@@ -311,28 +302,28 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
         });
       }
     }
-    
+
     // Calculate percentages for field stats
     for (const field of allFields) {
       const stats = fieldStats[field];
       stats.percentComplete = Math.round(((stats.filled + stats.explicitNA) / stats.total) * 100);
     }
-    
+
     // Sort incomplete by priority (high-yield + most missing first)
     incompleteConditions.sort((a, b) => {
       // First by PANCE yield (higher first)
       const yieldDiff = (b.pance_yield ?? 0) - (a.pance_yield ?? 0);
       if (yieldDiff !== 0) return yieldDiff;
-      
+
       // Then by completeness (lower score = more incomplete = higher priority)
       return a.completenessScore - b.completenessScore;
     });
-    
+
     // Create top priority list
     const topPriorityToFix = incompleteConditions
-      .filter(c => c.completenessScore < 100)
+      .filter((c) => c.completenessScore < 100)
       .slice(0, 50)
-      .map(c => ({
+      .map((c) => ({
         conditionId: c.conditionId,
         condition: c.condition,
         system: c.system,
@@ -340,7 +331,7 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
         missingCount: c.missingRequired.length + c.missingHighYield.length,
         priority: getPriority(c.pance_yield, c.missingRequired.length, c.missingHighYield.length),
       }));
-    
+
     const result: AuditResult = {
       timestamp: new Date().toISOString(),
       totalConditions: allContent.length,
@@ -351,22 +342,24 @@ export async function onRequestGet(context: { request: Request; env: CloudflareE
       incompleteConditions: incompleteConditions.slice(0, limit),
       topPriorityToFix,
     };
-    
-    return new Response(JSON.stringify(result, null, 2), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+
+    logger.info('Content audit completed', {
+      userId: user.id,
+      totalConditions: allContent.length,
+      fullyComplete,
+      criticalMissing,
     });
-    
+
+    return {
+      data: result,
+    };
   } catch (error) {
-    console.error('[content-audit] Error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to audit content',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    logger.error('Content audit error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    throw new Error('Failed to audit content');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

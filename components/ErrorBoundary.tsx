@@ -11,9 +11,11 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
 if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry').then((sentry) => {
-    captureError = sentry.captureError;
-  }).catch(() => {});
+  import('../lib/monitoring/sentry')
+    .then((sentry) => {
+      captureError = sentry.captureError;
+    })
+    .catch(() => {});
 }
 
 interface Props {
@@ -34,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -45,42 +47,42 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Store error info in state
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
-    
+
     // Check if this is a chunk loading error (stale cache issue)
-    const isChunkLoadError = 
+    const isChunkLoadError =
       error.name === 'ChunkLoadError' ||
       error.message.includes('Loading chunk') ||
       error.message.includes('Failed to fetch dynamically imported module') ||
       error.message.includes('Unable to preload CSS') ||
       (error.message.includes('vendor-') && error.message.includes('.js'));
-    
+
     if (isChunkLoadError) {
       console.warn('[ErrorBoundary] Chunk load error detected - likely stale cache');
       // Auto-reload for chunk errors after a short delay
       setTimeout(() => {
         // Clear service worker caches
         if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
+          caches.keys().then((names) => {
+            names.forEach((name) => caches.delete(name));
           });
         }
         // Unregister service worker
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => registration.unregister());
           });
         }
         // Force reload from server
         window.location.reload();
       }, 1500);
     }
-    
+
     // Send to error tracking service
     if (captureError) {
       captureError(error, {
@@ -114,9 +116,9 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
-    
+
     if (this.props.onReset) {
       this.props.onReset();
     }
@@ -136,7 +138,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       const isChunkError = this.isChunkLoadError();
-      
+
       return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
           <motion.div
@@ -153,17 +155,17 @@ export class ErrorBoundary extends Component<Props, State> {
               >
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </motion.div>
-              
+
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                 {isChunkError ? 'Update Available' : 'Oops! Something went wrong'}
               </h2>
-              
+
               <p className="text-[var(--color-text-muted)] mb-6">
-                {isChunkError 
+                {isChunkError
                   ? 'A new version of PANaCEa is available. The page will automatically refresh in a moment to load the latest version.'
-                  : 'We encountered an unexpected error. This has been logged and we\'ll look into it.'}
+                  : "We encountered an unexpected error. This has been logged and we'll look into it."}
               </p>
-              
+
               {isChunkError && (
                 <div className="w-full mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                   <p className="text-sm text-blue-400 flex items-center gap-2">
@@ -201,7 +203,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4" />
                   Try Again
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -228,7 +230,7 @@ export class ErrorBoundary extends Component<Props, State> {
  */
 export function useErrorHandler() {
   const [, setError] = React.useState();
-  
+
   return React.useCallback((error: Error) => {
     setError(() => {
       throw error;

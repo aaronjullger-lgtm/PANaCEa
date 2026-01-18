@@ -1,9 +1,9 @@
 #!/usr/bin/env npx tsx
 /**
  * Content Enrichment CLI Script
- * 
+ *
  * Batch enriches MedicalContent entries using the AI enrichment API
- * 
+ *
  * Usage:
  *   npx tsx scripts/content-enrichment.ts --audit          # Run audit only
  *   npx tsx scripts/content-enrichment.ts --enrich         # Enrich top 10 priority
@@ -23,25 +23,40 @@ const DELAY_BETWEEN_CALLS_MS = 1500; // Rate limit protection
 const REQUIRED_FIELDS = ['overview', 'symptoms', 'treatment', 'diagnostics'] as const;
 
 const HIGH_YIELD_FIELDS = [
-  'gold_standard_dx', 'first_line_rx', 'buzzwords', 'classic_patient',
-  'clinical_pearls', 'best_initial_test', 'classic_triad', 'pathophysiology',
+  'gold_standard_dx',
+  'first_line_rx',
+  'buzzwords',
+  'classic_patient',
+  'clinical_pearls',
+  'best_initial_test',
+  'classic_triad',
+  'pathophysiology',
 ] as const;
 
 const CLINICAL_FIELDS = [
-  'etiology', 'epidemiology', 'physicalExam', 'riskFactors', 'complications',
-  'prognosis', 'differentialDiagnosis',
+  'etiology',
+  'epidemiology',
+  'physicalExam',
+  'riskFactors',
+  'complications',
+  'prognosis',
+  'differentialDiagnosis',
 ] as const;
 
 const ADDITIONAL_FIELDS = [
-  'mnemonic', 'patient_education',
-  'prevention', 'guidelines', 'disposition', 'gender_bias',
+  'mnemonic',
+  'patient_education',
+  'prevention',
+  'guidelines',
+  'disposition',
+  'gender_bias',
 ] as const;
 
 const ALL_ENRICHABLE_FIELDS = [
-  ...REQUIRED_FIELDS, 
-  ...HIGH_YIELD_FIELDS, 
-  ...CLINICAL_FIELDS, 
-  ...ADDITIONAL_FIELDS
+  ...REQUIRED_FIELDS,
+  ...HIGH_YIELD_FIELDS,
+  ...CLINICAL_FIELDS,
+  ...ADDITIONAL_FIELDS,
 ];
 
 // Adequacy standards - minimum requirements for each field type
@@ -112,12 +127,12 @@ function isFieldAdequate(field: string, value: unknown): { adequate: boolean; re
   if (isFieldEmpty(value)) {
     return { adequate: false, reason: 'empty' };
   }
-  
+
   const standard = ADEQUACY_STANDARDS[field];
   if (!standard) {
     return { adequate: true }; // No standard defined = adequate if not empty
   }
-  
+
   // Check text/short fields for minimum length
   if (standard.type === 'text' || standard.type === 'short') {
     if (typeof value === 'string') {
@@ -127,7 +142,7 @@ function isFieldAdequate(field: string, value: unknown): { adequate: boolean; re
       }
     }
   }
-  
+
   // Check array fields for minimum items
   if (standard.type === 'array') {
     if (Array.isArray(value)) {
@@ -136,7 +151,7 @@ function isFieldAdequate(field: string, value: unknown): { adequate: boolean; re
       }
     }
   }
-  
+
   // Check JSON fields
   if (standard.type === 'json') {
     if (Array.isArray(value)) {
@@ -150,7 +165,7 @@ function isFieldAdequate(field: string, value: unknown): { adequate: boolean; re
       }
     }
   }
-  
+
   return { adequate: true };
 }
 
@@ -161,10 +176,10 @@ function calculateCompleteness(content: Record<string, unknown>): {
 } {
   const missingRequired: string[] = [];
   const missingHighYield: string[] = [];
-  
+
   let filledRequired = 0;
   let filledHighYield = 0;
-  
+
   for (const field of REQUIRED_FIELDS) {
     if (!isFieldEmpty(content[field])) {
       filledRequired++;
@@ -172,7 +187,7 @@ function calculateCompleteness(content: Record<string, unknown>): {
       missingRequired.push(field);
     }
   }
-  
+
   for (const field of HIGH_YIELD_FIELDS) {
     if (!isFieldEmpty(content[field])) {
       filledHighYield++;
@@ -180,10 +195,10 @@ function calculateCompleteness(content: Record<string, unknown>): {
       missingHighYield.push(field);
     }
   }
-  
+
   const requiredScore = (filledRequired / REQUIRED_FIELDS.length) * 60;
   const highYieldScore = (filledHighYield / HIGH_YIELD_FIELDS.length) * 40;
-  
+
   return {
     score: Math.round(requiredScore + highYieldScore),
     missingRequired,
@@ -193,10 +208,10 @@ function calculateCompleteness(content: Record<string, unknown>): {
 
 async function runAudit(systemFilter?: string): Promise<void> {
   console.log('\n📊 Running Content Audit...\n');
-  
+
   const whereClause: Record<string, string> = {};
   if (systemFilter) whereClause.system = systemFilter;
-  
+
   const allContent = await prisma.medicalContent.findMany({
     where: whereClause,
     select: {
@@ -238,22 +253,30 @@ async function runAudit(systemFilter?: string): Promise<void> {
       content: true,
     },
   });
-  
+
   console.log(`Total conditions: ${allContent.length}`);
-  
+
   // Field stats
   const fieldStats: Record<string, { filled: number; missing: number }> = {};
   for (const field of ALL_ENRICHABLE_FIELDS) {
     fieldStats[field] = { filled: 0, missing: 0 };
   }
-  
+
   let fullyComplete = 0;
   let criticalMissing = 0;
-  const priorityConditions: { condition: string; system: string; score: number; pance_yield: number | null; missingCount: number }[] = [];
-  
+  const priorityConditions: {
+    condition: string;
+    system: string;
+    score: number;
+    pance_yield: number | null;
+    missingCount: number;
+  }[] = [];
+
   for (const item of allContent) {
-    const { score, missingRequired, missingHighYield } = calculateCompleteness(item as unknown as Record<string, unknown>);
-    
+    const { score, missingRequired, missingHighYield } = calculateCompleteness(
+      item as unknown as Record<string, unknown>
+    );
+
     // Update field stats
     for (const field of ALL_ENRICHABLE_FIELDS) {
       if (!isFieldEmpty((item as Record<string, unknown>)[field])) {
@@ -262,12 +285,12 @@ async function runAudit(systemFilter?: string): Promise<void> {
         fieldStats[field].missing++;
       }
     }
-    
+
     if (score === 100) {
       fullyComplete++;
     } else {
       if (missingRequired.length > 0) criticalMissing++;
-      
+
       priorityConditions.push({
         condition: item.condition,
         system: item.system,
@@ -277,30 +300,34 @@ async function runAudit(systemFilter?: string): Promise<void> {
       });
     }
   }
-  
+
   // Sort by priority (high yield + most missing)
   priorityConditions.sort((a, b) => {
     const yieldDiff = (b.pance_yield ?? 0) - (a.pance_yield ?? 0);
     if (yieldDiff !== 0) return yieldDiff;
     return a.score - b.score;
   });
-  
+
   console.log('\n📈 Summary:');
-  console.log(`  ✅ Fully complete: ${fullyComplete} (${Math.round(fullyComplete/allContent.length*100)}%)`);
+  console.log(
+    `  ✅ Fully complete: ${fullyComplete} (${Math.round((fullyComplete / allContent.length) * 100)}%)`
+  );
   console.log(`  ⚠️  Critical (missing required): ${criticalMissing}`);
   console.log(`  📝 Needs enrichment: ${priorityConditions.length}`);
-  
+
   console.log('\n📊 Field Completeness:');
   for (const [field, stats] of Object.entries(fieldStats)) {
     const pct = Math.round((stats.filled / allContent.length) * 100);
     const bar = '█'.repeat(Math.floor(pct / 5)) + '░'.repeat(20 - Math.floor(pct / 5));
     console.log(`  ${field.padEnd(25)} ${bar} ${pct}%`);
   }
-  
+
   console.log('\n🎯 Top 20 Priority Conditions:');
   for (const item of priorityConditions.slice(0, 20)) {
     const yieldLabel = item.pance_yield ? `[Yield ${item.pance_yield}]` : '';
-    console.log(`  • ${item.condition} (${item.system}) - ${item.score}% complete, ${item.missingCount} missing ${yieldLabel}`);
+    console.log(
+      `  • ${item.condition} (${item.system}) - ${item.score}% complete, ${item.missingCount} missing ${yieldLabel}`
+    );
   }
 }
 
@@ -313,31 +340,31 @@ async function enrichCondition(
     const content = await prisma.medicalContent.findUnique({
       where: { conditionId },
     });
-    
+
     if (!content) {
       console.error(`  ❌ Condition not found: ${conditionId}`);
       stats.errors++;
       return false;
     }
-    
+
     const contentObj = content as unknown as Record<string, unknown>;
-    const missingFields = ALL_ENRICHABLE_FIELDS.filter(f => isFieldEmpty(contentObj[f]));
-    
+    const missingFields = ALL_ENRICHABLE_FIELDS.filter((f) => isFieldEmpty(contentObj[f]));
+
     if (missingFields.length === 0) {
       console.log(`  ✅ ${content.condition} - Already complete`);
       return true;
     }
-    
+
     console.log(`  🔄 ${content.condition} - Enriching ${missingFields.length} fields...`);
-    
+
     // Build prompt
     const prompt = buildEnrichmentPrompt(content, missingFields as string[]);
-    
+
     // Call Gemini 2.5 Pro for high-quality medical content generation
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     // Parse response
     let parsed: { fields: Record<string, unknown>; display_priority: DisplayPriority };
     try {
@@ -348,11 +375,11 @@ async function enrichCondition(
       stats.errors++;
       return false;
     }
-    
+
     // Prepare update
     const updateData: Record<string, unknown> = {};
     let fieldsUpdated = 0;
-    
+
     for (const field of missingFields) {
       const value = parsed.fields?.[field];
       if (value !== undefined) {
@@ -360,7 +387,7 @@ async function enrichCondition(
         fieldsUpdated++;
       }
     }
-    
+
     // Store display priority
     if (parsed.display_priority) {
       const existingContent = (content.content as Record<string, unknown>) || {};
@@ -369,7 +396,7 @@ async function enrichCondition(
         display_priority: parsed.display_priority,
       };
     }
-    
+
     // Update database
     if (Object.keys(updateData).length > 0) {
       await prisma.medicalContent.update({
@@ -379,15 +406,18 @@ async function enrichCondition(
           updatedAt: new Date(),
         },
       });
-      
+
       stats.fieldsUpdated += fieldsUpdated;
       stats.success++;
       console.log(`  ✅ ${content.condition} - Updated ${fieldsUpdated} fields`);
     }
-    
+
     return true;
   } catch (error) {
-    console.error(`  ❌ Error enriching ${conditionId}:`, error instanceof Error ? error.message : error);
+    console.error(
+      `  ❌ Error enriching ${conditionId}:`,
+      error instanceof Error ? error.message : error
+    );
     stats.errors++;
     return false;
   }
@@ -405,13 +435,19 @@ SUBCATEGORY: ${content.subcategory}
 
 EXISTING CONTENT (for context):
 ${Object.entries(content)
-  .filter(([k, v]) => v && !isFieldEmpty(v) && !['id', 'conditionId', 'createdAt', 'updatedAt'].includes(k))
+  .filter(
+    ([k, v]) =>
+      v && !isFieldEmpty(v) && !['id', 'conditionId', 'createdAt', 'updatedAt'].includes(k)
+  )
   .slice(0, 8)
-  .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v.substring(0, 150) : JSON.stringify(v).substring(0, 150)}`)
+  .map(
+    ([k, v]) =>
+      `- ${k}: ${typeof v === 'string' ? v.substring(0, 150) : JSON.stringify(v).substring(0, 150)}`
+  )
   .join('\n')}
 
 FIELDS TO GENERATE:
-${missingFields.map(f => `- ${f}`).join('\n')}
+${missingFields.map((f) => `- ${f}`).join('\n')}
 
 INSTRUCTIONS:
 1. For each missing field, provide PANCE-focused, high-yield content
@@ -455,50 +491,47 @@ async function runEnrichment(options: {
     console.error('❌ GEMINI_API_KEY environment variable is required');
     process.exit(1);
   }
-  
+
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  
+
   console.log('\n🚀 Starting Content Enrichment...\n');
-  
+
   // Get conditions to enrich
   const whereClause: Record<string, unknown> = {};
   if (options.systemFilter) whereClause.system = options.systemFilter;
   if (options.conditionFilter) {
     whereClause.condition = { contains: options.conditionFilter, mode: 'insensitive' };
   }
-  
+
   const allContent = await prisma.medicalContent.findMany({
     where: whereClause,
-    orderBy: [
-      { pance_yield: 'desc' },
-      { condition: 'asc' },
-    ],
+    orderBy: [{ pance_yield: 'desc' }, { condition: 'asc' }],
   });
-  
+
   // Filter to incomplete conditions
-  const incompleteConditions = allContent.filter(item => {
+  const incompleteConditions = allContent.filter((item) => {
     const { score } = calculateCompleteness(item as unknown as Record<string, unknown>);
     return score < 100;
   });
-  
+
   // Sort by priority
   incompleteConditions.sort((a, b) => {
     const aAnalysis = calculateCompleteness(a as unknown as Record<string, unknown>);
     const bAnalysis = calculateCompleteness(b as unknown as Record<string, unknown>);
-    
+
     // Prioritize high-yield conditions
     const yieldDiff = (b.pance_yield ?? 0) - (a.pance_yield ?? 0);
     if (yieldDiff !== 0) return yieldDiff;
-    
+
     // Then by completeness (least complete first)
     return aAnalysis.score - bAnalysis.score;
   });
-  
+
   const toProcess = incompleteConditions.slice(0, options.limit);
-  
+
   console.log(`Found ${incompleteConditions.length} incomplete conditions`);
   console.log(`Processing top ${toProcess.length} by priority\n`);
-  
+
   const stats: EnrichmentStats = {
     total: toProcess.length,
     processed: 0,
@@ -506,19 +539,19 @@ async function runEnrichment(options: {
     errors: 0,
     fieldsUpdated: 0,
   };
-  
+
   for (const item of toProcess) {
     stats.processed++;
     console.log(`[${stats.processed}/${stats.total}]`);
-    
+
     await enrichCondition(item.conditionId, genAI, stats);
-    
+
     // Rate limiting
     if (stats.processed < stats.total) {
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CALLS_MS));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_CALLS_MS));
     }
   }
-  
+
   console.log('\n📊 Enrichment Complete:');
   console.log(`  Total processed: ${stats.processed}`);
   console.log(`  Successful: ${stats.success}`);
@@ -528,21 +561,21 @@ async function runEnrichment(options: {
 
 async function handleOrphanedConditions(): Promise<void> {
   console.log('\n🔍 Checking for orphaned Conditions (no MedicalContent)...\n');
-  
+
   if (!GEMINI_API_KEY) {
     console.error('❌ GEMINI_API_KEY environment variable is required');
     return;
   }
-  
+
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  
+
   // Find Conditions without MedicalContent
   // Step 1: Get all conditionIds that have MedicalContent
   const existingContent = await prisma.medicalContent.findMany({
     select: { conditionId: true },
   });
-  const existingConditionIds = new Set(existingContent.map(mc => mc.conditionId));
-  
+  const existingConditionIds = new Set(existingContent.map((mc) => mc.conditionId));
+
   // Step 2: Get all Conditions and filter out those with MedicalContent
   const allConditions = await prisma.condition.findMany({
     select: {
@@ -551,31 +584,31 @@ async function handleOrphanedConditions(): Promise<void> {
       system: true,
     },
   });
-  
-  const orphanedConditions = allConditions.filter(c => !existingConditionIds.has(c.id));
-  
+
+  const orphanedConditions = allConditions.filter((c) => !existingConditionIds.has(c.id));
+
   console.log(`Found ${orphanedConditions.length} orphaned Conditions\n`);
-  
+
   if (orphanedConditions.length === 0) {
     console.log('✅ No orphaned Conditions found');
     return;
   }
-  
+
   console.log('Orphaned Conditions:');
-  orphanedConditions.forEach(c => console.log(`  • ${c.name} (${c.system})`));
-  
+  orphanedConditions.forEach((c) => console.log(`  • ${c.name} (${c.system})`));
+
   console.log('\n🚀 Creating MedicalContent for orphaned Conditions...\n');
-  
+
   let created = 0;
   let errors = 0;
-  
+
   for (const orphan of orphanedConditions) {
     try {
       console.log(`  🔄 Creating content for: ${orphan.name}`);
-      
+
       // Infer subcategory from system (simplified mapping)
       const subcategory = orphan.system || 'General';
-      
+
       // Build comprehensive prompt for creating full content
       const prompt = `You are a PANCE exam content expert. Create comprehensive medical content for this condition.
 
@@ -618,11 +651,11 @@ CRITICAL RULES:
 
 Return a JSON object with field names as keys matching the list above exactly.
 Return ONLY valid JSON, no markdown code blocks.`;
-      
+
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      
+
       // Parse response
       let parsed: { fields?: Record<string, unknown>; [key: string]: unknown };
       try {
@@ -633,41 +666,66 @@ Return ONLY valid JSON, no markdown code blocks.`;
         errors++;
         continue;
       }
-      
+
       // Merge top-level fields (backward compat if AI returns flat structure)
       const contentData = { ...(parsed.fields || {}), ...parsed };
       delete contentData.fields; // Remove wrapper if present
-      
+
       // Remove invalid fields that aren't in the schema
       delete contentData.display_priority;
       delete contentData.reasoning;
-      
+
       // Define valid MedicalContent fields
       const validFields = new Set([
-        'overview', 'symptoms', 'treatment', 'diagnostics', 'pathophysiology',
-        'gold_standard_dx', 'first_line_rx', 'best_initial_test', 'classic_patient',
-        'buzzwords', 'clinical_pearls', 'etiology', 'epidemiology', 'physicalExam',
-        'riskFactors', 'complications', 'prognosis', 'differentialDiagnosis',
-        'classic_triad', 'mnemonic', 'patient_education', 'prevention',
-        'guidelines', 'disposition', 'gender_bias', 'content', 'relatedSystems',
-        'age_demographic', 'differentials', 'image_query', 'pance_yield', 'synonyms'
+        'overview',
+        'symptoms',
+        'treatment',
+        'diagnostics',
+        'pathophysiology',
+        'gold_standard_dx',
+        'first_line_rx',
+        'best_initial_test',
+        'classic_patient',
+        'buzzwords',
+        'clinical_pearls',
+        'etiology',
+        'epidemiology',
+        'physicalExam',
+        'riskFactors',
+        'complications',
+        'prognosis',
+        'differentialDiagnosis',
+        'classic_triad',
+        'mnemonic',
+        'patient_education',
+        'prevention',
+        'guidelines',
+        'disposition',
+        'gender_bias',
+        'content',
+        'relatedSystems',
+        'age_demographic',
+        'differentials',
+        'image_query',
+        'pance_yield',
+        'synonyms',
       ]);
-      
+
       // Remove any fields not in the valid set
-      Object.keys(contentData).forEach(key => {
+      Object.keys(contentData).forEach((key) => {
         if (!validFields.has(key)) {
           delete contentData[key];
         }
       });
-      
+
       // Ensure arrays are converted to strings where needed
       if (Array.isArray(contentData.riskFactors)) {
         contentData.riskFactors = contentData.riskFactors.join('; ');
       }
-      
+
       // Log the data we're about to insert for debugging
       console.log(`  📝 Fields being inserted:`, Object.keys(contentData));
-      
+
       // Create MedicalContent record
       try {
         await prisma.medicalContent.create({
@@ -692,19 +750,21 @@ Return ONLY valid JSON, no markdown code blocks.`;
         console.error(`  📊 Content data:`, JSON.stringify(contentData, null, 2));
         throw createErr;
       }
-      
+
       created++;
       console.log(`  ✅ Created MedicalContent for ${orphan.name}`);
-      
+
       // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CALLS_MS));
-      
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_CALLS_MS));
     } catch (error) {
-      console.error(`  ❌ Error creating content for ${orphan.name}:`, error instanceof Error ? error.message : error);
+      console.error(
+        `  ❌ Error creating content for ${orphan.name}:`,
+        error instanceof Error ? error.message : error
+      );
       errors++;
     }
   }
-  
+
   console.log(`\n📊 Orphan Handling Complete:`);
   console.log(`  Created: ${created}`);
   console.log(`  Errors: ${errors}`);
@@ -713,7 +773,7 @@ Return ONLY valid JSON, no markdown code blocks.`;
 // CLI Entry Point
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  
+
   const hasAudit = args.includes('--audit');
   const hasEnrich = args.includes('--enrich');
   const hasOrphans = args.includes('--orphans');
@@ -723,7 +783,7 @@ async function main(): Promise<void> {
   const conditionFilter = conditionIdx !== -1 ? args[conditionIdx + 1] : undefined;
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1]) : 10;
-  
+
   if (!hasAudit && !hasEnrich && !hasOrphans) {
     console.log(`
 Content Enrichment CLI
@@ -743,16 +803,16 @@ Options:
     `);
     process.exit(0);
   }
-  
+
   try {
     if (hasAudit) {
       await runAudit(systemFilter);
     }
-    
+
     if (hasOrphans) {
       await handleOrphanedConditions();
     }
-    
+
     if (hasEnrich) {
       await runEnrichment({ limit, systemFilter, conditionFilter });
     }

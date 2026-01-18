@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { ANATOMY_REGISTRY } from '../anatomyRegistry.ts';
-import { SPECIAL_TEST_REGISTRY } from '../specialTestRegistry.ts';
-import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../physiologyRegistry.ts';
-import { TREATMENT_REGISTRY } from '../treatmentRegistry.ts';
-import { DIFFERENTIAL_REGISTRY } from '../differentialRegistry.ts';
-import { IMAGING_REGISTRY } from '../imagingRegistry.ts';
-import { FINDING_REGISTRY } from '../findingRegistry.ts';
-import { GUIDELINE_REGISTRY } from '../guidelineRegistry.ts';
+import { ANATOMY_REGISTRY } from '../src/registries/anatomyRegistry';
+import { SPECIAL_TEST_REGISTRY } from '../src/registries/specialTestRegistry';
+import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../src/registries/physiologyRegistry';
+import { TREATMENT_REGISTRY } from '../src/registries/treatmentRegistry';
+import { DIFFERENTIAL_REGISTRY } from '../src/registries/differentialRegistry';
+import { IMAGING_REGISTRY } from '../src/registries/imagingRegistry';
+import { FINDING_REGISTRY } from '../src/registries/findingRegistry';
+import { GUIDELINE_REGISTRY } from '../src/registries/guidelineRegistry';
 
 const prisma = new PrismaClient();
 
@@ -14,14 +14,16 @@ async function main() {
   console.log('Starting registry migration...');
 
   // Fetch all valid condition IDs to ensure we only connect to existing conditions
-  const allConditionIds = new Set((await prisma.condition.findMany({ select: { id: true } })).map(c => c.id));
+  const allConditionIds = new Set(
+    (await prisma.condition.findMany({ select: { id: true } })).map((c) => c.id)
+  );
   console.log(`Found ${allConditionIds.size} existing conditions.`);
 
   // 1. Anatomy
   console.log(`Migrating ${ANATOMY_REGISTRY.length} anatomy structures...`);
   for (const item of ANATOMY_REGISTRY) {
-    const validConditions = item.relatedConditions?.filter(id => allConditionIds.has(id)) || [];
-    
+    const validConditions = item.relatedConditions?.filter((id) => allConditionIds.has(id)) || [];
+
     await prisma.anatomyStructure.upsert({
       where: { name: item.name },
       update: {
@@ -33,9 +35,9 @@ async function main() {
         innervation: item.innervation,
         bloodSupply: item.bloodSupply,
         clinicalSignificance: item.clinicalSignificance,
-        conditions: {
-          set: validConditions.map(id => ({ id }))
-        }
+        Condition: {
+          set: validConditions.map((id) => ({ id })),
+        },
       },
       create: {
         name: item.name,
@@ -47,17 +49,17 @@ async function main() {
         innervation: item.innervation,
         bloodSupply: item.bloodSupply,
         clinicalSignificance: item.clinicalSignificance,
-        conditions: {
-          connect: validConditions.map(id => ({ id }))
-        }
-      }
+        Condition: {
+          connect: validConditions.map((id) => ({ id })),
+        },
+      },
     });
   }
 
   // 2. Special Tests
   console.log(`Migrating ${SPECIAL_TEST_REGISTRY.length} special tests...`);
   for (const item of SPECIAL_TEST_REGISTRY) {
-    const validConditions = item.relatedConditions?.filter(id => allConditionIds.has(id)) || [];
+    const validConditions = item.relatedConditions?.filter((id) => allConditionIds.has(id)) || [];
 
     await prisma.specialTest.upsert({
       where: { name: item.name },
@@ -72,9 +74,9 @@ async function main() {
         technique: item.technique,
         positiveTest: item.positiveTest,
         interpretation: item.interpretation,
-        conditions: {
-          set: validConditions.map(id => ({ id }))
-        }
+        Condition: {
+          set: validConditions.map((id) => ({ id })),
+        },
       },
       create: {
         name: item.name,
@@ -88,10 +90,10 @@ async function main() {
         technique: item.technique,
         positiveTest: item.positiveTest,
         interpretation: item.interpretation,
-        conditions: {
-          connect: validConditions.map(id => ({ id }))
-        }
-      }
+        Condition: {
+          connect: validConditions.map((id) => ({ id })),
+        },
+      },
     });
   }
 
@@ -106,7 +108,7 @@ async function main() {
         category: item.category,
         description: item.description,
         relatedConditions: item.relatedConditions || [],
-        relatedDrugs: item.relatedDrugs || []
+        relatedDrugs: item.relatedDrugs || [],
       },
       create: {
         name: item.name,
@@ -115,8 +117,8 @@ async function main() {
         category: item.category,
         description: item.description,
         relatedConditions: item.relatedConditions || [],
-        relatedDrugs: item.relatedDrugs || []
-      }
+        relatedDrugs: item.relatedDrugs || [],
+      },
     });
   }
 
@@ -127,15 +129,13 @@ async function main() {
       where: { name: item.name },
       update: {
         displayName: item.displayName,
-        aliases: item.aliases || [],
         category: item.category,
       },
       create: {
         name: item.name,
         displayName: item.displayName,
-        aliases: item.aliases || [],
         category: item.category,
-      }
+      },
     });
   }
 
@@ -152,7 +152,7 @@ async function main() {
         presentingComplaint: item.presentingComplaint,
         category: item.category,
         isEmergency: item.isEmergency || false,
-      }
+      },
     });
   }
 
@@ -173,7 +173,7 @@ async function main() {
         bodyRegion: item.bodyRegion,
         usesContrast: item.usesContrast || false,
         usesRadiation: item.usesRadiation || false,
-      }
+      },
     });
   }
 
@@ -188,7 +188,7 @@ async function main() {
       create: {
         name: item.name,
         system: item.system,
-      }
+      },
     });
   }
 
@@ -207,7 +207,7 @@ async function main() {
         organization: item.organization,
         category: item.category,
         year: item.year,
-      }
+      },
     });
   }
 

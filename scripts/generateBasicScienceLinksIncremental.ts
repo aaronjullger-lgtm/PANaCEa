@@ -1,16 +1,16 @@
 // scripts/generateBasicScienceLinksIncremental.ts
 // Incremental version that respects rate limits and can resume
 
-import fs from "fs";
-import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { BasicScienceLink } from "../src/types/content";
+import fs from 'fs';
+import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { BasicScienceLink } from '../src/types/content';
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-pro";
-const CONDITION_CONTENT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.correct.json");
+const MODEL_NAME = 'gemini-2.5-pro';
+const CONDITION_CONTENT_FILE = path.resolve('/workspaces/PANaCEa/conditionContent.correct.json');
 const REQUESTS_PER_MINUTE = 8; // Stay under 10/min limit
 // Add 20% buffer to account for API call processing time
 const DELAY_BETWEEN_REQUESTS = Math.ceil((60000 / REQUESTS_PER_MINUTE) * 1.2); // ~9 seconds
@@ -37,12 +37,12 @@ type ConditionsDatabase = Record<string, ConditionContent>;
 // ======================================================
 // API KEY
 // ======================================================
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
-  console.error("   Please set your API key before running this script:");
-  console.error("   export GEMINI_API_KEY=your_key_here");
+  console.error('[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required');
+  console.error('   Please set your API key before running this script:');
+  console.error('   export GEMINI_API_KEY=your_key_here');
   process.exit(1);
 }
 
@@ -50,7 +50,9 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
 console.log(`✅ Using Gemini model: ${MODEL_NAME}`);
-console.log(`⏱️  Rate limit: ${REQUESTS_PER_MINUTE} requests/minute (${DELAY_BETWEEN_REQUESTS}ms between requests)`);
+console.log(
+  `⏱️  Rate limit: ${REQUESTS_PER_MINUTE} requests/minute (${DELAY_BETWEEN_REQUESTS}ms between requests)`
+);
 
 // ======================================================
 // HELPER FUNCTIONS
@@ -67,7 +69,7 @@ function sleep(ms: number): Promise<void> {
  * Clean JSON response from Gemini (removes markdown code blocks)
  */
 function cleanJsonResponse(text: string): string {
-  let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  let cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
   cleaned = cleaned.trim();
   return cleaned;
 }
@@ -106,7 +108,7 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const cleanedText = cleanJsonResponse(text);
-    
+
     let links;
     try {
       links = JSON.parse(cleanedText);
@@ -115,12 +117,12 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     }
 
     if (!Array.isArray(links)) {
-      throw new Error("Response is not an array");
+      throw new Error('Response is not an array');
     }
 
     for (const link of links) {
       if (!link.title || !link.conceptId) {
-        throw new Error("Link missing required fields: title or conceptId");
+        throw new Error('Link missing required fields: title or conceptId');
       }
     }
 
@@ -136,12 +138,12 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
  */
 function getConditionName(conditionId: string): string {
   // Convert condition ID like "CV__ecg__sinus_bradycardia" to "Sinus Bradycardia"
-  const parts = conditionId.split("__");
+  const parts = conditionId.split('__');
   const namePart = parts[parts.length - 1];
   return namePart
-    .split("_")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
@@ -152,7 +154,7 @@ async function processConditionsIncremental(
   outputFile: string
 ): Promise<ConditionsDatabase> {
   const conditionIds = Object.keys(conditions);
-  
+
   // Filter conditions that need processing
   const conditionsNeedingLinks = conditionIds.filter(
     (id) => !conditions[id].basicScienceLinks || conditions[id].basicScienceLinks.length === 0
@@ -196,7 +198,7 @@ async function processConditionsIncremental(
 
     // Save incrementally every 10 conditions
     if (processed % 10 === 0) {
-      fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), "utf-8");
+      fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), 'utf-8');
       console.log(`   💾 Progress saved (${processed}/${conditionsNeedingLinks.length})\n`);
     }
 
@@ -207,7 +209,7 @@ async function processConditionsIncremental(
   }
 
   // Final save
-  fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), "utf-8");
+  fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), 'utf-8');
   console.log(`\n✅ All conditions processed and saved!\n`);
 
   return updatedConditions;
@@ -219,24 +221,24 @@ async function processConditionsIncremental(
 
 async function main() {
   try {
-    console.log("\n🚀 Starting Incremental Basic Science Links Generation\n");
-    console.log("=".repeat(60));
-    console.log("💡 This script can be safely stopped and restarted");
-    console.log("   It will resume from where it left off.\n");
-    console.log("=".repeat(60));
+    console.log('\n🚀 Starting Incremental Basic Science Links Generation\n');
+    console.log('='.repeat(60));
+    console.log('💡 This script can be safely stopped and restarted');
+    console.log('   It will resume from where it left off.\n');
+    console.log('='.repeat(60));
 
     // ======================================================
     // PROCESS CONDITIONS
     // ======================================================
-    console.log("\n📋 PROCESSING CONDITIONS FROM DATABASE");
-    console.log("=".repeat(60));
+    console.log('\n📋 PROCESSING CONDITIONS FROM DATABASE');
+    console.log('='.repeat(60));
 
     if (!fs.existsSync(CONDITION_CONTENT_FILE)) {
       console.error(`[ERROR] Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
       process.exit(1);
     }
 
-    const conditionsData = fs.readFileSync(CONDITION_CONTENT_FILE, "utf-8");
+    const conditionsData = fs.readFileSync(CONDITION_CONTENT_FILE, 'utf-8');
     const conditions: ConditionsDatabase = JSON.parse(conditionsData);
 
     const updatedConditions = await processConditionsIncremental(
@@ -247,23 +249,27 @@ async function main() {
     // ======================================================
     // SUMMARY
     // ======================================================
-    console.log("\n" + "=".repeat(60));
-    console.log("✨ GENERATION COMPLETE!");
-    console.log("=".repeat(60));
+    console.log('\n' + '='.repeat(60));
+    console.log('✨ GENERATION COMPLETE!');
+    console.log('='.repeat(60));
 
     const totalConditions = Object.keys(updatedConditions).length;
     const conditionsWithLinks = Object.keys(updatedConditions).filter(
-      (id) => updatedConditions[id].basicScienceLinks && updatedConditions[id].basicScienceLinks.length > 0
+      (id) =>
+        updatedConditions[id].basicScienceLinks &&
+        updatedConditions[id].basicScienceLinks.length > 0
     ).length;
 
     console.log(`\n📈 Final results:`);
-    console.log(`   - Conditions: ${conditionsWithLinks}/${totalConditions} with basic science links`);
+    console.log(
+      `   - Conditions: ${conditionsWithLinks}/${totalConditions} with basic science links`
+    );
     console.log(`   - Coverage: ${((conditionsWithLinks / totalConditions) * 100).toFixed(1)}%\n`);
 
-    console.log("✅ All done!\n");
+    console.log('✅ All done!\n');
   } catch (error) {
-    console.error("\n[ERROR] Fatal error:", error);
-    console.error("\n💡 You can safely re-run this script to continue from where it stopped.\n");
+    console.error('\n[ERROR] Fatal error:', error);
+    console.error('\n💡 You can safely re-run this script to continue from where it stopped.\n');
     process.exit(1);
   }
 }

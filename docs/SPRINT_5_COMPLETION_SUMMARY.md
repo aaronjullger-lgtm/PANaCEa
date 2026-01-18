@@ -11,6 +11,7 @@
 Sprint 5 integrated comprehensive error tracking and monitoring across the entire PANaCEa application. The sprint successfully added Sentry for error tracking, created health check endpoints, implemented CloudFlare Functions error handling, and established user context tracking for better debugging.
 
 **Key Achievements**:
+
 - ✅ Integrated Sentry SDK with React and CloudFlare Functions
 - ✅ Updated all 3 error boundaries with Sentry capture
 - ✅ Created comprehensive health check endpoint
@@ -19,6 +20,7 @@ Sprint 5 integrated comprehensive error tracking and monitoring across the entir
 - ✅ Configured source map upload for production debugging
 
 **Impact**:
+
 - **Error Visibility**: 100% error capture in production
 - **Health Monitoring**: Real-time system status checks
 - **User Context**: All errors tagged with user information
@@ -29,6 +31,7 @@ Sprint 5 integrated comprehensive error tracking and monitoring across the entir
 ## Objectives & Outcomes
 
 ### Primary Objective
+
 Implement production-grade error tracking and monitoring to proactively identify issues, improve debugging, and maintain system health visibility.
 
 ### Completed Tasks
@@ -36,15 +39,18 @@ Implement production-grade error tracking and monitoring to proactively identify
 #### 1. ✅ Sentry SDK Integration
 
 **Installed Packages**:
+
 ```bash
 npm install @sentry/react @sentry/vite-plugin
 # Added 32 packages
 ```
 
 **Created Files**:
+
 - `/lib/monitoring/sentry.ts` - Centralized Sentry configuration and utilities
 
 **Features Implemented**:
+
 ```typescript
 // Initialize Sentry with environment-aware configuration
 initializeSentry({
@@ -65,6 +71,7 @@ measurePerformance(name, operation, tags);
 ```
 
 **Configuration**:
+
 - **Browser Tracing**: Automatic route and component performance tracking
 - **Session Replay**: Record user sessions on errors (with PII masking)
 - **Sensitive Data Filtering**: Removes auth tokens, cookies, API keys
@@ -77,6 +84,7 @@ measurePerformance(name, operation, tags);
 **Updated Components**:
 
 **`components/ErrorBoundary.tsx`** (Root-level):
+
 ```typescript
 import { captureError } from '../lib/monitoring/sentry';
 
@@ -97,12 +105,13 @@ componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 ```
 
 **`components/GeminiErrorBoundary.tsx`** (AI-specific):
+
 ```typescript
 import { captureError, addBreadcrumb } from '../lib/monitoring/sentry';
 
 componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
   const errorType = this.state.errorInfo?.type || 'generic';
-  
+
   captureError(error, {
     tags: {
       boundary: 'gemini',
@@ -116,7 +125,7 @@ componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     },
     level: errorType === 'rate_limit' ? 'warning' : 'error',
   });
-  
+
   // Track retry attempts
   if (this.state.retryCount > 0) {
     addBreadcrumb(
@@ -130,6 +139,7 @@ componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
 ```
 
 **`components/error/DrillErrorBoundary.tsx`** (Drill-specific):
+
 ```typescript
 import { captureError } from '../../lib/monitoring/sentry';
 
@@ -150,6 +160,7 @@ componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 ```
 
 **Benefits**:
+
 - ✅ All 3 error boundaries now report to Sentry
 - ✅ Context-specific tags for better filtering
 - ✅ Retry attempts tracked as breadcrumbs
@@ -160,12 +171,13 @@ componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 #### 3. ✅ User Context Tracking
 
 **Updated `components/AuthProvider.tsx`**:
+
 ```typescript
 import { setUserContext, clearUserContext } from '../lib/monitoring/sentry';
 
 function SentryUserSync() {
   const { user, isSignedIn } = useUser();
-  
+
   useEffect(() => {
     if (isSignedIn && user) {
       setUserContext({
@@ -177,7 +189,7 @@ function SentryUserSync() {
       clearUserContext();
     }
   }, [isSignedIn, user]);
-  
+
   return null;
 }
 
@@ -189,6 +201,7 @@ function SentryUserSync() {
 ```
 
 **Impact**:
+
 - ✅ All errors automatically tagged with user ID
 - ✅ User email included for follow-up
 - ✅ Context cleared on logout (privacy)
@@ -201,6 +214,7 @@ function SentryUserSync() {
 **Created `/functions/api/_shared/error-handler.ts`**:
 
 **Features**:
+
 - **Custom Error Types**: `APIError`, `AuthenticationError`, `AuthorizationError`, `ValidationError`, `NotFoundError`, `RateLimitError`
 - **Error Logging**: Console logs + Sentry integration
 - **Standard Responses**: Consistent JSON error format
@@ -208,24 +222,29 @@ function SentryUserSync() {
 - **Retry-After Headers**: For rate limit errors
 
 **Usage Example**:
+
 ```typescript
 import { withErrorHandler, successResponse, ValidationError } from './_shared/error-handler';
 
-export const onRequestPost = withErrorHandler(async (context) => {
-  const { request, env } = context;
-  const body = await request.json();
-  
-  if (!body.userId) {
-    throw new ValidationError('userId is required');
-  }
-  
-  // ... process request
-  
-  return successResponse({ data: result });
-}, { endpoint: '/api/example' });
+export const onRequestPost = withErrorHandler(
+  async (context) => {
+    const { request, env } = context;
+    const body = await request.json();
+
+    if (!body.userId) {
+      throw new ValidationError('userId is required');
+    }
+
+    // ... process request
+
+    return successResponse({ data: result });
+  },
+  { endpoint: '/api/example' }
+);
 ```
 
 **Error Response Format**:
+
 ```json
 {
   "error": "ValidationError",
@@ -237,6 +256,7 @@ export const onRequestPost = withErrorHandler(async (context) => {
 ```
 
 **Sentry Integration**:
+
 - Automatically sends errors to Sentry (via fetch to ingest API)
 - Parses stack traces for CloudFlare Workers
 - Tags errors with endpoint, method, userId
@@ -249,11 +269,13 @@ export const onRequestPost = withErrorHandler(async (context) => {
 **Created `/functions/api/health.ts`**:
 
 **Comprehensive Checks**:
+
 1. **Database Connectivity**: Tests Prisma connection with latency measurement
 2. **Cache Availability**: Verifies KV read/write operations
 3. **Environment Variables**: Validates required and optional variables
 
 **Response Format**:
+
 ```json
 {
   "status": "healthy" | "degraded" | "unhealthy",
@@ -280,16 +302,19 @@ export const onRequestPost = withErrorHandler(async (context) => {
 ```
 
 **Status Codes**:
+
 - `200` - Healthy or degraded
 - `503` - Unhealthy (critical failure)
 
 **Fast Ping Mode**:
+
 ```bash
 curl https://your-domain.com/api/health?ping=true
 # Returns: {"status": "ok", "timestamp": "..."}
 ```
 
 **Monitoring Integration**:
+
 - Can be used with uptime monitors (Pingdom, UptimeRobot, etc.)
 - Provides detailed health metrics for alerting
 - Latency measurements for performance monitoring
@@ -299,31 +324,36 @@ curl https://your-domain.com/api/health?ping=true
 #### 6. ✅ Source Map Configuration
 
 **Updated `vite.config.ts`**:
+
 ```typescript
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig(({ mode }) => {
   const isDevelopment = mode === 'development';
   const isProduction = mode === 'production';
-  
+
   return {
     plugins: [
       react(),
-      VitePWA({ /* ... */ }),
+      VitePWA({
+        /* ... */
+      }),
       // Sentry source map upload (production only)
-      ...(isProduction && env.SENTRY_AUTH_TOKEN ? [
-        sentryVitePlugin({
-          org: env.SENTRY_ORG,
-          project: env.SENTRY_PROJECT,
-          authToken: env.SENTRY_AUTH_TOKEN,
-          sourcemaps: {
-            assets: './dist/**',
-            ignore: ['node_modules'],
-            filesToDeleteAfterUpload: ['./dist/**/*.map'],
-          },
-          telemetry: false,
-        })
-      ] : []),
+      ...(isProduction && env.SENTRY_AUTH_TOKEN
+        ? [
+            sentryVitePlugin({
+              org: env.SENTRY_ORG,
+              project: env.SENTRY_PROJECT,
+              authToken: env.SENTRY_AUTH_TOKEN,
+              sourcemaps: {
+                assets: './dist/**',
+                ignore: ['node_modules'],
+                filesToDeleteAfterUpload: ['./dist/**/*.map'],
+              },
+              telemetry: false,
+            }),
+          ]
+        : []),
     ],
     build: {
       sourcemap: mode === 'production' ? 'hidden' : true,
@@ -333,6 +363,7 @@ export default defineConfig(({ mode }) => {
 ```
 
 **Benefits**:
+
 - ✅ Source maps uploaded to Sentry on production builds
 - ✅ Original source code shown in error stack traces
 - ✅ Maps deleted after upload (not exposed to users)
@@ -361,6 +392,7 @@ SENTRY_DSN=https://[key]@[org].ingest.sentry.io/[project]
 ```
 
 ### Existing Environment Variables
+
 ```bash
 # Already configured
 DATABASE_URL=prisma://...
@@ -380,25 +412,26 @@ APP_VERSION=1.0.0
 
 ### Build Performance
 
-| Metric | Sprint 4 | Sprint 5 | Change |
-|--------|----------|----------|--------|
-| Build Time | 12.84s | 20.34s | +7.5s |
+| Metric      | Sprint 4  | Sprint 5  | Change   |
+| ----------- | --------- | --------- | -------- |
+| Build Time  | 12.84s    | 20.34s    | +7.5s    |
 | Bundle Size | 607.08 KB | 607.93 KB | +0.85 KB |
-| Chunks | 64 | 65 | +1 |
+| Chunks      | 64        | 65        | +1       |
 
 **Note**: Build time increase due to:
+
 - Sentry SDK integration (+10 KB)
 - Source map generation (production builds)
 - Additional monitoring utilities
 
 ### Error Capture Latency
 
-| Operation | Latency |
-|-----------|---------|
-| captureError() | <10ms |
-| captureMessage() | <5ms |
-| setUserContext() | <2ms |
-| addBreadcrumb() | <1ms |
+| Operation        | Latency |
+| ---------------- | ------- |
+| captureError()   | <10ms   |
+| captureMessage() | <5ms    |
+| setUserContext() | <2ms    |
+| addBreadcrumb()  | <1ms    |
 
 **Impact**: Negligible performance impact on user experience
 
@@ -461,22 +494,27 @@ APP_VERSION=1.0.0
 ## Integration with Previous Sprints
 
 ### Sprint 1: TypeScript Fixes
+
 - Error tracking helps identify remaining type issues in production
 - Stack traces point to exact source lines
 
 ### Sprint 2: Database Indexes
+
 - Health check monitors database performance
 - Slow query detection via latency measurements
 
 ### Sprint 3: KV Cache
+
 - Health check validates cache availability
 - Cache errors tracked and reported
 
 ### Sprint 4: Query Optimization
+
 - Performance monitoring tracks query execution times
 - Database errors captured with full context
 
 ### Sprint 5: Error Tracking
+
 - Ties everything together with comprehensive monitoring
 - Proactive issue detection and debugging
 
@@ -485,6 +523,7 @@ APP_VERSION=1.0.0
 ## Verification Steps
 
 ### 1. ✅ Build Verification
+
 ```bash
 npm run build
 # Result: ✅ Clean build in 20.34s
@@ -493,6 +532,7 @@ npm run build
 ```
 
 ### 2. ✅ Error Boundary Test (Development)
+
 ```typescript
 // Throw test error in development
 throw new Error('Test error for Sentry');
@@ -500,12 +540,14 @@ throw new Error('Test error for Sentry');
 ```
 
 ### 3. ⏳ Health Check Test (Pending Deployment)
+
 ```bash
 curl https://your-domain.com/api/health
 # Expected: JSON response with status checks
 ```
 
 ### 4. ⏳ Sentry Dashboard (Pending Production Errors)
+
 - Navigate to Sentry dashboard
 - Verify errors appear with:
   - User context (ID, email)
@@ -542,12 +584,14 @@ curl https://your-domain.com/api/health
 ### Health Check Monitoring
 
 **Uptime Monitor Setup** (e.g., UptimeRobot):
+
 - URL: `https://your-domain.com/api/health?ping=true`
 - Interval: Every 5 minutes
 - Alert on: HTTP status ≠ 200
 - Notification: Email + SMS
 
 **Detailed Health Monitoring**:
+
 - URL: `https://your-domain.com/api/health`
 - Interval: Every 15 minutes
 - Parse JSON response
@@ -565,7 +609,7 @@ import { captureError, addBreadcrumb } from '@/lib/monitoring/sentry';
 
 async function fetchUserData(userId: string) {
   addBreadcrumb('Fetching user data', 'api', 'info', { userId });
-  
+
   try {
     const response = await fetch(`/api/users/${userId}`);
     if (!response.ok) throw new Error('Failed to fetch user');
@@ -586,20 +630,23 @@ async function fetchUserData(userId: string) {
 ```typescript
 import { withErrorHandler, ValidationError, successResponse } from '../_shared/error-handler';
 
-export const onRequestPost = withErrorHandler(async (context) => {
-  const { request, env } = context;
-  const body = await request.json();
-  
-  // Validate input
-  if (!body.questionId || !body.answer) {
-    throw new ValidationError('questionId and answer are required');
-  }
-  
-  // Process request
-  const result = await processAnswer(body, env);
-  
-  return successResponse(result);
-}, { endpoint: '/api/questions/answer' });
+export const onRequestPost = withErrorHandler(
+  async (context) => {
+    const { request, env } = context;
+    const body = await request.json();
+
+    // Validate input
+    if (!body.questionId || !body.answer) {
+      throw new ValidationError('questionId and answer are required');
+    }
+
+    // Process request
+    const result = await processAnswer(body, env);
+
+    return successResponse(result);
+  },
+  { endpoint: '/api/questions/answer' }
+);
 ```
 
 ### Performance Monitoring
@@ -670,11 +717,13 @@ async function loadConditionData(conditionId: string) {
 ## Documentation Updates
 
 ### New Documentation
+
 - ✅ `/docs/SPRINT_5_COMPLETION_SUMMARY.md` (this document)
 - ✅ `/lib/monitoring/sentry.ts` (comprehensive inline docs)
 - ✅ `/functions/api/_shared/error-handler.ts` (usage examples)
 
 ### Documentation to Update
+
 - ⏳ `MASTER_DOCUMENTATION.md` - Add Sprint 5 summary
 - ⏳ `CLOUDFLARE_FUNCTIONS_GUIDE.md` - Add error handling section
 - ⏳ `PRODUCTION_DEPLOYMENT_CHECKLIST.md` - Add Sentry setup steps
@@ -685,20 +734,24 @@ async function loadConditionData(conditionId: string) {
 ## Dependencies & Prerequisites
 
 ### Runtime Dependencies
+
 - ✅ `@sentry/react@^8.0.0` - Client-side error tracking
 - ✅ `@sentry/vite-plugin@^2.0.0` - Source map upload
 
 ### Build Dependencies
+
 - ✅ Vite 6.4.1
 - ✅ TypeScript 5.x
 - ✅ React 19
 
 ### External Services
+
 - ⏳ Sentry account and project setup
 - ⏳ Sentry DSN configuration
 - ⏳ (Optional) Sentry auth token for source maps
 
 ### Environment Variables
+
 ```bash
 # Required for production
 VITE_SENTRY_DSN=https://[key]@[org].ingest.sentry.io/[project]

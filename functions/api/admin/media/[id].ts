@@ -1,13 +1,17 @@
 /**
  * Media Asset Detail API Endpoint
- * 
+ *
  * GET /api/admin/media/[id] - Get a single media asset
  * PUT /api/admin/media/[id] - Update media asset metadata
  * DELETE /api/admin/media/[id] - Delete a media asset
  */
 
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../_shared/auth';
 import { validateRequest } from '../../_shared/schemas';
 import { z } from 'zod';
 
@@ -33,7 +37,11 @@ interface Env {
 
 const MEDIA_BUCKET = 'medical-images';
 
-export const onRequestGet = async (context: { request: Request; env: Env; params: { id: string } }) => {
+export const onRequestGet = async (context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
   try {
@@ -71,11 +79,15 @@ export const onRequestGet = async (context: { request: Request; env: Env; params
     console.error('Media fetch error:', error);
     return createErrorResponse('Failed to fetch media', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
 
-export const onRequestPut = async (context: { request: Request; env: Env; params: { id: string } }) => {
+export const onRequestPut = async (context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
   try {
@@ -147,16 +159,17 @@ export const onRequestPut = async (context: { request: Request; env: Env; params
     });
   } catch (error) {
     console.error('Media update error:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Update failed',
-      500
-    );
+    return createErrorResponse(error instanceof Error ? error.message : 'Update failed', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
 
-export const onRequestDelete = async (context: { request: Request; env: Env; params: { id: string } }) => {
+export const onRequestDelete = async (context: {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
   try {
@@ -197,7 +210,7 @@ export const onRequestDelete = async (context: { request: Request; env: Env; par
           {
             method: 'DELETE',
             headers: {
-              'Authorization': `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
             },
           }
         );
@@ -214,7 +227,7 @@ export const onRequestDelete = async (context: { request: Request; env: Env; par
       if (media.thumbnailUrl) {
         const thumbParts = media.thumbnailUrl.split(`/${MEDIA_BUCKET}/`);
         const thumbPath = thumbParts && thumbParts.length > 1 ? thumbParts[1] : null;
-        
+
         if (thumbPath) {
           try {
             await fetch(
@@ -222,7 +235,7 @@ export const onRequestDelete = async (context: { request: Request; env: Env; par
               {
                 method: 'DELETE',
                 headers: {
-                  'Authorization': `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
+                  Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
                 },
               }
             );
@@ -246,11 +259,8 @@ export const onRequestDelete = async (context: { request: Request; env: Env; par
     });
   } catch (error) {
     console.error('Media delete error:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Delete failed',
-      500
-    );
+    return createErrorResponse(error instanceof Error ? error.message : 'Delete failed', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };

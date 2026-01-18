@@ -1,15 +1,15 @@
 /**
  * Grand Rounds Daily Challenge Mode Component
- * 
+ *
  * Database-first high-yield question mode with organ system selection.
  * Features speed-weighted scoring and one attempt per system per day.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trophy, 
-  Users, 
+import {
+  Trophy,
+  Users,
   Calendar,
   Clock,
   Play,
@@ -21,7 +21,7 @@ import {
   AlertCircle,
   Loader2,
   Timer,
-  Stethoscope
+  Stethoscope,
 } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -32,7 +32,14 @@ interface GrandRoundsModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'loading' | 'system-select' | 'completed' | 'landing' | 'active' | 'summary' | 'error';
+type ViewState =
+  | 'loading'
+  | 'system-select'
+  | 'completed'
+  | 'landing'
+  | 'active'
+  | 'summary'
+  | 'error';
 
 interface ChallengeData {
   challengeId: string;
@@ -68,11 +75,11 @@ const getTimeUntilNextChallenge = () => {
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   tomorrow.setUTCHours(0, 0, 0, 0);
   const diff = tomorrow.getTime() - now.getTime();
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  
+
   return `${hours}h ${minutes}m ${seconds}s`;
 };
 
@@ -80,12 +87,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
   const userId = user?.id || 'demo-user';
-  
+
   const [viewState, setViewState] = useState<ViewState>('system-select');
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [completedStats, setCompletedStats] = useState<CompletedStats | null>(null);
-  
+
   // Quiz state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -94,70 +101,76 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const [timeElapsedMs, setTimeElapsedMs] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
   // Fetch challenge when system is selected
-  const handleSystemSelect = useCallback(async (system: SystemCode) => {
-    setSelectedSystem(system);
-    setViewState('loading');
-    setError(null);
+  const handleSystemSelect = useCallback(
+    async (system: SystemCode) => {
+      setSelectedSystem(system);
+      setViewState('loading');
+      setError(null);
 
-    try {
-      const token = await getToken();
-      const response = await fetch(`/api/grand-rounds/system/${system}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Backend server not available. Using database-first fallback.');
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch challenge');
-      }
-
-      const data = await response.json();
-
-      if (data.status === 'completed') {
-        setCompletedStats({
-          score: data.stats.score,
-          correctCount: data.stats.correctCount,
-          totalQuestions: data.stats.totalQuestions,
-          timeSpentMs: data.stats.timeSpentMs,
-          percentile: data.stats.percentile,
-          ranking: data.stats.ranking,
+      try {
+        const token = await getToken();
+        const response = await fetch(`/api/grand-rounds/system/${system}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         });
-        setViewState('completed');
-      } else if (data.status === 'active') {
-        setChallengeData({
-          challengeId: data.challengeId,
-          questions: data.questions,
-          system,
-        });
-        setViewState('landing');
-      } else {
-        throw new Error('Invalid challenge status');
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Backend server not available. Using database-first fallback.');
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch challenge');
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          setCompletedStats({
+            score: data.stats.score,
+            correctCount: data.stats.correctCount,
+            totalQuestions: data.stats.totalQuestions,
+            timeSpentMs: data.stats.timeSpentMs,
+            percentile: data.stats.percentile,
+            ranking: data.stats.ranking,
+          });
+          setViewState('completed');
+        } else if (data.status === 'active') {
+          setChallengeData({
+            challengeId: data.challengeId,
+            questions: data.questions,
+            system,
+          });
+          setViewState('landing');
+        } else {
+          throw new Error('Invalid challenge status');
+        }
+      } catch (err) {
+        console.error('Error fetching challenge:', err);
+        const isNetworkIssue =
+          err instanceof TypeError || (err instanceof Error && /fetch|network/i.test(err.message));
+        setError(
+          isNetworkIssue
+            ? 'Unable to connect. Please check your internet connection and try again.'
+            : 'Unable to load challenge. Please try again.'
+        );
+        setViewState('error');
       }
-    } catch (err) {
-      console.error('Error fetching challenge:', err);
-      const isNetworkIssue = err instanceof TypeError || (err instanceof Error && /fetch|network/i.test(err.message));
-      setError(isNetworkIssue 
-        ? 'Unable to connect. Please check your internet connection and try again.'
-        : 'Unable to load challenge. Please try again.');
-      setViewState('error');
-    }
-  }, [getToken]);
+    },
+    [getToken]
+  );
 
   // Timer for next challenge countdown (only active when completed)
   useEffect(() => {
     if (viewState !== 'completed') return;
-    
+
     const interval = setInterval(() => {
       setNextChallengeCountdown(getTimeUntilNextChallenge());
     }, 1000);
@@ -189,25 +202,28 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     setSelectedAnswer(null);
   }, []);
 
-  const handleAnswerSelect = useCallback((index: number) => {
-    if (!challengeData) return;
-    setSelectedAnswer(index);
-  }, [challengeData]);
+  const handleAnswerSelect = useCallback(
+    (index: number) => {
+      if (!challengeData) return;
+      setSelectedAnswer(index);
+    },
+    [challengeData]
+  );
 
   const handleNext = useCallback(() => {
     if (!challengeData || selectedAnswer === null) return;
 
     const currentQuestion = challengeData.questions[currentQuestionIndex];
-    
+
     // Save answer
-    setUserAnswers(prev => ({
+    setUserAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: selectedAnswer,
     }));
 
     // Move to next question or finish
     if (currentQuestionIndex < challengeData.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
     } else {
       // Last question - submit
@@ -236,7 +252,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           challengeId: challengeData.challengeId,
@@ -253,7 +269,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
       if (result.success) {
         hapticSuccess();
-        
+
         setCompletedStats({
           score: result.score,
           correctCount: result.correctCount,
@@ -262,7 +278,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           percentile: result.percentile,
           ranking: result.ranking,
         });
-        
+
         setViewState('summary');
       } else {
         throw new Error('Submission failed');
@@ -271,7 +287,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       console.error('Error submitting challenge:', err);
       hapticError();
       // User-friendly error message - don't expose technical details
-      setError('Unable to submit your results. Your progress has been saved locally. Please try again.');
+      setError(
+        'Unable to submit your results. Your progress has been saved locally. Please try again.'
+      );
       setViewState('error');
     } finally {
       setIsSubmitting(false);
@@ -302,24 +320,24 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         >
           <div className="text-center space-y-4">
             <motion.div
-              animate={{ 
+              animate={{
                 rotate: [0, -5, 5, 0],
-                scale: [1, 1.05, 1]
+                scale: [1, 1.05, 1],
               }}
-              transition={{ 
+              transition={{
                 repeat: Infinity,
                 duration: 3,
-                ease: "easeInOut"
+                ease: 'easeInOut',
               }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
               <Stethoscope className="w-12 h-12 text-amber-500" />
             </motion.div>
-            
+
             <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
               Grand Rounds - System Focus
             </h1>
-            
+
             <p className="text-xl text-[var(--color-text-muted)]">
               Select a PANCE organ system to begin your high-yield challenge
             </p>
@@ -327,11 +345,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
             <h3 className="text-lg font-semibold text-center mb-4">14 PANCE Organ Systems</h3>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {PANCE_TOPIC_ABBREVIATIONS.filter(abbr => abbr !== 'PRO').map((systemCode) => {
+              {PANCE_TOPIC_ABBREVIATIONS.filter((abbr) => abbr !== 'PRO').map((systemCode) => {
                 const systemName = ABBREVIATION_TO_TOPIC_MAP[systemCode];
-                
+
                 return (
                   <motion.button
                     key={systemCode}
@@ -413,20 +431,20 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         >
           <div className="text-center space-y-4">
             <motion.div
-              animate={{ 
+              animate={{
                 rotate: [0, -5, 5, 0],
-                scale: [1, 1.05, 1]
+                scale: [1, 1.05, 1],
               }}
-              transition={{ 
+              transition={{
                 repeat: Infinity,
                 duration: 3,
-                ease: "easeInOut"
+                ease: 'easeInOut',
               }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
               <Trophy className="w-12 h-12 text-amber-500" />
             </motion.div>
-            
+
             <h1 className="text-4xl font-bold">Challenge Complete!</h1>
             <p className="text-xl text-[var(--color-text-muted)]">
               You've already completed today's Grand Rounds
@@ -487,7 +505,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Landing page (before starting challenge)
   if (viewState === 'landing' && challengeData) {
     const systemName = ABBREVIATION_TO_TOPIC_MAP[challengeData.system];
-    
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
         <motion.div
@@ -498,24 +516,24 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
               <motion.div
-                animate={{ 
+                animate={{
                   rotate: [0, -5, 5, 0],
-                  scale: [1, 1.05, 1]
+                  scale: [1, 1.05, 1],
                 }}
-                transition={{ 
+                transition={{
                   repeat: Infinity,
                   duration: 3,
-                  ease: "easeInOut"
+                  ease: 'easeInOut',
                 }}
                 className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
               >
                 <Trophy className="w-12 h-12 text-amber-500" />
               </motion.div>
-              
+
               <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                 {systemName} Challenge
               </h1>
-              
+
               <p className="text-xl text-[var(--color-text-muted)]">
                 High-Yield Questions • Speed Matters • One Attempt
               </p>
@@ -550,7 +568,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Users className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
                   <div>
@@ -560,7 +578,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
                   <div>
@@ -613,7 +631,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               <Trophy className="w-12 h-12 text-amber-500" />
             </motion.div>
-            
+
             <h1 className="text-4xl font-bold">Challenge Complete!</h1>
             <p className="text-xl text-[var(--color-text-muted)]">
               Great work! Here's how you performed.
@@ -704,7 +722,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
               <div className="text-right">
                 <div className="text-sm text-[var(--color-text-muted)]">Time Remaining</div>
-                <div className={`text-xl font-bold ${timeRemaining < 60000 ? 'text-red-500' : 'text-amber-500'}`}>
+                <div
+                  className={`text-xl font-bold ${timeRemaining < 60000 ? 'text-red-500' : 'text-amber-500'}`}
+                >
                   {formatTime(timeRemaining)}
                 </div>
               </div>

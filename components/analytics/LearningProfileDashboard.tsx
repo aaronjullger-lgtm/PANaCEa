@@ -1,6 +1,6 @@
 /**
  * Learning Profile Dashboard
- * 
+ *
  * Displays comprehensive user analytics from the database including:
  * - Lifetime stats and trends
  * - Test-taking patterns
@@ -84,11 +84,11 @@ export const LearningProfileDashboard: React.FC = () => {
   const loadProfile = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const token = await getToken();
       const data = await fetchLearningProfile(token);
-      
+
       if (data.error) {
         setError(data.error);
       } else {
@@ -125,19 +125,27 @@ export const LearningProfileDashboard: React.FC = () => {
 
   const getReadinessColor = (level: string | null): string => {
     switch (level) {
-      case 'ready': return 'text-emerald-500';
-      case 'almost_ready': return 'text-blue-500';
-      case 'progressing': return 'text-amber-500';
-      default: return 'text-slate-500';
+      case 'ready':
+        return 'text-emerald-500';
+      case 'almost_ready':
+        return 'text-blue-500';
+      case 'progressing':
+        return 'text-amber-500';
+      default:
+        return 'text-slate-500';
     }
   };
 
   const getReadinessLabel = (level: string | null): string => {
     switch (level) {
-      case 'ready': return 'Ready for PANCE';
-      case 'almost_ready': return 'Almost Ready';
-      case 'progressing': return 'Progressing';
-      default: return 'Building Foundation';
+      case 'ready':
+        return 'Ready for PANCE';
+      case 'almost_ready':
+        return 'Almost Ready';
+      case 'progressing':
+        return 'Progressing';
+      default:
+        return 'Building Foundation';
     }
   };
 
@@ -172,8 +180,8 @@ export const LearningProfileDashboard: React.FC = () => {
           No Learning Profile Yet
         </h3>
         <p className="text-slate-500 dark:text-slate-400 max-w-md">
-          Complete a few study sessions to build your personalized learning profile.
-          We&apos;ll track your patterns and provide insights to optimize your studying.
+          Complete a few study sessions to build your personalized learning profile. We&apos;ll
+          track your patterns and provide insights to optimize your studying.
         </p>
       </div>
     );
@@ -218,7 +226,9 @@ export const LearningProfileDashboard: React.FC = () => {
                 </span>
                 <span className="text-sm text-slate-500">/800</span>
               </div>
-              <p className={`text-sm mt-2 font-medium ${getReadinessColor(profile.readinessLevel)}`}>
+              <p
+                className={`text-sm mt-2 font-medium ${getReadinessColor(profile.readinessLevel)}`}
+              >
                 {getReadinessLabel(profile.readinessLevel)}
               </p>
             </div>
@@ -293,21 +303,28 @@ export const LearningProfileDashboard: React.FC = () => {
             <div>
               <p className="text-xs text-slate-400">Avg Accuracy (Last 10)</p>
               <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">
-                {aggregateStats.recentAvgAccuracy !== null 
-                  ? `${Math.round(aggregateStats.recentAvgAccuracy)}%` 
+                {aggregateStats.recentAvgAccuracy !== null
+                  ? `${Math.round(aggregateStats.recentAvgAccuracy)}%`
                   : '—'}
               </p>
             </div>
             <div>
               <p className="text-xs text-slate-400">Trend</p>
-              <p className={`text-lg font-semibold flex items-center gap-1 ${
-                aggregateStats.accuracyTrend === 'improving' ? 'text-emerald-500' :
-                aggregateStats.accuracyTrend === 'declining' ? 'text-red-500' :
-                'text-slate-500'
-              }`}>
+              <p
+                className={`text-lg font-semibold flex items-center gap-1 ${
+                  aggregateStats.accuracyTrend === 'improving'
+                    ? 'text-emerald-500'
+                    : aggregateStats.accuracyTrend === 'declining'
+                      ? 'text-red-500'
+                      : 'text-slate-500'
+                }`}
+              >
                 {aggregateStats.accuracyTrend === 'improving' && <TrendingUp className="w-4 h-4" />}
-                {aggregateStats.accuracyTrend === 'declining' && <TrendingDown className="w-4 h-4" />}
-                {aggregateStats.accuracyTrend.charAt(0).toUpperCase() + aggregateStats.accuracyTrend.slice(1)}
+                {aggregateStats.accuracyTrend === 'declining' && (
+                  <TrendingDown className="w-4 h-4" />
+                )}
+                {aggregateStats.accuracyTrend.charAt(0).toUpperCase() +
+                  aggregateStats.accuracyTrend.slice(1)}
               </p>
             </div>
             <div>
@@ -336,13 +353,19 @@ export const LearningProfileDashboard: React.FC = () => {
                 profile.overallCalibrationScore >= 70
                   ? "You're well-calibrated - your confidence matches your performance"
                   : profile.overallCalibrationScore >= 50
-                  ? "Room for improvement in calibrating your confidence"
-                  : "Work on trusting your gut - you may be over/under-confident"
+                    ? 'Room for improvement in calibrating your confidence'
+                    : 'Work on trusting your gut - you may be over/under-confident'
               }
-              color={profile.overallCalibrationScore >= 70 ? 'green' : profile.overallCalibrationScore >= 50 ? 'amber' : 'red'}
+              color={
+                profile.overallCalibrationScore >= 70
+                  ? 'green'
+                  : profile.overallCalibrationScore >= 50
+                    ? 'amber'
+                    : 'red'
+              }
             />
           )}
-          
+
           {/* Answer Change Pattern */}
           {profile.changeHelpfulRatio !== null && (
             <PatternItem
@@ -350,33 +373,41 @@ export const LearningProfileDashboard: React.FC = () => {
               value={`${Math.round(profile.changeHelpfulRatio * 100)}% helpful`}
               description={
                 profile.changeHelpfulRatio >= 0.6
-                  ? "Your answer changes usually improve your score - deliberate when unsure"
+                  ? 'Your answer changes usually improve your score - deliberate when unsure'
                   : profile.changeHelpfulRatio <= 0.4
-                  ? "You often change to wrong answers - trust your first instinct more"
-                  : "Your changes are about 50/50 - consider trusting your gut"
+                    ? 'You often change to wrong answers - trust your first instinct more'
+                    : 'Your changes are about 50/50 - consider trusting your gut'
               }
-              color={profile.changeHelpfulRatio >= 0.6 ? 'green' : profile.changeHelpfulRatio <= 0.4 ? 'red' : 'amber'}
+              color={
+                profile.changeHelpfulRatio >= 0.6
+                  ? 'green'
+                  : profile.changeHelpfulRatio <= 0.4
+                    ? 'red'
+                    : 'amber'
+              }
             />
           )}
-          
+
           {/* Rushing Tendency */}
           {profile.rushingTendency !== null && (
             <PatternItem
               label="Pacing"
               value={
-                profile.rushingTendency > 0.4 ? "Tends to rush" :
-                profile.rushingTendency < 0.2 ? "Methodical" :
-                "Balanced"
+                profile.rushingTendency > 0.4
+                  ? 'Tends to rush'
+                  : profile.rushingTendency < 0.2
+                    ? 'Methodical'
+                    : 'Balanced'
               }
               description={
                 profile.rushingTendency > 0.4
                   ? "You answer quickly - make sure you're reading carefully"
-                  : "Your pace is appropriate for the question complexity"
+                  : 'Your pace is appropriate for the question complexity'
               }
               color={profile.rushingTendency > 0.4 ? 'amber' : 'green'}
             />
           )}
-          
+
           {/* Fatigue Onset */}
           {profile.fatigueOnsetQuestion && (
             <PatternItem
@@ -399,7 +430,7 @@ export const LearningProfileDashboard: React.FC = () => {
                 Strong Systems
               </h3>
               <div className="flex flex-wrap gap-2">
-                {profile.strongestSystems.map(system => (
+                {profile.strongestSystems.map((system) => (
                   <span
                     key={system}
                     className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-sm"
@@ -410,7 +441,7 @@ export const LearningProfileDashboard: React.FC = () => {
               </div>
             </div>
           )}
-          
+
           {profile.weakestSystems.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
               <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
@@ -418,7 +449,7 @@ export const LearningProfileDashboard: React.FC = () => {
                 Focus Areas
               </h3>
               <div className="flex flex-wrap gap-2">
-                {profile.weakestSystems.map(system => (
+                {profile.weakestSystems.map((system) => (
                   <span
                     key={system}
                     className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full text-sm"
@@ -441,7 +472,10 @@ export const LearningProfileDashboard: React.FC = () => {
           </h3>
           <ul className="space-y-2">
             {profile.recommendations.map((rec, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-300">
+              <li
+                key={i}
+                className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-300"
+              >
                 <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>{rec}</span>
               </li>
@@ -458,23 +492,25 @@ export const LearningProfileDashboard: React.FC = () => {
             Recent Sessions
           </h3>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
-            {sessions.slice(0, 5).map(session => (
+            {sessions.slice(0, 5).map((session) => (
               <div key={session.id} className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                     {formatDate(session.startedAt)}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    {session.totalQuestions} questions
-                  </p>
+                  <p className="text-xs text-slate-500">{session.totalQuestions} questions</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={`text-lg font-semibold ${
-                      session.accuracy >= 80 ? 'text-emerald-500' :
-                      session.accuracy >= 60 ? 'text-amber-500' :
-                      'text-red-500'
-                    }`}>
+                    <p
+                      className={`text-lg font-semibold ${
+                        session.accuracy >= 80
+                          ? 'text-emerald-500'
+                          : session.accuracy >= 60
+                            ? 'text-amber-500'
+                            : 'text-red-500'
+                      }`}
+                    >
                       {Math.round(session.accuracy)}%
                     </p>
                     {session.bestStreak > 0 && (
@@ -507,9 +543,7 @@ const StatCard: React.FC<{
       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
     </div>
     <p className="text-2xl font-bold text-slate-700 dark:text-slate-200">{value}</p>
-    {sublabel && (
-      <p className="text-xs text-slate-400 mt-1">{sublabel}</p>
-    )}
+    {sublabel && <p className="text-xs text-slate-400 mt-1">{sublabel}</p>}
   </div>
 );
 

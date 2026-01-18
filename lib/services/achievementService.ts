@@ -18,10 +18,7 @@ export interface AchievementProgress {
 /**
  * Check if user has unlocked a specific achievement
  */
-export async function hasAchievement(
-  userId: string,
-  achievementId: string
-): Promise<boolean> {
+export async function hasAchievement(userId: string, achievementId: string): Promise<boolean> {
   const prisma = getPrisma();
   const achievement = await prisma.userAchievement.findUnique({
     where: {
@@ -67,9 +64,7 @@ export async function unlockAchievement(
 /**
  * Get all achievements for a user with unlock status
  */
-export async function getUserAchievements(
-  userId: string
-): Promise<AchievementProgress[]> {
+export async function getUserAchievements(userId: string): Promise<AchievementProgress[]> {
   const prisma = getPrisma();
   const unlockedAchievements = await prisma.userAchievement.findMany({
     where: { userId },
@@ -152,9 +147,7 @@ export async function checkQuestionCountAchievements(
 ): Promise<string[]> {
   const unlockedIds: string[] = [];
 
-  const countAchievements = ACHIEVEMENTS.filter(
-    (a) => a.requirements.type === 'count'
-  );
+  const countAchievements = ACHIEVEMENTS.filter((a) => a.requirements.type === 'count');
 
   for (const achievement of countAchievements) {
     if (totalQuestions >= achievement.requirements.value) {
@@ -178,19 +171,14 @@ export async function checkAccuracyAchievements(
 ): Promise<string[]> {
   const unlockedIds: string[] = [];
 
-  const accuracyAchievements = ACHIEVEMENTS.filter(
-    (a) => a.requirements.type === 'accuracy'
-  );
+  const accuracyAchievements = ACHIEVEMENTS.filter((a) => a.requirements.type === 'accuracy');
 
   for (const achievement of accuracyAchievements) {
     // Parse session size requirement from condition
     const match = achievement.requirements.condition?.match(/session_(\d+)/);
     const requiredQuestions = match ? parseInt(match[1]) : 0;
 
-    if (
-      questionCount >= requiredQuestions &&
-      accuracy >= achievement.requirements.value
-    ) {
+    if (questionCount >= requiredQuestions && accuracy >= achievement.requirements.value) {
       const wasUnlocked = await unlockAchievement(userId, achievement.id);
       if (wasUnlocked) {
         unlockedIds.push(achievement.id);
@@ -212,9 +200,7 @@ export async function checkMasteryAchievements(
   const prisma = getPrisma();
 
   const masteryAchievements = ACHIEVEMENTS.filter(
-    (a) =>
-      a.requirements.type === 'mastery' &&
-      a.requirements.condition === systemCode
+    (a) => a.requirements.type === 'mastery' && a.requirements.condition === systemCode
   );
 
   for (const achievement of masteryAchievements) {
@@ -241,14 +227,12 @@ export async function checkMasteryAchievements(
 /**
  * Check for "all systems gold" achievement
  */
-export async function checkAllSystemsGoldAchievement(
-  userId: string
-): Promise<string[]> {
+export async function checkAllSystemsGoldAchievement(userId: string): Promise<string[]> {
   const unlockedIds: string[] = [];
   const prisma = getPrisma();
 
   const allSystems = ['CV', 'PULM', 'GI', 'NEURO', 'RENAL', 'ENDO', 'HEME', 'MSK', 'DERM', 'PSYCH'];
-  
+
   const goldMasteries = await prisma.masteryProgress.findMany({
     where: {
       userId,
@@ -284,11 +268,14 @@ export async function getAchievementStats(userId: string) {
   const achievements = await getUserAchievements(userId);
   const unlocked = achievements.filter((a) => a.isUnlocked);
 
-  const byRarity = ACHIEVEMENTS.reduce((acc, def) => {
-    const isUnlocked = unlocked.some((u) => u.achievementId === def.id);
-    acc[def.rarity] = (acc[def.rarity] || 0) + (isUnlocked ? 1 : 0);
-    return acc;
-  }, {} as Record<string, number>);
+  const byRarity = ACHIEVEMENTS.reduce(
+    (acc, def) => {
+      const isUnlocked = unlocked.some((u) => u.achievementId === def.id);
+      acc[def.rarity] = (acc[def.rarity] || 0) + (isUnlocked ? 1 : 0);
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return {
     total: ACHIEVEMENTS.length,

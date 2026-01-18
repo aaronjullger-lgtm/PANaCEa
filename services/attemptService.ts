@@ -1,6 +1,6 @@
 /**
  * Question Attempt Service
- * 
+ *
  * Client-side service for recording question attempts to the database.
  * Handles the API call to /api/questions/attempt with proper error handling.
  */
@@ -89,7 +89,7 @@ export async function processRetryQueue(token?: string | null): Promise<{
   }
 
   console.log('[AttemptService] Processing retry queue, items:', queued.length);
-  
+
   let processed = 0;
   let failed = 0;
   const remaining: QueuedAttempt[] = [];
@@ -106,7 +106,10 @@ export async function processRetryQueue(token?: string | null): Promise<{
           remaining.push(item);
         } else {
           failed++;
-          console.warn('[AttemptService] Attempt exceeded max retries, dropping:', item.data.questionId);
+          console.warn(
+            '[AttemptService] Attempt exceeded max retries, dropping:',
+            item.data.questionId
+          );
         }
       }
     } catch {
@@ -120,8 +123,12 @@ export async function processRetryQueue(token?: string | null): Promise<{
   }
 
   saveQueuedAttempts(remaining);
-  console.log('[AttemptService] Retry queue processed:', { processed, failed, remaining: remaining.length });
-  
+  console.log('[AttemptService] Retry queue processed:', {
+    processed,
+    failed,
+    remaining: remaining.length,
+  });
+
   return { processed, failed };
 }
 
@@ -135,7 +142,7 @@ async function sendAttemptToServer(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -163,10 +170,10 @@ export async function recordQuestionAttempt(
 ): Promise<AttemptResponse | null> {
   try {
     const result = await sendAttemptToServer(data, token);
-    
+
     if (result) {
       // Success - also try to process any queued attempts
-      processRetryQueue(token).catch(err => {
+      processRetryQueue(token).catch((err) => {
         console.warn('[AttemptService] Background retry processing failed:', err);
       });
       return result;
@@ -189,7 +196,7 @@ export async function recordQuestionAttempt(
 export async function getUserStats(token?: string | null): Promise<any | null> {
   try {
     const headers: Record<string, string> = {};
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }

@@ -1,11 +1,11 @@
 // components/DrugDetailModal.tsx
 // Modal component for displaying detailed drug/pharmacology information
 
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
-import { formatDrugName } from "../lib/drugBrandNames";
-import { toTitleCase } from "../lib/textUtils";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { DrugEntry, DrugInteraction } from '../pharm/drugTypes';
+import { formatDrugName } from '../lib/drugBrandNames';
+import { toTitleCase } from '../lib/textUtils';
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
@@ -13,21 +13,17 @@ interface DrugDetailModalProps {
   onDrillDrug?: (drug: DrugEntry) => void;
 }
 
-const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
-  drug,
-  onClose,
-  onDrillDrug,
-}) => {
+const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDrillDrug }) => {
   // Format interaction for display
   const formatInteraction = (interaction: string | DrugInteraction): string => {
-    if (typeof interaction === "string") {
+    if (typeof interaction === 'string') {
       return interaction;
     }
     if (interaction.drug && interaction.effect) {
       return `${toTitleCase(interaction.drug)}: ${interaction.effect}`;
     }
     if (interaction.category && interaction.effect) {
-      return `${interaction.category} (${interaction.examples || ""}): ${interaction.effect}`;
+      return `${interaction.category} (${interaction.examples || ''}): ${interaction.effect}`;
     }
     return JSON.stringify(interaction);
   };
@@ -68,14 +64,14 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                   </span>
                 )}
                 {/* Only show type if it's NOT "small molecule" or other non-instructional classifications */}
-                {drug.type && 
-                 drug.type !== "N/A" && 
-                 drug.type.toLowerCase() !== "small molecule" && 
-                 drug.type.toLowerCase() !== "small_molecule" && (
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
-                    {toTitleCase(drug.type)}
-                  </span>
-                )}
+                {drug.type &&
+                  drug.type !== 'N/A' &&
+                  drug.type.toLowerCase() !== 'small molecule' &&
+                  drug.type.toLowerCase() !== 'small_molecule' && (
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
+                      {toTitleCase(drug.type)}
+                    </span>
+                  )}
               </div>
             </div>
             <button
@@ -84,7 +80,12 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
               aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -96,9 +97,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
               <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                 Mechanism of Action
               </h3>
-              <p className="text-[var(--color-text-primary)] text-sm leading-loose">
-                {drug.MOA}
-              </p>
+              <p className="text-[var(--color-text-primary)] text-sm leading-loose">{drug.MOA}</p>
             </section>
 
             {/* Clinical Notes */}
@@ -121,12 +120,20 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg">
-                    <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Metabolism</p>
-                    <p className="text-sm text-[var(--color-text-primary)]">{drug.pharmacokinetics.metabolism}</p>
+                    <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                      Metabolism
+                    </p>
+                    <p className="text-sm text-[var(--color-text-primary)]">
+                      {drug.pharmacokinetics.metabolism}
+                    </p>
                   </div>
                   <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg">
-                    <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Elimination</p>
-                    <p className="text-sm text-[var(--color-text-primary)]">{drug.pharmacokinetics.elimination}</p>
+                    <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                      Elimination
+                    </p>
+                    <p className="text-sm text-[var(--color-text-primary)]">
+                      {drug.pharmacokinetics.elimination}
+                    </p>
                   </div>
                 </div>
               </section>
@@ -140,7 +147,10 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.ADEs.map((ade, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+                    <li
+                      key={idx}
+                      className="text-sm text-[var(--color-text-primary)] leading-relaxed"
+                    >
                       {ade}
                     </li>
                   ))}
@@ -156,7 +166,10 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.contraindications.map((ci, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+                    <li
+                      key={idx}
+                      className="text-sm text-[var(--color-text-primary)] leading-relaxed"
+                    >
                       {ci}
                     </li>
                   ))}
@@ -172,7 +185,10 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.interactions.map((interaction, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+                    <li
+                      key={idx}
+                      className="text-sm text-[var(--color-text-primary)] leading-relaxed"
+                    >
                       {formatInteraction(interaction)}
                     </li>
                   ))}
@@ -181,7 +197,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
             )}
 
             {/* Antidote */}
-            {drug.antidote && drug.antidote !== "N/A" && (
+            {drug.antidote && drug.antidote !== 'N/A' && (
               <section className="card-glass p-4 rounded-xl">
                 <h3 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
                   Antidote

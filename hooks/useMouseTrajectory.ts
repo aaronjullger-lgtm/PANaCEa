@@ -1,16 +1,16 @@
 /**
  * useMouseTrajectory - React hook for tracking mouse movements during MCQ answer selection
- * 
+ *
  * Captures cursor trajectory data at 40ms intervals (25 Hz) and computes
  * micro-kinetic metrics for cognitive load inference.
- * 
+ *
  * Usage:
  * ```tsx
  * const { startTracking, stopTracking, getMetrics } = useMouseTrajectory();
- * 
+ *
  * // When question loads
  * useEffect(() => { startTracking(); }, [questionId]);
- * 
+ *
  * // When answer button is clicked
  * const handleClick = (e: MouseEvent, optionId: string) => {
  *   const rect = e.currentTarget.getBoundingClientRect();
@@ -79,10 +79,10 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
    */
   const samplePosition = useCallback(() => {
     if (!isTrackingRef.current) return;
-    
+
     const now = Date.now();
     const elapsed = now - startTimeRef.current;
-    
+
     pointsRef.current.push({
       x: lastPositionRef.current.x,
       y: lastPositionRef.current.y,
@@ -98,19 +98,19 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Initialize tracking state
     isTrackingRef.current = true;
     startTimeRef.current = Date.now();
     pointsRef.current = [];
     startPointRef.current = { ...lastPositionRef.current };
-    
+
     // Add global mouse move listener
     window.addEventListener('mousemove', handleMouseMove);
-    
+
     // Start sampling at 40ms intervals (25 Hz)
     intervalRef.current = setInterval(samplePosition, SAMPLING_INTERVAL_MS);
-    
+
     // Capture initial position
     samplePosition();
   }, [handleMouseMove, samplePosition]);
@@ -118,43 +118,46 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
   /**
    * Stop tracking and compute metrics
    */
-  const stopTracking = useCallback((target: TargetInfo): TrajectoryMetrics | null => {
-    if (!isTrackingRef.current) return null;
-    
-    // Stop tracking
-    isTrackingRef.current = false;
-    
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    
-    window.removeEventListener('mousemove', handleMouseMove);
-    
-    // Final sample
-    const endTime = Date.now();
-    pointsRef.current.push({
-      x: lastPositionRef.current.x,
-      y: lastPositionRef.current.y,
-      t: endTime - startTimeRef.current,
-    });
-    
-    // Build raw trajectory
-    if (!startPointRef.current || pointsRef.current.length < 2) {
-      return null;
-    }
-    
-    const rawTrajectory: RawTrajectory = {
-      startPoint: startPointRef.current,
-      points: pointsRef.current,
-      target,
-      startTime: startTimeRef.current,
-      endTime,
-    };
-    
-    // Analyze and return metrics
-    return analyzeTrajectory(rawTrajectory);
-  }, [handleMouseMove]);
+  const stopTracking = useCallback(
+    (target: TargetInfo): TrajectoryMetrics | null => {
+      if (!isTrackingRef.current) return null;
+
+      // Stop tracking
+      isTrackingRef.current = false;
+
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      window.removeEventListener('mousemove', handleMouseMove);
+
+      // Final sample
+      const endTime = Date.now();
+      pointsRef.current.push({
+        x: lastPositionRef.current.x,
+        y: lastPositionRef.current.y,
+        t: endTime - startTimeRef.current,
+      });
+
+      // Build raw trajectory
+      if (!startPointRef.current || pointsRef.current.length < 2) {
+        return null;
+      }
+
+      const rawTrajectory: RawTrajectory = {
+        startPoint: startPointRef.current,
+        points: pointsRef.current,
+        target,
+        startTime: startTimeRef.current,
+        endTime,
+      };
+
+      // Analyze and return metrics
+      return analyzeTrajectory(rawTrajectory);
+    },
+    [handleMouseMove]
+  );
 
   /**
    * Get metrics without stopping tracking
@@ -163,7 +166,7 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
     if (!startPointRef.current || pointsRef.current.length < 2) {
       return null;
     }
-    
+
     const rawTrajectory: RawTrajectory = {
       startPoint: startPointRef.current,
       points: [...pointsRef.current],
@@ -171,7 +174,7 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
       startTime: startTimeRef.current,
       endTime: Date.now(),
     };
-    
+
     return analyzeTrajectory(rawTrajectory);
   }, []);
 
@@ -187,14 +190,14 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
    */
   const reset = useCallback(() => {
     isTrackingRef.current = false;
-    
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    
+
     window.removeEventListener('mousemove', handleMouseMove);
-    
+
     startPointRef.current = null;
     startTimeRef.current = 0;
     pointsRef.current = [];
@@ -210,11 +213,14 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
   /**
    * Get serialized metrics for API submission
    */
-  const getSerializedMetrics = useCallback((target: TargetInfo): Record<string, number> | null => {
-    const metrics = getMetrics(target);
-    if (!metrics) return null;
-    return serializeTrajectoryMetrics(metrics);
-  }, [getMetrics]);
+  const getSerializedMetrics = useCallback(
+    (target: TargetInfo): Record<string, number> | null => {
+      const metrics = getMetrics(target);
+      if (!metrics) return null;
+      return serializeTrajectoryMetrics(metrics);
+    },
+    [getMetrics]
+  );
 
   // Cleanup on unmount
   useEffect(() => {

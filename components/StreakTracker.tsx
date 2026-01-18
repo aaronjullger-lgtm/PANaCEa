@@ -24,19 +24,19 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   // Handle loading/null states gracefully
   const safeStreak = currentStreak ?? 0;
   const safeBestStreak = bestStreak ?? 0;
-  
+
   // Use UTC date to ensure consistency regardless of client timezone
   const todayUTC = getTodayUTC();
   const today = todayUTC.toISOString().split('T')[0];
   const studiedToday = lastStudyDate === today;
-  
+
   // Get last 7 days for mini calendar using UTC
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(todayUTC);
     date.setUTCDate(todayUTC.getUTCDate() - (6 - i));
     return date.toISOString().split('T')[0];
   });
-  
+
   const getStreakColor = () => {
     if (safeStreak === 0) return 'text-slate-400';
     if (safeStreak < 3) return 'text-orange-500';
@@ -44,23 +44,24 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
     if (safeStreak < 14) return 'text-red-500';
     return 'text-red-600';
   };
-  
+
   const getStreakMessage = () => {
-    if (safeStreak === 0) return "Start your streak today!";
-    if (safeStreak === 1) return "Great start! Keep it going!";
-    if (safeStreak < 7) return "Building momentum!";
+    if (safeStreak === 0) return 'Start your streak today!';
+    if (safeStreak === 1) return 'Great start! Keep it going!';
+    if (safeStreak < 7) return 'Building momentum!';
     if (safeStreak < 14) return "You're on fire!";
-    if (safeStreak < 30) return "Unstoppable! Keep crushing it!";
-    return "Legendary dedication!";
+    if (safeStreak < 30) return 'Unstoppable! Keep crushing it!';
+    return 'Legendary dedication!';
   };
-  
+
   const hasStudiedOnDate = (date: string) => {
-    return streakHistory.some(entry => entry.date === date && entry.studied) || 
-           (date === lastStudyDate);
+    return (
+      streakHistory.some((entry) => entry.date === date && entry.studied) || date === lastStudyDate
+    );
   };
-  
+
   const isToday = (date: string) => date === today;
-  
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
       {/* Header */}
@@ -80,7 +81,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           </motion.div>
         )}
       </div>
-      
+
       {/* Current Streak Display */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -90,29 +91,23 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-baseline gap-2"
           >
-            <span className={`text-5xl font-bold ${getStreakColor()}`}>
-              {safeStreak}
-            </span>
+            <span className={`text-5xl font-bold ${getStreakColor()}`}>{safeStreak}</span>
             <span className="text-lg text-slate-600 dark:text-slate-400">
               {safeStreak === 1 ? 'day' : 'days'}
             </span>
           </motion.div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {getStreakMessage()}
-          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{getStreakMessage()}</p>
         </div>
-        
+
         <div className="text-right">
-          <div className="text-sm text-slate-500 dark:text-slate-400">
-            Best Streak
-          </div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">Best Streak</div>
           <div className="flex items-center gap-1 text-2xl font-bold text-slate-700 dark:text-slate-300">
             <TrendingUp className="w-5 h-5" />
             {safeBestStreak}
           </div>
         </div>
       </div>
-      
+
       {/* Mini Calendar - Last 7 Days */}
       <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
         <div className="flex items-center gap-2 mb-3">
@@ -121,14 +116,14 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
             Last 7 Days
           </span>
         </div>
-        
+
         <div className="grid grid-cols-7 gap-2">
           {last7Days.map((date, index) => {
             const hasStudied = hasStudiedOnDate(date);
             const isCurrentDay = isToday(date);
             // Use UTC day to ensure consistency
             const dayName = DAY_NAMES[new Date(date + 'T00:00:00Z').getUTCDay()];
-            
+
             return (
               <motion.div
                 key={date}
@@ -137,17 +132,16 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
                 transition={{ delay: index * 0.05 }}
                 className="flex flex-col items-center"
               >
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  {dayName}
-                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{dayName}</div>
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   className={`
                     w-8 h-8 rounded-lg flex items-center justify-center
                     transition-colors duration-200
-                    ${hasStudied
-                      ? 'bg-[var(--color-accent)] text-white'
-                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                    ${
+                      hasStudied
+                        ? 'bg-[var(--color-accent)] text-white'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                     }
                     ${isCurrentDay ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}
                   `}
@@ -161,7 +155,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           })}
         </div>
       </div>
-      
+
       {/* Study Today CTA */}
       {!studiedToday && (
         <motion.div
@@ -170,14 +164,13 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
           <p className="text-sm text-slate-700 dark:text-slate-300 text-center">
-            {safeStreak > 0 
+            {safeStreak > 0
               ? `Keep your ${safeStreak}-day streak alive! Study today.`
-              : 'Start building your study habit today!'
-            }
+              : 'Start building your study habit today!'}
           </p>
         </motion.div>
       )}
-      
+
       {/* Studied Today Badge */}
       {studiedToday && (
         <motion.div

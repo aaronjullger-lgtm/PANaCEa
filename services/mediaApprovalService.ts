@@ -1,17 +1,17 @@
 /**
  * Media Approval Service
- * 
+ *
  * Manages the approval workflow for uploaded medical images and resources.
  * Implements a "no-use" to "use" folder system via approval status.
  */
 
 import { prisma } from '../lib/prisma';
-import { 
-  assessImageQuality, 
-  shouldAutoApprove, 
+import {
+  assessImageQuality,
+  shouldAutoApprove,
   generateThumbnail,
   optimizeImage,
-  QualityAssessment 
+  QualityAssessment,
 } from './imageQualityService';
 import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
 
@@ -42,10 +42,10 @@ export async function processUploadedMedia(
 }> {
   // Assess image quality
   const assessment = await assessImageQuality(imageBuffer, category);
-  
+
   // Determine if auto-approval is warranted
   const autoApproved = shouldAutoApprove(assessment);
-  
+
   // Update database with assessment results
   await prisma.mediaAsset.update({
     where: { id: mediaId },
@@ -83,11 +83,11 @@ export async function getPendingMedia(options?: {
   limit?: number;
   offset?: number;
 }) {
-  const where: any = { 
+  const where: any = {
     approvalStatus: 'pending',
-    folder: 'inbox'
+    folder: 'inbox',
   };
-  
+
   if (options?.category) {
     where.type = options.category;
   }
@@ -98,7 +98,7 @@ export async function getPendingMedia(options?: {
     take: options?.limit || 50,
     skip: options?.offset || 0,
     include: {
-      condition: {
+      Condition: {
         select: {
           id: true,
           name: true,
@@ -123,11 +123,11 @@ export async function getApprovedMedia(options?: {
   offset?: number;
 }) {
   const where: any = { approvalStatus: 'approved' };
-  
+
   if (options?.category) {
     where.type = options.category;
   }
-  
+
   if (options?.conditionId) {
     where.conditionId = options.conditionId;
   }
@@ -138,7 +138,7 @@ export async function getApprovedMedia(options?: {
     take: options?.limit || 50,
     skip: options?.offset || 0,
     include: {
-      condition: {
+      Condition: {
         select: {
           id: true,
           name: true,
@@ -235,10 +235,7 @@ export async function batchApproveMedia(
 /**
  * Generate and upload thumbnail for media asset
  */
-async function generateAndUploadThumbnail(
-  mediaId: string,
-  imageBuffer: Buffer
-): Promise<void> {
+async function generateAndUploadThumbnail(mediaId: string, imageBuffer: Buffer): Promise<void> {
   const media = await prisma.mediaAsset.findUnique({
     where: { id: mediaId },
   });
@@ -248,7 +245,7 @@ async function generateAndUploadThumbnail(
   try {
     // Generate thumbnail
     const thumbnailBuffer = await generateThumbnail(imageBuffer, 300);
-    
+
     // Upload to Supabase Storage
     const thumbnailPath = `${media.type}/thumbnails/${media.filename}`;
     const { error } = await supabaseAdmin.storage
@@ -318,7 +315,9 @@ export async function reassessMedia(mediaId: string): Promise<QualityAssessment>
     }
     imageBuffer = Buffer.from(await response.arrayBuffer());
   } catch (error) {
-    throw new Error(`Failed to download image for re-assessment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to download image for re-assessment: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   // Re-assess quality

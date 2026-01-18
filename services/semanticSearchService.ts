@@ -25,38 +25,52 @@ const CONCEPT_MAPPINGS: ConceptMapping[] = [
     concept: 'Chest Pain',
     synonyms: ['chest discomfort', 'thoracic pain', 'chest tightness', 'angina'],
     relatedConditions: ['MI', 'Pericarditis', 'PE', 'GERD', 'Costochondritis', 'Pneumothorax'],
-    keywords: ['pain', 'pressure', 'substernal', 'radiating', 'crushing']
+    keywords: ['pain', 'pressure', 'substernal', 'radiating', 'crushing'],
   },
   {
     concept: 'Shortness of Breath',
     synonyms: ['dyspnea', 'breathlessness', 'difficulty breathing', 'SOB'],
     relatedConditions: ['CHF', 'Asthma', 'COPD', 'PE', 'Pneumonia', 'Pneumothorax'],
-    keywords: ['respiratory', 'breathing', 'air', 'oxygen', 'hypoxia']
+    keywords: ['respiratory', 'breathing', 'air', 'oxygen', 'hypoxia'],
   },
   {
     concept: 'Pericarditis',
     synonyms: ['pericardial inflammation'],
     relatedConditions: ['pericardial effusion', 'cardiac tamponade', 'viral pericarditis'],
-    keywords: ['chest pain', 'friction rub', 'ST elevation', 'sitting forward', 'pleuritic']
+    keywords: ['chest pain', 'friction rub', 'ST elevation', 'sitting forward', 'pleuritic'],
   },
   {
     concept: 'Pulmonary Embolism',
     synonyms: ['PE', 'blood clot in lung', 'pulmonary thromboembolism'],
     relatedConditions: ['DVT', 'VTE', 'right heart strain'],
-    keywords: ['chest pain', 'shortness of breath', 'hypoxia', 'tachycardia', 'hemoptysis', 'Wells score']
+    keywords: [
+      'chest pain',
+      'shortness of breath',
+      'hypoxia',
+      'tachycardia',
+      'hemoptysis',
+      'Wells score',
+    ],
   },
   {
     concept: 'Myocardial Infarction',
     synonyms: ['MI', 'heart attack', 'STEMI', 'NSTEMI', 'acute coronary syndrome', 'ACS'],
     relatedConditions: ['unstable angina', 'coronary artery disease', 'atherosclerosis'],
-    keywords: ['chest pain', 'troponin', 'ECG changes', 'ST elevation', 'crushing pain', 'jaw pain']
+    keywords: [
+      'chest pain',
+      'troponin',
+      'ECG changes',
+      'ST elevation',
+      'crushing pain',
+      'jaw pain',
+    ],
   },
   {
     concept: 'Congestive Heart Failure',
     synonyms: ['CHF', 'heart failure', 'cardiac failure', 'HFrEF', 'HFpEF'],
     relatedConditions: ['cardiomyopathy', 'pulmonary edema'],
-    keywords: ['shortness of breath', 'dyspnea', 'edema', 'JVD', 'orthopnea', 'PND', 'BNP']
-  }
+    keywords: ['shortness of breath', 'dyspnea', 'edema', 'JVD', 'orthopnea', 'PND', 'BNP'],
+  },
 ];
 
 /**
@@ -73,14 +87,14 @@ export function semanticSearch(
   // Extract concepts from query
   const queryConcepts = extractConcepts(normalizedQuery);
 
-  questions.forEach(question => {
+  questions.forEach((question) => {
     const relevance = calculateRelevance(normalizedQuery, queryConcepts, question);
-    
+
     if (relevance.score >= minRelevanceScore) {
       results.push({
         question,
         relevanceScore: relevance.score,
-        matchedConcepts: relevance.matchedConcepts
+        matchedConcepts: relevance.matchedConcepts,
       });
     }
   });
@@ -95,12 +109,12 @@ export function semanticSearch(
 function extractConcepts(query: string): ConceptMapping[] {
   const matchedConcepts: ConceptMapping[] = [];
 
-  CONCEPT_MAPPINGS.forEach(mapping => {
+  CONCEPT_MAPPINGS.forEach((mapping) => {
     // Check if query contains concept or synonyms
-    const conceptMatches = 
+    const conceptMatches =
       query.includes(mapping.concept.toLowerCase()) ||
-      mapping.synonyms.some(syn => query.includes(syn.toLowerCase())) ||
-      mapping.keywords.some(kw => query.includes(kw.toLowerCase()));
+      mapping.synonyms.some((syn) => query.includes(syn.toLowerCase())) ||
+      mapping.keywords.some((kw) => query.includes(kw.toLowerCase()));
 
     if (conceptMatches) {
       matchedConcepts.push(mapping);
@@ -120,20 +134,19 @@ function calculateRelevance(
 ): { score: number; matchedConcepts: string[] } {
   let score = 0;
   const matchedConcepts: string[] = [];
-  const questionText = `${question.question} ${question.condition} ${question.rationale}`.toLowerCase();
+  const questionText =
+    `${question.question} ${question.condition} ${question.rationale}`.toLowerCase();
 
   // Direct text match (baseline)
   const queryWords = query.split(/\s+/);
-  const matchedWords = queryWords.filter(word => 
-    word.length > 3 && questionText.includes(word)
-  );
+  const matchedWords = queryWords.filter((word) => word.length > 3 && questionText.includes(word));
   score += (matchedWords.length / queryWords.length) * 0.3;
 
   // Concept-based matching
-  queryConcepts.forEach(concept => {
+  queryConcepts.forEach((concept) => {
     // Check if question relates to this concept
     const conceptScore = calculateConceptScore(concept, question);
-    
+
     if (conceptScore > 0) {
       score += conceptScore;
       matchedConcepts.push(concept.concept);
@@ -142,7 +155,7 @@ function calculateRelevance(
 
   return {
     score: Math.min(score, 1.0), // Cap at 1.0
-    matchedConcepts
+    matchedConcepts,
   };
 }
 
@@ -151,25 +164,28 @@ function calculateRelevance(
  */
 function calculateConceptScore(concept: ConceptMapping, question: Question): number {
   let score = 0;
-  const questionText = `${question.question} ${question.condition} ${question.rationale}`.toLowerCase();
+  const questionText =
+    `${question.question} ${question.condition} ${question.rationale}`.toLowerCase();
 
   // Check for related conditions
-  concept.relatedConditions.forEach(condition => {
+  concept.relatedConditions.forEach((condition) => {
     if (questionText.includes(condition.toLowerCase())) {
       score += 0.3;
     }
   });
 
   // Check for concept keywords
-  concept.keywords.forEach(keyword => {
+  concept.keywords.forEach((keyword) => {
     if (questionText.includes(keyword.toLowerCase())) {
       score += 0.1;
     }
   });
 
   // Exact condition match
-  if (question.condition.toLowerCase() === concept.concept.toLowerCase() ||
-      concept.relatedConditions.some(c => c.toLowerCase() === question.condition.toLowerCase())) {
+  if (
+    question.condition.toLowerCase() === concept.concept.toLowerCase() ||
+    concept.relatedConditions.some((c) => c.toLowerCase() === question.condition.toLowerCase())
+  ) {
     score += 0.4;
   }
 
@@ -183,15 +199,15 @@ export function getRelatedConcepts(query: string): string[] {
   const normalizedQuery = query.toLowerCase();
   const related = new Set<string>();
 
-  CONCEPT_MAPPINGS.forEach(mapping => {
+  CONCEPT_MAPPINGS.forEach((mapping) => {
     // If query matches this concept
-    const matches = 
+    const matches =
       normalizedQuery.includes(mapping.concept.toLowerCase()) ||
-      mapping.synonyms.some(syn => normalizedQuery.includes(syn.toLowerCase()));
+      mapping.synonyms.some((syn) => normalizedQuery.includes(syn.toLowerCase()));
 
     if (matches) {
       // Add related conditions
-      mapping.relatedConditions.forEach(condition => related.add(condition));
+      mapping.relatedConditions.forEach((condition) => related.add(condition));
     }
   });
 
@@ -205,10 +221,10 @@ export function expandQuery(query: string): string[] {
   const normalizedQuery = query.toLowerCase();
   const expandedTerms = new Set<string>([query]);
 
-  CONCEPT_MAPPINGS.forEach(mapping => {
+  CONCEPT_MAPPINGS.forEach((mapping) => {
     if (normalizedQuery.includes(mapping.concept.toLowerCase())) {
-      mapping.synonyms.forEach(syn => expandedTerms.add(syn));
-      mapping.keywords.forEach(kw => expandedTerms.add(kw));
+      mapping.synonyms.forEach((syn) => expandedTerms.add(syn));
+      mapping.keywords.forEach((kw) => expandedTerms.add(kw));
     }
   });
 
@@ -222,10 +238,10 @@ export function suggestSearchTerms(query: string): string[] {
   const normalizedQuery = query.toLowerCase();
   const suggestions: string[] = [];
 
-  CONCEPT_MAPPINGS.forEach(mapping => {
+  CONCEPT_MAPPINGS.forEach((mapping) => {
     // Simple fuzzy matching - check if query is similar to concept
     const similarity = calculateStringSimilarity(normalizedQuery, mapping.concept.toLowerCase());
-    
+
     if (similarity > 0.6) {
       suggestions.push(mapping.concept);
       suggestions.push(...mapping.synonyms.slice(0, 2));
@@ -288,6 +304,6 @@ export function getExampleSearches(): string[] {
     'Patient has crushing chest pain',
     'Shortness of breath with leg swelling',
     'Sharp chest pain worse when lying flat',
-    'Sudden onset breathlessness with cough'
+    'Sudden onset breathlessness with cough',
   ];
 }

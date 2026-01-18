@@ -19,9 +19,9 @@ export class ContentService {
           select: {
             id: true,
             status: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!condition) return null;
@@ -73,7 +73,10 @@ export class ContentService {
           const parsed = MedicalContentSchema.parse(content.content);
           resultMap.set(content.conditionId, parsed);
         } catch (error) {
-          console.error(`[ContentService] Validation failed for condition ${content.conditionId}:`, error);
+          console.error(
+            `[ContentService] Validation failed for condition ${content.conditionId}:`,
+            error
+          );
         }
       }
     }
@@ -97,12 +100,12 @@ export class ContentService {
       where: { system },
       include: {
         MedicalContent: {
-          select: { status: true }
-        }
-      }
+          select: { status: true },
+        },
+      },
     });
 
-    return conditions.map(c => ({
+    return conditions.map((c) => ({
       id: c.id,
       conditionId: c.id,
       name: c.name,
@@ -116,11 +119,14 @@ export class ContentService {
   /**
    * Get all conditions (optionally filtered)
    */
-  async getAllConditions(filter?: { system?: string | null, includeContent?: boolean }): Promise<any[]> {
+  async getAllConditions(filter?: {
+    system?: string | null;
+    includeContent?: boolean;
+  }): Promise<any[]> {
     const where: any = {
       status: 'published',
     };
-    
+
     if (filter?.system) {
       where.OR = [
         { system: filter.system.toUpperCase() },
@@ -143,11 +149,7 @@ export class ContentService {
         createdAt: true,
         updatedAt: true,
       },
-      orderBy: [
-        { system: 'asc' },
-        { subcategory: 'asc' },
-        { name: 'asc' },
-      ],
+      orderBy: [{ system: 'asc' }, { subcategory: 'asc' }, { name: 'asc' }],
     });
 
     return conditions;

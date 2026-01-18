@@ -1,16 +1,16 @@
 /**
  * Custom Study Session Builder
- * 
+ *
  * Multi-step wizard for creating custom, Quizlet-style study sessions.
  * Allows multi-select of systems, subcategories, conditions, and focus areas.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronRight, 
-  ChevronLeft, 
-  Play, 
+import {
+  ChevronRight,
+  ChevronLeft,
+  Play,
   BookOpen,
   Target,
   Settings,
@@ -23,16 +23,13 @@ import {
 } from 'lucide-react';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
 import type { SystemCode } from '../../types';
-import type { 
-  CustomSessionConfig, 
+import type {
+  CustomSessionConfig,
   FocusArea,
   AvailableContent,
   SystemWithContent,
 } from '../../types/custom-session';
-import { 
-  FOCUS_AREA_META, 
-  DEFAULT_CUSTOM_SESSION_CONFIG 
-} from '../../types/custom-session';
+import { FOCUS_AREA_META, DEFAULT_CUSTOM_SESSION_CONFIG } from '../../types/custom-session';
 import { customSessionService } from '@/services/core';
 
 interface Props {
@@ -55,7 +52,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
   const [availableContent, setAvailableContent] = useState<AvailableContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Load available content on mount
   useEffect(() => {
     async function loadContent() {
@@ -70,7 +67,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
             subcategories: [], // Will be populated from API
             totalConditions: 0,
           }));
-        
+
         setAvailableContent({
           systems,
           userMaterials: [],
@@ -83,67 +80,67 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
         setIsLoading(false);
       }
     }
-    
+
     loadContent();
   }, []);
-  
+
   // Step navigation
-  const stepIndex = STEPS.findIndex(s => s.id === currentStep);
-  
+  const stepIndex = STEPS.findIndex((s) => s.id === currentStep);
+
   const goNext = useCallback(() => {
     const nextIndex = Math.min(stepIndex + 1, STEPS.length - 1);
     setCurrentStep(STEPS[nextIndex].id);
   }, [stepIndex]);
-  
+
   const goBack = useCallback(() => {
     const prevIndex = Math.max(stepIndex - 1, 0);
     setCurrentStep(STEPS[prevIndex].id);
   }, [stepIndex]);
-  
+
   // Validation
   const validation = customSessionService.validateConfig(config);
-  
+
   // Handle system toggle
   const toggleSystem = (systemCode: SystemCode) => {
-    setConfig(prev => {
+    setConfig((prev) => {
       const newSystems = prev.systems.includes(systemCode)
-        ? prev.systems.filter(s => s !== systemCode)
+        ? prev.systems.filter((s) => s !== systemCode)
         : [...prev.systems, systemCode];
       return { ...prev, systems: newSystems };
     });
   };
-  
+
   // Handle focus area toggle
   const toggleFocusArea = (area: FocusArea) => {
-    setConfig(prev => {
+    setConfig((prev) => {
       const newAreas = prev.focusAreas.includes(area)
-        ? prev.focusAreas.filter(a => a !== area)
+        ? prev.focusAreas.filter((a) => a !== area)
         : [...prev.focusAreas, area];
       return { ...prev, focusAreas: newAreas };
     });
   };
-  
+
   // Select all / deselect all
   const selectAllSystems = () => {
     if (availableContent) {
-      setConfig(prev => ({
+      setConfig((prev) => ({
         ...prev,
-        systems: availableContent.systems.map(s => s.code),
+        systems: availableContent.systems.map((s) => s.code),
       }));
     }
   };
-  
+
   const deselectAllSystems = () => {
-    setConfig(prev => ({ ...prev, systems: [] }));
+    setConfig((prev) => ({ ...prev, systems: [] }));
   };
-  
+
   // Handle start
   const handleStart = () => {
     if (validation.valid) {
       onStartSession(config);
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -151,7 +148,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
       </div>
     );
   }
-  
+
   return (
     <div className="max-w-4xl mx-auto p-4">
       {/* Header */}
@@ -171,7 +168,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           <X className="w-5 h-5 text-slate-500" />
         </button>
       </div>
-      
+
       {/* Step Progress */}
       <div className="flex items-center mb-8">
         {STEPS.map((step, index) => (
@@ -182,26 +179,24 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
                 currentStep === step.id
                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : index < stepIndex
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-slate-400'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-slate-400'
               }`}
             >
-              {index < stepIndex ? (
-                <Check className="w-4 h-4" />
-              ) : (
-                step.icon
-              )}
+              {index < stepIndex ? <Check className="w-4 h-4" /> : step.icon}
               <span className="hidden sm:inline">{step.label}</span>
             </button>
             {index < STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 ${
-                index < stepIndex ? 'bg-green-400' : 'bg-slate-200 dark:bg-slate-700'
-              }`} />
+              <div
+                className={`flex-1 h-0.5 mx-2 ${
+                  index < stepIndex ? 'bg-green-400' : 'bg-slate-200 dark:bg-slate-700'
+                }`}
+              />
             )}
           </React.Fragment>
         ))}
       </div>
-      
+
       {/* Step Content */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -221,30 +216,17 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
               onDeselectAll={deselectAllSystems}
             />
           )}
-          
+
           {currentStep === 'focus' && (
-            <FocusStep
-              config={config}
-              onToggleFocusArea={toggleFocusArea}
-            />
+            <FocusStep config={config} onToggleFocusArea={toggleFocusArea} />
           )}
-          
-          {currentStep === 'settings' && (
-            <SettingsStep
-              config={config}
-              onChange={setConfig}
-            />
-          )}
-          
-          {currentStep === 'review' && (
-            <ReviewStep
-              config={config}
-              validation={validation}
-            />
-          )}
+
+          {currentStep === 'settings' && <SettingsStep config={config} onChange={setConfig} />}
+
+          {currentStep === 'review' && <ReviewStep config={config} validation={validation} />}
         </motion.div>
       </AnimatePresence>
-      
+
       {/* Navigation Buttons */}
       <div className="flex justify-between mt-6">
         <button
@@ -259,7 +241,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           <ChevronLeft className="w-5 h-5" />
           Back
         </button>
-        
+
         {currentStep === 'review' ? (
           <button
             onClick={handleStart}
@@ -299,9 +281,9 @@ interface ContentStepProps {
   onDeselectAll: () => void;
 }
 
-function ContentStep({ 
-  config, 
-  availableContent, 
+function ContentStep({
+  config,
+  availableContent,
   onToggleSystem,
   onSelectAll,
   onDeselectAll,
@@ -333,9 +315,9 @@ function ContentStep({
           </button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {availableContent?.systems.map(system => (
+        {availableContent?.systems.map((system) => (
           <button
             key={system.code}
             onClick={() => onToggleSystem(system.code)}
@@ -346,14 +328,14 @@ function ContentStep({
             }`}
           >
             <div className="flex items-center gap-2">
-              <div className={`w-5 h-5 rounded flex items-center justify-center ${
-                config.systems.includes(system.code)
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-200 dark:bg-slate-700'
-              }`}>
-                {config.systems.includes(system.code) && (
-                  <Check className="w-3 h-3" />
-                )}
+              <div
+                className={`w-5 h-5 rounded flex items-center justify-center ${
+                  config.systems.includes(system.code)
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700'
+                }`}
+              >
+                {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
               </div>
               <span className="font-medium text-slate-900 dark:text-white text-sm">
                 {system.name}
@@ -362,7 +344,7 @@ function ContentStep({
           </button>
         ))}
       </div>
-      
+
       {config.systems.length === 0 && (
         <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300">
           <AlertCircle className="w-5 h-5" />
@@ -379,8 +361,11 @@ interface FocusStepProps {
 }
 
 function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
-  const focusAreas = Object.entries(FOCUS_AREA_META) as [FocusArea, typeof FOCUS_AREA_META[FocusArea]][];
-  
+  const focusAreas = Object.entries(FOCUS_AREA_META) as [
+    FocusArea,
+    (typeof FOCUS_AREA_META)[FocusArea],
+  ][];
+
   return (
     <div>
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -389,7 +374,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
         What aspects do you want to be tested on? ({config.focusAreas.length} selected)
       </p>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {focusAreas.map(([area, meta]) => (
           <button
@@ -404,12 +389,8 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
             <div className="flex items-start gap-3">
               <span className="text-2xl">{meta.icon}</span>
               <div>
-                <div className="font-medium text-slate-900 dark:text-white">
-                  {meta.label}
-                </div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  {meta.description}
-                </div>
+                <div className="font-medium text-slate-900 dark:text-white">{meta.label}</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">{meta.description}</div>
               </div>
               {config.focusAreas.includes(area) && (
                 <Check className="w-5 h-5 text-purple-500 ml-auto" />
@@ -418,7 +399,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
           </button>
         ))}
       </div>
-      
+
       {config.focusAreas.length === 0 && (
         <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300">
           <AlertCircle className="w-5 h-5" />
@@ -440,7 +421,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
         Session Settings
       </h2>
-      
+
       <div className="space-y-6">
         {/* Questions per increment */}
         <div>
@@ -448,7 +429,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             Questions per round
           </label>
           <div className="flex gap-2">
-            {[5, 10, 15, 20].map(num => (
+            {[5, 10, 15, 20].map((num) => (
               <button
                 key={num}
                 onClick={() => onChange({ ...config, questionsPerIncrement: num })}
@@ -463,7 +444,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             ))}
           </div>
         </div>
-        
+
         {/* Difficulty - Fixed at PANCE-Level for standardized practice */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -478,28 +459,28 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             </span>
           </div>
         </div>
-        
+
         {/* Retry missed questions */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-medium text-slate-900 dark:text-white">
-              Retry missed questions
-            </div>
+            <div className="font-medium text-slate-900 dark:text-white">Retry missed questions</div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
               Review questions you got wrong at the end of each round
             </div>
           </div>
           <button
-            onClick={() => onChange({ ...config, retryMissedQuestions: !config.retryMissedQuestions })}
+            onClick={() =>
+              onChange({ ...config, retryMissedQuestions: !config.retryMissedQuestions })
+            }
             className={`relative w-12 h-6 rounded-full transition-colors ${
-              config.retryMissedQuestions
-                ? 'bg-blue-600'
-                : 'bg-slate-300 dark:bg-slate-600'
+              config.retryMissedQuestions ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
             }`}
           >
-            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-              config.retryMissedQuestions ? 'translate-x-7' : 'translate-x-1'
-            }`} />
+            <div
+              className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                config.retryMissedQuestions ? 'translate-x-7' : 'translate-x-1'
+              }`}
+            />
           </button>
         </div>
       </div>
@@ -518,7 +499,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
         Review Your Session
       </h2>
-      
+
       <div className="space-y-4">
         {/* Systems */}
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
@@ -527,7 +508,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             <span className="font-medium">Systems ({config.systems.length})</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {config.systems.map(code => (
+            {config.systems.map((code) => (
               <span
                 key={code}
                 className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm"
@@ -537,7 +518,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             ))}
           </div>
         </div>
-        
+
         {/* Focus Areas */}
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
           <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 mb-2">
@@ -545,7 +526,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             <span className="font-medium">Focus Areas ({config.focusAreas.length})</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {config.focusAreas.map(area => (
+            {config.focusAreas.map((area) => (
               <span
                 key={area}
                 className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
@@ -555,7 +536,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             ))}
           </div>
         </div>
-        
+
         {/* Settings Summary */}
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
           <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 mb-2">
@@ -564,14 +545,20 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="text-slate-600 dark:text-slate-400">Questions per round:</div>
-            <div className="font-medium text-slate-900 dark:text-white">{config.questionsPerIncrement}</div>
+            <div className="font-medium text-slate-900 dark:text-white">
+              {config.questionsPerIncrement}
+            </div>
             <div className="text-slate-600 dark:text-slate-400">Difficulty:</div>
-            <div className="font-medium text-slate-900 dark:text-white capitalize">{config.difficulty}</div>
+            <div className="font-medium text-slate-900 dark:text-white capitalize">
+              {config.difficulty}
+            </div>
             <div className="text-slate-600 dark:text-slate-400">Retry missed:</div>
-            <div className="font-medium text-slate-900 dark:text-white">{config.retryMissedQuestions ? 'Yes' : 'No'}</div>
+            <div className="font-medium text-slate-900 dark:text-white">
+              {config.retryMissedQuestions ? 'Yes' : 'No'}
+            </div>
           </div>
         </div>
-        
+
         {/* Validation Errors */}
         {!validation.valid && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
@@ -586,11 +573,11 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             </ul>
           </div>
         )}
-        
+
         {/* Info Banner */}
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-700 dark:text-blue-300 text-sm">
           <p>
-            <strong>Note:</strong> This is a practice session. Progress is not saved to your spaced 
+            <strong>Note:</strong> This is a practice session. Progress is not saved to your spaced
             repetition schedule. Questions you miss will be repeated at the end of each round.
           </p>
         </div>

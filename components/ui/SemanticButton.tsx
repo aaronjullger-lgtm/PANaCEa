@@ -1,13 +1,13 @@
 /**
  * SemanticButton.tsx
- * 
+ *
  * Clinical Precision Design System - Semantic Button Component
- * 
+ *
  * Design Philosophy:
  * - Medical students need "Aesthetic Monotony" - low-contrast, predictable UI
  * - Color is reserved ONLY for data (red=forgot, green=good) and alerts
  * - Buttons are defined by FUNCTION, not marketing appeal
- * 
+ *
  * Variants:
  * - primary: High-contrast white on slate - THE hero CTA (Start Session)
  * - secondary: Glassmorphism slate - All other actions
@@ -42,7 +42,7 @@ function useButtonLatency(buttonId: string) {
       const now = performance.now();
       metricsRef.current.firstInteractionTime = now;
       metricsRef.current.latencyMs = now - metricsRef.current.componentRenderTime;
-      
+
       // Log to telemetry pipeline (integrate with existing useTelemetry hook)
       if (typeof window !== 'undefined' && (window as any).__PANACEA_TELEMETRY__) {
         (window as any).__PANACEA_TELEMETRY__.track('button_latency', {
@@ -51,7 +51,7 @@ function useButtonLatency(buttonId: string) {
           timestamp: new Date().toISOString(),
         });
       }
-      
+
       // Also store in sessionStorage for FSRS analysis
       try {
         const existing = sessionStorage.getItem('panacea_button_latencies');
@@ -90,7 +90,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     border border-slate-200
     font-semibold
   `,
-  
+
   // Secondary: Glassmorphism slate - All other actions
   secondary: `
     bg-slate-800/60 backdrop-blur-sm text-slate-100
@@ -99,7 +99,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     border border-slate-600/50
     font-medium
   `,
-  
+
   // Success: Teal - Only for confirmed positive states
   success: `
     bg-teal-600/90 text-white
@@ -108,7 +108,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     border border-teal-500/50
     font-semibold
   `,
-  
+
   // Danger: Red - Only for destructive actions
   danger: `
     bg-red-600/90 text-white
@@ -117,7 +117,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     border border-red-500/50
     font-semibold
   `,
-  
+
   // Ghost: Transparent - Navigation/subtle actions
   ghost: `
     bg-transparent text-slate-300
@@ -240,13 +240,7 @@ export function StartSessionButton({
   ...props
 }: Omit<SemanticButtonProps, 'variant'>) {
   return (
-    <SemanticButton
-      variant="primary"
-      size="xl"
-      fullWidth
-      buttonId="start-main-session"
-      {...props}
-    >
+    <SemanticButton variant="primary" size="xl" fullWidth buttonId="start-main-session" {...props}>
       {children}
     </SemanticButton>
   );

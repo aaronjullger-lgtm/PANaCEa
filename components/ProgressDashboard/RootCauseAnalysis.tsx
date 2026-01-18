@@ -1,6 +1,6 @@
 /**
  * Root Cause Analysis Widget
- * 
+ *
  * Displays a donut chart showing the breakdown of why users are getting questions wrong.
  * Uses the error taxonomy data (knowledge_gap, misread_question, guessing).
  */
@@ -20,40 +20,43 @@ interface RootCauseAnalysisProps {
   totalIncorrect: number;
 }
 
-const ERROR_TAG_CONFIG: Record<ErrorTag, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
-  knowledge_gap: { 
-    label: 'Knowledge Gap', 
+const ERROR_TAG_CONFIG: Record<
+  ErrorTag,
+  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+> = {
+  knowledge_gap: {
+    label: 'Knowledge Gap',
     color: '#9333ea', // purple-600
     bgColor: 'bg-purple-500',
-    icon: <Brain className="w-4 h-4" />
+    icon: <Brain className="w-4 h-4" />,
   },
-  misread_question: { 
-    label: 'Misread Question', 
+  misread_question: {
+    label: 'Misread Question',
     color: '#2563eb', // blue-600
     bgColor: 'bg-blue-500',
-    icon: <Eye className="w-4 h-4" />
+    icon: <Eye className="w-4 h-4" />,
   },
-  guessing: { 
-    label: 'Guessing', 
+  guessing: {
+    label: 'Guessing',
     color: '#d97706', // amber-600
     bgColor: 'bg-amber-500',
-    icon: <HelpCircle className="w-4 h-4" />
+    icon: <HelpCircle className="w-4 h-4" />,
   },
 };
 
 // Simple SVG Donut Chart
-const DonutChart: React.FC<{ data: { tag: ErrorTag; count: number; percentage: number }[]; size?: number }> = ({ 
-  data, 
-  size = 120 
-}) => {
+const DonutChart: React.FC<{
+  data: { tag: ErrorTag; count: number; percentage: number }[];
+  size?: number;
+}> = ({ data, size = 120 }) => {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const strokeWidth = 20;
-  
+
   // Calculate stroke-dasharray for each segment
   let cumulativePercentage = 0;
-  
-  if (data.length === 0 || data.every(d => d.count === 0)) {
+
+  if (data.length === 0 || data.every((d) => d.count === 0)) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100">
         <circle
@@ -79,7 +82,7 @@ const DonutChart: React.FC<{ data: { tag: ErrorTag; count: number; percentage: n
         const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
         const strokeDashoffset = -((cumulativePercentage / 100) * circumference);
         cumulativePercentage += percentage;
-        
+
         return (
           <motion.circle
             key={item.tag}
@@ -103,28 +106,25 @@ const DonutChart: React.FC<{ data: { tag: ErrorTag; count: number; percentage: n
   );
 };
 
-const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ 
-  errorCounts, 
-  totalIncorrect 
-}) => {
+const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, totalIncorrect }) => {
   const processedData = useMemo(() => {
     if (totalIncorrect === 0) return [];
-    
+
     return errorCounts
-      .filter(e => e.count > 0)
-      .map(e => ({
+      .filter((e) => e.count > 0)
+      .map((e) => ({
         ...e,
-        percentage: Math.round((e.count / totalIncorrect) * 100)
+        percentage: Math.round((e.count / totalIncorrect) * 100),
       }))
       .sort((a, b) => b.count - a.count);
   }, [errorCounts, totalIncorrect]);
 
   // Find the dominant error type for insight
   const dominantError = processedData.length > 0 ? processedData[0] : null;
-  
+
   const getInsight = (): string => {
     if (!dominantError) return 'Start tagging your errors to see insights.';
-    
+
     const percentage = dominantError.percentage;
     switch (dominantError.tag) {
       case 'knowledge_gap':
@@ -168,7 +168,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({
 
           {/* Legend */}
           <div className="flex-1 space-y-2">
-            {processedData.map(item => (
+            {processedData.map((item) => (
               <div key={item.tag} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full ${ERROR_TAG_CONFIG[item.tag].bgColor}`} />
@@ -184,7 +184,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({
                 </div>
               </div>
             ))}
-            
+
             {untaggedCount > 0 && (
               <div className="flex items-center justify-between text-sm pt-1 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-2">

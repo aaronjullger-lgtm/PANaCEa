@@ -111,7 +111,7 @@ export async function getCurrentStreak(userId: string): Promise<StreakInfo> {
 
   // Check if active today
   const isActiveToday = streaks[0]?.date.getTime() === today.getTime();
-  
+
   // Calculate current streak
   let currentStreak = 0;
   let expectedDate = isActiveToday ? today : yesterday;
@@ -119,7 +119,7 @@ export async function getCurrentStreak(userId: string): Promise<StreakInfo> {
   for (const streak of streaks) {
     const streakDate = new Date(streak.date);
     streakDate.setHours(0, 0, 0, 0);
-    
+
     if (streakDate.getTime() === expectedDate.getTime()) {
       currentStreak++;
       expectedDate = new Date(expectedDate);
@@ -178,7 +178,7 @@ export async function getCurrentStreak(userId: string): Promise<StreakInfo> {
 export async function getStreakStats(userId: string) {
   const info = await getCurrentStreak(userId);
   const prisma = getPrisma();
-  
+
   const thisWeek = await prisma.dailyStreak.findMany({
     where: {
       userId,
@@ -219,15 +219,12 @@ export async function getStreakStats(userId: string) {
  */
 export function isStreakAtRisk(lastActiveDate: Date | null): boolean {
   if (!lastActiveDate) return false;
-  
+
   const today = getTodayDate();
   const lastActive = new Date(lastActiveDate);
   lastActive.setHours(0, 0, 0, 0);
-  
+
   // Streak is at risk if last active was yesterday and current hour is past 6 PM
   const currentHour = new Date().getHours();
-  return (
-    lastActive.getTime() === getYesterdayDate().getTime() &&
-    currentHour >= 18
-  );
+  return lastActive.getTime() === getYesterdayDate().getTime() && currentHour >= 18;
 }

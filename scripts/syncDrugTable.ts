@@ -1,24 +1,24 @@
 #!/usr/bin/env tsx
 /**
  * Sync Drug Table from Registry
- * 
+ *
  * This script syncs the Drug table with the drugRegistry.
  * The Drug table serves as the source of truth for what drugs exist.
- * 
+ *
  * IMPORTANT: This script only ADDS new drugs. It never overwrites existing database records.
  * This preserves any manual edits or AI-generated content in the database.
- * 
+ *
  * Workflow:
  * 1. Add drug to drugRegistry.ts
  * 2. Run this script to sync Drug table (adds only, no overwrites)
  * 3. Automation detects new drugs and generates detailed content
- * 
+ *
  * Usage: tsx scripts/syncDrugTable.ts
  */
 
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { DRUG_REGISTRY, buildDrugId } from '../drugRegistry';
+import { DRUG_REGISTRY, buildDrugId } from '../src/registries/drugRegistry';
 import { fileURLToPath } from 'url';
 
 // Load environment variables
@@ -150,16 +150,18 @@ async function main() {
       process.exit(1);
     } else {
       console.log('\n✅ Drug table sync completed successfully!');
-      
+
       if (report.created > 0) {
         console.log(`\n💡 ${report.created} new drugs added to database.`);
         console.log('   Automation will generate detailed content for these drugs.');
       }
-      
+
       if (report.skipped > 0) {
-        console.log(`\n📝 ${report.skipped} drugs already exist in database (preserved, not overwritten).`);
+        console.log(
+          `\n📝 ${report.skipped} drugs already exist in database (preserved, not overwritten).`
+        );
       }
-      
+
       process.exit(0);
     }
   } catch (error: any) {

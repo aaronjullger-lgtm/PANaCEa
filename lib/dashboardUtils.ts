@@ -1,6 +1,6 @@
 /**
  * Dashboard Analytics Utilities
- * 
+ *
  * Shared utility functions for analytics calculations used across
  * the dashboard components.
  */
@@ -19,23 +19,22 @@ export function calculateAccuracy(correct: number, total: number): number {
 /**
  * Calculate streak information from performance data
  */
-export function calculateStreaks(records: { isCorrect: boolean }[]): { 
-  current: number; 
-  best: number 
+export function calculateStreaks(records: { isCorrect: boolean }[]): {
+  current: number;
+  best: number;
 } {
   if (records.length === 0) {
     return { current: 0, best: 0 };
   }
-  
+
   let currentStreak = 0;
   let bestStreak = 0;
   let tempStreak = 0;
-  
+
   for (let i = records.length - 1; i >= 0; i--) {
     if (records[i].isCorrect) {
       tempStreak++;
-      if (i === records.length - 1 || 
-          (i < records.length - 1 && records[i + 1].isCorrect)) {
+      if (i === records.length - 1 || (i < records.length - 1 && records[i + 1].isCorrect)) {
         currentStreak = tempStreak;
       }
       bestStreak = Math.max(bestStreak, tempStreak);
@@ -46,7 +45,7 @@ export function calculateStreaks(records: { isCorrect: boolean }[]): {
       }
     }
   }
-  
+
   return { current: currentStreak, best: bestStreak };
 }
 

@@ -1,56 +1,36 @@
 /**
  * Guidelines API Endpoint
  * GET /api/guidelines - List all guidelines with optional filtering
- * 
+ *
  * Query params:
  * - type: Filter by type (screening, prevention, treatment)
  * - organization: Filter by organization (USPSTF, AHA, IDSA, etc.)
  * - conditionId: Filter by associated condition
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const GuidelinesListSchema = z.object({
+  query: z.object({
+    type: z.string().optional(),
+    organization: z.string().optional(),
+    conditionId: z.string().optional(),
+  }),
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { env } = context;
-  
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+export const onRequestGet = authenticatedEndpoint(GuidelinesListSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/guidelines', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
   try {
-    // Authenticate request (optional - guidelines are generally public)
-    const auth = await authenticateRequest(context.request, env.CLERK_SECRET_KEY);
-    if (!auth.authenticated) {
-      return new Response(JSON.stringify({ error: auth.error }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Parse query parameters
-    const url = new URL(context.request.url);
-    const type = url.searchParams.get('type');
-    const organization = url.searchParams.get('organization');
-    const conditionId = url.searchParams.get('conditionId');
+    const { type, organization, conditionId } = validated.query;
 
     // Build where clause
     const where: any = {};
@@ -61,47 +41,44 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     // Query guidelines
     const guidelines = await prisma.guideline.findMany({
       where,
-      orderBy: [
-        { panceYield: 'desc' },
-        { name: 'asc' }
-      ],
+      orderBy: [{ panceYield: 'desc' }, { name: 'asc' }],
       include: {
         Condition: {
           select: {
             id: true,
             name: true,
-            system: true
-          }
-        }
-      }
+            system: true,
+          },
+        },
+      },
     });
 
-    return new Response(JSON.stringify({
-      success: true,
-      count: guidelines.length,
-      data: guidelines
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    log.info('Fetched guidelines', { count: guidelines.length, filters: { type, organization, conditionId } });
 
-  } catch (error) {
-    console.error('Error fetching guidelines:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+    return new Response(
+      JSON.stringify({
+        success: true,
+        count: guidelines.length,
+        data: guidelines,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       }
-    });
-    
+    );
+  } catch (error: any) {
+    log.error('Error fetching guidelines', { error: error.message });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

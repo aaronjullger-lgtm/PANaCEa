@@ -1,13 +1,13 @@
 /**
  * Higher-Order Component (HOC) for Gemini Error Boundary
- * 
+ *
  * Wraps AI-dependent components with error handling for Gemini API failures.
  * Use this for any component that makes Gemini API calls.
- * 
+ *
  * @example
  * // In App.tsx
  * const ProtectedDDxTrainer = withGeminiErrorBoundary(DdxTrainer, 'ddx_compare');
- * 
+ *
  * // Or inline:
  * {view === "ddx_compare" && (
  *   <WithGeminiErrorBoundary viewName="ddx_compare" onRetry={handleRetry}>
@@ -42,7 +42,7 @@ export const AI_DEPENDENT_VIEWS = [
   'rapid_recall',
 ] as const;
 
-export type AIDependentView = typeof AI_DEPENDENT_VIEWS[number];
+export type AIDependentView = (typeof AI_DEPENDENT_VIEWS)[number];
 
 interface WithGeminiErrorBoundaryProps {
   children: ReactNode;
@@ -59,16 +59,12 @@ export const WithGeminiErrorBoundary: React.FC<WithGeminiErrorBoundaryProps> = (
   viewName,
   onRetry,
 }) => {
-  return (
-    <GeminiErrorBoundary onRetry={onRetry}>
-      {children}
-    </GeminiErrorBoundary>
-  );
+  return <GeminiErrorBoundary onRetry={onRetry}>{children}</GeminiErrorBoundary>;
 };
 
 /**
  * HOC that wraps a component with Gemini error boundary
- * 
+ *
  * @param WrappedComponent - The component to wrap
  * @param viewName - The view name for retry navigation
  * @returns Wrapped component with error boundary
@@ -79,12 +75,14 @@ export function withGeminiErrorBoundary<P extends object>(
 ) {
   const WithBoundary: React.FC<P & { onRetry?: () => void }> = (props) => {
     const { onRetry, ...rest } = props;
-    
-    const handleRetry = onRetry || (() => {
-      // Default retry behavior - just re-render
-      window.location.reload();
-    });
-    
+
+    const handleRetry =
+      onRetry ||
+      (() => {
+        // Default retry behavior - just re-render
+        window.location.reload();
+      });
+
     return (
       <GeminiErrorBoundary onRetry={handleRetry}>
         <WrappedComponent {...(rest as P)} />

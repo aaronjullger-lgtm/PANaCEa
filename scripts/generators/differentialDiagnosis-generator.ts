@@ -121,9 +121,9 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Amenorrhea', category: 'Reproductive', emergency: false },
   { complaint: 'Dysmenorrhea', category: 'Reproductive', emergency: false },
   { complaint: 'Hot Flashes', category: 'Reproductive', emergency: false },
-  
+
   // === ADDITIONAL COMPREHENSIVE PANCE PRESENTING COMPLAINTS ===
-  
+
   // Pediatric-Specific
   { complaint: 'Pediatric Fever', category: 'Pediatrics', emergency: true },
   { complaint: 'Pediatric Abdominal Pain', category: 'Pediatrics', emergency: false },
@@ -134,7 +134,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Pediatric Rash', category: 'Pediatrics', emergency: false },
   { complaint: 'Pediatric Cough', category: 'Pediatrics', emergency: false },
   { complaint: 'Pediatric Vomiting', category: 'Pediatrics', emergency: false },
-  
+
   // Emergency/Trauma
   { complaint: 'Poisoning/Overdose', category: 'Emergency', emergency: true },
   { complaint: 'Burns', category: 'Emergency', emergency: true },
@@ -145,20 +145,20 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Animal Bite', category: 'Emergency', emergency: false },
   { complaint: 'Human Bite', category: 'Emergency', emergency: false },
   { complaint: 'Anaphylaxis', category: 'Emergency', emergency: true },
-  
+
   // Cardiovascular - Additional
   { complaint: 'Hypertensive Emergency', category: 'Cardiovascular', emergency: true },
   { complaint: 'Hypotension', category: 'Cardiovascular', emergency: true },
   { complaint: 'Bradycardia', category: 'Cardiovascular', emergency: false },
   { complaint: 'Tachycardia', category: 'Cardiovascular', emergency: false },
   { complaint: 'Cardiac Arrest', category: 'Cardiovascular', emergency: true },
-  
+
   // Respiratory - Additional
   { complaint: 'Respiratory Distress', category: 'Pulmonary', emergency: true },
   { complaint: 'Apnea', category: 'Pulmonary', emergency: true },
   { complaint: 'Chronic Cough', category: 'Pulmonary', emergency: false },
   { complaint: 'Pleuritic Chest Pain', category: 'Pulmonary', emergency: false },
-  
+
   // Neurological - Additional
   { complaint: 'Focal Neurologic Deficit', category: 'Neurologic', emergency: true },
   { complaint: 'Aphasia', category: 'Neurologic', emergency: true },
@@ -168,7 +168,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Diplopia', category: 'Neurologic', emergency: false },
   { complaint: 'Paresthesias', category: 'Neurologic', emergency: false },
   { complaint: 'Radiculopathy', category: 'Neurologic', emergency: false },
-  
+
   // GI - Additional
   { complaint: 'Dyspepsia', category: 'Gastrointestinal', emergency: false },
   { complaint: 'Melena', category: 'Gastrointestinal', emergency: true },
@@ -177,7 +177,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Chronic Diarrhea', category: 'Gastrointestinal', emergency: false },
   { complaint: 'Fecal Incontinence', category: 'Gastrointestinal', emergency: false },
   { complaint: 'Anorectal Pain', category: 'Gastrointestinal', emergency: false },
-  
+
   // Renal/GU - Additional
   { complaint: 'Oliguria/Anuria', category: 'Renal', emergency: true },
   { complaint: 'Polyuria/Nocturia', category: 'Renal', emergency: false },
@@ -185,7 +185,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Scrotal Pain', category: 'Renal', emergency: true },
   { complaint: 'Scrotal Mass', category: 'Renal', emergency: false },
   { complaint: 'Penile Discharge', category: 'Renal', emergency: false },
-  
+
   // Musculoskeletal - Additional
   { complaint: 'Monoarticular Joint Pain', category: 'Musculoskeletal', emergency: false },
   { complaint: 'Polyarticular Joint Pain', category: 'Musculoskeletal', emergency: false },
@@ -195,7 +195,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Wrist Pain', category: 'Musculoskeletal', emergency: false },
   { complaint: 'Elbow Pain', category: 'Musculoskeletal', emergency: false },
   { complaint: 'Hip Pain (Pediatric)', category: 'Musculoskeletal', emergency: false },
-  
+
   // Dermatologic - Additional
   { complaint: 'Vesicular Rash', category: 'Dermatology', emergency: false },
   { complaint: 'Petechial Rash', category: 'Dermatology', emergency: true },
@@ -205,7 +205,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Ulcer/Wound', category: 'Dermatology', emergency: false },
   { complaint: 'Nail Abnormality', category: 'Dermatology', emergency: false },
   { complaint: 'Alopecia', category: 'Dermatology', emergency: false },
-  
+
   // EENT - Additional
   { complaint: 'Tinnitus', category: 'EENT', emergency: false },
   { complaint: 'Vertigo (ENT)', category: 'EENT', emergency: false },
@@ -217,7 +217,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Eye Discharge', category: 'EENT', emergency: false },
   { complaint: 'Sudden Vision Loss', category: 'EENT', emergency: true },
   { complaint: 'Eye Trauma', category: 'EENT', emergency: true },
-  
+
   // Endocrine - Additional
   { complaint: 'Hypoglycemia', category: 'Endocrine', emergency: true },
   { complaint: 'Hyperglycemia', category: 'Endocrine', emergency: true },
@@ -227,7 +227,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Hypercalcemia', category: 'Endocrine', emergency: false },
   { complaint: 'Hyponatremia', category: 'Endocrine', emergency: false },
   { complaint: 'Hyperkalemia', category: 'Endocrine', emergency: true },
-  
+
   // Hematologic - Additional
   { complaint: 'Anemia', category: 'Hematology', emergency: false },
   { complaint: 'Thrombocytopenia', category: 'Hematology', emergency: false },
@@ -235,14 +235,18 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Leukopenia', category: 'Hematology', emergency: false },
   { complaint: 'Splenomegaly', category: 'Hematology', emergency: false },
   { complaint: 'Bleeding Disorder', category: 'Hematology', emergency: false },
-  
+
   // Infectious Disease - Additional
   { complaint: 'Sepsis', category: 'Infectious Disease', emergency: true },
   { complaint: 'Meningitis Presentation', category: 'Infectious Disease', emergency: true },
   { complaint: 'Encephalitis Presentation', category: 'Infectious Disease', emergency: true },
-  { complaint: 'Cellulitis/Soft Tissue Infection', category: 'Infectious Disease', emergency: false },
+  {
+    complaint: 'Cellulitis/Soft Tissue Infection',
+    category: 'Infectious Disease',
+    emergency: false,
+  },
   { complaint: 'Necrotizing Fasciitis', category: 'Infectious Disease', emergency: true },
-  
+
   // Psychiatry - Additional
   { complaint: 'Psychosis', category: 'Psychiatry', emergency: true },
   { complaint: 'Mania', category: 'Psychiatry', emergency: false },
@@ -250,7 +254,7 @@ const PRESENTING_COMPLAINTS = [
   { complaint: 'Eating Disorder', category: 'Psychiatry', emergency: false },
   { complaint: 'Substance Withdrawal', category: 'Psychiatry', emergency: true },
   { complaint: 'Delirium', category: 'Psychiatry', emergency: true },
-  { complaint: 'Agitation/Aggression', category: 'Psychiatry', emergency: true }
+  { complaint: 'Agitation/Aggression', category: 'Psychiatry', emergency: true },
 ];
 
 const PROMPT_TEMPLATE = `You are a medical educator creating a comprehensive differential diagnosis guide.
@@ -301,28 +305,31 @@ Return valid JSON:
 
 Return ONLY valid JSON, no markdown. panceYield is 1-10 scale.`;
 
-async function generateDDx(complaint: { complaint: string; category: string; emergency: boolean }): Promise<DDxData | null> {
+async function generateDDx(complaint: {
+  complaint: string;
+  category: string;
+  emergency: boolean;
+}): Promise<DDxData | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
-  const prompt = PROMPT_TEMPLATE
-    .replace(/{{COMPLAINT}}/g, complaint.complaint)
+
+  const prompt = PROMPT_TEMPLATE.replace(/{{COMPLAINT}}/g, complaint.complaint)
     .replace(/{{CATEGORY}}/g, complaint.category)
     .replace(/{{IS_EMERGENCY}}/g, String(complaint.emergency));
-  
+
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     let jsonStr = text;
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1];
-    
+
     jsonStr = jsonStr
       .trim()
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
       .replace(/,(\s*[}\]])/g, '$1');
-    
+
     return JSON.parse(jsonStr);
   } catch (error) {
     console.error(`    ⚠️  Error: ${error}`);
@@ -333,35 +340,35 @@ async function generateDDx(complaint: { complaint: string; category: string; eme
 async function main() {
   console.log('🔍 DifferentialDiagnosis Generator');
   console.log('═'.repeat(60));
-  
+
   const existing = await prisma.differentialDiagnosis.count();
   console.log(`Current DDx entries: ${existing}`);
-  
+
   // Get existing complaints to avoid duplicates
   const existingDDx = await prisma.differentialDiagnosis.findMany({
-    select: { presentingComplaint: true }
+    select: { presentingComplaint: true },
   });
-  const existingComplaints = new Set(existingDDx.map(d => d.presentingComplaint.toLowerCase()));
-  
+  const existingComplaints = new Set(existingDDx.map((d) => d.presentingComplaint.toLowerCase()));
+
   const toProcess = PRESENTING_COMPLAINTS.filter(
-    c => !existingComplaints.has(c.complaint.toLowerCase())
+    (c) => !existingComplaints.has(c.complaint.toLowerCase())
   );
-  
+
   console.log(`Complaints to generate: ${toProcess.length}`);
-  
+
   let created = 0;
   let failed = 0;
-  
+
   for (const complaint of toProcess) {
     console.log(`  🔄 [${created + 1}/${toProcess.length}] ${complaint.complaint}...`);
-    
+
     const data = await generateDDx(complaint);
-    
+
     if (!data) {
       failed++;
       continue;
     }
-    
+
     try {
       await prisma.differentialDiagnosis.create({
         data: {
@@ -391,10 +398,10 @@ async function main() {
           reassuringFeatures: data.reassuringFeatures || [],
           redFlags: data.redFlags || [],
           typicalPresentation: data.typicalPresentation,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
-      
+
       existingComplaints.add(complaint.complaint.toLowerCase());
       created++;
       console.log(`    ✅ Created`);
@@ -406,18 +413,18 @@ async function main() {
         failed++;
       }
     }
-    
-    await new Promise(r => setTimeout(r, 700));
+
+    await new Promise((r) => setTimeout(r, 700));
   }
-  
+
   console.log('\n' + '═'.repeat(60));
   console.log('📊 Summary:');
   console.log(`   Created: ${created}`);
   console.log(`   Failed: ${failed}`);
-  
+
   const total = await prisma.differentialDiagnosis.count();
   console.log(`   Total in database: ${total}`);
-  
+
   await prisma.$disconnect();
 }
 

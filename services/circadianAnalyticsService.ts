@@ -55,7 +55,7 @@ export function analyzeCircadianPerformance(
   }
 
   // Aggregate data by hour
-  performanceRecords.forEach(record => {
+  performanceRecords.forEach((record) => {
     const hour = getHourFromTimestamp(record.timestamp);
     const stats = hourlyStats.get(hour)!;
     stats.total++;
@@ -71,7 +71,7 @@ export function analyzeCircadianPerformance(
       hour,
       totalQuestions: stats.total,
       correctAnswers: stats.correct,
-      accuracy: stats.total > 0 ? stats.correct / stats.total : 0
+      accuracy: stats.total > 0 ? stats.correct / stats.total : 0,
     });
   });
 
@@ -89,10 +89,10 @@ export function getCircadianInsights(
   }
 
   const hourlyStats = analyzeCircadianPerformance(performanceRecords);
-  
+
   // Filter hours with at least 5 questions
-  const significantHours = hourlyStats.filter(stat => stat.totalQuestions >= 5);
-  
+  const significantHours = hourlyStats.filter((stat) => stat.totalQuestions >= 5);
+
   if (significantHours.length === 0) {
     return null;
   }
@@ -103,7 +103,7 @@ export function getCircadianInsights(
   let totalAccuracy = 0;
   let hoursWithData = 0;
 
-  significantHours.forEach(stat => {
+  significantHours.forEach((stat) => {
     if (stat.accuracy > bestHour.accuracy) {
       bestHour = stat;
     }
@@ -116,18 +116,21 @@ export function getCircadianInsights(
 
   const averageAccuracy = totalAccuracy / hoursWithData;
   const performanceDifference = ((bestHour.accuracy - worstHour.accuracy) * 100).toFixed(0);
-  
+
   // Generate recommendation
   let recommendation = '';
   if (parseFloat(performanceDifference) >= 15) {
     const bestTimeRange = getTimeRange(bestHour.hour);
-    recommendation = `You score ${performanceDifference}% higher during ${bestTimeRange}. ` +
+    recommendation =
+      `You score ${performanceDifference}% higher during ${bestTimeRange}. ` +
       `Consider scheduling your most challenging study sessions during this time.`;
   } else if (parseFloat(performanceDifference) >= 10) {
-    recommendation = `Your performance varies moderately throughout the day. ` +
+    recommendation =
+      `Your performance varies moderately throughout the day. ` +
       `Try to tackle harder topics during your peak hours.`;
   } else {
-    recommendation = `Your performance is consistent throughout the day. ` +
+    recommendation =
+      `Your performance is consistent throughout the day. ` +
       `Great job maintaining focus regardless of time!`;
   }
 
@@ -137,7 +140,7 @@ export function getCircadianInsights(
     averageAccuracy: averageAccuracy * 100,
     bestAccuracy: bestHour.accuracy * 100,
     worstAccuracy: worstHour.accuracy * 100,
-    recommendation
+    recommendation,
   };
 }
 
@@ -154,9 +157,7 @@ export function isLateNightStudying(): boolean {
 /**
  * Get optimal study time recommendation based on historical performance
  */
-export function getOptimalStudyTime(
-  performanceRecords: PerformanceRecord[]
-): string | null {
+export function getOptimalStudyTime(performanceRecords: PerformanceRecord[]): string | null {
   const insights = getCircadianInsights(performanceRecords);
   if (!insights) {
     return null;
@@ -211,20 +212,20 @@ export function recordCircadianPerformance(record: {
   try {
     const data = loadCircadianData() || { records: [] };
     data.records = data.records || [];
-    
+
     // Add the new record
     data.records.push({
       timestamp: record.timestamp,
       isCorrect: record.isCorrect,
       topic: record.topic,
-      hour: getHourFromTimestamp(record.timestamp)
+      hour: getHourFromTimestamp(record.timestamp),
     });
-    
+
     // Keep only last 1000 records to prevent storage bloat
     if (data.records.length > 1000) {
       data.records = data.records.slice(-1000);
     }
-    
+
     saveCircadianData(data);
   } catch (error) {
     console.error('Failed to record circadian performance:', error);

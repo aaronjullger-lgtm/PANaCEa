@@ -59,9 +59,9 @@ export function convertLabValue(
     const config = LAB_CONVERSIONS[labName][fromSystem];
     return { value, unit: config.unit };
   }
-  
+
   const conversion = LAB_CONVERSIONS[labName];
-  
+
   if (fromSystem === 'us' && toSystem === 'si') {
     const convertedValue = value * conversion.si.factor;
     return {
@@ -129,11 +129,11 @@ export function getLocalizedDrugName(
   convention: DrugNamingConvention = 'us'
 ): string {
   const lowerName = drugName.toLowerCase();
-  
+
   if (DRUG_NAME_LOCALIZATION[lowerName]) {
     return DRUG_NAME_LOCALIZATION[lowerName][convention];
   }
-  
+
   // If no localization exists, return original
   return drugName;
 }
@@ -146,15 +146,15 @@ export function localizeDrugNamesInText(
   convention: DrugNamingConvention = 'us'
 ): string {
   let localizedText = text;
-  
+
   Object.entries(DRUG_NAME_LOCALIZATION).forEach(([baseForm, localizations]) => {
     // Replace all conventions with target convention
-    Object.values(localizations).forEach(drugName => {
+    Object.values(localizations).forEach((drugName) => {
       const regex = new RegExp(`\\b${drugName}\\b`, 'gi');
       localizedText = localizedText.replace(regex, localizations[convention]);
     });
   });
-  
+
   return localizedText;
 }
 
@@ -167,13 +167,13 @@ export function formatLabValue(
   unitSystem: UnitSystem
 ): string {
   const config = LAB_CONVERSIONS[labName][unitSystem];
-  
+
   if (unitSystem === 'si') {
     // Convert from US to SI
     const converted = convertLabValue(value, labName, 'us', 'si');
     return `${converted.value} ${converted.unit}`;
   }
-  
+
   return `${value} ${config.unit}`;
 }
 
@@ -193,10 +193,10 @@ export function getReferenceRange(
       unit: LAB_CONVERSIONS[labName].us.unit,
     };
   }
-  
+
   const convertedLow = convertLabValue(usLow, labName, 'us', 'si');
   const convertedHigh = convertLabValue(usHigh, labName, 'us', 'si');
-  
+
   return {
     low: convertedLow.value,
     high: convertedHigh.value,

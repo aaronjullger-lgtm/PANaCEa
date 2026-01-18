@@ -13,43 +13,47 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // PANCE-relevant procedures
 const PANCE_PROCEDURES = [
-  { name: "Nasogastric Tube Insertion", category: "Gastrointestinal", system: "Gastrointestinal" },
-  { name: "Foley Catheter Insertion", category: "Urinary", system: "Genitourinary" },
-  { name: "Suprapubic Catheter Placement", category: "Urinary", system: "Genitourinary" },
-  { name: "Central Venous Catheter Insertion", category: "Vascular Access", system: "Cardiovascular" },
-  { name: "Peripheral IV Insertion", category: "Vascular Access", system: "Cardiovascular" },
-  { name: "Arterial Line Placement", category: "Vascular Access", system: "Cardiovascular" },
-  { name: "Intraosseous Access", category: "Vascular Access", system: "Musculoskeletal" },
-  { name: "Chest Tube Insertion", category: "Thoracic", system: "Pulmonary" },
-  { name: "Needle Thoracostomy", category: "Thoracic", system: "Pulmonary" },
-  { name: "Needle Pericardiocentesis", category: "Cardiac", system: "Cardiovascular" },
-  { name: "Endotracheal Intubation", category: "Airway", system: "Pulmonary" },
-  { name: "Cricothyrotomy", category: "Airway", system: "Pulmonary" },
-  { name: "Bag-Valve-Mask Ventilation", category: "Airway", system: "Pulmonary" },
-  { name: "Cardioversion", category: "Cardiac", system: "Cardiovascular" },
-  { name: "Defibrillation", category: "Cardiac", system: "Cardiovascular" },
-  { name: "Transcutaneous Pacing", category: "Cardiac", system: "Cardiovascular" },
-  { name: "Paracentesis", category: "Abdominal", system: "Gastrointestinal" },
-  { name: "Diagnostic Peritoneal Lavage", category: "Abdominal", system: "Gastrointestinal" },
-  { name: "Incision and Drainage", category: "Skin/Soft Tissue", system: "Dermatologic" },
-  { name: "Wound Closure - Suturing", category: "Skin/Soft Tissue", system: "Dermatologic" },
-  { name: "Wound Closure - Staples", category: "Skin/Soft Tissue", system: "Dermatologic" },
-  { name: "Splinting", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Joint Reduction - Shoulder", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Joint Reduction - Elbow", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Joint Reduction - Hip", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Joint Reduction - Knee", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Fracture Reduction", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Joint Aspiration", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Corticosteroid Joint Injection", category: "Orthopedic", system: "Musculoskeletal" },
-  { name: "Trigger Point Injection", category: "Pain Management", system: "Musculoskeletal" },
-  { name: "Epistaxis Management", category: "ENT", system: "EENT" },
-  { name: "Foreign Body Removal - Ear", category: "ENT", system: "EENT" },
-  { name: "Foreign Body Removal - Nose", category: "ENT", system: "EENT" },
-  { name: "Foreign Body Removal - Eye", category: "Ophthalmologic", system: "EENT" },
-  { name: "Slit Lamp Examination", category: "Ophthalmologic", system: "EENT" },
-  { name: "Tonometry", category: "Ophthalmologic", system: "EENT" },
-  { name: "Lateral Canthotomy", category: "Ophthalmologic", system: "EENT" },
+  { name: 'Nasogastric Tube Insertion', category: 'Gastrointestinal', system: 'Gastrointestinal' },
+  { name: 'Foley Catheter Insertion', category: 'Urinary', system: 'Genitourinary' },
+  { name: 'Suprapubic Catheter Placement', category: 'Urinary', system: 'Genitourinary' },
+  {
+    name: 'Central Venous Catheter Insertion',
+    category: 'Vascular Access',
+    system: 'Cardiovascular',
+  },
+  { name: 'Peripheral IV Insertion', category: 'Vascular Access', system: 'Cardiovascular' },
+  { name: 'Arterial Line Placement', category: 'Vascular Access', system: 'Cardiovascular' },
+  { name: 'Intraosseous Access', category: 'Vascular Access', system: 'Musculoskeletal' },
+  { name: 'Chest Tube Insertion', category: 'Thoracic', system: 'Pulmonary' },
+  { name: 'Needle Thoracostomy', category: 'Thoracic', system: 'Pulmonary' },
+  { name: 'Needle Pericardiocentesis', category: 'Cardiac', system: 'Cardiovascular' },
+  { name: 'Endotracheal Intubation', category: 'Airway', system: 'Pulmonary' },
+  { name: 'Cricothyrotomy', category: 'Airway', system: 'Pulmonary' },
+  { name: 'Bag-Valve-Mask Ventilation', category: 'Airway', system: 'Pulmonary' },
+  { name: 'Cardioversion', category: 'Cardiac', system: 'Cardiovascular' },
+  { name: 'Defibrillation', category: 'Cardiac', system: 'Cardiovascular' },
+  { name: 'Transcutaneous Pacing', category: 'Cardiac', system: 'Cardiovascular' },
+  { name: 'Paracentesis', category: 'Abdominal', system: 'Gastrointestinal' },
+  { name: 'Diagnostic Peritoneal Lavage', category: 'Abdominal', system: 'Gastrointestinal' },
+  { name: 'Incision and Drainage', category: 'Skin/Soft Tissue', system: 'Dermatologic' },
+  { name: 'Wound Closure - Suturing', category: 'Skin/Soft Tissue', system: 'Dermatologic' },
+  { name: 'Wound Closure - Staples', category: 'Skin/Soft Tissue', system: 'Dermatologic' },
+  { name: 'Splinting', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Joint Reduction - Shoulder', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Joint Reduction - Elbow', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Joint Reduction - Hip', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Joint Reduction - Knee', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Fracture Reduction', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Joint Aspiration', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Corticosteroid Joint Injection', category: 'Orthopedic', system: 'Musculoskeletal' },
+  { name: 'Trigger Point Injection', category: 'Pain Management', system: 'Musculoskeletal' },
+  { name: 'Epistaxis Management', category: 'ENT', system: 'EENT' },
+  { name: 'Foreign Body Removal - Ear', category: 'ENT', system: 'EENT' },
+  { name: 'Foreign Body Removal - Nose', category: 'ENT', system: 'EENT' },
+  { name: 'Foreign Body Removal - Eye', category: 'Ophthalmologic', system: 'EENT' },
+  { name: 'Slit Lamp Examination', category: 'Ophthalmologic', system: 'EENT' },
+  { name: 'Tonometry', category: 'Ophthalmologic', system: 'EENT' },
+  { name: 'Lateral Canthotomy', category: 'Ophthalmologic', system: 'EENT' },
 ];
 
 interface ProcedureData {
@@ -91,7 +95,10 @@ interface ProcedureData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -114,15 +121,19 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateProcedureData(name: string, category: string, system: string): Promise<ProcedureData> {
+async function generateProcedureData(
+  name: string,
+  category: string,
+  system: string
+): Promise<ProcedureData> {
   await rateLimiter.acquire();
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -162,12 +173,12 @@ Return as JSON.`;
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -234,7 +245,11 @@ async function main() {
       console.log(`Processing [${i + 1}/${missing.length}]: ${procedure.name}`);
 
       try {
-        const data = await generateProcedureData(procedure.name, procedure.category, procedure.system);
+        const data = await generateProcedureData(
+          procedure.name,
+          procedure.category,
+          procedure.system
+        );
 
         await prisma.procedure.create({
           data: {

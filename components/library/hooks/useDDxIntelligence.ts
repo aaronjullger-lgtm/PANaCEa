@@ -1,6 +1,6 @@
 /**
  * useDDxIntelligence - Hook for intelligent DDx features
- * 
+ *
  * Provides:
  * - Smart suggestions based on FSRS mastery
  * - Confusion pattern detection
@@ -105,7 +105,7 @@ export function useDDxIntelligence(
 ) {
   const { autoFetch = true, includeWorkup = false, limit = 10 } = options;
   const { getToken, isSignedIn } = useAuth();
-  
+
   const [state, setState] = useState<DDxIntelligenceState>({
     suggestions: [],
     workup: null,
@@ -119,14 +119,14 @@ export function useDDxIntelligence(
   // Fetch smart suggestions
   const fetchSuggestions = useCallback(async () => {
     if (!conditionId) return;
-    
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       // Add auth token if available
       if (isSignedIn) {
         const token = await getToken();
@@ -134,19 +134,19 @@ export function useDDxIntelligence(
           headers['Authorization'] = `Bearer ${token}`;
         }
       }
-      
+
       const response = await fetch(
         `${API_BASE}/smart-suggest?conditionId=${conditionId}&limit=${limit}`,
         { headers }
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch suggestions');
       }
-      
+
       const data = await response.json();
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         suggestions: data.suggestions || [],
         studyRecommendation: data.studyRecommendation || null,
@@ -154,7 +154,7 @@ export function useDDxIntelligence(
         isLoading: false,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Unknown error',
         isLoading: false,
@@ -165,21 +165,19 @@ export function useDDxIntelligence(
   // Fetch workup algorithm
   const fetchWorkup = useCallback(async () => {
     if (!conditionId) return;
-    
-    setState(prev => ({ ...prev, isLoading: true }));
-    
+
+    setState((prev) => ({ ...prev, isLoading: true }));
+
     try {
-      const response = await fetch(
-        `${API_BASE}/workup?conditionId=${conditionId}`
-      );
-      
+      const response = await fetch(`${API_BASE}/workup?conditionId=${conditionId}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch workup');
       }
-      
+
       const data = await response.json();
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         workup: {
           complaint: data.complaint,
@@ -196,7 +194,7 @@ export function useDDxIntelligence(
         isLoading: false,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Unknown error',
         isLoading: false,
@@ -207,19 +205,17 @@ export function useDDxIntelligence(
   // Fetch related conditions
   const fetchRelated = useCallback(async () => {
     if (!conditionId) return;
-    
+
     try {
-      const response = await fetch(
-        `${API_BASE}/related?conditionId=${conditionId}&limit=10`
-      );
-      
+      const response = await fetch(`${API_BASE}/related?conditionId=${conditionId}&limit=10`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch related conditions');
       }
-      
+
       const data = await response.json();
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         relatedConditions: data.relatedConditions || [],
       }));
@@ -241,57 +237,67 @@ export function useDDxIntelligence(
 
   // Computed values
   const criticalSuggestions = useMemo(
-    () => state.suggestions.filter(s => s.priority === 'critical'),
+    () => state.suggestions.filter((s) => s.priority === 'critical'),
     [state.suggestions]
   );
 
   const confusionSuggestions = useMemo(
-    () => state.suggestions.filter(s => s.context.type === 'confusion'),
+    () => state.suggestions.filter((s) => s.context.type === 'confusion'),
     [state.suggestions]
   );
 
   const masteryGapSuggestions = useMemo(
-    () => state.suggestions.filter(s => s.context.type === 'mastery_gap'),
+    () => state.suggestions.filter((s) => s.context.type === 'mastery_gap'),
     [state.suggestions]
   );
 
   const hasCriticalConfusions = useMemo(
-    () => criticalSuggestions.some(s => s.context.type === 'confusion'),
+    () => criticalSuggestions.some((s) => s.context.type === 'confusion'),
     [criticalSuggestions]
   );
 
   // Get priority color for a suggestion
   const getPriorityColor = useCallback((priority: SmartSuggestion['priority']) => {
     switch (priority) {
-      case 'critical': return 'text-red-500 bg-red-500/10';
-      case 'high': return 'text-amber-500 bg-amber-500/10';
-      case 'medium': return 'text-blue-500 bg-blue-500/10';
-      case 'low': return 'text-gray-500 bg-gray-500/10';
+      case 'critical':
+        return 'text-red-500 bg-red-500/10';
+      case 'high':
+        return 'text-amber-500 bg-amber-500/10';
+      case 'medium':
+        return 'text-blue-500 bg-blue-500/10';
+      case 'low':
+        return 'text-gray-500 bg-gray-500/10';
     }
   }, []);
 
   // Get context type icon name
   const getContextIcon = useCallback((type: SmartSuggestion['context']['type']) => {
     switch (type) {
-      case 'confusion': return 'AlertTriangle';
-      case 'similar': return 'GitCompare';
-      case 'complication': return 'ArrowRight';
-      case 'mastery_gap': return 'TrendingDown';
-      case 'weakness': return 'Target';
-      default: return 'Info';
+      case 'confusion':
+        return 'AlertTriangle';
+      case 'similar':
+        return 'GitCompare';
+      case 'complication':
+        return 'ArrowRight';
+      case 'mastery_gap':
+        return 'TrendingDown';
+      case 'weakness':
+        return 'Target';
+      default:
+        return 'Info';
     }
   }, []);
 
   return {
     // State
     ...state,
-    
+
     // Computed
     criticalSuggestions,
     confusionSuggestions,
     masteryGapSuggestions,
     hasCriticalConfusions,
-    
+
     // Actions
     fetchSuggestions,
     fetchWorkup,
@@ -301,7 +307,7 @@ export function useDDxIntelligence(
       fetchRelated();
       if (includeWorkup) fetchWorkup();
     },
-    
+
     // Utilities
     getPriorityColor,
     getContextIcon,

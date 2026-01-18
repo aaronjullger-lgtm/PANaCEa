@@ -5,39 +5,44 @@ import { TASK_TYPES, TaskType } from './taskTypes';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const variantSchema = {
-    type: SchemaType.OBJECT,
-    properties: {
-        question: { type: SchemaType.STRING },
-        options: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING },
-        },
-        correctAnswer: { type: SchemaType.STRING },
-        explanation: { type: SchemaType.STRING },
-        variantType: { type: SchemaType.STRING },
+  type: SchemaType.OBJECT,
+  properties: {
+    question: { type: SchemaType.STRING },
+    options: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
     },
-    required: ['question', 'options', 'correctAnswer', 'explanation', 'variantType'] as string[],
+    correctAnswer: { type: SchemaType.STRING },
+    explanation: { type: SchemaType.STRING },
+    variantType: { type: SchemaType.STRING },
+  },
+  required: ['question', 'options', 'correctAnswer', 'explanation', 'variantType'] as string[],
 } as const;
 
 export interface VariantRequest {
-    originalQuestion: string;
-    originalOptions: string[];
-    originalAnswer: string;
-    originalExplanation: string;
-    targetType: 'rephrased' | 'different_distractors' | 'different_scenario' | 'remediation' | 'decomposition';
-    userIncorrectAnswer?: string; // The incorrect option selected by the user
+  originalQuestion: string;
+  originalOptions: string[];
+  originalAnswer: string;
+  originalExplanation: string;
+  targetType:
+    | 'rephrased'
+    | 'different_distractors'
+    | 'different_scenario'
+    | 'remediation'
+    | 'decomposition';
+  userIncorrectAnswer?: string; // The incorrect option selected by the user
 }
 
 export async function generateVariant(request: VariantRequest) {
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
-        generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: variantSchema,
-        },
-    });
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash-exp',
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: variantSchema,
+    },
+  });
 
-    let prompt = `
+  let prompt = `
     You are a medical education expert. create a "${request.targetType}" variant of the following multiple choice question.
     
     Original Question: ${request.originalQuestion}
@@ -46,11 +51,11 @@ export async function generateVariant(request: VariantRequest) {
     Original Explanation: ${request.originalExplanation}
     `;
 
-    if (request.userIncorrectAnswer) {
-        prompt += `\nThe user incorrectly answered: "${request.userIncorrectAnswer}".`;
-    }
+  if (request.userIncorrectAnswer) {
+    prompt += `\nThe user incorrectly answered: "${request.userIncorrectAnswer}".`;
+  }
 
-    prompt += `\n\nRules for "${request.targetType}":
+  prompt += `\n\nRules for "${request.targetType}":
     - rephrased: Keep the same clinical concept but rewrite the vignette/question stem.
     - different_distractors: Keep the question similar but provide different/trickier wrong answer choices.
     - different_scenario: Change patient demographics or context but test the exact same underlying guideline/concept.
@@ -60,12 +65,12 @@ export async function generateVariant(request: VariantRequest) {
     Ensure the new question is high-quality, unambiguous, and accurate.
   `;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        return JSON.parse(text);
-    } catch (error) {
-        console.error('Variant generation failed:', error);
-        return null;
-    }
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Variant generation failed:', error);
+    return null;
+  }
 }

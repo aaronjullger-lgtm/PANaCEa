@@ -1,6 +1,6 @@
 /**
  * Risk Assessment Engine - Sprint 2
- * 
+ *
  * Comprehensive risk assessment for exam readiness.
  */
 
@@ -85,23 +85,27 @@ export function assessExamRisk(
   const requiredHours = scoreGap > 0 ? scoreGap * 0.5 : 0;
   const availableHours = daysUntilExam * studyHoursPerDay;
   const timeRisk: RiskAssessment['timeToExamRisk'] =
-    availableHours >= requiredHours * 1.5 ? 'adequate' :
-    availableHours >= requiredHours ? 'tight' : 'insufficient';
+    availableHours >= requiredHours * 1.5
+      ? 'adequate'
+      : availableHours >= requiredHours
+        ? 'tight'
+        : 'insufficient';
 
   if (timeRisk !== 'adequate') {
     riskFactors.push({
       factor: `${timeRisk === 'tight' ? 'Limited' : 'Insufficient'} time before exam`,
       severity: timeRisk === 'insufficient' ? 'severe' : 'moderate',
-      impact: Math.round((requiredHours - availableHours) / requiredHours * 100),
-      mitigation: timeRisk === 'insufficient'
-        ? 'Consider postponing or intensive study'
-        : 'Maximize study efficiency',
+      impact: Math.round(((requiredHours - availableHours) / requiredHours) * 100),
+      mitigation:
+        timeRisk === 'insufficient'
+          ? 'Consider postponing or intensive study'
+          : 'Maximize study efficiency',
     });
   }
 
   // 4. Study pattern risk
   if (recentPatterns.length >= 7) {
-    const studyDays = recentPatterns.filter(p => p.hoursStudied > 0).length;
+    const studyDays = recentPatterns.filter((p) => p.hoursStudied > 0).length;
     const consistency = studyDays / recentPatterns.length;
     if (consistency < 0.5) {
       riskFactors.push({
@@ -122,9 +126,7 @@ export function assessExamRisk(
   riskScore = Math.min(100, Math.round(riskScore));
 
   const overallRisk: RiskAssessment['overallRisk'] =
-    riskScore >= 75 ? 'critical' :
-    riskScore >= 50 ? 'high' :
-    riskScore >= 25 ? 'moderate' : 'low';
+    riskScore >= 75 ? 'critical' : riskScore >= 50 ? 'high' : riskScore >= 25 ? 'moderate' : 'low';
 
   // Generate actions
   const recommendedActions: RecommendedAction[] = riskFactors
@@ -133,7 +135,7 @@ export function assessExamRisk(
       return sev[b.severity] - sev[a.severity] || b.impact - a.impact;
     })
     .slice(0, 5)
-    .map(f => ({
+    .map((f) => ({
       priority: f.severity === 'severe' ? 'urgent' : f.severity === 'moderate' ? 'high' : 'medium',
       action: f.mitigation,
       expectedImpact: f.impact,

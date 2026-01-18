@@ -32,16 +32,16 @@ interface GridSkeletonProps {
 /**
  * GridSkeleton - Loading state with animated skeleton cards
  */
-const GridSkeleton: React.FC<GridSkeletonProps> = ({ 
+const GridSkeleton: React.FC<GridSkeletonProps> = ({
   count = 6,
-  columns = { default: 1, md: 2, lg: 3 }
+  columns = { default: 1, md: 2, lg: 3 },
 }) => {
   const gridClass = getGridClass(columns);
-  
+
   return (
     <div className={gridClass}>
       {Array.from({ length: count }).map((_, index) => (
-        <div 
+        <div
           key={index}
           className="bg-slate-900 border border-slate-700 rounded-2xl p-6 animate-pulse"
         >
@@ -53,7 +53,7 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
               <div className="h-6 bg-slate-800 rounded w-16" />
             </div>
           </div>
-          
+
           {/* Content skeleton */}
           <div className="space-y-2">
             <div className="h-4 bg-slate-800 rounded w-full" />
@@ -70,13 +70,7 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
  * Helper function to generate Tailwind grid classes
  */
 function getGridClass(columns: ContentGridProps['columns']): string {
-  const {
-    default: defaultCols = 1,
-    sm = defaultCols,
-    md = sm,
-    lg = md,
-    xl = lg,
-  } = columns || {};
+  const { default: defaultCols = 1, sm = defaultCols, md = sm, lg = md, xl = lg } = columns || {};
 
   const colMap: Record<number, string> = {
     1: 'grid-cols-1',
@@ -88,7 +82,7 @@ function getGridClass(columns: ContentGridProps['columns']): string {
   };
 
   const classes = ['grid'];
-  
+
   if (defaultCols) classes.push(colMap[defaultCols]);
   if (sm !== defaultCols) classes.push(`sm:${colMap[sm]}`);
   if (md !== sm) classes.push(`md:${colMap[md]}`);
@@ -100,14 +94,14 @@ function getGridClass(columns: ContentGridProps['columns']): string {
 
 /**
  * ContentGrid - Responsive grid layout for content cards
- * 
+ *
  * Features:
  * - Responsive column breakpoints (1/2/3 columns)
  * - Smooth card animations with stagger effect
  * - Loading skeleton state
  * - Empty state handling
  * - Customizable gap spacing
- * 
+ *
  * @example
  * <ContentGrid columns={{ default: 1, md: 2, lg: 3 }} gap={6}>
  *   {items.map(item => <MedicalContentCard key={item.id} content={item} />)}
@@ -182,31 +176,21 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
         <div className="flex items-start justify-between gap-4">
           {title && (
             <div>
-              <h1 
+              <h1
                 className="text-4xl font-bold text-slate-100 tracking-wide"
                 style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
               >
                 {title}
               </h1>
-              {subtitle && (
-                <p className="text-slate-400 mt-1">{subtitle}</p>
-              )}
+              {subtitle && <p className="text-slate-400 mt-1">{subtitle}</p>}
             </div>
           )}
-          {actions && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {actions}
-            </div>
-          )}
+          {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
         </div>
       )}
-      
+
       {/* Filter row */}
-      {filters && (
-        <div className="flex items-center gap-3 flex-wrap">
-          {filters}
-        </div>
-      )}
+      {filters && <div className="flex items-center gap-3 flex-wrap">{filters}</div>}
     </div>
   );
 };
@@ -218,8 +202,8 @@ interface LoadingOverlayProps {
   message?: string;
 }
 
-export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ 
-  message = 'Loading content...' 
+export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
+  message = 'Loading content...',
 }) => {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4">

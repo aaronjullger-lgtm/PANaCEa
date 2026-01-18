@@ -14,6 +14,7 @@ This guide documents query optimization strategies implemented in PANaCEa and be
 ## Architecture
 
 ### Database Stack
+
 - **Database**: PostgreSQL (Supabase)
 - **ORM**: Prisma with Accelerate extension
 - **Connection Pooling**: Prisma Accelerate (serverless-optimized)
@@ -21,11 +22,13 @@ This guide documents query optimization strategies implemented in PANaCEa and be
 - **Indexes**: 27 strategic indexes (see Sprint 2 docs)
 
 ### Connection Model
+
 ```
 CloudFlare Functions → Prisma Accelerate (HTTP) → Connection Pool → PostgreSQL
 ```
 
 **Benefits**:
+
 - No connection limits in edge functions
 - Automatic connection pooling
 - Built-in query result caching
@@ -57,7 +60,7 @@ for (const q of questions) {
 ```typescript
 // ✅ GOOD: Batch update
 const questions = await prisma.question.findMany({ take: 10 });
-const questionIds = questions.map(q => q.id);
+const questionIds = questions.map((q) => q.id);
 
 await prisma.question.updateMany({
   where: { id: { in: questionIds } },
@@ -180,7 +183,7 @@ const recentAttempts = await prisma.questionAttempt.findMany({
 ```typescript
 // ❌ BAD: Fetch all, filter in app
 const allQuestions = await prisma.question.findMany();
-const cvQuestions = allQuestions.filter(q => q.system === 'CV');
+const cvQuestions = allQuestions.filter((q) => q.system === 'CV');
 ```
 
 **Solution**: Filter in database using `where`
@@ -216,6 +219,7 @@ const attempts = await prisma.questionAttempt.findMany({
 ```
 
 **Index Usage**:
+
 - Composite indexes support leftmost prefix matching
 - Order matters: `(userId, system, createdAt)` != `(system, userId, createdAt)`
 - Covering indexes with `INCLUDE` avoid table lookups
@@ -229,7 +233,7 @@ const attempts = await prisma.questionAttempt.findMany({
 ```typescript
 // ✅ GOOD: Batch create
 await prisma.userQuestionHistory.createMany({
-  data: questionIds.map(id => ({
+  data: questionIds.map((id) => ({
     id: `${userId}-${id}`,
     userId,
     questionId: id,
@@ -246,6 +250,7 @@ await prisma.question.updateMany({
 ```
 
 **Limitations**:
+
 - `updateMany` doesn't support relation updates
 - `createMany` doesn't return created records
 - Use transactions for complex multi-step operations
@@ -283,6 +288,7 @@ const question = await prisma.question.findUnique({
 ```
 
 **Tips**:
+
 - Start with `select` for narrow queries
 - Use `include` when you need all fields + relations
 - Avoid deep nesting (>3 levels) - consider separate queries
@@ -304,6 +310,7 @@ const topConditions = await prisma.medicalContent.findMany({
 ```
 
 **Caching Tiers**:
+
 1. **CloudFlare KV Cache** (Sprint 3): 1-60 minutes for complete API responses
 2. **Prisma Accelerate Cache**: 1-5 minutes for database query results
 3. **Postgres Shared Buffers**: Automatic for frequently accessed pages
@@ -345,6 +352,7 @@ await prisma.$transaction(async (tx) => {
 ```
 
 **Transaction Benefits**:
+
 - All-or-nothing execution (rollback on error)
 - Consistent data state
 - Prevents race conditions
@@ -385,7 +393,7 @@ const prisma = new PrismaClient({
 
 ```sql
 -- In PostgreSQL (Supabase SQL Editor)
-SELECT 
+SELECT
   query,
   mean_exec_time,
   calls,
@@ -421,12 +429,13 @@ export function createEdgePrismaClient(databaseUrl: string) {
   const client = new PrismaClient({
     datasourceUrl: databaseUrl, // prisma://accelerate.prisma-data.net/?api_key=...
   });
-  
+
   return client.$extends(withAccelerate());
 }
 ```
 
 **Prisma Accelerate Features**:
+
 - **Connection Pooling**: Maintains persistent connections to database
 - **Global Distribution**: Edge nodes in 300+ locations
 - **Query Caching**: Automatic result caching with TTL
@@ -437,10 +446,12 @@ export function createEdgePrismaClient(databaseUrl: string) {
 Supabase provides **PgBouncer** for additional pooling:
 
 **Connection Modes**:
+
 1. **Transaction Mode** (recommended): Connections released after each transaction
 2. **Session Mode**: Connections held for entire session
 
 **DATABASE_URL Formats**:
+
 ```bash
 # Direct connection (use in Node.js, not Cloudflare)
 postgresql://postgres:[password]@db.xxx.supabase.co:5432/postgres
@@ -461,6 +472,7 @@ prisma://accelerate.prisma-data.net/?api_key=[YOUR_KEY]
 ### Example 1: Session Question Fetching
 
 **Before** (multiple queries):
+
 ```typescript
 const questions = await prisma.question.findMany({ take: 10 });
 
@@ -473,9 +485,10 @@ for (const q of questions) {
 ```
 
 **After** (batch update):
+
 ```typescript
 const questions = await prisma.question.findMany({ take: 10 });
-const ids = questions.map(q => q.id);
+const ids = questions.map((q) => q.id);
 
 await prisma.question.updateMany({
   where: { id: { in: ids } },
@@ -490,6 +503,7 @@ await prisma.question.updateMany({
 ### Example 2: User Stats Calculation
 
 **Before** (fetching all fields):
+
 ```typescript
 const attempts = await prisma.questionAttempt.findMany({
   where: { userId },
@@ -497,6 +511,7 @@ const attempts = await prisma.questionAttempt.findMany({
 ```
 
 **After** (select only needed fields):
+
 ```typescript
 const attempts = await prisma.questionAttempt.findMany({
   where: { userId },
@@ -516,10 +531,11 @@ const attempts = await prisma.questionAttempt.findMany({
 ### Example 3: Condition Content with Related Data
 
 **Before** (N+1 queries):
+
 ```typescript
 const condition = await prisma.condition.findUnique({ where: { id } });
-const content = await prisma.medicalContent.findUnique({ 
-  where: { conditionId: condition.id } 
+const content = await prisma.medicalContent.findUnique({
+  where: { conditionId: condition.id },
 });
 const drugs = await prisma.drug.findMany({
   where: { relatedConditions: { has: condition.id } },
@@ -527,6 +543,7 @@ const drugs = await prisma.drug.findMany({
 ```
 
 **After** (single query with joins):
+
 ```typescript
 const condition = await prisma.condition.findUnique({
   where: { id },
@@ -548,6 +565,7 @@ const condition = await prisma.condition.findUnique({
 ## Migration from Express to CloudFlare Functions
 
 ### Old Pattern (Express + Regular Prisma)
+
 ```typescript
 // server.ts - Node.js environment
 import { prisma } from './lib/prisma';
@@ -559,13 +577,14 @@ app.get('/api/questions', async (req, res) => {
 ```
 
 ### New Pattern (CloudFlare Functions + Prisma Accelerate)
+
 ```typescript
 // functions/api/questions/index.ts
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 export async function onRequestGet(context) {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+
   try {
     const questions = await prisma.question.findMany();
     return new Response(JSON.stringify(questions), {
@@ -578,6 +597,7 @@ export async function onRequestGet(context) {
 ```
 
 **Key Differences**:
+
 - ✅ Must use `createEdgePrismaClient` (not regular PrismaClient)
 - ✅ Must disconnect after each request (`finally` block)
 - ✅ DATABASE_URL must be Prisma Accelerate URL
@@ -592,10 +612,11 @@ export async function onRequestGet(context) {
 **Cause**: Not disconnecting Prisma client after requests
 
 **Solution**:
+
 ```typescript
 export async function onRequestGet(context) {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+
   try {
     // ... your code
   } finally {
@@ -629,6 +650,7 @@ Then run: `npm run db:migrate:dev`
 **Cause**: Fetching too many fields or rows
 
 **Solution**:
+
 1. Use `select` to limit fields
 2. Use `take` to limit rows
 3. Paginate results with `skip` and `take`

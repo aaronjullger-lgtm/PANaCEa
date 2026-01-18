@@ -1,6 +1,6 @@
 /**
  * MasteryBadge - Shows user's mastery level for a condition
- * 
+ *
  * Displays FSRS-based mastery with color-coded levels:
  * - 🔴 New/Learning (stability < 1)
  * - 🟡 Developing (stability 1-5)
@@ -141,10 +141,8 @@ export const MasteryBadge: React.FC<MasteryBadgeProps> = ({
             <p className="text-xs font-semibold text-[var(--color-text-primary)] mb-1">
               {config.label}
             </p>
-            <p className="text-[10px] text-[var(--color-text-muted)] mb-2">
-              {config.description}
-            </p>
-            
+            <p className="text-[10px] text-[var(--color-text-muted)] mb-2">{config.description}</p>
+
             {/* Progress bar */}
             <div className="h-1.5 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
               <div
@@ -152,16 +150,12 @@ export const MasteryBadge: React.FC<MasteryBadgeProps> = ({
                 style={{ width: `${config.progressPercent}%` }}
               />
             </div>
-            
+
             {/* Stats */}
             {(stability !== undefined || reviewCount !== undefined) && (
               <div className="mt-2 flex items-center justify-between text-[10px] text-[var(--color-text-muted)]">
-                {stability !== undefined && (
-                  <span>Stability: {stability.toFixed(1)}</span>
-                )}
-                {reviewCount !== undefined && (
-                  <span>Reviews: {reviewCount}</span>
-                )}
+                {stability !== undefined && <span>Stability: {stability.toFixed(1)}</span>}
+                {reviewCount !== undefined && <span>Reviews: {reviewCount}</span>}
               </div>
             )}
           </div>

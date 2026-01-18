@@ -1,12 +1,16 @@
 /**
  * Pending Media API Endpoint
- * 
+ *
  * GET /api/admin/media/pending
  * Returns media assets awaiting approval with optional filtering and stats.
  */
 
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../_shared/auth';
 
 interface Env {
   DATABASE_URL: string;
@@ -123,6 +127,6 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     console.error('Pending media fetch error:', error);
     return createErrorResponse('Failed to fetch pending media', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };

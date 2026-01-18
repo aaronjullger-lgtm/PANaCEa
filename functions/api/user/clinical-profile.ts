@@ -1,27 +1,27 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { calculateProfile, derivePeakHoursFromSessions, updateSystemStats } from '../../../lib/clinicalProfileCalculator';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import {
+  calculateProfile,
+  derivePeakHoursFromSessions,
+  updateSystemStats,
+} from '../../../lib/clinicalProfileCalculator';
 import { recomputeAvgSessionLength } from '../../../lib/services/userStatisticsService';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const ClinicalProfileSchema = z.object({
+  query: z.object({}).optional(), // No query params expected
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestGet = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/user/clinical-profile');
+  const userId = auth.userId;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const userId = auth.userId;
-
     // Get persisted stats (if any)
     const currentStats = await prisma.userStatistics.findUnique({ where: { userId } });
 
@@ -53,7 +53,12 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
 
       attempts.forEach((attempt) => {
         if (attempt.system) {
-          systemStats = updateSystemStats(systemStats, attempt.system, attempt.wasCorrect, attempt.timeSpentMs);
+          systemStats = updateSystemStats(
+            systemStats,
+            attempt.system,
+            attempt.wasCorrect,
+            attempt.timeSpentMs
+          );
         }
       });
     }
@@ -64,29 +69,38 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
       correctAnswers,
     });
 
-    const peakStudyHours = currentStats?.peakStudyHours && currentStats.peakStudyHours.length
-      ? currentStats.peakStudyHours
-      : await (async () => {
-          try {
-            const attempts = await prisma.questionAttempt.findMany({
-              where: { userId },
-              select: { createdAt: true },
-              take: 500,
-              orderBy: { createdAt: 'desc' },
-            });
-            return derivePeakHoursFromSessions(attempts.map((a) => new Date(a.createdAt).getHours()));
-          } catch (err) {
-            console.error('[clinical-profile] Failed to derive peak hours', err);
-            return [];
-          }
-        })();
+    const peakStudyHours =
+      currentStats?.peakStudyHours && currentStats.peakStudyHours.length
+        ? currentStats.peakStudyHours
+        : await (async () => {
+            try {
+              const attempts = await prisma.questionAttempt.findMany({
+                where: { userId },
+                select: { createdAt: true },
+                take: 500,
+                orderBy: { createdAt: 'desc' },
+              });
+              return derivePeakHoursFromSessions(
+                attempts.map((a) => new Date(a.createdAt).getHours())
+              );
+            } catch (err) {
+              logger.error('Failed to derive peak hours', {
+                error: err instanceof Error ? err.message : String(err),
+                userId,
+              });
+              return [];
+            }
+          })();
 
-    const avgSessionLength = currentStats?.avgSessionLength ?? (
-      await recomputeAvgSessionLength(prisma as any, userId).catch(err => {
-        console.error('[clinical-profile] Failed to compute avg session length', err);
+    const avgSessionLength =
+      currentStats?.avgSessionLength ??
+      (await recomputeAvgSessionLength(prisma as any, userId).catch((err) => {
+        logger.error('Failed to compute avg session length', {
+          error: err instanceof Error ? err.message : String(err),
+          userId,
+        });
         return null;
-      })
-    );
+      }));
 
     // Persist refreshed aggregates
     await prisma.userStatistics.upsert({
@@ -122,40 +136,45 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
       avgTimeMs: stats.avgTimeMs,
     }));
 
-    const response = {
-      overall: {
-        accuracy: totalQuestions > 0 ? correctAnswers / totalQuestions : 0,
-        totalQuestions,
-        avgTimeMs: avgTimePerQuestion,
-      },
-      systemBreakdown,
-      strengths: derived.strongestSystems,
-      weaknesses: derived.weakestSystems,
-      patterns: {
-        rushedSystems: derived.rushedSystems,
-        overthinkingSystems: derived.overthinkingSystems,
-      },
-      diagnosisBias: Object.entries(diagnosisBias)
-        .sort((a, b) => (b[1] || 0) - (a[1] || 0))
-        .map(([condition, count]) => ({ condition, count })),
-      studyPatterns: {
-        peakHours: peakStudyHours,
-        avgSessionLength,
+    logger.info('Generated clinical profile', {
+      userId,
+      totalQuestions,
+      accuracy: totalQuestions > 0 ? correctAnswers / totalQuestions : 0,
+    });
+
+    return {
+      data: {
+        overall: {
+          accuracy: totalQuestions > 0 ? correctAnswers / totalQuestions : 0,
+          totalQuestions,
+          avgTimeMs: avgTimePerQuestion,
+        },
+        systemBreakdown,
+        strengths: derived.strongestSystems,
+        weaknesses: derived.weakestSystems,
+        patterns: {
+          rushedSystems: derived.rushedSystems,
+          overthinkingSystems: derived.overthinkingSystems,
+        },
+        diagnosisBias: Object.entries(diagnosisBias)
+          .sort((a, b) => (b[1] || 0) - (a[1] || 0))
+          .map(([condition, count]) => ({ condition, count })),
+        studyPatterns: {
+          peakHours: peakStudyHours,
+          avgSessionLength,
+        },
       },
     };
-
-    return createSuccessResponse(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('[user/clinical-profile] Failed to load profile', { 
-      message: errorMessage, 
-      stack: errorStack,
-      name: error instanceof Error ? error.name : typeof error 
+    logger.error('Failed to load clinical profile', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : typeof error,
+      userId,
     });
-    // Return more diagnostic info in dev (still obscured in production)
-    return createErrorResponse(`Failed to load clinical profile: ${errorMessage}`, 500);
+    throw new Error(`Failed to load clinical profile: ${errorMessage}`);
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

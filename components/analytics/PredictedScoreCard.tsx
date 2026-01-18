@@ -1,13 +1,13 @@
 /**
  * Predicted Score Card Component
  * Sprint 7: Visual display of predicted PANCE score with confidence interval
- * 
+ *
  * Shows the user's estimated exam score based on their practice performance,
  * with visual indicators for readiness level and actionable recommendations.
  */
 
-import React, { useMemo } from "react";
-import { motion } from "framer-motion";
+import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Target,
   TrendingUp,
@@ -21,7 +21,7 @@ import {
   Sparkles,
   BarChart3,
   Clock,
-} from "lucide-react";
+} from 'lucide-react';
 import type { IrtPredictedScore as PredictedScore } from '@/services/analytics';
 
 // =============================================================================
@@ -31,7 +31,7 @@ import type { IrtPredictedScore as PredictedScore } from '@/services/analytics';
 export interface PredictedScoreCardProps {
   prediction: PredictedScore;
   percentile?: number;
-  trend?: { direction: "up" | "down" | "stable"; change: number };
+  trend?: { direction: 'up' | 'down' | 'stable'; change: number };
   questionsAnswered: number;
   targetDate?: Date;
   onViewDetails?: () => void;
@@ -46,39 +46,39 @@ export interface PredictedScoreCardProps {
 const READINESS_CONFIG = {
   confident_pass: {
     icon: CheckCircle,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
-    borderColor: "border-emerald-200 dark:border-emerald-800",
-    ringColor: "ring-emerald-500",
-    label: "Confident Pass",
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+    borderColor: 'border-emerald-200 dark:border-emerald-800',
+    ringColor: 'ring-emerald-500',
+    label: 'Confident Pass',
     description: "You're well-prepared for the exam!",
   },
   likely_pass: {
     icon: Target,
-    color: "text-teal-600 dark:text-teal-400",
-    bgColor: "bg-teal-50 dark:bg-teal-900/20",
-    borderColor: "border-teal-200 dark:border-teal-800",
-    ringColor: "ring-teal-500",
-    label: "Likely Pass",
-    description: "On track - keep up the momentum!",
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/20',
+    borderColor: 'border-teal-200 dark:border-teal-800',
+    ringColor: 'ring-teal-500',
+    label: 'Likely Pass',
+    description: 'On track - keep up the momentum!',
   },
   borderline: {
     icon: AlertTriangle,
-    color: "text-amber-600 dark:text-amber-400",
-    bgColor: "bg-amber-50 dark:bg-amber-900/20",
-    borderColor: "border-amber-200 dark:border-amber-800",
-    ringColor: "ring-amber-500",
-    label: "Borderline",
-    description: "More focused preparation needed.",
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+    ringColor: 'ring-amber-500',
+    label: 'Borderline',
+    description: 'More focused preparation needed.',
   },
   not_ready: {
     icon: XCircle,
-    color: "text-red-600 dark:text-red-400",
-    bgColor: "bg-red-50 dark:bg-red-900/20",
-    borderColor: "border-red-200 dark:border-red-800",
-    ringColor: "ring-red-500",
-    label: "Not Ready",
-    description: "Significant improvement needed.",
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800',
+    ringColor: 'ring-red-500',
+    label: 'Not Ready',
+    description: 'Significant improvement needed.',
   },
 };
 
@@ -125,7 +125,9 @@ export function PredictedScoreCard({
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className={`rounded-2xl border-2 p-6 bg-slate-50 dark:bg-slate-800/50 ${compact ? "p-4" : "p-6"}`}>
+      <div
+        className={`rounded-2xl border-2 p-6 bg-slate-50 dark:bg-slate-800/50 ${compact ? 'p-4' : 'p-6'}`}
+      >
         <div className="space-y-4 animate-pulse">
           <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
           <div className="h-16 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
@@ -151,13 +153,13 @@ export function PredictedScoreCard({
             <p className="text-sm text-slate-500">Insufficient data</p>
           </div>
         </div>
-        
+
         <div className="text-center py-8">
           <p className="text-4xl font-bold text-slate-300 dark:text-slate-600 mb-2">---</p>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Answer more questions to see your predicted score
           </p>
-          
+
           {/* Progress to prediction */}
           <div className="max-w-xs mx-auto">
             <div className="flex justify-between text-xs text-slate-500 mb-1">
@@ -192,37 +194,42 @@ export function PredictedScoreCard({
       className={`
         rounded-2xl border-2 ${readinessConfig.borderColor}
         ${readinessConfig.bgColor}
-        ${compact ? "p-4" : "p-6"}
+        ${compact ? 'p-4' : 'p-6'}
       `}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-xl ${readinessConfig.bgColor} ring-2 ${readinessConfig.ringColor}`}>
+          <div
+            className={`p-3 rounded-xl ${readinessConfig.bgColor} ring-2 ${readinessConfig.ringColor}`}
+          >
             <ReadinessIcon className={`h-6 w-6 ${readinessConfig.color}`} />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               Predicted PANCE Score
             </h3>
-            <p className={`text-sm ${readinessConfig.color}`}>
-              {readinessConfig.label}
-            </p>
+            <p className={`text-sm ${readinessConfig.color}`}>{readinessConfig.label}</p>
           </div>
         </div>
-        
+
         {/* Trend indicator */}
         {trend && (
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${
-            trend.direction === "up" 
-              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
-              : trend.direction === "down"
-                ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600"
-          }`}>
-            {trend.direction === "up" && <TrendingUp className="h-4 w-4" />}
-            {trend.direction === "down" && <TrendingDown className="h-4 w-4" />}
-            <span>{trend.change > 0 ? "+" : ""}{trend.change}</span>
+          <div
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${
+              trend.direction === 'up'
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                : trend.direction === 'down'
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
+            }`}
+          >
+            {trend.direction === 'up' && <TrendingUp className="h-4 w-4" />}
+            {trend.direction === 'down' && <TrendingDown className="h-4 w-4" />}
+            <span>
+              {trend.change > 0 ? '+' : ''}
+              {trend.change}
+            </span>
           </div>
         )}
       </div>
@@ -242,20 +249,23 @@ export function PredictedScoreCard({
             {prediction.confidenceInterval.lower} - {prediction.confidenceInterval.upper} (95% CI)
           </p>
         </div>
-        
+
         <div className="flex-grow">
           <div className="flex items-center gap-4">
             {/* Pass Likelihood Gauge */}
             <div className="text-center">
-              <div className={`
+              <div
+                className={`
                 relative w-16 h-16 rounded-full border-4
-                ${prediction.passLikelihood >= 75 
-                  ? "border-emerald-500" 
-                  : prediction.passLikelihood >= 50 
-                    ? "border-amber-500" 
-                    : "border-red-500"
+                ${
+                  prediction.passLikelihood >= 75
+                    ? 'border-emerald-500'
+                    : prediction.passLikelihood >= 50
+                      ? 'border-amber-500'
+                      : 'border-red-500'
                 }
-              `}>
+              `}
+              >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-xl font-bold text-slate-900 dark:text-white">
                     {prediction.passLikelihood}%
@@ -264,7 +274,7 @@ export function PredictedScoreCard({
               </div>
               <p className="text-xs text-slate-500 mt-1">Pass Likelihood</p>
             </div>
-            
+
             {/* Percentile (if available) */}
             {percentile !== undefined && (
               <div className="text-center">
@@ -292,7 +302,7 @@ export function PredictedScoreCard({
                 width: `${confidencePositions.upper - confidencePositions.lower}%`,
               }}
             />
-            
+
             {/* Pass threshold line */}
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-500"
@@ -302,21 +312,23 @@ export function PredictedScoreCard({
                 <span className="text-xs text-slate-500">Pass: {PASS_THRESHOLD}</span>
               </div>
             </div>
-            
+
             {/* Current score indicator */}
             <motion.div
-              initial={{ left: "0%" }}
+              initial={{ left: '0%' }}
               animate={{ left: `${scorePosition}%` }}
-              transition={{ type: "spring", damping: 20 }}
+              transition={{ type: 'spring', damping: 20 }}
               className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
             >
-              <div className={`
+              <div
+                className={`
                 w-5 h-5 rounded-full border-3 border-white dark:border-slate-800 shadow-lg
-                ${prediction.scaledScore >= PASS_THRESHOLD ? "bg-emerald-500" : "bg-red-500"}
-              `} />
+                ${prediction.scaledScore >= PASS_THRESHOLD ? 'bg-emerald-500' : 'bg-red-500'}
+              `}
+              />
             </motion.div>
           </div>
-          
+
           {/* Scale labels */}
           <div className="flex justify-between mt-2 text-xs text-slate-500">
             <span>{SCALE_MIN}</span>
@@ -334,10 +346,10 @@ export function PredictedScoreCard({
               Estimated Ready Date
             </p>
             <p className="text-xs text-slate-500">
-              {prediction.projectedDate.toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
+              {prediction.projectedDate.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
               })}
             </p>
           </div>
@@ -354,14 +366,17 @@ export function PredictedScoreCard({
               </p>
               <div className="space-y-1">
                 {prediction.strengths.slice(0, 3).map((s, i) => (
-                  <div key={i} className="text-sm text-emerald-700 dark:text-emerald-300 capitalize">
-                    {s.replace(/_/g, " ")}
+                  <div
+                    key={i}
+                    className="text-sm text-emerald-700 dark:text-emerald-300 capitalize"
+                  >
+                    {s.replace(/_/g, ' ')}
                   </div>
                 ))}
               </div>
             </div>
           )}
-          
+
           {prediction.weaknesses.length > 0 && (
             <div>
               <p className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
@@ -370,7 +385,7 @@ export function PredictedScoreCard({
               <div className="space-y-1">
                 {prediction.weaknesses.slice(0, 3).map((w, i) => (
                   <div key={i} className="text-sm text-red-700 dark:text-red-300 capitalize">
-                    {w.replace(/_/g, " ")}
+                    {w.replace(/_/g, ' ')}
                   </div>
                 ))}
               </div>

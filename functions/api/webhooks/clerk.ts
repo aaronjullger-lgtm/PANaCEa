@@ -4,7 +4,7 @@
  */
 
 import { Webhook } from 'svix';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 interface Env {
   CLERK_WEBHOOK_SECRET?: string;
@@ -82,9 +82,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         const { id, email_addresses, first_name, last_name, primary_email_address_id } = evt.data;
 
         // Robust email extraction: try primary first, fallback to first email
-        let primaryEmail = email_addresses?.find(
-          (email) => email.id === primary_email_address_id
-        );
+        let primaryEmail = email_addresses?.find((email) => email.id === primary_email_address_id);
 
         // Fallback to first email if primary not found
         if (!primaryEmail && email_addresses && email_addresses.length > 0) {
@@ -137,7 +135,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
           console.warn(`Could not delete user ${id}:`, error);
           // Return 200 anyway so Clerk stops retrying
         }
-        
+
         return new Response('Success', { status: 200 });
       }
 
@@ -152,6 +150,6 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     return new Response('Error: Processing failed', { status: 500 });
   } finally {
     // Disconnect Prisma client
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

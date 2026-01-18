@@ -1,6 +1,6 @@
 /**
  * DDxDrillSession - Differential Diagnosis drill mode
- * 
+ *
  * Quiz on must-not-miss diagnoses, most common causes, distinguishing features,
  * and red flags for various presenting complaints.
  */
@@ -73,8 +73,10 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
                          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">All Systems</option>
-              {drill.availableCategories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {drill.availableCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -132,10 +134,9 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
 
   // Complete state
   if (drill.status === 'complete') {
-    const accuracy = drill.totalAttempts > 0 
-      ? Math.round((drill.score / drill.totalAttempts) * 100) 
-      : 0;
-    
+    const accuracy =
+      drill.totalAttempts > 0 ? Math.round((drill.score / drill.totalAttempts) * 100) : 0;
+
     return (
       <MiniDrillLayout
         title="DDx Drill"
@@ -213,21 +214,22 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
     >
       {/* Question Type Badge */}
       <div className="flex items-center gap-2 mb-4">
-        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium
+        <span
+          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium
                          bg-${typeInfo.color}-100 text-${typeInfo.color}-700 
-                         dark:bg-${typeInfo.color}-900/30 dark:text-${typeInfo.color}-400`}>
+                         dark:bg-${typeInfo.color}-900/30 dark:text-${typeInfo.color}-400`}
+        >
           <TypeIcon className="w-4 h-4" />
           {typeInfo.label}
         </span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {question.category}
-        </span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{question.category}</span>
       </div>
 
       {/* Presenting Complaint Context */}
       <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 mb-4">
         <p className="text-sm text-indigo-700 dark:text-indigo-300">
-          <span className="font-semibold">Presenting Complaint:</span> {question.presentingComplaint}
+          <span className="font-semibold">Presenting Complaint:</span>{' '}
+          {question.presentingComplaint}
         </p>
       </div>
 

@@ -1,10 +1,10 @@
 /**
  * Consolidated Type Definitions for PANaCEa
- * 
+ *
  * This file consolidates all type definitions from:
  * - /types.ts (root)
  * - /src/types/content.ts
- * 
+ *
  * Import from this file for all type needs throughout the application.
  */
 
@@ -19,7 +19,11 @@ export interface Question {
   vignette?: string;
   question: string;
   options: string[];
+  /** Alias for options (for backwards compatibility) */
+  answers?: string[];
   correctAnswerIndex: number;
+  /** Alias for correctAnswerIndex (for backwards compatibility) */
+  correctIndex?: number;
   rationale: string;
   topic: string;
   /** PANCE system, mirrors topic but typed */
@@ -30,6 +34,8 @@ export interface Question {
   conditionId: string;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
+  /** Question difficulty level */
+  difficulty?: 'easy' | 'medium' | 'hard';
   pearls?: string[];
   repetitionLevel?: number;
   nextReviewDate?: string; // YYYY-MM-DD
@@ -52,28 +58,28 @@ export interface PerformanceRecord {
   timestamp: number;
 
   // What was shown
-  system: SystemCode | null;   // e.g. "CV", "PULM"
-  subcategory: string | null;  // e.g. "Arrhythmias", "Asthma"
-  conditionId: string;         // from CONDITION_REGISTRY if present
-  condition: string;           // human name from question.condition
-  topic: string;               // your existing topic code/label
+  system: SystemCode | null; // e.g. "CV", "PULM"
+  subcategory: string | null; // e.g. "Arrhythmias", "Asthma"
+  conditionId: string; // from CONDITION_REGISTRY if present
+  condition: string; // human name from question.condition
+  topic: string; // your existing topic code/label
 
   // Result
   isCorrect: boolean;
 
   // Meta (so we can filter to PANCE-level ALL sessions)
-  focus: SessionSettings["focus"];         // 'all' | 'growth' | ...
+  focus: SessionSettings['focus']; // 'all' | 'growth' | ...
   // Difficulty is always PANCE-level ('same')
 
   // Deep Insight metrics (optional for backward compatibility)
-  timeSpentMs?: number;            // Time spent on question in milliseconds
-  answerChangedCount?: number;     // Number of times answer was changed before submission
+  timeSpentMs?: number; // Time spent on question in milliseconds
+  answerChangedCount?: number; // Number of times answer was changed before submission
   finalAnswerWasChanged?: boolean; // Whether the final answer differed from first selection
   questionType?: 'diagnosis' | 'management' | 'pharm' | 'other'; // Question classification
-  
+
   // Error taxonomy for meta-cognition
-  errorTag?: ErrorTag;             // User-tagged reason for incorrect answer
-  questionWordCount?: number;      // Word count for vignette stamina analysis
+  errorTag?: ErrorTag; // User-tagged reason for incorrect answer
+  questionWordCount?: number; // Word count for vignette stamina analysis
 }
 
 export interface TopicStats {
@@ -84,8 +90,17 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged" | "unseen" | "incorrect" | "bookmarked";
-  difficulty: "same"; // Always PANCE-level, no easy/hard modes
+  mode?: 'drill' | 'session' | 'review' | 'exam' | 'rapid_recall';
+  focus:
+    | 'all'
+    | 'growth'
+    | 'review'
+    | 'topic'
+    | 'reviewFlagged'
+    | 'unseen'
+    | 'incorrect'
+    | 'bookmarked';
+  difficulty: 'same'; // Always PANCE-level, no easy/hard modes
   topic?: string;
   count?: number;
   systems?: string[];
@@ -101,22 +116,22 @@ export interface SessionSettings {
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
 export type SystemCode =
-  | "CV"
-  | "DERM"
-  | "ENDO"
-  | "GI"
-  | "GU"
-  | "HEME"
-  | "HEENT"
-  | "ID"
-  | "MSK"
-  | "NEURO"
-  | "PRO"
-  | "PSYCH"
-  | "PULM"
-  | "RENAL"
-  | "REPRO"
-  | "OTHER"; // internal only, not shown in the heatmap
+  | 'CV'
+  | 'DERM'
+  | 'ENDO'
+  | 'GI'
+  | 'GU'
+  | 'HEME'
+  | 'HEENT'
+  | 'ID'
+  | 'MSK'
+  | 'NEURO'
+  | 'PRO'
+  | 'PSYCH'
+  | 'PULM'
+  | 'RENAL'
+  | 'REPRO'
+  | 'OTHER'; // internal only, not shown in the heatmap
 
 export interface ConditionDefinition {
   /** Stable internal id, e.g. "PULM__asthma__status_asthmaticus" */
@@ -133,15 +148,15 @@ export interface ConditionDefinition {
 // User Profile and Onboarding Types
 // ============================================================================
 
-export type YearInProgram = 
+export type YearInProgram =
   | 'Didactic Year 1'
-  | 'Didactic Year 2' 
+  | 'Didactic Year 2'
   | 'Clinical Year'
   | 'Graduated'
   | 'Post-Graduate'
   | 'Preparing for PANCE';
 
-export type ClinicalRotation = 
+export type ClinicalRotation =
   | 'Emergency Medicine'
   | 'Family Medicine'
   | 'Internal Medicine'
@@ -179,11 +194,7 @@ export const YEAR_IN_PROGRAM_OPTIONS: readonly YearInProgram[] = [
 // Specialty CAQ and DLC Content
 // ============================================================================
 
-export type SpecialtyTrack = 
-  | 'orthopedics'
-  | 'dermatology'
-  | 'psychiatry'
-  | 'emergency_medicine';
+export type SpecialtyTrack = 'orthopedics' | 'dermatology' | 'psychiatry' | 'emergency_medicine';
 
 export interface SpecialtyCAQPack {
   id: SpecialtyTrack;
@@ -292,8 +303,8 @@ export interface LabPanels {
  * Basic science concept link for foundational learning
  */
 export interface BasicScienceLink {
-  title: string;      // e.g., "Review: Insulin Signaling"
-  conceptId: string;  // Internal ID for the foundational page
+  title: string; // e.g., "Review: Insulin Signaling"
+  conceptId: string; // Internal ID for the foundational page
 }
 
 /**

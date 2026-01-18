@@ -1,17 +1,17 @@
 /**
  * Custom Session Runner
- * 
+ *
  * The quiz interface for custom study sessions.
  * Handles question display, answer submission, and retry logic.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  ChevronRight, 
-  RotateCcw, 
-  CheckCircle, 
+import {
+  X,
+  ChevronRight,
+  RotateCcw,
+  CheckCircle,
   XCircle,
   AlertTriangle,
   Clock,
@@ -37,7 +37,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const questionStartTime = useRef<number>(Date.now());
-  
+
   // Initialize session
   useEffect(() => {
     async function initSession() {
@@ -45,7 +45,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
         setPhase('loading');
         const state = await customSessionService.startSession(config);
         setSessionState(state);
-        
+
         const question = customSessionService.getCurrentQuestion();
         if (question) {
           setCurrentQuestion(question);
@@ -60,23 +60,23 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
         setPhase('error');
       }
     }
-    
+
     initSession();
-    
+
     return () => {
       // Cleanup on unmount
       customSessionService.clearSessionState();
     };
   }, [config]);
-  
+
   // Handle answer selection
   const handleSelectAnswer = (index: number) => {
     if (phase !== 'question' || selectedAnswer !== null) return;
-    
+
     setSelectedAnswer(index);
     const correct = index === currentQuestion?.correctAnswerIndex;
     setIsCorrect(correct);
-    
+
     // Submit answer
     const timeSpent = Date.now() - questionStartTime.current;
     const updatedState = customSessionService.submitAnswer(
@@ -88,7 +88,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
     setSessionState(updatedState);
     setPhase('feedback');
   };
-  
+
   // Handle next question
   const handleNext = () => {
     // Check if increment is complete
@@ -96,7 +96,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       setPhase('increment-complete');
       return;
     }
-    
+
     // Get next question
     const question = customSessionService.getCurrentQuestion();
     if (question) {
@@ -109,13 +109,13 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       setPhase('increment-complete');
     }
   };
-  
+
   // Handle continue to next increment
   const handleContinue = async () => {
     try {
       setPhase('loading');
       const state = await customSessionService.startNextIncrement();
-      
+
       if (state) {
         setSessionState(state);
         const question = customSessionService.getCurrentQuestion();
@@ -135,11 +135,11 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       setPhase('error');
     }
   };
-  
+
   // Get stats
   const stats = customSessionService.getCurrentStats();
   const progress = customSessionService.getIncrementProgress();
-  
+
   if (phase === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -148,7 +148,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       </div>
     );
   }
-  
+
   if (phase === 'error') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -164,17 +164,11 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       </div>
     );
   }
-  
+
   if (phase === 'increment-complete') {
-    return (
-      <IncrementComplete
-        stats={stats}
-        onContinue={handleContinue}
-        onEnd={onEnd}
-      />
-    );
+    return <IncrementComplete stats={stats} onContinue={handleContinue} onEnd={onEnd} />;
   }
-  
+
   return (
     <div className="max-w-3xl mx-auto p-4">
       {/* Header */}
@@ -190,7 +184,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             Round {stats?.currentIncrement}
           </div>
         </div>
-        
+
         <button
           onClick={onEnd}
           className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -198,7 +192,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           <X className="w-5 h-5 text-slate-500" />
         </button>
       </div>
-      
+
       {/* Progress Bar */}
       <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full mb-6 overflow-hidden">
         <motion.div
@@ -208,7 +202,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           transition={{ duration: 0.3 }}
         />
       </div>
-      
+
       {/* Stats Bar */}
       <div className="flex items-center justify-between mb-6 text-sm">
         <div className="flex items-center gap-4">
@@ -227,7 +221,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           </div>
         )}
       </div>
-      
+
       {/* Question Card */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -242,11 +236,9 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
               {currentQuestion?.condition || currentQuestion?.topic}
             </p>
-            <p className="text-lg text-slate-900 dark:text-white">
-              {currentQuestion?.question}
-            </p>
+            <p className="text-lg text-slate-900 dark:text-white">{currentQuestion?.question}</p>
           </div>
-          
+
           {/* Answer Options */}
           <div className="space-y-3">
             {currentQuestion?.options.map((option, index) => (
@@ -259,11 +251,11 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                     ? index === currentQuestion.correctAnswerIndex
                       ? 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500'
                       : index === selectedAnswer && !isCorrect
-                      ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500'
-                      : 'bg-slate-100 dark:bg-slate-700 opacity-50'
+                        ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500'
+                        : 'bg-slate-100 dark:bg-slate-700 opacity-50'
                     : selectedAnswer === index
-                    ? 'bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500'
-                    : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border-2 border-transparent'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500'
+                      : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border-2 border-transparent'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -281,7 +273,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
               </button>
             ))}
           </div>
-          
+
           {/* Feedback & Rationale */}
           {phase === 'feedback' && currentQuestion?.rationale && (
             <motion.div
@@ -297,7 +289,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
               </p>
             </motion.div>
           )}
-          
+
           {/* Next Button */}
           {phase === 'feedback' && (
             <motion.div
@@ -337,11 +329,11 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
         <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-green-500" />
         </div>
-        
+
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
           Round {stats?.currentIncrement} Complete!
         </h2>
-        
+
         <div className="grid grid-cols-2 gap-4 my-6">
           <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -356,7 +348,7 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
             <div className="text-sm text-slate-600 dark:text-slate-400">Accuracy</div>
           </div>
         </div>
-        
+
         <div className="flex gap-3">
           <button
             onClick={onEnd}

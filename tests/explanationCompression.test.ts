@@ -17,43 +17,43 @@ describe('explanationCompression', () => {
     it('should identify pathognomonic terms', () => {
       const text = "Patient presents with Murphy's sign and rebound tenderness.";
       const result = extractBuzzwords(text);
-      
+
       expect(result.buzzwords).toContain("Murphy's sign");
       expect(result.buzzwords).toContain('rebound tenderness');
     });
 
     it('should bold buzzwords in formatted text', () => {
-      const text = "Classic finding is Babinski sign.";
+      const text = 'Classic finding is Babinski sign.';
       const result = extractBuzzwords(text);
-      
+
       expect(result.formattedText).toContain('<strong>Babinski sign</strong>');
     });
 
     it('should identify owl eye inclusion as buzzword', () => {
       const text = "Histology shows owl's eye inclusion bodies typical of CMV.";
       const result = extractBuzzwords(text);
-      
-      expect(result.buzzwords.some(b => b.toLowerCase().includes("owl"))).toBe(true);
+
+      expect(result.buzzwords.some((b) => b.toLowerCase().includes('owl'))).toBe(true);
     });
 
     it('should extract quoted terms as buzzwords', () => {
       const text = 'The classic "strawberry cervix" finding indicates Trichomonas.';
       const result = extractBuzzwords(text);
-      
+
       expect(result.buzzwords).toContain('strawberry cervix');
     });
 
     it('should extract curly-quoted terms as buzzwords', () => {
       const text = 'The classic "strawberry cervix" finding indicates Trichomonas.';
       const result = extractBuzzwords(text);
-      
+
       expect(result.buzzwords).toContain('strawberry cervix');
     });
 
     it('should handle multiple buzzwords in one text', () => {
-      const text = "Patient has JVD, crackles on auscultation, and peripheral edema.";
+      const text = 'Patient has JVD, crackles on auscultation, and peripheral edema.';
       const result = extractBuzzwords(text);
-      
+
       expect(result.buzzwords.length).toBeGreaterThanOrEqual(2);
       expect(result.buzzwords).toContain('JVD');
       expect(result.buzzwords).toContain('crackles');
@@ -75,7 +75,7 @@ describe('explanationCompression', () => {
         The gold standard for diagnosis is clinical presentation plus imaging.
         Antibiotics alone may be considered in uncomplicated cases.
       `;
-      
+
       const result = compressToBullets(longText);
       expect(result.length).toBeGreaterThanOrEqual(3);
       expect(result.length).toBeLessThanOrEqual(4);
@@ -88,10 +88,10 @@ describe('explanationCompression', () => {
         Weather was nice that day.
         First-line treatment includes beta blockers.
       `;
-      
+
       const result = compressToBullets(text);
-      expect(result.some(b => b.includes('gold standard'))).toBe(true);
-      expect(result.some(b => b.includes('First-line'))).toBe(true);
+      expect(result.some((b) => b.includes('gold standard'))).toBe(true);
+      expect(result.some((b) => b.includes('First-line'))).toBe(true);
     });
 
     it('should prioritize sentences with pathognomonic terms', () => {
@@ -101,16 +101,16 @@ describe('explanationCompression', () => {
         The doctor took notes.
         Labs showed elevated troponin levels.
       `;
-      
+
       const result = compressToBullets(text);
-      expect(result.some(b => b.includes('Babinski sign') || b.includes('troponin'))).toBe(true);
+      expect(result.some((b) => b.includes('Babinski sign') || b.includes('troponin'))).toBe(true);
     });
 
     it('should bold pathognomonic terms in bullets', () => {
-      const text = "ST elevation on ECG confirms the diagnosis of STEMI.";
+      const text = 'ST elevation on ECG confirms the diagnosis of STEMI.';
       const result = compressToBullets(text);
-      
-      expect(result.some(b => b.includes('<strong>ST elevation</strong>'))).toBe(true);
+
+      expect(result.some((b) => b.includes('<strong>ST elevation</strong>'))).toBe(true);
     });
   });
 
@@ -154,11 +154,12 @@ describe('explanationCompression', () => {
 
   describe('highYieldPackage', () => {
     it('should return a complete package with all fields', () => {
-      const explanation = "Patient has ST elevation on ECG with elevated troponin. This confirms STEMI diagnosis.";
-      const condition = "myocardial_infarction";
-      
+      const explanation =
+        'Patient has ST elevation on ECG with elevated troponin. This confirms STEMI diagnosis.';
+      const condition = 'myocardial_infarction';
+
       const result = highYieldPackage(explanation, condition);
-      
+
       expect(result).toHaveProperty('bullets');
       expect(result).toHaveProperty('buzzwords');
       expect(result).toHaveProperty('formattedHtml');
@@ -167,19 +168,19 @@ describe('explanationCompression', () => {
 
     it('should include buzzwords in package', () => {
       const explanation = "Murphy's sign is positive with rebound tenderness.";
-      const condition = "cholecystitis";
-      
+      const condition = 'cholecystitis';
+
       const result = highYieldPackage(explanation, condition);
-      
+
       expect(result.buzzwords.length).toBeGreaterThan(0);
     });
 
     it('should include mnemonic when available', () => {
-      const explanation = "Patient presents with confusion and respiratory distress.";
-      const condition = "pneumonia";
-      
+      const explanation = 'Patient presents with confusion and respiratory distress.';
+      const condition = 'pneumonia';
+
       const result = highYieldPackage(explanation, condition);
-      
+
       expect(result.mnemonic).toContain('CURB-65');
     });
 
@@ -189,19 +190,19 @@ describe('explanationCompression', () => {
         Treatment involves surgical intervention.
         First-line medication is antibiotics.
       `;
-      const condition = "appendicitis";
-      
+      const condition = 'appendicitis';
+
       const result = highYieldPackage(explanation, condition);
-      
+
       expect(result.bullets.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should format HTML with bolded buzzwords', () => {
-      const explanation = "Classic finding includes Babinski sign.";
-      const condition = "stroke";
-      
+      const explanation = 'Classic finding includes Babinski sign.';
+      const condition = 'stroke';
+
       const result = highYieldPackage(explanation, condition);
-      
+
       expect(result.formattedHtml).toContain('<strong>');
     });
   });

@@ -1,6 +1,6 @@
 /**
  * Centralized Color System
- * 
+ *
  * Provides a consistent color palette across the application.
  * Uses CSS custom properties that adapt to light/dark mode.
  */
@@ -16,7 +16,7 @@ export const themeColors = {
     border: 'border-stone-300 dark:border-stone-700',
     hover: 'hover:bg-stone-100 dark:hover:bg-stone-800',
   },
-  
+
   // System colors for body systems
   rose: {
     bg: 'bg-rose-50 dark:bg-rose-900/30',
@@ -25,7 +25,7 @@ export const themeColors = {
     hover: 'hover:bg-rose-100 dark:hover:bg-rose-800/50',
     accent: 'bg-rose-500',
   },
-  
+
   pink: {
     bg: 'bg-pink-50 dark:bg-pink-900/30',
     text: 'text-pink-900 dark:text-pink-50',
@@ -33,7 +33,7 @@ export const themeColors = {
     hover: 'hover:bg-pink-100 dark:hover:bg-pink-800/50',
     accent: 'bg-pink-500',
   },
-  
+
   slate: {
     bg: 'bg-slate-50 dark:bg-slate-900',
     text: 'text-slate-900 dark:text-slate-50',
@@ -41,7 +41,7 @@ export const themeColors = {
     hover: 'hover:bg-slate-100 dark:hover:bg-slate-800',
     accent: 'bg-slate-500',
   },
-  
+
   emerald: {
     bg: 'bg-emerald-50 dark:bg-emerald-900/30',
     text: 'text-emerald-900 dark:text-emerald-50',
@@ -49,7 +49,7 @@ export const themeColors = {
     hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-800/50',
     accent: 'bg-emerald-500',
   },
-  
+
   amber: {
     bg: 'bg-amber-50 dark:bg-amber-900/30',
     text: 'text-amber-900 dark:text-amber-50',
@@ -57,7 +57,7 @@ export const themeColors = {
     hover: 'hover:bg-amber-100 dark:hover:bg-amber-800/50',
     accent: 'bg-amber-500',
   },
-  
+
   blue: {
     bg: 'bg-blue-50 dark:bg-blue-900/30',
     text: 'text-blue-900 dark:text-blue-50',
@@ -65,7 +65,7 @@ export const themeColors = {
     hover: 'hover:bg-blue-100 dark:hover:bg-blue-800/50',
     accent: 'bg-blue-500',
   },
-  
+
   teal: {
     bg: 'bg-teal-50 dark:bg-teal-900/30',
     text: 'text-teal-900 dark:text-teal-50',
@@ -73,7 +73,7 @@ export const themeColors = {
     hover: 'hover:bg-teal-100 dark:hover:bg-teal-800/50',
     accent: 'bg-teal-500',
   },
-  
+
   violet: {
     bg: 'bg-violet-50 dark:bg-violet-900/30',
     text: 'text-violet-900 dark:text-violet-50',
@@ -81,7 +81,7 @@ export const themeColors = {
     hover: 'hover:bg-violet-100 dark:hover:bg-violet-800/50',
     accent: 'bg-violet-500',
   },
-  
+
   cyan: {
     bg: 'bg-cyan-50 dark:bg-cyan-900/30',
     text: 'text-cyan-900 dark:text-cyan-50',
@@ -89,7 +89,7 @@ export const themeColors = {
     hover: 'hover:bg-cyan-100 dark:hover:bg-cyan-800/50',
     accent: 'bg-cyan-500',
   },
-  
+
   purple: {
     bg: 'bg-purple-50 dark:bg-purple-900/30',
     text: 'text-purple-900 dark:text-purple-50',
@@ -97,7 +97,7 @@ export const themeColors = {
     hover: 'hover:bg-purple-100 dark:hover:bg-purple-800/50',
     accent: 'bg-purple-500',
   },
-  
+
   red: {
     bg: 'bg-red-50 dark:bg-red-900/30',
     text: 'text-red-900 dark:text-red-50',
@@ -116,26 +116,26 @@ export const semanticColors = {
   bgPrimary: 'var(--color-bg-primary)',
   bgSecondary: 'var(--color-bg-secondary)',
   bgTertiary: 'var(--color-bg-tertiary)',
-  
+
   // Text colors
   textPrimary: 'var(--color-text-primary)',
   textSecondary: 'var(--color-text-secondary)',
   textMuted: 'var(--color-text-muted)',
-  
+
   // Border colors
   border: 'var(--color-border)',
   borderLight: 'var(--color-border-light)',
-  
+
   // Interactive colors
   accent: 'var(--color-accent)',
   accentHover: 'var(--color-accent-hover)',
-  
+
   // Status colors
   success: 'var(--color-success)',
   error: 'var(--color-error)',
   warning: 'var(--color-warning)',
   info: 'var(--color-info)',
-  
+
   // Card and glass effects
   cardBg: 'var(--color-card-bg)',
   glassBg: 'var(--color-glass-bg)',

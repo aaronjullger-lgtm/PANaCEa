@@ -1,6 +1,6 @@
 /**
  * Step 1: Condition-to-MedicalContent Data Unification
- * 
+ *
  * This script:
  * 1. Audits orphaned records in both Condition and MedicalContent tables
  * 2. Creates missing MedicalContent records for conditions without them
@@ -39,8 +39,8 @@ async function auditConditionContentSync(): Promise<AuditReport> {
     });
 
     // Create lookup maps
-    const conditionMap = new Map(allConditions.map(c => [c.id, c]));
-    const contentMap = new Map(allContent.map(c => [c.conditionId, c]));
+    const conditionMap = new Map(allConditions.map((c) => [c.id, c]));
+    const contentMap = new Map(allContent.map((c) => [c.conditionId, c]));
 
     // Find orphaned records
     const conditionsWithoutContent: string[] = [];
@@ -161,9 +161,7 @@ async function fixNameMismatches(
       });
 
       fixed++;
-      console.log(
-        `✅ Fixed: "${mismatch.contentCondition}" → "${mismatch.conditionName}"`
-      );
+      console.log(`✅ Fixed: "${mismatch.contentCondition}" → "${mismatch.conditionName}"`);
     }
 
     return fixed;
@@ -200,11 +198,13 @@ async function printReport(report: AuditReport): Promise<void> {
   console.log(`\n🔴 Issues Found:`);
   console.log(`  • Conditions without MedicalContent: ${report.orphanedConditions}`);
   console.log(`  • MedicalContent without Condition:  ${report.orphanedContent}`);
-  console.log(`  • Name mismatches:                   ${report.conditionsWithContentMismatch.length}`);
+  console.log(
+    `  • Name mismatches:                   ${report.conditionsWithContentMismatch.length}`
+  );
 
   if (report.orphanedConditions > 0) {
     console.log(`\n⚠️  Conditions without MedicalContent (showing first 10):`);
-    report.conditionsWithoutContent.slice(0, 10).forEach(id => {
+    report.conditionsWithoutContent.slice(0, 10).forEach((id) => {
       console.log(`    - ${id}`);
     });
     if (report.orphanedConditions > 10) {
@@ -214,7 +214,7 @@ async function printReport(report: AuditReport): Promise<void> {
 
   if (report.orphanedContent > 0) {
     console.log(`\n⚠️  MedicalContent without Condition (showing first 10):`);
-    report.contentWithoutCondition.slice(0, 10).forEach(id => {
+    report.contentWithoutCondition.slice(0, 10).forEach((id) => {
       console.log(`    - ${id}`);
     });
     if (report.orphanedContent > 10) {
@@ -224,7 +224,7 @@ async function printReport(report: AuditReport): Promise<void> {
 
   if (report.conditionsWithContentMismatch.length > 0) {
     console.log(`\n⚠️  Name mismatches (showing first 5):`);
-    report.conditionsWithContentMismatch.slice(0, 5).forEach(m => {
+    report.conditionsWithContentMismatch.slice(0, 5).forEach((m) => {
       console.log(`    - ${m.conditionId}:`);
       console.log(`      Condition: "${m.conditionName}"`);
       console.log(`      Content:   "${m.contentCondition}"`);
@@ -275,9 +275,7 @@ async function main() {
       const deleted = await deleteOrphanedContent(report.contentWithoutCondition);
       totalFixed += deleted;
     } else if (report.orphanedContent > 0) {
-      console.log(
-        `\nℹ️  ${report.orphanedContent} orphaned MedicalContent records found.`
-      );
+      console.log(`\nℹ️  ${report.orphanedContent} orphaned MedicalContent records found.`);
       console.log('   Use --delete-orphaned flag to remove them.\n');
     }
 
@@ -313,7 +311,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);
   })

@@ -1,9 +1,9 @@
 /**
  * Example: PhotoDrillSession refactored with DrillShell
- * 
+ *
  * This demonstrates how to wrap an existing drill mode with the new
  * standardized DrillShell component for consistent UX.
- * 
+ *
  * BEFORE: Custom header, manual responsive handling, repeated layout code
  * AFTER: Clean, standardized layout with DrillShell
  */
@@ -22,10 +22,7 @@ interface PhotoDrillSessionProps {
   filterType?: PhotoDrillFilterType;
 }
 
-const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ 
-  onExit, 
-  filterType 
-}) => {
+const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit, filterType }) => {
   const {
     currentCase,
     score,
@@ -102,7 +99,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
             className="p-6 rounded-xl border border-[var(--color-border)] hover:border-blue-500 transition-all"
           >
             <h3 className="text-lg font-bold">ECG</h3>
-            <p className="text-sm text-[var(--color-text-muted)]">Electrocardiogram interpretation</p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Electrocardiogram interpretation
+            </p>
           </button>
           {/* More categories... */}
         </div>
@@ -117,9 +116,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
     <DrillShell
       title={getDrillTitle()}
       subtitle="Visual Diagnosis"
-      fullWidth={true}      // Immersive full-width experience
-      noPadding={true}      // Content touches edges
-      fullScreen={true}     // Fixed positioning
+      fullWidth={true} // Immersive full-width experience
+      noPadding={true} // Content touches edges
+      fullScreen={true} // Fixed positioning
       backgroundColor="bg-slate-950 dark:bg-slate-950" // Dark mode for imaging
       onExit={handleExit}
       rightAction={
@@ -148,7 +147,6 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
     >
       {/* Main Drill Content - No wrapper needed, DrillShell handles layout */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        
         {/* Image Display */}
         {currentCase && (
           <motion.div
@@ -160,7 +158,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
             {/* Clinical Context (for derm mode) */}
             {currentCase.clinicalContext && !imageRevealed && (
               <div className="mb-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                <p className="text-lg text-blue-100">{JSON.stringify(currentCase.clinicalContext)}</p>
+                <p className="text-lg text-blue-100">
+                  {JSON.stringify(currentCase.clinicalContext)}
+                </p>
                 <button
                   onClick={() => setImageRevealed(true)}
                   className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -216,7 +216,7 @@ export default PhotoDrillSessionRefactored;
 
 /**
  * KEY BENEFITS OF USING DrillShell:
- * 
+ *
  * ✅ Consistent header across all drill modes
  * ✅ Standardized back button behavior
  * ✅ Responsive design handled automatically
@@ -224,7 +224,7 @@ export default PhotoDrillSessionRefactored;
  * ✅ Right action slot for score/streak/settings
  * ✅ Clean separation of layout vs. content logic
  * ✅ Easy to maintain and update globally
- * 
+ *
  * MIGRATION CHECKLIST:
  * 1. Import DrillShell
  * 2. Replace custom header with DrillShell wrapper

@@ -13,85 +13,249 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // PANCE-relevant imaging studies
 const PANCE_IMAGING_STUDIES = [
   // Chest
-  { name: "Chest X-Ray PA/Lateral", category: "Radiography", indication: "Pulmonary, cardiac, thoracic pathology" },
-  { name: "Chest CT with Contrast", category: "CT", indication: "PE, mediastinal mass, vascular pathology" },
-  { name: "High Resolution CT Chest", category: "CT", indication: "Interstitial lung disease, bronchiectasis" },
-  { name: "CT Pulmonary Angiography", category: "CT", indication: "Pulmonary embolism" },
-  { name: "V/Q Scan", category: "Nuclear Medicine", indication: "PE when CT contraindicated" },
-  
+  {
+    name: 'Chest X-Ray PA/Lateral',
+    category: 'Radiography',
+    indication: 'Pulmonary, cardiac, thoracic pathology',
+  },
+  {
+    name: 'Chest CT with Contrast',
+    category: 'CT',
+    indication: 'PE, mediastinal mass, vascular pathology',
+  },
+  {
+    name: 'High Resolution CT Chest',
+    category: 'CT',
+    indication: 'Interstitial lung disease, bronchiectasis',
+  },
+  { name: 'CT Pulmonary Angiography', category: 'CT', indication: 'Pulmonary embolism' },
+  { name: 'V/Q Scan', category: 'Nuclear Medicine', indication: 'PE when CT contraindicated' },
+
   // Abdominal
-  { name: "Abdominal X-Ray (KUB)", category: "Radiography", indication: "Bowel obstruction, free air, stones" },
-  { name: "CT Abdomen/Pelvis with Contrast", category: "CT", indication: "Abdominal pathology, appendicitis, diverticulitis" },
-  { name: "CT Abdomen without Contrast", category: "CT", indication: "Renal stones, hemorrhage" },
-  { name: "MRI Abdomen", category: "MRI", indication: "Liver lesions, pancreatic mass" },
-  { name: "MRCP", category: "MRI", indication: "Biliary and pancreatic duct evaluation" },
-  { name: "ERCP", category: "Fluoroscopy", indication: "Therapeutic biliary/pancreatic intervention" },
-  { name: "Barium Swallow", category: "Fluoroscopy", indication: "Esophageal pathology, dysphagia workup" },
-  { name: "Upper GI Series", category: "Fluoroscopy", indication: "Gastric pathology, hiatal hernia" },
-  { name: "Small Bowel Follow Through", category: "Fluoroscopy", indication: "Small bowel pathology, Crohn disease" },
-  { name: "Barium Enema", category: "Fluoroscopy", indication: "Colonic pathology" },
-  { name: "Abdominal Ultrasound", category: "Ultrasound", indication: "Gallbladder, liver, biliary tree" },
-  { name: "Right Upper Quadrant Ultrasound", category: "Ultrasound", indication: "Cholecystitis, biliary pathology" },
-  { name: "HIDA Scan", category: "Nuclear Medicine", indication: "Acute cholecystitis, biliary patency" },
-  
+  {
+    name: 'Abdominal X-Ray (KUB)',
+    category: 'Radiography',
+    indication: 'Bowel obstruction, free air, stones',
+  },
+  {
+    name: 'CT Abdomen/Pelvis with Contrast',
+    category: 'CT',
+    indication: 'Abdominal pathology, appendicitis, diverticulitis',
+  },
+  { name: 'CT Abdomen without Contrast', category: 'CT', indication: 'Renal stones, hemorrhage' },
+  { name: 'MRI Abdomen', category: 'MRI', indication: 'Liver lesions, pancreatic mass' },
+  { name: 'MRCP', category: 'MRI', indication: 'Biliary and pancreatic duct evaluation' },
+  {
+    name: 'ERCP',
+    category: 'Fluoroscopy',
+    indication: 'Therapeutic biliary/pancreatic intervention',
+  },
+  {
+    name: 'Barium Swallow',
+    category: 'Fluoroscopy',
+    indication: 'Esophageal pathology, dysphagia workup',
+  },
+  {
+    name: 'Upper GI Series',
+    category: 'Fluoroscopy',
+    indication: 'Gastric pathology, hiatal hernia',
+  },
+  {
+    name: 'Small Bowel Follow Through',
+    category: 'Fluoroscopy',
+    indication: 'Small bowel pathology, Crohn disease',
+  },
+  { name: 'Barium Enema', category: 'Fluoroscopy', indication: 'Colonic pathology' },
+  {
+    name: 'Abdominal Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Gallbladder, liver, biliary tree',
+  },
+  {
+    name: 'Right Upper Quadrant Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Cholecystitis, biliary pathology',
+  },
+  {
+    name: 'HIDA Scan',
+    category: 'Nuclear Medicine',
+    indication: 'Acute cholecystitis, biliary patency',
+  },
+
   // Cardiac
-  { name: "Transthoracic Echocardiogram", category: "Ultrasound", indication: "Cardiac structure and function" },
-  { name: "Transesophageal Echocardiogram", category: "Ultrasound", indication: "Endocarditis, aortic dissection, thrombus" },
-  { name: "Stress Echocardiogram", category: "Ultrasound", indication: "Ischemic evaluation, CAD" },
-  { name: "Nuclear Stress Test", category: "Nuclear Medicine", indication: "Myocardial perfusion, CAD" },
-  { name: "Cardiac MRI", category: "MRI", indication: "Cardiomyopathy, myocarditis, infiltrative disease" },
-  { name: "Coronary CT Angiography", category: "CT", indication: "CAD, calcium scoring" },
-  { name: "Cardiac Catheterization", category: "Angiography", indication: "Coronary anatomy, intervention" },
-  
+  {
+    name: 'Transthoracic Echocardiogram',
+    category: 'Ultrasound',
+    indication: 'Cardiac structure and function',
+  },
+  {
+    name: 'Transesophageal Echocardiogram',
+    category: 'Ultrasound',
+    indication: 'Endocarditis, aortic dissection, thrombus',
+  },
+  { name: 'Stress Echocardiogram', category: 'Ultrasound', indication: 'Ischemic evaluation, CAD' },
+  {
+    name: 'Nuclear Stress Test',
+    category: 'Nuclear Medicine',
+    indication: 'Myocardial perfusion, CAD',
+  },
+  {
+    name: 'Cardiac MRI',
+    category: 'MRI',
+    indication: 'Cardiomyopathy, myocarditis, infiltrative disease',
+  },
+  { name: 'Coronary CT Angiography', category: 'CT', indication: 'CAD, calcium scoring' },
+  {
+    name: 'Cardiac Catheterization',
+    category: 'Angiography',
+    indication: 'Coronary anatomy, intervention',
+  },
+
   // Neurological
-  { name: "CT Head without Contrast", category: "CT", indication: "Acute stroke, hemorrhage, trauma" },
-  { name: "CT Head with Contrast", category: "CT", indication: "Mass, abscess, enhancement evaluation" },
-  { name: "CT Angiography Head/Neck", category: "CT", indication: "Vascular pathology, aneurysm, dissection" },
-  { name: "MRI Brain with/without Contrast", category: "MRI", indication: "CNS pathology, MS, tumor, stroke" },
-  { name: "MRA Head", category: "MRI", indication: "Intracranial vascular pathology" },
-  { name: "Carotid Duplex Ultrasound", category: "Ultrasound", indication: "Carotid stenosis, TIA/stroke workup" },
-  { name: "Lumbar Puncture with Fluoroscopy", category: "Fluoroscopy", indication: "CSF analysis guidance" },
-  { name: "MRI Spine Cervical", category: "MRI", indication: "Cervical disc, cord pathology" },
-  { name: "MRI Spine Lumbar", category: "MRI", indication: "Lumbar disc, stenosis, radiculopathy" },
-  { name: "Myelogram", category: "Fluoroscopy", indication: "Spinal pathology when MRI contraindicated" },
-  
+  {
+    name: 'CT Head without Contrast',
+    category: 'CT',
+    indication: 'Acute stroke, hemorrhage, trauma',
+  },
+  {
+    name: 'CT Head with Contrast',
+    category: 'CT',
+    indication: 'Mass, abscess, enhancement evaluation',
+  },
+  {
+    name: 'CT Angiography Head/Neck',
+    category: 'CT',
+    indication: 'Vascular pathology, aneurysm, dissection',
+  },
+  {
+    name: 'MRI Brain with/without Contrast',
+    category: 'MRI',
+    indication: 'CNS pathology, MS, tumor, stroke',
+  },
+  { name: 'MRA Head', category: 'MRI', indication: 'Intracranial vascular pathology' },
+  {
+    name: 'Carotid Duplex Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Carotid stenosis, TIA/stroke workup',
+  },
+  {
+    name: 'Lumbar Puncture with Fluoroscopy',
+    category: 'Fluoroscopy',
+    indication: 'CSF analysis guidance',
+  },
+  { name: 'MRI Spine Cervical', category: 'MRI', indication: 'Cervical disc, cord pathology' },
+  { name: 'MRI Spine Lumbar', category: 'MRI', indication: 'Lumbar disc, stenosis, radiculopathy' },
+  {
+    name: 'Myelogram',
+    category: 'Fluoroscopy',
+    indication: 'Spinal pathology when MRI contraindicated',
+  },
+
   // Musculoskeletal
-  { name: "X-Ray Extremity", category: "Radiography", indication: "Fracture, arthritis, bone lesion" },
-  { name: "X-Ray Spine Cervical", category: "Radiography", indication: "Trauma, degenerative changes" },
-  { name: "X-Ray Spine Lumbar", category: "Radiography", indication: "Spondylosis, fracture, alignment" },
-  { name: "MRI Shoulder", category: "MRI", indication: "Rotator cuff, labral pathology" },
-  { name: "MRI Knee", category: "MRI", indication: "Ligament, meniscal, cartilage pathology" },
-  { name: "MRI Hip", category: "MRI", indication: "AVN, labral tear, occult fracture" },
-  { name: "Bone Scan", category: "Nuclear Medicine", indication: "Metastases, infection, stress fracture" },
-  { name: "DEXA Scan", category: "Nuclear Medicine", indication: "Bone mineral density, osteoporosis" },
-  { name: "Arthrogram", category: "Fluoroscopy/MRI", indication: "Joint pathology pre-MRI" },
-  
+  {
+    name: 'X-Ray Extremity',
+    category: 'Radiography',
+    indication: 'Fracture, arthritis, bone lesion',
+  },
+  {
+    name: 'X-Ray Spine Cervical',
+    category: 'Radiography',
+    indication: 'Trauma, degenerative changes',
+  },
+  {
+    name: 'X-Ray Spine Lumbar',
+    category: 'Radiography',
+    indication: 'Spondylosis, fracture, alignment',
+  },
+  { name: 'MRI Shoulder', category: 'MRI', indication: 'Rotator cuff, labral pathology' },
+  { name: 'MRI Knee', category: 'MRI', indication: 'Ligament, meniscal, cartilage pathology' },
+  { name: 'MRI Hip', category: 'MRI', indication: 'AVN, labral tear, occult fracture' },
+  {
+    name: 'Bone Scan',
+    category: 'Nuclear Medicine',
+    indication: 'Metastases, infection, stress fracture',
+  },
+  {
+    name: 'DEXA Scan',
+    category: 'Nuclear Medicine',
+    indication: 'Bone mineral density, osteoporosis',
+  },
+  { name: 'Arthrogram', category: 'Fluoroscopy/MRI', indication: 'Joint pathology pre-MRI' },
+
   // Genitourinary
-  { name: "Renal Ultrasound", category: "Ultrasound", indication: "Hydronephrosis, cysts, masses" },
-  { name: "CT Urogram", category: "CT", indication: "Hematuria workup, urothelial pathology" },
-  { name: "IVP", category: "Fluoroscopy", indication: "Urinary tract anatomy (largely replaced by CT)" },
-  { name: "VCUG", category: "Fluoroscopy", indication: "Vesicoureteral reflux, voiding dysfunction" },
-  { name: "Pelvic Ultrasound", category: "Ultrasound", indication: "Uterus, ovaries, pelvic mass" },
-  { name: "Transvaginal Ultrasound", category: "Ultrasound", indication: "Early pregnancy, ovarian pathology" },
-  { name: "Testicular Ultrasound", category: "Ultrasound", indication: "Scrotal pathology, torsion" },
-  
+  { name: 'Renal Ultrasound', category: 'Ultrasound', indication: 'Hydronephrosis, cysts, masses' },
+  { name: 'CT Urogram', category: 'CT', indication: 'Hematuria workup, urothelial pathology' },
+  {
+    name: 'IVP',
+    category: 'Fluoroscopy',
+    indication: 'Urinary tract anatomy (largely replaced by CT)',
+  },
+  {
+    name: 'VCUG',
+    category: 'Fluoroscopy',
+    indication: 'Vesicoureteral reflux, voiding dysfunction',
+  },
+  { name: 'Pelvic Ultrasound', category: 'Ultrasound', indication: 'Uterus, ovaries, pelvic mass' },
+  {
+    name: 'Transvaginal Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Early pregnancy, ovarian pathology',
+  },
+  {
+    name: 'Testicular Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Scrotal pathology, torsion',
+  },
+
   // Vascular
-  { name: "Lower Extremity Venous Duplex", category: "Ultrasound", indication: "DVT" },
-  { name: "Lower Extremity Arterial Duplex", category: "Ultrasound", indication: "PAD, claudication" },
-  { name: "Abdominal Aortic Ultrasound", category: "Ultrasound", indication: "AAA screening" },
-  { name: "CT Angiography Abdomen", category: "CT", indication: "Mesenteric ischemia, AAA, renal artery" },
-  { name: "Peripheral Angiography", category: "Angiography", indication: "PAD intervention" },
-  
+  { name: 'Lower Extremity Venous Duplex', category: 'Ultrasound', indication: 'DVT' },
+  {
+    name: 'Lower Extremity Arterial Duplex',
+    category: 'Ultrasound',
+    indication: 'PAD, claudication',
+  },
+  { name: 'Abdominal Aortic Ultrasound', category: 'Ultrasound', indication: 'AAA screening' },
+  {
+    name: 'CT Angiography Abdomen',
+    category: 'CT',
+    indication: 'Mesenteric ischemia, AAA, renal artery',
+  },
+  { name: 'Peripheral Angiography', category: 'Angiography', indication: 'PAD intervention' },
+
   // Breast
-  { name: "Mammography", category: "Radiography", indication: "Breast cancer screening and diagnostic" },
-  { name: "Breast Ultrasound", category: "Ultrasound", indication: "Cyst vs solid mass, biopsy guidance" },
-  { name: "Breast MRI", category: "MRI", indication: "High-risk screening, extent of disease" },
-  
+  {
+    name: 'Mammography',
+    category: 'Radiography',
+    indication: 'Breast cancer screening and diagnostic',
+  },
+  {
+    name: 'Breast Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Cyst vs solid mass, biopsy guidance',
+  },
+  { name: 'Breast MRI', category: 'MRI', indication: 'High-risk screening, extent of disease' },
+
   // Thyroid/Neck
-  { name: "Thyroid Ultrasound", category: "Ultrasound", indication: "Nodule characterization, biopsy guidance" },
-  { name: "Thyroid Uptake and Scan", category: "Nuclear Medicine", indication: "Hyperthyroidism etiology" },
-  { name: "CT Neck with Contrast", category: "CT", indication: "Neck mass, abscess, lymphadenopathy" },
-  { name: "PET/CT", category: "Nuclear Medicine", indication: "Cancer staging, treatment response" },
+  {
+    name: 'Thyroid Ultrasound',
+    category: 'Ultrasound',
+    indication: 'Nodule characterization, biopsy guidance',
+  },
+  {
+    name: 'Thyroid Uptake and Scan',
+    category: 'Nuclear Medicine',
+    indication: 'Hyperthyroidism etiology',
+  },
+  {
+    name: 'CT Neck with Contrast',
+    category: 'CT',
+    indication: 'Neck mass, abscess, lymphadenopathy',
+  },
+  {
+    name: 'PET/CT',
+    category: 'Nuclear Medicine',
+    indication: 'Cancer staging, treatment response',
+  },
 ];
 
 // Schema for Gemini response
@@ -115,7 +279,7 @@ const imagingStudySchema = {
     whenToOrder: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     alternativeStudies: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
   },
-  required: ["description", "technique", "normalFindings", "clinicalPearls", "boardYieldFacts"],
+  required: ['description', 'technique', 'normalFindings', 'clinicalPearls', 'boardYieldFacts'],
 };
 
 interface ImagingStudyData {
@@ -141,7 +305,10 @@ interface ImagingStudyData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -164,14 +331,18 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateImagingStudyData(name: string, category: string, indication: string): Promise<ImagingStudyData> {
+async function generateImagingStudyData(
+  name: string,
+  category: string,
+  indication: string
+): Promise<ImagingStudyData> {
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -239,9 +410,7 @@ async function main() {
     const existingNames = new Set(existing.map((s) => s.name.toLowerCase()));
 
     // Filter out studies that already exist
-    const toCreate = PANCE_IMAGING_STUDIES.filter(
-      (s) => !existingNames.has(s.name.toLowerCase())
-    );
+    const toCreate = PANCE_IMAGING_STUDIES.filter((s) => !existingNames.has(s.name.toLowerCase()));
 
     console.log(`Existing: ${existing.length}`);
     console.log(`Missing: ${toCreate.length}`);

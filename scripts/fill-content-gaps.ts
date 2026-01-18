@@ -1,9 +1,9 @@
 /**
  * Fill Content Gaps Script
- * 
+ *
  * Fills all null/empty MedicalContent fields with appropriate placeholders
  * so that all fields are at 100% coverage.
- * 
+ *
  * Usage:
  *   npx tsx scripts/fill-content-gaps.ts
  */
@@ -45,13 +45,13 @@ async function fillContentGaps() {
 
   for (const [field, placeholder] of Object.entries(FIELDS_TO_FILL)) {
     console.log(`\n📝 Processing field: ${field}`);
-    
+
     try {
       // Count null values
       const nullCount = await prisma.medicalContent.count({
         where: { [field]: null },
       });
-      
+
       // Count empty strings
       let emptyCount = 0;
       try {
@@ -61,16 +61,18 @@ async function fillContentGaps() {
       } catch {
         // Field might not support empty string check
       }
-      
+
       const totalMissing = nullCount + emptyCount;
-      
+
       if (totalMissing === 0) {
         console.log(`   ✓ Already complete (${total}/${total})`);
         continue;
       }
-      
-      console.log(`   Found ${totalMissing} missing values (${nullCount} null, ${emptyCount} empty)`);
-      
+
+      console.log(
+        `   Found ${totalMissing} missing values (${nullCount} null, ${emptyCount} empty)`
+      );
+
       // Update null values
       if (nullCount > 0) {
         const result = await prisma.medicalContent.updateMany({
@@ -80,7 +82,7 @@ async function fillContentGaps() {
         console.log(`   → Updated ${result.count} null values`);
         totalUpdated += result.count;
       }
-      
+
       // Update empty string values
       if (emptyCount > 0) {
         const result = await prisma.medicalContent.updateMany({
@@ -90,7 +92,7 @@ async function fillContentGaps() {
         console.log(`   → Updated ${result.count} empty values`);
         totalUpdated += result.count;
       }
-      
+
       // Verify
       const remainingNull = await prisma.medicalContent.count({
         where: { [field]: null },
@@ -103,7 +105,7 @@ async function fillContentGaps() {
       } catch {
         // ignore
       }
-      
+
       if (remainingNull === 0 && remainingEmpty === 0) {
         console.log(`   ✓ Field now at 100% coverage`);
       } else {
@@ -117,7 +119,7 @@ async function fillContentGaps() {
   console.log('\n─────────────────────────────────────');
   console.log(`Total field values updated: ${totalUpdated}`);
   console.log('─────────────────────────────────────\n');
-  
+
   console.log('✓ Content gap filling complete!');
 }
 

@@ -1,6 +1,6 @@
 /**
  * EnhancedConditionCard - Unified preview card for Clinical Reference Library
- * 
+ *
  * REDESIGNED for homogeneous display:
  * - All cards show the SAME structure regardless of data availability
  * - Key Clinical Features section merges: classic_triad, buzzwords, clinical_pearls
@@ -29,51 +29,53 @@ interface EnhancedConditionCardProps {
  */
 function extractKeyFeatures(condition: Partial<MedicalContentDisplay>): string[] {
   const features: string[] = [];
-  
+
   // Priority 1: Classic Triad (pathognomonic features)
   const classicTriad = parseListField(condition.classic_triad);
   if (classicTriad.length > 0) {
     features.push(...classicTriad.slice(0, 4));
     if (features.length >= 3) return features.slice(0, 4);
   }
-  
+
   // Priority 2: Buzzwords (if short - true buzzwords)
   const buzzwords = parseListField(condition.buzzwords);
-  const shortBuzzwords = buzzwords.filter(b => b.length < 60 && !b.includes('.'));
+  const shortBuzzwords = buzzwords.filter((b) => b.length < 60 && !b.includes('.'));
   if (shortBuzzwords.length > 0) {
     features.push(...shortBuzzwords.slice(0, 4 - features.length));
     if (features.length >= 3) return features.slice(0, 4);
   }
-  
+
   // Priority 3: Clinical Pearls (key sentences)
   const clinicalPearls = parseListField(condition.clinical_pearls);
   if (clinicalPearls.length > 0) {
     // Truncate long pearls
-    const truncatedPearls = clinicalPearls.slice(0, 4 - features.length).map(p => 
-      p.length > 80 ? p.slice(0, 77) + '...' : p
-    );
+    const truncatedPearls = clinicalPearls
+      .slice(0, 4 - features.length)
+      .map((p) => (p.length > 80 ? p.slice(0, 77) + '...' : p));
     features.push(...truncatedPearls);
     if (features.length >= 3) return features.slice(0, 4);
   }
-  
+
   // Priority 4: Long buzzwords (sentences that were stored as buzzwords)
-  const longBuzzwords = buzzwords.filter(b => b.length >= 60 || b.includes('.'));
+  const longBuzzwords = buzzwords.filter((b) => b.length >= 60 || b.includes('.'));
   if (longBuzzwords.length > 0 && features.length < 3) {
-    const truncated = longBuzzwords.slice(0, 4 - features.length).map(b =>
-      b.length > 80 ? b.slice(0, 77) + '...' : b
-    );
+    const truncated = longBuzzwords
+      .slice(0, 4 - features.length)
+      .map((b) => (b.length > 80 ? b.slice(0, 77) + '...' : b));
     features.push(...truncated);
   }
-  
+
   // Priority 5: Extract from classic_patient if still need features
   if (features.length < 2) {
     const classicPatient = parseTextField(condition.classic_patient);
     if (classicPatient && classicPatient.length > 20) {
       // Take first 80 chars as a feature
-      features.push(classicPatient.length > 80 ? classicPatient.slice(0, 77) + '...' : classicPatient);
+      features.push(
+        classicPatient.length > 80 ? classicPatient.slice(0, 77) + '...' : classicPatient
+      );
     }
   }
-  
+
   return features.slice(0, 4);
 }
 
@@ -88,18 +90,21 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
 }) => {
   // Extract data
   const keyFeatures = useMemo(() => extractKeyFeatures(condition), [condition]);
-  
-  const goldStandard = useMemo(() => 
-    parseTextField(condition.gold_standard_dx),
-  [condition.gold_standard_dx]);
 
-  const firstLineRx = useMemo(() => 
-    parseTextField(condition.first_line_rx),
-  [condition.first_line_rx]);
+  const goldStandard = useMemo(
+    () => parseTextField(condition.gold_standard_dx),
+    [condition.gold_standard_dx]
+  );
 
-  const bestInitialTest = useMemo(() =>
-    parseTextField((condition as Record<string, unknown>).best_initial_test),
-  [condition]);
+  const firstLineRx = useMemo(
+    () => parseTextField(condition.first_line_rx),
+    [condition.first_line_rx]
+  );
+
+  const bestInitialTest = useMemo(
+    () => parseTextField((condition as Record<string, unknown>).best_initial_test),
+    [condition]
+  );
 
   const hasQuickInfo = goldStandard || firstLineRx || bestInitialTest;
   const hasFeatures = keyFeatures.length > 0;
@@ -115,16 +120,16 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
         bg-[var(--color-bg-secondary)]/40 backdrop-blur-sm
         border border-l-[3px] transition-all duration-200
         border-l-[var(--color-accent)]
-        ${isSelected
-          ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30 shadow-lg shadow-[var(--color-accent)]/10'
-          : 'border-[var(--color-border)]/50 hover:border-[var(--color-border)] hover:shadow-lg hover:shadow-black/10'
+        ${
+          isSelected
+            ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30 shadow-lg shadow-[var(--color-accent)]/10'
+            : 'border-[var(--color-border)]/50 hover:border-[var(--color-border)] hover:shadow-lg hover:shadow-black/10'
         }
         ${className}
       `}
     >
       {/* Unified Vertical Layout */}
       <div className="flex flex-col h-full min-h-[200px]">
-        
         {/* HEADER: Condition Name + Yield Badge */}
         <div className="flex items-start justify-between gap-3 p-4 pb-2">
           <h3 className="font-bold text-base text-[var(--color-text-primary)] leading-snug line-clamp-2 flex-1">
@@ -141,7 +146,7 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
               Key Clinical Features
             </span>
           </div>
-          
+
           {hasFeatures ? (
             <div className="space-y-1.5">
               {keyFeatures.map((feature, idx) => (
@@ -149,7 +154,10 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
                   key={idx}
                   className="px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]/30 text-xs leading-relaxed"
                 >
-                  <MarkdownRenderer content={feature} className="text-xs [&_p]:mb-0 [&_p]:text-[var(--color-text-primary)]" />
+                  <MarkdownRenderer
+                    content={feature}
+                    className="text-xs [&_p]:mb-0 [&_p]:text-[var(--color-text-primary)]"
+                  />
                 </div>
               ))}
             </div>

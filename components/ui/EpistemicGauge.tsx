@@ -1,13 +1,13 @@
 /**
  * EpistemicGauge - Uncertainty-Aware Visualization Component
- * 
+ *
  * Implements "Visual Uncertainty" from Open Learner Models (OLM) research.
  * Shows confidence/opacity based on data sufficiency, preventing false
  * precision that erodes user trust.
- * 
+ *
  * Key insight: Users prefer "fuzzy" visualizations that communicate
  * uncertainty over precise numbers based on insufficient data.
- * 
+ *
  * Formula: confidence = min(1, reviewCount / CONFIDENCE_THRESHOLD)
  */
 
@@ -130,19 +130,17 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
   const opacity = confidenceToOpacity(confidence);
   const calibrationLevel = getCalibrationLevel(dataPoints);
   const remaining = questionsUntilConfident(dataPoints, confidenceThreshold);
-  
+
   // Normalize value to 0-100
-  const displayValue = normalized 
-    ? Math.round(value * 100) 
-    : Math.round(value);
-  
+  const displayValue = normalized ? Math.round(value * 100) : Math.round(value);
+
   // Size classes
   const sizeClasses = {
     sm: { gauge: 'h-2', text: 'text-sm', label: 'text-xs' },
     md: { gauge: 'h-3', text: 'text-base', label: 'text-sm' },
     lg: { gauge: 'h-4', text: 'text-lg', label: 'text-base' },
   };
-  
+
   // Color classes for the gauge fill
   const colorClasses = {
     blue: 'bg-blue-500 dark:bg-blue-400',
@@ -150,28 +148,27 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
     amber: 'bg-amber-500 dark:bg-amber-400',
     slate: 'bg-slate-500 dark:bg-slate-400',
   };
-  
+
   // Default tooltip based on calibration level
-  const tooltipText = lowConfidenceTooltip || (
-    confidence < 1
+  const tooltipText =
+    lowConfidenceTooltip ||
+    (confidence < 1
       ? `Complete ${remaining} more questions for precise prediction.`
-      : 'Data confidence is high.'
-  );
-  
+      : 'Data confidence is high.');
+
   return (
-    <div 
-      className={`relative ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
-    >
+    <div className={`relative ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
       {/* Label with confidence indicator */}
       {(label || showConfidenceIndicator) && (
         <div className="flex items-center justify-between mb-1.5">
           {label && (
-            <span className={`font-medium text-slate-700 dark:text-slate-300 ${sizeClasses[size].label}`}>
+            <span
+              className={`font-medium text-slate-700 dark:text-slate-300 ${sizeClasses[size].label}`}
+            >
               {label}
             </span>
           )}
-          
+
           {showConfidenceIndicator && (
             <div className="flex items-center gap-1.5">
               {calibrationLevel.confidence === 'collecting' && (
@@ -186,26 +183,30 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
               {calibrationLevel.confidence === 'confident' && (
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
               )}
-              <span className={`text-[10px] uppercase tracking-wider font-medium ${
-                calibrationLevel.confidence === 'collecting' ? 'text-slate-400' :
-                calibrationLevel.confidence === 'emerging' ? 'text-amber-500' :
-                calibrationLevel.confidence === 'provisional' ? 'text-blue-500' :
-                'text-emerald-500'
-              }`}>
+              <span
+                className={`text-[10px] uppercase tracking-wider font-medium ${
+                  calibrationLevel.confidence === 'collecting'
+                    ? 'text-slate-400'
+                    : calibrationLevel.confidence === 'emerging'
+                      ? 'text-amber-500'
+                      : calibrationLevel.confidence === 'provisional'
+                        ? 'text-blue-500'
+                        : 'text-emerald-500'
+                }`}
+              >
                 {calibrationLevel.label}
               </span>
             </div>
           )}
         </div>
       )}
-      
+
       {/* Gauge container with opacity based on confidence */}
-      <div 
-        className="relative group"
-        style={{ opacity }}
-      >
+      <div className="relative group" style={{ opacity }}>
         {/* Background track */}
-        <div className={`w-full ${sizeClasses[size].gauge} bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden`}>
+        <div
+          className={`w-full ${sizeClasses[size].gauge} bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden`}
+        >
           {/* Filled portion */}
           <motion.div
             initial={{ width: 0 }}
@@ -214,17 +215,17 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
             className={`h-full ${colorClasses[colorScheme]} rounded-full`}
           />
         </div>
-        
+
         {/* Value display */}
         <div className="flex items-center justify-between mt-1">
-          <span className={`font-semibold text-slate-900 dark:text-slate-100 ${sizeClasses[size].text}`}>
+          <span
+            className={`font-semibold text-slate-900 dark:text-slate-100 ${sizeClasses[size].text}`}
+          >
             {showPercentage ? `${displayValue}%` : displayValue}
           </span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            n={dataPoints}
-          </span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">n={dataPoints}</span>
         </div>
-        
+
         {/* Tooltip on hover for low confidence */}
         {confidence < 1 && (
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -235,10 +236,10 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Blur overlay for very low confidence */}
       {confidence < 0.33 && (
-        <div 
+        <div
           className="absolute inset-0 backdrop-blur-[1px] pointer-events-none rounded-lg"
           style={{ opacity: 0.5 * (1 - confidence * 3) }}
         />
@@ -254,10 +255,12 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
 /**
  * Circular version of EpistemicGauge
  */
-export const EpistemicRadialGauge: React.FC<EpistemicGaugeProps & {
-  radius?: number;
-  strokeWidth?: number;
-}> = ({
+export const EpistemicRadialGauge: React.FC<
+  EpistemicGaugeProps & {
+    radius?: number;
+    strokeWidth?: number;
+  }
+> = ({
   value,
   dataPoints,
   confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
@@ -273,25 +276,25 @@ export const EpistemicRadialGauge: React.FC<EpistemicGaugeProps & {
   const opacity = confidenceToOpacity(confidence);
   const calibrationLevel = getCalibrationLevel(dataPoints);
   const displayValue = normalized ? Math.round(value * 100) : Math.round(value);
-  
+
   const circumference = 2 * Math.PI * radius;
   const progress = (displayValue / 100) * circumference;
-  
+
   const colorMap = {
     blue: 'stroke-blue-500 dark:stroke-blue-400',
     green: 'stroke-emerald-500 dark:stroke-emerald-400',
     amber: 'stroke-amber-500 dark:stroke-amber-400',
     slate: 'stroke-slate-500 dark:stroke-slate-400',
   };
-  
+
   return (
-    <div 
+    <div
       className={`relative inline-flex flex-col items-center ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       style={{ opacity }}
     >
-      <svg 
-        width={(radius + strokeWidth) * 2} 
+      <svg
+        width={(radius + strokeWidth) * 2}
         height={(radius + strokeWidth) * 2}
         className="transform -rotate-90"
       >
@@ -318,7 +321,7 @@ export const EpistemicRadialGauge: React.FC<EpistemicGaugeProps & {
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </svg>
-      
+
       {/* Center value */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -330,14 +333,19 @@ export const EpistemicRadialGauge: React.FC<EpistemicGaugeProps & {
           </span>
         )}
       </div>
-      
+
       {/* Confidence badge */}
-      <div className={`mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-        calibrationLevel.confidence === 'collecting' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-        calibrationLevel.confidence === 'emerging' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-        calibrationLevel.confidence === 'provisional' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      }`}>
+      <div
+        className={`mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+          calibrationLevel.confidence === 'collecting'
+            ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            : calibrationLevel.confidence === 'emerging'
+              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+              : calibrationLevel.confidence === 'provisional'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+        }`}
+      >
         n={dataPoints}
       </div>
     </div>
@@ -357,11 +365,7 @@ export const EpistemicSystemGrid: React.FC<{
   systems: SystemMasteryData[];
   confidenceThreshold?: number;
   onSystemClick?: (system: string) => void;
-}> = ({
-  systems,
-  confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
-  onSystemClick,
-}) => {
+}> = ({ systems, confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD, onSystemClick }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {systems.map((system) => (
@@ -401,7 +405,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
 }) => {
   const remaining = Math.max(0, targetCount - currentCount);
   const progress = Math.min(1, currentCount / targetCount);
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -417,10 +421,11 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
             Calibration in Progress
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-            Complete <span className="font-semibold text-blue-600 dark:text-blue-400">{remaining}</span> more 
+            Complete{' '}
+            <span className="font-semibold text-blue-600 dark:text-blue-400">{remaining}</span> more
             questions to unlock your personalized analytics dashboard.
           </p>
-          
+
           {/* Progress bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
@@ -440,7 +445,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
               />
             </div>
           </div>
-          
+
           {onStartCalibration && (
             <button
               onClick={onStartCalibration}

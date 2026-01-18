@@ -1,14 +1,14 @@
 /**
  * MetacognitiveReflection Component
- * 
+ *
  * Post-session prompts for metacognitive reflection.
  * Research shows 15-20% learning gains from structured reflection.
- * 
+ *
  * Prompts include:
  * - "What patterns did you notice in questions you missed?"
  * - "What will you do differently next time?"
  * - "Rate your confidence before you saw results"
- * 
+ *
  * @see .clinerules Section 3: PEDAGOGY & SCIENCE OF LEARNING - Metacognition
  */
 
@@ -77,14 +77,16 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
   const [confidenceRating, setConfidenceRating] = useState(3);
   const [topicsToReview, setTopicsToReview] = useState<string[]>([]);
 
-  const score = Math.round((sessionPerformance.correctAnswers / sessionPerformance.totalQuestions) * 100);
-  const uniqueMissedTopics = [...new Set([...sessionPerformance.missedSystems, ...sessionPerformance.missedConditions])];
+  const score = Math.round(
+    (sessionPerformance.correctAnswers / sessionPerformance.totalQuestions) * 100
+  );
+  const uniqueMissedTopics = [
+    ...new Set([...sessionPerformance.missedSystems, ...sessionPerformance.missedConditions]),
+  ];
 
   const handleTopicToggle = (topic: string) => {
-    setTopicsToReview(prev =>
-      prev.includes(topic)
-        ? prev.filter(t => t !== topic)
-        : [...prev, topic]
+    setTopicsToReview((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
     );
   };
 
@@ -101,7 +103,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
 
   const handleNext = () => {
     if (currentStep < REFLECTION_PROMPTS.length) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     } else {
       handleComplete();
     }
@@ -148,7 +150,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
               <span className="text-white font-semibold">{score}%</span>
             </div>
           </div>
-          
+
           {/* Progress Indicator */}
           <div className="mt-4 flex gap-2">
             {REFLECTION_PROMPTS.map((_, idx) => (
@@ -176,16 +178,16 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                 {(() => {
                   const prompt = REFLECTION_PROMPTS[currentStep];
                   const Icon = prompt.icon;
-                  
+
                   return (
                     <>
                       <div className="flex items-center gap-3 text-indigo-400">
                         <Icon className="w-6 h-6" />
                         <h3 className="text-lg font-semibold">{prompt.title}</h3>
                       </div>
-                      
+
                       <p className="text-white text-lg">{prompt.question}</p>
-                      
+
                       {currentStep === 2 ? (
                         /* Confidence Rating Slider */
                         <div className="space-y-4 pt-4">
@@ -203,24 +205,47 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                           />
                           <div className="flex justify-between text-xs text-slate-500">
                             {['1', '2', '3', '4', '5'].map((num) => (
-                              <span key={num} className={confidenceRating === parseInt(num) ? 'text-indigo-400 font-bold' : ''}>
+                              <span
+                                key={num}
+                                className={
+                                  confidenceRating === parseInt(num)
+                                    ? 'text-indigo-400 font-bold'
+                                    : ''
+                                }
+                              >
                                 {num}
                               </span>
                             ))}
                           </div>
-                          
+
                           {/* Confidence Comparison */}
                           <div className="mt-6 p-4 bg-slate-700/50 rounded-lg">
                             <p className="text-slate-300 text-sm">
-                              <span className="font-semibold text-indigo-400">Calibration Check:</span>{' '}
-                              You were {confidenceRating <= 2 ? 'not very' : confidenceRating >= 4 ? 'very' : 'moderately'} confident
-                              and scored {score}%.
+                              <span className="font-semibold text-indigo-400">
+                                Calibration Check:
+                              </span>{' '}
+                              You were{' '}
+                              {confidenceRating <= 2
+                                ? 'not very'
+                                : confidenceRating >= 4
+                                  ? 'very'
+                                  : 'moderately'}{' '}
+                              confident and scored {score}%.
                               {Math.abs(confidenceRating * 20 - score) <= 20 ? (
-                                <span className="text-green-400"> Your confidence was well-calibrated! ✓</span>
+                                <span className="text-green-400">
+                                  {' '}
+                                  Your confidence was well-calibrated! ✓
+                                </span>
                               ) : confidenceRating * 20 > score ? (
-                                <span className="text-amber-400"> Consider being more cautious in your self-assessment.</span>
+                                <span className="text-amber-400">
+                                  {' '}
+                                  Consider being more cautious in your self-assessment.
+                                </span>
                               ) : (
-                                <span className="text-blue-400"> You may be underestimating your abilities!</span>
+                                <span className="text-blue-400">
+                                  {' '}
+                                  You may be underestimating your abilities!
+                                </span>
                               )}
                             </p>
                           </div>
@@ -230,18 +255,17 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                         <>
                           <textarea
                             value={currentStep === 0 ? patternsNoticed : improvementPlan}
-                            onChange={(e) => currentStep === 0 
-                              ? setPatternsNoticed(e.target.value)
-                              : setImprovementPlan(e.target.value)
+                            onChange={(e) =>
+                              currentStep === 0
+                                ? setPatternsNoticed(e.target.value)
+                                : setImprovementPlan(e.target.value)
                             }
                             placeholder={prompt.placeholder}
                             className="w-full h-32 bg-slate-700 text-white rounded-xl p-4 resize-none
                               border-2 border-transparent focus:border-indigo-500 focus:outline-none
                               placeholder:text-slate-500"
                           />
-                          <p className="text-slate-500 text-sm">
-                            💡 {prompt.hint}
-                          </p>
+                          <p className="text-slate-500 text-sm">💡 {prompt.hint}</p>
                         </>
                       )}
                     </>
@@ -259,11 +283,11 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                   <CheckCircle className="w-6 h-6" />
                   <h3 className="text-lg font-semibold">Topics to Review</h3>
                 </div>
-                
+
                 <p className="text-white">
                   Select topics you want to prioritize in future sessions:
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2 mt-4">
                   {uniqueMissedTopics.length > 0 ? (
                     uniqueMissedTopics.map((topic) => (
@@ -280,9 +304,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                       </button>
                     ))
                   ) : (
-                    <p className="text-slate-400 italic">
-                      Great job! No missed topics to review.
-                    </p>
+                    <p className="text-slate-400 italic">Great job! No missed topics to review.</p>
                   )}
                 </div>
               </motion.div>
@@ -298,7 +320,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
           >
             Skip reflection
           </button>
-          
+
           <button
             onClick={handleNext}
             disabled={!canProceed()}

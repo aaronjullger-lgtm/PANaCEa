@@ -1,7 +1,7 @@
 /**
  * @deprecated This file is being consolidated into src/types/index.ts
  * New code should import from 'src/types' instead of './types'
- * 
+ *
  * Note: This file is still widely used throughout the codebase.
  * Migration is planned but not yet implemented.
  */
@@ -12,7 +12,11 @@ export interface Question {
   vignette?: string;
   question: string;
   options: string[];
+  /** Alias for options (for backwards compatibility) */
+  answers?: string[];
   correctAnswerIndex: number;
+  /** Alias for correctAnswerIndex (for backwards compatibility) */
+  correctIndex?: number;
   rationale: string;
   topic: string;
   /** PANCE system, mirrors topic but typed */
@@ -23,6 +27,8 @@ export interface Question {
   conditionId: string;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
+  /** Question difficulty level */
+  difficulty?: 'easy' | 'medium' | 'hard';
   pearls: string[];
   repetitionLevel?: number;
   nextReviewDate?: string; // YYYY-MM-DD
@@ -43,28 +49,28 @@ export interface PerformanceRecord {
   timestamp: number;
 
   // What was shown
-  system: SystemCode | null;   // e.g. "CV", "PULM"
-  subcategory: string | null;  // e.g. "Arrhythmias", "Asthma"
-  conditionId: string;         // from CONDITION_REGISTRY if present
-  condition: string;           // human name from question.condition
-  topic: string;               // your existing topic code/label
+  system: SystemCode | null; // e.g. "CV", "PULM"
+  subcategory: string | null; // e.g. "Arrhythmias", "Asthma"
+  conditionId: string; // from CONDITION_REGISTRY if present
+  condition: string; // human name from question.condition
+  topic: string; // your existing topic code/label
 
   // Result
   isCorrect: boolean;
 
   // Meta (so we can filter to PANCE-level ALL sessions)
-  focus: SessionSettings["focus"];         // 'all' | 'growth' | ...
-  difficulty: SessionSettings["difficulty"]; // 'easier' | 'same' | 'harder'
+  focus: SessionSettings['focus']; // 'all' | 'growth' | ...
+  difficulty: SessionSettings['difficulty']; // 'easier' | 'same' | 'harder'
 
   // Deep Insight metrics (optional for backward compatibility)
-  timeSpentMs?: number;            // Time spent on question in milliseconds
-  answerChangedCount?: number;     // Number of times answer was changed before submission
+  timeSpentMs?: number; // Time spent on question in milliseconds
+  answerChangedCount?: number; // Number of times answer was changed before submission
   finalAnswerWasChanged?: boolean; // Whether the final answer differed from first selection
   questionType?: 'diagnosis' | 'management' | 'pharm' | 'other'; // Question classification
-  
+
   // Error taxonomy for meta-cognition
-  errorTag?: ErrorTag;             // User-tagged reason for incorrect answer
-  questionWordCount?: number;      // Word count for vignette stamina analysis
+  errorTag?: ErrorTag; // User-tagged reason for incorrect answer
+  questionWordCount?: number; // Word count for vignette stamina analysis
 }
 
 export interface TopicStats {
@@ -75,37 +81,46 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged" | "unseen" | "incorrect" | "bookmarked";
-  difficulty: "easier" | "same" | "harder";
+  mode?: 'standard' | 'diagnostic' | 'photo' | 'anatomy' | 'quick-review' | 'custom';
+  focus:
+    | 'all'
+    | 'growth'
+    | 'review'
+    | 'topic'
+    | 'reviewFlagged'
+    | 'unseen'
+    | 'incorrect'
+    | 'bookmarked';
+  difficulty: 'easier' | 'same' | 'harder';
   topic?: string;
   count?: number;
   systems?: string[];
 
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;
-  
+
   /** Optional: when present, Gemini should target this specific condition ID or name */
   conditionName?: string;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
 export type SystemCode =
-  | "CV"
-  | "DERM"
-  | "ENDO"
-  | "GI"
-  | "GU"
-  | "HEME"
-  | "HEENT"
-  | "ID"
-  | "MSK"
-  | "NEURO"
-  | "PRO"
-  | "PSYCH"
-  | "PULM"
-  | "RENAL"
-  | "REPRO"
-  | "OTHER"; // internal only, not shown in the heatmap
+  | 'CV'
+  | 'DERM'
+  | 'ENDO'
+  | 'GI'
+  | 'GU'
+  | 'HEME'
+  | 'HEENT'
+  | 'ID'
+  | 'MSK'
+  | 'NEURO'
+  | 'PRO'
+  | 'PSYCH'
+  | 'PULM'
+  | 'RENAL'
+  | 'REPRO'
+  | 'OTHER'; // internal only, not shown in the heatmap
 
 export interface ConditionDefinition {
   /** Stable internal id, e.g. "PULM__asthma__status_asthmaticus" */
@@ -119,15 +134,15 @@ export interface ConditionDefinition {
 }
 
 // User profile and onboarding types
-export type YearInProgram = 
+export type YearInProgram =
   | 'Didactic Year 1'
-  | 'Didactic Year 2' 
+  | 'Didactic Year 2'
   | 'Clinical Year'
   | 'Graduated'
   | 'Post-Graduate'
   | 'Preparing for PANCE';
 
-export type ClinicalRotation = 
+export type ClinicalRotation =
   | 'Emergency Medicine'
   | 'Family Medicine'
   | 'Internal Medicine'
@@ -162,11 +177,7 @@ export const YEAR_IN_PROGRAM_OPTIONS: readonly YearInProgram[] = [
 ] as const;
 
 // Specialty CAQ Tracks (DLC Packs)
-export type SpecialtyTrack = 
-  | 'orthopedics'
-  | 'dermatology'
-  | 'psychiatry'
-  | 'emergency_medicine';
+export type SpecialtyTrack = 'orthopedics' | 'dermatology' | 'psychiatry' | 'emergency_medicine';
 
 export interface SpecialtyCAQPack {
   id: SpecialtyTrack;

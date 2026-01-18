@@ -17,7 +17,7 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
       // Browser: fetch from API endpoint
       const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
       const response = await fetch(apiUrl);
-      
+
       if (response.ok) {
         const data = await response.json();
         return transformToMedicalContent(data);
@@ -28,8 +28,8 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
       const records = await prisma.medicalContent.findMany({
         where: { status: 'published' },
       });
-      
-      return records.map(record => ({
+
+      return records.map((record) => ({
         id: record.id,
         conditionId: record.conditionId,
         condition: record.condition,
@@ -42,13 +42,14 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
         createdBy: record.createdBy,
         updatedBy: record.updatedBy,
         overview: record.overview || undefined,
-        etiologyPathophysiology: [record.etiology, record.pathophysiology].filter(Boolean).join('\n\n') || undefined,
+        etiologyPathophysiology:
+          [record.etiology, record.pathophysiology].filter(Boolean).join('\n\n') || undefined,
         epidemiology: record.epidemiology || undefined,
         riskFactors: record.riskFactors,
         symptoms: record.symptoms,
         examFindings: record.physicalExam,
         diagnostics: record.diagnostics as any,
-        treatment: Array.isArray(record.treatment) ? record.treatment as string[] : undefined,
+        treatment: Array.isArray(record.treatment) ? (record.treatment as string[]) : undefined,
         complications: record.complications,
         prognosis: record.prognosis || undefined,
       }));
@@ -56,7 +57,7 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
   } catch (error) {
     console.error('Error loading content from database:', error);
   }
-  
+
   return [];
 }
 
@@ -65,7 +66,7 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
  */
 function transformToMedicalContent(data: Record<string, any>): MedicalContent[] {
   const content: MedicalContent[] = [];
-  
+
   for (const [conditionId, condition] of Object.entries(data)) {
     if (typeof condition === 'object' && condition !== null) {
       const item: MedicalContent = {
@@ -94,7 +95,7 @@ function transformToMedicalContent(data: Record<string, any>): MedicalContent[] 
       content.push(item);
     }
   }
-  
+
   return content;
 }
 
@@ -103,7 +104,7 @@ function transformToMedicalContent(data: Record<string, any>): MedicalContent[] 
  */
 export async function getContentById(id: string): Promise<MedicalContent | null> {
   const allContent = await loadAllContent();
-  return allContent.find(item => item.id === id) || null;
+  return allContent.find((item) => item.id === id) || null;
 }
 
 /**
@@ -112,11 +113,12 @@ export async function getContentById(id: string): Promise<MedicalContent | null>
 export async function searchContent(query: string): Promise<MedicalContent[]> {
   const allContent = await loadAllContent();
   const lowerQuery = query.toLowerCase();
-  
-  return allContent.filter(item =>
-    item.condition.toLowerCase().includes(lowerQuery) ||
-    item.conditionId.toLowerCase().includes(lowerQuery) ||
-    item.subcategory.toLowerCase().includes(lowerQuery)
+
+  return allContent.filter(
+    (item) =>
+      item.condition.toLowerCase().includes(lowerQuery) ||
+      item.conditionId.toLowerCase().includes(lowerQuery) ||
+      item.subcategory.toLowerCase().includes(lowerQuery)
   );
 }
 
@@ -125,7 +127,7 @@ export async function searchContent(query: string): Promise<MedicalContent[]> {
  */
 export async function getContentBySystem(system: string): Promise<MedicalContent[]> {
   const allContent = await loadAllContent();
-  return allContent.filter(item => item.system === system);
+  return allContent.filter((item) => item.system === system);
 }
 
 /**
@@ -133,20 +135,20 @@ export async function getContentBySystem(system: string): Promise<MedicalContent
  */
 export async function getContentStats() {
   const allContent = await loadAllContent();
-  
+
   const stats = {
     total: allContent.length,
     bySystem: {} as Record<string, number>,
     byStatus: {} as Record<string, number>,
   };
-  
-  allContent.forEach(item => {
+
+  allContent.forEach((item) => {
     // By system
     stats.bySystem[item.system] = (stats.bySystem[item.system] || 0) + 1;
-    
+
     // By status
     stats.byStatus[item.status] = (stats.byStatus[item.status] || 0) + 1;
   });
-  
+
   return stats;
 }

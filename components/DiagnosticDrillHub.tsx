@@ -17,7 +17,7 @@ import {
   Brain,
   Target,
   Sparkles,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 
 interface DiagnosticDrillHubProps {
@@ -211,10 +211,7 @@ const CATEGORY_INFO: Record<
   },
 };
 
-const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({
-  onNavigateToDrill,
-  onClose,
-}) => {
+const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDrill, onClose }) => {
   const [selectedCategory, setSelectedCategory] = useState<DrillCategory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -467,7 +464,9 @@ const DrillCard: React.FC<DrillCardProps> = ({ drill, onSelect, getDifficultyCol
       {/* Metadata */}
       <div className="flex items-center gap-2 flex-wrap">
         {drill.difficulty && (
-          <span className={`text-xs font-medium px-2 py-1 rounded ${getDifficultyColor(drill.difficulty)}`}>
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded ${getDifficultyColor(drill.difficulty)}`}
+          >
             {drill.difficulty.charAt(0).toUpperCase() + drill.difficulty.slice(1)}
           </span>
         )}

@@ -462,11 +462,11 @@ describe('generateRandomCase helper', () => {
   it('should generate random modality case for random category', () => {
     // Run multiple times to increase chance of getting different modalities
     const cases = Array.from({ length: 10 }, () => generateRandomCase('random'));
-    const modalities = new Set(cases.map(c => c.modality));
+    const modalities = new Set(cases.map((c) => c.modality));
 
     // Should have at least one unique modality (statistical)
     expect(modalities.size).toBeGreaterThan(0);
-    cases.forEach(c => {
+    cases.forEach((c) => {
       expect(MASTER_CONDITION_LIST).toContain(c.correctDiagnosis);
     });
   });
@@ -481,7 +481,7 @@ describe('generateRandomCase helper', () => {
   it('should generate distractors that are not the correct diagnosis', () => {
     const photoCase = generateRandomCase('ecg');
 
-    photoCase.distractors.forEach(distractor => {
+    photoCase.distractors.forEach((distractor) => {
       expect(distractor).not.toBe(photoCase.correctDiagnosis);
     });
   });
@@ -493,7 +493,8 @@ describe('generateRandomCase helper', () => {
   });
 
   it('should use educational caption when provided', () => {
-    const customCaption = 'The irregularly irregular rhythm with absent P waves is characteristic of atrial fibrillation.';
+    const customCaption =
+      'The irregularly irregular rhythm with absent P waves is characteristic of atrial fibrillation.';
     const photoCase = generateRandomCase('ecg', { educationalCaption: customCaption });
 
     expect(photoCase.explanation).toBe(customCaption);

@@ -1,18 +1,37 @@
 /**
  * DDxMatrixView - Multi-condition comparison matrix
- * 
+ *
  * Compare 3-5 conditions side-by-side in a matrix format
  * Highlights discriminating features and unique characteristics
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Plus, ArrowLeftRight, AlertTriangle, Lightbulb, 
-  ChevronDown, ChevronRight, Star, Target, Microscope,
-  Pill, Stethoscope, Activity, Clock, TrendingUp
+import {
+  X,
+  Plus,
+  ArrowLeftRight,
+  AlertTriangle,
+  Lightbulb,
+  ChevronDown,
+  ChevronRight,
+  Star,
+  Target,
+  Microscope,
+  Pill,
+  Stethoscope,
+  Activity,
+  Clock,
+  TrendingUp,
 } from 'lucide-react';
-import { fetchConditionComparison, type DeepConditionData, type ComparisonField, formatFieldValue, groupFieldsByCategory, getCategoryLabel } from '@/services/ddxService';
+import {
+  fetchConditionComparison,
+  type DeepConditionData,
+  type ComparisonField,
+  formatFieldValue,
+  groupFieldsByCategory,
+  getCategoryLabel,
+} from '@/services/ddxService';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 
 interface DDxMatrixViewProps {
@@ -57,7 +76,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   onStartQuiz,
   maxConditions = 5,
 }) => {
-  const [selectedIds, setSelectedIds] = useState<string[]>(initialConditionIds.slice(0, maxConditions));
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    initialConditionIds.slice(0, maxConditions)
+  );
   const [comparisonData, setComparisonData] = useState<{
     conditions: DeepConditionData[];
     discriminatingFeatures: string[];
@@ -66,7 +87,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['presentation', 'diagnosis', 'treatment']));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(['presentation', 'diagnosis', 'treatment'])
+  );
   const [highlightDifferences, setHighlightDifferences] = useState(true);
   const [showLinkedEntities, setShowLinkedEntities] = useState(true);
 
@@ -101,23 +124,25 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   // Toggle condition selection
   const toggleCondition = (id: string) => {
     if (selectedIds.includes(id)) {
-      setSelectedIds(prev => prev.filter(i => i !== id));
+      setSelectedIds((prev) => prev.filter((i) => i !== id));
     } else if (selectedIds.length < maxConditions) {
-      setSelectedIds(prev => [...prev, id]);
+      setSelectedIds((prev) => [...prev, id]);
     }
   };
 
   // Check if a field differs across conditions
   const fieldDiffers = (field: ComparisonField): boolean => {
     if (!comparisonData?.conditions || comparisonData.conditions.length < 2) return false;
-    const values = comparisonData.conditions.map(c => formatFieldValue(c[field.key as keyof DeepConditionData]));
-    const unique = new Set(values.filter(v => v !== '-'));
+    const values = comparisonData.conditions.map((c) =>
+      formatFieldValue(c[field.key as keyof DeepConditionData])
+    );
+    const unique = new Set(values.filter((v) => v !== '-'));
     return unique.size > 1;
   };
 
   // Toggle category expansion
   const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(category)) {
         next.delete(category);
@@ -157,7 +182,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               Compare up to {maxConditions} conditions side-by-side
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {/* Highlight Toggle */}
             <button
@@ -171,7 +196,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               <Target className="w-3 h-3 inline mr-1" />
               Differences
             </button>
-            
+
             {/* Linked Entities Toggle */}
             <button
               onClick={() => setShowLinkedEntities(!showLinkedEntities)}
@@ -183,7 +208,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
             >
               Labs/Imaging
             </button>
-            
+
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
@@ -197,7 +222,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
         <div className="px-4 sm:px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30 overflow-x-auto">
           <div className="flex items-center gap-2 flex-nowrap">
             {selectedIds.map((id, index) => {
-              const cond = availableConditions.find(c => c.id === id);
+              const cond = availableConditions.find((c) => c.id === id);
               return (
                 <div
                   key={id}
@@ -218,11 +243,11 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                 </div>
               );
             })}
-            
+
             {/* Add Condition Button */}
             {selectedIds.length < maxConditions && (
               <ConditionAdder
-                availableConditions={availableConditions.filter(c => !selectedIds.includes(c.id))}
+                availableConditions={availableConditions.filter((c) => !selectedIds.includes(c.id))}
                 onSelect={(id) => toggleCondition(id)}
               />
             )}
@@ -259,7 +284,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                     Key Discriminating Features
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {comparisonData.discriminatingFeatures.map(feature => (
+                    {comparisonData.discriminatingFeatures.map((feature) => (
                       <span
                         key={feature}
                         className="px-2 py-1 rounded bg-amber-500/20 text-xs text-amber-300"
@@ -276,9 +301,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                 {Object.entries(groupedFields).map(([category, fields]) => {
                   const CategoryIcon = CATEGORY_ICONS[category] || Stethoscope;
                   const isExpanded = expandedCategories.has(category);
-                  const filteredFields = showLinkedEntities 
-                    ? fields 
-                    : fields.filter(f => !f.isLinkedEntity);
+                  const filteredFields = showLinkedEntities
+                    ? fields
+                    : fields.filter((f) => !f.isLinkedEntity);
 
                   if (filteredFields.length === 0) return null;
 
@@ -344,7 +369,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                       <tr
                                         key={field.key}
                                         className={`border-t border-[var(--color-border)]/30 ${
-                                          rowIndex % 2 === 0 ? 'bg-transparent' : 'bg-[var(--color-bg-secondary)]/20'
+                                          rowIndex % 2 === 0
+                                            ? 'bg-transparent'
+                                            : 'bg-[var(--color-bg-secondary)]/20'
                                         }`}
                                       >
                                         <td className="sticky left-0 bg-[var(--color-bg-secondary)] px-4 py-2 font-medium text-[var(--color-text-secondary)]">
@@ -360,7 +387,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                           const displayValue = field.isLinkedEntity
                                             ? formatLinkedEntity(value)
                                             : formatFieldValue(value);
-                                          
+
                                           return (
                                             <td
                                               key={cond.id}
@@ -372,9 +399,13 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                             >
                                               <div className="max-w-xs">
                                                 {displayValue === '-' ? (
-                                                  <span className="text-[var(--color-text-muted)]">-</span>
+                                                  <span className="text-[var(--color-text-muted)]">
+                                                    -
+                                                  </span>
                                                 ) : (
-                                                  <span className="break-words">{displayValue}</span>
+                                                  <span className="break-words">
+                                                    {displayValue}
+                                                  </span>
                                                 )}
                                               </div>
                                             </td>
@@ -404,7 +435,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               onClick={() => onStartQuiz(selectedIds)}
               className="w-full py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
             >
-              Start DDx Quiz: {comparisonData.conditions.map(c => c.condition).join(' vs ')}
+              Start DDx Quiz: {comparisonData.conditions.map((c) => c.condition).join(' vs ')}
             </button>
           </div>
         )}
@@ -419,15 +450,15 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
 function formatLinkedEntity(value: unknown): string {
   if (!value || !Array.isArray(value)) return '-';
   if (value.length === 0) return '-';
-  
+
   // Handle different linked entity types
-  const items = value.slice(0, 3).map(item => {
+  const items = value.slice(0, 3).map((item) => {
     if (typeof item === 'string') return item;
     if (item.name) return item.name;
     if (item.genericName) return item.genericName;
     return JSON.stringify(item);
   });
-  
+
   const suffix = value.length > 3 ? ` (+${value.length - 3} more)` : '';
   return items.join(', ') + suffix;
 }
@@ -446,7 +477,9 @@ const ConditionAdder: React.FC<{
     if (!search.trim()) return availableConditions.slice(0, 20);
     const query = search.toLowerCase();
     return availableConditions
-      .filter(c => c.condition.toLowerCase().includes(query) || c.system.toLowerCase().includes(query))
+      .filter(
+        (c) => c.condition.toLowerCase().includes(query) || c.system.toLowerCase().includes(query)
+      )
       .slice(0, 20);
   }, [availableConditions, search]);
 
@@ -479,7 +512,7 @@ const ConditionAdder: React.FC<{
               />
             </div>
             <div className="max-h-48 overflow-y-auto">
-              {filtered.map(cond => (
+              {filtered.map((cond) => (
                 <button
                   key={cond.id}
                   onClick={() => {
@@ -506,12 +539,7 @@ const ConditionAdder: React.FC<{
       </AnimatePresence>
 
       {/* Backdrop to close dropdown */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
     </div>
   );
 };

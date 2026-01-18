@@ -1,24 +1,24 @@
 /**
  * PANCE Score Predictor - Sprint 2
- * 
+ *
  * Predicts PANCE exam scores using weighted system performance
  * calibrated against actual PANCE domain weights.
  */
 
 // PANCE Domain Weights (actual exam blueprint)
 const PANCE_DOMAIN_WEIGHTS: Record<string, number> = {
-  'Cardiovascular': 0.16,
-  'Pulmonary': 0.12,
-  'Gastrointestinal': 0.10,
-  'Musculoskeletal': 0.10,
-  'EENT': 0.09,
-  'Reproductive': 0.08,
-  'Neurological': 0.08,
-  'Psychiatry': 0.06,
-  'Dermatology': 0.05,
-  'Endocrine': 0.05,
-  'Renal': 0.05,
-  'Hematology': 0.03,
+  Cardiovascular: 0.16,
+  Pulmonary: 0.12,
+  Gastrointestinal: 0.1,
+  Musculoskeletal: 0.1,
+  EENT: 0.09,
+  Reproductive: 0.08,
+  Neurological: 0.08,
+  Psychiatry: 0.06,
+  Dermatology: 0.05,
+  Endocrine: 0.05,
+  Renal: 0.05,
+  Hematology: 0.03,
   'Infectious Disease': 0.03,
 };
 
@@ -47,17 +47,29 @@ const MAX_SCORE = 800;
 
 function mapSystemToDomain(system: string): string {
   const map: Record<string, string> = {
-    'cardiovascular': 'Cardiovascular', 'cardiac': 'Cardiovascular',
-    'pulmonary': 'Pulmonary', 'respiratory': 'Pulmonary',
-    'gastrointestinal': 'Gastrointestinal', 'gi': 'Gastrointestinal',
-    'musculoskeletal': 'Musculoskeletal', 'orthopedic': 'Musculoskeletal',
-    'eent': 'EENT', 'ent': 'EENT', 'eyes': 'EENT',
-    'reproductive': 'Reproductive', 'obgyn': 'Reproductive',
-    'neurological': 'Neurological', 'neuro': 'Neurological',
-    'psychiatry': 'Psychiatry', 'behavioral': 'Psychiatry',
-    'dermatology': 'Dermatology', 'skin': 'Dermatology',
-    'endocrine': 'Endocrine', 'renal': 'Renal',
-    'hematology': 'Hematology', 'infectious': 'Infectious Disease',
+    cardiovascular: 'Cardiovascular',
+    cardiac: 'Cardiovascular',
+    pulmonary: 'Pulmonary',
+    respiratory: 'Pulmonary',
+    gastrointestinal: 'Gastrointestinal',
+    gi: 'Gastrointestinal',
+    musculoskeletal: 'Musculoskeletal',
+    orthopedic: 'Musculoskeletal',
+    eent: 'EENT',
+    ent: 'EENT',
+    eyes: 'EENT',
+    reproductive: 'Reproductive',
+    obgyn: 'Reproductive',
+    neurological: 'Neurological',
+    neuro: 'Neurological',
+    psychiatry: 'Psychiatry',
+    behavioral: 'Psychiatry',
+    dermatology: 'Dermatology',
+    skin: 'Dermatology',
+    endocrine: 'Endocrine',
+    renal: 'Renal',
+    hematology: 'Hematology',
+    infectious: 'Infectious Disease',
   };
   return map[system.toLowerCase()] || 'Other';
 }
@@ -69,7 +81,7 @@ export function predictPANCEScore(
 ): ScorePrediction {
   // Calculate domain scores
   const domainStats: Record<string, { accuracy: number; questions: number }> = {};
-  
+
   for (const sys of systemPerformance) {
     const domain = mapSystemToDomain(sys.system);
     if (!domainStats[domain]) {
@@ -83,14 +95,12 @@ export function predictPANCEScore(
   let rawScore = 0;
   for (const [domain, weight] of Object.entries(PANCE_DOMAIN_WEIGHTS)) {
     const stats = domainStats[domain];
-    const accuracy = stats && stats.questions > 0 
-      ? stats.accuracy / stats.questions 
-      : 0.5;
+    const accuracy = stats && stats.questions > 0 ? stats.accuracy / stats.questions : 0.5;
     rawScore += (MIN_SCORE + accuracy * (MAX_SCORE - MIN_SCORE)) * weight;
   }
 
   // Apply adjustments
-  const volumeAdj = Math.min(1, 0.7 + 0.3 * Math.log10(totalQuestions + 1) / 3);
+  const volumeAdj = Math.min(1, 0.7 + (0.3 * Math.log10(totalQuestions + 1)) / 3);
   let trendAdj = 1.0;
   for (const sys of systemPerformance) {
     const weight = PANCE_DOMAIN_WEIGHTS[mapSystemToDomain(sys.system)] || 0.05;
@@ -110,7 +120,10 @@ export function predictPANCEScore(
   }
 
   const predictedScore = Math.round(
-    Math.max(MIN_SCORE, Math.min(MAX_SCORE, rawScore * volumeAdj * trendAdj - Math.min(100, errorPenalty)))
+    Math.max(
+      MIN_SCORE,
+      Math.min(MAX_SCORE, rawScore * volumeAdj * trendAdj - Math.min(100, errorPenalty))
+    )
   );
 
   // Confidence interval
@@ -146,10 +159,10 @@ export function predictPANCEScore(
 
   // Focus areas
   const focusAreas = systemPerformance
-    .filter(s => s.accuracy < 0.7)
+    .filter((s) => s.accuracy < 0.7)
     .sort((a, b) => a.accuracy - b.accuracy)
     .slice(0, 5)
-    .map(s => s.system);
+    .map((s) => s.system);
 
   // Study hours estimate
   const pointsNeeded = Math.max(0, PASSING_SCORE - predictedScore);

@@ -24,16 +24,16 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
   image,
   onClose,
   onInterpret,
-  requireInterpretation
+  requireInterpretation,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [userInterpretation, setUserInterpretation] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
-  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
   const handleReset = () => {
     setZoom(1);
     setRotation(0);
@@ -41,12 +41,18 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
 
   const getModalityLabel = (type: MedicalImage['type']) => {
     switch (type) {
-      case 'xray': return 'X-Ray';
-      case 'ct': return 'CT Scan';
-      case 'mri': return 'MRI';
-      case 'ultrasound': return 'Ultrasound';
-      case 'ecg': return 'ECG/EKG';
-      default: return 'Medical Image';
+      case 'xray':
+        return 'X-Ray';
+      case 'ct':
+        return 'CT Scan';
+      case 'mri':
+        return 'MRI';
+      case 'ultrasound':
+        return 'Ultrasound';
+      case 'ecg':
+        return 'ECG/EKG';
+      default:
+        return 'Medical Image';
     }
   };
 
@@ -140,9 +146,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
               {requireInterpretation && !showAnswer ? (
                 <>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      Your Interpretation
-                    </h3>
+                    <h3 className="text-lg font-semibold text-white mb-2">Your Interpretation</h3>
                     <p className="text-sm text-slate-400 mb-4">
                       Describe the key findings you observe in this {image.type}.
                     </p>
@@ -183,15 +187,10 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                   )}
 
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">
-                      Key Findings
-                    </h3>
+                    <h3 className="text-lg font-semibold text-white mb-3">Key Findings</h3>
                     <ul className="space-y-2">
                       {image.findings.map((finding, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm text-slate-300"
-                        >
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                           <span className="text-red-400 mt-0.5">•</span>
                           <span>{finding}</span>
                         </li>
@@ -201,15 +200,10 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
 
                   {image.normalFindings && image.normalFindings.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-400 mb-2">
-                        Normal Findings
-                      </h3>
+                      <h3 className="text-sm font-semibold text-slate-400 mb-2">Normal Findings</h3>
                       <ul className="space-y-1">
                         {image.normalFindings.map((finding, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2 text-sm text-slate-400"
-                          >
+                          <li key={idx} className="flex items-start gap-2 text-sm text-slate-400">
                             <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                             <span>{finding}</span>
                           </li>
@@ -222,9 +216,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                     <h3 className="text-sm font-semibold text-blue-300 mb-2">
                       Clinical Interpretation
                     </h3>
-                    <p className="text-sm text-blue-100 leading-relaxed">
-                      {image.interpretation}
-                    </p>
+                    <p className="text-sm text-blue-100 leading-relaxed">{image.interpretation}</p>
                   </div>
 
                   {!requireInterpretation && (
@@ -258,14 +250,11 @@ export function generateSampleImaging(type: MedicalImage['type'], condition: str
         'Right lower lobe consolidation',
         'Air bronchograms present',
         'Blunting of right costophrenic angle suggesting effusion',
-        'Heart size normal'
+        'Heart size normal',
       ],
-      normalFindings: [
-        'No pneumothorax',
-        'Left lung clear',
-        'Bony structures intact'
-      ],
-      interpretation: 'Findings consistent with right lower lobe pneumonia with small parapneumonic effusion. Clinical correlation recommended. Consider CBC, blood cultures, and appropriate antibiotic therapy.'
+      normalFindings: ['No pneumothorax', 'Left lung clear', 'Bony structures intact'],
+      interpretation:
+        'Findings consistent with right lower lobe pneumonia with small parapneumonic effusion. Clinical correlation recommended. Consider CBC, blood cultures, and appropriate antibiotic therapy.',
     },
     mi_ecg: {
       id: 'ecg-001',
@@ -277,25 +266,28 @@ export function generateSampleImaging(type: MedicalImage['type'], condition: str
         'ST-segment elevation in leads II, III, aVF (>1mm)',
         'Reciprocal ST depression in leads I, aVL',
         'Q waves developing in inferior leads',
-        'Heart rate 95 bpm, regular rhythm'
+        'Heart rate 95 bpm, regular rhythm',
       ],
       normalFindings: [
         'No signs of old MI in other territories',
         'QRS duration normal',
-        'No conduction abnormalities'
+        'No conduction abnormalities',
       ],
-      interpretation: 'Acute inferior STEMI. Immediate cardiology consultation and cardiac catheterization indicated. Start dual antiplatelet therapy, anticoagulation, and prepare for primary PCI.'
-    }
+      interpretation:
+        'Acute inferior STEMI. Immediate cardiology consultation and cardiac catheterization indicated. Start dual antiplatelet therapy, anticoagulation, and prepare for primary PCI.',
+    },
   };
 
   // Return sample or placeholder
-  return sampleImages[`${condition}_${type}`] || {
-    id: 'placeholder',
-    type,
-    bodyPart: 'Medical Image',
-    url: '/images/radiology/placeholder.png',
-    clinicalContext: 'Clinical context for imaging',
-    findings: ['Finding 1', 'Finding 2'],
-    interpretation: 'Clinical interpretation would appear here'
-  };
+  return (
+    sampleImages[`${condition}_${type}`] || {
+      id: 'placeholder',
+      type,
+      bodyPart: 'Medical Image',
+      url: '/images/radiology/placeholder.png',
+      clinicalContext: 'Clinical context for imaging',
+      findings: ['Finding 1', 'Finding 2'],
+      interpretation: 'Clinical interpretation would appear here',
+    }
+  );
 }

@@ -1,6 +1,6 @@
 /**
  * LibrarySidebar - Hierarchical navigation for Clinical Reference Library
- * 
+ *
  * Features:
  * - Collapsible system tree with condition counts
  * - Subcategory navigation within each system
@@ -10,10 +10,25 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronRight, ChevronDown, Star, BookOpen, Search,
-  Heart, Brain, Stethoscope, Activity, Bone, Eye, 
-  Pill, Baby, Droplet, Shield, Dna, Wind, Beaker
+import {
+  ChevronRight,
+  ChevronDown,
+  Star,
+  BookOpen,
+  Search,
+  Heart,
+  Brain,
+  Stethoscope,
+  Activity,
+  Bone,
+  Eye,
+  Pill,
+  Baby,
+  Droplet,
+  Shield,
+  Dna,
+  Wind,
+  Beaker,
 } from 'lucide-react';
 
 interface SystemData {
@@ -46,33 +61,33 @@ interface LibrarySidebarProps {
 
 // System icons mapping
 const SYSTEM_ICONS: Record<string, typeof Heart> = {
-  'Cardiovascular': Heart,
-  'Cardiology': Heart,
-  'Neurological': Brain,
-  'Neurology': Brain,
-  'Pulmonary': Wind,
-  'Pulmonology': Wind,
-  'Gastrointestinal': Activity,
-  'GI': Activity,
-  'Musculoskeletal': Bone,
-  'MSK': Bone,
-  'EENT': Eye,
-  'HEENT': Eye,
-  'Ophthalmology': Eye,
-  'Endocrine': Dna,
-  'Endocrinology': Dna,
-  'Renal': Droplet,
-  'Nephrology': Droplet,
-  'Genitourinary': Droplet,
-  'Hematology': Beaker,
-  'Oncology': Beaker,
+  Cardiovascular: Heart,
+  Cardiology: Heart,
+  Neurological: Brain,
+  Neurology: Brain,
+  Pulmonary: Wind,
+  Pulmonology: Wind,
+  Gastrointestinal: Activity,
+  GI: Activity,
+  Musculoskeletal: Bone,
+  MSK: Bone,
+  EENT: Eye,
+  HEENT: Eye,
+  Ophthalmology: Eye,
+  Endocrine: Dna,
+  Endocrinology: Dna,
+  Renal: Droplet,
+  Nephrology: Droplet,
+  Genitourinary: Droplet,
+  Hematology: Beaker,
+  Oncology: Beaker,
   'Infectious Disease': Shield,
-  'Dermatology': Stethoscope,
-  'Psychiatry': Brain,
-  'Reproductive': Baby,
+  Dermatology: Stethoscope,
+  Psychiatry: Brain,
+  Reproductive: Baby,
   'OB/GYN': Baby,
-  'Pediatrics': Baby,
-  'Rheumatology': Bone,
+  Pediatrics: Baby,
+  Rheumatology: Bone,
   'Emergency Medicine': Activity,
 };
 
@@ -121,9 +136,10 @@ const SystemTreeItem: React.FC<{
         onClick={handleSystemClick}
         className={`
           w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200
-          ${isActive 
-            ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30' 
-            : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
+          ${
+            isActive
+              ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+              : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
           }
         `}
       >
@@ -136,15 +152,20 @@ const SystemTreeItem: React.FC<{
         ) : (
           <span className="w-4" />
         )}
-        <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`} />
+        <Icon
+          className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+        />
         <span className="flex-1 text-sm font-medium truncate">{system.label}</span>
-        <span className={`
+        <span
+          className={`
           text-xs px-1.5 py-0.5 rounded-full
-          ${isActive 
-            ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]' 
-            : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+          ${
+            isActive
+              ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
           }
-        `}>
+        `}
+        >
           {system.count}
         </span>
       </button>
@@ -165,25 +186,27 @@ const SystemTreeItem: React.FC<{
                 onClick={() => onSubcategorySelect(null)}
                 className={`
                   w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors
-                  ${activeSubcategory === null && isActive
-                    ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
+                  ${
+                    activeSubcategory === null && isActive
+                      ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
                   }
                 `}
               >
                 All {system.label}
               </button>
-              
+
               {/* Individual subcategories */}
-              {subcategories.map(sub => (
+              {subcategories.map((sub) => (
                 <button
                   key={sub.subcategory}
                   onClick={() => onSubcategorySelect(sub.subcategory)}
                   className={`
                     w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between
-                    ${activeSubcategory === sub.subcategory && isActive
-                      ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
+                    ${
+                      activeSubcategory === sub.subcategory && isActive
+                        ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
                     }
                   `}
                 >
@@ -223,16 +246,17 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
     onSearch(e.target.value);
   };
 
-  const totalConditions = useMemo(() => 
-    systems.reduce((sum, s) => sum + s.count, 0),
-  [systems]);
+  const totalConditions = useMemo(() => systems.reduce((sum, s) => sum + s.count, 0), [systems]);
 
   const renderSystemsState = () => {
     if (systemsLoading) {
       return (
         <div className="space-y-2 mb-2" aria-label="Loading systems">
           {Array.from({ length: 5 }).map((_, idx) => (
-            <div key={idx} className="h-10 rounded-lg bg-[var(--color-bg-secondary)] animate-pulse" />
+            <div
+              key={idx}
+              className="h-10 rounded-lg bg-[var(--color-bg-secondary)] animate-pulse"
+            />
           ))}
         </div>
       );
@@ -270,16 +294,14 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
     <div className="w-64 flex-shrink-0 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-[var(--color-border)]">
-        <h2 
+        <h2
           className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2"
           style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
         >
           <BookOpen className="w-5 h-5 text-[var(--color-accent)]" />
           Reference Library
         </h2>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">
-          {totalConditions} conditions
-        </p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">{totalConditions} conditions</p>
       </div>
 
       {/* Search */}
@@ -302,9 +324,10 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           onClick={() => onHighYieldToggle(!highYieldOnly)}
           className={`
             w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200
-            ${highYieldOnly
-              ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
-              : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-amber-500/30'
+            ${
+              highYieldOnly
+                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-amber-500/30'
             }
           `}
         >
@@ -312,14 +335,18 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
             <Star className={`w-4 h-4 ${highYieldOnly ? 'fill-amber-400' : ''}`} />
             High Yield Only
           </span>
-          <div className={`
+          <div
+            className={`
             w-8 h-5 rounded-full transition-colors relative
             ${highYieldOnly ? 'bg-amber-500' : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'}
-          `}>
-            <div className={`
+          `}
+          >
+            <div
+              className={`
               absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform
               ${highYieldOnly ? 'translate-x-3.5' : 'translate-x-0.5'}
-            `} />
+            `}
+            />
           </div>
         </button>
       </div>
@@ -331,21 +358,25 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           onClick={() => onSystemSelect('all')}
           className={`
             w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200
-            ${activeSystem === 'all'
-              ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-              : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
+            ${
+              activeSystem === 'all'
+                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
             }
           `}
         >
           <BookOpen className="w-4 h-4" />
           <span className="flex-1 text-sm font-medium">All Systems</span>
-          <span className={`
+          <span
+            className={`
             text-xs px-1.5 py-0.5 rounded-full
-            ${activeSystem === 'all'
-              ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]'
-              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+            ${
+              activeSystem === 'all'
+                ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
             }
-          `}>
+          `}
+          >
             {totalConditions}
           </span>
         </button>
@@ -355,23 +386,29 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
 
         {/* Individual Systems */}
         {renderSystemsState()}
-        {systems.filter(s => s.id !== 'all').map(system => (
-          <SystemTreeItem
-            key={system.id}
-            system={system}
-            subcategories={subcategories.get(system.id) || []}
-            isActive={activeSystem === system.id}
-            activeSubcategory={activeSystem === system.id ? activeSubcategory : null}
-            onSelect={() => onSystemSelect(system.id)}
-            onSubcategorySelect={(sub) => onSubcategorySelect(system.id, sub)}
-          />
-        ))}
+        {systems
+          .filter((s) => s.id !== 'all')
+          .map((system) => (
+            <SystemTreeItem
+              key={system.id}
+              system={system}
+              subcategories={subcategories.get(system.id) || []}
+              isActive={activeSystem === system.id}
+              activeSubcategory={activeSystem === system.id ? activeSubcategory : null}
+              onSelect={() => onSystemSelect(system.id)}
+              onSubcategorySelect={(sub) => onSubcategorySelect(system.id, sub)}
+            />
+          ))}
       </div>
 
       {/* Keyboard Hint */}
       <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
         <p className="text-xs text-[var(--color-text-muted)] text-center">
-          Press <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-[10px]">/</kbd> to search
+          Press{' '}
+          <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-[10px]">
+            /
+          </kbd>{' '}
+          to search
         </p>
       </div>
     </div>

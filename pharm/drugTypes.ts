@@ -31,6 +31,7 @@ export interface DrugEntry {
 export interface DrugSearchResult {
   id: string;
   drugName: string;
+  genericName?: string;
   drugClass: string;
   subclass: string;
   type: string;

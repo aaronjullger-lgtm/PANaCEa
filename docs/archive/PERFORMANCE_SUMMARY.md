@@ -14,38 +14,43 @@ This PR successfully identifies and resolves multiple performance bottlenecks in
 
 ## Performance Gains
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Statistics Calculation (1000 records) | ~14ms | ~2ms | **85% faster** |
-| localStorage Reads (10 rapid calls) | 10 reads + 10 parses | 1 read + 1 parse | **90% reduction** |
-| Memory Leaks | 1 timeout/update | 0 leaks | **100% fixed** |
-| System Lookup (question generation) | Parse every time | Parse once | **95% reduction** |
+| Metric                                | Before               | After            | Improvement       |
+| ------------------------------------- | -------------------- | ---------------- | ----------------- |
+| Statistics Calculation (1000 records) | ~14ms                | ~2ms             | **85% faster**    |
+| localStorage Reads (10 rapid calls)   | 10 reads + 10 parses | 1 read + 1 parse | **90% reduction** |
+| Memory Leaks                          | 1 timeout/update     | 0 leaks          | **100% fixed**    |
+| System Lookup (question generation)   | Parse every time     | Parse once       | **95% reduction** |
 
 ## Changes Made
 
 ### 1. Core Performance Fixes
 
 #### SettingsStatsModal.tsx
+
 - **Before**: 7+ separate filter operations on performanceData array
 - **After**: Single-pass algorithm consolidating all calculations
 - **Impact**: 85% faster statistics calculation for large datasets
 
 #### useUserStats.ts
+
 - **Before**: Memory leaks from uncleaned setTimeout operations
 - **After**: Proper debouncing with cleanup using ref-based approach
 - **Impact**: Stable memory usage over time, no growth from leaked timers
 
 #### performanceService.ts
+
 - **Before**: Every read parsed localStorage JSON
 - **After**: 5-second in-memory cache with cross-tab invalidation
 - **Impact**: 90% fewer localStorage reads
 
 #### geminiService.ts
+
 - **Before**: Parsed enabled systems JSON on every question generation
 - **After**: Cached result, only re-parses when localStorage value changes
 - **Impact**: Eliminates redundant parsing during question sequences
 
 #### dataLoader.ts
+
 - **Before**: Simple setTimeout for data preloading
 - **After**: requestIdleCallback with prioritized loading order
 - **Impact**: Non-blocking background loads, better browser performance
@@ -53,6 +58,7 @@ This PR successfully identifies and resolves multiple performance bottlenecks in
 ### 2. New Utilities
 
 #### lib/utils/debounce.ts
+
 A proper debouncing utility with React-friendly cleanup support:
 
 ```typescript
@@ -61,11 +67,13 @@ const { debounced, cancel } = createDebouncedFunction(myFunc, 2000);
 ```
 
 **Features**:
+
 - Simple `debounce()` for general use
 - `createDebouncedFunction()` with cleanup for React hooks
 - Prevents memory leaks from uncancelled timers
 
 #### lib/utils/localStorage.ts
+
 Comprehensive localStorage wrapper with caching and batching:
 
 ```typescript
@@ -83,6 +91,7 @@ batchSetItems([
 ```
 
 **Features**:
+
 - Automatic in-memory caching (5s TTL by default)
 - Type-safe with TypeScript generics
 - Batch operations for efficiency
@@ -93,6 +102,7 @@ batchSetItems([
 ### Single-Pass Algorithm (SettingsStatsModal)
 
 **Problem**: Multiple `.filter()` calls each iterate through the entire array:
+
 ```typescript
 const totalCorrect = performanceData.filter(r => r.isCorrect).length;
 const todayRecords = performanceData.filter(r => ...);
@@ -101,6 +111,7 @@ const weekRecords = performanceData.filter(r => ...);
 ```
 
 **Solution**: One loop, multiple counters:
+
 ```typescript
 performanceData.forEach((r, index) => {
   if (r.isCorrect) totalCorrect++;
@@ -115,6 +126,7 @@ performanceData.forEach((r, index) => {
 ### Memory Leak Fix (useUserStats)
 
 **Problem**: setTimeout cleanup functions returned but never called:
+
 ```typescript
 const setter = useCallback((data) => {
   setState(data);
@@ -124,6 +136,7 @@ const setter = useCallback((data) => {
 ```
 
 **Solution**: Ref-based debouncing with proper cleanup:
+
 ```typescript
 const debouncedSyncRef = useRef(null);
 
@@ -136,13 +149,12 @@ useEffect(() => {
 ### Cross-Tab Cache Invalidation (performanceService)
 
 **Enhancement**: Cache now invalidates when localStorage changes in other tabs:
+
 ```typescript
 let cachedStorageValue: string | null = null;
 
 // Check both TTL and localStorage value
-if (cachedRecords && 
-    (now - cacheTimestamp) < CACHE_TTL && 
-    raw === cachedStorageValue) {
+if (cachedRecords && now - cacheTimestamp < CACHE_TTL && raw === cachedStorageValue) {
   return cachedRecords; // Valid cache
 }
 ```
@@ -150,6 +162,7 @@ if (cachedRecords &&
 ## Testing & Validation
 
 ### Test Results
+
 ```
 Test Files: 30 passed (30)
 Tests: 406 passed (406)
@@ -159,6 +172,7 @@ Duration: ~4.5s
 All existing tests pass without modification, confirming backward compatibility.
 
 ### Security Scan
+
 ```
 CodeQL Analysis: 0 alerts
 - javascript: No alerts found
@@ -167,6 +181,7 @@ CodeQL Analysis: 0 alerts
 No security vulnerabilities introduced by the changes.
 
 ### Build Validation
+
 ```
 ✓ TypeScript compilation successful
 ✓ Vite build completed (9.25s)
@@ -176,12 +191,14 @@ No security vulnerabilities introduced by the changes.
 ## Code Quality
 
 ### Code Review Feedback Addressed
+
 - ✅ Improved type safety in `batchSetItems` with generic parameter
 - ✅ Removed unnecessary variable assignment in statistics loop
 - ✅ Added cross-tab cache invalidation tracking
 - ✅ All concerns resolved
 
 ### Best Practices Applied
+
 - Single Responsibility: Each optimization targets a specific issue
 - DRY Principle: Created reusable utilities (debounce, localStorage)
 - Type Safety: Full TypeScript support with generics
@@ -191,15 +208,18 @@ No security vulnerabilities introduced by the changes.
 ## Real-World Impact
 
 ### For Users with Small Datasets (< 100 records)
+
 - Negligible performance difference but improved memory stability
 - Better battery life on mobile devices (less CPU usage)
 
 ### For Active Users (500-1000 records)
+
 - Noticeably faster statistics loading (14ms → 2ms)
 - Smoother UI interactions, no lag
 - Reduced memory growth over extended sessions
 
 ### For Power Users (2000+ records)
+
 - Dramatic improvement in statistics calculation
 - Significant reduction in battery drain
 - Application remains responsive even with large datasets
@@ -207,10 +227,12 @@ No security vulnerabilities introduced by the changes.
 ## Documentation
 
 ### Files Added
+
 1. **PERFORMANCE_IMPROVEMENTS.md** (11KB) - Detailed technical documentation
 2. **PERFORMANCE_SUMMARY.md** (This file) - Executive summary
 
 ### Coverage
+
 - Technical details of each optimization
 - Before/after code comparisons
 - Performance metrics and benchmarks
@@ -244,7 +266,8 @@ The changes are production-ready, backward-compatible, and provide immediate val
 
 ---
 
-**Next Steps**: 
+**Next Steps**:
+
 1. Merge this PR
 2. Monitor real-world performance metrics
 3. Consider implementing virtual scrolling for very large lists

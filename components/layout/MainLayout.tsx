@@ -9,7 +9,7 @@ interface MainLayoutProps {
 /**
  * Main Layout Component
  * Provides the overall application structure with sidebar navigation
- * 
+ *
  * Features:
  * - Responsive sidebar (mobile drawer, desktop sticky)
  * - Professional medical high-tech aesthetic
@@ -27,10 +27,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Mobile Sidebar - Drawer */}
       <div className="md:hidden">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          onClose={() => setIsSidebarOpen(false)} 
-        />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </div>
 
       {/* Main Content Area */}
@@ -44,15 +41,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           >
             <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-            PANaCEa
-          </h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">PANaCEa</h1>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

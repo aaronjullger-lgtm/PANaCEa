@@ -15,7 +15,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import type { OSCEScoreReport, CompetencyScore, CriticalAction, TimelineEntry, LearningGap } from '@/types/osce-enhanced';
+import type {
+  OSCEScoreReport,
+  CompetencyScore,
+  CriticalAction,
+  TimelineEntry,
+  LearningGap,
+} from '@/types/osce-enhanced';
 
 interface ScoreReportProps {
   report: OSCEScoreReport;
@@ -23,11 +29,7 @@ interface ScoreReportProps {
   onRetry?: () => void;
 }
 
-export const ScoreReport: React.FC<ScoreReportProps> = ({
-  report,
-  onClose,
-  onRetry,
-}) => {
+export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRetry }) => {
   const [expandedSection, setExpandedSection] = React.useState<string | null>('overview');
 
   const getGradeColor = (score: number) => {
@@ -59,7 +61,9 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({
       <div className={`p-6 ${getGradeBg(report.overallScore)} border-b`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Performance Report</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+              Performance Report
+            </h2>
             <p className="text-slate-600 dark:text-slate-300 mt-1">Patient Encounter Assessment</p>
           </div>
           <div className="text-center">
@@ -69,13 +73,14 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({
             <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Overall Score</div>
           </div>
         </div>
-        
+
         {/* ACGME Milestone */}
         {report.acgmeMilestoneLevel && (
           <div className="mt-4 flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-500" />
             <span className="text-slate-700 dark:text-slate-200">
-              ACGME Milestone Level: <strong>{report.acgmeMilestoneLevel}</strong> - {getMilestoneLabel(report.acgmeMilestoneLevel)}
+              ACGME Milestone Level: <strong>{report.acgmeMilestoneLevel}</strong> -{' '}
+              {getMilestoneLabel(report.acgmeMilestoneLevel)}
             </span>
           </div>
         )}
@@ -99,7 +104,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({
           icon={<CheckCircle className="w-5 h-5" />}
           isExpanded={expandedSection === 'critical'}
           onToggle={() => toggleSection('critical')}
-          badge={`${report.criticalActions.filter(a => a.triggered).length}/${report.criticalActions.length}`}
+          badge={`${report.criticalActions.filter((a) => a.triggered).length}/${report.criticalActions.length}`}
         >
           <CriticalActionsList actions={report.criticalActions} />
         </CollapsibleSection>
@@ -135,14 +140,17 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({
               </h4>
               <ul className="space-y-2">
                 {report.strengths.map((s, i) => (
-                  <li key={i} className="text-sm text-emerald-600 dark:text-emerald-300 flex items-start gap-2">
+                  <li
+                    key={i}
+                    className="text-sm text-emerald-600 dark:text-emerald-300 flex items-start gap-2"
+                  >
                     <span className="mt-1">•</span> {s}
                   </li>
                 ))}
               </ul>
             </div>
           )}
-          
+
           {report.areasForImprovement.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
               <h4 className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-3">
@@ -150,7 +158,10 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({
               </h4>
               <ul className="space-y-2">
                 {report.areasForImprovement.map((a, i) => (
-                  <li key={i} className="text-sm text-amber-600 dark:text-amber-300 flex items-start gap-2">
+                  <li
+                    key={i}
+                    className="text-sm text-amber-600 dark:text-amber-300 flex items-start gap-2"
+                  >
                     <span className="mt-1">•</span> {a}
                   </li>
                 ))}
@@ -206,7 +217,11 @@ const CollapsibleSection: React.FC<{
           </span>
         )}
       </div>
-      {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+      {isExpanded ? (
+        <ChevronUp className="w-5 h-5 text-slate-400" />
+      ) : (
+        <ChevronDown className="w-5 h-5 text-slate-400" />
+      )}
     </button>
     {isExpanded && (
       <motion.div
@@ -226,7 +241,11 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
   const categories = [
     { key: 'history', label: 'History Taking', score: scores.history },
     { key: 'physicalExam', label: 'Physical Exam', score: scores.physicalExam },
-    { key: 'diagnosticReasoning', label: 'Diagnostic Reasoning', score: scores.diagnosticReasoning },
+    {
+      key: 'diagnosticReasoning',
+      label: 'Diagnostic Reasoning',
+      score: scores.diagnosticReasoning,
+    },
     { key: 'treatment', label: 'Treatment', score: scores.treatment },
     { key: 'communication', label: 'Communication', score: scores.communication },
     { key: 'efficiency', label: 'Efficiency', score: scores.efficiency },
@@ -243,9 +262,13 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
               animate={{ width: `${score}%` }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className={`h-full rounded-full ${
-                score >= 80 ? 'bg-emerald-500' :
-                score >= 60 ? 'bg-blue-500' :
-                score >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                score >= 80
+                  ? 'bg-emerald-500'
+                  : score >= 60
+                    ? 'bg-blue-500'
+                    : score >= 40
+                      ? 'bg-amber-500'
+                      : 'bg-red-500'
               }`}
             />
           </div>
@@ -261,13 +284,11 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
 // Critical Actions List
 const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions }) => (
   <div className="space-y-2">
-    {actions.map(action => (
+    {actions.map((action) => (
       <div
         key={action.id}
         className={`flex items-center gap-3 p-2 rounded-lg ${
-          action.triggered
-            ? 'bg-emerald-50 dark:bg-emerald-900/20'
-            : 'bg-red-50 dark:bg-red-900/20'
+          action.triggered ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
         }`}
       >
         {action.triggered ? (
@@ -275,19 +296,26 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
         ) : (
           <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
         )}
-        <span className={`text-sm ${
-          action.triggered
-            ? 'text-emerald-700 dark:text-emerald-300'
-            : 'text-red-700 dark:text-red-300'
-        }`}>
+        <span
+          className={`text-sm ${
+            action.triggered
+              ? 'text-emerald-700 dark:text-emerald-300'
+              : 'text-red-700 dark:text-red-300'
+          }`}
+        >
           {action.description}
         </span>
-        <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
-          action.category === 'safety' ? 'bg-red-100 text-red-700' :
-          action.category === 'diagnosis' ? 'bg-blue-100 text-blue-700' :
-          action.category === 'communication' ? 'bg-purple-100 text-purple-700' :
-          'bg-slate-100 text-slate-700'
-        }`}>
+        <span
+          className={`ml-auto text-xs px-2 py-0.5 rounded ${
+            action.category === 'safety'
+              ? 'bg-red-100 text-red-700'
+              : action.category === 'diagnosis'
+                ? 'bg-blue-100 text-blue-700'
+                : action.category === 'communication'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-slate-100 text-slate-700'
+          }`}
+        >
           {action.category}
         </span>
       </div>
@@ -300,13 +328,19 @@ const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (
   <div className="relative space-y-2 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
     {entries.map((entry, i) => (
       <div key={i} className="relative pl-4">
-        <div className={`absolute -left-[9px] w-4 h-4 rounded-full border-2 ${
-          entry.evaluation === 'excellent' ? 'bg-emerald-500 border-emerald-500' :
-          entry.evaluation === 'good' ? 'bg-blue-500 border-blue-500' :
-          entry.evaluation === 'fair' ? 'bg-amber-500 border-amber-500' :
-          entry.evaluation === 'poor' ? 'bg-red-500 border-red-500' :
-          'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
-        }`} />
+        <div
+          className={`absolute -left-[9px] w-4 h-4 rounded-full border-2 ${
+            entry.evaluation === 'excellent'
+              ? 'bg-emerald-500 border-emerald-500'
+              : entry.evaluation === 'good'
+                ? 'bg-blue-500 border-blue-500'
+                : entry.evaluation === 'fair'
+                  ? 'bg-amber-500 border-amber-500'
+                  : entry.evaluation === 'poor'
+                    ? 'bg-red-500 border-red-500'
+                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+          }`}
+        />
         <div className="text-xs text-slate-400 mb-0.5">
           {new Date(entry.timestamp).toLocaleTimeString()} • {entry.phase}
         </div>
@@ -326,24 +360,35 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
       <div
         key={i}
         className={`p-3 rounded-lg border ${
-          gap.severity === 'significant' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
-          gap.severity === 'moderate' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
-          'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+          gap.severity === 'significant'
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            : gap.severity === 'moderate'
+              ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+              : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
         }`}
       >
         <div className="flex items-center gap-2 mb-1">
-          <BookOpen className={`w-4 h-4 ${
-            gap.severity === 'significant' ? 'text-red-500' :
-            gap.severity === 'moderate' ? 'text-amber-500' : 'text-blue-500'
-          }`} />
+          <BookOpen
+            className={`w-4 h-4 ${
+              gap.severity === 'significant'
+                ? 'text-red-500'
+                : gap.severity === 'moderate'
+                  ? 'text-amber-500'
+                  : 'text-blue-500'
+            }`}
+          />
           <span className="font-medium text-sm text-slate-700 dark:text-slate-200">
             {gap.category.charAt(0).toUpperCase() + gap.category.slice(1)}
           </span>
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            gap.severity === 'significant' ? 'bg-red-200 text-red-700' :
-            gap.severity === 'moderate' ? 'bg-amber-200 text-amber-700' :
-            'bg-blue-200 text-blue-700'
-          }`}>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded ${
+              gap.severity === 'significant'
+                ? 'bg-red-200 text-red-700'
+                : gap.severity === 'moderate'
+                  ? 'bg-amber-200 text-amber-700'
+                  : 'bg-blue-200 text-blue-700'
+            }`}
+          >
             {gap.severity}
           </span>
         </div>

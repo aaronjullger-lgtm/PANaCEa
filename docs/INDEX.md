@@ -8,22 +8,24 @@ This index provides quick navigation to all documentation in the PANaCEa codebas
 
 ## 📌 Start Here (Essential Docs)
 
-| Document | Description |
-|----------|-------------|
-| [MASTER_DOCUMENTATION.md](../MASTER_DOCUMENTATION.md) | Comprehensive project overview |
-| [README.md](./README.md) | Documentation folder guide |
-| [CRITICAL_FIXES_SPRINT_TRACKER.md](./CRITICAL_FIXES_SPRINT_TRACKER.md) | Current sprint progress |
+| Document                                                               | Description                    |
+| ---------------------------------------------------------------------- | ------------------------------ |
+| [MASTER_DOCUMENTATION.md](../MASTER_DOCUMENTATION.md)                  | Comprehensive project overview |
+| [README.md](./README.md)                                               | Documentation folder guide     |
+| [CRITICAL_FIXES_SPRINT_TRACKER.md](./CRITICAL_FIXES_SPRINT_TRACKER.md) | Current sprint progress        |
 
 ---
 
 ## 🔴 Active Development
 
 ### Current Sprints & Plans
+
 - [CRITICAL_FIXES_SPRINT_TRACKER.md](./CRITICAL_FIXES_SPRINT_TRACKER.md) - **Current** security, UX, service consolidation
 - [STRATEGIC_10_SPRINT_ROADMAP.md](./STRATEGIC_10_SPRINT_ROADMAP.md) - Long-term roadmap
 - [PHASE_2_ROADMAP.md](./PHASE_2_ROADMAP.md) - Phase 2 features
 
 ### Sprint Completion Reports
+
 - [SPRINT_1_COMPLETION_SUMMARY.md](./SPRINT_1_COMPLETION_SUMMARY.md)
 - [SPRINT_2_COMPLETION_SUMMARY.md](./SPRINT_2_COMPLETION_SUMMARY.md)
 - [SPRINT_3_COMPLETION_SUMMARY.md](./SPRINT_3_COMPLETION_SUMMARY.md)
@@ -35,17 +37,20 @@ This index provides quick navigation to all documentation in the PANaCEa codebas
 ## 🔧 Technical Guides
 
 ### Architecture
+
 - [architecture/](./architecture/) - System architecture docs
 - [ARCHITECTURAL_REFACTORING_SUMMARY.md](./ARCHITECTURAL_REFACTORING_SUMMARY.md)
 - [ORGANIZATION_SUMMARY.md](../ORGANIZATION_SUMMARY.md)
 
 ### Database & Deployment
+
 - [deployment/](./deployment/) - Deployment guides
 - [MULTI_REGION_DEPLOYMENT.md](./MULTI_REGION_DEPLOYMENT.md)
 - [RLS_IMPLEMENTATION.md](./RLS_IMPLEMENTATION.md)
 - [QUERY_OPTIMIZATION_GUIDE.md](./QUERY_OPTIMIZATION_GUIDE.md)
 
 ### Security
+
 - [security/](./security/) - Security documentation
 - [AUTH_HEADER_AUDIT_REPORT.md](./AUTH_HEADER_AUDIT_REPORT.md)
 
@@ -54,16 +59,19 @@ This index provides quick navigation to all documentation in the PANaCEa codebas
 ## 📚 Feature Documentation
 
 ### Learning Features
+
 - [INTELLIGENT_SESSION_SPRINTS.md](./INTELLIGENT_SESSION_SPRINTS.md) - Adaptive session engine
 - [PEARL_HARVESTER_PATTERN.md](./PEARL_HARVESTER_PATTERN.md) - Clinical pearl extraction
 - [PEARL_HARVESTER_TESTING.md](./PEARL_HARVESTER_TESTING.md)
 
 ### Media & Content
+
 - [MEDIA_INTEGRATION.md](./MEDIA_INTEGRATION.md) - Image/media system
 - [PHOTO_DRILL_IMAGE_REQUIREMENTS.md](./PHOTO_DRILL_IMAGE_REQUIREMENTS.md)
 - [LAB_MODE_ENHANCEMENT.md](./LAB_MODE_ENHANCEMENT.md)
 
 ### Automation
+
 - [AUTOMATION_SETUP_GUIDE.md](./AUTOMATION_SETUP_GUIDE.md)
 - [PRODUCTION_READINESS_MASTER_PLAN.md](./PRODUCTION_READINESS_MASTER_PLAN.md)
 
@@ -82,12 +90,13 @@ This index provides quick navigation to all documentation in the PANaCEa codebas
 The `archive/` folder contains 71 historical documents from previous development phases:
 
 ### Categories:
-- **Sprint Reports:** SPRINT_*_COMPLETE.md, SPRINT_*_SUMMARY.md
-- **Implementation Summaries:** IMPLEMENTATION_SUMMARY_*.md, IMPLEMENTATION_COMPLETE_*.md
-- **Migration Docs:** MIGRATION_*.md
-- **Phase Docs:** PHASE_*_IMPLEMENTATION.md, PHASE_*_SUMMARY.md
-- **Performance:** PERFORMANCE_*.md, BUNDLE_OPTIMIZATION.md
-- **UI/UX:** UI_*.md, MODAL_SCROLLING_*.md
+
+- **Sprint Reports:** SPRINT*\*\_COMPLETE.md, SPRINT*\*\_SUMMARY.md
+- **Implementation Summaries:** IMPLEMENTATION*SUMMARY*_.md, IMPLEMENTATION*COMPLETE*_.md
+- **Migration Docs:** MIGRATION\_\*.md
+- **Phase Docs:** PHASE*\*\_IMPLEMENTATION.md, PHASE*\*\_SUMMARY.md
+- **Performance:** PERFORMANCE\_\*.md, BUNDLE_OPTIMIZATION.md
+- **UI/UX:** UI*\*.md, MODAL_SCROLLING*\*.md
 
 > 💡 **Tip:** Use grep to search archive: `grep -r "keyword" docs/archive/`
 
@@ -120,6 +129,7 @@ npm run orchestrate:full  # Full content pipeline
 ## Quick Reference
 
 ### Key Files
+
 ```
 .clinerules              # AI coding standards
 App.tsx                  # Main React app
@@ -129,6 +139,7 @@ prisma/schema.prisma     # Database schema
 ```
 
 ### Service Barrel Exports
+
 ```typescript
 import { questionService, sessionService } from '@/services/core';
 import { performanceService, predictionService } from '@/services/analytics';

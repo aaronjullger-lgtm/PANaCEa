@@ -10,13 +10,9 @@ import type { Question, PerformanceRecord } from '../types';
 
 describe('Anki Export Service', () => {
   const mockQuestion: Question = {
-    question: 'A 45-year-old patient presents with chest pain. What is the most appropriate next step?',
-    options: [
-      'Obtain ECG',
-      'Give aspirin',
-      'Send home with follow-up',
-      'Order CT scan',
-    ],
+    question:
+      'A 45-year-old patient presents with chest pain. What is the most appropriate next step?',
+    options: ['Obtain ECG', 'Give aspirin', 'Send home with follow-up', 'Order CT scan'],
     correctAnswerIndex: 0,
     rationale: 'ECG is the first step in evaluating chest pain to rule out acute MI.',
     topic: 'CV',
@@ -60,7 +56,7 @@ describe('Anki Export Service', () => {
     it('should return questions missed today', () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const todayRecords: PerformanceRecord[] = [
         {
           timestamp: today.getTime(),
@@ -74,10 +70,10 @@ describe('Anki Export Service', () => {
           difficulty: 'same',
         },
       ];
-      
+
       const missedQuestions = [mockQuestion];
       const result = getMissedQuestionsToday(todayRecords, missedQuestions);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(mockQuestion);
     });
@@ -95,11 +91,13 @@ describe('Anki Export Service', () => {
         difficulty: 'same',
       };
 
-      const missedQuestions: Question[] = [{
-        ...mockQuestion,
-        condition: 'Different Condition',
-        topic: 'Different Topic',
-      }];
+      const missedQuestions: Question[] = [
+        {
+          ...mockQuestion,
+          condition: 'Different Condition',
+          topic: 'Different Topic',
+        },
+      ];
 
       const result = getMissedQuestionsToday([yesterdayRecord], missedQuestions);
       expect(result).toHaveLength(0);
@@ -123,34 +121,34 @@ describe('Anki Export Service', () => {
       expect(card.front).toContain(mockQuestion.question);
       expect(card.front).toContain('A) Obtain ECG');
       expect(card.front).toContain('B) Give aspirin');
-      
+
       expect(card.back).toContain('Answer: A)');
       expect(card.back).toContain('Obtain ECG');
       expect(card.back).toContain(mockQuestion.rationale);
-      
+
       expect(card.tags).toContain('PANaCEa');
       expect(card.tags).toContain('PANCE');
       expect(card.tags).toContain('CV');
-      
+
       expect(card.guid).toBe(mockQuestion.conditionId);
     });
 
     it('should include pearls when option is enabled', () => {
       const card = questionToAnkiCard(mockQuestion, { includePearls: true });
-      
+
       expect(card.back).toContain('Key Pearls:');
       expect(card.back).toContain('ECG should be obtained within 10 minutes');
     });
 
     it('should exclude pearls when option is disabled', () => {
       const card = questionToAnkiCard(mockQuestion, { includePearls: false });
-      
+
       expect(card.back).not.toContain('Key Pearls:');
     });
 
     it('should exclude rationale when option is disabled', () => {
       const card = questionToAnkiCard(mockQuestion, { includeRationale: false });
-      
+
       expect(card.back).not.toContain('Explanation:');
       expect(card.back).not.toContain(mockQuestion.rationale);
     });
@@ -160,10 +158,10 @@ describe('Anki Export Service', () => {
         ...mockQuestion,
         condition: 'Type 2 Diabetes (DM2)',
       };
-      
+
       const card = questionToAnkiCard(questionWithSpecialChars);
-      
-      expect(card.tags.some(tag => tag.includes('Type_2_Diabetes_DM2'))).toBe(true);
+
+      expect(card.tags.some((tag) => tag.includes('Type_2_Diabetes_DM2'))).toBe(true);
     });
   });
 
@@ -192,7 +190,7 @@ describe('Anki Export Service', () => {
         question: 'Different question',
         condition: 'Different condition',
       };
-      
+
       const questions = [mockQuestion, question2];
       const result = exportToAnkiText(questions);
 
@@ -209,7 +207,7 @@ describe('Anki Export Service', () => {
       expect(result).toHaveProperty('action', 'addNotes');
       expect(result).toHaveProperty('version', 6);
       expect(result).toHaveProperty('params');
-      
+
       const params = (result as any).params;
       expect(params.notes).toHaveLength(1);
       expect(params.notes[0].deckName).toBe('PANaCEa_Missed_Questions');
@@ -254,7 +252,7 @@ describe('Anki Export Service', () => {
     it('should export missed questions from today', () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const todayRecords: PerformanceRecord[] = [
         {
           timestamp: today.getTime(),
@@ -268,7 +266,7 @@ describe('Anki Export Service', () => {
           difficulty: 'same',
         },
       ];
-      
+
       const missedQuestions = [mockQuestion];
       const result = exportMissedTodayToAnki(todayRecords, missedQuestions);
 

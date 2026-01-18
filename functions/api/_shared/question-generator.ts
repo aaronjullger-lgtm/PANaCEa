@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface ConditionData {
   condition: string;
@@ -31,12 +31,11 @@ export interface GeneratedQuestion {
 
 export async function generateSingleQuestion(
   apiKey: string,
-  condition: ConditionData, 
+  condition: ConditionData,
   type: string
 ): Promise<GeneratedQuestion | null> {
-  
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   const prompt = `
     CONTEXT:
@@ -65,10 +64,13 @@ export async function generateSingleQuestion(
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Clean up markdown code blocks if present
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+    const jsonStr = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     const question = JSON.parse(jsonStr);
     return question;
   } catch (error) {

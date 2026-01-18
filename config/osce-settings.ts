@@ -14,7 +14,8 @@ export const DEFAULT_OSCE_CONFIG: OSCEConfiguration = {
 
 export const OSCE_DIFFICULTY_DESCRIPTIONS = {
   cooperative: 'Patient provides clear, direct answers to questions.',
-  difficult: 'Patient gives vague answers, is distracted, or anxious - requires skilled interviewing.',
+  difficult:
+    'Patient gives vague answers, is distracted, or anxious - requires skilled interviewing.',
   very_difficult: 'Patient is hostile, in pain, or has cognitive impairment - extreme challenge.',
 };
 
@@ -76,7 +77,8 @@ export const RESOURCE_LIMITED_SETTINGS = {
     'Rapid Tests (Strep, Flu, COVID)',
   ],
   scenario: 'Rural Clinic',
-  description: 'You are practicing in a rural clinic with limited imaging and laboratory capabilities. Rely on physical exam, history, and basic diagnostics.',
+  description:
+    'You are practicing in a rural clinic with limited imaging and laboratory capabilities. Rely on physical exam, history, and basic diagnostics.',
 };
 
 /**
@@ -84,9 +86,10 @@ export const RESOURCE_LIMITED_SETTINGS = {
  */
 export function applyResourceLimitations(availableTests: string[]): string[] {
   return availableTests.filter(
-    test => !RESOURCE_LIMITED_SETTINGS.disabledTests.some(
-      disabled => test.toLowerCase().includes(disabled.toLowerCase())
-    )
+    (test) =>
+      !RESOURCE_LIMITED_SETTINGS.disabledTests.some((disabled) =>
+        test.toLowerCase().includes(disabled.toLowerCase())
+      )
   );
 }
 

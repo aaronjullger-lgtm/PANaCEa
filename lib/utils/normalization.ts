@@ -1,6 +1,6 @@
 /**
  * normalization.ts - Universal parser for MedicalContent JSONB fields
- * 
+ *
  * Handles all edge cases:
  * - JSON arrays/objects stored as strings
  * - Raw text with list structure (newlines, bullets)
@@ -13,18 +13,20 @@ import { safeParseJson, handleFakeNull, safeParseList } from './jsonParser';
 /**
  * Universal parser for all MedicalContent fields.
  * Handles: arrays, objects, raw text, and "null" strings.
- * 
+ *
  * @param fieldData - Unknown field value from database
  * @returns Normalized string[], object, string, or null
  */
-export function universalParser(fieldData: unknown): string[] | Record<string, unknown> | string | null {
+export function universalParser(
+  fieldData: unknown
+): string[] | Record<string, unknown> | string | null {
   // Step 1: Handle fake nulls
   const nonFakeNull = handleFakeNull(fieldData, null);
   if (nonFakeNull === null) return null;
 
   // Step 2: Already correct type
   if (Array.isArray(nonFakeNull)) {
-    return nonFakeNull.map(item => String(item ?? '').trim()).filter(Boolean);
+    return nonFakeNull.map((item) => String(item ?? '').trim()).filter(Boolean);
   }
   if (typeof nonFakeNull === 'object' && nonFakeNull !== null) {
     return nonFakeNull as Record<string, unknown>;
@@ -33,28 +35,33 @@ export function universalParser(fieldData: unknown): string[] | Record<string, u
   // Step 3: String parsing
   if (typeof nonFakeNull === 'string') {
     const trimmed = nonFakeNull.trim();
-    
+
     // Empty string = null
     if (!trimmed) return null;
-    
+
     // JSON Array
     if (trimmed.startsWith('[')) {
       const parsed = safeParseJson<unknown[]>(trimmed, []);
-      return Array.isArray(parsed) 
-        ? parsed.map(item => String(item ?? '').trim()).filter(Boolean)
+      return Array.isArray(parsed)
+        ? parsed.map((item) => String(item ?? '').trim()).filter(Boolean)
         : [trimmed];
     }
-    
+
     // JSON Object (for differentials, diagnosis, etc.)
     if (trimmed.startsWith('{')) {
       return safeParseJson<Record<string, unknown>>(trimmed, {});
     }
-    
+
     // Raw text with potential list structure
-    if (trimmed.includes('\n') || trimmed.includes('•') || trimmed.includes('*') || trimmed.includes(',')) {
+    if (
+      trimmed.includes('\n') ||
+      trimmed.includes('•') ||
+      trimmed.includes('*') ||
+      trimmed.includes(',')
+    ) {
       return safeParseList(trimmed);
     }
-    
+
     // Plain single-line text
     return trimmed;
   }
@@ -79,7 +86,7 @@ export const parseListField = (value: unknown): string[] => {
  */
 export const parseObjectField = (value: unknown): Record<string, unknown> | null => {
   const result = universalParser(value);
-  return (typeof result === 'object' && result !== null && !Array.isArray(result)) ? result : null;
+  return typeof result === 'object' && result !== null && !Array.isArray(result) ? result : null;
 };
 
 /**
@@ -102,12 +109,21 @@ export function normalizeMedicalContent<T extends Record<string, unknown>>(rawDa
 
   // List fields
   const listFields = [
-    'buzzwords', 'clinical_pearls', 'symptoms', 'signs', 'risk_factors',
-    'labs_findings', 'imaging_findings', 'complications', 'synonyms',
-    'classic_triad', 'mnemonics', 'associations'
+    'buzzwords',
+    'clinical_pearls',
+    'symptoms',
+    'signs',
+    'risk_factors',
+    'labs_findings',
+    'imaging_findings',
+    'complications',
+    'synonyms',
+    'classic_triad',
+    'mnemonics',
+    'associations',
   ];
 
-  listFields.forEach(field => {
+  listFields.forEach((field) => {
     if (field in normalized) {
       (normalized as any)[field] = parseListField(normalized[field]);
     }
@@ -115,13 +131,22 @@ export function normalizeMedicalContent<T extends Record<string, unknown>>(rawDa
 
   // Text fields
   const textFields = [
-    'overview', 'pathophysiology', 'treatment', 'etiology',
-    'epidemiology', 'prognosis', 'prevention', 'patient_education',
-    'classic_patient', 'physical_exam', 'monitoring', 'lifestyle',
-    'riskFactors'
+    'overview',
+    'pathophysiology',
+    'treatment',
+    'etiology',
+    'epidemiology',
+    'prognosis',
+    'prevention',
+    'patient_education',
+    'classic_patient',
+    'physical_exam',
+    'monitoring',
+    'lifestyle',
+    'riskFactors',
   ];
 
-  textFields.forEach(field => {
+  textFields.forEach((field) => {
     if (field in normalized) {
       (normalized as any)[field] = parseTextField(normalized[field]);
     }
@@ -130,7 +155,7 @@ export function normalizeMedicalContent<T extends Record<string, unknown>>(rawDa
   // Object fields
   const objectFields = ['diagnosis', 'differentials'];
 
-  objectFields.forEach(field => {
+  objectFields.forEach((field) => {
     if (field in normalized) {
       (normalized as any)[field] = parseObjectField(normalized[field]);
     }

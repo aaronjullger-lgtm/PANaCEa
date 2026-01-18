@@ -1,25 +1,18 @@
 /**
  * Session Insights Panel
- * 
+ *
  * A collapsible panel that shows real-time behavioral analytics:
  * - Momentum indicator
  * - Behavioral confidence calibration
  * - Pacing analysis
  * - Smart recommendations
- * 
+ *
  * This replaces manual confidence input with auto-inferred insights.
  */
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Brain, 
-  ChevronDown, 
-  ChevronUp,
-  BarChart3,
-  Zap,
-  Target,
-} from 'lucide-react';
+import { Brain, ChevronDown, ChevronUp, BarChart3, Zap, Target } from 'lucide-react';
 import { MomentumIndicator } from './MomentumIndicator';
 import { BehavioralCalibration } from './BehavioralCalibration';
 import { getSessionSummary } from '@/services/domain';
@@ -36,17 +29,19 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
   defaultExpanded = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [activeTab, setActiveTab] = useState<'momentum' | 'calibration' | 'distribution'>('momentum');
-  
+  const [activeTab, setActiveTab] = useState<'momentum' | 'calibration' | 'distribution'>(
+    'momentum'
+  );
+
   // Get PANCE distribution summary
   const distributionSummary = getSessionSummary();
-  
+
   const tabs = [
     { id: 'momentum' as const, label: 'Flow', icon: Zap },
     { id: 'calibration' as const, label: 'Patterns', icon: Brain },
     { id: 'distribution' as const, label: 'Coverage', icon: Target },
   ];
-  
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
       {/* Header */}
@@ -62,9 +57,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {!isExpanded && (
-            <span className="text-xs text-slate-500">
-              {distributionSummary.totalQuestions} Qs
-            </span>
+            <span className="text-xs text-slate-500">{distributionSummary.totalQuestions} Qs</span>
           )}
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -73,7 +66,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
           )}
         </div>
       </button>
-      
+
       {/* Content */}
       <AnimatePresence>
         {isExpanded && (
@@ -87,7 +80,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
             <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700">
               {/* Tabs */}
               <div className="flex gap-1 py-3 border-b border-slate-100 dark:border-slate-700">
-                {tabs.map(tab => (
+                {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -102,7 +95,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   </button>
                 ))}
               </div>
-              
+
               {/* Tab Content */}
               <div className="pt-3">
                 <AnimatePresence mode="wait">
@@ -116,7 +109,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                       <MomentumIndicator refreshKey={refreshKey} />
                     </motion.div>
                   )}
-                  
+
                   {activeTab === 'calibration' && (
                     <motion.div
                       key="calibration"
@@ -124,13 +117,10 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
-                      <BehavioralCalibration 
-                        refreshKey={refreshKey}
-                        isExpanded={true}
-                      />
+                      <BehavioralCalibration refreshKey={refreshKey} isExpanded={true} />
                     </motion.div>
                   )}
-                  
+
                   {activeTab === 'distribution' && (
                     <motion.div
                       key="distribution"
@@ -152,7 +142,9 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
 };
 
 // Distribution preview component
-const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSummary> }> = ({ summary }) => {
+const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSummary> }> = ({
+  summary,
+}) => {
   if (summary.totalQuestions === 0) {
     return (
       <div className="text-center py-4 text-sm text-slate-500">
@@ -160,10 +152,10 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
       </div>
     );
   }
-  
+
   // Get top 4 systems by count using systemBreakdown
   const topSystems = summary.systemBreakdown.slice(0, 4);
-  
+
   return (
     <div className="space-y-3">
       {/* Overall stats */}
@@ -181,57 +173,56 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
           <div className="text-xs text-slate-500">Pace</div>
         </div>
       </div>
-      
+
       {/* Top systems */}
       {topSystems.length > 0 && (
         <div className="space-y-2">
           <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
             System Coverage
           </div>
-          {topSystems.map(sys => (
+          {topSystems.map((sys) => (
             <div key={sys.system} className="flex items-center gap-2">
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-600 dark:text-slate-400 truncate">
-                    {sys.name}
-                  </span>
+                  <span className="text-slate-600 dark:text-slate-400 truncate">{sys.name}</span>
                   <span className="text-slate-500">
                     {sys.count} ({sys.percent}%)
                   </span>
                 </div>
                 <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full rounded-full ${
-                      Math.abs(sys.percent - sys.target) <= 5 
-                        ? 'bg-emerald-500' 
+                      Math.abs(sys.percent - sys.target) <= 5
+                        ? 'bg-emerald-500'
                         : Math.abs(sys.percent - sys.target) <= 10
-                        ? 'bg-amber-500'
-                        : 'bg-red-400'
+                          ? 'bg-amber-500'
+                          : 'bg-red-400'
                     }`}
-                    style={{ width: `${Math.min(100, (sys.count / Math.max(1, summary.totalQuestions)) * 100 * 2)}%` }}
+                    style={{
+                      width: `${Math.min(100, (sys.count / Math.max(1, summary.totalQuestions)) * 100 * 2)}%`,
+                    }}
                   />
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5">
-                  Target: {sys.target}%
-                </div>
+                <div className="text-xs text-slate-400 mt-0.5">Target: {sys.target}%</div>
               </div>
             </div>
           ))}
         </div>
       )}
-      
+
       {/* Distribution score indicator */}
-      <div className={`text-xs text-center py-2 rounded-lg ${
-        summary.distributionScore >= 80 
-          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-          : summary.distributionScore >= 60
-          ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-          : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-      }`}>
-        {summary.distributionScore >= 80 
+      <div
+        className={`text-xs text-center py-2 rounded-lg ${
+          summary.distributionScore >= 80
+            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+            : summary.distributionScore >= 60
+              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+              : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+        }`}
+      >
+        {summary.distributionScore >= 80
           ? '✓ PANCE-aligned distribution'
-          : `Distribution score: ${summary.distributionScore}/100`
-        }
+          : `Distribution score: ${summary.distributionScore}/100`}
       </div>
     </div>
   );

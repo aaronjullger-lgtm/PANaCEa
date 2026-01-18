@@ -99,8 +99,8 @@ export function OfflineSyncIndicator() {
         status.isOffline
           ? 'bg-yellow-900/90 border-yellow-700 text-yellow-100'
           : status.pendingCount > 0
-          ? 'bg-blue-900/90 border-blue-700 text-blue-100'
-          : 'bg-green-900/90 border-green-700 text-green-100'
+            ? 'bg-blue-900/90 border-blue-700 text-blue-100'
+            : 'bg-green-900/90 border-green-700 text-green-100'
       }`}
     >
       {/* Status Icon */}
@@ -136,9 +136,7 @@ export function OfflineSyncIndicator() {
           )}
         </div>
         {!syncing && status.lastSyncTime && (
-          <div className="text-xs opacity-80">
-            Last sync: {formatLastSync(status.lastSyncTime)}
-          </div>
+          <div className="text-xs opacity-80">Last sync: {formatLastSync(status.lastSyncTime)}</div>
         )}
       </div>
 

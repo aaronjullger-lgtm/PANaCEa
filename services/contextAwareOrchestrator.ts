@@ -1,13 +1,13 @@
 /**
  * Context-Aware Content Orchestrator
- * 
+ *
  * Intelligently maintains ALL parts of the site by understanding:
  * - What content is needed and why
  * - Quality expectations for each type
  * - Relationships between different content types
  * - Usage patterns and gaps
  * - Educational effectiveness
- * 
+ *
  * This system runs autonomously to keep the entire platform topped off
  * with accurate, high-quality medical content.
  */
@@ -249,9 +249,9 @@ export class ContextAwareAnalyzer {
    */
   async analyzeSiteNeeds(): Promise<Map<string, ContentNeed[]>> {
     const needsMap = new Map<string, ContentNeed[]>();
-    
+
     console.log('🔍 Analyzing site-wide content needs with full context...\n');
-    
+
     for (const context of SITE_CONTEXT_MAP) {
       const needs = await this.analyzeComponentNeeds(context);
       if (needs.length > 0) {
@@ -259,20 +259,20 @@ export class ContextAwareAnalyzer {
         console.log(`📊 ${context.component}: ${needs.length} needs identified`);
       }
     }
-    
+
     return needsMap;
   }
-  
+
   /**
    * Analyze needs for a specific component with context awareness
    */
   async analyzeComponentNeeds(context: SiteContext): Promise<ContentNeed[]> {
     const needs: ContentNeed[] = [];
-    
+
     // Check each content type requirement
     for (const contentType of context.contentTypes) {
       const analysis = await this.analyzeContentType(contentType, context);
-      
+
       if (analysis.hasGaps) {
         needs.push({
           component: context.component,
@@ -285,45 +285,44 @@ export class ContextAwareAnalyzer {
         });
       }
     }
-    
+
     return needs;
   }
-  
+
   /**
    * Analyze a specific content type
    */
-  async analyzeContentType(
-    contentType: string,
-    context: SiteContext
-  ): Promise<ContentAnalysis> {
+  async analyzeContentType(contentType: string, context: SiteContext): Promise<ContentAnalysis> {
     // Get quality standard for this content type
-    const standard = QUALITY_STANDARDS.find(s => s.contentType === contentType);
-    
+    const standard = QUALITY_STANDARDS.find((s) => s.contentType === contentType);
+
     // Query database for existing content
     const existing = await this.getExistingContent(contentType);
-    
+
     // Identify gaps
     const gaps: string[] = [];
     const recommendations: string[] = [];
-    
+
     // Check completeness
     if (existing.count < existing.expectedCount) {
       gaps.push(`Missing ${existing.expectedCount - existing.count} items`);
-      recommendations.push(`Generate ${existing.expectedCount - existing.count} high-quality ${contentType}`);
+      recommendations.push(
+        `Generate ${existing.expectedCount - existing.count} high-quality ${contentType}`
+      );
     }
-    
+
     // Check quality
     if (existing.lowQuality > 0) {
       gaps.push(`${existing.lowQuality} items below quality threshold`);
       recommendations.push(`Review and improve ${existing.lowQuality} items`);
     }
-    
+
     // Check freshness
     if (standard?.mustBeCurrent && existing.outdated > 0) {
       gaps.push(`${existing.outdated} outdated items`);
       recommendations.push(`Update ${existing.outdated} items with current information`);
     }
-    
+
     // Check dependencies
     for (const dep of context.dependencies) {
       const depStatus = await this.checkDependency(dep);
@@ -332,7 +331,7 @@ export class ContextAwareAnalyzer {
         recommendations.push(`Address ${dep} first`);
       }
     }
-    
+
     return {
       hasGaps: gaps.length > 0,
       gaps,
@@ -341,7 +340,7 @@ export class ContextAwareAnalyzer {
       completeness: (existing.count / existing.expectedCount) * 100,
     };
   }
-  
+
   /**
    * Get existing content statistics
    */
@@ -354,7 +353,7 @@ export class ContextAwareAnalyzer {
       outdated: 0,
       averageQuality: 0,
     };
-    
+
     switch (contentType) {
       case 'clinical_images':
       case 'ecg':
@@ -372,23 +371,23 @@ export class ContextAwareAnalyzer {
         stats.averageQuality = mediaStats._avg.qualityScore || 0;
         stats.expectedCount = 500; // Expect 500 clinical images
         break;
-        
+
       case 'drug_information':
         // Check pharmacy drill data
         stats.expectedCount = 200; // Common medications
         break;
-        
+
       case 'guidelines':
         // Check guideline database
         stats.expectedCount = 100; // Major guidelines
         break;
-        
+
       case 'case_vignettes':
         // Check case database
         stats.expectedCount = 1000; // Comprehensive case library
         break;
     }
-    
+
     // Calculate low quality and outdated
     if (contentType === 'clinical_images') {
       const lowQualityCount = await prisma.mediaAsset.count({
@@ -398,7 +397,7 @@ export class ContextAwareAnalyzer {
         },
       });
       stats.lowQuality = lowQualityCount;
-      
+
       // Check for outdated (older than 1 year for images)
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -410,10 +409,10 @@ export class ContextAwareAnalyzer {
       });
       stats.outdated = outdatedCount;
     }
-    
+
     return stats;
   }
-  
+
   /**
    * Check if a dependency is satisfied
    */
@@ -426,17 +425,17 @@ export class ContextAwareAnalyzer {
           satisfied: conditionCount > 50,
           details: `${conditionCount} conditions in database`,
         };
-        
+
       case 'treatments':
       case 'medications':
         // Would check treatment database
         return { satisfied: true, details: 'Treatments available' };
-        
+
       default:
         return { satisfied: true, details: 'Dependency assumed met' };
     }
   }
-  
+
   /**
    * Calculate priority based on context and gaps
    */
@@ -448,17 +447,17 @@ export class ContextAwareAnalyzer {
     if (context.qualityRequirements.accuracy === 'critical' && analysis.completeness < 50) {
       return 'critical';
     }
-    
+
     // High if usage is high and gaps exist
     if (context.metrics.usageFrequency > 0.7 && analysis.hasGaps) {
       return 'high';
     }
-    
+
     // Medium if moderate gaps
     if (analysis.completeness < 75) {
       return 'medium';
     }
-    
+
     return 'low';
   }
 }
@@ -472,12 +471,12 @@ export class ContextAwareGenerator {
    */
   async generateForNeeds(needs: ContentNeed[]): Promise<void> {
     console.log(`\n🤖 Generating content for ${needs.length} identified needs...\n`);
-    
+
     for (const need of needs) {
       await this.generateContent(need);
     }
   }
-  
+
   /**
    * Generate specific content with context awareness
    */
@@ -485,38 +484,37 @@ export class ContextAwareGenerator {
     console.log(`📝 Generating ${need.contentType} for ${need.component}`);
     console.log(`   Purpose: ${need.purpose}`);
     console.log(`   Quality: ${need.qualityRequired.accuracy} accuracy required`);
-    
+
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    
+
     // Build context-aware prompt
     const prompt = this.buildContextAwarePrompt(need);
-    
+
     try {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const content = response.text();
-      
+
       // Validate generated content meets quality standards
       const isValid = await this.validateGeneratedContent(content, need);
-      
+
       if (isValid) {
         await this.saveGeneratedContent(content, need);
         console.log(`   ✅ Generated and saved with ${need.qualityRequired.accuracy} accuracy`);
       } else {
         console.log(`   ⚠️  Generated content did not meet quality standards, retrying...`);
       }
-      
     } catch (error) {
       console.error(`   ❌ Generation failed:`, error);
     }
   }
-  
+
   /**
    * Build context-aware prompt
    */
   buildContextAwarePrompt(need: ContentNeed): string {
-    const standard = QUALITY_STANDARDS.find(s => s.contentType === need.contentType);
-    
+    const standard = QUALITY_STANDARDS.find((s) => s.contentType === need.contentType);
+
     return `You are a medical education expert creating content for ${need.component}.
 
 PURPOSE: ${need.purpose}
@@ -529,31 +527,31 @@ QUALITY REQUIREMENTS:
 - Freshness: ${need.qualityRequired.freshness}
 
 MUST INCLUDE:
-${standard?.mustHave.map(item => `- ${item}`).join('\n')}
+${standard?.mustHave.map((item) => `- ${item}`).join('\n')}
 
 MUST BE ACCURATE:
-${standard?.mustBeAccurate.map(item => `- ${item}`).join('\n')}
+${standard?.mustBeAccurate.map((item) => `- ${item}`).join('\n')}
 
 GAPS TO ADDRESS:
-${need.gaps.map(gap => `- ${gap}`).join('\n')}
+${need.gaps.map((gap) => `- ${gap}`).join('\n')}
 
 RECOMMENDATIONS:
-${need.recommendations.map(rec => `- ${rec}`).join('\n')}
+${need.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
 Generate high-quality medical content that meets all these requirements. The content will be used for medical education and must be completely accurate and evidence-based.
 
 Provide your response in structured JSON format that can be directly saved to the database.`;
   }
-  
+
   /**
    * Validate generated content meets quality standards
    */
   async validateGeneratedContent(content: string, need: ContentNeed): Promise<boolean> {
     // Check length
     if (content.length < 100) return false;
-    
+
     // Check for required elements
-    const standard = QUALITY_STANDARDS.find(s => s.contentType === need.contentType);
+    const standard = QUALITY_STANDARDS.find((s) => s.contentType === need.contentType);
     if (standard) {
       for (const required of standard.mustHave) {
         // Basic check - in production would be more sophisticated
@@ -563,10 +561,10 @@ Provide your response in structured JSON format that can be directly saved to th
         }
       }
     }
-    
+
     return true;
   }
-  
+
   /**
    * Save generated content to database
    */
@@ -585,36 +583,36 @@ export async function runContextAwareOrchestration(): Promise<void> {
   console.log('║     Context-Aware Site Maintenance System                 ║');
   console.log('║     Intelligently maintaining ALL parts of PANaCEa        ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
-  
+
   const analyzer = new ContextAwareAnalyzer();
   const generator = new ContextAwareGenerator();
-  
+
   // Step 1: Analyze all components
   const needsMap = await analyzer.analyzeSiteNeeds();
-  
+
   // Step 2: Prioritize needs
   const allNeeds: ContentNeed[] = [];
-  needsMap.forEach(needs => allNeeds.push(...needs));
+  needsMap.forEach((needs) => allNeeds.push(...needs));
   const sortedNeeds = allNeeds.sort((a, b) => {
     const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
-  
+
   console.log(`\n📋 Total needs identified: ${sortedNeeds.length}`);
-  console.log(`   Critical: ${sortedNeeds.filter(n => n.priority === 'critical').length}`);
-  console.log(`   High: ${sortedNeeds.filter(n => n.priority === 'high').length}`);
-  console.log(`   Medium: ${sortedNeeds.filter(n => n.priority === 'medium').length}`);
-  console.log(`   Low: ${sortedNeeds.filter(n => n.priority === 'low').length}`);
-  
+  console.log(`   Critical: ${sortedNeeds.filter((n) => n.priority === 'critical').length}`);
+  console.log(`   High: ${sortedNeeds.filter((n) => n.priority === 'high').length}`);
+  console.log(`   Medium: ${sortedNeeds.filter((n) => n.priority === 'medium').length}`);
+  console.log(`   Low: ${sortedNeeds.filter((n) => n.priority === 'low').length}`);
+
   // Step 3: Generate content for high-priority needs
-  const highPriorityNeeds = sortedNeeds.filter(n => 
-    n.priority === 'critical' || n.priority === 'high'
+  const highPriorityNeeds = sortedNeeds.filter(
+    (n) => n.priority === 'critical' || n.priority === 'high'
   );
-  
+
   if (highPriorityNeeds.length > 0) {
     await generator.generateForNeeds(highPriorityNeeds.slice(0, 10)); // Process top 10
   }
-  
+
   console.log('\n✨ Context-aware orchestration complete!');
 }
 

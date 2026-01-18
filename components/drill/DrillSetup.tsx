@@ -1,6 +1,6 @@
 /**
  * DrillSetup - Universal drill configuration component
- * 
+ *
  * Replaces static conditionRegistry imports with live database-driven registry.
  * Used by drill modes to configure system filters and question generation.
  */
@@ -80,7 +80,7 @@ export function DrillSetup({
   const [conditions, setConditions] = useState<ConditionMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | undefined>(undefined);
   // Difficulty is fixed at PANCE-level for standardized practice
   const difficulty: 'easier' | 'same' | 'harder' = 'same';
@@ -93,13 +93,13 @@ export function DrillSetup({
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch('/api/conditions');
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load conditions: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setConditions(data);
       } catch (err) {
@@ -109,42 +109,42 @@ export function DrillSetup({
         setLoading(false);
       }
     }
-    
+
     fetchConditions();
   }, []);
 
   // Extract unique systems from conditions, applying filter if provided
   const availableSystems = useMemo(() => {
     if (conditions.length === 0) return [];
-    
+
     const systemSet = new Set<SystemCode>();
-    conditions.forEach(c => {
+    conditions.forEach((c) => {
       // Apply filter if provided
       if (!systemFilter || systemFilter.includes(c.system)) {
         systemSet.add(c.system);
       }
     });
-    
+
     return Array.from(systemSet).sort();
   }, [conditions, systemFilter]);
 
   // Filter conditions by selected system
   const filteredConditions = useMemo(() => {
     if (!selectedSystem) return conditions;
-    return conditions.filter(c => c.system === selectedSystem);
+    return conditions.filter((c) => c.system === selectedSystem);
   }, [conditions, selectedSystem]);
 
   // Handle start drill
   const handleStart = () => {
     setIsStarting(true);
-    
+
     const config: DrillConfiguration = {
       system: selectedSystem,
       difficulty,
       questionCount,
       availableConditions: filteredConditions,
     };
-    
+
     // Small delay for visual feedback
     setTimeout(() => {
       onStart(config);
@@ -173,7 +173,9 @@ export function DrillSetup({
         <div className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-red-200 dark:border-red-800 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <AlertCircle className="w-6 h-6 text-red-500" />
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Error Loading Drill</h2>
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+              Error Loading Drill
+            </h2>
           </div>
           <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
           {onBack && (
@@ -198,12 +200,8 @@ export function DrillSetup({
       >
         {/* Header */}
         <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-8 mb-6">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
-            {title}
-          </h1>
-          <p className="text-lg text-[var(--color-text-secondary)]">
-            {description}
-          </p>
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h1>
+          <p className="text-lg text-[var(--color-text-secondary)]">{description}</p>
         </div>
 
         {/* Configuration Options */}
@@ -217,7 +215,7 @@ export function DrillSetup({
                   Filter by System
                 </label>
               </div>
-              
+
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setSelectedSystem(undefined)}
@@ -229,14 +227,12 @@ export function DrillSetup({
                 >
                   <div className="flex items-center justify-between">
                     <span>All Systems</span>
-                    <span className="text-sm opacity-75">
-                      {conditions.length} conditions
-                    </span>
+                    <span className="text-sm opacity-75">{conditions.length} conditions</span>
                   </div>
                 </button>
-                
-                {availableSystems.map(system => {
-                  const systemConditions = conditions.filter(c => c.system === system);
+
+                {availableSystems.map((system) => {
+                  const systemConditions = conditions.filter((c) => c.system === system);
                   return (
                     <button
                       key={system}
@@ -264,10 +260,13 @@ export function DrillSetup({
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-blue-500" />
-              <span className="font-bold text-blue-700 dark:text-blue-300">PANCE-Level Questions</span>
+              <span className="font-bold text-blue-700 dark:text-blue-300">
+                PANCE-Level Questions
+              </span>
             </div>
             <p className="text-sm text-blue-600 dark:text-blue-400">
-              All questions are calibrated to match real PANCE exam difficulty for optimal preparation.
+              All questions are calibrated to match real PANCE exam difficulty for optimal
+              preparation.
             </p>
           </div>
 
@@ -280,9 +279,9 @@ export function DrillSetup({
                   Number of Questions
                 </label>
               </div>
-              
+
               <div className="grid grid-cols-4 gap-3">
-                {[5, 10, 15, 20].map(count => (
+                {[5, 10, 15, 20].map((count) => (
                   <button
                     key={count}
                     onClick={() => setQuestionCount(count)}
@@ -313,9 +312,7 @@ export function DrillSetup({
               </div>
               <div className="flex justify-between">
                 <span>Difficulty:</span>
-                <span className="font-medium text-[var(--color-text-primary)]">
-                  PANCE-Level
-                </span>
+                <span className="font-medium text-[var(--color-text-primary)]">PANCE-Level</span>
               </div>
               <div className="flex justify-between">
                 <span>Questions:</span>

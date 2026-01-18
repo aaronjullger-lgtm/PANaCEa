@@ -36,7 +36,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
         setIsLoading(false);
         return;
       }
-      
+
       const response = await fetch('/api/srs/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });

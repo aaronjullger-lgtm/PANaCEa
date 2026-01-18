@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import type { PerformanceRecord, SystemCode } from "../types";
+import React, { useEffect, useMemo, useState } from 'react';
+import type { PerformanceRecord, SystemCode } from '../types';
 
 export type SystemDrilldownSelection = {
   system: SystemCode;
@@ -14,29 +14,26 @@ interface SystemDrilldownModalProps {
   performanceData?: PerformanceRecord[];
   onClose: () => void;
 
-  onDrillSubcategory?: (payload: {
-    system: SystemCode | undefined;
-    subcategory: string;
-  }) => void;
+  onDrillSubcategory?: (payload: { system: SystemCode | undefined; subcategory: string }) => void;
 }
 
 const SYSTEM_LABELS: Record<SystemCode, string> = {
-  CV: "Cardiovascular",
-  DERM: "Dermatology",
-  ENDO: "Endocrine",
-  GI: "Gastrointestinal",
-  GU: "Genitourinary",
-  HEME: "Hematology",
-  HEENT: "HEENT",
-  ID: "Infectious Disease",
-  MSK: "Musculoskeletal",
-  NEURO: "Neurology",
-  PRO: "Professional Practice",
-  PSYCH: "Psychiatry",
-  PULM: "Pulmonology",
-  RENAL: "Renal",
-  REPRO: "Reproductive",
-  OTHER: "Other / Unmapped",
+  CV: 'Cardiovascular',
+  DERM: 'Dermatology',
+  ENDO: 'Endocrine',
+  GI: 'Gastrointestinal',
+  GU: 'Genitourinary',
+  HEME: 'Hematology',
+  HEENT: 'HEENT',
+  ID: 'Infectious Disease',
+  MSK: 'Musculoskeletal',
+  NEURO: 'Neurology',
+  PRO: 'Professional Practice',
+  PSYCH: 'Psychiatry',
+  PULM: 'Pulmonology',
+  RENAL: 'Renal',
+  REPRO: 'Reproductive',
+  OTHER: 'Other / Unmapped',
 };
 
 /**
@@ -47,21 +44,21 @@ const SYSTEM_LABELS: Record<SystemCode, string> = {
  * - "cv__acs" -> "ACS"
  */
 const cleanConditionName = (raw: string | undefined): string => {
-  if (!raw) return "Unspecified condition";
+  if (!raw) return 'Unspecified condition';
 
-  if (!raw.includes("__") && !raw.includes("_")) return raw;
+  if (!raw.includes('__') && !raw.includes('_')) return raw;
 
   let s = raw;
-  if (s.includes("__")) {
-    const parts = s.split("__");
+  if (s.includes('__')) {
+    const parts = s.split('__');
     s = parts[parts.length - 1];
   }
 
-  const words = s.split("_").filter(Boolean);
+  const words = s.split('_').filter(Boolean);
 
   const formatted = words
     .map((word) => {
-      const letters = word.replace(/[^A-Za-z]/g, "");
+      const letters = word.replace(/[^A-Za-z]/g, '');
       if (!letters) return word;
 
       if (letters.length <= 4) {
@@ -70,9 +67,9 @@ const cleanConditionName = (raw: string | undefined): string => {
 
       return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
     })
-    .join(" ");
+    .join(' ');
 
-  return formatted || "Unspecified condition";
+  return formatted || 'Unspecified condition';
 };
 
 const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
@@ -94,23 +91,16 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     return { total, correct, percent };
   }, [systemRecords]);
 
-  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(
-    null
-  );
-  const [sortMode, setSortMode] = useState<"weakest" | "alpha" | "most">(
-    "weakest"
-  );
+  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<'weakest' | 'alpha' | 'most'>('weakest');
   const [showWeakOnly, setShowWeakOnly] = useState(false);
 
   // -------- SUBCATEGORY STATS --------
   const rawSubcategoryStats = useMemo(() => {
-    const map = new Map<
-      string,
-      { subcategory: string; correct: number; total: number }
-    >();
+    const map = new Map<string, { subcategory: string; correct: number; total: number }>();
 
     for (const r of systemRecords) {
-      const key = r.subcategory || "Unspecified";
+      const key = r.subcategory || 'Unspecified';
       if (!map.has(key)) {
         map.set(key, { subcategory: key, correct: 0, total: 0 });
       }
@@ -132,9 +122,9 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
       list = list.filter((s) => s.score < 80);
     }
 
-    if (sortMode === "alpha") {
+    if (sortMode === 'alpha') {
       list.sort((a, b) => a.subcategory.localeCompare(b.subcategory));
-    } else if (sortMode === "most") {
+    } else if (sortMode === 'most') {
       list.sort((a, b) => b.total - a.total);
     } else {
       list.sort((a, b) => a.score - b.score); // weakest first
@@ -156,10 +146,9 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     >();
 
     for (const r of systemRecords) {
-      const sub = r.subcategory || "Unspecified";
-      const rawCond =
-        (r as any).conditionName || r.condition || (r as any).conditionId || "";
-      const condName = cleanConditionName(rawCond || "Unspecified");
+      const sub = r.subcategory || 'Unspecified';
+      const rawCond = (r as any).conditionName || r.condition || (r as any).conditionId || '';
+      const condName = cleanConditionName(rawCond || 'Unspecified');
 
       const id = `${sub}__${condName}`;
       if (!map.has(id)) {
@@ -197,12 +186,12 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   }, [conditionStats, activeSubcategory]);
 
   const getBarColor = (score: number) => {
-    if (score < 50) return "bg-red-500";
-    if (score < 80) return "bg-yellow-500";
-    return "bg-green-500";
+    if (score < 50) return 'bg-red-500';
+    if (score < 80) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
-  const systemLabel = system ? SYSTEM_LABELS[system] : "System Details";
+  const systemLabel = system ? SYSTEM_LABELS[system] : 'System Details';
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -216,7 +205,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
               {systemSummary.total > 0
                 ? `Based on ${systemSummary.total.toString()} ${systemLabel.toLowerCase()} questions (${systemSummary.correct.toString()}/${systemSummary.total.toString()}, ${systemSummary.percent.toString()}% correct).`
-                : "No performance data yet for this system."}
+                : 'No performance data yet for this system.'}
             </p>
             <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
               Click a subcategory to see condition-level performance.
@@ -255,11 +244,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                     <select
                       className="border border-slate-200 rounded-md bg-white text-[11px] px-2 py-1 text-slate-600"
                       value={sortMode}
-                      onChange={(e) =>
-                        setSortMode(
-                          e.target.value as "weakest" | "alpha" | "most"
-                        )
-                      }
+                      onChange={(e) => setSortMode(e.target.value as 'weakest' | 'alpha' | 'most')}
                     >
                       <option value="weakest">Weakest first</option>
                       <option value="alpha">A–Z</option>
@@ -285,8 +270,8 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                         onClick={() => setActiveSubcategory(sub.subcategory)}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${
                           isActive
-                            ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10"
-                            : "border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-primary)]"
+                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                            : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-primary)]'
                         }`}
                       >
                         <div className="flex justify-between items-center mb-1">
@@ -299,16 +284,14 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                         </div>
                         <div className="w-full bg-[var(--color-bg-primary)] rounded-full h-1.5 mb-1">
                           <div
-                            className={`h-1.5 rounded-full ${getBarColor(
-                              sub.score
-                            )}`}
+                            className={`h-1.5 rounded-full ${getBarColor(sub.score)}`}
                             style={{ width: `${sub.score}%` }}
                           />
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] text-[var(--color-text-muted)]">
                             {sub.total.toString()} question
-                            {sub.total !== 1 ? "s" : ""}
+                            {sub.total !== 1 ? 's' : ''}
                           </span>
                           {isWeak && (
                             <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
@@ -359,8 +342,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                 </>
               ) : (
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  Select a subcategory on the left to see condition-level
-                  mastery.
+                  Select a subcategory on the left to see condition-level mastery.
                 </p>
               )}
 
@@ -387,9 +369,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                       </div>
                       <div className="w-full bg-[var(--color-bg-primary)] rounded-full h-1.5 mb-1">
                         <div
-                          className={`h-1.5 rounded-full ${getBarColor(
-                            cond.score
-                          )}`}
+                          className={`h-1.5 rounded-full ${getBarColor(cond.score)}`}
                           style={{ width: `${cond.score}%` }}
                         />
                       </div>
@@ -405,7 +385,6 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

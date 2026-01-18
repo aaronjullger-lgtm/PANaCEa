@@ -1,6 +1,6 @@
 /**
  * DDx Service - Client-side service for differential diagnosis features
- * 
+ *
  * Provides:
  * - Fetching related differentials
  * - Deep condition comparison
@@ -75,7 +75,7 @@ export interface DeepConditionData {
   condition: string;
   system: string;
   subcategory: string;
-  
+
   // Clinical data
   classic_patient?: string;
   symptoms?: string;
@@ -84,26 +84,26 @@ export interface DeepConditionData {
   etiology?: string;
   riskFactors?: string;
   physicalExam?: string;
-  
+
   // Diagnosis
   gold_standard_dx?: string;
   best_initial_test?: string;
   diagnostics?: string;
-  
+
   // Treatment
   first_line_rx?: string;
   treatment?: string;
   rx_mechanism?: string;
-  
+
   // Demographics
   age_demographic?: any;
   gender_bias?: string;
-  
+
   // PANCE
   pance_yield?: number;
   mnemonic?: string;
   clinical_pearls?: any;
-  
+
   // Linked entities
   linkedLabs?: LinkedLab[];
   linkedImaging?: LinkedImaging[];
@@ -163,10 +163,13 @@ export interface ConfusionPairsResponse {
   confusionPairs: ConfusionPair[];
   totalPairs: number;
   confusionScore: number;
-  systemSummary: Record<string, {
-    count: number;
-    pairs: Array<{ real: string; mistaken: string; count: number }>;
-  }>;
+  systemSummary: Record<
+    string,
+    {
+      count: number;
+      pairs: Array<{ real: string; mistaken: string; count: number }>;
+    }
+  >;
   recommendations: string[];
 }
 
@@ -213,30 +216,28 @@ export async function fetchRelatedConditions(
   params.set('limit', limit.toString());
 
   const response = await fetch(`${API_BASE}/related?${params}`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch related conditions: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
 /**
  * Fetch deep comparison data for multiple conditions
  */
-export async function fetchConditionComparison(
-  conditionIds: string[]
-): Promise<CompareResponse> {
+export async function fetchConditionComparison(conditionIds: string[]): Promise<CompareResponse> {
   if (conditionIds.length < 2) {
     throw new Error('At least 2 condition IDs required for comparison');
   }
-  
+
   const response = await fetch(`${API_BASE}/compare?ids=${conditionIds.join(',')}`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to compare conditions: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
@@ -258,105 +259,108 @@ export async function fetchConfusionPairs(
 
   const response = await fetch(`${API_BASE}/confusion-pairs?${params}`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('Authentication required');
     }
     throw new Error(`Failed to fetch confusion pairs: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
-  /**
-   * Track a confusion pair for the current user (POST /api/user/confusion)
-   */
-  export async function trackConfusionPair(
-    token: string,
-    body: { correctConditionId: string; selectedConditionId: string }
-  ) {
-    const response = await fetch(`${USER_API_BASE}/confusion`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+/**
+ * Track a confusion pair for the current user (POST /api/user/confusion)
+ */
+export async function trackConfusionPair(
+  token: string,
+  body: { correctConditionId: string; selectedConditionId: string }
+) {
+  const response = await fetch(`${USER_API_BASE}/confusion`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Failed to track confusion pair: ${response.statusText}`);
-    }
-
-    return response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to track confusion pair: ${response.statusText}`);
   }
 
-  /**
-   * Fetch top confusion pairs for the current user (GET /api/user/confusions)
-   */
-  export async function fetchUserConfusions(
-    token: string,
-    options: { limit?: number } = {}
-  ): Promise<UserConfusionsResponse> {
-    const params = new URLSearchParams();
-    if (options.limit) params.set('limit', options.limit.toString());
+  return response.json();
+}
 
-    const response = await fetch(`${USER_API_BASE}/confusions?${params.toString()}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+/**
+ * Fetch top confusion pairs for the current user (GET /api/user/confusions)
+ */
+export async function fetchUserConfusions(
+  token: string,
+  options: { limit?: number } = {}
+): Promise<UserConfusionsResponse> {
+  const params = new URLSearchParams();
+  if (options.limit) params.set('limit', options.limit.toString());
 
-    if (!response.ok) {
-      throw new Error(`Failed to load confusion pairs: ${response.statusText}`);
-    }
+  const response = await fetch(`${USER_API_BASE}/confusions?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-    return response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to load confusion pairs: ${response.statusText}`);
   }
 
-  /**
-   * Generate or fetch a cached comparison table for given conditions
-   */
-  export async function generateComparison(
-    conditionIds: string[],
-    token?: string,
-    signal?: AbortSignal
-  ): Promise<ComparisonResult> {
-    if (conditionIds.length < 2) {
-      throw new Error('At least two condition IDs are required');
-    }
+  return response.json();
+}
 
-    const params = new URLSearchParams();
-    params.set('conditions', conditionIds.join(','));
-
-    const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    const response = await fetch(`${API_BASE}/comparison?${params.toString()}`, {
-      headers,
-      signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to generate comparison: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.comparison as ComparisonResult;
+/**
+ * Generate or fetch a cached comparison table for given conditions
+ */
+export async function generateComparison(
+  conditionIds: string[],
+  token?: string,
+  signal?: AbortSignal
+): Promise<ComparisonResult> {
+  if (conditionIds.length < 2) {
+    throw new Error('At least two condition IDs are required');
   }
+
+  const params = new URLSearchParams();
+  params.set('conditions', conditionIds.join(','));
+
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE}/comparison?${params.toString()}`, {
+    headers,
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate comparison: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.comparison as ComparisonResult;
+}
 
 /**
  * Get severity color for confusion pairs
  */
 export function getSeverityColor(severity: 'high' | 'medium' | 'low'): string {
   switch (severity) {
-    case 'high': return 'text-red-500';
-    case 'medium': return 'text-amber-500';
-    case 'low': return 'text-green-500';
+    case 'high':
+      return 'text-red-500';
+    case 'medium':
+      return 'text-amber-500';
+    case 'low':
+      return 'text-green-500';
   }
 }
 
@@ -365,9 +369,12 @@ export function getSeverityColor(severity: 'high' | 'medium' | 'low'): string {
  */
 export function getSeverityBgColor(severity: 'high' | 'medium' | 'low'): string {
   switch (severity) {
-    case 'high': return 'bg-red-500/10 border-red-500/30';
-    case 'medium': return 'bg-amber-500/10 border-amber-500/30';
-    case 'low': return 'bg-green-500/10 border-green-500/30';
+    case 'high':
+      return 'bg-red-500/10 border-red-500/30';
+    case 'medium':
+      return 'bg-amber-500/10 border-amber-500/30';
+    case 'low':
+      return 'bg-green-500/10 border-green-500/30';
   }
 }
 
@@ -377,7 +384,7 @@ export function getSeverityBgColor(severity: 'high' | 'medium' | 'low'): string 
 export function formatFieldValue(value: unknown): string {
   if (value == null) return '-';
   if (Array.isArray(value)) {
-    return value.filter(v => v != null).join(', ') || '-';
+    return value.filter((v) => v != null).join(', ') || '-';
   }
   if (typeof value === 'object') {
     return JSON.stringify(value);
@@ -412,14 +419,19 @@ export function getCategoryLabel(category: string): string {
 /**
  * Group comparison fields by category
  */
-export function groupFieldsByCategory(fields: ComparisonField[]): Record<string, ComparisonField[]> {
-  return fields.reduce((acc, field) => {
-    if (!acc[field.category]) {
-      acc[field.category] = [];
-    }
-    acc[field.category].push(field);
-    return acc;
-  }, {} as Record<string, ComparisonField[]>);
+export function groupFieldsByCategory(
+  fields: ComparisonField[]
+): Record<string, ComparisonField[]> {
+  return fields.reduce(
+    (acc, field) => {
+      if (!acc[field.category]) {
+        acc[field.category] = [];
+      }
+      acc[field.category].push(field);
+      return acc;
+    },
+    {} as Record<string, ComparisonField[]>
+  );
 }
 
 export default {

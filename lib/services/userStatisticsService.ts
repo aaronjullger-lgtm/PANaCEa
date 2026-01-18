@@ -19,8 +19,13 @@ export async function applyAttemptToUserStatistics(
   const timeSpentMs = payload.timeSpentMs ?? null;
 
   const updatedSystemStats = payload.system
-    ? updateSystemStats(existing?.systemStats as Record<string, any>, payload.system, isCorrect, timeSpentMs)
-    : ((existing?.systemStats as Record<string, any>) || {});
+    ? updateSystemStats(
+        existing?.systemStats as Record<string, any>,
+        payload.system,
+        isCorrect,
+        timeSpentMs
+      )
+    : (existing?.systemStats as Record<string, any>) || {};
 
   const updatedTotals = {
     totalQuestions: totalQuestions + 1,
@@ -109,7 +114,9 @@ export async function updateTimingAggregates(
 ) {
   const [peakStudyHours, avgSessionLength] = await Promise.all([
     options.refreshPeakHours ? recomputePeakStudyHours(prisma, userId) : Promise.resolve(null),
-    options.refreshAvgSessionLength ? recomputeAvgSessionLength(prisma, userId) : Promise.resolve(null),
+    options.refreshAvgSessionLength
+      ? recomputeAvgSessionLength(prisma, userId)
+      : Promise.resolve(null),
   ]);
 
   await prisma.userStatistics.upsert({

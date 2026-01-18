@@ -1,6 +1,6 @@
 /**
  * DDx Comparison Table Builder
- * 
+ *
  * Generates dynamically-updated differential diagnosis comparison tables
  * for commonly confused condition pairs. Uses structured condition JSON
  * to extract and compare key clinical features.
@@ -33,10 +33,10 @@ interface ConditionData {
  */
 function extractBulletPoints(text: string | undefined): string[] {
   if (!text) return [];
-  
+
   const lines = text.split('\n');
   const bullets: string[] = [];
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     // Match lines starting with -, *, •, or numbered lists
@@ -49,7 +49,7 @@ function extractBulletPoints(text: string | undefined): string[] {
       bullets.push(trimmed);
     }
   }
-  
+
   return bullets.slice(0, 10); // Limit to 10 points
 }
 
@@ -58,29 +58,29 @@ function extractBulletPoints(text: string | undefined): string[] {
  */
 function findSimilarities(listA: string[], listB: string[]): string[] {
   const similarities: string[] = [];
-  const lowerB = listB.map(s => s.toLowerCase());
-  
+  const lowerB = listB.map((s) => s.toLowerCase());
+
   for (const itemA of listA) {
     const lowerA = itemA.toLowerCase();
-    
+
     // Check for exact or partial matches
     for (const itemB of lowerB) {
       // Check for significant word overlap
-      const wordsA = new Set(lowerA.split(/\s+/).filter(w => w.length > 3));
-      const wordsB = new Set(itemB.split(/\s+/).filter(w => w.length > 3));
-      
+      const wordsA = new Set(lowerA.split(/\s+/).filter((w) => w.length > 3));
+      const wordsB = new Set(itemB.split(/\s+/).filter((w) => w.length > 3));
+
       let overlap = 0;
       for (const word of wordsA) {
         if (wordsB.has(word)) overlap++;
       }
-      
+
       if (overlap >= 2 || (wordsA.size <= 3 && overlap >= 1)) {
         similarities.push(itemA);
         break;
       }
     }
   }
-  
+
   return [...new Set(similarities)].slice(0, 5);
 }
 
@@ -89,32 +89,32 @@ function findSimilarities(listA: string[], listB: string[]): string[] {
  */
 function findDifferences(listA: string[], listB: string[]): string[] {
   const differences: string[] = [];
-  const lowerB = listB.map(s => s.toLowerCase());
-  
+  const lowerB = listB.map((s) => s.toLowerCase());
+
   for (const itemA of listA) {
     const lowerA = itemA.toLowerCase();
     let isSimilar = false;
-    
+
     for (const itemB of lowerB) {
-      const wordsA = new Set(lowerA.split(/\s+/).filter(w => w.length > 3));
-      const wordsB = new Set(itemB.split(/\s+/).filter(w => w.length > 3));
-      
+      const wordsA = new Set(lowerA.split(/\s+/).filter((w) => w.length > 3));
+      const wordsB = new Set(itemB.split(/\s+/).filter((w) => w.length > 3));
+
       let overlap = 0;
       for (const word of wordsA) {
         if (wordsB.has(word)) overlap++;
       }
-      
+
       if (overlap >= 2) {
         isSimilar = true;
         break;
       }
     }
-    
+
     if (!isSimilar) {
       differences.push(itemA);
     }
   }
-  
+
   return differences.slice(0, 5);
 }
 
@@ -124,7 +124,7 @@ function findDifferences(listA: string[], listB: string[]): string[] {
 
 /**
  * Generate a DDx comparison table from two condition JSON objects
- * 
+ *
  * @param conditionAJson - First condition's structured data
  * @param conditionBJson - Second condition's structured data
  * @returns DDxComparison object with similarities and differences
@@ -135,52 +135,53 @@ export function generateDDxTable(
 ): DDxComparison {
   const conditionA = conditionAJson.name || 'Condition A';
   const conditionB = conditionBJson.name || 'Condition B';
-  
+
   // Extract buzzwords
   const buzzwordsA = conditionAJson.buzzwords || [];
   const buzzwordsB = conditionBJson.buzzwords || [];
-  
+
   // Extract clinical presentation points
   const presentationA = extractBulletPoints(conditionAJson.clinicalPresentation);
   const presentationB = extractBulletPoints(conditionBJson.clinicalPresentation);
-  
+
   // Extract diagnostic findings
   const diagnosticA = extractBulletPoints(conditionAJson.diagnosticFindings);
   const diagnosticB = extractBulletPoints(conditionBJson.diagnosticFindings);
-  
+
   // Extract treatments
   const treatmentA = extractBulletPoints(conditionAJson.treatment);
   const treatmentB = extractBulletPoints(conditionBJson.treatment);
-  
+
   // Find similarities in presentation
   const allFeaturesA = [...presentationA, ...diagnosticA];
   const allFeaturesB = [...presentationB, ...diagnosticB];
   const similarities = findSimilarities(allFeaturesA, allFeaturesB);
-  
+
   // Find distinguishing differences
   const diffA = findDifferences(allFeaturesA, allFeaturesB);
   const diffB = findDifferences(allFeaturesB, allFeaturesA);
-  
+
   // Find distinguishing buzzwords
   const uniqueBuzzwordsA = buzzwordsA.filter(
-    bw => !buzzwordsB.some(b => b.toLowerCase() === bw.toLowerCase())
+    (bw) => !buzzwordsB.some((b) => b.toLowerCase() === bw.toLowerCase())
   );
   const uniqueBuzzwordsB = buzzwordsB.filter(
-    bw => !buzzwordsA.some(a => a.toLowerCase() === bw.toLowerCase())
+    (bw) => !buzzwordsA.some((a) => a.toLowerCase() === bw.toLowerCase())
   );
-  
+
   // Find distinguishing diagnostics
   const uniqueDiagA = findDifferences(diagnosticA, diagnosticB);
   const uniqueDiagB = findDifferences(diagnosticB, diagnosticA);
-  
+
   // Find distinguishing treatments
   const uniqueTreatmentA = findDifferences(treatmentA, treatmentB);
   const uniqueTreatmentB = findDifferences(treatmentB, treatmentA);
-  
+
   return {
     conditionA,
     conditionB,
-    similarities: similarities.length > 0 ? similarities : ['Data pending - check condition details'],
+    similarities:
+      similarities.length > 0 ? similarities : ['Data pending - check condition details'],
     differences: {
       A: diffA.length > 0 ? diffA : ['Review condition profile for distinguishing features'],
       B: diffB.length > 0 ? diffB : ['Review condition profile for distinguishing features'],
@@ -212,7 +213,7 @@ export function getPrebuiltComparison(
   const keyA = conditionA.toLowerCase().replace(/\s+/g, '_');
   const keyB = conditionB.toLowerCase().replace(/\s+/g, '_');
   const pairKey = [keyA, keyB].sort().join('|');
-  
+
   // Pre-built comparisons for high-yield confused pairs
   const prebuiltComparisons: Record<string, DDxComparison> = {
     'appendicitis|diverticulitis': {
@@ -249,7 +250,10 @@ export function getPrebuiltComparison(
       },
       treatments: {
         A: ['Appendectomy (urgent surgical intervention)', 'IV antibiotics'],
-        B: ['Uncomplicated: oral antibiotics, bowel rest', 'Complicated: IV antibiotics, possible surgery'],
+        B: [
+          'Uncomplicated: oral antibiotics, bowel rest',
+          'Complicated: IV antibiotics, possible surgery',
+        ],
       },
     },
     'crohn_disease|ulcerative_colitis': {
@@ -280,7 +284,13 @@ export function getPrebuiltComparison(
       },
       buzzwords: {
         A: ['Skip lesions', 'String sign', 'Cobblestone', 'Fistula', 'Terminal ileum'],
-        B: ['Lead pipe colon', 'Pseudopolyps', 'Bloody diarrhea', 'Continuous', 'Rectal involvement'],
+        B: [
+          'Lead pipe colon',
+          'Pseudopolyps',
+          'Bloody diarrhea',
+          'Continuous',
+          'Rectal involvement',
+        ],
       },
       diagnostic: {
         A: ['Non-caseating granulomas on biopsy', 'String sign on imaging'],
@@ -330,7 +340,7 @@ export function getPrebuiltComparison(
       },
     },
   };
-  
+
   return prebuiltComparisons[pairKey] || null;
 }
 
@@ -339,16 +349,16 @@ export function getPrebuiltComparison(
  */
 export function formatComparisonForDisplay(comparison: DDxComparison): string {
   const lines: string[] = [];
-  
+
   lines.push(`## ${comparison.conditionA} vs ${comparison.conditionB}`);
   lines.push('');
-  
+
   lines.push('### Shared Features');
   for (const item of comparison.similarities) {
     lines.push(`- ${item}`);
   }
   lines.push('');
-  
+
   lines.push('### Key Differences');
   lines.push(`**${comparison.conditionA}:**`);
   for (const item of comparison.differences.A) {
@@ -359,10 +369,10 @@ export function formatComparisonForDisplay(comparison: DDxComparison): string {
     lines.push(`- ${item}`);
   }
   lines.push('');
-  
+
   lines.push('### Buzzwords');
   lines.push(`**${comparison.conditionA}:** ${comparison.buzzwords.A.join(', ')}`);
   lines.push(`**${comparison.conditionB}:** ${comparison.buzzwords.B.join(', ')}`);
-  
+
   return lines.join('\n');
 }

@@ -1,12 +1,12 @@
 /**
  * Metacognition Trigger System
- * 
+ *
  * Implements pattern-based triggers for knowledge gap reflection prompts.
  * Prompts appear for ~20-30% of incorrect answers based on:
  * - Consecutive misses on same subcategory
  * - Known confusion pairs (e.g., AFib vs AFlutter)
  * - Random sampling (10%) for other cases
- * 
+ *
  * Research: Metacognitive monitoring improves learning (Dunlosky et al., 2013)
  */
 
@@ -23,61 +23,75 @@ export const CONFUSION_PAIRS: Array<{
   {
     condition1: 'Atrial Fibrillation',
     condition2: 'Atrial Flutter',
-    distinguishingFeature: 'Flutter has regular "sawtooth" P waves at ~300 bpm; AFib is irregularly irregular',
-    clinicalPearl: 'Remember: Flutter = Fixed rate (usually 2:1 or 4:1 block), Fib = Fibrillating (chaotic)',
+    distinguishingFeature:
+      'Flutter has regular "sawtooth" P waves at ~300 bpm; AFib is irregularly irregular',
+    clinicalPearl:
+      'Remember: Flutter = Fixed rate (usually 2:1 or 4:1 block), Fib = Fibrillating (chaotic)',
   },
   {
-    condition1: 'Crohn\'s Disease',
+    condition1: "Crohn's Disease",
     condition2: 'Ulcerative Colitis',
-    distinguishingFeature: 'Crohn\'s: transmural, skip lesions, any GI tract. UC: mucosal, continuous, colon only',
+    distinguishingFeature:
+      "Crohn's: transmural, skip lesions, any GI tract. UC: mucosal, continuous, colon only",
     clinicalPearl: 'Crohn\'s = "creeping" fat, granulomas. UC = "bloody" diarrhea, pseudopolyps',
   },
   {
     condition1: 'Hyperthyroidism',
     condition2: 'Hypothyroidism',
-    distinguishingFeature: 'Hyper: weight loss, tachycardia, heat intolerance. Hypo: weight gain, bradycardia, cold intolerance',
+    distinguishingFeature:
+      'Hyper: weight loss, tachycardia, heat intolerance. Hypo: weight gain, bradycardia, cold intolerance',
     clinicalPearl: 'Think temperature: Hyper = HOT and fast, Hypo = COLD and slow',
   },
   {
     condition1: 'Type 1 Diabetes',
     condition2: 'Type 2 Diabetes',
-    distinguishingFeature: 'T1: autoimmune, absolute insulin deficiency. T2: insulin resistance, relative deficiency',
-    clinicalPearl: 'T1 = young, lean, ketosis-prone, needs insulin. T2 = older, obese, starts with metformin',
+    distinguishingFeature:
+      'T1: autoimmune, absolute insulin deficiency. T2: insulin resistance, relative deficiency',
+    clinicalPearl:
+      'T1 = young, lean, ketosis-prone, needs insulin. T2 = older, obese, starts with metformin',
   },
   {
     condition1: 'DVT',
     condition2: 'Superficial Thrombophlebitis',
-    distinguishingFeature: 'DVT: deep veins, high PE risk. Superficial: visible, palpable cord, low PE risk',
+    distinguishingFeature:
+      'DVT: deep veins, high PE risk. Superficial: visible, palpable cord, low PE risk',
     clinicalPearl: 'Deep = D-dimer + ultrasound. Superficial = clinical diagnosis, warm compresses',
   },
   {
     condition1: 'STEMI',
     condition2: 'NSTEMI',
-    distinguishingFeature: 'STEMI: ST elevation, complete occlusion, emergent cath. NSTEMI: no elevation, partial occlusion',
-    clinicalPearl: 'STEMI = "Door to Balloon" <90 min. NSTEMI = medical management first, cath within 24-72h',
+    distinguishingFeature:
+      'STEMI: ST elevation, complete occlusion, emergent cath. NSTEMI: no elevation, partial occlusion',
+    clinicalPearl:
+      'STEMI = "Door to Balloon" <90 min. NSTEMI = medical management first, cath within 24-72h',
   },
   {
     condition1: 'Pneumonia',
     condition2: 'Bronchitis',
-    distinguishingFeature: 'Pneumonia: alveolar, fever, consolidation on CXR. Bronchitis: airways, no infiltrate, productive cough',
+    distinguishingFeature:
+      'Pneumonia: alveolar, fever, consolidation on CXR. Bronchitis: airways, no infiltrate, productive cough',
     clinicalPearl: 'Pneumonia = PNA = Parenchymal. Bronchitis = airways only, usually viral',
   },
   {
     condition1: 'Prerenal AKI',
     condition2: 'Intrinsic AKI',
-    distinguishingFeature: 'Prerenal: FENa <1%, BUN/Cr >20. Intrinsic: FENa >2%, BUN/Cr <15, muddy brown casts',
-    clinicalPearl: 'Prerenal = "plumbing problem before kidney". Intrinsic = "kidney itself is damaged"',
+    distinguishingFeature:
+      'Prerenal: FENa <1%, BUN/Cr >20. Intrinsic: FENa >2%, BUN/Cr <15, muddy brown casts',
+    clinicalPearl:
+      'Prerenal = "plumbing problem before kidney". Intrinsic = "kidney itself is damaged"',
   },
   {
     condition1: 'Tension Headache',
     condition2: 'Migraine',
-    distinguishingFeature: 'Tension: bilateral, band-like. Migraine: unilateral, pulsating, nausea, photo/phonophobia',
+    distinguishingFeature:
+      'Tension: bilateral, band-like. Migraine: unilateral, pulsating, nausea, photo/phonophobia',
     clinicalPearl: 'Migraine = "Miserable" with aura/nausea. Tension = "Tight band" without',
   },
   {
     condition1: 'Osteoarthritis',
     condition2: 'Rheumatoid Arthritis',
-    distinguishingFeature: 'OA: DIP joints, no systemic, mechanical pain. RA: MCP/PIP, systemic, morning stiffness >1hr',
+    distinguishingFeature:
+      'OA: DIP joints, no systemic, mechanical pain. RA: MCP/PIP, systemic, morning stiffness >1hr',
     clinicalPearl: 'OA = Old age, Degeneration. RA = RF positive, Rheumatoid factor',
   },
 ];
@@ -168,7 +182,7 @@ export function shouldShowMetacognition(params: {
   // Update miss counts
   const currentMisses = (tracker.consecutiveMissesBySubcategory.get(subcategory) || 0) + 1;
   tracker.consecutiveMissesBySubcategory.set(subcategory, currentMisses);
-  
+
   const systemMisses = (tracker.totalMissesBySystem.get(system) || 0) + 1;
   tracker.totalMissesBySystem.set(system, systemMisses);
 
@@ -230,7 +244,7 @@ export function shouldShowMetacognition(params: {
       shouldShow: true,
       triggerReason: 'high_yield_miss',
       reflectionQuestions: [
-        'This is a high-yield topic for the PANCE. What\'s the most important fact to remember?',
+        "This is a high-yield topic for the PANCE. What's the most important fact to remember?",
         'What classic presentation should trigger you to think of this diagnosis?',
       ],
     };
@@ -265,18 +279,22 @@ function findConfusionPair(conditionName: string): {
   clinicalPearl: string;
 } | null {
   const lowerName = conditionName.toLowerCase();
-  
+
   for (const pair of CONFUSION_PAIRS) {
-    if (pair.condition1.toLowerCase().includes(lowerName) ||
-        lowerName.includes(pair.condition1.toLowerCase())) {
+    if (
+      pair.condition1.toLowerCase().includes(lowerName) ||
+      lowerName.includes(pair.condition1.toLowerCase())
+    ) {
       return {
         pairedCondition: pair.condition2,
         distinguishingFeature: pair.distinguishingFeature,
         clinicalPearl: pair.clinicalPearl,
       };
     }
-    if (pair.condition2.toLowerCase().includes(lowerName) ||
-        lowerName.includes(pair.condition2.toLowerCase())) {
+    if (
+      pair.condition2.toLowerCase().includes(lowerName) ||
+      lowerName.includes(pair.condition2.toLowerCase())
+    ) {
       return {
         pairedCondition: pair.condition1,
         distinguishingFeature: pair.distinguishingFeature,
@@ -284,7 +302,7 @@ function findConfusionPair(conditionName: string): {
       };
     }
   }
-  
+
   return null;
 }
 
@@ -310,9 +328,8 @@ export function getSessionMetacognitionSummary(tracker: SessionMissTracker): {
 
   return {
     totalAnswered: tracker.totalAnswered,
-    metacognitionRate: tracker.totalAnswered > 0 
-      ? tracker.metacognitionCount / tracker.totalAnswered 
-      : 0,
+    metacognitionRate:
+      tracker.totalAnswered > 0 ? tracker.metacognitionCount / tracker.totalAnswered : 0,
     topMissedSubcategories: subcatMisses,
     topMissedSystems: systemMisses,
   };
@@ -324,22 +341,20 @@ export function getSessionMetacognitionSummary(tracker: SessionMissTracker): {
 export function generatePostSessionReflection(tracker: SessionMissTracker): string[] {
   const summary = getSessionMetacognitionSummary(tracker);
   const reflections: string[] = [];
-  
+
   if (summary.topMissedSubcategories.length > 0) {
     reflections.push(
       `You had the most difficulty with: ${summary.topMissedSubcategories.join(', ')}. Consider focused review.`
     );
   }
-  
+
   if (summary.topMissedSystems.length > 0) {
-    reflections.push(
-      `Your weakest systems this session: ${summary.topMissedSystems.join(', ')}`
-    );
+    reflections.push(`Your weakest systems this session: ${summary.topMissedSystems.join(', ')}`);
   }
-  
+
   reflections.push('What patterns did you notice in the questions you missed?');
   reflections.push('What specific topics need more review before your next session?');
-  
+
   return reflections;
 }
 

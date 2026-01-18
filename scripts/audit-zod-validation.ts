@@ -58,9 +58,9 @@ async function auditFile(filePath: string): Promise<AuditResult | null> {
   const usesValidateRequest = /validateRequest\s*\(/.test(content);
   const usesZodSafeParse = /\.safeParse\s*\(/.test(content);
   const usesZodParse = /\.parse\s*\(/.test(content);
-  
+
   // Check for manual validation patterns
-  const hasManualValidation = 
+  const hasManualValidation =
     /if\s*\(\s*![\w.]+\s*\)/.test(content) && // if (!field)
     /return\s+new\s+Response\s*\([^)]*(?:400|missing|required)/i.test(content);
 
@@ -104,9 +104,9 @@ async function main() {
   }
 
   // Group results
-  const passing = results.filter(r => r.status === 'PASS');
-  const manualOnly = results.filter(r => r.status === 'WARN_MANUAL_ONLY');
-  const noValidation = results.filter(r => r.status === 'FAIL_NO_VALIDATION');
+  const passing = results.filter((r) => r.status === 'PASS');
+  const manualOnly = results.filter((r) => r.status === 'WARN_MANUAL_ONLY');
+  const noValidation = results.filter((r) => r.status === 'FAIL_NO_VALIDATION');
 
   console.log(`📊 Audit Results:`);
   console.log(`✅ PASS (Zod validation): ${passing.length} endpoints`);
@@ -115,24 +115,30 @@ async function main() {
 
   if (noValidation.length > 0) {
     console.log('🚨 CRITICAL: Endpoints with NO validation:');
-    noValidation.forEach(result => {
-      console.log(`  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`);
+    noValidation.forEach((result) => {
+      console.log(
+        `  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`
+      );
     });
     console.log('');
   }
 
   if (manualOnly.length > 0) {
     console.log('⚠️  WARNING: Endpoints with manual validation (should use Zod):');
-    manualOnly.forEach(result => {
-      console.log(`  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`);
+    manualOnly.forEach((result) => {
+      console.log(
+        `  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`
+      );
     });
     console.log('');
   }
 
   if (passing.length > 0) {
     console.log('✅ Properly validated endpoints:');
-    passing.slice(0, 5).forEach(result => {
-      console.log(`  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`);
+    passing.slice(0, 5).forEach((result) => {
+      console.log(
+        `  - ${path.relative(process.cwd(), result.file)} [${result.methods.join(', ')}]`
+      );
     });
     if (passing.length > 5) {
       console.log(`  ... and ${passing.length - 5} more`);
@@ -154,8 +160,8 @@ async function main() {
     'performance/record.ts',
   ];
 
-  const prioritized = [...manualOnly, ...noValidation].filter(r => 
-    priorityEndpoints.some(p => r.file.includes(p))
+  const prioritized = [...manualOnly, ...noValidation].filter((r) =>
+    priorityEndpoints.some((p) => r.file.includes(p))
   );
 
   prioritized.forEach((result, i) => {

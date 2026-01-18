@@ -1,6 +1,6 @@
 /**
  * Widget Panel Component
- * 
+ *
  * Provides UI for generating embeddable widgets for Notion, Obsidian, and other apps.
  * Users can generate widgets and copy the embed code.
  */
@@ -27,10 +27,7 @@ type WidgetType = 'streak' | 'question-of-day';
 type Theme = 'light' | 'dark';
 type EmbedFormat = 'html' | 'obsidian';
 
-export const WidgetPanel: React.FC<WidgetPanelProps> = ({
-  performanceData,
-  missedQuestions,
-}) => {
+export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, missedQuestions }) => {
   const { user } = useUser();
   const [selectedWidget, setSelectedWidget] = useState<WidgetType>('streak');
   const [theme, setTheme] = useState<Theme>('light');
@@ -39,10 +36,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
   const [previewKey, setPreviewKey] = useState(0);
 
   // Calculate streak data
-  const streakData = useMemo(
-    () => calculateStreak(performanceData),
-    [performanceData]
-  );
+  const streakData = useMemo(() => calculateStreak(performanceData), [performanceData]);
 
   // Get question of the day
   const questionOfDay = useMemo(
@@ -65,19 +59,19 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
     // Use server-hosted widget URLs instead of data URIs
     // This makes them compatible with Notion's security policies
     const serverUrl = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:3001';
-    
+
     // Get actual userId from authentication context
     const userId = user?.id || 'YOUR_USER_ID';
-    
+
     let widgetPath = '';
     if (selectedWidget === 'streak') {
       widgetPath = `/widgets/streak/${userId}?theme=${theme}`;
     } else if (selectedWidget === 'question-of-day') {
       widgetPath = `/widgets/question-of-day/${userId}?theme=${theme}`;
     }
-    
+
     const widgetUrl = `${serverUrl}${widgetPath}`;
-    
+
     if (embedFormat === 'obsidian') {
       return generateObsidianEmbed(widgetUrl);
     } else {
@@ -96,21 +90,19 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
   };
 
   const handleRefreshPreview = () => {
-    setPreviewKey(prev => prev + 1);
+    setPreviewKey((prev) => prev + 1);
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-4">
         <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Embeddable Widgets
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Embeddable Widgets</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Generate embeddable widgets for your Notion dashboards or Obsidian notes.
-        Display your study streak or question of the day.
+        Generate embeddable widgets for your Notion dashboards or Obsidian notes. Display your study
+        streak or question of the day.
       </p>
 
       {/* Widget Type Selection */}
@@ -268,13 +260,14 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
           <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded border border-yellow-300 dark:border-yellow-700 mb-2">
             <p className="text-xs font-medium text-yellow-900 dark:text-yellow-300 flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <span>Important: Replace YOUR_USER_ID in the URL with your actual user ID before embedding.</span>
+              <span>
+                Important: Replace YOUR_USER_ID in the URL with your actual user ID before
+                embedding.
+              </span>
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-indigo-800 dark:text-indigo-400 mb-1">
-              Notion:
-            </p>
+            <p className="text-xs font-medium text-indigo-800 dark:text-indigo-400 mb-1">Notion:</p>
             <ol className="text-xs text-indigo-700 dark:text-indigo-400 space-y-0.5 list-decimal list-inside pl-2">
               <li>Replace YOUR_USER_ID in the URL with your user ID</li>
               <li>Type /embed in your Notion page</li>

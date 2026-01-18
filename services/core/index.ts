@@ -1,9 +1,9 @@
 /**
  * Core Services - Unified Exports
- * 
+ *
  * This barrel file consolidates related services into logical groups.
  * Import from here instead of individual files for cleaner imports.
- * 
+ *
  * @example
  * import { questionService, sessionService, attemptService } from '@/services/core';
  */
@@ -38,10 +38,7 @@ export {
 } from './questionService';
 
 // Named exports from attemptService
-export {
-  recordQuestionAttempt,
-  getUserStats,
-} from '../attemptService';
+export { recordQuestionAttempt, getUserStats } from '../attemptService';
 
 // ============================================================================
 // SESSION SERVICES - Session management
@@ -94,21 +91,21 @@ export const conditionContentService = conditionContentServiceModule;
 // ============================================================================
 /**
  * SERVICE CONSOLIDATION GUIDE:
- * 
+ *
  * The following services are being consolidated. Use the unified services above.
- * 
+ *
  * QUESTION-RELATED (use questionService):
  * - enhancedQuestionService.ts → Use questionService with enhanced options
  * - intelligentQuestionService.ts → Use questionService with adaptive mode
  * - adaptiveQuestionEngine.ts → Integrated into questionService
  * - questionSeedService.ts → Use server-side questionPoolService
  * - stagingQuestionService.ts → Use server-side questionPoolService with staging flag
- * 
+ *
  * SESSION-RELATED (use sessionService):
  * - sessionMomentumService.ts → Integrated into sessionService
  * - realTimeSessionOptimizer.ts → Integrated into sessionService
  * - contextAwareOrchestrator.ts → Integrated into sessionService
- * 
+ *
  * Import pattern change:
  * OLD: import { getQuestion } from '@/services/questionService';
  * NEW: import { questionService } from '@/services/core';

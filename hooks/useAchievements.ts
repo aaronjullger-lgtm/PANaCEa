@@ -83,7 +83,7 @@ export function useAchievements() {
   const saveAchievements = useCallback(
     (achievements: UserAchievement[], streak: StreakInfo) => {
       if (!userId) return;
-      
+
       try {
         localStorage.setItem(
           `panacea_achievements_${userId}`,
@@ -112,15 +112,14 @@ export function useAchievements() {
       };
 
       const updatedAchievements = existing
-        ? state.achievements.map((a) =>
-            a.achievementId === achievementId ? newAchievement : a
-          )
+        ? state.achievements.map((a) => (a.achievementId === achievementId ? newAchievement : a))
         : [...state.achievements, newAchievement];
 
       setState((prev) => ({
         ...prev,
         achievements: updatedAchievements,
-        recentUnlocks: progress >= 100 ? [achievementId, ...prev.recentUnlocks] : prev.recentUnlocks,
+        recentUnlocks:
+          progress >= 100 ? [achievementId, ...prev.recentUnlocks] : prev.recentUnlocks,
       }));
 
       saveAchievements(updatedAchievements, state.streak);
@@ -137,10 +136,8 @@ export function useAchievements() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const lastActive = state.streak.lastActiveDate
-        ? new Date(state.streak.lastActiveDate)
-        : null;
-      
+      const lastActive = state.streak.lastActiveDate ? new Date(state.streak.lastActiveDate) : null;
+
       if (lastActive) {
         lastActive.setHours(0, 0, 0, 0);
       }
@@ -152,7 +149,7 @@ export function useAchievements() {
         // Check if continuing streak (yesterday) or breaking streak
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        
+
         if (lastActive?.getTime() === yesterday.getTime()) {
           newStreak += 1;
         } else if (lastActive) {
@@ -261,10 +258,10 @@ export function useAchievements() {
   const recordSession = useCallback(
     (questionsAnswered: number, correctAnswers: number, totalQuestions: number) => {
       const accuracy = (correctAnswers / questionsAnswered) * 100;
-      
+
       // Update streak
       updateStreak(questionsAnswered, accuracy);
-      
+
       // Check achievements
       checkAccuracyAchievements(accuracy, questionsAnswered);
       checkQuestionCountAchievements(totalQuestions);

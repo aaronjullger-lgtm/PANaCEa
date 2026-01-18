@@ -1,6 +1,6 @@
 /**
  * Generate Enrichment Template
- * 
+ *
  * Creates a structured JSON template for the 62 critical conditions.
  * This can be:
  * 1. Manually filled in by content creators
@@ -45,20 +45,21 @@ async function generateTemplate(): Promise<void> {
   });
 
   // Filter to those missing at least 3 of the 4 required fields
-  const critical = conditions.filter(c => {
+  const critical = conditions.filter((c) => {
     let missingCount = 0;
-    
+
     if (!c.symptoms || (Array.isArray(c.symptoms) && c.symptoms.length === 0)) missingCount++;
     if (!c.treatment || c.treatment === '') missingCount++;
-    if (!c.diagnostics || (Array.isArray(c.diagnostics) && c.diagnostics.length === 0)) missingCount++;
+    if (!c.diagnostics || (Array.isArray(c.diagnostics) && c.diagnostics.length === 0))
+      missingCount++;
     if (!c.overview || c.overview === '') missingCount++;
-    
+
     return missingCount >= 3;
   });
 
   console.log(`Found ${critical.length} critical conditions\n`);
 
-  const template: ConditionTemplate[] = critical.map(c => ({
+  const template: ConditionTemplate[] = critical.map((c) => ({
     id: c.id,
     conditionId: c.conditionId,
     condition: c.condition,
@@ -66,14 +67,24 @@ async function generateTemplate(): Promise<void> {
     subcategory: c.subcategory,
     currentOverview: c.overview,
     toGenerate: {
-      overview: c.overview || "[GENERATE: 2-3 sentence clinical overview. Focus on definition, pathophysiology basics, and clinical significance.]",
-      symptoms: c.symptoms && Array.isArray(c.symptoms) && c.symptoms.length > 0 
-        ? c.symptoms 
-        : ["[GENERATE: 5-8 key clinical symptoms/presentations. Be specific and clinically relevant.]"],
-      treatment: c.treatment || "[GENERATE: 2-3 paragraphs covering: 1) First-line treatment, 2) Alternatives, 3) Special considerations (monitoring, complications, referrals).]",
-      diagnostics: c.diagnostics && Array.isArray(c.diagnostics) && c.diagnostics.length > 0
-        ? c.diagnostics
-        : ["[GENERATE: 5-8 diagnostic tests/findings. Include labs, imaging, physical exam. Format: 'Test Name: Finding/Purpose']"],
+      overview:
+        c.overview ||
+        '[GENERATE: 2-3 sentence clinical overview. Focus on definition, pathophysiology basics, and clinical significance.]',
+      symptoms:
+        c.symptoms && Array.isArray(c.symptoms) && c.symptoms.length > 0
+          ? c.symptoms
+          : [
+              '[GENERATE: 5-8 key clinical symptoms/presentations. Be specific and clinically relevant.]',
+            ],
+      treatment:
+        c.treatment ||
+        '[GENERATE: 2-3 paragraphs covering: 1) First-line treatment, 2) Alternatives, 3) Special considerations (monitoring, complications, referrals).]',
+      diagnostics:
+        c.diagnostics && Array.isArray(c.diagnostics) && c.diagnostics.length > 0
+          ? c.diagnostics
+          : [
+              "[GENERATE: 5-8 diagnostic tests/findings. Include labs, imaging, physical exam. Format: 'Test Name: Finding/Purpose']",
+            ],
     },
   }));
 
@@ -85,15 +96,16 @@ async function generateTemplate(): Promise<void> {
   // Save simplified CSV for quick reference
   const csvLines = [
     'Condition,System,Subcategory,Has Overview,Needs Symptoms,Needs Treatment,Needs Diagnostics',
-    ...template.map(t => 
-      `"${t.condition}","${t.system}","${t.subcategory}",` +
-      `${t.currentOverview ? 'YES' : 'NO'},` +
+    ...template.map(
+      (t) =>
+        `"${t.condition}","${t.system}","${t.subcategory}",` +
+        `${t.currentOverview ? 'YES' : 'NO'},` +
         `${!t.toGenerate.symptoms || t.toGenerate.symptoms.length === 0 ? 'YES' : 'NO'},` +
         `${!t.toGenerate.treatment ? 'YES' : 'NO'},` +
         `${!t.toGenerate.diagnostics || t.toGenerate.diagnostics.length === 0 ? 'YES' : 'NO'}`
     ),
   ];
-  
+
   const csvPath = join(process.cwd(), 'enrichment-checklist.csv');
   writeFileSync(csvPath, csvLines.join('\n'));
   console.log(`✅ Checklist saved to: ${csvPath}`);
@@ -120,7 +132,10 @@ Return results in JSON format matching this structure:
 ]
 
 CONDITIONS TO ENRICH:
-${template.slice(0, 10).map((t, i) => `${i + 1}. ${t.condition} (${t.system} - ${t.subcategory})`).join('\n')}
+${template
+  .slice(0, 10)
+  .map((t, i) => `${i + 1}. ${t.condition} (${t.system} - ${t.subcategory})`)
+  .join('\n')}
 
 [... and ${critical.length - 10} more conditions listed in enrichment-template.json]`;
 
@@ -144,7 +159,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);
   })

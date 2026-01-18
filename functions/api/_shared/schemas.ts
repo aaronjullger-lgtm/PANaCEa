@@ -1,6 +1,6 @@
 /**
  * Zod Validation Schemas for API Endpoints
- * 
+ *
  * Sprint A: Security & Stability
  * Centralized input validation for all POST/PUT endpoints
  */
@@ -12,7 +12,7 @@ import { z } from 'zod';
 // =============================================================================
 
 /** UUID validation */
-export const UUIDSchema = z.string().uuid();
+export const UUIDSchema = z.string().uuid({});
 
 /** CUID validation (Prisma default ID format) */
 export const CUIDSchema = z.string().min(20).max(30);
@@ -43,34 +43,29 @@ export const OrganSystemSchema = z.enum([
 export const DifficultySchema = z.enum(['easy', 'medium', 'hard']);
 
 /** Question mode */
-export const QuestionModeSchema = z.enum([
-  'drill',
-  'session',
-  'review',
-  'exam',
-  'rapid_recall',
-]);
+export const QuestionModeSchema = z.enum(['drill', 'session', 'review', 'exam', 'rapid_recall']);
 
 // =============================================================================
 // QUESTION ATTEMPT
 // =============================================================================
 
-export const QuestionAttemptSchema = z.object({
-  questionId: IDSchema,
-  isCorrect: z.boolean().optional(),
-  wasCorrect: z.boolean().optional(),
-  system: OrganSystemSchema.optional(),
-  conditionId: IDSchema.optional(),
-  questionType: z.string().max(50).optional(),
-  mode: QuestionModeSchema.optional().default('session'),
-  timeSpent: z.number().int().min(0).max(600000).optional(),
-  timeSpentMs: z.number().int().min(0).max(600000).optional(),
-  answerChangedCount: z.number().int().min(0).max(100).optional(),
-  isRankedAttempt: z.boolean().optional().default(false),
-}).refine(
-  (data) => data.isCorrect !== undefined || data.wasCorrect !== undefined,
-  { message: 'Either isCorrect or wasCorrect must be provided' }
-);
+export const QuestionAttemptSchema = z
+  .object({
+    questionId: IDSchema,
+    isCorrect: z.boolean().optional(),
+    wasCorrect: z.boolean().optional(),
+    system: OrganSystemSchema.optional(),
+    conditionId: IDSchema.optional(),
+    questionType: z.string().max(50).optional(),
+    mode: QuestionModeSchema.optional().default('session'),
+    timeSpent: z.number().int().min(0).max(600000).optional(),
+    timeSpentMs: z.number().int().min(0).max(600000).optional(),
+    answerChangedCount: z.number().int().min(0).max(100).optional(),
+    isRankedAttempt: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.isCorrect !== undefined || data.wasCorrect !== undefined, {
+    message: 'Either isCorrect or wasCorrect must be provided',
+  });
 
 export type QuestionAttemptInput = z.infer<typeof QuestionAttemptSchema>;
 
@@ -106,12 +101,14 @@ export type CompleteExamInput = z.infer<typeof CompleteExamSchema>;
 
 export const SubmitExamAnswersSchema = z.object({
   examAttemptId: IDSchema,
-  answers: z.array(z.object({
-    questionId: IDSchema,
-    selectedAnswer: z.string().max(500),
-    flagged: z.boolean().optional(),
-    timeSpentMs: z.number().int().min(0).optional(),
-  })),
+  answers: z.array(
+    z.object({
+      questionId: IDSchema,
+      selectedAnswer: z.string().max(500),
+      flagged: z.boolean().optional(),
+      timeSpentMs: z.number().int().min(0).optional(),
+    })
+  ),
 });
 
 export type SubmitExamAnswersInput = z.infer<typeof SubmitExamAnswersSchema>;
@@ -162,7 +159,10 @@ export const DrillSubmitReviewSchema = z.object({
   answerSwitches: z.number().int().min(0).max(100).optional(),
   totalDwellTime: z.number().int().min(0).max(600000).optional(),
   timezone: z.string().max(100).optional(),
-  wakeTimeHHMM: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  wakeTimeHHMM: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
 });
 
 export type DrillSubmitReviewInput = z.infer<typeof DrillSubmitReviewSchema>;
@@ -171,17 +171,19 @@ export const UserProgressUpdateSchema = z.object({
   conditionId: IDSchema,
   totalAttempts: z.number().int().min(0).optional(),
   correctCount: z.number().int().min(0).optional(),
-  fsrsCard: z.object({
-    due: z.string().datetime().optional(),
-    stability: z.number().min(0).optional(),
-    difficulty: z.number().min(1).max(10).optional(),
-    elapsed_days: z.number().int().min(0).optional(),
-    scheduled_days: z.number().int().min(0).optional(),
-    reps: z.number().int().min(0).optional(),
-    lapses: z.number().int().min(0).optional(),
-    state: z.number().int().min(0).max(3).optional(),
-    last_review: z.string().datetime().optional(),
-  }).optional(),
+  fsrsCard: z
+    .object({
+      due: z.string().datetime({}).optional(),
+      stability: z.number().min(0).optional(),
+      difficulty: z.number().min(1).max(10).optional(),
+      elapsed_days: z.number().int().min(0).optional(),
+      scheduled_days: z.number().int().min(0).optional(),
+      reps: z.number().int().min(0).optional(),
+      lapses: z.number().int().min(0).optional(),
+      state: z.number().int().min(0).max(3).optional(),
+      last_review: z.string().datetime({}).optional(),
+    })
+    .optional(),
 });
 
 export type UserProgressUpdateInput = z.infer<typeof UserProgressUpdateSchema>;
@@ -219,7 +221,7 @@ export const FeedbackSubmitSchema = z.object({
   type: z.enum(['bug', 'feature', 'content', 'general']),
   message: z.string().min(10).max(5000),
   page: z.string().max(500).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type FeedbackSubmitInput = z.infer<typeof FeedbackSubmitSchema>;
@@ -278,15 +280,17 @@ export type AdminMediaApproveInput = z.infer<typeof AdminMediaApproveSchema>;
 export const QuestionCurateSchema = z.object({
   questionId: IDSchema,
   action: z.enum(['approve', 'reject', 'edit', 'archive']),
-  edits: z.object({
-    vignette: z.string().max(5000).optional(),
-    question: z.string().max(2000).optional(),
-    options: z.array(z.string().max(500)).length(4).optional(),
-    correctAnswer: z.string().max(1).optional(),
-    explanation: z.string().max(5000).optional(),
-    difficulty: DifficultySchema.optional(),
-    tags: z.array(z.string().max(50)).max(20).optional(),
-  }).optional(),
+  edits: z
+    .object({
+      vignette: z.string().max(5000).optional(),
+      question: z.string().max(2000).optional(),
+      options: z.array(z.string().max(500)).length(4).optional(),
+      correctAnswer: z.string().max(1).optional(),
+      explanation: z.string().max(5000).optional(),
+      difficulty: DifficultySchema.optional(),
+      tags: z.array(z.string().max(50)).max(20).optional(),
+    })
+    .optional(),
   reason: z.string().max(500).optional(),
 });
 
@@ -298,20 +302,20 @@ export type QuestionCurateInput = z.infer<typeof QuestionCurateSchema>;
 
 export const AdminContentCreateSchema = z.object({
   conditionId: IDSchema,
-  system: z.string().min(1).max(100),
+  category: z.string().min(1).max(100),
   subcategory: z.string().min(1).max(200),
   condition: z.string().min(1).max(500),
-  content: z.record(z.unknown()).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
   description: z.string().max(1000).optional(),
 });
 
 export type AdminContentCreateInput = z.infer<typeof AdminContentCreateSchema>;
 
 export const AdminContentUpdateSchema = z.object({
-  system: z.string().min(1).max(100).optional(),
+  category: z.string().min(1).max(100).optional(),
   subcategory: z.string().min(1).max(200).optional(),
   condition: z.string().min(1).max(500).optional(),
-  content: z.record(z.unknown()).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
   status: z.enum(['draft', 'review', 'published', 'archived']).optional(),
   description: z.string().max(1000).optional(),
 });
@@ -356,10 +360,15 @@ export const OSCESessionSchema = z.object({
 
 export const OSCEChatSchema = z.object({
   sessionId: IDSchema,
-  messages: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string().max(10000),
-  })).min(1).max(100),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant', 'system']),
+        content: z.string().max(10000),
+      })
+    )
+    .min(1)
+    .max(100),
 });
 
 export const OSCECompleteSchema = z.object({
@@ -396,14 +405,14 @@ export const CustomSessionSchema = z.object({
 
 export const PerformanceRecordSchema = z.object({
   drillType: z.string().min(1).max(100),
-  startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
+  startTime: z.string().datetime({}),
+  endTime: z.string().datetime({}),
   questionsAttempted: z.number().int().min(0).max(10000),
   correctAnswers: z.number().int().min(0).max(10000),
   accuracy: z.number().min(0).max(100),
   timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
   bestStreak: z.number().int().min(0).max(10000),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
@@ -417,15 +426,15 @@ export const SRSItemSchema = z.object({
   interval: z.number().int().min(0).max(365000),
   repetition: z.number().int().min(0).max(10000),
   easiness: z.number().min(1).max(5),
-  dueDate: z.string().datetime(),
-  lastReviewed: z.string().datetime(),
+  dueDate: z.string().datetime({}),
+  lastReviewed: z.string().datetime({}),
   quality: z.number().int().min(0).max(5),
   difficulty: z.number().min(0).max(10),
   stabilityScore: z.number().min(0).max(100),
   fsrsStability: z.number().min(0).optional(),
   fsrsDifficulty: z.number().min(1).max(10).optional(),
   fsrsState: z.number().int().min(0).max(3).optional(),
-  fsrsLastReview: z.string().datetime().optional(),
+  fsrsLastReview: z.string().datetime({}).optional(),
 });
 
 export const SRSSyncSchema = z.object({
@@ -444,8 +453,14 @@ export const SessionRequestSchema = z.object({
   system: z.string().max(100).optional(),
   systems: z.array(OrganSystemSchema).optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
-  mode: z.enum(['standard', 'interleaved', 'review', 'weakness', 'random']).optional().default('standard'),
-  focus: z.enum(['all', 'growth', 'review', 'reviewFlagged', 'flagged', 'due', 'new']).optional().default('all'),
+  mode: z
+    .enum(['standard', 'interleaved', 'review', 'weakness', 'random'])
+    .optional()
+    .default('standard'),
+  focus: z
+    .enum(['all', 'growth', 'review', 'reviewFlagged', 'flagged', 'due', 'new'])
+    .optional()
+    .default('all'),
   excludeIds: z.array(IDSchema).max(1000).optional(),
   includeInterleaved: z.boolean().optional().default(true),
   conditionIds: z.array(IDSchema).max(500).optional(),
@@ -462,7 +477,10 @@ export const StreakRecordSchema = z.object({
   questionsAnswered: z.number().int().min(0).max(10000),
   accuracyPercent: z.number().min(0).max(100),
   studyMinutes: z.number().int().min(0).max(1440).optional(), // Max 24 hours
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // YYYY-MM-DD format
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(), // YYYY-MM-DD format
 });
 
 export type StreakRecordInput = z.infer<typeof StreakRecordSchema>;
@@ -538,15 +556,14 @@ export async function validateRequest<T>(
   try {
     const body = await request.json();
     const result = schema.safeParse(body);
-    
+
     if (!result.success) {
-      const zodError = result as z.SafeParseError<T>;
       return {
         success: false,
         response: new Response(
           JSON.stringify({
             error: 'Validation Error',
-            details: zodError.error.errors.map(e => ({
+            details: result.error.issues.map((e) => ({
               path: e.path.join('.'),
               message: e.message,
             })),
@@ -558,7 +575,7 @@ export async function validateRequest<T>(
         ),
       };
     }
-    
+
     return { success: true, data: result.data };
   } catch {
     return {

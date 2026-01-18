@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Stethoscope } from 'lucide-react';
 
-export type Rotation = 
+export type Rotation =
   | 'all'
   | 'surgery'
   | 'internal_medicine'
@@ -71,7 +71,7 @@ const ROTATION_OPTIONS: RotationOption[] = [
   {
     id: 'obgyn',
     label: 'OB/GYN',
-    description: 'Women\'s health and obstetrics',
+    description: "Women's health and obstetrics",
     modes: ['guideline_drill', 'patient_encounter', 'pharmacology'],
   },
   {
@@ -94,7 +94,8 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentOption = ROTATION_OPTIONS.find(opt => opt.id === currentRotation) || ROTATION_OPTIONS[0];
+  const currentOption =
+    ROTATION_OPTIONS.find((opt) => opt.id === currentRotation) || ROTATION_OPTIONS[0];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -128,7 +129,7 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
         <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
           {currentOption.label}
         </span>
-        <ChevronDown 
+        <ChevronDown
           className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
@@ -148,9 +149,7 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
                   className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700 last:border-b-0 ${
-                    option.id === currentRotation
-                      ? 'bg-blue-50 dark:bg-blue-900/20'
-                      : ''
+                    option.id === currentRotation ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <div className="font-medium text-slate-900 dark:text-slate-100">
@@ -178,7 +177,7 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
  * Get filtered training modes based on selected rotation
  */
 export function getModesForRotation(rotation: Rotation): string[] {
-  const option = ROTATION_OPTIONS.find(opt => opt.id === rotation);
+  const option = ROTATION_OPTIONS.find((opt) => opt.id === rotation);
   if (!option || option.id === 'all') {
     return []; // Empty array means show all modes
   }

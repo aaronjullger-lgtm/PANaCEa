@@ -5,6 +5,7 @@
 The admin authentication middleware has been created but is **NOT YET APPLIED** to the API routes.
 
 ### Current Status
+
 - ✅ Middleware created: `lib/middleware/adminAuth.ts`
 - ✅ Token verification implemented
 - ✅ Role-based access control ready
@@ -15,6 +16,7 @@ The admin authentication middleware has been created but is **NOT YET APPLIED** 
 #### 1. Import the middleware in `server.ts`
 
 Add at the top of the file:
+
 ```typescript
 import { requireAdmin } from './lib/middleware/adminAuth';
 ```
@@ -22,6 +24,7 @@ import { requireAdmin } from './lib/middleware/adminAuth';
 #### 2. Apply to admin endpoints
 
 **Replace these lines:**
+
 ```typescript
 // Get pending media (admin-only)
 app.get('/api/media/pending', async (req: Request, res: Response) => {
@@ -36,6 +39,7 @@ app.get('/api/media/pending', async (req: Request, res: Response) => {
 ```
 
 **With:**
+
 ```typescript
 // Get pending media (admin-only)
 app.get('/api/media/pending', requireAdmin, async (req: Request, res: Response) => {
@@ -51,11 +55,13 @@ app.get('/api/media/pending', requireAdmin, async (req: Request, res: Response) 
 #### 3. Apply to all admin routes
 
 Apply `requireAdmin` middleware to these endpoints:
+
 - ✅ `/api/media/pending` - Get pending media
-- ✅ `/api/media/approve` - Approve/reject media  
+- ✅ `/api/media/approve` - Approve/reject media
 - ✅ `/api/media/stats` - Get approval statistics
 
 **Optional:** Apply to upload endpoint (require any authenticated user):
+
 ```typescript
 import { requireAuth } from './lib/middleware/adminAuth'; // You'll need to create this
 
@@ -69,12 +75,14 @@ app.post('/api/media/upload', requireAuth, async (req, res) => {
 After applying middleware:
 
 1. **Test without token (should fail):**
+
 ```bash
 curl http://localhost:3001/api/media/pending
 # Expected: 401 Unauthorized
 ```
 
 2. **Test with invalid token (should fail):**
+
 ```bash
 curl -H "Authorization: Bearer invalid-token" \
   http://localhost:3001/api/media/pending
@@ -82,6 +90,7 @@ curl -H "Authorization: Bearer invalid-token" \
 ```
 
 3. **Test with valid non-admin token (should fail):**
+
 ```bash
 curl -H "Authorization: Bearer <valid-user-token>" \
   http://localhost:3001/api/media/pending
@@ -89,6 +98,7 @@ curl -H "Authorization: Bearer <valid-user-token>" \
 ```
 
 4. **Test with valid admin token (should succeed):**
+
 ```bash
 curl -H "Authorization: Bearer <valid-admin-token>" \
   http://localhost:3001/api/media/pending
@@ -98,6 +108,7 @@ curl -H "Authorization: Bearer <valid-admin-token>" \
 ### Why This Wasn't Applied Automatically
 
 Authentication was left as a TODO to allow you to:
+
 1. Test the functionality without auth during development
 2. Configure Clerk properly before enforcement
 3. Set up admin users with correct roles
@@ -108,12 +119,14 @@ Authentication was left as a TODO to allow you to:
 For local development, you can use the dev bypass:
 
 In `.env`:
+
 ```bash
 NODE_ENV=development
 BYPASS_AUTH=true  # WARNING: NEVER set this in production!
 ```
 
 Then import the dev version:
+
 ```typescript
 import { requireAdminDev } from './lib/middleware/adminAuth';
 app.get('/api/media/pending', requireAdminDev, async (req, res) => {

@@ -1,12 +1,28 @@
 import React, { useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
+import {
+  useMiniLabDrill,
+  type LabCategory,
+  type LabPanel,
+  type LabValue,
+} from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
-import { X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
+import {
+  X,
+  ArrowRight,
+  RotateCcw,
+  FlaskConical,
+  Heart,
+  Droplets,
+  Activity as ActivityIcon,
+  Shuffle,
+  AlertTriangle,
+  Plus,
+} from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
   onExit?: () => void;
@@ -81,8 +97,8 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
       return 'text-red-500 font-bold';
     }
     if (value.isAbnormal) {
-      return value.abnormalDirection === 'high' 
-        ? 'text-orange-500 font-semibold' 
+      return value.abnormalDirection === 'high'
+        ? 'text-orange-500 font-semibold'
         : 'text-blue-500 font-semibold';
     }
     return 'text-slate-300';
@@ -101,11 +117,11 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
   };
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2.5 border-b ${getValueBg()} last:border-b-0`}>
+    <div
+      className={`flex items-center justify-between px-4 py-2.5 border-b ${getValueBg()} last:border-b-0`}
+    >
       <div className="flex items-center gap-2">
-        {value.isCritical && (
-          <AlertTriangle className="w-4 h-4 text-red-500" />
-        )}
+        {value.isCritical && <AlertTriangle className="w-4 h-4 text-red-500" />}
         <span className="text-slate-300 font-medium">{value.name}</span>
       </div>
       <div className="flex items-center gap-4">
@@ -161,7 +177,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     isLoading: isDataLoading,
     loadError,
   } = useMiniLabDrill();
-  
+
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
   const [isStarting, setIsStarting] = React.useState(false);
   const [totalAttempts, setTotalAttempts] = React.useState(0);
@@ -172,7 +188,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
       onExit();
     }
   };
-  
+
   const handleReset = () => {
     setTotalAttempts(0);
     reset();
@@ -187,14 +203,14 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   };
 
   const handleSubmitAnswer = (answer: string) => {
-    setTotalAttempts(prev => prev + 1);
+    setTotalAttempts((prev) => prev + 1);
     submitAnswer(answer);
   };
 
   const handleCategorySelect = (category: LabCategory) => {
     startSession(category);
   };
-  
+
   const handleOrderTest = (testName: string) => {
     orderTest(testName);
     setShowOrderTestMenu(false);
@@ -233,14 +249,16 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         </div>
       );
     }
-    
+
     // Show error if database load failed
     if (loadError) {
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
           <div className="text-center max-w-md">
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Database Error</h2>
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
+              Database Error
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-6">{loadError}</p>
             <button
               onClick={onExit}
@@ -252,7 +270,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         </div>
       );
     }
-    
+
     return (
       <DrillLandingPage
         title="Mini Lab Mode"
@@ -335,17 +353,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 className={`relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
               >
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
+
                 <div className="relative z-10">
-                  <div className="mb-3 p-2.5 bg-white/20 rounded-xl w-fit">
-                    {card.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1">
-                    {card.title}
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    {card.description}
-                  </p>
+                  <div className="mb-3 p-2.5 bg-white/20 rounded-xl w-fit">{card.icon}</div>
+                  <h3 className="text-lg font-bold text-white mb-1">{card.title}</h3>
+                  <p className="text-white/80 text-sm">{card.description}</p>
                 </div>
 
                 <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
@@ -377,11 +389,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
               <p className="text-sm text-[var(--color-text-secondary)] mb-2 text-center">
                 What is your diagnosis?
               </p>
-              <DiagnosisInput
-                onSubmit={handleSubmitAnswer}
-                autoFocus
-                options={validDiagnoses}
-              />
+              <DiagnosisInput onSubmit={handleSubmitAnswer} autoFocus options={validDiagnoses} />
             </div>
           </motion.div>
         )}
@@ -446,7 +454,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 </motion.div>
               ))}
             </div>
-            
+
             {/* Order Additional Tests Button */}
             {status === 'playing' && availableTests.length > 0 && (
               <motion.div
@@ -462,7 +470,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                   <Plus className="w-5 h-5" />
                   Order Additional Tests ({availableTests.length} available)
                 </button>
-                
+
                 {showOrderTestMenu && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -523,9 +531,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">
-                {score}
-              </div>
+              <div className="text-4xl font-bold text-emerald-400">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>

@@ -13,67 +13,67 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // PANCE-relevant differential diagnoses by presenting complaint
 const PANCE_DIFFERENTIALS = [
-  { presentingComplaint: "Acute Chest Pain", category: "Cardiovascular" },
-  { presentingComplaint: "Chronic Chest Pain", category: "Cardiovascular" },
-  { presentingComplaint: "Palpitations", category: "Cardiovascular" },
-  { presentingComplaint: "Syncope", category: "Cardiovascular" },
-  { presentingComplaint: "Lower Extremity Edema", category: "Cardiovascular" },
-  { presentingComplaint: "Acute Dyspnea", category: "Pulmonary" },
-  { presentingComplaint: "Chronic Dyspnea", category: "Pulmonary" },
-  { presentingComplaint: "Chronic Cough", category: "Pulmonary" },
-  { presentingComplaint: "Hemoptysis", category: "Pulmonary" },
-  { presentingComplaint: "Acute Abdominal Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Chronic Abdominal Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Right Upper Quadrant Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Left Lower Quadrant Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Right Lower Quadrant Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Epigastric Pain", category: "Gastrointestinal" },
-  { presentingComplaint: "Nausea and Vomiting", category: "Gastrointestinal" },
-  { presentingComplaint: "Acute Diarrhea", category: "Gastrointestinal" },
-  { presentingComplaint: "Chronic Diarrhea", category: "Gastrointestinal" },
-  { presentingComplaint: "GI Bleeding - Upper", category: "Gastrointestinal" },
-  { presentingComplaint: "GI Bleeding - Lower", category: "Gastrointestinal" },
-  { presentingComplaint: "Jaundice", category: "Gastrointestinal" },
-  { presentingComplaint: "Dysphagia", category: "Gastrointestinal" },
-  { presentingComplaint: "Acute Headache", category: "Neurological" },
-  { presentingComplaint: "Chronic Headache", category: "Neurological" },
-  { presentingComplaint: "Acute Altered Mental Status", category: "Neurological" },
-  { presentingComplaint: "Dizziness", category: "Neurological" },
-  { presentingComplaint: "Vertigo", category: "Neurological" },
-  { presentingComplaint: "Seizure", category: "Neurological" },
-  { presentingComplaint: "Focal Weakness", category: "Neurological" },
-  { presentingComplaint: "Peripheral Neuropathy", category: "Neurological" },
-  { presentingComplaint: "Tremor", category: "Neurological" },
-  { presentingComplaint: "Acute Back Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Chronic Back Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Joint Pain - Monoarticular", category: "Musculoskeletal" },
-  { presentingComplaint: "Joint Pain - Polyarticular", category: "Musculoskeletal" },
-  { presentingComplaint: "Neck Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Shoulder Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Hip Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Knee Pain", category: "Musculoskeletal" },
-  { presentingComplaint: "Hematuria", category: "Genitourinary" },
-  { presentingComplaint: "Dysuria", category: "Genitourinary" },
-  { presentingComplaint: "Oliguria/Anuria", category: "Genitourinary" },
-  { presentingComplaint: "Flank Pain", category: "Genitourinary" },
-  { presentingComplaint: "Scrotal Pain", category: "Genitourinary" },
-  { presentingComplaint: "Vaginal Bleeding - Abnormal", category: "Reproductive" },
-  { presentingComplaint: "Pelvic Pain - Female", category: "Reproductive" },
-  { presentingComplaint: "Rash - Maculopapular", category: "Dermatologic" },
-  { presentingComplaint: "Rash - Vesicular", category: "Dermatologic" },
-  { presentingComplaint: "Rash - Petechial/Purpuric", category: "Dermatologic" },
-  { presentingComplaint: "Pruritis", category: "Dermatologic" },
-  { presentingComplaint: "Fever of Unknown Origin", category: "Infectious Disease" },
-  { presentingComplaint: "Lymphadenopathy", category: "Hematologic" },
-  { presentingComplaint: "Fatigue", category: "General" },
-  { presentingComplaint: "Weight Loss - Unintentional", category: "General" },
-  { presentingComplaint: "Night Sweats", category: "General" },
-  { presentingComplaint: "Red Eye", category: "EENT" },
-  { presentingComplaint: "Hearing Loss", category: "EENT" },
-  { presentingComplaint: "Sore Throat", category: "EENT" },
-  { presentingComplaint: "Epistaxis", category: "EENT" },
-  { presentingComplaint: "Anxiety Symptoms", category: "Psychiatry" },
-  { presentingComplaint: "Depression Symptoms", category: "Psychiatry" },
+  { presentingComplaint: 'Acute Chest Pain', category: 'Cardiovascular' },
+  { presentingComplaint: 'Chronic Chest Pain', category: 'Cardiovascular' },
+  { presentingComplaint: 'Palpitations', category: 'Cardiovascular' },
+  { presentingComplaint: 'Syncope', category: 'Cardiovascular' },
+  { presentingComplaint: 'Lower Extremity Edema', category: 'Cardiovascular' },
+  { presentingComplaint: 'Acute Dyspnea', category: 'Pulmonary' },
+  { presentingComplaint: 'Chronic Dyspnea', category: 'Pulmonary' },
+  { presentingComplaint: 'Chronic Cough', category: 'Pulmonary' },
+  { presentingComplaint: 'Hemoptysis', category: 'Pulmonary' },
+  { presentingComplaint: 'Acute Abdominal Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Chronic Abdominal Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Right Upper Quadrant Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Left Lower Quadrant Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Right Lower Quadrant Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Epigastric Pain', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Nausea and Vomiting', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Acute Diarrhea', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Chronic Diarrhea', category: 'Gastrointestinal' },
+  { presentingComplaint: 'GI Bleeding - Upper', category: 'Gastrointestinal' },
+  { presentingComplaint: 'GI Bleeding - Lower', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Jaundice', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Dysphagia', category: 'Gastrointestinal' },
+  { presentingComplaint: 'Acute Headache', category: 'Neurological' },
+  { presentingComplaint: 'Chronic Headache', category: 'Neurological' },
+  { presentingComplaint: 'Acute Altered Mental Status', category: 'Neurological' },
+  { presentingComplaint: 'Dizziness', category: 'Neurological' },
+  { presentingComplaint: 'Vertigo', category: 'Neurological' },
+  { presentingComplaint: 'Seizure', category: 'Neurological' },
+  { presentingComplaint: 'Focal Weakness', category: 'Neurological' },
+  { presentingComplaint: 'Peripheral Neuropathy', category: 'Neurological' },
+  { presentingComplaint: 'Tremor', category: 'Neurological' },
+  { presentingComplaint: 'Acute Back Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Chronic Back Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Joint Pain - Monoarticular', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Joint Pain - Polyarticular', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Neck Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Shoulder Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Hip Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Knee Pain', category: 'Musculoskeletal' },
+  { presentingComplaint: 'Hematuria', category: 'Genitourinary' },
+  { presentingComplaint: 'Dysuria', category: 'Genitourinary' },
+  { presentingComplaint: 'Oliguria/Anuria', category: 'Genitourinary' },
+  { presentingComplaint: 'Flank Pain', category: 'Genitourinary' },
+  { presentingComplaint: 'Scrotal Pain', category: 'Genitourinary' },
+  { presentingComplaint: 'Vaginal Bleeding - Abnormal', category: 'Reproductive' },
+  { presentingComplaint: 'Pelvic Pain - Female', category: 'Reproductive' },
+  { presentingComplaint: 'Rash - Maculopapular', category: 'Dermatologic' },
+  { presentingComplaint: 'Rash - Vesicular', category: 'Dermatologic' },
+  { presentingComplaint: 'Rash - Petechial/Purpuric', category: 'Dermatologic' },
+  { presentingComplaint: 'Pruritis', category: 'Dermatologic' },
+  { presentingComplaint: 'Fever of Unknown Origin', category: 'Infectious Disease' },
+  { presentingComplaint: 'Lymphadenopathy', category: 'Hematologic' },
+  { presentingComplaint: 'Fatigue', category: 'General' },
+  { presentingComplaint: 'Weight Loss - Unintentional', category: 'General' },
+  { presentingComplaint: 'Night Sweats', category: 'General' },
+  { presentingComplaint: 'Red Eye', category: 'EENT' },
+  { presentingComplaint: 'Hearing Loss', category: 'EENT' },
+  { presentingComplaint: 'Sore Throat', category: 'EENT' },
+  { presentingComplaint: 'Epistaxis', category: 'EENT' },
+  { presentingComplaint: 'Anxiety Symptoms', category: 'Psychiatry' },
+  { presentingComplaint: 'Depression Symptoms', category: 'Psychiatry' },
 ];
 
 interface DifferentialData {
@@ -106,7 +106,10 @@ interface DifferentialData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -129,15 +132,18 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket();
 
-async function generateDifferentialData(presentingComplaint: string, category: string): Promise<DifferentialData> {
+async function generateDifferentialData(
+  presentingComplaint: string,
+  category: string
+): Promise<DifferentialData> {
   await rateLimiter.acquire();
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -172,12 +178,12 @@ Return as JSON.`;
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -220,7 +226,9 @@ async function main() {
   console.log('╚══════════════════════════════════════════════════════════════════╝\n');
 
   try {
-    const existing = await prisma.differentialDiagnosis.findMany({ select: { presentingComplaint: true } });
+    const existing = await prisma.differentialDiagnosis.findMany({
+      select: { presentingComplaint: true },
+    });
     const existingComplaints = new Set(existing.map((e) => e.presentingComplaint.toLowerCase()));
 
     const missing = PANCE_DIFFERENTIALS.filter(
@@ -249,7 +257,7 @@ async function main() {
         await prisma.differentialDiagnosis.create({
           data: {
             id: randomUUID(),
-            presentingComplaint: ddx.presentingComplaint,  // This is the unique key!
+            presentingComplaint: ddx.presentingComplaint, // This is the unique key!
             category: ddx.category,
             isEmergency: ensureBool(data.isEmergency),
             differentialList: ensureArray(data.differentialList),

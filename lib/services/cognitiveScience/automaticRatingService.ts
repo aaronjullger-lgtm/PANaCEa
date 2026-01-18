@@ -1,16 +1,16 @@
 /**
  * Automatic Rating Service
- * 
+ *
  * Integrates behavioral signal collection with FSRS rating inference.
  * This service acts as the bridge between user interactions and the
  * spaced repetition algorithm - NO user input required for ratings.
- * 
+ *
  * ## Key Features
  * - Real-time behavioral signal collection during quiz sessions
  * - Automatic FSRS rating inference based on collected signals
  * - Profile-based personalization using historical data
  * - Analytics export for debugging and optimization
- * 
+ *
  * @module lib/services/cognitiveScience/automaticRatingService
  */
 
@@ -71,9 +71,7 @@ export function initializeSession(
     questionNumber: number;
   }[]
 ): SessionState {
-  const profile = historicalData 
-    ? buildPerformanceProfile(historicalData)
-    : undefined;
+  const profile = historicalData ? buildPerformanceProfile(historicalData) : undefined;
 
   const state: SessionState = {
     sessionId,
@@ -139,10 +137,7 @@ export function recordInteraction(
 /**
  * Record an answer selection (may be changed later)
  */
-export function recordAnswerSelection(
-  sessionId: string,
-  answer: string
-): void {
+export function recordAnswerSelection(sessionId: string, answer: string): void {
   const session = activeSessions.get(sessionId);
   if (!session) return;
 
@@ -246,7 +241,7 @@ function extractBehavioralSignals(
     : responseTimeMs * 0.3; // Estimate if no interactions recorded
 
   // Calculate time between clicks
-  const clickEvents = question.interactions.filter(e => e.type === 'click');
+  const clickEvents = question.interactions.filter((e) => e.type === 'click');
   const timeBetweenClicks: number[] = [];
   for (let i = 1; i < clickEvents.length; i++) {
     timeBetweenClicks.push(clickEvents[i].timestamp - clickEvents[i - 1].timestamp);
@@ -273,9 +268,8 @@ function extractBehavioralSignals(
     questionNumber: question.questionNumber,
     consecutiveCorrect: session.consecutiveCorrect,
     consecutiveIncorrect: session.consecutiveIncorrect,
-    sessionAccuracySoFar: session.totalAnswered > 0
-      ? session.totalCorrect / session.totalAnswered
-      : 0,
+    sessionAccuracySoFar:
+      session.totalAnswered > 0 ? session.totalCorrect / session.totalAnswered : 0,
     previousAttempts: historicalContext?.previousAttempts ?? 0,
     previousCorrectRate: historicalContext?.previousCorrectRate ?? 0,
     averageResponseTimeForItem: historicalContext?.averageResponseTimeForItem ?? 30000,
@@ -300,20 +294,21 @@ export function applyAutoFSRS(
   };
 } {
   const fsrs = new FSRS();
-  
+
   // Apply the inferred rating
   const result = fsrs.next(card, new Date(), inferredRating.rating);
-  
+
   // Apply additional adjustments based on behavioral analysis
   const updatedCard = { ...result.card };
-  
+
   // Adjust stability based on confidence signals
   updatedCard.stability *= inferredRating.recommendedStabilityMultiplier;
-  
+
   // Adjust difficulty based on performance patterns
-  updatedCard.difficulty = Math.max(1, Math.min(10,
-    updatedCard.difficulty + inferredRating.recommendedDifficultyAdjustment
-  ));
+  updatedCard.difficulty = Math.max(
+    1,
+    Math.min(10, updatedCard.difficulty + inferredRating.recommendedDifficultyAdjustment)
+  );
 
   return {
     updatedCard,
@@ -350,11 +345,10 @@ export function endSession(sessionId: string): {
 
   // Calculate summary stats
   const responseTimes = session.questions
-    .filter(q => q.endTime)
-    .map(q => (q.endTime! - q.startTime));
-  const averageResponseTime = responseTimes.length > 0
-    ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-    : 0;
+    .filter((q) => q.endTime)
+    .map((q) => q.endTime! - q.startTime);
+  const averageResponseTime =
+    responseTimes.length > 0 ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
 
   // Calculate longest streak
   let longestStreak = 0;
@@ -388,7 +382,7 @@ export function endSession(sessionId: string): {
       ratingDistribution,
       longestStreak,
     },
-    detailedResults: session.questions.map(q => ({
+    detailedResults: session.questions.map((q) => ({
       questionId: q.questionId,
       isCorrect: q.isCorrect ?? false,
       rating: Rating.Good, // Would need to store inferred ratings

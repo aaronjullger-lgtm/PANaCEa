@@ -5,6 +5,7 @@ This document explains the security headers configured for PANaCEa, implemented 
 ## Overview
 
 Security headers are HTTP response headers that help protect the application from common web vulnerabilities such as:
+
 - Cross-Site Scripting (XSS)
 - Clickjacking
 - Code injection attacks
@@ -18,79 +19,87 @@ The Content Security Policy is the primary security mechanism that controls whic
 ### Current Configuration
 
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
-  script-src-elem 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
-  worker-src 'self' blob:; 
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
-  font-src 'self' https://fonts.gstatic.com data:; 
-  img-src 'self' data: blob: https:; 
-  media-src 'self' blob: https:; 
-  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; 
-  frame-src 'self' https://*.clerk.accounts.dev https://clerk.studypanacea.com; 
-  object-src 'none'; 
-  base-uri 'self'; 
-  form-action 'self'; 
-  frame-ancestors 'none'; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com;
+  script-src-elem 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com;
+  worker-src 'self' blob:;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com data:;
+  img-src 'self' data: blob: https:;
+  media-src 'self' blob: https:;
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  frame-src 'self' https://*.clerk.accounts.dev https://clerk.studypanacea.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'none';
   upgrade-insecure-requests;
 ```
 
 ### Directive Breakdown
 
-| Directive | Value | Purpose |
-|-----------|-------|---------|
-| `default-src` | `'self'` | Default fallback - only allow resources from same origin |
-| `script-src` | `'self' 'unsafe-inline' 'unsafe-eval' + trusted domains` | Allow scripts from app, inline scripts, and trusted third parties |
-| `script-src-elem` | Same as script-src | Explicitly control `<script>` elements |
-| `worker-src` | `'self' blob:` | Allow service workers from same origin and blob URLs |
-| `style-src` | `'self' 'unsafe-inline' + Google Fonts` | Allow styles from app, inline styles, and Google Fonts |
-| `font-src` | `'self' + Google Fonts + data:` | Allow fonts from app, Google Fonts, and data URIs |
-| `img-src` | `'self' data: blob: https:` | Allow images from any HTTPS source, data URIs, and blobs |
-| `media-src` | `'self' blob: https:` | Allow media from any HTTPS source and blobs |
-| `connect-src` | `'self' + trusted APIs` | Allow connections to backend APIs (Clerk, Supabase, Gemini) |
-| `frame-src` | `'self' + Clerk` | Allow iframes only from same origin and Clerk |
-| `object-src` | `'none'` | Block plugins (Flash, Java, etc.) |
-| `base-uri` | `'self'` | Prevent base tag injection attacks |
-| `form-action` | `'self'` | Only allow forms to submit to same origin |
-| `frame-ancestors` | `'none'` | Prevent page from being embedded in iframes (clickjacking protection) |
-| `upgrade-insecure-requests` | - | Automatically upgrade HTTP to HTTPS |
+| Directive                   | Value                                                    | Purpose                                                               |
+| --------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| `default-src`               | `'self'`                                                 | Default fallback - only allow resources from same origin              |
+| `script-src`                | `'self' 'unsafe-inline' 'unsafe-eval' + trusted domains` | Allow scripts from app, inline scripts, and trusted third parties     |
+| `script-src-elem`           | Same as script-src                                       | Explicitly control `<script>` elements                                |
+| `worker-src`                | `'self' blob:`                                           | Allow service workers from same origin and blob URLs                  |
+| `style-src`                 | `'self' 'unsafe-inline' + Google Fonts`                  | Allow styles from app, inline styles, and Google Fonts                |
+| `font-src`                  | `'self' + Google Fonts + data:`                          | Allow fonts from app, Google Fonts, and data URIs                     |
+| `img-src`                   | `'self' data: blob: https:`                              | Allow images from any HTTPS source, data URIs, and blobs              |
+| `media-src`                 | `'self' blob: https:`                                    | Allow media from any HTTPS source and blobs                           |
+| `connect-src`               | `'self' + trusted APIs`                                  | Allow connections to backend APIs (Clerk, Supabase, Gemini)           |
+| `frame-src`                 | `'self' + Clerk`                                         | Allow iframes only from same origin and Clerk                         |
+| `object-src`                | `'none'`                                                 | Block plugins (Flash, Java, etc.)                                     |
+| `base-uri`                  | `'self'`                                                 | Prevent base tag injection attacks                                    |
+| `form-action`               | `'self'`                                                 | Only allow forms to submit to same origin                             |
+| `frame-ancestors`           | `'none'`                                                 | Prevent page from being embedded in iframes (clickjacking protection) |
+| `upgrade-insecure-requests` | -                                                        | Automatically upgrade HTTP to HTTPS                                   |
 
 ### Trusted Domains
 
 The following external domains are explicitly allowed:
 
 #### Authentication (Clerk)
+
 - `https://*.clerk.accounts.dev` - Clerk authentication widgets and flows
 - `https://clerk.studypanacea.com` - Clerk custom subdomain for PANaCEa
 - `https://api.clerk.dev` - Clerk API endpoints
 
 #### Infrastructure (Cloudflare)
+
 - `https://challenges.cloudflare.com` - Cloudflare bot protection challenges
 - `https://static.cloudflareinsights.com` - Cloudflare Web Analytics
 - `https://cloudflareinsights.com` - Analytics data collection
 - **Cloudflare CDN Paths**: `/cdn-cgi/*` paths are automatically allowed via `'self'` since they're same-origin
 
 #### Development Environment
+
 - `http://localhost:3001` - Local development API server (only affects development builds)
 
 #### CDN
+
 - `https://aistudiocdn.com` - React 19 and other dependencies via import maps
 
 #### Database (Supabase)
+
 - `https://*.supabase.co` - Supabase database connections
 - `wss://*.supabase.co` - Supabase real-time subscriptions (WebSocket)
 
 #### AI Services (Google Gemini)
+
 - `https://generativelanguage.googleapis.com` - Google Gemini API
 
 #### Fonts
+
 - `https://fonts.googleapis.com` - Google Fonts CSS
 - `https://fonts.gstatic.com` - Google Fonts files
 
 ### Security Notes
 
 ⚠️ **`'unsafe-inline'` and `'unsafe-eval'`**: Currently used for:
+
 - React 19 inline script execution
 - Vite build artifacts with inline scripts
 - Third-party libraries that use `eval()` or `Function()`
@@ -106,18 +115,19 @@ The application uses path-specific CSP overrides for different resource types to
 Vite generates content-hashed JavaScript chunks (e.g., `index-De0TFXQ2.js`, `vendor-common-B8V4NZUa.js`) that are served from the `/assets/` directory. These files have a specific CSP configuration:
 
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
-  script-src-elem 'self' 'unsafe-inline'; 
-  worker-src 'self' blob:; 
-  style-src 'self' 'unsafe-inline'; 
-  font-src 'self' https://fonts.gstatic.com data:; 
-  img-src 'self' data: blob: https:; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  script-src-elem 'self' 'unsafe-inline';
+  worker-src 'self' blob:;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self' https://fonts.gstatic.com data:;
+  img-src 'self' data: blob: https:;
   connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
-**Purpose**: 
+**Purpose**:
+
 - Ensures all Vite-generated chunks can load and execute
 - Maintains long-term caching with `Cache-Control: public, max-age=31536000, immutable`
 - Content hashes in filenames enable safe aggressive caching
@@ -127,14 +137,15 @@ Content-Security-Policy:
 The service worker file has a specialized CSP configuration optimized for worker execution:
 
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
-  worker-src 'self' blob:; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  worker-src 'self' blob:;
   connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
 **Purpose**:
+
 - Allows the service worker to execute in its own context
 - `worker-src 'self' blob:` enables worker registration and blob URLs
 - Prevents caching with `Cache-Control: no-cache, no-store, must-revalidate`
@@ -145,15 +156,16 @@ Content-Security-Policy:
 The registration script has its own CSP to ensure proper initialization:
 
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
-  script-src-elem 'self' 'unsafe-inline'; 
-  worker-src 'self' blob:; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  script-src-elem 'self' 'unsafe-inline';
+  worker-src 'self' blob:;
   connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
 **Purpose**:
+
 - Allows the registration script to load and execute
 - Enables communication with the service worker
 - No caching to ensure immediate updates
@@ -161,24 +173,30 @@ Content-Security-Policy:
 ## Other Security Headers
 
 ### Strict-Transport-Security (HSTS)
+
 ```
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
+
 - Forces HTTPS connections for 1 year (31,536,000 seconds)
 - Applies to all subdomains
 - Eligible for browser HSTS preload list
 
 ### X-Content-Type-Options
+
 ```
 X-Content-Type-Options: nosniff
 ```
+
 - Prevents browsers from MIME-sniffing responses
 - Reduces risk of drive-by download attacks
 
 ### X-Frame-Options
+
 ```
 X-Frame-Options: DENY
 ```
+
 - Prevents page from being embedded in iframes
 - Protects against clickjacking attacks
 - Reinforces `frame-ancestors 'none'` from CSP
@@ -186,23 +204,28 @@ X-Frame-Options: DENY
 ### X-XSS-Protection (Removed)
 
 This header was previously included but has been removed because:
+
 - It's deprecated and can introduce security vulnerabilities
 - Modern browsers rely on CSP for XSS protection
 - Can cause false positives and break legitimate functionality
 - Our comprehensive CSP provides superior protection
 
 ### Referrer-Policy
+
 ```
 Referrer-Policy: strict-origin-when-cross-origin
 ```
+
 - Sends full URL for same-origin requests
 - Only sends origin for cross-origin HTTPS requests
 - No referrer sent when downgrading from HTTPS to HTTP
 
 ### Permissions-Policy
+
 ```
 Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
 ```
+
 - Disables access to sensitive device features
 - Prevents third-party scripts from accessing hardware
 - Reduces attack surface
@@ -210,26 +233,32 @@ Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), m
 ## Cache Control
 
 ### Static Assets
+
 ```
 Cache-Control: public, max-age=31536000, immutable
 ```
+
 - Cached for 1 year
 - Can be cached by CDN and browsers
 - Marked as immutable (content never changes)
 - Vite adds content hashes to filenames for cache busting
 
 ### Service Worker Files
+
 ```
 Cache-Control: no-cache, no-store, must-revalidate
 ```
+
 - Never cached
 - Always fetched fresh
 - Ensures users get latest service worker updates
 
 ### HTML Files
+
 ```
 Cache-Control: no-cache, no-store, must-revalidate
 ```
+
 - Never cached
 - Always fetched fresh
 - Ensures users get latest app version
@@ -258,6 +287,7 @@ To test the CSP configuration:
 ✅ **No CSP violations** - All scripts, styles, and resources should load without errors
 
 ❌ **Before Fix**: Multiple CSP violations for:
+
 - Vite-generated asset files with content hashes
 - Service worker files (`sw.js`, `registerSW.js`)
 - Clerk subdomain scripts (`clerk.studypanacea.com`)
@@ -282,6 +312,7 @@ After deployment, verify the following in the browser console:
 Test on multiple browsers to ensure compatibility:
 
 **Chrome/Edge (Chromium)**
+
 ```
 1. Open DevTools (F12)
 2. Go to Console tab
@@ -290,6 +321,7 @@ Test on multiple browsers to ensure compatibility:
 ```
 
 **Firefox**
+
 ```
 1. Open Developer Tools (F12)
 2. Go to Console tab
@@ -298,6 +330,7 @@ Test on multiple browsers to ensure compatibility:
 ```
 
 **Safari**
+
 ```
 1. Enable Developer Tools (Safari > Preferences > Advanced > Show Develop menu)
 2. Open Web Inspector (Cmd+Option+I)
@@ -308,11 +341,13 @@ Test on multiple browsers to ensure compatibility:
 ### Development vs Production
 
 **Development Environment** (`localhost`):
+
 - `http://localhost:3001` is allowed in `connect-src` for API calls
 - Vite dev server proxies requests, so CSP is less restrictive
 - Service workers may not be active during development
 
 **Production Environment** (Cloudflare Pages):
+
 - All paths are HTTPS due to `upgrade-insecure-requests`
 - Service workers are fully active
 - CDN paths (`/cdn-cgi/*`) are same-origin and allowed via `'self'`
@@ -346,6 +381,7 @@ If you encounter CSP violations:
 ## Monitoring
 
 CSP violations can be monitored using:
+
 - Browser DevTools Console
 - Cloudflare Web Analytics
 - Custom CSP reporting endpoint (future enhancement)

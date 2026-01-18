@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 /**
  * Standardize Question Difficulty Script
- * 
+ *
  * This script:
  * 1. Updates ALL existing pooled questions to "PANCE-level" difficulty
  * 2. Updates ALL questions in the main Question table to "PANCE-level"
  * 3. Updates ALL question seeds to "PANCE-level"
- * 
+ *
  * Run with: npx tsx scripts/standardize-question-difficulty.ts
  */
 
@@ -27,7 +27,9 @@ async function standardizeAllQuestionDifficulty() {
       difficulty: PANCE_LEVEL,
     },
   });
-  console.log(`✅ PreGeneratedQuestion: ${pooledUpdated.count}/${pooledBefore} updated to ${PANCE_LEVEL}`);
+  console.log(
+    `✅ PreGeneratedQuestion: ${pooledUpdated.count}/${pooledBefore} updated to ${PANCE_LEVEL}`
+  );
 
   // 2. Update Question table
   const mainBefore = await prisma.question.count();
@@ -55,7 +57,7 @@ async function standardizeAllQuestionDifficulty() {
 
   // 4. Show distribution after update
   console.log('\n📊 Final Distribution:');
-  
+
   const pooledDistribution = await prisma.preGeneratedQuestion.groupBy({
     by: ['difficulty'],
     _count: { difficulty: true },

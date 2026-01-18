@@ -1,12 +1,12 @@
 /**
  * PERC Rule Calculator
- * 
+ *
  * Pulmonary Embolism Rule-out Criteria.
  * Binary decision tool for LOW-RISK patients only.
- * 
+ *
  * If ALL 8 criteria are ABSENT → PERC negative → PE ruled out (no D-dimer/imaging needed)
  * If ANY criterion present → PERC positive → Cannot rule out PE (proceed with workup)
- * 
+ *
  * Important: Only use in patients with LOW clinical suspicion (<15% pre-test probability)
  */
 
@@ -24,7 +24,16 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [priorPE, setPriorPE] = useState(false);
   const [hormoneUse, setHormoneUse] = useState(false);
 
-  const criteria = [age50, heartRate100, o2sat95, unilateralLegSwelling, hemoptysis, recentSurgery, priorPE, hormoneUse];
+  const criteria = [
+    age50,
+    heartRate100,
+    o2sat95,
+    unilateralLegSwelling,
+    hemoptysis,
+    recentSurgery,
+    priorPE,
+    hormoneUse,
+  ];
   const positiveCount = criteria.filter(Boolean).length;
   const percNegative = positiveCount === 0;
 
@@ -33,17 +42,21 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       return {
         score: 'NEGATIVE',
         interpretation: 'All Criteria Absent',
-        recommendation: 'In low-risk patients, PE can be ruled out without D-dimer or imaging. No further workup needed.',
+        recommendation:
+          'In low-risk patients, PE can be ruled out without D-dimer or imaging. No further workup needed.',
         riskLevel: 'low',
-        details: 'PERC Rule has 96-100% sensitivity when applied to low-risk patients. Risk of missed PE is <2%.',
+        details:
+          'PERC Rule has 96-100% sensitivity when applied to low-risk patients. Risk of missed PE is <2%.',
       };
     } else {
       return {
         score: 'POSITIVE',
         interpretation: `${positiveCount} Criteria Present`,
-        recommendation: 'Cannot rule out PE with PERC. Proceed with D-dimer or imaging based on clinical probability (e.g., Wells score).',
+        recommendation:
+          'Cannot rule out PE with PERC. Proceed with D-dimer or imaging based on clinical probability (e.g., Wells score).',
         riskLevel: 'high',
-        details: 'PERC Rule cannot be used to exclude PE. Consider Wells score or other clinical decision rules to guide further testing.',
+        details:
+          'PERC Rule cannot be used to exclude PE. Consider Wells score or other clinical decision rules to guide further testing.',
       };
     }
   };
@@ -111,8 +124,9 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
       <div className="bg-blue-950/30 border border-blue-700 rounded-xl p-4">
         <p className="text-sm text-blue-200 leading-relaxed">
-          <strong className="text-blue-100">⚠️ Use only in LOW-RISK patients</strong> (clinical gestalt &lt;15% pre-test probability). 
-          If ALL criteria are absent (PERC negative), PE can be ruled out without further testing.
+          <strong className="text-blue-100">⚠️ Use only in LOW-RISK patients</strong> (clinical
+          gestalt &lt;15% pre-test probability). If ALL criteria are absent (PERC negative), PE can
+          be ruled out without further testing.
         </p>
       </div>
 

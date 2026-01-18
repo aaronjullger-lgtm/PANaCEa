@@ -1,6 +1,6 @@
 /**
  * Web Speech API TypeScript declarations
- * 
+ *
  * These types are needed for browsers that support the Web Speech API
  * but don't have TypeScript definitions included.
  */
@@ -82,12 +82,12 @@ interface SpeechGrammar {
 
 declare var SpeechRecognition: {
   prototype: SpeechRecognition;
-  new(): SpeechRecognition;
+  new (): SpeechRecognition;
 };
 
 declare var webkitSpeechRecognition: {
   prototype: SpeechRecognition;
-  new(): SpeechRecognition;
+  new (): SpeechRecognition;
 };
 
 interface Window {

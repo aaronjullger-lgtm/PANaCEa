@@ -4,7 +4,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Shield, Frown, Star, Unlock, Lock, User, Sparkles } from 'lucide-react';
-import type { RapportMeter as RapportMeterType, EmotionalState, PatientPersonalityMatrix } from '@/types/osce-enhanced';
+import type {
+  RapportMeter as RapportMeterType,
+  EmotionalState,
+  PatientPersonalityMatrix,
+} from '@/types/osce-enhanced';
 
 interface RapportMeterProps {
   meter: RapportMeterType;
@@ -24,10 +28,13 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
   className = '',
 }) => {
   const getRapportColor = (score: number) => {
-    if (score >= 80) return { bg: 'bg-emerald-500', text: 'text-emerald-500', ring: 'ring-emerald-500/30' };
+    if (score >= 80)
+      return { bg: 'bg-emerald-500', text: 'text-emerald-500', ring: 'ring-emerald-500/30' };
     if (score >= 65) return { bg: 'bg-blue-500', text: 'text-blue-500', ring: 'ring-blue-500/30' };
-    if (score >= 50) return { bg: 'bg-amber-500', text: 'text-amber-500', ring: 'ring-amber-500/30' };
-    if (score >= 30) return { bg: 'bg-orange-500', text: 'text-orange-500', ring: 'ring-orange-500/30' };
+    if (score >= 50)
+      return { bg: 'bg-amber-500', text: 'text-amber-500', ring: 'ring-amber-500/30' };
+    if (score >= 30)
+      return { bg: 'bg-orange-500', text: 'text-orange-500', ring: 'ring-orange-500/30' };
     return { bg: 'bg-red-500', text: 'text-red-500', ring: 'ring-red-500/30' };
   };
 
@@ -41,12 +48,18 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
 
   const getEmotionIcon = (emotion?: string) => {
     switch (emotion) {
-      case 'anxious': return '😰';
-      case 'frustrated': return '😤';
-      case 'tearful': return '😢';
-      case 'angry': return '😠';
-      case 'relieved': return '😌';
-      default: return '😐';
+      case 'anxious':
+        return '😰';
+      case 'frustrated':
+        return '😤';
+      case 'tearful':
+        return '😢';
+      case 'angry':
+        return '😠';
+      case 'relieved':
+        return '😌';
+      default:
+        return '😐';
     }
   };
 
@@ -73,7 +86,9 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
   }
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 ${className}`}>
+    <div
+      className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -159,23 +174,27 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
                 <Lock className="w-4 h-4 text-slate-400 flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-medium truncate ${
-                  milestone.achieved 
-                    ? 'text-emerald-700 dark:text-emerald-300'
-                    : meter.score >= milestone.threshold - 10
-                      ? 'text-amber-700 dark:text-amber-300'
-                      : 'text-slate-500 dark:text-slate-400'
-                }`}>
+                <div
+                  className={`text-xs font-medium truncate ${
+                    milestone.achieved
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : meter.score >= milestone.threshold - 10
+                        ? 'text-amber-700 dark:text-amber-300'
+                        : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
                   {milestone.unlocks}
                 </div>
               </div>
-              <div className={`text-xs font-mono ${
-                milestone.achieved 
-                  ? 'text-emerald-500'
-                  : meter.score >= milestone.threshold - 10
-                    ? 'text-amber-500'
-                    : 'text-slate-400'
-              }`}>
+              <div
+                className={`text-xs font-mono ${
+                  milestone.achieved
+                    ? 'text-emerald-500'
+                    : meter.score >= milestone.threshold - 10
+                      ? 'text-amber-500'
+                      : 'text-slate-400'
+                }`}
+              >
                 {milestone.threshold}+
               </div>
             </div>
@@ -220,7 +239,7 @@ export const RapportChangeNotification: React.FC<{
   reason?: string;
 }> = ({ change, reason }) => {
   const isPositive = change > 0;
-  
+
   return (
     <AnimatePresence>
       <motion.div
@@ -228,20 +247,17 @@ export const RapportChangeNotification: React.FC<{
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.9 }}
         className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${
-          isPositive
-            ? 'bg-emerald-500 text-white'
-            : 'bg-red-500 text-white'
+          isPositive ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
         }`}
       >
         <div className="flex items-center gap-2">
           <Heart className="w-4 h-4" />
           <span className="font-semibold">
-            {isPositive ? '+' : ''}{change} Rapport
+            {isPositive ? '+' : ''}
+            {change} Rapport
           </span>
         </div>
-        {reason && (
-          <div className="text-xs opacity-80 mt-0.5">{reason}</div>
-        )}
+        {reason && <div className="text-xs opacity-80 mt-0.5">{reason}</div>}
       </motion.div>
     </AnimatePresence>
   );
@@ -252,14 +268,16 @@ export const RapportIndicator: React.FC<{
   score: number;
   emotion?: string;
 }> = ({ score, emotion }) => {
-  const getColor = (s: number) => 
+  const getColor = (s: number) =>
     s >= 70 ? 'emerald' : s >= 50 ? 'blue' : s >= 30 ? 'amber' : 'red';
-  
+
   const color = getColor(score);
-  
+
   return (
     <div className="flex items-center gap-1.5">
-      <div className={`w-6 h-6 rounded-full bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center`}>
+      <div
+        className={`w-6 h-6 rounded-full bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center`}
+      >
         <Heart className={`w-3 h-3 text-${color}-500`} />
       </div>
       <span className={`text-sm font-medium text-${color}-600 dark:text-${color}-400`}>
@@ -267,10 +285,15 @@ export const RapportIndicator: React.FC<{
       </span>
       {emotion && (
         <span className="text-sm ml-1">
-          {emotion === 'anxious' ? '😰' :
-           emotion === 'frustrated' ? '😤' :
-           emotion === 'relieved' ? '😌' :
-           emotion === 'angry' ? '😠' : '😐'}
+          {emotion === 'anxious'
+            ? '😰'
+            : emotion === 'frustrated'
+              ? '😤'
+              : emotion === 'relieved'
+                ? '😌'
+                : emotion === 'angry'
+                  ? '😠'
+                  : '😐'}
         </span>
       )}
     </div>

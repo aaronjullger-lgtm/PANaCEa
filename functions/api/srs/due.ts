@@ -1,41 +1,50 @@
 /**
+ * SRS Due Items API
  * GET /api/srs/due
- * Fetch SRS items due for review for authenticated user
+ * 
+ * Fetch all SRS items due for review for the authenticated user
  */
 
-import { authenticateRequest, createErrorResponse, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const SRSDueSchema = z.object({
+  query: z.object({
+    limit: z.string().optional().transform(val => val ? Math.min(Number(val), 200) : 100),
+  }).optional(),
+});
 
-  // Authenticate request
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
+export const onRequestOptions = withCors();
 
-  if (!env.DATABASE_URL) {
-    return createErrorResponse('Database not configured', 500);
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/srs/due');
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Look up user by clerkId to get internal database ID
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    // Look up user by clerkId
     const user = await prisma.user.findUnique({
-      where: { clerkId: authContext.userId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return createErrorResponse('User not found. Please refresh and try again.', 404);
+      logger.warn('User not found in database', { clerkId: auth.userId.substring(0, 10) });
+      return { 
+        data: { error: 'User not found. Please refresh and try again.' },
+        status: 404,
+      };
     }
 
     const userId = user.id;
     const now = new Date();
+    const limit = validated.query?.limit || 100;
 
-    // Fetch all SRS items due for review (dueDate <= now)
+    // Fetch all SRS items due for review
     const dueItems = await prisma.sRSItem.findMany({
       where: {
         userId,
@@ -47,7 +56,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
         { dueDate: 'asc' }, // Most overdue first
         { difficulty: 'desc' }, // Harder questions prioritized
       ],
-      take: 100, // Limit to prevent overwhelming response
+      take: limit,
       select: {
         id: true,
         questionId: true,
@@ -74,21 +83,26 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       };
     });
 
-    return new Response(
-      JSON.stringify({
+    logger.info('SRS due items retrieved', {
+      userId: userId.substring(0, 10),
+      totalDue: enrichedItems.length,
+      limit,
+    });
+
+    return {
+      data: {
         items: enrichedItems,
         totalDue: enrichedItems.length,
         timestamp: now.toISOString(),
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      },
+    };
   } catch (error) {
-    console.error('[SRS Due] Error fetching due items:', error);
-    return createErrorResponse('Failed to fetch due items', 500);
+    logger.error('SRS due items error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId.substring(0, 10),
+    });
+    throw new Error('Failed to fetch due items');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

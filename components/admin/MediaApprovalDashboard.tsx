@@ -1,13 +1,22 @@
 /**
  * Media Approval Dashboard
- * 
+ *
  * Admin interface for reviewing and approving uploaded medical images
  * Implements the "no-use to use folder" workflow
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Upload, RefreshCw } from 'lucide-react';
+import {
+  X,
+  Check,
+  ThumbsDown,
+  Eye,
+  AlertCircle,
+  TrendingUp,
+  Upload,
+  RefreshCw,
+} from 'lucide-react';
 
 interface MediaAsset {
   id: string;
@@ -64,7 +73,7 @@ export function MediaApprovalDashboard() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = await getToken();
       if (!token) {
         setError('Authentication required');
@@ -74,17 +83,17 @@ export function MediaApprovalDashboard() {
       const params = new URLSearchParams({
         status: 'pending',
       });
-      
+
       if (filter !== 'all') {
         params.append('category', filter);
       }
 
       const response = await fetch(`/api/admin/media/upload?${params}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const data = await response.json();
 
       if (data.success) {
@@ -120,12 +129,12 @@ export function MediaApprovalDashboard() {
     try {
       setActionLoading(true);
       const token = await getToken();
-      
+
       const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: 'approve',
@@ -134,7 +143,7 @@ export function MediaApprovalDashboard() {
       });
 
       if (response.ok) {
-        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
+        setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
         setSelectedMedia(null);
       } else {
         const data = await response.json();
@@ -152,12 +161,12 @@ export function MediaApprovalDashboard() {
     try {
       setActionLoading(true);
       const token = await getToken();
-      
+
       const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: 'reject',
@@ -167,7 +176,7 @@ export function MediaApprovalDashboard() {
       });
 
       if (response.ok) {
-        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
+        setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
         setSelectedMedia(null);
         setShowRejectionModal(false);
         setRejectionReason('');
@@ -211,10 +220,7 @@ export function MediaApprovalDashboard() {
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-500 hover:text-red-700"
-            >
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -300,7 +306,7 @@ export function MediaApprovalDashboard() {
       {/* Filters */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex gap-2">
-          {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams'].map(category => (
+          {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams'].map((category) => (
             <button
               key={category}
               onClick={() => setFilter(category)}
@@ -330,7 +336,7 @@ export function MediaApprovalDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pendingMedia.map(media => (
+            {pendingMedia.map((media) => (
               <div
                 key={media.id}
                 className="bg-white dark:bg-[#1F283A] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
@@ -367,7 +373,7 @@ export function MediaApprovalDashboard() {
                   )}
 
                   <div className="flex flex-wrap gap-1 mb-3">
-                    {media.tags.slice(0, 3).map(tag => (
+                    {media.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
                         className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded"
@@ -416,9 +422,7 @@ export function MediaApprovalDashboard() {
           <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Media Details
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Media Details</h2>
                 <button
                   onClick={() => setSelectedMedia(null)}
                   className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -458,17 +462,22 @@ export function MediaApprovalDashboard() {
                     {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Diagnostic Quality: <span className="font-medium">
+                    Diagnostic Quality:{' '}
+                    <span className="font-medium">
                       {selectedMedia.aiMetadata.assessment.aiAnalysis.diagnosticQuality}
                     </span>
                   </p>
                   {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Clinical Features:</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Clinical Features:
+                      </p>
                       <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                        {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map((feature, idx) => (
-                          <li key={idx}>{feature}</li>
-                        ))}
+                        {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map(
+                          (feature, idx) => (
+                            <li key={idx}>{feature}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -491,7 +500,9 @@ export function MediaApprovalDashboard() {
 
                   {selectedMedia.aiMetadata.assessment.recommendations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Recommendations</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        Recommendations
+                      </h3>
                       <ul className="list-disc list-inside text-blue-600 dark:text-blue-400">
                         {selectedMedia.aiMetadata.assessment.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
@@ -528,9 +539,7 @@ export function MediaApprovalDashboard() {
       {showRejectionModal && selectedMedia && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Reject Media
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Reject Media</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Please provide a reason for rejection:
             </p>
@@ -579,13 +588,7 @@ export function MediaApprovalDashboard() {
 /**
  * Media Upload Modal Component
  */
-function MediaUploadModal({ 
-  onClose, 
-  onSuccess 
-}: { 
-  onClose: () => void; 
-  onSuccess: () => void;
-}) {
+function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { getToken } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [category, setCategory] = useState<string>('derm');
@@ -621,17 +624,20 @@ function MediaUploadModal({
       const formData = new FormData();
       formData.append('file', file);
       formData.append('category', category);
-      
+
       if (correctDiagnosis) {
         formData.append('correctDiagnosis', correctDiagnosis);
       }
-      
+
       if (distractors) {
         // Parse comma-separated distractors into JSON array
-        const distractorArray = distractors.split(',').map(d => d.trim()).filter(Boolean);
+        const distractorArray = distractors
+          .split(',')
+          .map((d) => d.trim())
+          .filter(Boolean);
         formData.append('distractors', JSON.stringify(distractorArray));
       }
-      
+
       if (description) {
         formData.append('description', description);
       }
@@ -639,7 +645,7 @@ function MediaUploadModal({
       const response = await fetch('/api/admin/media/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -663,9 +669,7 @@ function MediaUploadModal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-lg w-full p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Upload Medical Image
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Upload Medical Image</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -683,11 +687,14 @@ function MediaUploadModal({
         {/* File Drop Zone */}
         <div
           onDrop={handleDrop}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-colors ${
-            dragOver 
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+            dragOver
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
@@ -699,12 +706,8 @@ function MediaUploadModal({
                 className="w-20 h-20 object-cover rounded"
               />
               <div className="text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
+                <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 <button
                   onClick={() => setFile(null)}
                   className="text-xs text-red-500 hover:text-red-700 mt-1"
@@ -716,9 +719,7 @@ function MediaUploadModal({
           ) : (
             <>
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
-                Drag & drop an image here, or
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Drag & drop an image here, or</p>
               <label className="cursor-pointer text-blue-600 hover:text-blue-700">
                 browse files
                 <input

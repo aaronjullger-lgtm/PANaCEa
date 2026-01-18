@@ -23,7 +23,11 @@ const SCORING_SYSTEMS = [
   { name: 'ABCD2', condition: 'TIA', category: 'Risk Stratification' },
 ];
 
-async function generateScoringContent(system: { name: string; condition: string; category: string }) {
+async function generateScoringContent(system: {
+  name: string;
+  condition: string;
+  category: string;
+}) {
   const prompt = `For clinical decision rule "${system.name}" used for ${system.condition}, provide PANCE content.
 
 Return ONLY valid JSON:
@@ -45,7 +49,10 @@ Return ONLY valid JSON:
 }`;
 
   const result = await model.generateContent(prompt);
-  const text = result.response.text().replace(/```json\n?|\n?```/g, '').trim();
+  const text = result.response
+    .text()
+    .replace(/```json\n?|\n?```/g, '')
+    .trim();
   return JSON.parse(text);
 }
 
@@ -70,13 +77,13 @@ async function seedScoringSystems(dryRun = false) {
             condition: system.condition,
             category: system.category,
             isHighYield: true,
-            ...content
-          }
+            ...content,
+          },
         });
         console.log(`    ✓ Created ${system.name}`);
       }
 
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
     } catch (err) {
       console.error(`    ✗ Failed: ${system.name}`, err);
     }

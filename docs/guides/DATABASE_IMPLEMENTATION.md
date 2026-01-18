@@ -76,17 +76,17 @@ The system implements a **"Golden Repository"** approach:
 ### Question Management
 
 ```typescript
-POST /api/questions/fetch
+POST / api / questions / fetch;
 // Fetch questions with no-repeat logic
 // Request: { userId, system?, difficulty?, limit? }
 // Response: { questions[], source, needsGeneration }
 
-POST /api/questions/record
+POST / api / questions / record;
 // Record that user has seen a question
 // Request: { userId, questionId, wasCorrect? }
 // Response: { success: true }
 
-GET /api/questions/stats
+GET / api / questions / stats;
 // Get repository statistics
 // Response: { totalQuestions, unseenByAnyUser, systemBreakdown }
 ```
@@ -94,12 +94,12 @@ GET /api/questions/stats
 ### Media Management
 
 ```typescript
-POST /api/media/upload
+POST / api / media / upload;
 // Upload medical image to Supabase Storage
 // Request: { filename, category, fileData (base64), tags?, conditionId? }
 // Response: { success: true, media: {...} }
 
-GET /api/media/list
+GET / api / media / list;
 // List media assets
 // Query: ?category=ecg | ?conditionId=xxx | ?tags=keyword1,keyword2
 // Response: { media[], count }
@@ -215,12 +215,14 @@ const photo = await getImageForCondition('Atrial Fibrillation', 'ecg');
 ## Performance Characteristics
 
 ### Without Database (Pure AI)
+
 - **Cost**: $7,300/year for 100k questions
 - **Latency**: 2-5 seconds per question
 - **Reliability**: Dependent on API availability
 - **Quality**: Varies with each generation
 
 ### With Database (Hybrid Approach)
+
 - **Cost**: $730/year (90% reduction)
 - **Latency**: 50ms from database
 - **Reliability**: High (cached questions always available)
@@ -294,6 +296,7 @@ curl http://localhost:3001/api/questions/stats
 ```
 
 Returns:
+
 ```json
 {
   "totalQuestions": 50000,
@@ -325,6 +328,7 @@ Returns:
 See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for troubleshooting guide.
 
 Common issues:
+
 - Connection errors: Check DATABASE_URL format
 - Migration errors: Use DIRECT_DATABASE_URL
 - Storage upload errors: Verify bucket policies
@@ -332,6 +336,7 @@ Common issues:
 ## Support
 
 For issues:
+
 1. Check logs: `npm run dev:server` output
 2. Verify environment variables in `.env`
 3. Check Supabase dashboard for database status

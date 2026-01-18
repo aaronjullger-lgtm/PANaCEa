@@ -75,9 +75,13 @@ function ErrorCard({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function DailyTriadCard() {
-  const { data, error, isLoading, mutate } = useSWR<DailyTriad>('/api/dashboard/daily-triad', triadFetcher, {
-    revalidateOnFocus: false,
-  });
+  const { data, error, isLoading, mutate } = useSWR<DailyTriad>(
+    '/api/dashboard/daily-triad',
+    triadFetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
   if (isLoading) return <TriadSkeleton />;
   if (error || !data) return <ErrorCard onRetry={() => mutate()} />;
@@ -97,9 +101,7 @@ export default function DailyTriadCard() {
             <Sparkles className="w-5 h-5 text-amber-300" />
             {data.condition}
           </h3>
-          <p className="text-sm text-slate-100/90 leading-relaxed">
-            {data.highlight}
-          </p>
+          <p className="text-sm text-slate-100/90 leading-relaxed">{data.highlight}</p>
         </div>
         <TriadBadge type={data.type} />
       </div>

@@ -53,17 +53,19 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **File:** `lib/implicit-metrics.ts`
 
 **Key Features:**
+
 - `deriveImplicitRating()` - Maps behavioral data to FSRS Rating (1-4)
 - `updateLatencyStats()` - Welford's algorithm for running variance
 - `calculateLatencyPercentile()` - Session-relative performance
 - `estimateParTime()` - Dynamic par time based on question complexity
 
 **Rating Derivation Algorithm:**
+
 ```typescript
 // If incorrect → Always Rating.Again
 // If correct:
 //   - Latency < 50% par → Easy
-//   - Latency < 85% par → Good  
+//   - Latency < 85% par → Good
 //   - Latency < 130% par → Hard
 //   - Latency > 130% par → Hard (capped, never Again for correct)
 // + Answer switch penalty (30% per switch)
@@ -75,6 +77,7 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **File:** `lib/nccpa-blueprint.ts`
 
 **Key Features:**
+
 - `NCCPA_BLUEPRINT_WEIGHTS` - Official 2024 exam percentages
 - `applyInterleaving()` - Builds sessions with weighted selection
 - `validateInterleaving()` - Enforces M≥3 system diversity
@@ -104,6 +107,7 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **File:** `lib/circadian.ts`
 
 **Key Features:**
+
 - `buildCircadianContext()` - Captures timezone + wake time data
 - `applyCircadianModifier()` - Adjusts stability based on time-of-day
 - `getStudyRecommendation()` - Suggests session duration based on phase
@@ -123,6 +127,7 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **File:** `components/ui/skeletons/MedicalSkeleton.tsx`
 
 **Variants:**
+
 - `QuestionCardSkeleton` - Matches question display
 - `ConditionCardSkeleton` - Library card placeholder
 - `DetailPanelSkeleton` - Condition detail view
@@ -138,6 +143,7 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **File:** `lib/metacognition.ts`
 
 **Trigger Conditions:**
+
 1. **Consecutive Misses** (≥2 in same subcategory)
 2. **Confusion Pairs** (10 known pairs: AFib/AFlutter, Crohn's/UC, etc.)
 3. **High-Yield Miss** (PANCE yield ≥ 3)
@@ -146,6 +152,7 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 **Rate Limiting:** Max 30% of incorrect answers show metacognition
 
 **Confusion Pairs Included:**
+
 - Atrial Fibrillation ↔ Atrial Flutter
 - Crohn's Disease ↔ Ulcerative Colitis
 - Hyperthyroidism ↔ Hypothyroidism
@@ -162,16 +169,19 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 ## Remaining Tasks
 
 ### Leg 1: Complete Integration
+
 - [ ] Update `functions/api/drills/submit-review.ts` to use implicit metrics
 - [ ] Remove rating buttons from drill UI components
 - [ ] Add answer switch tracking to question state
 
 ### Leg 3: Complete Integration
+
 - [ ] Add wakeTime preference to User model
 - [ ] Capture circadian context in review snapshots
 - [ ] Create settings UI for circadian preferences
 
 ### Leg 4: Passive Engagement Telemetry
+
 - [ ] Create `hooks/useTelemetry.ts`
 - [ ] Implement scroll depth tracking
 - [ ] Implement dwell time per content segment
@@ -179,12 +189,14 @@ This sprint transforms PANaCEa into a **Cognitive Prosthetic** - a system that l
 - [ ] Adjust initial S₀ based on engagement
 
 ### Leg 5: Semantic Siblings (KAR3L)
+
 - [ ] Create `lib/services/semanticSiblingService.ts`
 - [ ] Set up Cloudflare Workers AI BERT
 - [ ] Build condition similarity index
 - [ ] Implement recall propagation
 
 ### Leg 6: Complete Hardening
+
 - [ ] Add skeletons to DiagnosticDrillHub
 - [ ] Add skeletons to all loading states
 - [ ] Update reviewHistory schema for implicit metrics
@@ -201,13 +213,16 @@ import { deriveImplicitRating, initLatencyStats } from '@/lib/implicit-metrics';
 const sessionStats = initLatencyStats();
 
 // After each question
-const reviewData = deriveImplicitRating({
-  timeToFirstClick: 25000,  // 25 seconds
-  answerSwitches: 1,
-  totalDwellTime: 45000,
-  isCorrect: true,
-  parTimeMs: 30000,
-}, sessionStats);
+const reviewData = deriveImplicitRating(
+  {
+    timeToFirstClick: 25000, // 25 seconds
+    answerSwitches: 1,
+    totalDwellTime: 45000,
+    isCorrect: true,
+    parTimeMs: 30000,
+  },
+  sessionStats
+);
 
 // Result: { rating: Rating.Good, confidence: 0.65, ... }
 ```

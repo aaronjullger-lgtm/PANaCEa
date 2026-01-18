@@ -1,8 +1,8 @@
 /**
  * Concept Gaps API
- * 
+ *
  * GET /api/intelligence/concept-gaps
- * 
+ *
  * Returns detailed knowledge gap analysis including:
  * - Identified gaps and their severity
  * - Concepts blocked by each gap
@@ -11,10 +11,16 @@
  * - Prerequisite analysis
  */
 
-import { authenticateRequest, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export const onRequestOptions = handleCorsOptions;
+// ============================================================================
+// Validation Schema
+// ============================================================================
+
+const ConceptGapsSchema = z.object({});
 
 // ============================================================================
 // Types
@@ -25,14 +31,14 @@ interface ConceptGapsResponse {
   analysis: {
     userId: string;
     analyzedAt: string;
-    
+
     // Summary
     totalGapsIdentified: number;
     criticalGaps: number;
     significantGaps: number;
     moderateGaps: number;
     totalBlockedConcepts: number;
-    
+
     // Detailed gaps
     knowledgeGaps: {
       conceptId: string;
@@ -49,7 +55,7 @@ interface ConceptGapsResponse {
       prerequisites: string[];
       relatedGaps: string[];
     }[];
-    
+
     // Keystone concepts
     keystoneConcepts: {
       conceptId: string;
@@ -63,7 +69,7 @@ interface ConceptGapsResponse {
       potentialGain: number;
       recommendedPriority: number;
     }[];
-    
+
     // Learning path recommendation
     recommendedPath: {
       strategy: string;
@@ -78,7 +84,7 @@ interface ConceptGapsResponse {
       totalEstimatedHours: number;
       expectedImpact: number;
     };
-    
+
     // System analysis
     systemGapAnalysis: {
       system: string;
@@ -87,7 +93,7 @@ interface ConceptGapsResponse {
       blockedConceptsCount: number;
       priority: number;
     }[];
-    
+
     // Interference patterns
     interferencePatterns: {
       conceptA: string;
@@ -97,7 +103,7 @@ interface ConceptGapsResponse {
       occurrences: number;
       differentiatingFactors: string[];
     }[];
-    
+
     // Action items
     immediateActions: string[];
     weeklyGoals: string[];
@@ -108,7 +114,7 @@ interface ConceptGapsResponse {
 // Gap Analysis Constants
 // ============================================================================
 
-type GapTypeValue = 
+type GapTypeValue =
   | 'missing_foundation'
   | 'partial_understanding'
   | 'shallow_encoding'
@@ -126,22 +132,22 @@ const GAP_TYPES: Record<string, GapTypeValue> = {
 };
 
 // ============================================================================
+// CORS Handler
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+// ============================================================================
 // Main Handler
 // ============================================================================
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ env, auth }) => {
+  const log = createEndpointLogger('/api/intelligence/concept-gaps', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    // Authenticate
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    log.info('Fetching concept gaps analysis');
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
     const userId = auth.userId;
 
     // Fetch question attempts for analysis
@@ -161,15 +167,18 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     ]);
 
     // Build condition lookup
-    const conditionMap = new Map(conditions.map(c => [c.id, c]));
+    const conditionMap = new Map(conditions.map((c) => [c.id, c]));
 
     // Analyze errors by condition
-    const conditionErrors: Map<string, {
-      errors: number;
-      total: number;
-      timestamps: number[];
-      systems: string[];
-    }> = new Map();
+    const conditionErrors: Map<
+      string,
+      {
+        errors: number;
+        total: number;
+        timestamps: number[];
+        systems: string[];
+      }
+    > = new Map();
 
     for (const attempt of questionAttempts) {
       const conditionId = attempt.conditionId;
@@ -197,16 +206,18 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Identify gaps (error rate > 40% with sufficient attempts)
     const knowledgeGaps: ConceptGapsResponse['analysis']['knowledgeGaps'] = [];
-    
+
     for (const [conditionId, data] of conditionErrors) {
       if (data.total < 3) continue; // Need sufficient data
-      
+
       const errorRate = data.errors / data.total;
       if (errorRate < 0.4) continue; // Not a significant gap
-      
-      const conditionInfo = conditionMap.get(conditionId) as { id: string; name: string; system: string } | undefined;
+
+      const conditionInfo = conditionMap.get(conditionId) as
+        | { id: string; name: string; system: string }
+        | undefined;
       const system = conditionInfo?.system || data.systems[0] || 'unknown';
-      
+
       // Determine severity
       let severity: 'critical' | 'significant' | 'moderate' | 'minor' = 'moderate';
       if (errorRate >= 0.7 && data.total >= 5) {
@@ -231,16 +242,26 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
       // Calculate remediation priority
       const remediationPriority = Math.round(
-        (errorRate * 40) + 
-        (severity === 'critical' ? 40 : severity === 'significant' ? 30 : severity === 'moderate' ? 20 : 10) +
-        Math.min(20, data.total)
+        errorRate * 40 +
+          (severity === 'critical'
+            ? 40
+            : severity === 'significant'
+              ? 30
+              : severity === 'moderate'
+                ? 20
+                : 10) +
+          Math.min(20, data.total)
       );
 
-      const conditionData = conditionMap.get(conditionId) as { id: string; name: string; system: string } | undefined;
+      const conditionData = conditionMap.get(conditionId) as
+        | { id: string; name: string; system: string }
+        | undefined;
 
       knowledgeGaps.push({
         conceptId: conditionId,
-        conceptName: conditionData?.name || conditionId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        conceptName:
+          conditionData?.name ||
+          conditionId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
         system,
         gapType,
         severity,
@@ -259,9 +280,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     knowledgeGaps.sort((a, b) => b.remediationPriority - a.remediationPriority);
 
     // Count by severity
-    const criticalGaps = knowledgeGaps.filter(g => g.severity === 'critical').length;
-    const significantGaps = knowledgeGaps.filter(g => g.severity === 'significant').length;
-    const moderateGaps = knowledgeGaps.filter(g => g.severity === 'moderate').length;
+    const criticalGaps = knowledgeGaps.filter((g) => g.severity === 'critical').length;
+    const significantGaps = knowledgeGaps.filter((g) => g.severity === 'significant').length;
+    const moderateGaps = knowledgeGaps.filter((g) => g.severity === 'moderate').length;
     const totalBlockedConcepts = knowledgeGaps.reduce((sum, g) => sum + g.blocksCount, 0);
 
     // Generate keystone concepts
@@ -277,9 +298,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       }
     }
 
-    const keystoneConcepts: ConceptGapsResponse['analysis']['keystoneConcepts'] = Array.from(systemStats)
+    const keystoneConcepts: ConceptGapsResponse['analysis']['keystoneConcepts'] = Array.from(
+      systemStats
+    )
       .filter(([, stats]) => stats.total >= 10)
-      .sort(([, a], [, b]) => (b.errors / b.total) - (a.errors / a.total))
+      .sort(([, a], [, b]) => b.errors / b.total - a.errors / a.total)
       .slice(0, 10)
       .map(([system, stats], index) => {
         const mastery = Math.round((1 - stats.errors / stats.total) * 100);
@@ -292,7 +315,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
           directUnlocks: [`${system}_clinical`],
           indirectUnlocks: [`${system}_treatment`, `${system}_diagnosis`],
           totalImpact: 15 - index,
-          potentialGain: Math.round((100 - mastery) * (15 - index) / 10),
+          potentialGain: Math.round(((100 - mastery) * (15 - index)) / 10),
           recommendedPriority: 100 - index * 8,
         };
       });
@@ -300,14 +323,15 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     // System gap analysis
     const systemGapAnalysis = Array.from(systemStats)
       .map(([system, stats]) => {
-        const systemGaps = knowledgeGaps.filter(g => g.system === system);
-        const avgSeverity = systemGaps.length > 0
-          ? systemGaps.reduce((sum, g) => {
-              const sevMap = { critical: 4, significant: 3, moderate: 2, minor: 1 };
-              return sum + sevMap[g.severity];
-            }, 0) / systemGaps.length
-          : 0;
-        
+        const systemGaps = knowledgeGaps.filter((g) => g.system === system);
+        const avgSeverity =
+          systemGaps.length > 0
+            ? systemGaps.reduce((sum, g) => {
+                const sevMap = { critical: 4, significant: 3, moderate: 2, minor: 1 };
+                return sum + sevMap[g.severity];
+              }, 0) / systemGaps.length
+            : 0;
+
         return {
           system,
           gapCount: systemGaps.length,
@@ -324,10 +348,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Stage 1: Critical gaps
     const criticalGapConcepts = knowledgeGaps
-      .filter(g => g.severity === 'critical')
+      .filter((g) => g.severity === 'critical')
       .slice(0, 5)
-      .map(g => g.conceptId);
-    
+      .map((g) => g.conceptId);
+
     if (criticalGapConcepts.length > 0) {
       stages.push({
         stageNumber: ++stageNum,
@@ -341,10 +365,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Stage 2: Keystone concepts
     const keystoneConceptIds = keystoneConcepts
-      .filter(k => k.currentMastery < 70)
+      .filter((k) => k.currentMastery < 70)
       .slice(0, 5)
-      .map(k => k.conceptId);
-    
+      .map((k) => k.conceptId);
+
     if (keystoneConceptIds.length > 0) {
       stages.push({
         stageNumber: ++stageNum,
@@ -358,10 +382,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Stage 3: Significant gaps
     const significantGapConcepts = knowledgeGaps
-      .filter(g => g.severity === 'significant')
+      .filter((g) => g.severity === 'significant')
       .slice(0, 7)
-      .map(g => g.conceptId);
-    
+      .map((g) => g.conceptId);
+
     if (significantGapConcepts.length > 0) {
       stages.push({
         stageNumber: ++stageNum,
@@ -375,10 +399,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Stage 4: Advancement
     const advancementConcepts = keystoneConcepts
-      .filter(k => k.currentMastery >= 70)
+      .filter((k) => k.currentMastery >= 70)
       .slice(0, 5)
-      .map(k => k.conceptId);
-    
+      .map((k) => k.conceptId);
+
     if (advancementConcepts.length > 0) {
       stages.push({
         stageNumber: ++stageNum,
@@ -392,7 +416,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Detect interference patterns (simplified - would use actual concept similarity)
     const interferencePatterns: ConceptGapsResponse['analysis']['interferencePatterns'] = [];
-    
+
     // Group errors by system and look for pairs
     const systemErrors: Map<string, string[]> = new Map();
     for (const gap of knowledgeGaps.slice(0, 20)) {
@@ -423,12 +447,16 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Generate action items
     const immediateActions: string[] = [];
-    
+
     if (criticalGaps > 0) {
-      immediateActions.push(`Review ${criticalGaps} critical gap${criticalGaps > 1 ? 's' : ''} immediately`);
+      immediateActions.push(
+        `Review ${criticalGaps} critical gap${criticalGaps > 1 ? 's' : ''} immediately`
+      );
     }
     if (keystoneConcepts[0]?.currentMastery < 60) {
-      immediateActions.push(`Focus on ${keystoneConcepts[0].conceptName} - it unlocks ${keystoneConcepts[0].totalImpact} other concepts`);
+      immediateActions.push(
+        `Focus on ${keystoneConcepts[0].conceptName} - it unlocks ${keystoneConcepts[0].totalImpact} other concepts`
+      );
     }
     if (interferencePatterns.length > 0) {
       immediateActions.push('Practice distinguishing commonly confused concepts');
@@ -438,7 +466,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     }
 
     const weeklyGoals: string[] = [];
-    
+
     if (stages.length > 0) {
       weeklyGoals.push(`Complete Stage 1: ${stages[0].title}`);
     }
@@ -454,49 +482,57 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       analysis: {
         userId,
         analyzedAt: new Date().toISOString(),
-        
+
         totalGapsIdentified: knowledgeGaps.length,
         criticalGaps,
         significantGaps,
         moderateGaps,
         totalBlockedConcepts,
-        
+
         knowledgeGaps: knowledgeGaps.slice(0, 20), // Top 20
         keystoneConcepts,
-        
+
         recommendedPath: {
           strategy: criticalGaps > 3 ? 'gap_priority' : 'keystone_priority',
           stages,
           totalEstimatedHours: stages.reduce((sum, s) => sum + s.estimatedHours, 0),
           expectedImpact: Math.min(100, 70 + stages.length * 5),
         },
-        
+
         systemGapAnalysis,
         interferencePatterns,
-        
+
         immediateActions,
         weeklyGoals,
       },
     };
 
+    log.info('Concept gaps analysis complete', {
+      totalGaps: knowledgeGaps.length,
+      criticalGaps,
+      significantGaps,
+    });
+
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
-    console.error('[ConceptGaps] Error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    log.error('Error fetching concept gaps', { error });
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});
 
 // ============================================================================
 // Helper Functions

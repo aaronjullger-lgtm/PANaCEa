@@ -1,9 +1,9 @@
 /**
  * Error Diagnostics System
- * 
+ *
  * Classifies incorrect answers into diagnostic categories to enable
  * targeted remediation strategies.
- * 
+ *
  * Categories:
  * - Memory Slip: High latency + correct OR incorrect after initial correct selection
  *   → Weak memory trace, schedule for shorter interval review
@@ -13,7 +13,7 @@
  *   → Active interference from incorrect schema
  * - Careless Error: Fast correct-to-wrong switch at last moment
  *   → Attention lapse, not a memory issue
- * 
+ *
  * Research basis:
  * - Koriat & Goldsmith (1996): Monitoring and control in memory
  * - Metcalfe (2017): Error correction and hypercorrection
@@ -22,12 +22,12 @@
 /**
  * Error diagnostic classification
  */
-export type ErrorCategory = 
-  | 'memory_slip'      // Weak trace - knew it but couldn't retrieve
-  | 'knowledge_gap'    // Never encoded properly
-  | 'misconception'    // Active incorrect knowledge
-  | 'careless_error'   // Attention/execution failure
-  | 'unknown';         // Insufficient data to classify
+export type ErrorCategory =
+  | 'memory_slip' // Weak trace - knew it but couldn't retrieve
+  | 'knowledge_gap' // Never encoded properly
+  | 'misconception' // Active incorrect knowledge
+  | 'careless_error' // Attention/execution failure
+  | 'unknown'; // Insufficient data to classify
 
 /**
  * Full error diagnostic result
@@ -172,8 +172,10 @@ export function classifyError(input: ErrorClassificationInput): ErrorDiagnostic 
       };
     }
     // High latency + hesitant trajectory = retrieval failure
-    if (input.trajectoryConfidence !== undefined && 
-        input.trajectoryConfidence < THRESHOLDS.LOW_TRAJECTORY_CONFIDENCE) {
+    if (
+      input.trajectoryConfidence !== undefined &&
+      input.trajectoryConfidence < THRESHOLDS.LOW_TRAJECTORY_CONFIDENCE
+    ) {
       return {
         category: 'memory_slip',
         confidence: 0.75,
@@ -197,9 +199,11 @@ export function classifyError(input: ErrorClassificationInput): ErrorDiagnostic 
   }
 
   // Priority 5: Misconception - confident wrong answer
-  if (input.trajectoryConfidence !== undefined && 
-      input.trajectoryConfidence > THRESHOLDS.HIGH_TRAJECTORY_CONFIDENCE &&
-      latencyRatio < 1.0) {
+  if (
+    input.trajectoryConfidence !== undefined &&
+    input.trajectoryConfidence > THRESHOLDS.HIGH_TRAJECTORY_CONFIDENCE &&
+    latencyRatio < 1.0
+  ) {
     return {
       category: 'misconception',
       confidence: 0.7,
@@ -234,8 +238,8 @@ export function classifyError(input: ErrorClassificationInput): ErrorDiagnostic 
  * Build evidence object from input
  */
 function buildEvidence(input: ErrorClassificationInput): ErrorEvidence {
-  const initiallyCorrect = input.selectionHistory 
-    ? input.selectionHistory[0] === input.correctAnswerId && 
+  const initiallyCorrect = input.selectionHistory
+    ? input.selectionHistory[0] === input.correctAnswerId &&
       input.selectionHistory[input.selectionHistory.length - 1] !== input.correctAnswerId
     : false;
 
@@ -256,7 +260,10 @@ function createRemediation(
   type: RemediationStrategy['type'],
   intervalMultiplier: number
 ): RemediationStrategy {
-  const strategies: Record<RemediationStrategy['type'], Omit<RemediationStrategy, 'intervalMultiplier'>> = {
+  const strategies: Record<
+    RemediationStrategy['type'],
+    Omit<RemediationStrategy, 'intervalMultiplier'>
+  > = {
     short_interval: {
       type: 'short_interval',
       showElaboration: true,
@@ -267,7 +274,7 @@ function createRemediation(
       type: 'elaboration',
       showElaboration: true,
       addToConfusionPairs: false,
-      interventionText: 'Let\'s build a stronger foundation. Study the pathophysiology.',
+      interventionText: "Let's build a stronger foundation. Study the pathophysiology.",
     },
     contrast: {
       type: 'contrast',
@@ -294,11 +301,11 @@ function createRemediation(
  */
 export function getStabilityMultiplierForError(category: ErrorCategory): number {
   const multipliers: Record<ErrorCategory, number> = {
-    memory_slip: 0.7,      // Reduce stability but not severely
-    knowledge_gap: 0.4,    // Major stability reduction - needs re-encoding
-    misconception: 0.3,    // Severe reduction - needs unlearning + relearning
-    careless_error: 0.9,   // Minimal reduction - not a memory issue
-    unknown: 0.6,          // Default moderate reduction
+    memory_slip: 0.7, // Reduce stability but not severely
+    knowledge_gap: 0.4, // Major stability reduction - needs re-encoding
+    misconception: 0.3, // Severe reduction - needs unlearning + relearning
+    careless_error: 0.9, // Minimal reduction - not a memory issue
+    unknown: 0.6, // Default moderate reduction
   };
   return multipliers[category];
 }

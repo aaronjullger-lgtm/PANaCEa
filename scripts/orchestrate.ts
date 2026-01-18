@@ -23,37 +23,37 @@ const TASKS: Task[] = [
   // 1. THE BRIDGE: Ensure DB has all the rows from your .ts files
   {
     name: 'Registry Synchronization',
-    script: 'syncAllRegistries.ts', 
+    script: 'syncAllRegistries.ts',
     description: 'Upsert local registry files (Conditions, Drugs) to Database',
-    critical: true // If this fails, there is nothing to validate
+    critical: true, // If this fails, there is nothing to validate
   },
   // 2. THE CHECKUP: Are the rows we just synced valid?
   {
     name: 'Database Validation',
     script: 'validate_database.ts',
     description: 'Check for missing fields (nulls) and data format issues',
-    critical: true
+    critical: true,
   },
   // 3. THE CONTENT AUDIT: Do they have the actual text?
   {
     name: 'Content Quality Check',
     script: 'check_content_quality.ts',
     description: 'Verify required sections (symptoms, treatment) exist and aren\'t "TBD"',
-    critical: true
+    critical: true,
   },
   // 4. THE RELATIONSHIPS: Are the links broken?
   {
     name: 'Relationship Validation',
     script: 'validate_relationships.ts',
     description: 'Ensure Conditions link to valid Systems/Categories',
-    critical: true
+    critical: true,
   },
   // 5. THE CLEANUP
   {
     name: 'Duplicate Detection',
     script: 'deduplicate.ts',
     description: 'Find and report duplicate conditions',
-    critical: false
+    critical: false,
   },
   // 6. THE FIX: Fill the empty shells found in steps 2 & 3
   {
@@ -61,8 +61,8 @@ const TASKS: Task[] = [
     script: 'generate_content.ts',
     args: ['--limit=5'], // Removed dry-run for production fix, or keep for safety
     description: 'Generate missing content sections using Gemini 2.5 Pro',
-    critical: false
-  }
+    critical: false,
+  },
 ];
 
 interface TaskResult {
@@ -75,12 +75,15 @@ interface TaskResult {
 
 const results: TaskResult[] = [];
 
-function runScript(scriptPath: string, args: string[] = []): Promise<{ stdout: string, stderr: string }> {
+function runScript(
+  scriptPath: string,
+  args: string[] = []
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const fullPath = path.join(__dirname, scriptPath);
     const proc = spawn('npx', ['tsx', fullPath, ...args], {
       cwd: path.join(__dirname, '..'),
-      env: process.env
+      env: process.env,
     });
 
     let stdout = '';
@@ -112,7 +115,7 @@ function runScript(scriptPath: string, args: string[] = []): Promise<{ stdout: s
 
 async function runTask(task: Task): Promise<TaskResult> {
   const startTime = Date.now();
-  
+
   console.log(`\n${'='.repeat(80)}`);
   console.log(`🚀 Running: ${task.name}`);
   console.log(`   ${task.description}`);
@@ -121,26 +124,26 @@ async function runTask(task: Task): Promise<TaskResult> {
   try {
     const { stdout, stderr } = await runScript(task.script, task.args);
     const duration = Date.now() - startTime;
-    
+
     console.log(`\n✅ ${task.name} completed in ${(duration / 1000).toFixed(2)}s\n`);
-    
+
     return {
       task,
       success: true,
       duration,
-      output: stdout
+      output: stdout,
     };
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    
+
     console.error(`\n❌ ${task.name} failed after ${(duration / 1000).toFixed(2)}s`);
     if (error.error) console.error(`   Error: ${error.error}`);
-    
+
     return {
       task,
       success: false,
       duration,
-      error: error.error || error.stderr || 'Unknown error'
+      error: error.error || error.stderr || 'Unknown error',
     };
   }
 }
@@ -149,11 +152,11 @@ async function generateSummaryReport() {
   console.log(`\n\n${'='.repeat(80)}`);
   console.log('AUTOMATION SUMMARY');
   console.log(`${'='.repeat(80)}`);
-  
+
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
-  const successCount = results.filter(r => r.success).length;
-  const failureCount = results.filter(r => !r.success).length;
-  const criticalFailures = results.filter(r => !r.success && r.task.critical);
+  const successCount = results.filter((r) => r.success).length;
+  const failureCount = results.filter((r) => !r.success).length;
+  const criticalFailures = results.filter((r) => !r.success && r.task.critical);
 
   console.log(`\nTotal Tasks: ${results.length}`);
   console.log(`✅ Successful: ${successCount}`);
@@ -171,7 +174,7 @@ async function generateSummaryReport() {
     const status = result.success ? '✅' : '❌';
     const critical = result.task.critical ? '🚨' : '  ';
     const duration = (result.duration / 1000).toFixed(2);
-    
+
     console.log(`${status} ${critical} ${result.task.name} (${duration}s)`);
     if (!result.success && result.error) {
       console.log(`   Error: ${result.error.split('\n')[0]}`);
@@ -179,16 +182,17 @@ async function generateSummaryReport() {
   }
 
   console.log(`\n${'='.repeat(80)}`);
-  
+
   // Check for generated reports
   const reportDir = path.join(__dirname, '../reports');
   if (fs.existsSync(reportDir)) {
-    const files = fs.readdirSync(reportDir)
-      .filter(f => f.endsWith('.json'))
+    const files = fs
+      .readdirSync(reportDir)
+      .filter((f) => f.endsWith('.json'))
       .sort()
       .reverse()
       .slice(0, 10);
-    
+
     if (files.length > 0) {
       console.log('\n📄 Recent Reports Generated:');
       for (const file of files) {
@@ -209,23 +213,30 @@ async function generateSummaryReport() {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const logPath = path.join(logDir, `automation-${timestamp}.json`);
-  
-  fs.writeFileSync(logPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    summary: {
-      totalTasks: results.length,
-      successful: successCount,
-      failed: failureCount,
-      criticalFailures: criticalFailures.length,
-      totalDuration
-    },
-    results: results.map(r => ({
-      task: r.task.name,
-      success: r.success,
-      duration: r.duration,
-      error: r.error
-    }))
-  }, null, 2));
+
+  fs.writeFileSync(
+    logPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalTasks: results.length,
+          successful: successCount,
+          failed: failureCount,
+          criticalFailures: criticalFailures.length,
+          totalDuration,
+        },
+        results: results.map((r) => ({
+          task: r.task.name,
+          success: r.success,
+          duration: r.duration,
+          error: r.error,
+        })),
+      },
+      null,
+      2
+    )
+  );
 
   console.log(`📝 Automation log saved to: ${logPath}\n`);
 
@@ -245,14 +256,14 @@ async function main() {
 
   try {
     let tasksToRun = TASKS;
-    
+
     if (skipGeneration) {
-      tasksToRun = TASKS.filter(t => t.name !== 'Content Generation');
+      tasksToRun = TASKS.filter((t) => t.name !== 'Content Generation');
     }
-    
+
     if (quickMode) {
       // In quick mode, only run critical tasks
-      tasksToRun = tasksToRun.filter(t => t.critical);
+      tasksToRun = tasksToRun.filter((t) => t.critical);
     }
 
     for (const task of tasksToRun) {
@@ -280,7 +291,7 @@ async function main() {
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('❌ Fatal error:', error);
   process.exit(1);
 });

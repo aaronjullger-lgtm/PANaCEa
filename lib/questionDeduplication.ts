@@ -1,8 +1,8 @@
 /**
  * Question Deduplication Utility
- * 
+ *
  * Sprint B - Step 3: Prevent users from seeing duplicate questions
- * 
+ *
  * Uses UserQuestionSeen table to track which questions each user has encountered.
  * Provides filtering and deduplication functions for question selection.
  */
@@ -20,7 +20,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Get list of question IDs the user has already seen
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param options - Optional filters
@@ -37,18 +37,18 @@ export async function getUserSeenQuestionIds(
   // Check cache first
   const cacheKey = `${userId}:${options?.questionType || 'all'}:${options?.since?.toISOString() || 'all'}`;
   const cached = seenQuestionsCache.get(cacheKey);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return new Set(cached.questionIds);
   }
 
   // Build where clause
   const where: any = { userId };
-  
+
   if (options?.questionType) {
     where.questionType = options.questionType;
   }
-  
+
   if (options?.since) {
     where.lastSeenAt = {
       gte: options.since,
@@ -61,7 +61,7 @@ export async function getUserSeenQuestionIds(
       select: { questionId: true },
     });
 
-    const questionIds = new Set(seenRecords.map(r => r.questionId));
+    const questionIds = new Set(seenRecords.map((r) => r.questionId));
 
     // Update cache
     seenQuestionsCache.set(cacheKey, {
@@ -78,7 +78,7 @@ export async function getUserSeenQuestionIds(
 
 /**
  * Filter out questions the user has already seen
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param questionIds - Array of question IDs to filter
@@ -97,12 +97,12 @@ export async function filterUnseenQuestions(
 
   const seenIds = await getUserSeenQuestionIds(prisma, userId, { questionType });
 
-  return questionIds.filter(id => !seenIds.has(id));
+  return questionIds.filter((id) => !seenIds.has(id));
 }
 
 /**
  * Get count of how many questions from a pool the user has seen
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param poolQuestionIds - Array of question IDs in the pool
@@ -126,7 +126,7 @@ export async function getPoolExplorationStats(
 
   const seenIds = await getUserSeenQuestionIds(prisma, userId, { questionType });
 
-  const seenCount = poolQuestionIds.filter(id => seenIds.has(id)).length;
+  const seenCount = poolQuestionIds.filter((id) => seenIds.has(id)).length;
   const unseenCount = poolQuestionIds.length - seenCount;
   const percentExplored = Math.round((seenCount / poolQuestionIds.length) * 100);
 
@@ -140,7 +140,7 @@ export async function getPoolExplorationStats(
 
 /**
  * Check if specific questions have been seen by the user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param questionIds - Array of question IDs to check
@@ -170,7 +170,7 @@ export async function checkQuestionsSeenStatus(
 
 /**
  * Get detailed information about when questions were seen
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID to check
  * @param questionIds - Array of question IDs to get details for
@@ -182,16 +182,18 @@ export async function getSeenQuestionDetails(
   userId: string,
   questionIds: string[],
   questionType: string = 'pre_generated'
-): Promise<Array<{
-  questionId: string;
-  firstSeenAt: Date;
-  lastSeenAt: Date;
-  timesShown: number;
-  timesCorrect: number;
-  timesIncorrect: number;
-  avgTimeMs: number | null;
-  correctOnFirst: boolean | null;
-}>> {
+): Promise<
+  Array<{
+    questionId: string;
+    firstSeenAt: Date;
+    lastSeenAt: Date;
+    timesShown: number;
+    timesCorrect: number;
+    timesIncorrect: number;
+    avgTimeMs: number | null;
+    correctOnFirst: boolean | null;
+  }>
+> {
   if (questionIds.length === 0) {
     return [];
   }
@@ -225,7 +227,7 @@ export async function getSeenQuestionDetails(
 /**
  * Clear the seen questions cache for a specific user
  * Call this after recording new question views
- * 
+ *
  * @param userId - User ID to clear cache for
  */
 export function clearSeenQuestionsCache(userId?: string): void {

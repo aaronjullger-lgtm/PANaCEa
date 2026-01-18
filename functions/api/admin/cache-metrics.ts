@@ -1,99 +1,96 @@
 // functions/api/admin/cache-metrics.ts
 // Admin endpoint to view cache performance metrics
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCacheMetrics, isKVAvailable } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-  CACHE?: KVNamespace;
-}
+const CacheMetricsSchema = z.object({
+  query: z.object({}).optional(),
+});
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/cache-metrics
  * Returns cache hit/miss statistics for monitoring performance
  * Admin-only endpoint
  */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
-  try {
-    // Authenticate request
-    const authResult = await authenticateRequest(context.request as any, context.env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+export const onRequestGet = authenticatedEndpoint(CacheMetricsSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/admin/cache-metrics');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+  try {
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { clerkId: authResult.userId },
-      select: { role: true },
+      where: { clerkId: auth.userId },
+      select: { role: true, id: true },
     });
 
-    if (user?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
+    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+      logger.warn('Non-admin attempted to access cache metrics', {
+        userId: auth.userId,
+        role: user?.role,
       });
+
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
     }
 
     // Check if KV is available
-    if (!isKVAvailable(context.env.CACHE)) {
-      return new Response(JSON.stringify({ 
-        error: 'Cache not available',
-        message: 'KV namespace is not configured',
-      }), {
+    const cache = (env as any).CACHE as KVNamespace | undefined;
+
+    if (!isKVAvailable(cache)) {
+      logger.warn('Cache not available', { userId: user.id });
+
+      return {
+        data: {
+          error: 'Cache not available',
+          message: 'KV namespace is not configured',
+        },
         status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      };
     }
 
     // Get cache metrics
-    const metrics = await getCacheMetrics(context.env.CACHE);
+    const metrics = await getCacheMetrics(cache);
 
     // Calculate hit rate
     const total = metrics.hits + metrics.misses;
     const hitRate = total > 0 ? Math.round((metrics.hits / total) * 100) : 0;
 
-    return new Response(JSON.stringify({
-      success: true,
-      metrics: {
-        hits: metrics.hits,
-        misses: metrics.misses,
-        errors: metrics.errors,
-        total,
-        hitRate: `${hitRate}%`,
-        lastUpdated: metrics.lastUpdated,
-      },
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    logger.info('Cache metrics retrieved', {
+      userId: user.id,
+      total,
+      hitRate,
     });
 
+    return {
+      data: {
+        success: true,
+        metrics: {
+          hits: metrics.hits,
+          misses: metrics.misses,
+          errors: metrics.errors,
+          total,
+          hitRate: `${hitRate}%`,
+          lastUpdated: metrics.lastUpdated,
+        },
+      },
+    };
   } catch (error) {
-    console.error('Error fetching cache metrics:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    logger.error('Error fetching cache metrics', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch cache metrics');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-};
+});

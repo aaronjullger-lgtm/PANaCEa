@@ -1,5 +1,20 @@
 import React, { useMemo } from 'react';
-import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
+import {
+  ResponsiveContainer,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from 'recharts';
 import { Sparkles, Gauge, Clock, TrendingUp, Activity } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -89,8 +104,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           <div className="flex items-center gap-3 mt-3">
             <Gauge className="w-10 h-10 text-[var(--color-accent)]" />
             <div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">{readinessScore}%</div>
-              <p className="text-sm text-[var(--color-text-muted)]">Weighted blend of accuracy + coverage</p>
+              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+                {readinessScore}%
+              </div>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Weighted blend of accuracy + coverage
+              </p>
             </div>
           </div>
         </div>
@@ -108,9 +127,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
             <Clock className="w-4 h-4" /> Avg Decision Time
           </div>
           <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
-            {timeData.length ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s` : '—'}
+            {timeData.length
+              ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s`
+              : '—'}
           </div>
-          <p className="text-sm text-[var(--color-text-muted)]">Per question across tracked systems</p>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Per question across tracked systems
+          </p>
         </div>
       </div>
 
@@ -125,9 +148,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
             <ResponsiveContainer width="100%" height={320}>
               <RadarChart data={radarData} outerRadius={120}>
                 <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
-                <Radar name="Accuracy" dataKey="accuracy" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} />
+                <PolarAngleAxis
+                  dataKey="system"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
+                />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 100]}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                />
+                <Radar
+                  name="Accuracy"
+                  dataKey="accuracy"
+                  stroke="#6366f1"
+                  fill="#6366f1"
+                  fillOpacity={0.35}
+                />
               </RadarChart>
             </ResponsiveContainer>
           )}
@@ -144,11 +180,35 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} domain={[0, 100]} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                  domain={[0, 100]}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                />
                 <Tooltip />
-                <Line yAxisId="left" type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} dot={false} name="Accuracy (%)" />
-                <Line yAxisId="right" type="monotone" dataKey="pace" stroke="#6366f1" strokeWidth={2} dot={false} name="Pace (s)" />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="accuracy"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Accuracy (%)"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="pace"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Pace (s)"
+                />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -160,15 +220,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           <Clock className="w-4 h-4" /> Decision Time by System
         </div>
         {timeData.length === 0 ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Time tracking will appear once you complete timed sessions.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Time tracking will appear once you complete timed sessions.
+          </p>
         ) : (
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={timeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} interval={0} angle={-20} height={60} />
+              <XAxis
+                dataKey="system"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                interval={0}
+                angle={-20}
+                height={60}
+              />
               <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="seconds" fill="#f59e0b" radius={[6,6,0,0]} name="Avg seconds" />
+              <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds" />
             </BarChart>
           </ResponsiveContainer>
         )}

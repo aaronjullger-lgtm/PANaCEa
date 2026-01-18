@@ -1,9 +1,9 @@
 /**
  * Preferences Sync Utility
- * 
+ *
  * Migrates localStorage preferences to database and keeps them in sync.
  * Handles conflict resolution when preferences exist in both locations.
- * 
+ *
  * Strategy:
  * - On first login: Check localStorage, migrate to DB if exists
  * - On subsequent logins: Use DB as source of truth
@@ -216,7 +216,7 @@ export async function syncPreferencesToDb(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(localPrefs),
     });
@@ -255,7 +255,7 @@ export async function fetchPreferencesFromDb(
     const response = await fetch('/api/user/preferences', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -290,7 +290,7 @@ export async function updatePreferencesInDb(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(prefs),
     });

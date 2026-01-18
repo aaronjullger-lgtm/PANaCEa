@@ -1,14 +1,21 @@
 /**
  * KeybindContext - Global keybind management system
- * 
+ *
  * Provides a centralized way to register and manage keyboard shortcuts
  * throughout the application. Prevents ghost triggers by checking for
  * focused input elements.
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
 
-export type KeybindAction = 
+export type KeybindAction =
   | 'submit'
   | 'next'
   | 'previous'
@@ -62,7 +69,7 @@ interface KeybindProviderProps {
 
 export function KeybindProvider({ children }: KeybindProviderProps) {
   const [keybinds, setKeybinds] = useState<Map<KeybindAction, KeybindConfig>>(() => {
-    return new Map(DEFAULT_KEYBINDS.map(config => [config.action, config]));
+    return new Map(DEFAULT_KEYBINDS.map((config) => [config.action, config]));
   });
 
   const [isKeybindActive, setKeybindActive] = useState(true);
@@ -70,12 +77,12 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
   // Load from localStorage on mount (client-side only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const stored = localStorage.getItem('panacea_keybinds');
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as KeybindConfig[];
-        setKeybinds(new Map(parsed.map(config => [config.action, config])));
+        setKeybinds(new Map(parsed.map((config) => [config.action, config])));
       } catch (error) {
         console.error('[KeybindContext] Failed to load keybinds from localStorage:', error);
       }
@@ -89,7 +96,7 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
   }, [keybinds]);
 
   const registerKeybind = useCallback((config: KeybindConfig) => {
-    setKeybinds(prev => {
+    setKeybinds((prev) => {
       const next = new Map(prev);
       next.set(config.action, config);
       return next;
@@ -97,7 +104,7 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
   }, []);
 
   const unregisterKeybind = useCallback((action: KeybindAction) => {
-    setKeybinds(prev => {
+    setKeybinds((prev) => {
       const next = new Map(prev);
       next.delete(action);
       return next;
@@ -105,7 +112,7 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
   }, []);
 
   const updateKeybind = useCallback((action: KeybindAction, newKey: string) => {
-    setKeybinds(prev => {
+    setKeybinds((prev) => {
       const next = new Map(prev);
       const existing = next.get(action);
       if (existing) {
@@ -115,9 +122,12 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
     });
   }, []);
 
-  const getKeybind = useCallback((action: KeybindAction) => {
-    return keybinds.get(action);
-  }, [keybinds]);
+  const getKeybind = useCallback(
+    (action: KeybindAction) => {
+      return keybinds.get(action);
+    },
+    [keybinds]
+  );
 
   const value: KeybindContextValue = {
     keybinds,
@@ -129,11 +139,7 @@ export function KeybindProvider({ children }: KeybindProviderProps) {
     setKeybindActive,
   };
 
-  return (
-    <KeybindContext.Provider value={value}>
-      {children}
-    </KeybindContext.Provider>
-  );
+  return <KeybindContext.Provider value={value}>{children}</KeybindContext.Provider>;
 }
 
 /**
@@ -148,7 +154,7 @@ export function useKeybind(
   }
 ) {
   const context = useContext(KeybindContext);
-  
+
   if (!context) {
     throw new Error('useKeybind must be used within a KeybindProvider');
   }
@@ -170,9 +176,8 @@ export function useKeybind(
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if user is typing in an input field
       const target = event.target as HTMLElement;
-      const isInput = target.tagName === 'INPUT' || 
-                     target.tagName === 'TEXTAREA' || 
-                     target.isContentEditable;
+      const isInput =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
       // Skip if typing in input (unless it's Escape key which should always work)
       if (isInput && config.key !== 'Escape') {
@@ -181,7 +186,9 @@ export function useKeybind(
 
       // Check if the key matches
       const keyMatches = event.key === config.key;
-      const ctrlMatches = config.ctrlKey ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
+      const ctrlMatches = config.ctrlKey
+        ? event.ctrlKey || event.metaKey
+        : !event.ctrlKey && !event.metaKey;
       const shiftMatches = config.shiftKey ? event.shiftKey : !event.shiftKey;
       const altMatches = config.altKey ? event.altKey : !event.altKey;
 
@@ -216,7 +223,7 @@ export function useKeybindContext() {
  */
 export function formatKeybind(config: KeybindConfig): string {
   const parts: string[] = [];
-  
+
   if (config.ctrlKey) {
     parts.push(navigator.platform.includes('Mac') ? '⌘' : 'Ctrl');
   }
@@ -226,7 +233,7 @@ export function formatKeybind(config: KeybindConfig): string {
   if (config.altKey) {
     parts.push(navigator.platform.includes('Mac') ? '⌥' : 'Alt');
   }
-  
+
   // Format the key
   let key = config.key;
   if (key === 'ArrowLeft') key = '←';
@@ -237,8 +244,8 @@ export function formatKeybind(config: KeybindConfig): string {
   else if (key === 'Enter') key = '↵';
   else if (key === ' ') key = 'Space';
   else key = key.toUpperCase();
-  
+
   parts.push(key);
-  
+
   return parts.join(' + ');
 }

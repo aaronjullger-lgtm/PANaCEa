@@ -13,9 +13,9 @@ export function normalize(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[_\-\s]+/g, " ") // Replace underscores, hyphens, spaces with single space
-    .replace(/[^\w\s]/g, "") // Remove punctuation
-    .replace(/\s+/g, " ") // Collapse multiple spaces
+    .replace(/[_\-\s]+/g, ' ') // Replace underscores, hyphens, spaces with single space
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
     .trim();
 }
 
@@ -31,9 +31,7 @@ function levenshteinDistance(a: string, b: string): number {
   if (n === 0) return m;
 
   // Create distance matrix
-  const dp: number[][] = Array.from({ length: m + 1 }, () =>
-    Array(n + 1).fill(0)
-  );
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
 
   // Initialize first column
   for (let i = 0; i <= m; i++) {
@@ -84,27 +82,27 @@ export function similarityScore(a: string, b: string): number {
 
 // Common trivial tokens to filter out from extracted tags
 const TRIVIAL_TOKENS = new Set([
-  "img",
-  "image",
-  "final",
-  "v1",
-  "v2",
-  "v3",
-  "copy",
-  "new",
-  "old",
-  "test",
-  "tmp",
-  "temp",
-  "draft",
-  "edit",
-  "edited",
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "svg",
-  "webp",
+  'img',
+  'image',
+  'final',
+  'v1',
+  'v2',
+  'v3',
+  'copy',
+  'new',
+  'old',
+  'test',
+  'tmp',
+  'temp',
+  'draft',
+  'edit',
+  'edited',
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'svg',
+  'webp',
 ]);
 
 /**
@@ -117,7 +115,7 @@ const TRIVIAL_TOKENS = new Set([
  */
 export function extractTags(filename: string): string[] {
   // Remove file extension
-  const nameWithoutExtension = filename.replace(/\.[^.]+$/, "");
+  const nameWithoutExtension = filename.replace(/\.[^.]+$/, '');
 
   // Split on underscores, hyphens, and spaces
   const tokens = nameWithoutExtension.split(/[_\-\s]+/);
@@ -142,7 +140,7 @@ export function extractTags(filename: string): string[] {
 /**
  * Media asset types based on folder location.
  */
-export type MediaType = "ekg" | "imaging" | "labs" | "diagram" | "other";
+export type MediaType = 'ekg' | 'imaging' | 'labs' | 'diagram' | 'other';
 
 /**
  * Detects the media type based on the folder path.
@@ -151,20 +149,20 @@ export type MediaType = "ekg" | "imaging" | "labs" | "diagram" | "other";
  * @returns The detected media type
  */
 export function detectMediaTypeFromFolder(filepath: string): MediaType {
-  const normalizedPath = filepath.toLowerCase().replace(/\\/g, "/");
+  const normalizedPath = filepath.toLowerCase().replace(/\\/g, '/');
 
-  if (normalizedPath.includes("/ekg/")) {
-    return "ekg";
+  if (normalizedPath.includes('/ekg/')) {
+    return 'ekg';
   }
-  if (normalizedPath.includes("/imaging/")) {
-    return "imaging";
+  if (normalizedPath.includes('/imaging/')) {
+    return 'imaging';
   }
-  if (normalizedPath.includes("/labs/")) {
-    return "labs";
+  if (normalizedPath.includes('/labs/')) {
+    return 'labs';
   }
-  if (normalizedPath.includes("/diagrams/")) {
-    return "diagram";
+  if (normalizedPath.includes('/diagrams/')) {
+    return 'diagram';
   }
 
-  return "other";
+  return 'other';
 }

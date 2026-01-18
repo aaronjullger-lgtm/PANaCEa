@@ -1,17 +1,17 @@
 /**
  * Supabase Hook with Clerk Integration
- * 
+ *
  * Provides a Supabase client that automatically uses Clerk session tokens
  * for authentication. This allows Row Level Security (RLS) policies in
  * Supabase to use Clerk JWT claims.
- * 
+ *
  * Usage:
  * ```tsx
  * import { useSupabase } from './hooks/useSupabase';
- * 
+ *
  * function MyComponent() {
  *   const supabase = useSupabase();
- *   
+ *
  *   // Use supabase client as normal
  *   const { data, error } = await supabase
  *     .from('my_table')
@@ -27,10 +27,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Hook to get a Supabase client configured with Clerk authentication
- * 
+ *
  * The client will automatically include the current Clerk session token
  * in all requests to Supabase, allowing RLS policies to use JWT claims.
- * 
+ *
  * @returns Supabase client configured with Clerk session tokens
  */
 export function useSupabase(): SupabaseClient {
@@ -60,7 +60,7 @@ export function useSupabase(): SupabaseClient {
 /**
  * Hook variant that returns null when user is not authenticated
  * Useful for components that should only work with authenticated users
- * 
+ *
  * @returns Supabase client or null if not authenticated
  */
 export function useAuthenticatedSupabase(): SupabaseClient | null {

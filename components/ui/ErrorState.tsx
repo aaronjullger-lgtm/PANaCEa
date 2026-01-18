@@ -12,10 +12,10 @@ interface ErrorStateProps {
 
 /**
  * ErrorState - Reusable error display component with optional retry
- * 
+ *
  * Provides consistent error UX across the application with smooth animations
  * and clear call-to-action for recoverable errors.
- * 
+ *
  * @param message - Error message to display (default: "Something went wrong")
  * @param onRetry - Optional callback for retry button
  * @param className - Additional Tailwind classes
@@ -45,15 +45,11 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         </motion.div>
       )}
-      
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-        {title}
-      </h3>
-      
-      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">
-        {message}
-      </p>
-      
+
+      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
+
+      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
+
       {onRetry && (
         <motion.button
           onClick={onRetry}
@@ -71,7 +67,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
 /**
  * ErrorBoundaryFallback - Error fallback component for React Error Boundaries
- * 
+ *
  * Use this as the fallback UI for ErrorBoundary components.
  */
 export const ErrorBoundaryFallback: React.FC<{
@@ -122,15 +118,11 @@ export const EmptyState: React.FC<{
           {icon}
         </motion.div>
       )}
-      
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-        {title}
-      </h3>
-      
-      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">
-        {message}
-      </p>
-      
+
+      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
+
+      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
+
       {action && action}
     </motion.div>
   );

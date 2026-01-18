@@ -1,6 +1,6 @@
 /**
  * Image Optimization Utilities
- * 
+ *
  * Provides lazy loading, placeholder generation, and progressive image loading
  * for improved performance and user experience.
  */
@@ -8,7 +8,7 @@
 /**
  * Generate a blur placeholder data URL for an image
  * This creates a tiny, blurred version of an image that can be shown while loading
- * 
+ *
  * @param width - Width of the placeholder
  * @param height - Height of the placeholder
  * @param color - Base color for the placeholder (default: gray)
@@ -30,7 +30,7 @@ export function generateBlurPlaceholder(
       <rect width="100%" height="100%" fill="${color}" filter="url(#blur)"/>
     </svg>
   `;
-  
+
   // Encode to base64 data URL
   const encoded = btoa(svg);
   return `data:image/svg+xml;base64,${encoded}`;
@@ -39,7 +39,7 @@ export function generateBlurPlaceholder(
 /**
  * Intersection Observer based lazy loading hook
  * This can be used with React refs to trigger image loading when visible
- * 
+ *
  * @param threshold - Visibility threshold (0-1) to trigger loading
  * @param rootMargin - Margin around viewport to preload images
  * @returns Function to observe an element
@@ -52,19 +52,19 @@ export function createLazyLoader(
   if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
     return null;
   }
-  
+
   return new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const img = entry.target as HTMLImageElement;
           const src = img.dataset.src;
-          
+
           if (src) {
             img.src = src;
             img.removeAttribute('data-src');
           }
-          
+
           // Stop observing once loaded
           if (entry.target instanceof Element) {
             img.classList.add('loaded');
@@ -82,7 +82,7 @@ export function createLazyLoader(
 /**
  * Preload an image in the background
  * Useful for preloading images that will be shown soon
- * 
+ *
  * @param src - Image source URL
  * @returns Promise that resolves when image is loaded
  */
@@ -97,7 +97,7 @@ export function preloadImage(src: string): Promise<void> {
 
 /**
  * Preload multiple images
- * 
+ *
  * @param sources - Array of image URLs to preload
  * @returns Promise that resolves when all images are loaded
  */
@@ -107,7 +107,7 @@ export function preloadImages(sources: string[]): Promise<void[]> {
 
 /**
  * Check if an image URL is valid and accessible
- * 
+ *
  * @param url - Image URL to check
  * @returns Promise that resolves to true if image is valid
  */
@@ -123,18 +123,19 @@ export async function isValidImageUrl(url: string): Promise<boolean> {
 /**
  * Generate responsive image srcset for different screen sizes
  * Useful for optimizing image delivery based on device
- * 
+ *
  * @param baseUrl - Base image URL (should support width parameter)
  * @param widths - Array of widths to generate
  * @returns srcset string
  */
-export function generateSrcSet(baseUrl: string, widths: number[] = [320, 640, 960, 1280, 1920]): string {
+export function generateSrcSet(
+  baseUrl: string,
+  widths: number[] = [320, 640, 960, 1280, 1920]
+): string {
   return widths
     .map((width) => {
       // Assuming URL supports ?w=width parameter
-      const url = baseUrl.includes('?') 
-        ? `${baseUrl}&w=${width}` 
-        : `${baseUrl}?w=${width}`;
+      const url = baseUrl.includes('?') ? `${baseUrl}&w=${width}` : `${baseUrl}?w=${width}`;
       return `${url} ${width}w`;
     })
     .join(', ');
@@ -143,7 +144,7 @@ export function generateSrcSet(baseUrl: string, widths: number[] = [320, 640, 96
 /**
  * Calculate the aspect ratio of an image
  * Useful for maintaining aspect ratio during loading
- * 
+ *
  * @param width - Image width
  * @param height - Image height
  * @returns Aspect ratio as percentage (for padding-bottom trick)
@@ -155,7 +156,7 @@ export function calculateAspectRatio(width: number, height: number): string {
 /**
  * Create a progressive image loading component props
  * This returns props that can be spread onto an img element
- * 
+ *
  * @param src - Image source
  * @param alt - Alt text
  * @param options - Additional options
@@ -183,7 +184,7 @@ export function createProgressiveImageProps(
   sizes?: string;
 } {
   const { placeholder, className = '', width, height, sizes } = options;
-  
+
   return {
     'data-src': src,
     src: placeholder || generateBlurPlaceholder(),
@@ -205,7 +206,7 @@ export class ImageLoadingQueue {
   private criticalQueue: string[] = [];
   private normalQueue: string[] = [];
   private isProcessing: boolean = false;
-  
+
   /**
    * Add image to critical queue (loads immediately)
    */
@@ -215,7 +216,7 @@ export class ImageLoadingQueue {
       this.processQueue();
     }
   }
-  
+
   /**
    * Add image to normal queue (loads when idle)
    */
@@ -225,15 +226,15 @@ export class ImageLoadingQueue {
       this.processQueue();
     }
   }
-  
+
   /**
    * Process the loading queue
    */
   private async processQueue(): Promise<void> {
     if (this.isProcessing) return;
-    
+
     this.isProcessing = true;
-    
+
     // Load critical images first
     while (this.criticalQueue.length > 0) {
       const src = this.criticalQueue.shift();
@@ -245,7 +246,7 @@ export class ImageLoadingQueue {
         }
       }
     }
-    
+
     // Load normal images when idle
     if ('requestIdleCallback' in window) {
       this.processNormalQueue();
@@ -253,17 +254,17 @@ export class ImageLoadingQueue {
       // Fallback for browsers without requestIdleCallback
       setTimeout(() => this.processNormalQueue(), 100);
     }
-    
+
     this.isProcessing = false;
   }
-  
+
   /**
    * Process normal queue during idle time
    */
   private processNormalQueue(): void {
     const processNext = () => {
       if (this.normalQueue.length === 0) return;
-      
+
       const src = this.normalQueue.shift();
       if (src) {
         preloadImage(src)
@@ -271,7 +272,12 @@ export class ImageLoadingQueue {
           .finally(() => {
             if (this.normalQueue.length > 0) {
               if ('requestIdleCallback' in window) {
-                (window as Window & typeof globalThis & { requestIdleCallback: (callback: IdleRequestCallback) => number }).requestIdleCallback(processNext);
+                (
+                  window as Window &
+                    typeof globalThis & {
+                      requestIdleCallback: (callback: IdleRequestCallback) => number;
+                    }
+                ).requestIdleCallback(processNext);
               } else {
                 setTimeout(processNext, 50);
               }
@@ -279,14 +285,17 @@ export class ImageLoadingQueue {
           });
       }
     };
-    
+
     if ('requestIdleCallback' in window) {
-      (window as Window & typeof globalThis & { requestIdleCallback: (callback: IdleRequestCallback) => number }).requestIdleCallback(processNext);
+      (
+        window as Window &
+          typeof globalThis & { requestIdleCallback: (callback: IdleRequestCallback) => number }
+      ).requestIdleCallback(processNext);
     } else {
       setTimeout(processNext, 50);
     }
   }
-  
+
   /**
    * Clear all queues
    */
@@ -294,7 +303,7 @@ export class ImageLoadingQueue {
     this.criticalQueue = [];
     this.normalQueue = [];
   }
-  
+
   /**
    * Get queue status
    */

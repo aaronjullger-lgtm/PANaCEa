@@ -1,71 +1,127 @@
 /**
  * Question Pool API Endpoint
- * GET: Returns pool health stats
- * POST: Triggers batch generation for low systems
+ * GET: Returns pool health stats (public - monitoring)
+ * POST: Triggers batch generation for low systems (authenticated)
+ *
+ * Sprint 3 Security: Updated to use secure middleware pattern
  */
 
-import { createEdgePrismaClient } from './_shared/prisma-edge';
-import { CloudflareContext, CloudflareEnv, jsonResponse, errorResponse } from './_shared/types';
-import { validateRequest } from './_shared/schemas';
 import { z } from 'zod';
+import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from './_shared/prisma-edge';
+import { publicEndpoint, authenticatedEndpoint, withCors } from './_shared/middleware';
+import { createEndpointLogger } from './_shared/secureLogger';
 
-// Zod schema for batch generation request
-const PoolStatsSchema = z.object({
+// ============================================================================
+// SCHEMAS
+// ============================================================================
+
+const GetPoolStatsSchema = z.object({}).optional();
+
+const PostPoolStatsSchema = z.object({
   system: z.string().max(50).optional(),
   count: z.number().int().min(1).max(100).optional().default(25),
 });
 
-export async function onRequestGet(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
-  const { env } = context;
-  const prisma = createEdgePrismaClient(env.DATABASE_URL!);
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-  try {
-    const systems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
-    
-    const stats = await Promise.all(
-      systems.map(async (system) => {
-        const [total, unused] = await Promise.all([
-          prisma.preGeneratedQuestion.count({ where: { system } }),
-          prisma.preGeneratedQuestion.count({ where: { system, usedAt: null } }),
-        ]);
-        return { system, total, unused };
-      })
-    );
-    
-    const totalQuestions = stats.reduce((s, x) => s + x.total, 0);
-    const totalUnused = stats.reduce((s, x) => s + x.unused, 0);
-    
-    return jsonResponse({
-      health: totalUnused < 100 ? 'critical' : totalUnused < 500 ? 'warning' : 'healthy',
-      totalQuestions,
-      totalUnused,
-      systems: stats,
-    });
-  } catch (error) {
-    return errorResponse('Failed to get pool stats', 500);
-  } finally {
-    await prisma.$disconnect();
-  }
-}
+const SYSTEMS = [
+  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 
+  'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 
+  'PSYCH', 'ID', 'GU',
+];
 
-export async function onRequestPost(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
-  try {
-    // Validate input with Zod schema
-    const validation = await validateRequest(context.request.clone(), PoolStatsSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
+// ============================================================================
+// HANDLERS
+// ============================================================================
+
+/**
+ * GET /api/pool-stats
+ * Returns pool health statistics (public endpoint for monitoring)
+ */
+export const onRequestGet = publicEndpoint(
+  GetPoolStatsSchema,
+  async (context) => {
+    const log = createEndpointLogger('GET /api/pool-stats');
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+      const stats = await Promise.all(
+        SYSTEMS.map(async (system) => {
+          const [total, unused] = await Promise.all([
+            prisma!.preGeneratedQuestion.count({ where: { system } }),
+            prisma!.preGeneratedQuestion.count({ where: { system, usedAt: null } }),
+          ]);
+          return { system, total, unused };
+        })
+      );
+
+      const totalQuestions = stats.reduce((s, x) => s + x.total, 0);
+      const totalUnused = stats.reduce((s, x) => s + x.unused, 0);
+
+      const health = totalUnused < 100 ? 'critical' : totalUnused < 500 ? 'warning' : 'healthy';
+
+      log.info('Pool stats retrieved', { 
+        health, 
+        totalQuestions, 
+        totalUnused 
+      });
+
+      return {
+        data: {
+          health,
+          totalQuestions,
+          totalUnused,
+          systems: stats,
+        },
+      };
+    } catch (error) {
+      log.error('Failed to get pool stats', error);
+      return { status: 500, error: 'Failed to get pool stats' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    const { system, count } = (validation as { success: true; data: any }).data;
-    
-    // In production, this would queue a background job
-    // For now, just acknowledge the request
-    return jsonResponse({
-      queued: true,
-      system: system || 'all',
-      count: count || 25,
-      message: 'Batch generation queued',
-    });
-  } catch (error) {
-    return errorResponse('Failed to queue generation', 500);
   }
-}
+);
+
+/**
+ * POST /api/pool-stats
+ * Triggers batch generation for low systems (authenticated)
+ */
+export const onRequestPost = authenticatedEndpoint(
+  PostPoolStatsSchema,
+  async (context) => {
+    const log = createEndpointLogger('POST /api/pool-stats', context.auth.userId);
+    const { system, count } = context.validated;
+
+    try {
+      // In production, this would queue a background job
+      // For now, just acknowledge the request
+      log.info('Batch generation queued', { 
+        system: system || 'all', 
+        count,
+        requestedBy: context.auth.userId 
+      });
+
+      return {
+        data: {
+          queued: true,
+          system: system || 'all',
+          count: count || 25,
+          message: 'Batch generation queued',
+        },
+      };
+    } catch (error) {
+      log.error('Failed to queue generation', error);
+      return { status: 500, error: 'Failed to queue generation' };
+    }
+  }
+);
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const onRequestOptions = withCors();

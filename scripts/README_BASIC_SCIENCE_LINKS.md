@@ -12,8 +12,8 @@ For each case (clinical or lab), the system generates up to 3 basic science conc
 
 ```typescript
 interface BasicScienceLink {
-  title: string;      // e.g., "Review: Insulin Signaling"
-  conceptId: string;  // e.g., "insulin-signaling"
+  title: string; // e.g., "Review: Insulin Signaling"
+  conceptId: string; // e.g., "insulin-signaling"
 }
 ```
 
@@ -56,16 +56,19 @@ npm run test:basic-science-links
 ```
 
 **What it does:**
+
 - Processes 3 clinical cases and 3 lab cases
 - Generates basic science links for each
 - Saves output to `/tmp/basic-science-test/`
 - Shows detailed progress and results
 
 **Output files:**
+
 - `/tmp/basic-science-test/clinicalCases-test.json`
 - `/tmp/basic-science-test/labCases-test.json`
 
 **Use this to:**
+
 - Validate the API key works
 - Check the quality of generated links
 - Verify the script logic before processing all cases
@@ -80,6 +83,7 @@ npm run generate:basic-science-links:incremental
 ```
 
 **What it does:**
+
 - Reads all clinical cases from `src/data/clinicalCases.json`
 - Reads all lab cases from `src/data/labCases.json`
 - Generates basic science links only for cases that don't have them yet
@@ -87,16 +91,19 @@ npm run generate:basic-science-links:incremental
 - Can be safely stopped and restarted - will resume from where it left off
 
 **Processing details:**
+
 - Respects API rate limit: 8 requests/minute (to stay under 10/min limit)
 - ~7.5 seconds delay between requests
 - Saves progress every 10 cases
 - Skips cases that already have links
 
 **Time estimate:**
+
 - ~60 minutes for 500 cases (due to API rate limits)
 - Can be run in multiple sessions if needed
 
 **Why use this?**
+
 - Gemini API has a rate limit of 10 requests/minute for free tier
 - This script ensures you don't hit the limit
 - Can be interrupted and resumed without losing progress
@@ -112,15 +119,18 @@ npm run generate:basic-science-links
 ```
 
 **What it does:**
+
 - Processes cases in batches of 10
 - 2-second delay between batches
 - Processes all cases even if they already have links (overwrites)
 
 **Time estimate:**
+
 - ~5-10 minutes if no rate limits hit
 - Will fail if you exceed API quota
 
 **When to use:**
+
 - Only for small datasets
 - When you have a paid API tier with higher limits
 - When regenerating all links is desired
@@ -176,6 +186,7 @@ The script uses the `gemini-2.0-flash-exp` model by default.
 ## Concept Selection Logic
 
 The AI model focuses on:
+
 - **Fundamental physiological processes** (e.g., RAAS, insulin signaling)
 - **Key biochemical pathways** (e.g., glycolysis, ketone metabolism)
 - **Important anatomical structures** (e.g., coronary circulation)
@@ -186,17 +197,21 @@ The system prioritizes the most relevant and foundational concepts for each diag
 ## Quality Assurance
 
 ### Validation
+
 - Each generated link must have both `title` and `conceptId`
 - Links are limited to maximum 3 per case
 - Invalid responses return empty array (non-blocking)
 
 ### Error Handling
+
 - API errors are logged but don't stop processing
 - Cases that fail to generate links get empty array
 - Batch processing continues even if individual cases fail
 
 ### Output Verification
+
 After generation, check:
+
 - Files are valid JSON
 - All cases have the new field (even if empty)
 - Link structure is consistent
@@ -205,55 +220,69 @@ After generation, check:
 ## Customization
 
 ### Change Batch Size
+
 Edit `scripts/generateBasicScienceLinks.ts`:
+
 ```typescript
 const BATCH_SIZE = 10; // Adjust as needed
 ```
 
 ### Change Rate Limit Delay
+
 ```typescript
 const DELAY_BETWEEN_BATCHES = 2000; // milliseconds
 ```
 
 ### Change Model
+
 ```typescript
-const MODEL_NAME = "gemini-2.0-flash-exp"; // or "gemini-2.5-pro"
+const MODEL_NAME = 'gemini-2.0-flash-exp'; // or "gemini-2.5-pro"
 ```
 
 ## Troubleshooting
 
 ### "GEMINI_API_KEY is not set"
+
 Make sure to export the environment variable:
+
 ```bash
 export GEMINI_API_KEY="your-key-here"
 echo $GEMINI_API_KEY  # Verify it's set
 ```
 
 ### Rate Limit Errors (429 Too Many Requests)
+
 **Best solution:** Use the incremental script instead:
+
 ```bash
 npm run generate:basic-science-links:incremental
 ```
 
 The incremental script:
+
 - Respects the 10 requests/minute API limit
 - Automatically saves progress every 10 cases
 - Can be stopped and resumed at any time
 - Only processes cases that don't have links yet
 
 **Alternative:** For the fast script, if you still hit rate limits:
+
 1. Wait for the rate limit window to reset (usually 1 minute)
 2. The script will have saved some progress already
 3. Manually increase delays in the script configuration
 
 ### JSON Parse Errors
+
 The script automatically cleans markdown code blocks. If errors persist:
+
 1. Check console output for problematic responses
 2. Try running again - occasional API hiccups happen
 3. Switch to `gemini-2.5-pro` for more consistent formatting
 
 ### Empty Links Array
+
 If a case has an empty `basicScienceLinks` array:
+
 - Check if the diagnosis is clear and specific
 - Verify API key is valid and has quota remaining
 - Check console for error messages
@@ -261,7 +290,9 @@ If a case has an empty `basicScienceLinks` array:
 ## Integration
 
 ### TypeScript Types
+
 The types are defined in `src/types/content.ts`:
+
 ```typescript
 interface BasicScienceLink {
   title: string;
@@ -280,6 +311,7 @@ interface LabCase {
 ```
 
 ### Using in Code
+
 ```typescript
 import clinicalCases from '@/src/data/clinicalCases.json';
 
@@ -287,10 +319,8 @@ import clinicalCases from '@/src/data/clinicalCases.json';
 const caseLinks = clinicalCases[0].basicScienceLinks || [];
 
 // Filter cases with specific concepts
-const casesWithRAAS = clinicalCases.filter(c => 
-  c.basicScienceLinks?.some(link => 
-    link.conceptId.includes('raas')
-  )
+const casesWithRAAS = clinicalCases.filter((c) =>
+  c.basicScienceLinks?.some((link) => link.conceptId.includes('raas'))
 );
 ```
 
@@ -299,15 +329,19 @@ const casesWithRAAS = clinicalCases.filter(c =>
 Recommended workflow for generating basic science links:
 
 1. **Test first**
+
    ```bash
    npm run test:basic-science-links
    ```
+
    Review output in `/tmp/basic-science-test/`
 
 2. **Generate full dataset (incremental)**
+
    ```bash
    npm run generate:basic-science-links:incremental
    ```
+
    This will take ~60 minutes for 500 cases. The script:
    - Shows progress for each case
    - Saves every 10 cases
@@ -316,17 +350,20 @@ Recommended workflow for generating basic science links:
 
 3. **Resume if interrupted**
    If you need to stop, just run the same command again:
+
    ```bash
    npm run generate:basic-science-links:incremental
    ```
+
    It will automatically continue from where it left off.
 
 4. **Verify results**
+
    ```bash
    # Check progress
    jq '[.[] | select(.basicScienceLinks != null and (.basicScienceLinks | length) > 0)] | length' src/data/clinicalCases.json
    jq '[.[] | select(.basicScienceLinks != null and (.basicScienceLinks | length) > 0)] | length' src/data/labCases.json
-   
+
    # Spot-check random cases
    jq '.[42].basicScienceLinks' src/data/clinicalCases.json
    ```
@@ -351,6 +388,7 @@ Recommended workflow for generating basic science links:
 ## Support
 
 For issues or questions:
+
 - Check this README first
 - Review script console output for errors
 - Test with small sample using `test:basic-science-links`

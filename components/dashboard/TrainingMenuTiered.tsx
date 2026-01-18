@@ -36,7 +36,12 @@ import {
   AlertCircle,
   HelpCircle,
 } from 'lucide-react';
-import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+import {
+  MODE_REGISTRY,
+  TrainingModeConfig,
+  TrainingModeId,
+  MODES_WITH_DEDICATED_ROUTES,
+} from '@/config/training-modes';
 
 // ============================================================================
 // Types & Constants
@@ -71,40 +76,43 @@ interface TrainingMenuTieredProps {
 // Time investment categorization
 const TIME_INVESTMENT_MAP: Record<TrainingModeId, TimeInvestment> = {
   // Rapid-Fire (1-5 min)
-  'rapid_recall': 'rapid',
-  'medical_wordle': 'rapid',
-  'code_blue_speed': 'rapid',
-  'cram_mode': 'rapid',
-  
+  rapid_recall: 'rapid',
+  medical_wordle: 'rapid',
+  code_blue_speed: 'rapid',
+  cram_mode: 'rapid',
+
   // Targeted Drills (5-15 min)
-  'core_adaptive': 'targeted',
-  'ecg_drill': 'targeted',
-  'derm_drill': 'targeted',
-  'imaging_drill': 'targeted',
-  'mini_lab': 'targeted',
-  'ddx_compare': 'targeted',
-  'guideline_drill': 'targeted',
-  'first_line_treatment': 'targeted',
-  'pharmacology': 'targeted',
-  'condition_drill': 'targeted',
-  'system_drill': 'targeted',
-  'subcategory_drill': 'targeted',
-  'antibiotic_mode': 'targeted',
-  'photo_drill': 'targeted',
-  'grand_rounds': 'targeted',
-  
+  core_adaptive: 'targeted',
+  ecg_drill: 'targeted',
+  derm_drill: 'targeted',
+  imaging_drill: 'targeted',
+  mini_lab: 'targeted',
+  ddx_compare: 'targeted',
+  guideline_drill: 'targeted',
+  first_line_treatment: 'targeted',
+  pharmacology: 'targeted',
+  condition_drill: 'targeted',
+  system_drill: 'targeted',
+  subcategory_drill: 'targeted',
+  antibiotic_mode: 'targeted',
+  photo_drill: 'targeted',
+  grand_rounds: 'targeted',
+
   // Deep Clinical Encounters (15+ min)
-  'patient_encounter': 'deep',
-  'panre_la': 'deep',
-  'fluid_electrolyte': 'deep',
-  'ventilator_hero': 'deep',
-  'polypharmacy_puzzle': 'deep',
-  'radiology_scroll': 'deep',
-  'physiology_drill': 'deep',
-  'anatomy_review': 'deep',
+  patient_encounter: 'deep',
+  panre_la: 'deep',
+  fluid_electrolyte: 'deep',
+  ventilator_hero: 'deep',
+  polypharmacy_puzzle: 'deep',
+  radiology_scroll: 'deep',
+  physiology_drill: 'deep',
+  anatomy_review: 'deep',
 };
 
-const TIME_TIER_CONFIG: Record<TimeInvestment, { label: string; description: string; timeRange: string; icon: LucideIcon; color: string }> = {
+const TIME_TIER_CONFIG: Record<
+  TimeInvestment,
+  { label: string; description: string; timeRange: string; icon: LucideIcon; color: string }
+> = {
   rapid: {
     label: 'Rapid-Fire',
     description: 'Quick drills for speed and retention',
@@ -184,7 +192,7 @@ const ModeCard: React.FC<ModeCardProps> = ({
   const ICON_MAP = getIconMap();
   const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
   const isDisabled = mode.isComingSoon;
-  
+
   // Variant-specific styling
   const variantStyles = {
     rapid: {
@@ -207,9 +215,10 @@ const ModeCard: React.FC<ModeCardProps> = ({
       className={`
         relative rounded-2xl border overflow-hidden transition-all
         ${variantStyles[variant].card}
-        ${isDisabled
-          ? 'opacity-40 grayscale cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-slate-300 dark:border-slate-700'
-          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl cursor-pointer shadow-md'
+        ${
+          isDisabled
+            ? 'opacity-40 grayscale cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-slate-300 dark:border-slate-700'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl cursor-pointer shadow-md'
         }
         ${isPinned && !isDisabled ? 'ring-2 ring-amber-400 ring-offset-2 dark:ring-offset-slate-950' : ''}
         ${isDailyPick && !isDisabled ? 'ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-950' : ''}
@@ -248,22 +257,26 @@ const ModeCard: React.FC<ModeCardProps> = ({
         </div>
       )}
 
-      <button
-        onClick={onSelect}
-        disabled={isDisabled}
-        className="w-full h-full p-5 text-left"
-      >
+      <button onClick={onSelect} disabled={isDisabled} className="w-full h-full p-5 text-left">
         <div className="flex flex-col h-full">
           {/* Icon */}
-          <div className={`w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 ${isDisabled ? 'opacity-50' : ''}`}>
-            <IconComponent className={`w-5 h-5 text-slate-600 dark:text-slate-300 ${isDisabled ? 'opacity-50' : ''}`} />
+          <div
+            className={`w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 ${isDisabled ? 'opacity-50' : ''}`}
+          >
+            <IconComponent
+              className={`w-5 h-5 text-slate-600 dark:text-slate-300 ${isDisabled ? 'opacity-50' : ''}`}
+            />
           </div>
 
           {/* Title & Description */}
-          <h3 className={`font-semibold text-slate-900 dark:text-white text-base mb-1 ${isDisabled ? 'opacity-50' : ''}`}>
+          <h3
+            className={`font-semibold text-slate-900 dark:text-white text-base mb-1 ${isDisabled ? 'opacity-50' : ''}`}
+          >
             {mode.label}
           </h3>
-          <p className={`text-sm text-slate-600 dark:text-slate-400 line-clamp-2 flex-1 ${isDisabled ? 'opacity-50' : ''}`}>
+          <p
+            className={`text-sm text-slate-600 dark:text-slate-400 line-clamp-2 flex-1 ${isDisabled ? 'opacity-50' : ''}`}
+          >
             {mode.description}
           </p>
 
@@ -274,7 +287,10 @@ const ModeCard: React.FC<ModeCardProps> = ({
                 <span>{progress.masteryPercent}% mastery</span>
                 {progress.lastPracticed && (
                   <span>
-                    {Math.floor((Date.now() - progress.lastPracticed.getTime()) / (1000 * 60 * 60 * 24))}d ago
+                    {Math.floor(
+                      (Date.now() - progress.lastPracticed.getTime()) / (1000 * 60 * 60 * 24)
+                    )}
+                    d ago
                   </span>
                 )}
               </div>
@@ -329,9 +345,9 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      allModes = allModes.filter((mode) =>
-        mode.label.toLowerCase().includes(query) ||
-        mode.description.toLowerCase().includes(query)
+      allModes = allModes.filter(
+        (mode) =>
+          mode.label.toLowerCase().includes(query) || mode.description.toLowerCase().includes(query)
       );
     }
 
@@ -370,16 +386,19 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
     return activeModes.find((m) => !modeProgress[m.id]?.questionsAnswered)?.id || null;
   }, [modeProgress]);
 
-  const handleModeSelect = useCallback((mode: TrainingModeConfig) => {
-    if (mode.isComingSoon) return;
+  const handleModeSelect = useCallback(
+    (mode: TrainingModeConfig) => {
+      if (mode.isComingSoon) return;
 
-    if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
-      onNavigateToMode?.(mode.route, mode);
-    } else {
-      onStartSession?.(mode.id);
-    }
-    onClose?.();
-  }, [onNavigateToMode, onStartSession, onClose]);
+      if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
+        onNavigateToMode?.(mode.route, mode);
+      } else {
+        onStartSession?.(mode.id);
+      }
+      onClose?.();
+    },
+    [onNavigateToMode, onStartSession, onClose]
+  );
 
   const handleCoreStart = useCallback(() => {
     if (coreMode) {
@@ -388,9 +407,12 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
     }
   }, [coreMode, focus, onStartSession, onClose]);
 
-  const handleTogglePin = useCallback((modeId: string) => {
-    onTogglePin?.(modeId);
-  }, [onTogglePin]);
+  const handleTogglePin = useCallback(
+    (modeId: string) => {
+      onTogglePin?.(modeId);
+    },
+    [onTogglePin]
+  );
 
   const getFocusDescription = () => {
     switch (focus) {
@@ -489,8 +511,16 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: 'all' as FocusOption, label: 'All Topics' },
-                  { value: 'growth' as FocusOption, label: 'Growth Areas', count: growthAreasCount },
-                  { value: 'flagged' as FocusOption, label: 'Flagged', count: flaggedQuestionsCount },
+                  {
+                    value: 'growth' as FocusOption,
+                    label: 'Growth Areas',
+                    count: growthAreasCount,
+                  },
+                  {
+                    value: 'flagged' as FocusOption,
+                    label: 'Flagged',
+                    count: flaggedQuestionsCount,
+                  },
                   { value: 'due' as FocusOption, label: 'Due', count: dueQuestionsCount },
                 ].map((opt) => (
                   <button
@@ -501,8 +531,8 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
                       focus === opt.value
                         ? 'bg-blue-500 text-white'
                         : opt.count === 0 && opt.value !== 'all'
-                        ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                          ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
                     {opt.label}
@@ -533,9 +563,7 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
               <Star className="w-5 h-5 text-amber-500" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Your Favorites
-            </h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Your Favorites</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pinnedModesData.map((mode) => (

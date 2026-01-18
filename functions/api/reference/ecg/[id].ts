@@ -1,73 +1,91 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
+ * ECG Pattern Detail API
  * GET /api/reference/ecg/:id
- * Fetch a single ECG pattern by ID
+ *
+ * Fetches a single ECG pattern by ID
+ *
+ * Sprint: Security Hardening Sprint 3
  */
-export async function onRequestGet(context: any) {
-  const { request, env, params } = context;
-  const { id } = params;
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
+
+const ECGDetailSchema = z.object({
+  params: z
+    .object({
+      id: z.string().uuid('Invalid ECG pattern ID format'),
+    })
+    .optional(),
+});
+
+// ============================================================================
+// CORS HANDLER
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+// ============================================================================
+// GET HANDLER
+// ============================================================================
+
+export const onRequestGet = authenticatedEndpoint(
+  ECGDetailSchema,
+  async ({ env, auth, params }) => {
+    const log = createEndpointLogger('/api/reference/ecg/[id]', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      const { id } = params;
+
+      if (!id) {
+        return {
+          status: 400,
+          error: 'ECG pattern ID is required',
+        };
       }
-    });
-  }
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+      log.info('Fetching ECG pattern detail', { id });
 
-  try {
-    const result = await prisma.eCGPattern.findUnique({
-      where: { id }
-    });
-    
-    if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'ECG pattern not found' }), { 
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+      const result = await prisma.eCGPattern.findUnique({
+        where: { id },
       });
+
+      if (!result) {
+        log.warn('ECG pattern not found', { id });
+        return {
+          status: 404,
+          error: 'ECG pattern not found',
+        };
+      }
+
+      log.info('ECG pattern fetch successful', { id });
+
+      return {
+        data: {
+          success: true,
+          data: result,
+        },
+      };
+    } catch (error) {
+      log.error('Error fetching ECG pattern', error);
+      return {
+        status: 500,
+        error: 'Failed to fetch ECG pattern',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-    
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error: any) {
-    console.error('Error fetching ECG pattern:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch ECG pattern', details: error.message }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } finally {
-    await prisma.$disconnect();
   }
-}
+);

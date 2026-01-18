@@ -35,12 +35,12 @@ function maskSecretKey(key: string): string {
  * JWT payload interface for type safety
  */
 interface JwtPayload {
-  sub?: string;        // Subject (user ID)
-  iss?: string;        // Issuer
-  aud?: string;        // Audience
-  exp?: number;        // Expiration time (Unix timestamp)
-  iat?: number;        // Issued at (Unix timestamp)
-  email?: string;      // User email
+  sub?: string; // Subject (user ID)
+  iss?: string; // Issuer
+  aud?: string; // Audience
+  exp?: number; // Expiration time (Unix timestamp)
+  iat?: number; // Issued at (Unix timestamp)
+  email?: string; // User email
   [key: string]: unknown; // Allow additional claims
 }
 
@@ -103,14 +103,16 @@ export async function verifyAuthToken(
   }
 
   if (!authHeader.startsWith('Bearer ')) {
-    console.error('[AUTH] Authorization header format is invalid. Expected "Bearer <token>", got:', 
-      authHeader.substring(0, 10) + '...');
+    console.error(
+      '[AUTH] Authorization header format is invalid. Expected "Bearer <token>", got:',
+      authHeader.substring(0, 10) + '...'
+    );
     return null;
   }
 
   try {
     const token = authHeader.substring(7);
-    
+
     // Phase 2.2: Identify token claims for diagnostics (only in test/dev environments)
     const isTestEnv = secretKey.startsWith('sk_test_');
     if (isTestEnv) {
@@ -124,11 +126,13 @@ export async function verifyAuthToken(
         console.log('[AUTH] Token payload claims:', loggedPayload);
         // Only log non-sensitive claims for diagnostics
         authLogger.success(payload.sub || 'unknown', 'jwt_verification');
-        
+
         // Check if token is expired
         if (payload.exp && payload.exp < Date.now() / 1000) {
-          console.error('[AUTH] Token is expired. Expiration time:', 
-            new Date(payload.exp * 1000).toISOString());
+          console.error(
+            '[AUTH] Token is expired. Expiration time:',
+            new Date(payload.exp * 1000).toISOString()
+          );
         }
       }
     }
@@ -138,7 +142,7 @@ export async function verifyAuthToken(
     const verifiedToken = await verifyToken(token, {
       secretKey,
       // This is the critical change for clock skew/timing issues
-      clockSkewInMs: 5000
+      clockSkewInMs: 5000,
     });
 
     const userSub = verifiedToken.sub || null;
@@ -151,14 +155,16 @@ export async function verifyAuthToken(
       message: error instanceof Error ? error.message : String(error),
       name: error instanceof Error ? error.name : 'Unknown',
     });
-    
+
     // Log specific error patterns to help identify root cause
     if (error instanceof Error) {
       const errorMsg = error.message.toLowerCase();
       if (errorMsg.includes('expired')) {
         console.error('[AUTH] Root Cause: Token Expiration');
       } else if (errorMsg.includes('signature')) {
-        console.error('[AUTH] Root Cause: Signature Verification Failed (possible mismatched secret key)');
+        console.error(
+          '[AUTH] Root Cause: Signature Verification Failed (possible mismatched secret key)'
+        );
       } else if (errorMsg.includes('issuer') || errorMsg.includes('iss')) {
         console.error('[AUTH] Root Cause: Invalid Issuer');
       } else if (errorMsg.includes('audience') || errorMsg.includes('aud')) {
@@ -167,7 +173,7 @@ export async function verifyAuthToken(
         console.error('[AUTH] Root Cause: Unknown - See error details above');
       }
     }
-    
+
     return null;
   }
 }
@@ -175,18 +181,14 @@ export async function verifyAuthToken(
 /**
  * Create a standardized error response
  */
-export function createErrorResponse(
-  error: string,
-  status: number,
-  code?: string
-): Response {
+export function createErrorResponse(error: string, status: number, code?: string): Response {
   const response = {
     success: false,
     error,
     code,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   return new Response(JSON.stringify(response), {
     status,
     headers: {
@@ -212,9 +214,9 @@ export function createSuccessResponse<T = unknown>(
   const response = {
     success: true,
     data,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -224,11 +226,12 @@ export function createSuccessResponse<T = unknown>(
 
   // Add cache headers if specified
   if (cacheSeconds > 0) {
-    headers['Cache-Control'] = `public, max-age=${cacheSeconds}, stale-while-revalidate=${Math.floor(cacheSeconds / 2)}`;
+    headers['Cache-Control'] =
+      `public, max-age=${cacheSeconds}, stale-while-revalidate=${Math.floor(cacheSeconds / 2)}`;
   } else {
     headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
   }
-  
+
   return new Response(JSON.stringify(response), {
     status,
     headers,
@@ -254,10 +257,7 @@ export function handleCorsOptions(context?: any): Response {
  * Verify authentication and extract user context
  * Returns null if authentication fails
  */
-export async function authenticateRequest(
-  request: Request,
-  env: Env
-): Promise<AuthContext | null> {
+export async function authenticateRequest(request: Request, env: Env): Promise<AuthContext | null> {
   const secretKey = env.CLERK_SECRET_KEY;
 
   // Phase 1.1: Verify secret key exists
@@ -268,8 +268,10 @@ export async function authenticateRequest(
 
   // Phase 1.2: Check key format (should start with sk_test_ or sk_live_)
   if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
-    console.error('[AUTH] CLERK_SECRET_KEY has invalid format. Expected to start with "sk_test_" or "sk_live_", got:', 
-      secretKey.substring(0, 4) + '***');
+    console.error(
+      '[AUTH] CLERK_SECRET_KEY has invalid format. Expected to start with "sk_test_" or "sk_live_", got:',
+      secretKey.substring(0, 4) + '***'
+    );
     console.error('[AUTH] Note: Public keys (pk_*) cannot be used as secret keys');
     return null;
   }

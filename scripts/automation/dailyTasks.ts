@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * Daily Automation Tasks
- * 
+ *
  * Runs daily to ensure content accuracy and system health:
  * - Content accuracy validation against medical standards
  * - Automated content gap identification
  * - Media asset quality checks
  * - Performance metrics aggregation
  * - Database optimization and cleanup
- * 
+ *
  * Usage: tsx scripts/automation/dailyTasks.ts
  * Schedule: 0 3 * * * (3 AM daily)
  */
@@ -50,7 +50,7 @@ const report: DailyReport = {
 async function validateContentAccuracy(): Promise<void> {
   const start = Date.now();
   console.log('🔍 Validating content accuracy...');
-  
+
   try {
     const content = await prisma.medicalContent.findMany({
       where: { status: 'published' },
@@ -58,13 +58,13 @@ async function validateContentAccuracy(): Promise<void> {
     });
 
     const issues: string[] = [];
-    
+
     for (const item of content) {
       // Check for placeholder content
       if (item.overview && /\[NO CONTENT PROVIDED\]/i.test(item.overview)) {
         issues.push(`${item.condition}: Contains placeholder in overview`);
       }
-      
+
       // Check for empty critical sections
       if (!item.treatment) {
         issues.push(`${item.condition}: Missing treatment information`);
@@ -75,7 +75,11 @@ async function validateContentAccuracy(): Promise<void> {
       name: 'Content Accuracy Validation',
       status: 'completed',
       message: `Validated ${content.length} conditions, found ${issues.length} issues`,
-      details: { totalConditions: content.length, issuesFound: issues.length, issues: issues.slice(0, 10) },
+      details: {
+        totalConditions: content.length,
+        issuesFound: issues.length,
+        issues: issues.slice(0, 10),
+      },
       duration: Date.now() - start,
     });
     report.summary.completed++;
@@ -96,7 +100,7 @@ async function validateContentAccuracy(): Promise<void> {
 async function identifyContentGaps(): Promise<void> {
   const start = Date.now();
   console.log('🔍 Identifying content gaps...');
-  
+
   try {
     // Count conditions by system
     const systemCounts = await prisma.medicalContent.groupBy({
@@ -105,13 +109,13 @@ async function identifyContentGaps(): Promise<void> {
       _count: { system: true },
     });
 
-    const gaps = systemCounts.filter(s => s._count.system < 10);
+    const gaps = systemCounts.filter((s) => s._count.system < 10);
 
     report.tasks.push({
       name: 'Content Gap Identification',
       status: 'completed',
       message: `Found ${gaps.length} systems with < 10 conditions`,
-      details: { systemCounts, gapSystems: gaps.map(g => g.system) },
+      details: { systemCounts, gapSystems: gaps.map((g) => g.system) },
       duration: Date.now() - start,
     });
     report.summary.completed++;
@@ -132,22 +136,20 @@ async function identifyContentGaps(): Promise<void> {
 async function checkMediaAssetQuality(): Promise<void> {
   const start = Date.now();
   console.log('📸 Checking media asset quality...');
-  
+
   try {
     const mediaAssets = await prisma.mediaAsset.findMany({
       where: {
-        OR: [
-          { qualityScore: null },
-          { qualityScore: { lt: 50 } },
-          { originalUrl: null },
-        ],
+        OR: [{ qualityScore: null }, { qualityScore: { lt: 50 } }, { originalUrl: null }],
       },
       select: { id: true, filename: true, qualityScore: true, originalUrl: true },
     });
 
-    const missingQuality = mediaAssets.filter(m => m.qualityScore === null).length;
-    const lowQuality = mediaAssets.filter(m => m.qualityScore !== null && m.qualityScore < 50).length;
-    const missingUrl = mediaAssets.filter(m => !m.originalUrl).length;
+    const missingQuality = mediaAssets.filter((m) => m.qualityScore === null).length;
+    const lowQuality = mediaAssets.filter(
+      (m) => m.qualityScore !== null && m.qualityScore < 50
+    ).length;
+    const missingUrl = mediaAssets.filter((m) => !m.originalUrl).length;
 
     report.tasks.push({
       name: 'Media Asset Quality Check',
@@ -174,12 +176,12 @@ async function checkMediaAssetQuality(): Promise<void> {
 async function aggregatePerformanceMetrics(): Promise<void> {
   const start = Date.now();
   console.log('📊 Aggregating performance metrics...');
-  
+
   try {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -202,7 +204,7 @@ async function aggregatePerformanceMetrics(): Promise<void> {
       },
     });
 
-    const accuracy = perfRecords > 0 ? (correctAnswers / perfRecords * 100).toFixed(2) : 'N/A';
+    const accuracy = perfRecords > 0 ? ((correctAnswers / perfRecords) * 100).toFixed(2) : 'N/A';
 
     report.tasks.push({
       name: 'Performance Metrics Aggregation',
@@ -229,7 +231,7 @@ async function aggregatePerformanceMetrics(): Promise<void> {
 async function databaseCleanup(): Promise<void> {
   const start = Date.now();
   console.log('🧹 Running database cleanup...');
-  
+
   try {
     // Clean up old failed jobs (> 30 days)
     const thirtyDaysAgo = new Date();
@@ -276,8 +278,8 @@ async function databaseCleanup(): Promise<void> {
  */
 async function createGrandRoundsChallenge(): Promise<void> {
   const start = Date.now();
-  console.log('🏆 Creating today\'s Grand Rounds challenge...');
-  
+  console.log("🏆 Creating today's Grand Rounds challenge...");
+
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -312,7 +314,7 @@ async function createGrandRoundsChallenge(): Promise<void> {
     report.tasks.push({
       name: 'Grand Rounds Challenge Creation',
       status: 'completed',
-      message: 'Created today\'s Grand Rounds challenge with 5 questions',
+      message: "Created today's Grand Rounds challenge with 5 questions",
       details: { date: today.toISOString(), seed, questionIds },
       duration: Date.now() - start,
     });
@@ -334,13 +336,13 @@ async function createGrandRoundsChallenge(): Promise<void> {
 function generateQuestionIds(seed: number, count: number): string[] {
   const ids: string[] = [];
   let current = seed;
-  
+
   for (let i = 0; i < count; i++) {
     // Simple LCG (Linear Congruential Generator) for deterministic randomness
     current = (current * 1103515245 + 12345) % 2147483648;
     ids.push(`gr-q-${current % 10000}`);
   }
-  
+
   return ids;
 }
 
@@ -353,7 +355,9 @@ function printReport(): void {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   console.log(`📅 Date: ${report.timestamp.toISOString()}`);
-  console.log(`📊 Summary: ${report.summary.completed} completed, ${report.summary.failed} failed, ${report.summary.skipped} skipped\n`);
+  console.log(
+    `📊 Summary: ${report.summary.completed} completed, ${report.summary.failed} failed, ${report.summary.skipped} skipped\n`
+  );
 
   report.tasks.forEach((task) => {
     const icon = task.status === 'completed' ? '✅' : task.status === 'failed' ? '❌' : '⏭️';
@@ -370,14 +374,14 @@ function printReport(): void {
  */
 function saveReport(): void {
   const reportDir = path.join(process.cwd(), 'logs', 'daily');
-  
+
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
   }
 
   const dateStr = report.timestamp.toISOString().split('T')[0];
   const filepath = path.join(reportDir, `daily-${dateStr}.json`);
-  
+
   fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
   console.log(`💾 Daily report saved to: ${filepath}\n`);
 }

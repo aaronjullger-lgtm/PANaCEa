@@ -1,9 +1,9 @@
 /**
  * useAnatomy Hook
- * 
+ *
  * State management for 3D anatomy model viewer.
  * Handles model selection, camera controls, highlighting, and interactions.
- * 
+ *
  * Architecture: Separates 3D state logic from rendering components.
  */
 
@@ -125,72 +125,75 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
   const sceneRef = useRef<any>(null); // Three.js scene reference
 
   // Load model from API
-  const loadModel = useCallback(async (modelId: string) => {
-    setIsLoading(true);
-    setError(null);
-    setLoadProgress(0);
+  const loadModel = useCallback(
+    async (modelId: string) => {
+      setIsLoading(true);
+      setError(null);
+      setLoadProgress(0);
 
-    try {
-      const response = await fetch(`/api/anatomy/${modelId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load model: ${response.statusText}`);
+      try {
+        const response = await fetch(`/api/anatomy/${modelId}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load model: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setCurrentModel(data.model);
+
+        // Apply model's default camera if available
+        if (data.model.cameraPosition) {
+          setCamera((prev) => ({
+            ...prev,
+            position: [
+              data.model.cameraPosition.x,
+              data.model.cameraPosition.y,
+              data.model.cameraPosition.z,
+            ],
+          }));
+        }
+
+        if (data.model.cameraTarget) {
+          setCamera((prev) => ({
+            ...prev,
+            target: [
+              data.model.cameraTarget.x,
+              data.model.cameraTarget.y,
+              data.model.cameraTarget.z,
+            ],
+          }));
+        }
+
+        if (data.model.defaultZoom) {
+          setCamera((prev) => ({
+            ...prev,
+            zoom: data.model.defaultZoom,
+          }));
+        }
+
+        onModelLoad?.(data.model);
+        setLoadProgress(100);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error loading model');
+        setError(error);
+        onError?.(error);
+      } finally {
+        setIsLoading(false);
       }
-
-      const data = await response.json();
-      setCurrentModel(data.model);
-      
-      // Apply model's default camera if available
-      if (data.model.cameraPosition) {
-        setCamera(prev => ({
-          ...prev,
-          position: [
-            data.model.cameraPosition.x,
-            data.model.cameraPosition.y,
-            data.model.cameraPosition.z,
-          ],
-        }));
-      }
-
-      if (data.model.cameraTarget) {
-        setCamera(prev => ({
-          ...prev,
-          target: [
-            data.model.cameraTarget.x,
-            data.model.cameraTarget.y,
-            data.model.cameraTarget.z,
-          ],
-        }));
-      }
-
-      if (data.model.defaultZoom) {
-        setCamera(prev => ({
-          ...prev,
-          zoom: data.model.defaultZoom,
-        }));
-      }
-
-      onModelLoad?.(data.model);
-      setLoadProgress(100);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error loading model');
-      setError(error);
-      onError?.(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [onModelLoad, onError]);
+    },
+    [onModelLoad, onError]
+  );
 
   // Camera controls
   const zoomIn = useCallback((factor = 0.1) => {
-    setCamera(prev => ({
+    setCamera((prev) => ({
       ...prev,
       zoom: Math.min(prev.zoom + factor, 3),
     }));
   }, []);
 
   const zoomOut = useCallback((factor = 0.1) => {
-    setCamera(prev => ({
+    setCamera((prev) => ({
       ...prev,
       zoom: Math.max(prev.zoom - factor, 0.3),
     }));
@@ -223,24 +226,27 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
   }, [currentModel, defaultCameraPosition, defaultCameraTarget, defaultZoom]);
 
   const setCameraPosition = useCallback((position: [number, number, number]) => {
-    setCamera(prev => ({ ...prev, position }));
+    setCamera((prev) => ({ ...prev, position }));
   }, []);
 
   const setCameraTarget = useCallback((target: [number, number, number]) => {
-    setCamera(prev => ({ ...prev, target }));
+    setCamera((prev) => ({ ...prev, target }));
   }, []);
 
   // Structure selection
-  const selectStructure = useCallback((structureName: string | null) => {
-    setSelectedStructure(structureName);
-    onStructureSelect?.(structureName);
-  }, [onStructureSelect]);
+  const selectStructure = useCallback(
+    (structureName: string | null) => {
+      setSelectedStructure(structureName);
+      onStructureSelect?.(structureName);
+    },
+    [onStructureSelect]
+  );
 
   const toggleStructureHighlight = useCallback((structureName: string, color?: string) => {
-    setHighlightedRegions(prev => {
-      const exists = prev.find(r => r.name === structureName);
+    setHighlightedRegions((prev) => {
+      const exists = prev.find((r) => r.name === structureName);
       if (exists) {
-        return prev.filter(r => r.name !== structureName);
+        return prev.filter((r) => r.name !== structureName);
       }
       return [...prev, { id: structureName, name: structureName, color: color || '#00ff88' }];
     });
@@ -252,23 +258,23 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
 
   // Settings controls
   const toggleAutoRotate = useCallback(() => {
-    setSettings(prev => ({ ...prev, autoRotate: !prev.autoRotate }));
+    setSettings((prev) => ({ ...prev, autoRotate: !prev.autoRotate }));
   }, []);
 
   const toggleWireframe = useCallback(() => {
-    setSettings(prev => ({ ...prev, wireframe: !prev.wireframe }));
+    setSettings((prev) => ({ ...prev, wireframe: !prev.wireframe }));
   }, []);
 
   const toggleAnnotations = useCallback(() => {
-    setSettings(prev => ({ ...prev, showAnnotations: !prev.showAnnotations }));
+    setSettings((prev) => ({ ...prev, showAnnotations: !prev.showAnnotations }));
   }, []);
 
   const toggleGrid = useCallback(() => {
-    setSettings(prev => ({ ...prev, showGrid: !prev.showGrid }));
+    setSettings((prev) => ({ ...prev, showGrid: !prev.showGrid }));
   }, []);
 
   const updateSettings = useCallback((updates: Partial<ViewerSettings>) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Fullscreen
@@ -291,7 +297,7 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
   // Screenshot
   const takeScreenshot = useCallback((): string | null => {
     if (!sceneRef.current?.gl) return null;
-    
+
     try {
       return sceneRef.current.gl.domElement.toDataURL('image/png');
     } catch (err) {
@@ -301,29 +307,32 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
   }, []);
 
   // Citation generation
-  const generateCitation = useCallback((format: 'AMA' | 'APA' | 'MLA' = 'AMA'): string => {
-    if (!currentModel) return '';
+  const generateCitation = useCallback(
+    (format: 'AMA' | 'APA' | 'MLA' = 'AMA'): string => {
+      if (!currentModel) return '';
 
-    const date = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+      const date = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
 
-    const source = currentModel.sourceName || 'NIH 3D Print Exchange';
-    const url = currentModel.sourceUrl || 'https://3d.nih.gov';
+      const source = currentModel.sourceName || 'NIH 3D Print Exchange';
+      const url = currentModel.sourceUrl || 'https://3d.nih.gov';
 
-    switch (format) {
-      case 'AMA':
-        return `${source}. ${currentModel.name}. ${source}. ${url}. Accessed ${date}.`;
-      case 'APA':
-        return `${source}. (${new Date().getFullYear()}). ${currentModel.name}. ${source}. Retrieved ${date}, from ${url}`;
-      case 'MLA':
-        return `"${currentModel.name}." ${source}, ${url}. Accessed ${date}.`;
-      default:
-        return `${source}. ${currentModel.name}. ${url}. Accessed ${date}.`;
-    }
-  }, [currentModel]);
+      switch (format) {
+        case 'AMA':
+          return `${source}. ${currentModel.name}. ${source}. ${url}. Accessed ${date}.`;
+        case 'APA':
+          return `${source}. (${new Date().getFullYear()}). ${currentModel.name}. ${source}. Retrieved ${date}, from ${url}`;
+        case 'MLA':
+          return `"${currentModel.name}." ${source}, ${url}. Accessed ${date}.`;
+        default:
+          return `${source}. ${currentModel.name}. ${url}. Accessed ${date}.`;
+      }
+    },
+    [currentModel]
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -372,7 +381,16 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetCamera, toggleAutoRotate, toggleWireframe, toggleFullscreen, selectedStructure, selectStructure]);
+  }, [
+    zoomIn,
+    zoomOut,
+    resetCamera,
+    toggleAutoRotate,
+    toggleWireframe,
+    toggleFullscreen,
+    selectedStructure,
+    selectStructure,
+  ]);
 
   // Derived state
   const hasModel = useMemo(() => currentModel !== null, [currentModel]);

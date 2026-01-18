@@ -1,27 +1,23 @@
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+const ContrastiveStartSchema = z.object({
+  body: z.object({
+    setId: z.string().min(1, 'setId is required'),
+  }),
+});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: { request: Request; env: Env }) => {
-  const { request, env } = context;
+export const onRequestPost = authenticatedEndpoint(ContrastiveStartSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/drills/contrastive/start');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const auth = await authenticateRequest(request as any, env as any);
-    if (!auth) return createErrorResponse('Unauthorized', 401);
-
-    const body = (await request.json()) as Partial<{ setId: string }> | null;
-    const { setId } = body || {};
-
-    if (!setId) {
-      return createErrorResponse('setId is required', 400);
-    }
+    const { setId } = validated.body;
 
     // Fetch the contrastive set
     const set = await prisma.contrastiveSet.findUnique({
@@ -32,14 +28,16 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     });
 
     if (!set) {
-      return createErrorResponse('Contrastive set not found', 404);
+      logger.warn('Contrastive set not found', { setId, userId: auth.userId });
+      throw new Error('Contrastive set not found');
     }
 
-    return createSuccessResponse({ set }, 200);
+    logger.info('Contrastive drill started', { setId, userId: auth.userId });
+    return { data: { set } };
   } catch (error) {
-    console.error('[contrastive/start] Failed to start drill', error);
-    return createErrorResponse('Failed to start contrastive drill', 500);
+    logger.error('Failed to start contrastive drill', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    throw error;
   } finally {
-    await safePrismaDisconnect(prisma as any);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

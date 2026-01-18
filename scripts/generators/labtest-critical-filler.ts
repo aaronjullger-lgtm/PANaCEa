@@ -14,7 +14,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -25,7 +28,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -101,17 +104,24 @@ async function main() {
 
   // Find labs with critical gaps
   const allLabs = await prisma.labTest.findMany();
-  
-  const labsWithGaps = allLabs.filter(lab => {
+
+  const labsWithGaps = allLabs.filter((lab) => {
     const scenarios = lab.clinicalScenarios;
-    const hasClinicalScenariosGap = !scenarios || (typeof scenarios === 'string' && scenarios.trim() === '');
-    const hasCriticalValuesGap = !lab.criticalValues || (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0);
+    const hasClinicalScenariosGap =
+      !scenarios || (typeof scenarios === 'string' && scenarios.trim() === '');
+    const hasCriticalValuesGap =
+      !lab.criticalValues || (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0);
     const hasReferenceRangesGap = !lab.referenceRanges;
     const hasIncreaseGap = !lab.increaseIndicates || lab.increaseIndicates.length === 0;
     const hasDecreaseGap = !lab.decreaseIndicates || lab.decreaseIndicates.length === 0;
-    
-    return hasClinicalScenariosGap || hasCriticalValuesGap || hasReferenceRangesGap || 
-           hasIncreaseGap || hasDecreaseGap;
+
+    return (
+      hasClinicalScenariosGap ||
+      hasCriticalValuesGap ||
+      hasReferenceRangesGap ||
+      hasIncreaseGap ||
+      hasDecreaseGap
+    );
   });
 
   console.log(`Found ${labsWithGaps.length} labs with gaps to fill\n`);
@@ -136,7 +146,10 @@ async function main() {
     if (!scenarios || (typeof scenarios === 'string' && scenarios.trim() === '')) {
       updateData.clinicalScenarios = content.clinicalScenarios || '';
     }
-    if (!lab.criticalValues || (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0)) {
+    if (
+      !lab.criticalValues ||
+      (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0)
+    ) {
       updateData.criticalValues = ensureArray(content.criticalValues);
     }
     if (!lab.referenceRanges) {

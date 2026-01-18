@@ -3,12 +3,14 @@
 ## Photo Drill Requirements
 
 **Quiz Mode** needs:
+
 - Clean, un-annotated images
 - High resolution (readable diagnostic quality)
 - No arrows, labels, circles, or annotations
 - Student must identify findings themselves
 
 **Reference Mode** can use:
+
 - Annotated images with labels/arrows
 - Teaching diagrams
 - Comparative images
@@ -18,16 +20,15 @@
 ### ECG Images
 
 **CLEAN (Quiz-suitable) Sources:**
+
 1. **PhysioNet Databases** - Raw ECG recordings
    - MIT-BIH Arrhythmia Database
    - PTB Diagnostic ECG Database
    - European ST-T Database
    - URL pattern: https://physionet.org/content/{database}/
-   
 2. **ECG Wave-Maven (Harvard)** - Clean teaching ECGs
    - https://ecg.bidmc.harvard.edu/maven/mavenmain.asp
    - Requires case-by-case selection
-   
 3. **Dr. Smith's ECG Blog** - Many clean strips (check each)
    - https://hqmeded-ecg.blogspot.com/
 
@@ -35,6 +36,7 @@
    - https://ecg.queensu.ca/
 
 **ANNOTATED (Reference-only) Sources:**
+
 - LITFL ECG Library (most have annotations)
 - ECGpedia
 - Most Google Image results
@@ -42,21 +44,20 @@
 ### Radiology Images
 
 **CLEAN (Quiz-suitable) Sources:**
+
 1. **Radiopaedia** - Many have clean versions
    - Look for "Image" vs "Annotated" versions
    - Case images before annotations added
-   
 2. **MedPix** (NIH) - Military medical image database
    - https://medpix.nlm.nih.gov/
    - Original DICOM-quality images
-   
 3. **RSNA Case Collection**
    - https://cases.rsna.org/
-   
 4. **Eurorad** - European radiology cases
    - https://www.eurorad.org/
 
 **ANNOTATED (Reference-only) Sources:**
+
 - Most Radiopaedia case annotations
 - RadiologyAssistant
 - LearningRadiology.com
@@ -64,26 +65,26 @@
 ### Dermatology Images
 
 **CLEAN (Quiz-suitable) Sources:**
+
 1. **DermNet NZ** - Clinical photos (mostly clean)
    - https://dermnetnz.org/
    - High quality, well-licensed
-   
 2. **DermIS** - Dermatology Information System
    - https://www.dermis.net/
-   
 3. **Fitzpatrick's Atlas** - Clinical photos
    - (Licensed, may need permission)
-   
 4. **VisualDx** - Clinical decision support images
    - (Subscription required)
 
 **ANNOTATED (Reference-only):**
+
 - Most textbook figures
 - Google Image results with labels
 
 ### Pathology / Histology
 
 **CLEAN Sources:**
+
 1. **PathPresenter** - Clean slides
 2. **WebPath** - University of Utah
 3. **PathologyOutlines** - Some clean images
@@ -92,6 +93,7 @@
 ### Clinical Photos (Physical Exam Findings)
 
 **CLEAN Sources:**
+
 1. **Stanford Medicine 25**
 2. **MedlinePlus Medical Encyclopedia**
 3. **NEJM Images in Clinical Medicine** (subscription)
@@ -103,11 +105,9 @@
 1. **Search for CLEAN version first**
    - Use source-specific searches
    - Verify NO annotations before adding
-   
 2. **If only annotated exists:**
    - Mark as `usageType: 'reference'`
    - Continue searching for clean version
-   
 3. **Create paired entries when possible:**
    - Clean version for quiz
    - Annotated version for learning
@@ -115,6 +115,7 @@
 ### Image Verification Checklist
 
 Before adding any image, verify:
+
 - [ ] No arrows or pointers
 - [ ] No text labels on image
 - [ ] No circles/boxes highlighting findings

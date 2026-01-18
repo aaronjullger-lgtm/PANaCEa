@@ -1,6 +1,6 @@
 /**
  * Centralized Storage Registry
- * 
+ *
  * Manages all localStorage keys in one place to:
  * - Prevent key collisions
  * - Handle user-scoped vs global data
@@ -21,19 +21,19 @@ export const StorageKeys = {
   MISSED_QUESTIONS: 'panceai_missed_v2',
   FLAGGED_QUESTIONS: 'panceai_flagged_v2',
   SRS_ITEMS: 'panceai_srs_items',
-  
+
   // User preferences - local only, user-scoped
-  USER_PREFERENCES: 'user:panceai_preferences',  // requires userId
+  USER_PREFERENCES: 'user:panceai_preferences', // requires userId
   USER_CONTEXT: 'panceai_user_context',
   USER_PROFILE: 'panceai_user_profile',
   ENABLED_SYSTEMS: 'panceai_enabled_systems',
   FONT_SIZE: 'panceai_font_size',
-  
+
   // Session/temporary data
   DAILY_STREAK: 'panceai_daily_streak',
-  GRAND_ROUNDS_COMPLETED: 'date:panceai_grand_rounds',  // requires date
+  GRAND_ROUNDS_COMPLETED: 'date:panceai_grand_rounds', // requires date
   ATTENDING_PERSONA: 'panceai_attending_persona',
-  
+
   // Feature-specific storage
   OFFLINE_QUEUE: 'panacea_offline_queue',
   DEAD_LETTER_QUEUE: 'panacea_dead_letter_queue',
@@ -41,41 +41,37 @@ export const StorageKeys = {
   COMMUTER_SETTINGS: 'panacea_commuter_settings',
   CIRCADIAN_DATA: 'panceai_circadian_data',
   CONFUSION_PAIRS: 'panceai_confusion_pairs',
-  
+
   // Toolkit/calculator data
   RECENT_CALCULATORS: 'panacea_recent_calculators',
   PINNED_CALCULATORS: 'panacea_pinned_calculators',
-  
+
   // Apple Watch sync
   WATCH_SCHEDULE: 'panacea_watch_schedule',
   WATCH_FLASHCARDS: 'panacea_watch_flashcards',
-  
+
   // Feedback preferences
   FEEDBACK_CONFIG: 'panacea_feedback_config',
-  
+
   // Drill/session data
   DRILL_RECORDS: 'panceai_drill_records',
 } as const;
 
-export type StorageKey = typeof StorageKeys[keyof typeof StorageKeys];
+export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
 
 /**
  * Keys that require user ID for namespacing
  */
-const USER_SCOPED_KEYS = new Set<string>([
-  'user:panceai_preferences',
-]);
+const USER_SCOPED_KEYS = new Set<string>(['user:panceai_preferences']);
 
 /**
  * Keys that require date for namespacing
  */
-const DATE_SCOPED_KEYS = new Set<string>([
-  'date:panceai_grand_rounds',
-]);
+const DATE_SCOPED_KEYS = new Set<string>(['date:panceai_grand_rounds']);
 
 /**
  * Get the actual localStorage key, handling namespacing
- * 
+ *
  * @param key - The storage key from StorageKeys
  * @param options - Optional namespacing options
  * @returns The actual key to use with localStorage
@@ -93,15 +89,17 @@ export function getStorageKey(
     }
     return `${key.replace('user:', '')}_${options.userId}`;
   }
-  
+
   // Handle date-scoped keys
   if (DATE_SCOPED_KEYS.has(key)) {
-    const dateStr = options?.date 
-      ? (options.date instanceof Date ? options.date.toDateString() : options.date)
+    const dateStr = options?.date
+      ? options.date instanceof Date
+        ? options.date.toDateString()
+        : options.date
       : new Date().toDateString();
     return `${key.replace('date:', '')}_${dateStr}`;
   }
-  
+
   return key;
 }
 
@@ -127,7 +125,11 @@ export const localStore = {
   /**
    * Get a value with a fallback default
    */
-  getOrDefault<T>(key: StorageKey, defaultValue: T, options?: { userId?: string; date?: string | Date }): T {
+  getOrDefault<T>(
+    key: StorageKey,
+    defaultValue: T,
+    options?: { userId?: string; date?: string | Date }
+  ): T {
     const value = localStore.get<T>(key, options);
     return value ?? defaultValue;
   },
@@ -174,15 +176,15 @@ export const localStore = {
    */
   clearAll(): void {
     const keysToRemove: string[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (key.startsWith('panceai_') || key.startsWith('panacea_'))) {
         keysToRemove.push(key);
       }
     }
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
     console.log(`[Storage] Cleared ${keysToRemove.length} PANaCEa storage keys`);
   },
 
@@ -192,21 +194,21 @@ export const localStore = {
    */
   clearUserData(userId: string): void {
     const keysToRemove: string[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes(`_${userId}`)) {
         keysToRemove.push(key);
       }
     }
-    
+
     // Also clear performance data (not user-prefixed but user-specific)
     keysToRemove.push(StorageKeys.PERFORMANCE_DATA);
     keysToRemove.push(StorageKeys.MISSED_QUESTIONS);
     keysToRemove.push(StorageKeys.FLAGGED_QUESTIONS);
     keysToRemove.push(StorageKeys.SRS_ITEMS);
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
     console.log(`[Storage] Cleared ${keysToRemove.length} user data keys for ${userId}`);
   },
 
@@ -215,7 +217,7 @@ export const localStore = {
    */
   getStorageInfo(): { key: string; size: number }[] {
     const info: { key: string; size: number }[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (key.startsWith('panceai_') || key.startsWith('panacea_'))) {
@@ -223,7 +225,7 @@ export const localStore = {
         info.push({ key, size: value.length * 2 }); // UTF-16 = 2 bytes per char
       }
     }
-    
+
     return info.sort((a, b) => b.size - a.size);
   },
 };

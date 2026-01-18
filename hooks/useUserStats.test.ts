@@ -38,7 +38,7 @@ describe('useUserStats', () => {
   describe('initialization', () => {
     it('should initialize with empty arrays', () => {
       const { result } = renderHook(() => useUserStats());
-      
+
       expect(result.current.performanceData).toEqual([]);
       expect(result.current.missedQuestions).toEqual([]);
       expect(result.current.flaggedQuestions).toEqual([]);
@@ -62,11 +62,11 @@ describe('useUserStats', () => {
           difficulty: 'same' as const,
         },
       ];
-      
+
       localStorage.setItem('panceai_performance_v2', JSON.stringify(testPerformanceData));
-      
+
       const { result } = renderHook(() => useUserStats());
-      
+
       expect(result.current.performanceData).toEqual(testPerformanceData);
     });
   });
@@ -77,14 +77,15 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: {
-              performanceRecords: [],
-              srsItems: [],
-              savedQuestions: [],
-            },
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              data: {
+                performanceRecords: [],
+                srsItems: [],
+                savedQuestions: [],
+              },
+            }),
         } as Response)
       );
       global.fetch = mockFetch;
@@ -99,7 +100,7 @@ describe('useUserStats', () => {
       });
 
       const { result } = renderHook(() => useUserStats());
-      
+
       await result.current.syncToCloud();
 
       await waitFor(() => {
@@ -123,19 +124,18 @@ describe('useUserStats', () => {
           },
         ],
         srsItems: [{ questionId: 'q1', userId: 'test-user-123' }],
-        savedQuestions: [
-          { questionId: 'q2', type: 'missed', questionText: 'Question 2' },
-        ],
+        savedQuestions: [{ questionId: 'q2', type: 'missed', questionText: 'Question 2' }],
       };
 
       const mockLoadSRSItemsFromCloud = vi.spyOn(srsService, 'loadSRSItemsFromCloud');
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: serverData,
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              data: serverData,
+            }),
         } as Response)
       );
       global.fetch = mockFetch;
@@ -150,7 +150,7 @@ describe('useUserStats', () => {
       });
 
       const { result } = renderHook(() => useUserStats());
-      
+
       await result.current.syncToCloud();
 
       await waitFor(() => {
@@ -173,10 +173,11 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: serverData,
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              data: serverData,
+            }),
         } as Response)
       );
       global.fetch = mockFetch;
@@ -191,7 +192,7 @@ describe('useUserStats', () => {
       });
 
       const { result } = renderHook(() => useUserStats());
-      
+
       await result.current.syncFromCloud();
 
       await waitFor(() => {
@@ -219,14 +220,15 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: {
-              performanceRecords: testPerformanceData,
-              srsItems: [],
-              savedQuestions: [],
-            },
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              data: {
+                performanceRecords: testPerformanceData,
+                srsItems: [],
+                savedQuestions: [],
+              },
+            }),
         } as Response)
       );
       global.fetch = mockFetch;
@@ -273,14 +275,15 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: {
-              performanceRecords: [],
-              srsItems: [],
-              savedQuestions: [],
-            },
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              data: {
+                performanceRecords: [],
+                srsItems: [],
+                savedQuestions: [],
+              },
+            }),
         } as Response)
       );
       global.fetch = mockFetch;

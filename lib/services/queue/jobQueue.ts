@@ -1,12 +1,12 @@
 /**
  * Background Job Queue Service
- * 
+ *
  * Phase 4: Queue management for:
  * - Pre-generating AI questions during low-traffic hours
  * - Running health checks
  * - Processing media uploads
  * - Sync operations
- * 
+ *
  * NOTE: This is a simple database-backed queue implementation.
  * For production with high volume, consider Redis + BullMQ.
  */
@@ -17,7 +17,7 @@ type PrismaClientLike = {
   [key: string]: any;
 };
 
-export type JobType = 
+export type JobType =
   | 'generate_questions'
   | 'health_check'
   | 'media_processing'
@@ -42,10 +42,7 @@ export interface CreateJobOptions {
 /**
  * Create a new background job
  */
-export async function createJob(
-  prisma: PrismaClientLike,
-  options: CreateJobOptions
-): Promise<any> {
+export async function createJob(prisma: PrismaClientLike, options: CreateJobOptions): Promise<any> {
   return prisma.backgroundJob.create({
     data: {
       jobType: options.jobType,
@@ -75,10 +72,7 @@ export async function getNextJob(
 
   const job = await prisma.backgroundJob.findFirst({
     where,
-    orderBy: [
-      { priority: 'desc' },
-      { scheduledFor: 'asc' },
-    ],
+    orderBy: [{ priority: 'desc' }, { scheduledFor: 'asc' }],
   });
 
   if (job) {
@@ -86,7 +80,7 @@ export async function getNextJob(
     if (job.attempts >= job.maxAttempts) {
       return null; // Skip this job, it's maxed out
     }
-    
+
     // Mark as processing
     await prisma.backgroundJob.update({
       where: { id: job.id },
@@ -206,12 +200,12 @@ function getNext3AM(): Date {
   const now = new Date();
   const next3AM = new Date(now);
   next3AM.setHours(3, 0, 0, 0);
-  
+
   // If it's already past 3 AM today, schedule for tomorrow
   if (now.getHours() >= 3) {
     next3AM.setDate(next3AM.getDate() + 1);
   }
-  
+
   return next3AM;
 }
 
@@ -221,16 +215,16 @@ function getNext3AM(): Date {
 function getNextLowTrafficTime(): Date {
   const now = new Date();
   const lowTraffic = new Date(now);
-  
+
   // Random time between 2-5 AM
   const hour = 2 + Math.floor(Math.random() * 3);
   lowTraffic.setHours(hour, Math.floor(Math.random() * 60), 0, 0);
-  
+
   // If it's already past that time today, schedule for tomorrow
   if (now >= lowTraffic) {
     lowTraffic.setDate(lowTraffic.getDate() + 1);
   }
-  
+
   return lowTraffic;
 }
 

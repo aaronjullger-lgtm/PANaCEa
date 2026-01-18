@@ -48,7 +48,7 @@ Provide ONLY the hint sentence, no additional commentary.`,
   } catch (error) {
     console.error('Error generating Socratic hint:', error);
     // Fallback hint if API fails
-    return "Think about the key clinical findings and what they tell you about the underlying pathology. What diagnosis best fits this pattern?";
+    return 'Think about the key clinical findings and what they tell you about the underlying pathology. What diagnosis best fits this pattern?';
   }
 }
 
@@ -71,7 +71,7 @@ export interface AnalyzeAnswerParams {
  */
 export async function analyzeAnswer(params: AnalyzeAnswerParams): Promise<string> {
   const { questionText, isCorrect, explanation, condition, userAnswer, correctAnswer } = params;
-  
+
   try {
     const prompt = `
       You are a supportive and Socratic medical tutor helping a PA student.
@@ -81,19 +81,20 @@ export async function analyzeAnswer(params: AnalyzeAnswerParams): Promise<string
       Correct Answer: "${correctAnswer}"
       Explanation: "${explanation}"
       Topic: ${condition}
-      Result: ${isCorrect ? "Correct" : "Incorrect"}
+      Result: ${isCorrect ? 'Correct' : 'Incorrect'}
 
       Task:
-      ${isCorrect 
-        ? "Congratulate the student briefly and ask a follow-up question to deepen their understanding of the pathophysiology or clinical nuance. Keep it short (2 sentences)." 
-        : "Gently explain why their answer might be wrong or what key concept they missed, based on the explanation. Then ask a guiding question to help them arrive at the correct logic. Do not just give the answer if possible, guide them. Keep it encouraging and short (2-3 sentences)."
+      ${
+        isCorrect
+          ? 'Congratulate the student briefly and ask a follow-up question to deepen their understanding of the pathophysiology or clinical nuance. Keep it short (2 sentences).'
+          : 'Gently explain why their answer might be wrong or what key concept they missed, based on the explanation. Then ask a guiding question to help them arrive at the correct logic. Do not just give the answer if possible, guide them. Keep it encouraging and short (2-3 sentences).'
       }
     `;
 
     const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
     return response;
   } catch (error) {
-    console.error("AI Coaching Error:", error);
+    console.error('AI Coaching Error:', error);
     // Fallback response
     if (!isCorrect) {
       return `Let's break this down together. When thinking about ${condition}, remember these key points:\n\n${explanation}\n\nWhat specific part would you like me to clarify?`;
@@ -147,9 +148,7 @@ export interface SearchHistoryEntry {
 /**
  * Calculate user metrics from performance data
  */
-export function calculateUserMetrics(
-  performanceData: PerformanceRecord[]
-): UserMetrics {
+export function calculateUserMetrics(performanceData: PerformanceRecord[]): UserMetrics {
   if (performanceData.length === 0) {
     return {
       averageQuestionTime: 0,
@@ -160,22 +159,22 @@ export function calculateUserMetrics(
       performanceByHour: {},
       vignetteStamina: {
         shortQuestions: { correct: 0, total: 0 },
-        longQuestions: { correct: 0, total: 0 }
-      }
+        longQuestions: { correct: 0, total: 0 },
+      },
     };
   }
 
   // Calculate average question time
-  const timesRecorded = performanceData.filter(r => r.timeSpentMs);
-  const averageQuestionTime = timesRecorded.length > 0
-    ? timesRecorded.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / timesRecorded.length
-    : 0;
+  const timesRecorded = performanceData.filter((r) => r.timeSpentMs);
+  const averageQuestionTime =
+    timesRecorded.length > 0
+      ? timesRecorded.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / timesRecorded.length
+      : 0;
 
   // Calculate second-guess rate
-  const answersWithChanges = performanceData.filter(r => r.finalAnswerWasChanged);
-  const secondGuessRate = performanceData.length > 0
-    ? (answersWithChanges.length / performanceData.length) * 100
-    : 0;
+  const answersWithChanges = performanceData.filter((r) => r.finalAnswerWasChanged);
+  const secondGuessRate =
+    performanceData.length > 0 ? (answersWithChanges.length / performanceData.length) * 100 : 0;
 
   // Calculate system decay (performance trend over time by system)
   const systemDecay: Record<string, number> = {};
@@ -197,7 +196,7 @@ export function calculateUserMetrics(
     }
   });
 
-  Object.keys(systemPerformance).forEach(system => {
+  Object.keys(systemPerformance).forEach((system) => {
     const early = systemPerformance[system].early;
     const late = systemPerformance[system].late;
 
@@ -209,12 +208,12 @@ export function calculateUserMetrics(
   });
 
   // Calculate overall accuracy
-  const correctCount = performanceData.filter(r => r.isCorrect).length;
+  const correctCount = performanceData.filter((r) => r.isCorrect).length;
   const overallAccuracy = (correctCount / performanceData.length) * 100;
 
   // Calculate performance by hour
   const performanceByHour: Record<number, { correct: number; total: number }> = {};
-  performanceData.forEach(record => {
+  performanceData.forEach((record) => {
     const hour = new Date(record.timestamp).getHours();
     if (!performanceByHour[hour]) {
       performanceByHour[hour] = { correct: 0, total: 0 };
@@ -228,10 +227,10 @@ export function calculateUserMetrics(
   // Calculate vignette stamina
   const vignetteStamina = {
     shortQuestions: { correct: 0, total: 0 },
-    longQuestions: { correct: 0, total: 0 }
+    longQuestions: { correct: 0, total: 0 },
   };
 
-  performanceData.forEach(record => {
+  performanceData.forEach((record) => {
     const wordCount = record.questionWordCount || 0;
     const isLong = wordCount > 100; // Threshold for "long" question
 
@@ -251,7 +250,7 @@ export function calculateUserMetrics(
     totalQuestions: performanceData.length,
     overallAccuracy,
     performanceByHour,
-    vignetteStamina
+    vignetteStamina,
   };
 }
 
@@ -268,7 +267,7 @@ export function generateStudyPrescription(
     return {
       prescription: 'Complete at least 10 questions to receive personalized recommendations.',
       focusAreas: ['Build your baseline performance'],
-      confidence: 0
+      confidence: 0,
     };
   }
 
@@ -277,12 +276,18 @@ export function generateStudyPrescription(
   let optimalTimeSlot: string | undefined;
 
   // Analyze vignette stamina
-  const longAccuracy = metrics.vignetteStamina.longQuestions.total > 0
-    ? (metrics.vignetteStamina.longQuestions.correct / metrics.vignetteStamina.longQuestions.total) * 100
-    : 0;
-  const shortAccuracy = metrics.vignetteStamina.shortQuestions.total > 0
-    ? (metrics.vignetteStamina.shortQuestions.correct / metrics.vignetteStamina.shortQuestions.total) * 100
-    : 0;
+  const longAccuracy =
+    metrics.vignetteStamina.longQuestions.total > 0
+      ? (metrics.vignetteStamina.longQuestions.correct /
+          metrics.vignetteStamina.longQuestions.total) *
+        100
+      : 0;
+  const shortAccuracy =
+    metrics.vignetteStamina.shortQuestions.total > 0
+      ? (metrics.vignetteStamina.shortQuestions.correct /
+          metrics.vignetteStamina.shortQuestions.total) *
+        100
+      : 0;
 
   if (longAccuracy < shortAccuracy - 15) {
     recommendations.push('Your performance drops on longer vignettes.');
@@ -316,7 +321,7 @@ export function generateStudyPrescription(
     .filter(([_, data]) => data.total >= 3) // At least 3 questions
     .map(([hour, data]) => ({
       hour: parseInt(hour),
-      accuracy: (data.correct / data.total) * 100
+      accuracy: (data.correct / data.total) * 100,
     }))
     .sort((a, b) => b.accuracy - a.accuracy);
 
@@ -343,7 +348,7 @@ export function generateStudyPrescription(
     prescription,
     focusAreas,
     optimalTimeSlot,
-    confidence: Math.min(100, metrics.totalQuestions * 2) // Confidence increases with data
+    confidence: Math.min(100, metrics.totalQuestions * 2), // Confidence increases with data
   };
 }
 
@@ -369,7 +374,7 @@ export function analyzeSearchHistory(
 ): { frequentlySearched: string[]; rarelyDrilled: string[] } {
   // Count search frequency
   const searchCounts: Record<string, number> = {};
-  searchHistory.forEach(entry => {
+  searchHistory.forEach((entry) => {
     const query = entry.query.toLowerCase();
     searchCounts[query] = (searchCounts[query] || 0) + 1;
   });
@@ -381,14 +386,11 @@ export function analyzeSearchHistory(
     .map(([query]) => query);
 
   // Find topics that are searched but not practiced
-  const practicedTopics = new Set(
-    performanceData.map(r => r.topic.toLowerCase())
-  );
+  const practicedTopics = new Set(performanceData.map((r) => r.topic.toLowerCase()));
 
   const rarelyDrilled = frequentlySearched.filter(
-    query => !Array.from(practicedTopics).some(topic => 
-      topic.includes(query) || query.includes(topic)
-    )
+    (query) =>
+      !Array.from(practicedTopics).some((topic) => topic.includes(query) || query.includes(topic))
   );
 
   return { frequentlySearched, rarelyDrilled };

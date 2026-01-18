@@ -10,41 +10,34 @@
  * Or with: npm run media:integrate
  */
 
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 import {
   normalize,
   similarityScore,
   extractTags,
   detectMediaTypeFromFolder,
   MediaType,
-} from "../lib/mediaMatcherUtils.js";
+} from '../lib/mediaMatcherUtils.js';
 
 // Configuration
 const MEDIA_DIRECTORIES = [
-  "assets/media/ekg",
-  "assets/media/labs",
-  "assets/media/imaging",
-  "assets/media/diagrams",
+  'assets/media/ekg',
+  'assets/media/labs',
+  'assets/media/imaging',
+  'assets/media/diagrams',
 ];
 
-const CONDITION_DATASET_PATH = "output/conditionContent.transformed.json";
-const OUTPUT_LINKS_PATH = "output/media_links.json";
-const OUTPUT_AUDIT_PATH = "output/media_audit.json";
+const CONDITION_DATASET_PATH = 'output/conditionContent.transformed.json';
+const OUTPUT_LINKS_PATH = 'output/media_links.json';
+const OUTPUT_AUDIT_PATH = 'output/media_audit.json';
 
 // Matching thresholds
 const CONFIDENCE_THRESHOLD = 0.65;
 const DISAMBIGUATION_MARGIN = 0.15;
 
 // Supported image extensions
-const IMAGE_EXTENSIONS = new Set([
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".gif",
-  ".svg",
-  ".webp",
-]);
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp']);
 
 /**
  * Represents a media asset discovered during scanning
@@ -115,13 +108,13 @@ function scanDirectory(dir: string, basePath: string): MediaAsset[] {
         let tags = extractTags(entry.name);
 
         // Check for sidecar metadata file
-        const metadataPath = entryPath.replace(/\.[^.]+$/, ".json");
+        const metadataPath = entryPath.replace(/\.[^.]+$/, '.json');
         if (fs.existsSync(metadataPath)) {
           try {
-            const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+            const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
             if (Array.isArray(metadata.tags)) {
               const metadataTags = metadata.tags
-                .map((t: unknown) => (typeof t === "string" ? normalize(t) : ""))
+                .map((t: unknown) => (typeof t === 'string' ? normalize(t) : ''))
                 .filter((t: string) => t.length > 0);
               tags = [...new Set([...tags, ...metadataTags])];
             }
@@ -155,13 +148,13 @@ function loadConditions(basePath: string): Condition[] {
   }
 
   try {
-    const data = JSON.parse(fs.readFileSync(fullPath, "utf8"));
+    const data = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
 
     // The dataset is an object with condition IDs as keys
     return Object.entries(data).map(([id, value]) => {
       // Extract condition name from the ID or the value object
       let name = id;
-      if (typeof value === "object" && value !== null && "condition" in value) {
+      if (typeof value === 'object' && value !== null && 'condition' in value) {
         name = (value as { condition: string }).condition;
       }
       return { id, name };
@@ -183,7 +176,7 @@ function computeMatchScores(
 
   for (const condition of conditions) {
     // Compute scores based on filename and condition ID/name
-    const filenameNormalized = normalize(asset.filename.replace(/\.[^.]+$/, ""));
+    const filenameNormalized = normalize(asset.filename.replace(/\.[^.]+$/, ''));
     const conditionIdNormalized = normalize(condition.id);
     const conditionNameNormalized = normalize(condition.name);
 
@@ -232,7 +225,7 @@ function findBestMatch(
       link: null,
       audit: {
         file: asset.filename,
-        reason: "no suitable match",
+        reason: 'no suitable match',
         possibleMatches: [],
       },
     };
@@ -246,7 +239,7 @@ function findBestMatch(
       link: null,
       audit: {
         file: asset.filename,
-        reason: "no suitable match",
+        reason: 'no suitable match',
         possibleMatches: scores.slice(0, 3).map((s) => ({
           conditionId: s.conditionId,
           score: Math.round(s.score * 100) / 100,
@@ -265,7 +258,7 @@ function findBestMatch(
         link: null,
         audit: {
           file: asset.filename,
-          reason: "ambiguous match",
+          reason: 'ambiguous match',
           possibleMatches: scores.slice(0, 3).map((s) => ({
             conditionId: s.conditionId,
             score: Math.round(s.score * 100) / 100,
@@ -305,9 +298,9 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
 
   // Dynamic import to avoid requiring database in all cases
   try {
-    const { prisma } = await import("../lib/prisma.js");
+    const { prisma } = await import('../lib/prisma.js');
 
-    console.log("  Connecting to database...");
+    console.log('  Connecting to database...');
 
     for (const link of links) {
       try {
@@ -335,8 +328,8 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
               conditionId: condition.id,
               tags: link.tags,
               confidence: link.confidence,
-              status: link.confidence > 0.9 ? "approved" : "pending_review",
-              folder: link.confidence > 0.9 ? "clinical_verified" : "inbox",
+              status: link.confidence > 0.9 ? 'approved' : 'pending_review',
+              folder: link.confidence > 0.9 ? 'clinical_verified' : 'inbox',
             },
           });
           console.log(`    ✓ Updated: ${link.filename}`);
@@ -349,10 +342,10 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
               conditionId: condition.id,
               tags: link.tags,
               confidence: link.confidence,
-              status: link.confidence > 0.9 ? "approved" : "pending_review",
-              folder: link.confidence > 0.9 ? "clinical_verified" : "inbox",
-              mediaType: "image", // Default to image
-              approvalStatus: "pending",
+              status: link.confidence > 0.9 ? 'approved' : 'pending_review',
+              folder: link.confidence > 0.9 ? 'clinical_verified' : 'inbox',
+              mediaType: 'image', // Default to image
+              approvalStatus: 'pending',
             },
           });
           console.log(`    ✓ Created: ${link.filename}`);
@@ -367,7 +360,7 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
 
     await prisma.$disconnect();
   } catch (error: any) {
-    console.error("  ❌ Database connection failed:", error.message);
+    console.error('  ❌ Database connection failed:', error.message);
     result.errors.push(`Database error: ${error.message}`);
   }
 
@@ -380,10 +373,10 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
 async function run(): Promise<void> {
   const basePath = process.cwd();
 
-  console.log("Media Integrator - Starting...\n");
+  console.log('Media Integrator - Starting...\n');
 
   // Step 1: Scan media directories
-  console.log("Step 1: Scanning media directories...");
+  console.log('Step 1: Scanning media directories...');
   const assets: MediaAsset[] = [];
 
   for (const dir of MEDIA_DIRECTORIES) {
@@ -396,16 +389,16 @@ async function run(): Promise<void> {
   console.log(`\nTotal media files found: ${assets.length}\n`);
 
   // Step 2: Load conditions
-  console.log("Step 2: Loading condition dataset...");
+  console.log('Step 2: Loading condition dataset...');
   const conditions = loadConditions(basePath);
   console.log(`  Loaded ${conditions.length} conditions\n`);
 
   if (conditions.length === 0) {
-    console.warn("Warning: No conditions loaded. Creating empty output files.");
+    console.warn('Warning: No conditions loaded. Creating empty output files.');
   }
 
   // Step 3: Match media to conditions
-  console.log("Step 3: Matching media to conditions...");
+  console.log('Step 3: Matching media to conditions...');
   const links: MediaLink[] = [];
   const audits: AuditEntry[] = [];
 
@@ -424,10 +417,10 @@ async function run(): Promise<void> {
   console.log(`  Unresolved/Ambiguous: ${audits.length}\n`);
 
   // Step 4: Write output files (backup)
-  console.log("Step 4: Writing output files (backup)...");
+  console.log('Step 4: Writing output files (backup)...');
 
   // Ensure output directory exists
-  const outputDir = path.resolve(basePath, "output");
+  const outputDir = path.resolve(basePath, 'output');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
     console.log(`  Created output directory: ${outputDir}`);
@@ -445,7 +438,7 @@ async function run(): Promise<void> {
 
   // Step 5: Save to database
   if (process.env.DATABASE_URL && links.length > 0) {
-    console.log("\nStep 5: Saving to database...");
+    console.log('\nStep 5: Saving to database...');
     const dbResult = await saveToDatabase(links);
 
     console.log(`\n  Database Results:`);
@@ -462,17 +455,17 @@ async function run(): Promise<void> {
       }
     }
   } else {
-    console.log("\nStep 5: Skipping database save");
+    console.log('\nStep 5: Skipping database save');
     if (!process.env.DATABASE_URL) {
-      console.log("  ℹ️  DATABASE_URL not set. Set it to enable database integration.");
+      console.log('  ℹ️  DATABASE_URL not set. Set it to enable database integration.');
     }
     if (links.length === 0) {
-      console.log("  ℹ️  No successful matches to save.");
+      console.log('  ℹ️  No successful matches to save.');
     }
   }
 
-  console.log("\nMedia Integrator - Complete!");
-  console.log("\nSummary:");
+  console.log('\nMedia Integrator - Complete!');
+  console.log('\nSummary:');
   console.log(`  Total scanned: ${assets.length}`);
   console.log(`  Matched: ${links.length}`);
   console.log(`  Unmatched: ${audits.length}`);
@@ -484,6 +477,6 @@ async function run(): Promise<void> {
 
 // Execute the script
 run().catch((error) => {
-  console.error("Fatal error:", error);
+  console.error('Fatal error:', error);
   process.exit(1);
 });

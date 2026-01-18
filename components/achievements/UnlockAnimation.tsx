@@ -100,9 +100,10 @@ export function UnlockAnimation({
             />
 
             {/* Card */}
-            <div className="relative bg-[var(--color-bg-tertiary)] rounded-2xl border-2 p-8 min-w-[400px] max-w-[500px] shadow-2xl"
-              style={{ borderColor: rarityColor }}>
-              
+            <div
+              className="relative bg-[var(--color-bg-tertiary)] rounded-2xl border-2 p-8 min-w-[400px] max-w-[500px] shadow-2xl"
+              style={{ borderColor: rarityColor }}
+            >
               {/* Shine effect */}
               <motion.div
                 initial={{ x: '-100%' }}
@@ -151,11 +152,7 @@ export function UnlockAnimation({
                         ease: 'easeInOut',
                       }}
                     >
-                      <Icon
-                        className="w-12 h-12"
-                        style={{ color: rarityColor }}
-                        strokeWidth={2}
-                      />
+                      <Icon className="w-12 h-12" style={{ color: rarityColor }} strokeWidth={2} />
                     </motion.div>
 
                     {/* Outer pulse ring */}

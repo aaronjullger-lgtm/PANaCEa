@@ -1,6 +1,6 @@
 /**
  * Mastery & Velocity Predictor - Sprint 2
- * 
+ *
  * Time-to-mastery calculations and progress velocity tracking.
  */
 
@@ -34,15 +34,19 @@ export function calculateTimeToMastery(
   avgLearningRate = 1.0
 ): MasteryPrediction {
   // Model forgetting curve
-  const initialRetention = practiceHistory.length >= 2
-    ? practiceHistory.slice(0, 5).filter(p => p.wasCorrect).length / Math.min(5, practiceHistory.length) * 0.5 + 0.5
-    : 0.9;
-  
+  const initialRetention =
+    practiceHistory.length >= 2
+      ? (practiceHistory.slice(0, 5).filter((p) => p.wasCorrect).length /
+          Math.min(5, practiceHistory.length)) *
+          0.5 +
+        0.5
+      : 0.9;
+
   let decayRate = 0.3;
   if (practiceHistory.length >= 3) {
     let forgotCount = 0;
     for (let i = 1; i < practiceHistory.length; i++) {
-      if (practiceHistory[i-1].wasCorrect && !practiceHistory[i].wasCorrect) forgotCount++;
+      if (practiceHistory[i - 1].wasCorrect && !practiceHistory[i].wasCorrect) forgotCount++;
     }
     decayRate = Math.min(0.5, forgotCount / practiceHistory.length + 0.2);
   }
@@ -57,7 +61,7 @@ export function calculateTimeToMastery(
   // Generate review schedule (spaced repetition intervals)
   const now = new Date();
   const baseInterval = Math.max(1, Math.round(stability));
-  const reviewDates = [1, 2.5, 6, 14, 30].map(mult => {
+  const reviewDates = [1, 2.5, 6, 14, 30].map((mult) => {
     const d = new Date(now);
     d.setDate(d.getDate() + Math.round(baseInterval * mult));
     return d;
@@ -80,7 +84,11 @@ export function calculateTimeToMastery(
 }
 
 export function predictProgressVelocity(
-  weeklyProgress: { questionsAttempted: number; correctAnswers: number; newConceptsMastered: number }[],
+  weeklyProgress: {
+    questionsAttempted: number;
+    correctAnswers: number;
+    newConceptsMastered: number;
+  }[],
   targetConceptCount: number,
   targetDate: Date,
   currentMasteredConcepts: number
@@ -97,17 +105,20 @@ export function predictProgressVelocity(
   // Trend calculation
   let velocityTrend: ProgressVelocity['velocityTrend'] = 'steady';
   if (weeklyProgress.length >= 3) {
-    const recent = weeklyProgress.slice(-3).map(w => w.newConceptsMastered / 7);
+    const recent = weeklyProgress.slice(-3).map((w) => w.newConceptsMastered / 7);
     const slope = (recent[2] - recent[0]) / 2;
     velocityTrend = slope > 0.1 ? 'accelerating' : slope < -0.1 ? 'decelerating' : 'steady';
   }
 
-  const projectedCompletionDate = currentVelocity > 0
-    ? new Date(Date.now() + (conceptsRemaining / currentVelocity) * 24 * 60 * 60 * 1000)
-    : new Date(targetDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const projectedCompletionDate =
+    currentVelocity > 0
+      ? new Date(Date.now() + (conceptsRemaining / currentVelocity) * 24 * 60 * 60 * 1000)
+      : new Date(targetDate.getTime() + 365 * 24 * 60 * 60 * 1000);
 
   const onTrack = projectedCompletionDate <= targetDate;
-  const daysAheadOrBehind = Math.round((targetDate.getTime() - projectedCompletionDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysAheadOrBehind = Math.round(
+    (targetDate.getTime() - projectedCompletionDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   return {
     currentVelocity: Math.round(currentVelocity * 100) / 100,

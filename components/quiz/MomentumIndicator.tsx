@@ -1,23 +1,15 @@
 /**
  * Momentum Indicator Component
- * 
+ *
  * Displays current session momentum with visual feedback.
  * Shows when user is "in the zone" vs struggling.
  */
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Flame, 
-  TrendingUp, 
-  Minus, 
-  TrendingDown, 
-  Snowflake,
-  Zap,
-  Coffee,
-} from 'lucide-react';
-import { 
-  calculateMomentum, 
+import { Flame, TrendingUp, Minus, TrendingDown, Snowflake, Zap, Coffee } from 'lucide-react';
+import {
+  calculateMomentum,
   detectFatigueSignals,
   type MomentumLevel,
   type MomentumState,
@@ -30,13 +22,16 @@ interface MomentumIndicatorProps {
   compact?: boolean;
 }
 
-const levelConfig: Record<MomentumLevel, {
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  label: string;
-}> = {
+const levelConfig: Record<
+  MomentumLevel,
+  {
+    icon: React.ElementType;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    label: string;
+  }
+> = {
   peaked: {
     icon: Flame,
     color: 'text-orange-500',
@@ -82,15 +77,15 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
     return calculateMomentum();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
-  
+
   const fatigue = useMemo(() => {
     return detectFatigueSignals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
-  
+
   const config = levelConfig[momentum.level];
   const Icon = config.icon;
-  
+
   if (compact) {
     return (
       <motion.div
@@ -104,7 +99,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
       </motion.div>
     );
   }
-  
+
   return (
     <div className="space-y-2">
       {/* Main indicator */}
@@ -118,17 +113,13 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         <div className={`p-2 rounded-lg bg-white/50 dark:bg-black/20 ${config.color}`}>
           <Icon className="w-5 h-5" />
         </div>
-        
+
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <span className={`text-sm font-semibold ${config.color}`}>
-              {config.label}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {momentum.score}%
-            </span>
+            <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">{momentum.score}%</span>
           </div>
-          
+
           {/* Progress bar */}
           <div className="mt-1.5 h-1.5 bg-white/50 dark:bg-black/20 rounded-full overflow-hidden">
             <motion.div
@@ -136,15 +127,19 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
               animate={{ width: `${momentum.score}%` }}
               transition={{ duration: 0.5 }}
               className={`h-full rounded-full ${
-                momentum.level === 'peaked' ? 'bg-orange-500' :
-                momentum.level === 'rising' ? 'bg-emerald-500' :
-                momentum.level === 'cooling' ? 'bg-amber-500' :
-                momentum.level === 'cold' ? 'bg-blue-400' :
-                'bg-slate-400'
+                momentum.level === 'peaked'
+                  ? 'bg-orange-500'
+                  : momentum.level === 'rising'
+                    ? 'bg-emerald-500'
+                    : momentum.level === 'cooling'
+                      ? 'bg-amber-500'
+                      : momentum.level === 'cold'
+                        ? 'bg-blue-400'
+                        : 'bg-slate-400'
               }`}
             />
           </div>
-          
+
           {/* Stats row */}
           <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
             {momentum.streak > 0 && (
@@ -155,14 +150,16 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             )}
             <span>{momentum.recentAccuracy}% recent</span>
             {momentum.speedTrend !== 'consistent' && (
-              <span className={momentum.speedTrend === 'faster' ? 'text-emerald-600' : 'text-amber-600'}>
+              <span
+                className={momentum.speedTrend === 'faster' ? 'text-emerald-600' : 'text-amber-600'}
+              >
                 {momentum.speedTrend === 'faster' ? '↗ Faster' : '↘ Slower'}
               </span>
             )}
           </div>
         </div>
       </motion.div>
-      
+
       {/* Recommendation */}
       <AnimatePresence>
         {momentum.recommendation && (
@@ -172,13 +169,11 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             exit={{ opacity: 0, height: 0 }}
             className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
           >
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              💡 {momentum.recommendation}
-            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-300">💡 {momentum.recommendation}</p>
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Fatigue warning */}
       <AnimatePresence>
         {fatigue.isFatigued && (

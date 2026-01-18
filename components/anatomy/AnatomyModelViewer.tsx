@@ -1,9 +1,9 @@
 /**
  * AnatomyModelViewer Component
- * 
+ *
  * A 3D model viewer for anatomical structures using Three.js/React Three Fiber.
  * Designed to display NIH 3D Print Exchange models with proper citations.
- * 
+ *
  * Features:
  * - Interactive 3D model viewing with rotation, zoom, and pan
  * - Structure highlighting and selection
@@ -30,9 +30,14 @@ import {
   Layers,
   Settings,
 } from 'lucide-react';
-import type { AnatomyModel, ModelAnnotation, ViewerConfig, AnatomySystem } from '../../types/anatomy-model';
+import type {
+  AnatomyModel,
+  ModelAnnotation,
+  ViewerConfig,
+  AnatomySystem,
+} from '../../types/anatomy-model';
 import { DEFAULT_VIEWER_CONFIG } from '../../types/anatomy-model';
-import * as anatomyModelService from '@/services/anatomyModelService';
+import { anatomyModelService } from '@/services/anatomyModelService';
 
 // Skeleton loader for when 3D libraries are loading
 const ModelSkeleton = () => (
@@ -69,15 +74,13 @@ const Model3DPlaceholder: React.FC<{
             <p className="text-sm text-slate-300 font-medium">{model.name}</p>
           </div>
         </motion.div>
-        
+
         {/* Structure indicators */}
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center">
-          <p className="text-xs text-slate-500">
-            {model.structures.length} structures available
-          </p>
+          <p className="text-xs text-slate-500">{model.structures.length} structures available</p>
         </div>
       </div>
-      
+
       {/* Placeholder message */}
       <div className="absolute bottom-4 left-4 right-4 text-center">
         <p className="text-xs text-slate-500 bg-slate-800/80 rounded-lg px-3 py-2">
@@ -95,7 +98,13 @@ const StructureList: React.FC<{
   highlightedStructures: string[];
   onStructureSelect: (structure: string) => void;
   onStructureHighlight: (structure: string) => void;
-}> = ({ model, selectedStructure, highlightedStructures, onStructureSelect, onStructureHighlight }) => {
+}> = ({
+  model,
+  selectedStructure,
+  highlightedStructures,
+  onStructureSelect,
+  onStructureHighlight,
+}) => {
   return (
     <div className="bg-slate-800/50 rounded-xl p-4 h-full overflow-y-auto">
       <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
@@ -106,18 +115,19 @@ const StructureList: React.FC<{
         {model.structures.map((structure) => {
           const isSelected = selectedStructure === structure;
           const isHighlighted = highlightedStructures.includes(structure);
-          
+
           return (
             <button
               key={structure}
               onClick={() => onStructureSelect(structure)}
               className={`
                 w-full text-left px-3 py-2 rounded-lg text-sm transition-all
-                ${isSelected 
-                  ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50' 
-                  : isHighlighted
-                  ? 'bg-teal-600/20 text-teal-300'
-                  : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-300'
+                ${
+                  isSelected
+                    ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50'
+                    : isHighlighted
+                      ? 'bg-teal-600/20 text-teal-300'
+                      : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-300'
                 }
               `}
             >
@@ -137,15 +147,15 @@ const CitationPanel: React.FC<{
   onFormatChange: (format: 'AMA' | 'APA' | 'MLA') => void;
 }> = ({ model, citationFormat, onFormatChange }) => {
   const [copied, setCopied] = useState(false);
-  
+
   const citation = anatomyModelService.generateCitation(model, citationFormat);
-  
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(citation);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [citation]);
-  
+
   return (
     <div className="bg-slate-800/50 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
@@ -160,9 +170,10 @@ const CitationPanel: React.FC<{
               onClick={() => onFormatChange(format)}
               className={`
                 px-2 py-1 text-xs rounded transition-colors
-                ${citationFormat === format
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                ${
+                  citationFormat === format
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
                 }
               `}
             >
@@ -171,7 +182,7 @@ const CitationPanel: React.FC<{
           ))}
         </div>
       </div>
-      
+
       <div className="relative">
         <p className="text-xs text-slate-400 bg-slate-900/50 rounded-lg p-3 pr-10 leading-relaxed">
           {citation}
@@ -188,15 +199,13 @@ const CitationPanel: React.FC<{
           )}
         </button>
       </div>
-      
+
       <div className="mt-3 pt-3 border-t border-slate-700/50">
         <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="px-1.5 py-0.5 bg-slate-700/50 rounded">
-            {model.citation.license}
-          </span>
-          <a 
-            href={model.citation.url} 
-            target="_blank" 
+          <span className="px-1.5 py-0.5 bg-slate-700/50 rounded">{model.citation.license}</span>
+          <a
+            href={model.citation.url}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-400 hover:text-emerald-300 underline"
           >
@@ -235,7 +244,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
   const [model, setModel] = useState<AnatomyModel | null>(providedModel || null);
   const [isLoading, setIsLoading] = useState(!providedModel);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Viewer state
   const [selectedStructure, setSelectedStructure] = useState<string | null>(null);
   const [highlightedStructures, setHighlightedStructures] = useState<string[]>([]);
@@ -244,12 +253,12 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [citationFormat, setCitationFormat] = useState<'AMA' | 'APA' | 'MLA'>('AMA');
-  
+
   // Config
   const config = { ...DEFAULT_VIEWER_CONFIG, ...userConfig };
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Load model
   useEffect(() => {
     if (providedModel) {
@@ -257,10 +266,11 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
       setIsLoading(false);
       return;
     }
-    
+
     if (modelId) {
       setIsLoading(true);
-      anatomyModelService.getModel(modelId)
+      anatomyModelService
+        .getModel(modelId)
         .then((loadedModel) => {
           if (loadedModel) {
             setModel(loadedModel);
@@ -275,22 +285,23 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
         .finally(() => setIsLoading(false));
     }
   }, [modelId, providedModel]);
-  
+
   // Handle structure selection
-  const handleStructureSelect = useCallback((structure: string) => {
-    setSelectedStructure(prev => prev === structure ? null : structure);
-    onStructureSelect?.(structure);
-  }, [onStructureSelect]);
-  
+  const handleStructureSelect = useCallback(
+    (structure: string) => {
+      setSelectedStructure((prev) => (prev === structure ? null : structure));
+      onStructureSelect?.(structure);
+    },
+    [onStructureSelect]
+  );
+
   // Handle structure highlight
   const handleStructureHighlight = useCallback((structure: string) => {
-    setHighlightedStructures(prev => 
-      prev.includes(structure)
-        ? prev.filter(s => s !== structure)
-        : [...prev, structure]
+    setHighlightedStructures((prev) =>
+      prev.includes(structure) ? prev.filter((s) => s !== structure) : [...prev, structure]
     );
   }, []);
-  
+
   // Reset view
   const handleResetView = useCallback(() => {
     setSelectedStructure(null);
@@ -298,11 +309,11 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
     setWireframe(false);
     setAutoRotate(false);
   }, []);
-  
+
   // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
-    
+
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen();
       setIsFullscreen(true);
@@ -311,7 +322,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
       setIsFullscreen(false);
     }
   }, []);
-  
+
   // Loading state
   if (isLoading) {
     return (
@@ -320,58 +331,61 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
       </div>
     );
   }
-  
+
   // Error state
   if (error || !model) {
     return (
-      <div className={`w-full h-96 flex items-center justify-center bg-slate-800/50 rounded-xl ${className}`}>
+      <div
+        className={`w-full h-96 flex items-center justify-center bg-slate-800/50 rounded-xl ${className}`}
+      >
         <div className="text-center">
           <Info className="w-12 h-12 text-slate-500 mx-auto mb-3" />
           <p className="text-slate-400">{error || 'No model selected'}</p>
-          <p className="text-sm text-slate-500 mt-1">
-            Select an anatomy model to view
-          </p>
+          <p className="text-sm text-slate-500 mt-1">Select an anatomy model to view</p>
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div 
-      ref={containerRef}
-      className={`bg-slate-900 rounded-xl overflow-hidden ${className}`}
-    >
+    <div ref={containerRef} className={`bg-slate-900 rounded-xl overflow-hidden ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
         <div>
           <h2 className="text-lg font-semibold text-white">{model.name}</h2>
           <p className="text-xs text-slate-400 capitalize">{model.system} System</p>
         </div>
-        
+
         {showControls && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setWireframe(prev => !prev)}
+              onClick={() => setWireframe((prev) => !prev)}
               className={`p-2 rounded-lg transition-colors ${
-                wireframe ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                wireframe
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
               title="Toggle wireframe"
             >
               <Layers className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setAutoRotate(prev => !prev)}
+              onClick={() => setAutoRotate((prev) => !prev)}
               className={`p-2 rounded-lg transition-colors ${
-                autoRotate ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                autoRotate
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
               title="Toggle auto-rotate"
             >
               <Rotate3D className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setShowAnnotations(prev => !prev)}
+              onClick={() => setShowAnnotations((prev) => !prev)}
               className={`p-2 rounded-lg transition-colors ${
-                showAnnotations ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                showAnnotations
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
               title="Toggle annotations"
             >
@@ -394,7 +408,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Main content */}
       <div className="flex h-[500px]">
         {/* 3D Viewer */}
@@ -408,7 +422,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
               autoRotate={autoRotate}
             />
           </Suspense>
-          
+
           {/* Selected structure info */}
           <AnimatePresence>
             {selectedStructure && (
@@ -428,7 +442,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
             )}
           </AnimatePresence>
         </div>
-        
+
         {/* Sidebar */}
         {showStructureList && (
           <div className="w-64 border-l border-slate-800 p-4 flex flex-col gap-4 overflow-y-auto">
@@ -442,7 +456,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Citation */}
       {showCitation && (
         <div className="px-4 pb-4">
@@ -453,7 +467,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
           />
         </div>
       )}
-      
+
       {/* Clinical relevance */}
       {model.clinicalRelevance && model.clinicalRelevance.length > 0 && (
         <div className="px-4 pb-4">

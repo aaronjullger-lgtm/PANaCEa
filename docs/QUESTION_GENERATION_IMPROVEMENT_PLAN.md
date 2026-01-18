@@ -15,25 +15,26 @@ This plan addresses critical gaps in the question generation system to improve P
 ## Current State Assessment
 
 ### ✅ What's Working
-| Component | Status | Notes |
-|-----------|--------|-------|
-| FSRS v5 Algorithm | ✅ Complete | Proper stability/difficulty calculations |
-| Question Pool System | ✅ Working | DB-first with Gemini fallback |
-| Pearl Harvester | ✅ Active | Extracts pearls from rationales |
-| Background Generation | ✅ Working | Auto-triggers when pool low |
+
+| Component             | Status      | Notes                                    |
+| --------------------- | ----------- | ---------------------------------------- |
+| FSRS v5 Algorithm     | ✅ Complete | Proper stability/difficulty calculations |
+| Question Pool System  | ✅ Working  | DB-first with Gemini fallback            |
+| Pearl Harvester       | ✅ Active   | Extracts pearls from rationales          |
+| Background Generation | ✅ Working  | Auto-triggers when pool low              |
 
 ### ⚠️ Critical Gaps Identified
 
-| Gap | Impact | Current State |
-|-----|--------|---------------|
-| **conditionId often fake** | Breaks per-condition FSRS | Generated from name, not DB |
-| **No question deduplication** | Users see same questions | No similarity check |
-| **Fixed "medium" difficulty** | No adaptive difficulty | Hardcoded |
-| **No NCCPA blueprint weighting** | Doesn't match exam distribution | Uses equal system weighting |
-| **Questions not linked to FSRS** | Review timing not optimal | FSRS uses UserProgress, not questions |
-| **No question versioning** | Can't track quality over edits | Single version only |
-| **Distractor quality unchecked** | Bad options reduce learning | No validation |
-| **No interleaving guarantee** | May get same system repeatedly | Random selection |
+| Gap                              | Impact                          | Current State                         |
+| -------------------------------- | ------------------------------- | ------------------------------------- |
+| **conditionId often fake**       | Breaks per-condition FSRS       | Generated from name, not DB           |
+| **No question deduplication**    | Users see same questions        | No similarity check                   |
+| **Fixed "medium" difficulty**    | No adaptive difficulty          | Hardcoded                             |
+| **No NCCPA blueprint weighting** | Doesn't match exam distribution | Uses equal system weighting           |
+| **Questions not linked to FSRS** | Review timing not optimal       | FSRS uses UserProgress, not questions |
+| **No question versioning**       | Can't track quality over edits  | Single version only                   |
+| **Distractor quality unchecked** | Bad options reduce learning     | No validation                         |
+| **No interleaving guarantee**    | May get same system repeatedly  | Random selection                      |
 
 ---
 
@@ -46,12 +47,14 @@ This plan addresses critical gaps in the question generation system to improve P
 **Solution**: Created condition resolver with fuzzy matching using Levenshtein distance.
 
 **Implementation**: `lib/conditionResolver.ts` (239 lines)
+
 - `resolveConditionId()`: Single condition resolution with 100% confidence for exact matches
 - `resolveConditionIdBatch()`: Batch resolution for efficiency
 - 5-minute in-memory cache with TTL
 - Demo validated: "Atrial Fibrillation" → `CV__ecg__atrial_fibrillation` (100% confidence)
 
 **Scripts**:
+
 - `scripts/fix-fake-condition-ids.ts`: Found 137 questions with fake IDs
 - `npm run fix:condition-ids`: Run batch fix job
 
@@ -62,6 +65,7 @@ This plan addresses critical gaps in the question generation system to improve P
 **Problem**: Session questions don't match PANCE exam distribution.
 
 **Implementation**: `lib/nccpa-question-weighting.ts` (275 lines)
+
 - `calculateSessionDistribution()`: Returns Map of system → question count
 - `selectWeightedSystems()`: Weighted random selection
 - `validateSessionDistribution()`: Checks ±2% compliance
@@ -84,11 +88,13 @@ This plan addresses critical gaps in the question generation system to improve P
 | GU | 5% | 2 |
 | HEME | 4% | 1-2 |
 | ID | 4% | 1-2 |
+
 ### **Step 3: Add Question Deduplication** ✅ COMPLETE
 
 **Problem**: Users may see identical or near-identical questions.
 
 **Implementation**: `lib/questionDeduplication.ts` (260 lines)
+
 - `getUserSeenQuestionIds()`: Returns Set of seen question IDs with caching
 - `filterUnseenQuestions()`: Filters array to only unseen questions
 - `getPoolExplorationStats()`: Returns seen/unseen counts and % explored
@@ -99,12 +105,15 @@ This plan addresses critical gaps in the question generation system to improve P
 **Demo**: Validated filtering logic with empty database (correct behavior)-identical questions.
 
 **Implementation**:
+
 - Track `UserQuestionSeen` table (already exists)
+
 ### **Step 4: Implement Adaptive Difficulty** ✅ COMPLETE
 
 **Problem**: All questions served at "medium" regardless of user performance.
 
 **Implementation**: `lib/adaptiveDifficulty.ts` (327 lines)
+
 - `getUserPerformanceBySystem()`: Returns accuracy, stability, recommended difficulty
 - `getRecommendedDifficultiesBySystem()`: Batch difficulty for multiple systems
 - `getUserOverallSkillLevel()`: Returns beginner/intermediate/advanced assessment
@@ -112,6 +121,7 @@ This plan addresses critical gaps in the question generation system to improve P
 - 2-minute in-memory cache
 
 **Algorithm** (implemented):
+
 ```
 if attempts < 5:                      → easy   (new learners)
 if accuracy < 50% OR stability < 2:   → easy   (struggling)
@@ -120,11 +130,13 @@ else:                                 → medium (default)
 ```
 
 **Demo**: Validated with synthetic examples (beginner→easy, intermediate→medium, advanced→hard)
+
 ### **Step 5: Guarantee Interleaved Sessions** ✅ COMPLETE
 
 **Problem**: Sessions may have consecutive questions from same system.
 
 **Implementation**: `lib/sessionInterleaving.ts` (315 lines)
+
 - `ensureInterleaving()`: Reorders questions to meet constraint using greedy algorithm
 - `validateInterleaving()`: Returns true if valid, false if violations
 - `getInterleavingMetrics()`: Returns quality metrics (consecutive, violations, etc.)
@@ -132,7 +144,8 @@ else:                                 → medium (default)
 
 **Rule** (implemented): Max 2 questions from same system in any 5-question sliding window
 
-**Demo**: 
+**Demo**:
+
 - Input: `[CV, CV, CV, PULM, PULM, PULM, GI, GI, GI, NEURO]` (6 violations)
 - Output: `[CV, CV, PULM, PULM, GI, CV, GI, PULM, NEURO, GI]` (0 violations)
 - Validation: ✅ All interleaving tests passed
@@ -154,6 +167,7 @@ else:                                 → medium (default)
 **Solution**: Extended UserProgress.fsrsCard JSON with question tracking.
 
 **Implementation**: `lib/fsrsQuestionLinking.ts` (320+ lines)
+
 - `recordQuestionWithFSRS()`: Links question attempts to FSRS updates
 - `getQuestionHistoryForCondition()`: Returns last 10 question IDs
 - `getQuestionUsageStats()`: Analytics on question usage per condition
@@ -170,12 +184,14 @@ else:                                 → medium (default)
 **Solution**: 8-rule validation system scoring options 0-100.
 
 **Implementation**: `lib/distractorValidation.ts` (430+ lines)
+
 - `validateDistractors()`: Score with issues/warnings/suggestions
 - `validateDistractorsBatch()`: Batch processing
 - `generateValidationReport()`: Human-readable report
 - `getQuestionsNeedingAttention()`: Returns IDs with score < 70
 
 **Validation Rules** (implemented):
+
 1. No duplicate options (-30 points)
 2. No empty options (-20 points)
 3. Similar length ±50% of correct (-15 if 2+ violations)
@@ -196,6 +212,7 @@ else:                                 → medium (default)
 **Solution**: Full version control with rollback capability.
 
 **Implementation**: `lib/questionVersioning.ts` (380+ lines)
+
 - `createQuestionVersion()`: Snapshot when editing (stores OLD data)
 - `getQuestionVersions()`: List all versions
 - `rollbackQuestion()`: Revert to previous version
@@ -203,6 +220,7 @@ else:                                 → medium (default)
 - `getVersionHistorySummary()`: Display history
 
 **Schema**: `QuestionVersion` table (added to Prisma)
+
 - Tracks: version number, questionData, changedFields, editedBy
 - Includes: distractorScore, qualityScore
 - Full audit trail with timestamps
@@ -216,6 +234,7 @@ else:                                 → medium (default)
 **Problem**: No systematic quality assessment.
 
 **Scoring Factors**:
+
 - Has clinical vignette (+10)
 - Proper explanation length (+10)
 - Valid conditionId (+15)
@@ -227,102 +246,113 @@ else:                                 → medium (default)
 ### **Step 10: Create Question Analytics Dashboard** 🟢 P3
 
 **Problem**: No visibility into question pool health.
+
 ## Implementation Priority Matrix
 
-| Step | Effort | Impact | Priority | Sprint | Status |
-|------|--------|--------|----------|--------|--------|
-| 1. Fix conditionId Linking | Medium | Very High | 🔴 P0 | A | ✅ Complete |
-| 2. NCCPA Blueprint Weighting | Low | Very High | 🔴 P0 | A | ✅ Complete |
-| 3. Question Deduplication | Medium | High | 🟠 P1 | B | ✅ Complete |
-| 4. Adaptive Difficulty | Medium | High | 🟠 P1 | B | ✅ Complete |
-| 5. Interleaved Sessions | Low | High | 🟠 P1 | B | ✅ Complete |
-| 6. Link Questions to FSRS | Medium | Medium | 🟡 P2 | C | ✅ Complete |
-| 7. Distractor Validation | Low | Medium | 🟡 P2 | C | ✅ Complete |
-| 8. Question Versioning | Medium | Low | 🟡 P2 | C | ✅ Complete |
-| 9. Quality Scoring | Low | Medium | 🟢 P3 | D | ⏳ Pending |
-| 10. Analytics Dashboard | Medium | Medium | 🟢 P3 | D | ⏳ Pending | | A |
-| 2. NCCPA Blueprint Weighting | Low | Very High | 🔴 P0 | A |
-| 3. Question Deduplication | Medium | High | 🟠 P1 | B |
-| 4. Adaptive Difficulty | Medium | High | 🟠 P1 | B |
+| Step                         | Effort | Impact    | Priority | Sprint | Status      |
+| ---------------------------- | ------ | --------- | -------- | ------ | ----------- | --- | --- |
+| 1. Fix conditionId Linking   | Medium | Very High | 🔴 P0    | A      | ✅ Complete |
+| 2. NCCPA Blueprint Weighting | Low    | Very High | 🔴 P0    | A      | ✅ Complete |
+| 3. Question Deduplication    | Medium | High      | 🟠 P1    | B      | ✅ Complete |
+| 4. Adaptive Difficulty       | Medium | High      | 🟠 P1    | B      | ✅ Complete |
+| 5. Interleaved Sessions      | Low    | High      | 🟠 P1    | B      | ✅ Complete |
+| 6. Link Questions to FSRS    | Medium | Medium    | 🟡 P2    | C      | ✅ Complete |
+| 7. Distractor Validation     | Low    | Medium    | 🟡 P2    | C      | ✅ Complete |
+| 8. Question Versioning       | Medium | Low       | 🟡 P2    | C      | ✅ Complete |
+| 9. Quality Scoring           | Low    | Medium    | 🟢 P3    | D      | ⏳ Pending  |
+| 10. Analytics Dashboard      | Medium | Medium    | 🟢 P3    | D      | ⏳ Pending  |     | A   |
+| 2. NCCPA Blueprint Weighting | Low    | Very High | 🔴 P0    | A      |
+| 3. Question Deduplication    | Medium | High      | 🟠 P1    | B      |
+| 4. Adaptive Difficulty       | Medium | High      | 🟠 P1    | B      |
+
 ## Sprint Plan
 
-**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core PANCE alignment  
-  - ✅ Condition resolver with fuzzy matching
-  - ✅ NCCPA blueprint weighting
-  - 📄 Demo: `npm run demo:question-improvements`
+**Sprint A** ✅ **COMPLETE**: Steps 1-2 - Core PANCE alignment
 
-**Sprint B** ✅ **COMPLETE**: Steps 3-5 - Session quality  
-  - ✅ Question deduplication with caching
-  - ✅ Adaptive difficulty (easy/medium/hard)
-  - ✅ Session interleaving (max 2 per system in 5Q window)
-  - 📄 Demo: `npm run demo:question-sprint-b`
-  - 📄 Summary: `docs/SPRINT_B_SUMMARY.md`
+- ✅ Condition resolver with fuzzy matching
+- ✅ NCCPA blueprint weighting
+- 📄 Demo: `npm run demo:question-improvements`
 
-**Sprint C** ✅ **COMPLETE**: Steps 6-8 - Advanced tracking  
-  - ✅ Link questions to FSRS cards (extends UserProgress.fsrsCard JSON)
-  - ✅ Distractor validation (8 rules, 0-100 scoring)
-  - ✅ Question versioning (QuestionVersion table created)
-  - 📄 Demo: `npm run demo:question-sprint-c`
+**Sprint B** ✅ **COMPLETE**: Steps 3-5 - Session quality
+
+- ✅ Question deduplication with caching
+- ✅ Adaptive difficulty (easy/medium/hard)
+- ✅ Session interleaving (max 2 per system in 5Q window)
+- 📄 Demo: `npm run demo:question-sprint-b`
+- 📄 Summary: `docs/SPRINT_B_SUMMARY.md`
+
+**Sprint C** ✅ **COMPLETE**: Steps 6-8 - Advanced tracking
+
+- ✅ Link questions to FSRS cards (extends UserProgress.fsrsCard JSON)
+- ✅ Distractor validation (8 rules, 0-100 scoring)
+- ✅ Question versioning (QuestionVersion table created)
+- 📄 Demo: `npm run demo:question-sprint-c`
+
 ## Files Created/Modified
 
 ### ✅ Sprint A & B Complete
 
-| File | Purpose | Status | Lines |
-|------|---------|--------|-------|
-| `lib/conditionResolver.ts` | Step 1 - Fuzzy match conditions | ✅ Created | 239 |
-| `lib/nccpa-question-weighting.ts` | Step 2 - Blueprint weights | ✅ Created | 275 |
-| `lib/questionDeduplication.ts` | Step 3 - Seen question tracking | ✅ Created | 260 |
-| `lib/adaptiveDifficulty.ts` | Step 4 - Performance-based difficulty | ✅ Created | 327 |
-| `lib/sessionInterleaving.ts` | Step 5 - Question spacing | ✅ Created | 315 |
-| `scripts/fix-fake-condition-ids.ts` | Batch fix fake conditionIds | ✅ Created | 280 |
-| `scripts/demo-question-improvements.ts` | Sprint A demo | ✅ Created | 150 |
-| `scripts/demo-question-sprint-b.ts` | Sprint B demo | ✅ Created | 259 |
-| `scripts/demo-question-sprint-c.ts` | Sprint C demo | ✅ Created | 250 |
-| `lib/fsrsQuestionLinking.ts` | Step 6 - FSRS linking | ✅ Created | 320 |
-| `lib/distractorValidation.ts` | Step 7 - Distractor validation | ✅ Created | 430 |
-| `lib/questionVersioning.ts` | Step 8 - Version control | ✅ Created | 380 |
-| `lib/questionVersioning.schema.ts` | Step 8 - Schema definition | ✅ Created | 50 |
-| `services/core/enhancedQuestionPool.ts` | Integration layer | ✅ Created | 387 |
-| `docs/SPRINT_B_SUMMARY.md` | Sprint B documentation | ✅ Created | - |
+| File                                    | Purpose                               | Status     | Lines |
+| --------------------------------------- | ------------------------------------- | ---------- | ----- |
+| `lib/conditionResolver.ts`              | Step 1 - Fuzzy match conditions       | ✅ Created | 239   |
+| `lib/nccpa-question-weighting.ts`       | Step 2 - Blueprint weights            | ✅ Created | 275   |
+| `lib/questionDeduplication.ts`          | Step 3 - Seen question tracking       | ✅ Created | 260   |
+| `lib/adaptiveDifficulty.ts`             | Step 4 - Performance-based difficulty | ✅ Created | 327   |
+| `lib/sessionInterleaving.ts`            | Step 5 - Question spacing             | ✅ Created | 315   |
+| `scripts/fix-fake-condition-ids.ts`     | Batch fix fake conditionIds           | ✅ Created | 280   |
+| `scripts/demo-question-improvements.ts` | Sprint A demo                         | ✅ Created | 150   |
+| `scripts/demo-question-sprint-b.ts`     | Sprint B demo                         | ✅ Created | 259   |
+| `scripts/demo-question-sprint-c.ts`     | Sprint C demo                         | ✅ Created | 250   |
+| `lib/fsrsQuestionLinking.ts`            | Step 6 - FSRS linking                 | ✅ Created | 320   |
+| `lib/distractorValidation.ts`           | Step 7 - Distractor validation        | ✅ Created | 430   |
+| `lib/questionVersioning.ts`             | Step 8 - Version control              | ✅ Created | 380   |
+| `lib/questionVersioning.schema.ts`      | Step 8 - Schema definition            | ✅ Created | 50    |
+| `services/core/enhancedQuestionPool.ts` | Integration layer                     | ✅ Created | 387   |
+| `docs/SPRINT_B_SUMMARY.md`              | Sprint B documentation                | ✅ Created | -     |
 
 ### 🔄 Sprint D To-Do
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `lib/questionQuality.ts` | Step 9 - Quality scoring | 🔄 Ready |
-| `functions/api/questions/session.ts` | Integration of Sprint B | 🔄 Ready |
-| `components/admin/QuestionVersionHistory.tsx` | Admin UI for versioning | 🔄 Ready |
+| File                                          | Purpose                  | Status   |
+| --------------------------------------------- | ------------------------ | -------- |
+| `lib/questionQuality.ts`                      | Step 9 - Quality scoring | 🔄 Ready |
+| `functions/api/questions/session.ts`          | Integration of Sprint B  | 🔄 Ready |
+| `components/admin/QuestionVersionHistory.tsx` | Admin UI for versioning  | 🔄 Ready |
 
 **Sprint A (1 week)**: Steps 1-2 - Core PANCE alignment  
 **Sprint B (1 week)**: Steps 3-5 - Session quality  
 **Sprint C (1 week)**: Steps 6-8 - Advanced tracking  
-**Sprint D (1 week)**: Steps 9-10 - Quality & visibility  
+**Sprint D (1 week)**: Steps 9-10 - Quality & visibility
 
 ---
 
 ## Files to Create/Modify
+
 ---
 
 ## Completion Summary
 
 ### Sprint A Results ✅
+
 - **Condition Resolver**: 100% confidence for exact matches, 90%+ for close matches
 - **NCCPA Weighting**: 40-question sessions match PANCE blueprint within ±2%
 - **Impact**: Questions now link to real database conditions, sessions match exam distribution
 
 ### Sprint B Results ✅
+
 - **Deduplication**: Tracks seen questions via `UserQuestionSeen` table with 5-min cache
 - **Adaptive Difficulty**: Adjusts based on accuracy + FSRS stability (easy/medium/hard)
 - **Interleaving**: Ensures max 2 from same system in 5Q window (reduced violations 6→0)
 - **Impact**: No duplicate questions, appropriate difficulty, optimal learning spacing
 
 ### Sprint C Results ✅
+
 - **FSRS Question Linking**: Tracks which questions update which FSRS cards (extends UserProgress.fsrsCard JSON)
 - **Distractor Validation**: 8-rule system scoring 0-100 (good question: 100/100, poor: 50/100)
 - **Question Versioning**: Full version control with rollback (QuestionVersion table created)
 - **Impact**: Question-level analytics, automated quality validation, audit trail
 
 ### Total Implementation
+
 - **Files Created**: 13 files (~3,500 lines of code)
 - **Utilities**: 35+ functions across 8 core libraries
 - **Testing**: 3 comprehensive demo scripts with validation
@@ -330,6 +360,7 @@ else:                                 → medium (default)
 - **Database**: QuestionVersion table added via migration
 
 ### Integration Status
+
 - ✅ Sprint A, B & C utilities production-ready
 - ✅ Enhanced question pool integration complete (services/core/enhancedQuestionPool.ts)
 - ✅ Sprint C deployed (FSRS linking ready, validation working, versioning table created)

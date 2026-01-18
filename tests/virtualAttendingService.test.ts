@@ -11,7 +11,7 @@ import {
   savePreferredPersona,
   loadPreferredPersona,
   getMotivationalMessage,
-  ATTENDING_PERSONAS
+  ATTENDING_PERSONAS,
 } from '../services/virtualAttendingService';
 
 describe('Virtual Attending Service', () => {
@@ -30,9 +30,9 @@ describe('Virtual Attending Service', () => {
       },
       clear() {
         this.store = {};
-      }
+      },
     };
-    
+
     global.localStorage = localStorageMock as any;
   });
 
@@ -40,8 +40,8 @@ describe('Virtual Attending Service', () => {
     it('should have 5 unique personas', () => {
       const personas = getAllPersonas();
       expect(personas).toHaveLength(5);
-      
-      const ids = personas.map(p => p.id);
+
+      const ids = personas.map((p) => p.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(5);
     });
@@ -54,7 +54,7 @@ describe('Virtual Attending Service', () => {
     });
 
     it('should have all required persona properties', () => {
-      getAllPersonas().forEach(persona => {
+      getAllPersonas().forEach((persona) => {
         expect(persona).toHaveProperty('id');
         expect(persona).toHaveProperty('name');
         expect(persona).toHaveProperty('description');
@@ -70,7 +70,7 @@ describe('Virtual Attending Service', () => {
       const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: true,
         topic: 'Cardiology',
-        condition: 'STEMI'
+        condition: 'STEMI',
       });
 
       expect(feedback).toBeTruthy();
@@ -83,7 +83,7 @@ describe('Virtual Attending Service', () => {
         isCorrect: false,
         topic: 'Cardiology',
         condition: 'STEMI',
-        keyLearning: 'Always check troponins'
+        keyLearning: 'Always check troponins',
       });
 
       expect(feedback).toBeTruthy();
@@ -94,12 +94,12 @@ describe('Virtual Attending Service', () => {
     it('should generate different feedback for different personas', async () => {
       const nurturerFeedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: true,
-        topic: 'Cardiology'
+        topic: 'Cardiology',
       });
 
       const surgeonFeedback = await generatePersonalizedFeedback('surgeon', {
         isCorrect: true,
-        topic: 'Cardiology'
+        topic: 'Cardiology',
       });
 
       // Feedback should be different (though there's a small chance of collision)
@@ -107,14 +107,20 @@ describe('Virtual Attending Service', () => {
     });
 
     it('should handle all persona types', async () => {
-      const personaIds = ['nurturer', 'surgeon', 'professor', 'comedian', 'drill-sergeant'] as const;
-      
+      const personaIds = [
+        'nurturer',
+        'surgeon',
+        'professor',
+        'comedian',
+        'drill-sergeant',
+      ] as const;
+
       for (const personaId of personaIds) {
         const feedback = await generatePersonalizedFeedback(personaId, {
           isCorrect: true,
-          topic: 'Test Topic'
+          topic: 'Test Topic',
         });
-        
+
         expect(feedback).toBeTruthy();
         expect(typeof feedback).toBe('string');
       }
@@ -143,9 +149,15 @@ describe('Virtual Attending Service', () => {
 
   describe('Motivational Messages', () => {
     it('should provide motivational message for each persona', () => {
-      const personaIds = ['nurturer', 'surgeon', 'professor', 'comedian', 'drill-sergeant'] as const;
-      
-      personaIds.forEach(personaId => {
+      const personaIds = [
+        'nurturer',
+        'surgeon',
+        'professor',
+        'comedian',
+        'drill-sergeant',
+      ] as const;
+
+      personaIds.forEach((personaId) => {
         const message = getMotivationalMessage(personaId);
         expect(message).toBeTruthy();
         expect(typeof message).toBe('string');
@@ -155,8 +167,8 @@ describe('Virtual Attending Service', () => {
 
     it('should have unique messages for different personas', () => {
       const messages = new Set();
-      
-      Object.keys(ATTENDING_PERSONAS).forEach(personaId => {
+
+      Object.keys(ATTENDING_PERSONAS).forEach((personaId) => {
         const message = getMotivationalMessage(personaId as any);
         messages.add(message);
       });
@@ -177,14 +189,14 @@ describe('Virtual Attending Service', () => {
     });
 
     it('should have descriptive names', () => {
-      getAllPersonas().forEach(persona => {
+      getAllPersonas().forEach((persona) => {
         expect(persona.name).toMatch(/^The /);
         expect(persona.description.length).toBeGreaterThan(10);
       });
     });
 
     it('should have unique emojis', () => {
-      const emojis = getAllPersonas().map(p => p.icon);
+      const emojis = getAllPersonas().map((p) => p.icon);
       const uniqueEmojis = new Set(emojis);
       expect(uniqueEmojis.size).toBe(5);
     });
@@ -194,7 +206,7 @@ describe('Virtual Attending Service', () => {
     it('should include topic in feedback when provided', async () => {
       const feedback = await generatePersonalizedFeedback('professor', {
         isCorrect: true,
-        topic: 'Neurology'
+        topic: 'Neurology',
       });
 
       // Professor persona is educational and likely mentions the topic
@@ -207,7 +219,7 @@ describe('Virtual Attending Service', () => {
       const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: false,
         topic: 'Cardiology',
-        keyLearning
+        keyLearning,
       });
 
       // Should be substantial feedback
@@ -217,7 +229,7 @@ describe('Virtual Attending Service', () => {
     it('should provide supportive incorrect feedback for nurturer', async () => {
       const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: false,
-        topic: 'Test'
+        topic: 'Test',
       });
 
       // Nurturer should have gentle, supportive language
@@ -228,7 +240,7 @@ describe('Virtual Attending Service', () => {
     it('should provide direct incorrect feedback for surgeon', async () => {
       const feedback = await generatePersonalizedFeedback('surgeon', {
         isCorrect: false,
-        topic: 'Emergency'
+        topic: 'Emergency',
       });
 
       // Surgeon feedback should be present and direct

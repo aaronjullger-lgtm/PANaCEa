@@ -1,6 +1,6 @@
 /**
  * Guideline Types for Vignette-Based Scoring Drills
- * 
+ *
  * These types define the structure for clinical scoring guidelines
  * like CURB-65, Wells Criteria, CHADS2-VASc, etc.
  */

@@ -14,6 +14,7 @@ This document describes the new features implemented across multiple phases to e
 ## Specialty CAQ Tracks (DLC Packs)
 
 ### Overview
+
 Post-graduate specialty certification preparation packs that can be unlocked 2-3 years after graduation when users specialize.
 
 ### Available Specialties
@@ -45,10 +46,12 @@ Post-graduate specialty certification preparation packs that can be unlocked 2-3
    - High-acuity decision-making
 
 ### Configuration Files
+
 - `config/specialty-caq.ts` - Pack definitions and unlock logic
 - Types defined in `types.ts`
 
 ### Testing
+
 - `tests/specialty-caq.test.ts` - 6 comprehensive tests
 
 ---
@@ -62,6 +65,7 @@ Engaging features to maintain daily user engagement and build study habits.
 **Description:** Daily word-guessing game featuring medical terms (drugs, conditions, anatomy).
 
 **Features:**
+
 - 6 attempts to guess the word
 - Color-coded feedback (green/yellow/gray)
 - Hints based on drug class or body system
@@ -69,16 +73,19 @@ Engaging features to maintain daily user engagement and build study habits.
 - Progress saved locally
 
 **Categories:**
+
 - Drugs (e.g., ASPIRIN, WARFARIN, METFORMIN)
 - Conditions (e.g., ASTHMA, DIABETES, STROKE)
 - Anatomy (e.g., AORTA, FEMUR, LIVER)
 
 **Files:**
+
 - Data: `data/modes/dailyRitualsData.ts`
 - Component: `components/modes/MedicalWordleMode.tsx`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
 ```typescript
 import { getTodaysMedicalWordle } from '@/data/modes/dailyRitualsData';
 
@@ -91,6 +98,7 @@ const game = getTodaysMedicalWordle();
 **Description:** Historical medical events displayed on their anniversary dates.
 
 **Featured Events:**
+
 - September 28, 1928: Fleming discovers Penicillin
 - January 11, 1922: First insulin treatment
 - May 8, 1980: Smallpox eradicated
@@ -98,15 +106,18 @@ const game = getTodaysMedicalWordle();
 - And more...
 
 **Features:**
+
 - Automatic display on anniversary dates
 - Link to related study questions
 - External Wikipedia links for learning more
 
 **Files:**
+
 - Data: `data/modes/dailyRitualsData.ts`
 - Component: `components/dashboard/ThisDayInMedicine.tsx`
 
 **Usage:**
+
 ```typescript
 import { getTodayInMedicine } from '@/data/modes/dailyRitualsData';
 
@@ -119,6 +130,7 @@ const event = getTodayInMedicine();
 **Description:** Virtual currency system allowing users to protect their study streaks.
 
 **How It Works:**
+
 - Earn coins by answering questions (1 coin per question)
 - Bonus coins for correct answers (2 coins)
 - Daily bonus for maintaining streaks (10 coins)
@@ -126,20 +138,20 @@ const event = getTodayInMedicine();
 - Max 5 freezes at a time
 
 **Mechanics:**
+
 - If you miss a day, a freeze is automatically consumed
 - Your streak remains intact
 - Prevents complete loss of long streaks
 
 **Files:**
+
 - Data: `data/modes/dailyRitualsData.ts`
 - Component: `components/dashboard/StreakFreezeShop.tsx`
 
 **Usage:**
+
 ```typescript
-import { 
-  calculateCoinsEarned, 
-  canPurchaseStreakFreeze 
-} from '@/data/modes/dailyRitualsData';
+import { calculateCoinsEarned, canPurchaseStreakFreeze } from '@/data/modes/dailyRitualsData';
 
 const coins = calculateCoinsEarned(10, 7, true);
 // questionsAnswered: 10, correctAnswers: 7, hadActiveStreak: true
@@ -157,6 +169,7 @@ Advanced simulation modes for hands-on clinical decision-making practice.
 **Description:** Interactive ventilator management simulator for critical care scenarios.
 
 **Features:**
+
 - Adjust tidal volume, respiratory rate, PEEP, and FiO2
 - Real-time physiologic feedback
 - Condition-specific cases (ARDS, COPD, Asthma, etc.)
@@ -164,27 +177,31 @@ Advanced simulation modes for hands-on clinical decision-making practice.
 - Tracks attempts and provides detailed feedback
 
 **Cases:**
+
 - Moderate ARDS
 - COPD Exacerbation
 - Status Asthmaticus
 - Cardiogenic Pulmonary Edema
 
 **Key Learning:**
+
 - Lung-protective ventilation strategies
 - Permissive hypercapnia
 - PEEP management
 - Auto-PEEP prevention
 
 **Files:**
+
 - Data: `data/modes/ventilatorHeroData.ts`
 - Types: `types/drill-modes.ts`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
 ```typescript
-import { 
-  getRandomVentilatorCase, 
-  evaluateVentilatorSettings 
+import {
+  getRandomVentilatorCase,
+  evaluateVentilatorSettings,
 } from '@/data/modes/ventilatorHeroData';
 
 const vCase = getRandomVentilatorCase();
@@ -198,6 +215,7 @@ const outcome = evaluateVentilatorSettings(vCase, newSettings);
 **Description:** Mass casualty triage simulation using START protocol.
 
 **Features:**
+
 - Swipe/tap to categorize victims
 - 4 triage categories: Immediate (Red), Delayed (Yellow), Minor (Green), Expectant (Black)
 - Speed and accuracy scoring
@@ -205,6 +223,7 @@ const outcome = evaluateVentilatorSettings(vCase, newSettings);
 - Teaching points for each decision
 
 **START Triage Algorithm:**
+
 1. Can walk? → Minor (Green)
 2. Breathing? → If no, open airway
 3. Respiratory Rate: <10 or >30 → Immediate (Red)
@@ -213,16 +232,15 @@ const outcome = evaluateVentilatorSettings(vCase, newSettings);
 6. Otherwise → Delayed (Yellow)
 
 **Files:**
+
 - Data: `data/modes/triageTentData.ts`
 - Types: `types/drill-modes.ts`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
 ```typescript
-import { 
-  generateTriageSession, 
-  calculateTriageScore 
-} from '@/data/modes/triageTentData';
+import { generateTriageSession, calculateTriageScore } from '@/data/modes/triageTentData';
 
 const session = generateTriageSession('bus-crash', 10);
 // Practice triaging victims...
@@ -235,6 +253,7 @@ const score = calculateTriageScore(sessionWithDecisions);
 **Description:** Geriatric deprescribing challenges focusing on medication safety.
 
 **Features:**
+
 - Real-world polypharmacy cases
 - 8-15 medications per patient
 - Identify medications that should be stopped
@@ -243,28 +262,29 @@ const score = calculateTriageScore(sessionWithDecisions);
 - Teaching points (Beers Criteria, drug interactions)
 
 **Clinical Concerns:**
+
 - Fall risk reduction
 - QT prolongation
 - Anticholinergic burden
 - Renal impairment considerations
 
 **Cases:**
+
 - Fall Risk in Elderly (85yo with polypharmacy)
 - QT Prolongation and Syncope
 - Anticholinergic Burden causing Delirium
 - Medication Safety in Severe Renal Impairment
 
 **Files:**
+
 - Data: `data/modes/polypharmacyData.ts`
 - Types: `types/drill-modes.ts`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
 ```typescript
-import { 
-  getRandomPolypharmacyCase, 
-  evaluateDeprescribing 
-} from '@/data/modes/polypharmacyData';
+import { getRandomPolypharmacyCase, evaluateDeprescribing } from '@/data/modes/polypharmacyData';
 
 const pCase = getRandomPolypharmacyCase();
 const selectedMeds = ['med-002', 'med-005', 'med-006'];
@@ -277,6 +297,7 @@ const result = evaluateDeprescribing(pCase, selectedMeds);
 **Description:** Interactive CT/MRI viewer with scrollable slices to find pathology.
 
 **Features:**
+
 - Scroll through imaging series (up to 50 slices)
 - Multiple modalities (CT, MRI)
 - Multiple body parts (head, chest, abdomen, pelvis)
@@ -285,6 +306,7 @@ const result = evaluateDeprescribing(pCase, selectedMeds);
 - Thoroughness scoring based on slices viewed
 
 **Cases:**
+
 - CT Abdomen: Acute Appendicitis
 - CT Head: Chronic Subdural Hematoma
 - CT Chest: Pulmonary Embolism
@@ -293,24 +315,26 @@ const result = evaluateDeprescribing(pCase, selectedMeds);
 - CT Chest: Spontaneous Pneumothorax
 
 **Files:**
+
 - Data: `data/modes/radiologyScrollData.ts`
 - Types: `types/drill-modes.ts`
 - Config: Added to `config/training-modes.ts`
 
 **Usage:**
+
 ```typescript
-import { 
-  getRandomRadiologySeries, 
-  calculateRadiologyScore 
+import {
+  getRandomRadiologySeries,
+  calculateRadiologyScore,
 } from '@/data/modes/radiologyScrollData';
 
 const series = getRandomRadiologySeries();
 // User scrolls and identifies findings...
 const score = calculateRadiologyScore(
-  series, 
-  identifiedFindings, 
-  diagnosis, 
-  criticalSlicesViewed, 
+  series,
+  identifiedFindings,
+  diagnosis,
+  criticalSlicesViewed,
   timeSpent
 );
 // Returns: { findingsAccuracy, diagnosisCorrect, thoroughness, overall }
@@ -325,6 +349,7 @@ const score = calculateRadiologyScore(
 **Description:** Toggle between US standard and international (SI) units for laboratory values.
 
 **Supported Conversions:**
+
 - Glucose: mg/dL ↔ mmol/L
 - BUN: mg/dL ↔ mmol/L
 - Creatinine: mg/dL ↔ µmol/L
@@ -335,10 +360,12 @@ const score = calculateRadiologyScore(
 - Hemoglobin: g/dL ↔ g/L
 
 **Files:**
+
 - Config: `config/unit-converter.ts`
 - Tests: `tests/unit-converter.test.ts`
 
 **Usage:**
+
 ```typescript
 import { convertLabValue, formatLabValue } from '@/config/unit-converter';
 
@@ -356,6 +383,7 @@ const formatted = formatLabValue('glucose', 100, 'si');
 **Description:** Regional drug naming conventions (US/UK/Global).
 
 **Supported Localizations:**
+
 - Acetaminophen (US) → Paracetamol (UK/Global)
 - Albuterol (US) → Salbutamol (UK/Global)
 - Epinephrine (US) → Adrenaline (UK/Global)
@@ -363,15 +391,14 @@ const formatted = formatLabValue('glucose', 100, 'si');
 - Meperidine (US) → Pethidine (UK/Global)
 
 **Files:**
+
 - Config: `config/unit-converter.ts`
 - Tests: `tests/unit-converter.test.ts`
 
 **Usage:**
+
 ```typescript
-import { 
-  getLocalizedDrugName, 
-  localizeDrugNamesInText 
-} from '@/config/unit-converter';
+import { getLocalizedDrugName, localizeDrugNamesInText } from '@/config/unit-converter';
 
 const ukName = getLocalizedDrugName('acetaminophen', 'uk');
 // Returns: "Paracetamol"
@@ -386,15 +413,18 @@ const ukText = localizeDrugNamesInText(text, 'uk');
 **Description:** Sync study progress to Apple Watch and compatible smartwatches.
 
 **Available Complications:**
+
 - Days until exam countdown
 - Daily question goal progress ring
 - Current study streak
 
 **Files:**
+
 - Types: `types.ts` (SmartWatchComplication interface)
 - Component: `components/settings/UserPreferencesPanel.tsx`
 
 **Data Structure:**
+
 ```typescript
 interface SmartWatchComplication {
   daysUntilExam?: number;
@@ -411,44 +441,50 @@ interface SmartWatchComplication {
 **Advanced OSCE/Patient Encounter settings:**
 
 #### Voice-to-Voice Mode
+
 - Enable speech-to-text for questions
 - AI responds verbally
 - Simulates telehealth encounters
 
 #### AI Difficulty Levels
+
 - **Cooperative:** Clear, direct answers
 - **Difficult:** Vague answers, distracted, requires skilled interviewing
 - **Very Difficult:** Hostile, in pain, cognitive impairment
 
 #### Resource-Limited Toggle
+
 - Disables CT Scan and MRI options
 - Simulates rural clinic environment
 - Forces reliance on physical exam and basic diagnostics
 - Available tests: X-Ray, Ultrasound, Basic Labs, ECG
 
 #### Cultural Competency Scenarios
+
 - Blood transfusion religious objections
 - Organ donation cultural beliefs
 - End-of-life care preferences
 - Mental health cultural stigma
 
 **Files:**
+
 - Config: `config/osce-settings.ts`
 - Tests: `tests/osce-settings.test.ts`
 
 **Usage:**
+
 ```typescript
-import { 
+import {
   DEFAULT_OSCE_CONFIG,
   getAIDifficultyPrompt,
-  applyResourceLimitations 
+  applyResourceLimitations,
 } from '@/config/osce-settings';
 
 const config: OSCEConfiguration = {
   enableVoiceMode: true,
   aiDifficultyLevel: 'difficult',
   resourceLimited: true,
-  culturalCompetency: true
+  culturalCompetency: true,
 };
 
 const limitedTests = applyResourceLimitations(['X-Ray', 'CT Scan', 'MRI', 'Ultrasound']);
@@ -460,6 +496,7 @@ const limitedTests = applyResourceLimitations(['X-Ray', 'CT Scan', 'MRI', 'Ultra
 **Comprehensive settings UI for all personalization options.**
 
 **Features:**
+
 - Unit system selection (US/SI)
 - Drug naming convention (US/UK/Global)
 - Smart watch sync toggle
@@ -467,6 +504,7 @@ const limitedTests = applyResourceLimitations(['X-Ray', 'CT Scan', 'MRI', 'Ultra
 - Persistent storage
 
 **Files:**
+
 - Component: `components/settings/UserPreferencesPanel.tsx`
 - Types: `types.ts`
 
@@ -477,6 +515,7 @@ const limitedTests = applyResourceLimitations(['X-Ray', 'CT Scan', 'MRI', 'Ultra
 ### Test Coverage
 
 **New Test Files:**
+
 - `tests/new-training-modes.test.ts` - 34 tests covering all simulation modes
 - `tests/specialty-caq.test.ts` - 6 tests for specialty packs
 - `tests/osce-settings.test.ts` - 8 tests for OSCE configuration
@@ -504,21 +543,25 @@ All new features use TypeScript for type safety:
 
 ```typescript
 // Main types in types.ts
-- SpecialtyCAQPack
-- OSCEConfiguration
-- DailyRitualData
-- MedicalWordleGame
-- HistoricalMedicalEvent
-- UserPreferences
-- UnitSystem
-- DrugNamingConvention
-- SmartWatchComplication
-
-// Drill mode types in types/drill-modes.ts
-- VentilatorCase, VentilatorSettings, VentilatorAttempt
-- TriageVictim, TriageCategory, TriageSession
-- PolypharmacyCase, Medication, PolypharmacyAttempt
-- RadiologySeries, RadiologySlice, RadiologyAttempt
+(-SpecialtyCAQPack -
+  OSCEConfiguration -
+  DailyRitualData -
+  MedicalWordleGame -
+  HistoricalMedicalEvent -
+  UserPreferences -
+  UnitSystem -
+  DrugNamingConvention -
+  SmartWatchComplication -
+  // Drill mode types in types/drill-modes.ts
+  VentilatorCase,
+  VentilatorSettings,
+  VentilatorAttempt - TriageVictim,
+  TriageCategory,
+  TriageSession - PolypharmacyCase,
+  Medication,
+  PolypharmacyAttempt - RadiologySeries,
+  RadiologySlice,
+  RadiologyAttempt);
 ```
 
 ### Configuration Files
@@ -567,10 +610,10 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
 import { MODE_REGISTRY } from '@/config/training-modes';
 
 // Find specific mode
-const wordleMode = MODE_REGISTRY.find(m => m.id === 'medical_wordle');
+const wordleMode = MODE_REGISTRY.find((m) => m.id === 'medical_wordle');
 
 // Filter by category
-const clinicalModes = MODE_REGISTRY.filter(m => m.category === 'clinical');
+const clinicalModes = MODE_REGISTRY.filter((m) => m.category === 'clinical');
 
 // Check if mode is available
 const isAvailable = !mode.isComingSoon;
@@ -581,6 +624,7 @@ const isAvailable = !mode.isComingSoon;
 ## Future Enhancements
 
 ### Planned Features
+
 1. AI voice synthesis for OSCE voice-to-voice mode
 2. Real DICOM image integration for radiology scroll
 3. Multiplayer triage competitions
@@ -589,7 +633,9 @@ const isAvailable = !mode.isComingSoon;
 6. Advanced ventilator waveform visualization
 
 ### Extensibility
+
 All systems are designed to be extensible:
+
 - Add new specialty packs in `config/specialty-caq.ts`
 - Add new historical events in `data/modes/dailyRitualsData.ts`
 - Add new simulation cases in respective data files
@@ -600,6 +646,7 @@ All systems are designed to be extensible:
 ## Support
 
 For questions or issues:
+
 1. Check the test files for usage examples
 2. Review type definitions in `types.ts` and `types/drill-modes.ts`
 3. Refer to existing implementation in data files
@@ -617,6 +664,7 @@ All code follows the existing PANaCEa license and contribution guidelines.
 ### Version 1.0.0 (December 2024)
 
 **Added:**
+
 - Specialty CAQ DLC packs (4 specialties)
 - Medical Wordle daily game
 - This Day in Medicine historical events
@@ -632,11 +680,13 @@ All code follows the existing PANaCEa license and contribution guidelines.
 - User Preferences Panel
 
 **Testing:**
+
 - 65 new tests added
 - 100% test pass rate for new features
 - Zero security vulnerabilities (CodeQL verified)
 
 **Documentation:**
+
 - Complete feature guide (this document)
 - Inline code documentation
 - Usage examples for all APIs

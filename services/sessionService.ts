@@ -1,11 +1,11 @@
 /**
  * Session Context Service
- * 
+ *
  * Captures environmental context for study sessions:
  * - Screen size (from window.screen API)
  * - Connection type (from navigator.connection API)
  * - Likely context inference (commute, home, library, etc.)
- * 
+ *
  * This data is used for:
  * - Adaptive difficulty based on device
  * - Context-aware scheduling (avoid mobile-heavy reviews on desktop)
@@ -67,18 +67,23 @@ export function getConnectionType(): ConnectionType {
   try {
     if (typeof navigator !== 'undefined' && 'connection' in navigator) {
       const connection = (navigator as any).connection;
-      
+
       if (connection) {
         const effectiveType = connection.effectiveType;
         const type = connection.type;
-        
+
         // Check explicit type first
         if (type === 'wifi') return 'wifi';
         if (type === 'ethernet') return 'ethernet';
         if (type === 'cellular' || type === 'wimax') return 'cellular';
-        
+
         // Fallback to effectiveType (4g, 3g, 2g, slow-2g)
-        if (effectiveType === '4g' || effectiveType === '3g' || effectiveType === '2g' || effectiveType === 'slow-2g') {
+        if (
+          effectiveType === '4g' ||
+          effectiveType === '3g' ||
+          effectiveType === '2g' ||
+          effectiveType === 'slow-2g'
+        ) {
           return 'cellular';
         }
       }
@@ -96,11 +101,11 @@ export function getDeviceType(): 'desktop' | 'tablet' | 'mobile' {
   try {
     const ua = navigator.userAgent.toLowerCase();
     const width = window.screen?.width || 0;
-    
+
     // Check user agent first for explicit device indicators
     if (/ipad|tablet|kindle|playbook|silk/.test(ua)) return 'tablet';
     if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/.test(ua)) return 'mobile';
-    
+
     // Fallback to screen width
     if (width <= 768) return 'mobile';
     if (width <= 1024) return 'tablet';
@@ -117,13 +122,13 @@ export function getDeviceType(): 'desktop' | 'tablet' | 'mobile' {
 export function getBrowserName(): string {
   try {
     const ua = navigator.userAgent;
-    
+
     if (ua.includes('Firefox')) return 'Firefox';
     if (ua.includes('Edg')) return 'Edge';
     if (ua.includes('Chrome')) return 'Chrome';
     if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
     if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
-    
+
     return 'Other';
   } catch (error) {
     console.warn('[sessionService] Failed to detect browser:', error);
@@ -148,7 +153,7 @@ export function getTimezone(): string {
  */
 export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
   const hour = new Date().getHours();
-  
+
   if (hour >= 6 && hour < 12) return 'morning';
   if (hour >= 12 && hour < 17) return 'afternoon';
   if (hour >= 17 && hour < 21) return 'evening';
@@ -157,7 +162,7 @@ export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
 
 /**
  * Infer likely study context from environmental signals
- * 
+ *
  * Heuristics:
  * - Mobile + Cellular → Likely commute
  * - Mobile + Late night → Likely home (bed)
@@ -175,32 +180,32 @@ export function inferStudyContext(
   if (deviceType === 'mobile' && connectionType === 'cellular') {
     return 'commute';
   }
-  
+
   // Strong signal: Desktop + daytime + wifi → work/library
   if (deviceType === 'desktop' && (timeOfDay === 'morning' || timeOfDay === 'afternoon')) {
     return 'work';
   }
-  
+
   // Strong signal: Late night → home
   if (timeOfDay === 'night') {
     return 'home';
   }
-  
+
   // Moderate signal: Mobile + quick session → commute/break
   if (deviceType === 'mobile' && isQuickSession) {
     return 'commute';
   }
-  
+
   // Moderate signal: Desktop + evening → home
   if (deviceType === 'desktop' && timeOfDay === 'evening') {
     return 'home';
   }
-  
+
   // Moderate signal: Tablet + afternoon → library
   if (deviceType === 'tablet' && timeOfDay === 'afternoon') {
     return 'library';
   }
-  
+
   // Default: unknown
   return 'unknown';
 }
@@ -215,14 +220,9 @@ export function captureSessionContext(isQuickSession: boolean = false): SessionC
   const browserName = getBrowserName();
   const timezone = getTimezone();
   const timeOfDay = getTimeOfDay();
-  
-  const likelyContext = inferStudyContext(
-    deviceType,
-    connectionType,
-    timeOfDay,
-    isQuickSession
-  );
-  
+
+  const likelyContext = inferStudyContext(deviceType, connectionType, timeOfDay, isQuickSession);
+
   return {
     screenSize,
     connectionType,
@@ -241,16 +241,16 @@ export function captureSessionContext(isQuickSession: boolean = false): SessionC
  */
 export function detectInterruption(questionTimestamps: number[]): boolean {
   if (questionTimestamps.length < 2) return false;
-  
+
   const INTERRUPTION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-  
+
   for (let i = 1; i < questionTimestamps.length; i++) {
     const gap = questionTimestamps[i] - questionTimestamps[i - 1];
     if (gap > INTERRUPTION_THRESHOLD_MS) {
       return true;
     }
   }
-  
+
   return false;
 }
 

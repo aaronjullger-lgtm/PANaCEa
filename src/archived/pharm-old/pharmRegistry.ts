@@ -13,64 +13,77 @@ export interface DrugEntry {
 // ------------------------------
 
 export const drugClasses: Record<string, string[]> = {
-  "ACE Inhibitors": [
-    "lisinopril", "enalapril", "captopril", "ramipril", "benazepril",
-    "quinapril", "fosinopril", "moexipril", "perindopril", "trandolapril"
+  'ACE Inhibitors': [
+    'lisinopril',
+    'enalapril',
+    'captopril',
+    'ramipril',
+    'benazepril',
+    'quinapril',
+    'fosinopril',
+    'moexipril',
+    'perindopril',
+    'trandolapril',
   ],
 
-  "ARBs": [
-    "losartan", "valsartan", "irbesartan", "candesartan", "telmisartan",
-    "olmesartan", "eprosartan", "azilsartan"
+  ARBs: [
+    'losartan',
+    'valsartan',
+    'irbesartan',
+    'candesartan',
+    'telmisartan',
+    'olmesartan',
+    'eprosartan',
+    'azilsartan',
   ],
 
-  "Beta-Blockers (Selective)": [
-    "metoprolol", "atenolol", "bisoprolol", "nebivolol", "esmolol"
+  'Beta-Blockers (Selective)': ['metoprolol', 'atenolol', 'bisoprolol', 'nebivolol', 'esmolol'],
+
+  'Beta-Blockers (Nonselective)': ['propranolol', 'nadolol', 'timolol', 'pindolol'],
+
+  'Alpha/Beta Blockers': ['carvedilol', 'labetalol'],
+
+  'Alpha-1 Blockers': ['prazosin', 'terazosin', 'doxazosin'],
+
+  'Central Alpha-2 Agonists': ['clonidine', 'guanfacine', 'methyldopa'],
+
+  'Calcium Channel Blockers — Dihydropyridine': [
+    'amlodipine',
+    'nifedipine',
+    'felodipine',
+    'nicardipine',
+    'isradipine',
+    'clevidipine',
   ],
 
-  "Beta-Blockers (Nonselective)": [
-    "propranolol", "nadolol", "timolol", "pindolol"
+  'Calcium Channel Blockers — Non-Dihydropyridine': ['diltiazem', 'verapamil'],
+
+  'Thiazide & Like Diuretics': [
+    'hydrochlorothiazide',
+    'chlorthalidone',
+    'indapamide',
+    'metolazone',
   ],
 
-  "Alpha/Beta Blockers": [
-    "carvedilol", "labetalol"
+  'Loop Diuretics': ['furosemide', 'bumetanide', 'torsemide', 'ethacrynic acid'],
+
+  'Potassium-Sparing Diuretics': ['spironolactone', 'eplerenone', 'amiloride', 'triamterene'],
+
+  Vasodilators: [
+    'hydralazine',
+    'minoxidil',
+    'nitroprusside',
+    'isosorbide dinitrate',
+    'isosorbide mononitrate',
+    'nitroglycerin',
   ],
 
-  "Alpha-1 Blockers": [
-    "prazosin", "terazosin", "doxazosin"
-  ],
-
-  "Central Alpha-2 Agonists": [
-    "clonidine", "guanfacine", "methyldopa"
-  ],
-
-  "Calcium Channel Blockers — Dihydropyridine": [
-    "amlodipine", "nifedipine", "felodipine", "nicardipine",
-    "isradipine", "clevidipine"
-  ],
-
-  "Calcium Channel Blockers — Non-Dihydropyridine": [
-    "diltiazem", "verapamil"
-  ],
-
-  "Thiazide & Like Diuretics": [
-    "hydrochlorothiazide", "chlorthalidone", "indapamide", "metolazone"
-  ],
-
-  "Loop Diuretics": [
-    "furosemide", "bumetanide", "torsemide", "ethacrynic acid"
-  ],
-
-  "Potassium-Sparing Diuretics": [
-    "spironolactone", "eplerenone", "amiloride", "triamterene"
-  ],
-
-  "Vasodilators": [
-    "hydralazine", "minoxidil", "nitroprusside", "isosorbide dinitrate",
-    "isosorbide mononitrate", "nitroglycerin"
-  ],
-
-  "Heart Failure — Specific": [
-    "sacubitril/valsartan", "ivabradine", "digoxin", "dobutamine", "milrinone"
+  'Heart Failure — Specific': [
+    'sacubitril/valsartan',
+    'ivabradine',
+    'digoxin',
+    'dobutamine',
+    'milrinone',
   ],
 
   // -------------------------------------------

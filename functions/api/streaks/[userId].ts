@@ -3,49 +3,47 @@
  * GET /api/streaks/:userId
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+
+const StreakParamsSchema = z.object({
+  params: z.object({
+    userId: z.string().min(1, 'User ID is required'),
+  }),
+});
 
 interface PagesContext {
   request: Request;
-  env: Env;
+  env: any;
   params: {
     userId: string;
   };
 }
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch user's current streak information
  */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env, params } = context;
-
-  const authContext = await authenticateRequest(request, env);
-
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  const { userId: authenticatedUserId } = authContext;
-  const { userId: requestedUserId } = params;
+export const onRequestGet = authenticatedEndpoint(StreakParamsSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/streaks/[userId]');
+  const { userId: requestedUserId } = validated.params;
 
   // Users can only fetch their own streaks
-  if (authenticatedUserId !== requestedUserId) {
-    return createErrorResponse('Forbidden', 403);
+  if (auth.userId !== requestedUserId) {
+    logger.warn('Forbidden access attempt', {
+      authenticatedUserId: auth.userId,
+      requestedUserId,
+    });
+    throw new Error('Forbidden');
   }
 
   if (!env.DATABASE_URL) {
-    return createErrorResponse('Database not configured', 500);
+    logger.error('Database not configured');
+    throw new Error('Database not configured');
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -54,7 +52,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     const streaks = await prisma.dailyStreak.findMany({
       where: { userId: requestedUserId },
       orderBy: { date: 'desc' },
-      take: 100
+      take: 100,
     });
 
     // Calculate current streak
@@ -62,7 +60,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     let isActiveToday = false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -80,7 +78,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
           prevDate.setHours(0, 0, 0, 0);
           const expectedDate = new Date(today);
           expectedDate.setDate(expectedDate.getDate() - i);
-          
+
           if (prevDate.getTime() === expectedDate.getTime()) {
             currentStreak++;
           } else {
@@ -95,7 +93,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
           prevDate.setHours(0, 0, 0, 0);
           const expectedDate = new Date(yesterday);
           expectedDate.setDate(expectedDate.getDate() - i);
-          
+
           if (prevDate.getTime() === expectedDate.getTime()) {
             currentStreak++;
           } else {
@@ -105,8 +103,13 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }
     }
 
-    const response = {
-      success: true,
+    logger.info('Fetched user streaks', {
+      userId: requestedUserId,
+      currentStreak,
+      isActiveToday,
+    });
+
+    return {
       data: {
         currentStreak,
         longestStreak: currentStreak, // Simplified for now
@@ -115,12 +118,13 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         lastActivity: streaks.length > 0 ? streaks[0].date : null,
       },
     };
-
-    return createSuccessResponse(response);
   } catch (error: any) {
-    console.error('Streak GET error:', error);
-    return createErrorResponse('Internal server error', 500);
+    logger.error('Streak GET error', {
+      error: error.message,
+      userId: requestedUserId,
+    });
+    throw new Error('Internal server error');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

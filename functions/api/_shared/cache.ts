@@ -9,12 +9,12 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 export const CACHE_CONFIG = {
   // TTL in seconds
   TTL: {
-    CONDITION_DETAIL: 3600,        // 1 hour - medical content changes infrequently
-    QUESTION_POOL: 300,             // 5 minutes - questions rotate frequently
-    USER_STATS: 600,                // 10 minutes - stats update with each attempt
-    DRUG_DETAIL: 3600,              // 1 hour - drug info is stable
-    GUIDELINE_DETAIL: 7200,         // 2 hours - guidelines are very stable
-    SYSTEM_METADATA: 1800,          // 30 minutes - system lists, categories
+    CONDITION_DETAIL: 3600, // 1 hour - medical content changes infrequently
+    QUESTION_POOL: 300, // 5 minutes - questions rotate frequently
+    USER_STATS: 600, // 10 minutes - stats update with each attempt
+    DRUG_DETAIL: 3600, // 1 hour - drug info is stable
+    GUIDELINE_DETAIL: 7200, // 2 hours - guidelines are very stable
+    SYSTEM_METADATA: 1800, // 30 minutes - system lists, categories
   },
   // Key prefixes for organization
   PREFIX: {
@@ -53,13 +53,13 @@ export async function getFromCache<T>(
   try {
     const fullKey = prefix + key;
     const cached = await kv.get(fullKey, { type: 'json' });
-    
+
     if (cached) {
       // Track cache hit
       await trackCacheMetric(kv, 'hit');
       return cached as T;
     }
-    
+
     // Track cache miss
     await trackCacheMetric(kv, 'miss');
     return null;
@@ -102,11 +102,7 @@ export async function setInCache<T>(
  * @param key Cache key
  * @param prefix Optional key prefix
  */
-export async function deleteFromCache(
-  kv: KVNamespace,
-  key: string,
-  prefix = ''
-): Promise<void> {
+export async function deleteFromCache(kv: KVNamespace, key: string, prefix = ''): Promise<void> {
   try {
     const fullKey = prefix + key;
     await kv.delete(fullKey);
@@ -120,18 +116,13 @@ export async function deleteFromCache(
  * @param kv KV namespace binding
  * @param prefix Key prefix to invalidate
  */
-export async function invalidateCacheByPrefix(
-  kv: KVNamespace,
-  prefix: string
-): Promise<void> {
+export async function invalidateCacheByPrefix(kv: KVNamespace, prefix: string): Promise<void> {
   try {
     // List all keys with prefix
     const keys = await kv.list({ prefix });
-    
+
     // Delete all matching keys
-    await Promise.all(
-      keys.keys.map((key) => kv.delete(key.name))
-    );
+    await Promise.all(keys.keys.map((key) => kv.delete(key.name)));
   } catch (error) {
     console.error('Cache invalidation error:', error);
   }
@@ -142,25 +133,22 @@ export async function invalidateCacheByPrefix(
  * @param kv KV namespace binding
  * @param type Metric type
  */
-async function trackCacheMetric(
-  kv: KVNamespace,
-  type: 'hit' | 'miss' | 'error'
-): Promise<void> {
+async function trackCacheMetric(kv: KVNamespace, type: 'hit' | 'miss' | 'error'): Promise<void> {
   try {
     const metricsKey = CACHE_CONFIG.PREFIX.METRICS + 'daily';
-    const cached = await kv.get(metricsKey, { type: 'json' }) as CacheMetrics | null;
-    
+    const cached = (await kv.get(metricsKey, { type: 'json' })) as CacheMetrics | null;
+
     const metrics: CacheMetrics = cached || {
       hits: 0,
       misses: 0,
       errors: 0,
       lastUpdated: new Date().toISOString(),
     };
-    
+
     // Increment the appropriate counter
     metrics[type === 'hit' ? 'hits' : type === 'miss' ? 'misses' : 'errors']++;
     metrics.lastUpdated = new Date().toISOString();
-    
+
     // Store metrics with 24-hour TTL
     await kv.put(metricsKey, JSON.stringify(metrics), {
       expirationTtl: 86400, // 24 hours
@@ -176,19 +164,19 @@ async function trackCacheMetric(
  * @param kv KV namespace binding
  * @returns Current cache metrics
  */
-export async function getCacheMetrics(
-  kv: KVNamespace
-): Promise<CacheMetrics> {
+export async function getCacheMetrics(kv: KVNamespace): Promise<CacheMetrics> {
   try {
     const metricsKey = CACHE_CONFIG.PREFIX.METRICS + 'daily';
-    const cached = await kv.get(metricsKey, { type: 'json' }) as CacheMetrics | null;
-    
-    return cached || {
-      hits: 0,
-      misses: 0,
-      errors: 0,
-      lastUpdated: new Date().toISOString(),
-    };
+    const cached = (await kv.get(metricsKey, { type: 'json' })) as CacheMetrics | null;
+
+    return (
+      cached || {
+        hits: 0,
+        misses: 0,
+        errors: 0,
+        lastUpdated: new Date().toISOString(),
+      }
+    );
   } catch (error) {
     console.error('Get metrics error:', error);
     return {
@@ -210,19 +198,17 @@ export function getConditionCacheKey(conditionId: string): string {
 /**
  * Generate cache key for question pool
  */
-export function getQuestionPoolCacheKey(
-  filters: {
-    system?: string;
-    category?: string;
-    difficulty?: string;
-  }
-): string {
+export function getQuestionPoolCacheKey(filters: {
+  system?: string;
+  category?: string;
+  difficulty?: string;
+}): string {
   const parts: string[] = [CACHE_CONFIG.PREFIX.QUESTION_POOL];
-  
+
   if (filters.system) parts.push(`sys:${filters.system}`);
   if (filters.category) parts.push(`cat:${filters.category}`);
   if (filters.difficulty) parts.push(`diff:${filters.difficulty}`);
-  
+
   return parts.join(':');
 }
 

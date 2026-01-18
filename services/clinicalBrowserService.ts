@@ -76,18 +76,18 @@ async function getAuthToken(): Promise<string | null> {
 
 export async function fetchClinicalBrowse(): Promise<ClinicalBrowsePayload> {
   const endpoint = getApiEndpoint('/api/clinical/browse');
-  
+
   // Get auth token
   const token = await getAuthToken();
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   try {
     const res = await fetch(endpoint, {
       headers,
@@ -109,7 +109,9 @@ export async function fetchClinicalBrowse(): Promise<ClinicalBrowsePayload> {
   } catch (error) {
     // Handle network errors (backend down)
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new BackendUnavailableError('Unable to connect to server. Please ensure the backend is running.');
+      throw new BackendUnavailableError(
+        'Unable to connect to server. Please ensure the backend is running.'
+      );
     }
     throw error;
   }

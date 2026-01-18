@@ -66,12 +66,8 @@ const DefinitionTooltip: React.FC = () => {
             <div className="flex items-start gap-2">
               <Info className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-cyan-300 mb-1">
-                  {tooltipState.term}
-                </h4>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  {tooltipState.definition}
-                </p>
+                <h4 className="font-semibold text-cyan-300 mb-1">{tooltipState.term}</h4>
+                <p className="text-sm text-slate-300 leading-relaxed">{tooltipState.definition}</p>
               </div>
             </div>
             {/* Pointer arrow */}
@@ -94,10 +90,7 @@ interface HighlightableTermProps {
   term?: string; // Optional: specify term if different from children
 }
 
-export const HighlightableTerm: React.FC<HighlightableTermProps> = ({ 
-  children, 
-  term 
-}) => {
+export const HighlightableTerm: React.FC<HighlightableTermProps> = ({ children, term }) => {
   const { showTooltip, hideTooltip } = useTooltip();
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLSpanElement>) => {

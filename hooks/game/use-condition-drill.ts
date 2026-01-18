@@ -2,18 +2,25 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { type ConditionQuestionType } from '@/types/drill-modes';
 import type { QuestionDTO } from '@/lib/services/questionBankService';
-import { 
-  initSessionTracker, 
-  shouldShowMetacognition, 
+import {
+  initSessionTracker,
+  shouldShowMetacognition,
   getSessionMetacognitionSummary,
   type SessionMissTracker,
-  type MetacognitionPrompt 
+  type MetacognitionPrompt,
 } from '@/lib/metacognition';
 import { getBrowserTimezone } from '@/lib/circadian';
 
-export type ConditionDrillStatus = 'landing' | 'menu' | 'playing' | 'coaching' | 'feedback' | 'metacognition' | 'summary';
+export type ConditionDrillStatus =
+  | 'landing'
+  | 'menu'
+  | 'playing'
+  | 'coaching'
+  | 'feedback'
+  | 'metacognition'
+  | 'summary';
 
-export type ConditionCategory = 
+export type ConditionCategory =
   | 'presentation'
   | 'diagnosis'
   | 'etiology'
@@ -115,7 +122,7 @@ function createInitialImplicitMetrics(): ImplicitMetrics {
 
 export function useConditionDrill(): UseConditionDrillReturn {
   const { getToken, isSignedIn } = useAuth();
-  
+
   const [selectedCategory, setSelectedCategory] = useState<ConditionCategory>('random');
   const [queue, setQueue] = useState<ConditionQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -132,16 +139,18 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const [isLoadingHint, setIsLoadingHint] = useState(false);
   const [attemptNumber, setAttemptNumber] = useState(1);
   const [firstAttemptAnswer, setFirstAttemptAnswer] = useState<number | null>(null);
-  
+
   // Metacognition state
   const [metacognitionPrompt, setMetacognitionPrompt] = useState<MetacognitionPrompt | null>(null);
   const metacognitionTrackerRef = useRef<SessionMissTracker>(initSessionTracker());
-  
+
   // Implicit behavior metrics tracking
-  const [currentImplicitMetrics, setCurrentImplicitMetrics] = useState<ImplicitMetrics>(createInitialImplicitMetrics);
+  const [currentImplicitMetrics, setCurrentImplicitMetrics] = useState<ImplicitMetrics>(
+    createInitialImplicitMetrics
+  );
   const questionStartTimeRef = useRef<number>(Date.now());
   const previousSelectedAnswerRef = useRef<number | null>(null);
-  
+
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
 
@@ -160,18 +169,19 @@ export function useConditionDrill(): UseConditionDrillReturn {
    * Record when user selects/changes answer (for implicit metrics)
    */
   const recordAnswerSelection = useCallback((answerIndex: number) => {
-    setCurrentImplicitMetrics(prev => {
+    setCurrentImplicitMetrics((prev) => {
       const now = Date.now();
       const isFirstSelection = prev.timeToFirstClick === null;
-      const isSwitch = previousSelectedAnswerRef.current !== null && 
-                       previousSelectedAnswerRef.current !== answerIndex;
-      
+      const isSwitch =
+        previousSelectedAnswerRef.current !== null &&
+        previousSelectedAnswerRef.current !== answerIndex;
+
       previousSelectedAnswerRef.current = answerIndex;
-      
+
       return {
         ...prev,
-        timeToFirstClick: isFirstSelection 
-          ? now - questionStartTimeRef.current 
+        timeToFirstClick: isFirstSelection
+          ? now - questionStartTimeRef.current
           : prev.timeToFirstClick,
         answerSwitches: isSwitch ? prev.answerSwitches + 1 : prev.answerSwitches,
         totalDwellTime: now - questionStartTimeRef.current,
@@ -179,61 +189,67 @@ export function useConditionDrill(): UseConditionDrillReturn {
     });
   }, []);
 
-  const fetchQuestionsFromAPI = useCallback(async (count: number = INITIAL_QUEUE_SIZE): Promise<ConditionQuestion[]> => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`/api/questions?limit=${count}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch questions');
-      }
-      
-      const data = await response.json();
-      
-      if (!data.success || !data.questions) {
-        throw new Error('Invalid response from server');
-      }
-      
-      const mappedQuestions = data.questions.map(mapDtoToConditionQuestion);
-      return mappedQuestions;
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load questions';
-      setError(errorMsg);
-      console.error('Error fetching questions:', err);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetchQuestionsFromAPI = useCallback(
+    async (count: number = INITIAL_QUEUE_SIZE): Promise<ConditionQuestion[]> => {
+      setIsLoading(true);
+      setError(null);
 
-  const startSession = useCallback(async (category: ConditionCategory) => {
-    setSelectedCategory(category);
-    recentConditionsRef.current.clear();
-    metacognitionTrackerRef.current = initSessionTracker(); // Reset metacognition tracker
-    
-    const questions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE);
-    
-    if (questions.length === 0) {
-      setError('No questions available. Please try again.');
-      return;
-    }
-    
-    setQueue(questions);
-    setCurrentIndex(0);
-    setScore(0);
-    setStreak(0);
-    setTotalAttempts(0);
-    setUserAnswerIndex(null);
-    setIsCorrect(null);
-    setSocraticHint(null);
-    setAttemptNumber(1);
-    setFirstAttemptAnswer(null);
-    setMetacognitionPrompt(null);
-    setStatus('playing');
-    startImplicitTracking();
-  }, [fetchQuestionsFromAPI, startImplicitTracking]);
+      try {
+        const response = await fetch(`/api/questions?limit=${count}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch questions');
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !data.questions) {
+          throw new Error('Invalid response from server');
+        }
+
+        const mappedQuestions = data.questions.map(mapDtoToConditionQuestion);
+        return mappedQuestions;
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load questions';
+        setError(errorMsg);
+        console.error('Error fetching questions:', err);
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const startSession = useCallback(
+    async (category: ConditionCategory) => {
+      setSelectedCategory(category);
+      recentConditionsRef.current.clear();
+      metacognitionTrackerRef.current = initSessionTracker(); // Reset metacognition tracker
+
+      const questions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE);
+
+      if (questions.length === 0) {
+        setError('No questions available. Please try again.');
+        return;
+      }
+
+      setQueue(questions);
+      setCurrentIndex(0);
+      setScore(0);
+      setStreak(0);
+      setTotalAttempts(0);
+      setUserAnswerIndex(null);
+      setIsCorrect(null);
+      setSocraticHint(null);
+      setAttemptNumber(1);
+      setFirstAttemptAnswer(null);
+      setMetacognitionPrompt(null);
+      setStatus('playing');
+      startImplicitTracking();
+    },
+    [fetchQuestionsFromAPI, startImplicitTracking]
+  );
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -243,7 +259,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
     // Log session metacognition summary before exiting
     const summary = getSessionMetacognitionSummary(metacognitionTrackerRef.current);
     console.log('[Metacognition] Session Summary:', summary);
-    
+
     setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
@@ -263,190 +279,209 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setStatus('feedback');
   }, []);
 
-  const submitAnswer = useCallback(async (answerIndex: number) => {
-    if (!currentQuestion || (status !== 'playing' && status !== 'coaching') || isSubmitting) return;
+  const submitAnswer = useCallback(
+    async (answerIndex: number) => {
+      if (!currentQuestion || (status !== 'playing' && status !== 'coaching') || isSubmitting)
+        return;
 
-    setIsSubmitting(true);
-    setUserAnswerIndex(answerIndex);
-    setTotalAttempts(prev => prev + 1);
-    
-    const selectedAnswer = currentQuestion.options[answerIndex];
-    const isCorrectAnswer = answerIndex === currentQuestion.correctAnswerIndex;
-    
-    // Finalize implicit metrics
-    const finalDwellTime = Date.now() - questionStartTimeRef.current;
-    const finalMetrics: ImplicitMetrics = {
-      ...currentImplicitMetrics,
-      totalDwellTime: finalDwellTime,
-    };
-    setCurrentImplicitMetrics(finalMetrics);
-    
-    // Store first attempt for coaching flow
-    if (attemptNumber === 1) {
-      setFirstAttemptAnswer(answerIndex);
-    }
-    
-    try {
-      // Get auth token for authenticated request
-      const token = isSignedIn ? await getToken() : null;
-      
-      // Submit to correct FSRS endpoint with implicit metrics
-      const response = await fetch('/api/drills/submit-review', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          questionId: currentQuestion.id,
-          selectedAnswer,
-          timeSpentMs: finalMetrics.totalDwellTime,
-          // Implicit behavior metrics for FSRS rating derivation
-          timeToFirstClick: finalMetrics.timeToFirstClick,
-          answerSwitches: finalMetrics.answerSwitches,
-          totalDwellTime: finalMetrics.totalDwellTime,
-          timezone: finalMetrics.timezone,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to submit answer');
+      setIsSubmitting(true);
+      setUserAnswerIndex(answerIndex);
+      setTotalAttempts((prev) => prev + 1);
+
+      const selectedAnswer = currentQuestion.options[answerIndex];
+      const isCorrectAnswer = answerIndex === currentQuestion.correctAnswerIndex;
+
+      // Finalize implicit metrics
+      const finalDwellTime = Date.now() - questionStartTimeRef.current;
+      const finalMetrics: ImplicitMetrics = {
+        ...currentImplicitMetrics,
+        totalDwellTime: finalDwellTime,
+      };
+      setCurrentImplicitMetrics(finalMetrics);
+
+      // Store first attempt for coaching flow
+      if (attemptNumber === 1) {
+        setFirstAttemptAnswer(answerIndex);
       }
-      
-      const result = await response.json();
-      setIsCorrect(result.isCorrect);
-      
-      // Check metacognition trigger (only for incorrect answers on first attempt)
-      if (!result.isCorrect && attemptNumber === 1) {
-        const metacogResult = shouldShowMetacognition({
-          isCorrect: result.isCorrect,
-          conditionId: currentQuestion.conditionId || currentQuestion.id,
-          conditionName: currentQuestion.conditionName,
-          subcategory: currentQuestion.subcategory || currentQuestion.system,
-          system: currentQuestion.system,
-          panaceYield: currentQuestion.panaceYield,
-          tracker: metacognitionTrackerRef.current,
+
+      try {
+        // Get auth token for authenticated request
+        const token = isSignedIn ? await getToken() : null;
+
+        // Submit to correct FSRS endpoint with implicit metrics
+        const response = await fetch('/api/drills/submit-review', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            questionId: currentQuestion.id,
+            selectedAnswer,
+            timeSpentMs: finalMetrics.totalDwellTime,
+            // Implicit behavior metrics for FSRS rating derivation
+            timeToFirstClick: finalMetrics.timeToFirstClick,
+            answerSwitches: finalMetrics.answerSwitches,
+            totalDwellTime: finalMetrics.totalDwellTime,
+            timezone: finalMetrics.timezone,
+          }),
         });
-        
-        if (metacogResult.shouldShow) {
-          setMetacognitionPrompt(metacogResult);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to submit answer');
         }
-      } else {
-        // Track correct answer in metacognition tracker
-        shouldShowMetacognition({
-          isCorrect: result.isCorrect,
-          conditionId: currentQuestion.conditionId || currentQuestion.id,
-          conditionName: currentQuestion.conditionName,
-          subcategory: currentQuestion.subcategory || currentQuestion.system,
-          system: currentQuestion.system,
-          panaceYield: currentQuestion.panaceYield,
-          tracker: metacognitionTrackerRef.current,
-        });
-      }
-      
-      // Coaching interception: First attempt and incorrect
-      if (attemptNumber === 1 && !result.isCorrect) {
-        setStreak(0);
-        setStatus('coaching');
-        setIsLoadingHint(true);
-        
-        // Generate Socratic hint
-        const { getSocraticHint } = await import('@/services/CoachingService');
-        const hint = await getSocraticHint(
-          currentQuestion.question,
-          currentQuestion.options[currentQuestion.correctAnswerIndex],
-          selectedAnswer
-        );
-        setSocraticHint(hint);
-        setIsLoadingHint(false);
-      } else if (result.isCorrect) {
-        // Correct answer: award full or partial points
-        if (attemptNumber === 1) {
-          setScore(prev => prev + 1);
+
+        const result = await response.json();
+        setIsCorrect(result.isCorrect);
+
+        // Check metacognition trigger (only for incorrect answers on first attempt)
+        if (!result.isCorrect && attemptNumber === 1) {
+          const metacogResult = shouldShowMetacognition({
+            isCorrect: result.isCorrect,
+            conditionId: currentQuestion.conditionId || currentQuestion.id,
+            conditionName: currentQuestion.conditionName,
+            subcategory: currentQuestion.subcategory || currentQuestion.system,
+            system: currentQuestion.system,
+            panaceYield: currentQuestion.panaceYield,
+            tracker: metacognitionTrackerRef.current,
+          });
+
+          if (metacogResult.shouldShow) {
+            setMetacognitionPrompt(metacogResult);
+          }
         } else {
-          setScore(prev => prev + 0.5);
+          // Track correct answer in metacognition tracker
+          shouldShowMetacognition({
+            isCorrect: result.isCorrect,
+            conditionId: currentQuestion.conditionId || currentQuestion.id,
+            conditionName: currentQuestion.conditionName,
+            subcategory: currentQuestion.subcategory || currentQuestion.system,
+            system: currentQuestion.system,
+            panaceYield: currentQuestion.panaceYield,
+            tracker: metacognitionTrackerRef.current,
+          });
         }
-        setStreak(result.implicitMetrics?.rating >= 3 ? (streak + 1) : 1);
-        
-        // Show metacognition modal if triggered, otherwise go to feedback
-        if (metacognitionPrompt?.shouldShow) {
-          setStatus('metacognition');
-        } else {
-          setStatus('feedback');
-        }
-      } else {
-        // Second attempt still wrong: show explanation
-        setStreak(0);
-        
-        // Show metacognition modal if triggered, otherwise go to feedback
-        if (metacognitionPrompt?.shouldShow) {
-          setStatus('metacognition');
-        } else {
-          setStatus('feedback');
-        }
-      }
-      
-      // Log implicit metrics result for debugging
-      if (result.implicitMetrics) {
-        console.log('[FSRS] Implicit rating:', result.implicitMetrics.rating, 
-                    'confidence:', result.implicitMetrics.confidence);
-      }
-      
-    } catch (err) {
-      console.error('Error submitting answer:', err);
-      // Fallback to client-side grading if API fails
-      setIsCorrect(isCorrectAnswer);
-      
-      // Still track in metacognition even if API fails
-      shouldShowMetacognition({
-        isCorrect: isCorrectAnswer,
-        conditionId: currentQuestion.conditionId || currentQuestion.id,
-        conditionName: currentQuestion.conditionName,
-        subcategory: currentQuestion.subcategory || currentQuestion.system,
-        system: currentQuestion.system,
-        panaceYield: currentQuestion.panaceYield,
-        tracker: metacognitionTrackerRef.current,
-      });
-      
-      if (attemptNumber === 1 && !isCorrectAnswer) {
-        setStreak(0);
-        setStatus('coaching');
-        setIsLoadingHint(true);
-        
-        import('@/services/CoachingService').then(module => {
-          module.getSocraticHint(
+
+        // Coaching interception: First attempt and incorrect
+        if (attemptNumber === 1 && !result.isCorrect) {
+          setStreak(0);
+          setStatus('coaching');
+          setIsLoadingHint(true);
+
+          // Generate Socratic hint
+          const { getSocraticHint } = await import('@/services/CoachingService');
+          const hint = await getSocraticHint(
             currentQuestion.question,
             currentQuestion.options[currentQuestion.correctAnswerIndex],
             selectedAnswer
-          ).then(hint => {
-            setSocraticHint(hint);
-            setIsLoadingHint(false);
-          });
-        });
-      } else if (isCorrectAnswer) {
-        if (attemptNumber === 1) {
-          setScore(prev => prev + 1);
+          );
+          setSocraticHint(hint);
+          setIsLoadingHint(false);
+        } else if (result.isCorrect) {
+          // Correct answer: award full or partial points
+          if (attemptNumber === 1) {
+            setScore((prev) => prev + 1);
+          } else {
+            setScore((prev) => prev + 0.5);
+          }
+          setStreak(result.implicitMetrics?.rating >= 3 ? streak + 1 : 1);
+
+          // Show metacognition modal if triggered, otherwise go to feedback
+          if (metacognitionPrompt?.shouldShow) {
+            setStatus('metacognition');
+          } else {
+            setStatus('feedback');
+          }
         } else {
-          setScore(prev => prev + 0.5);
+          // Second attempt still wrong: show explanation
+          setStreak(0);
+
+          // Show metacognition modal if triggered, otherwise go to feedback
+          if (metacognitionPrompt?.shouldShow) {
+            setStatus('metacognition');
+          } else {
+            setStatus('feedback');
+          }
         }
-        setStreak(prev => prev + 1);
-        setStatus('feedback');
-      } else {
-        setStreak(0);
-        setStatus('feedback');
+
+        // Log implicit metrics result for debugging
+        if (result.implicitMetrics) {
+          console.log(
+            '[FSRS] Implicit rating:',
+            result.implicitMetrics.rating,
+            'confidence:',
+            result.implicitMetrics.confidence
+          );
+        }
+      } catch (err) {
+        console.error('Error submitting answer:', err);
+        // Fallback to client-side grading if API fails
+        setIsCorrect(isCorrectAnswer);
+
+        // Still track in metacognition even if API fails
+        shouldShowMetacognition({
+          isCorrect: isCorrectAnswer,
+          conditionId: currentQuestion.conditionId || currentQuestion.id,
+          conditionName: currentQuestion.conditionName,
+          subcategory: currentQuestion.subcategory || currentQuestion.system,
+          system: currentQuestion.system,
+          panaceYield: currentQuestion.panaceYield,
+          tracker: metacognitionTrackerRef.current,
+        });
+
+        if (attemptNumber === 1 && !isCorrectAnswer) {
+          setStreak(0);
+          setStatus('coaching');
+          setIsLoadingHint(true);
+
+          import('@/services/CoachingService').then((module) => {
+            module
+              .getSocraticHint(
+                currentQuestion.question,
+                currentQuestion.options[currentQuestion.correctAnswerIndex],
+                selectedAnswer
+              )
+              .then((hint) => {
+                setSocraticHint(hint);
+                setIsLoadingHint(false);
+              });
+          });
+        } else if (isCorrectAnswer) {
+          if (attemptNumber === 1) {
+            setScore((prev) => prev + 1);
+          } else {
+            setScore((prev) => prev + 0.5);
+          }
+          setStreak((prev) => prev + 1);
+          setStatus('feedback');
+        } else {
+          setStreak(0);
+          setStatus('feedback');
+        }
+      } finally {
+        setIsSubmitting(false);
       }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [currentQuestion, status, isSubmitting, attemptNumber, currentImplicitMetrics, isSignedIn, getToken, streak, metacognitionPrompt]);
+    },
+    [
+      currentQuestion,
+      status,
+      isSubmitting,
+      attemptNumber,
+      currentImplicitMetrics,
+      isSignedIn,
+      getToken,
+      streak,
+      metacognitionPrompt,
+    ]
+  );
 
   const retryAfterHint = useCallback(() => {
     setAttemptNumber(2);
     setUserAnswerIndex(null);
     setStatus('playing');
     // Keep tracking time but reset first click for second attempt
-    setCurrentImplicitMetrics(prev => ({
+    setCurrentImplicitMetrics((prev) => ({
       ...prev,
       timeToFirstClick: null,
       answerSwitches: 0,
@@ -456,12 +491,12 @@ export function useConditionDrill(): UseConditionDrillReturn {
 
   const nextQuestion = useCallback(async () => {
     const newQuestions = await fetchQuestionsFromAPI(1);
-    
+
     if (newQuestions.length > 0) {
-      setQueue(prev => [...prev, newQuestions[0]]);
+      setQueue((prev) => [...prev, newQuestions[0]]);
     }
-    
-    setCurrentIndex(prev => prev + 1);
+
+    setCurrentIndex((prev) => prev + 1);
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setSocraticHint(null);
@@ -475,14 +510,14 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const reset = useCallback(async () => {
     recentConditionsRef.current.clear();
     metacognitionTrackerRef.current = initSessionTracker();
-    
+
     const newQuestions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE);
-    
+
     if (newQuestions.length === 0) {
       setError('No questions available. Please try again.');
       return;
     }
-    
+
     setQueue(newQuestions);
     setCurrentIndex(0);
     setScore(0);

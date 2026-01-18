@@ -31,7 +31,13 @@ import {
   TrendingUp,
   ChevronRight,
 } from 'lucide-react';
-import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, TrainingCategory, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+import {
+  MODE_REGISTRY,
+  TrainingModeConfig,
+  TrainingModeId,
+  TrainingCategory,
+  MODES_WITH_DEDICATED_ROUTES,
+} from '@/config/training-modes';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -73,7 +79,10 @@ interface TrainingMenuProps {
   flaggedQuestionsCount?: number;
   growthAreasCount?: number;
   /** User's progress data for each mode (for progress indicators) */
-  modeProgress?: Record<string, { masteryPercent: number; lastPracticed?: Date; questionsAnswered?: number }>;
+  modeProgress?: Record<
+    string,
+    { masteryPercent: number; lastPracticed?: Date; questionsAnswered?: number }
+  >;
   /** Last practiced mode ID for daily recommended badge */
   lastPracticedMode?: string;
 }
@@ -89,7 +98,7 @@ interface TrainingMenuProps {
  * - Standardized 3-column grid
  * - Mobile horizontal scrolling
  */
-const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({ 
+const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
   onStartSession,
   onNavigateToMode,
   onClose,
@@ -140,9 +149,9 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
   const filteredModes = useMemo(() => {
     if (!searchQuery.trim()) return drillModes;
     const query = searchQuery.toLowerCase();
-    return drillModes.filter((mode) =>
-      mode.label.toLowerCase().includes(query) ||
-      mode.description.toLowerCase().includes(query)
+    return drillModes.filter(
+      (mode) =>
+        mode.label.toLowerCase().includes(query) || mode.description.toLowerCase().includes(query)
     );
   }, [searchQuery, drillModes]);
 
@@ -151,11 +160,13 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
    */
   const dailyRecommended = useMemo(() => {
     // Find mode with lowest recent activity
-    const activeModes = drillModes.filter(mode => !mode.isComingSoon);
+    const activeModes = drillModes.filter((mode) => !mode.isComingSoon);
     if (activeModes.length === 0) return null;
 
     // Prioritize modes with progress but not practiced recently
-    const modesWithProgress = activeModes.filter(mode => modeProgress[mode.id]?.questionsAnswered);
+    const modesWithProgress = activeModes.filter(
+      (mode) => modeProgress[mode.id]?.questionsAnswered
+    );
     if (modesWithProgress.length > 0) {
       return modesWithProgress.sort((a, b) => {
         const aLast = modeProgress[a.id]?.lastPracticed?.getTime() || 0;
@@ -165,7 +176,7 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
     }
 
     // Otherwise suggest a mode they haven't tried
-    const untriedMode = activeModes.find(mode => !modeProgress[mode.id]?.questionsAnswered);
+    const untriedMode = activeModes.find((mode) => !modeProgress[mode.id]?.questionsAnswered);
     return untriedMode?.id || null;
   }, [drillModes, modeProgress]);
 
@@ -210,8 +221,18 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
   const renderFocusToggle = () => {
     const options: { value: FocusOption; label: string; count?: number; disabled?: boolean }[] = [
       { value: 'all', label: 'All Topics' },
-      { value: 'growth', label: 'Growth Areas', count: growthAreasCount, disabled: growthAreasCount === 0 },
-      { value: 'flagged', label: 'Flagged', count: flaggedQuestionsCount, disabled: flaggedQuestionsCount === 0 },
+      {
+        value: 'growth',
+        label: 'Growth Areas',
+        count: growthAreasCount,
+        disabled: growthAreasCount === 0,
+      },
+      {
+        value: 'flagged',
+        label: 'Flagged',
+        count: flaggedQuestionsCount,
+        disabled: flaggedQuestionsCount === 0,
+      },
       { value: 'due', label: 'Due', count: dueQuestionsCount, disabled: dueQuestionsCount === 0 },
     ];
 
@@ -227,16 +248,20 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
               focus === option.value
                 ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-md'
                 : option.disabled
-                ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
+                  ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
             {option.count !== undefined && option.count > 0 && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                focus === option.value ? 'bg-[var(--color-bg-primary)]/20 text-[var(--color-bg-primary)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-              }`}>
+              <span
+                className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  focus === option.value
+                    ? 'bg-[var(--color-bg-primary)]/20 text-[var(--color-bg-primary)]'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                }`}
+              >
                 {option.count}
               </span>
             )}
@@ -251,7 +276,9 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
     if (!progress) return null;
 
     const { masteryPercent, lastPracticed, questionsAnswered } = progress;
-    const daysSinceLastPractice = lastPracticed ? Math.floor((Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const daysSinceLastPractice = lastPracticed
+      ? Math.floor((Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24))
+      : null;
 
     return (
       <div className="mt-2 space-y-1">
@@ -293,9 +320,10 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
         className={`
           relative p-5 rounded-2xl border overflow-hidden
           text-left transition-all duration-200
-          ${isDisabled 
-            ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 border-dashed' 
-            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
+          ${
+            isDisabled
+              ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 border-dashed'
+              : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
           }
           ${isDailyRecommended && !isDisabled ? 'ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-900' : ''}
         `}
@@ -312,16 +340,24 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
             Daily Pick
           </div>
         )}
-        
+
         <div className="flex flex-col gap-3 relative z-[1]">
-          <div className={`w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center shadow-sm ${isDisabled ? 'opacity-50' : ''}`}>
-            <IconComponent className={`w-5 h-5 text-[var(--color-text-secondary)] ${isDisabled ? 'opacity-50' : ''}`} />
+          <div
+            className={`w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center shadow-sm ${isDisabled ? 'opacity-50' : ''}`}
+          >
+            <IconComponent
+              className={`w-5 h-5 text-[var(--color-text-secondary)] ${isDisabled ? 'opacity-50' : ''}`}
+            />
           </div>
           <div className="min-h-[80px]">
-            <h3 className={`font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <h3
+              className={`font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}
+            >
               {mode.label}
             </h3>
-            <p className={`text-sm text-[#364154] dark:text-[#cbd5e1] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <p
+              className={`text-sm text-[#364154] dark:text-[#cbd5e1] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
+            >
               {mode.description}
             </p>
           </div>
@@ -345,9 +381,11 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-lg font-bold text-[#1F283A] dark:text-[#E9ECF1]">{title}</h3>
-          <p className="text-sm text-[#364154] dark:text-[#cbd5e1] hidden sm:block">{description}</p>
+          <p className="text-sm text-[#364154] dark:text-[#cbd5e1] hidden sm:block">
+            {description}
+          </p>
         </div>
-        
+
         {/* Desktop: Standard 3-column grid */}
         <div className="hidden md:grid grid-cols-3 gap-4">
           {modes.map((mode) => renderDrillCard(mode))}
@@ -425,9 +463,7 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-5">
-                  {renderFocusToggle()}
-                </div>
+                <div className="mt-5">{renderFocusToggle()}</div>
               </div>
 
               <div className="flex items-center">
@@ -452,7 +488,9 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
 
         {searchQuery && filteredModes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[var(--color-text-muted)]">No modes found matching "{searchQuery}"</p>
+            <p className="text-[var(--color-text-muted)]">
+              No modes found matching "{searchQuery}"
+            </p>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ This document describes the architecture for handling medical conditions that af
 ## Problem Statement
 
 Many medical conditions affect multiple organ systems:
+
 - **Sarcoidosis**: Primarily pulmonary, but also causes skin lesions (erythema nodosum), eye issues (uveitis), and cardiac conduction blocks
 - **Systemic Lupus Erythematosus (SLE)**: Affects musculoskeletal, dermatology, renal, hematology, cardiovascular, and neurology systems
 - **Syphilis**: Infectious disease that can present with skin rashes (secondary), neurological symptoms (neurosyphilis), and cardiovascular complications
@@ -14,13 +15,15 @@ Many medical conditions affect multiple organ systems:
 ### The Old Approach (Duplicates)
 
 Previously, you might create separate entries:
+
 ```
 PULM__interstitial__sarcoidosis
-DERM__skin_lesions__sarcoidosis  
+DERM__skin_lesions__sarcoidosis
 HEENT__eye__sarcoidosis
 ```
 
 **Problems:**
+
 - ❌ Maintenance nightmare: Updating one doesn't update others
 - ❌ Content drift: Different versions become inconsistent
 - ❌ Wasted storage: Duplicate large content blobs
@@ -29,17 +32,21 @@ HEENT__eye__sarcoidosis
 ### The New Approach (Tags + Context)
 
 Single source of truth with system tags:
+
 ```json
 {
   "conditionId": "PULM__interstitial__sarcoidosis",
   "condition": "Sarcoidosis",
   "system": "PULM",
   "relatedSystems": ["DERM", "HEENT", "CV"],
-  "content": { /* single authoritative content */ }
+  "content": {
+    /* single authoritative content */
+  }
 }
 ```
 
 **Benefits:**
+
 - ✅ Single source of truth
 - ✅ Easy to maintain and update
 - ✅ No duplicate content
@@ -59,7 +66,7 @@ model MedicalContent {
   condition      String
   content        Json
   // ... other fields
-  
+
   @@index([system])
   @@index([relatedSystems]) // GIN index for array queries
 }
@@ -71,7 +78,7 @@ model MedicalContent {
 interface LoadedConditionData {
   conditionId: string;
   name: string;
-  system: string;               // Primary system
+  system: string; // Primary system
   subcategory: string;
   relatedSystems?: SystemCode[]; // NEW: Related systems
   meta: ConditionMeta;
@@ -94,6 +101,7 @@ const dermConditions = await getConditionsBySystem('DERM');
 ```
 
 This returns:
+
 - Conditions with `system: "DERM"` (primary dermatology conditions)
 - Conditions with `relatedSystems: ["DERM", ...]` (e.g., Sarcoidosis, SLE)
 
@@ -103,8 +111,8 @@ The real power comes from context injection during question generation:
 
 ```typescript
 // User is studying Dermatology
-const system = "DERM";
-const condition = await loadConditionData("PULM__interstitial__sarcoidosis");
+const system = 'DERM';
+const condition = await loadConditionData('PULM__interstitial__sarcoidosis');
 
 // Generate question with context
 const prompt = `
@@ -144,6 +152,7 @@ npm run migrate:related-systems
 ```
 
 This automatically populates relatedSystems for conditions like:
+
 - Sarcoidosis → ["DERM", "HEENT", "CV", "NEURO"]
 - SLE → ["DERM", "RENAL", "HEME", "CV", "NEURO"]
 - Syphilis → ["DERM", "NEURO", "CV"]
@@ -155,18 +164,22 @@ This automatically populates relatedSystems for conditions like:
 ```typescript
 import { createDraft } from './lib/services/cms/contentService';
 
-await createDraft(prisma, {
-  conditionId: 'PULM__interstitial__sarcoidosis',
-  system: 'PULM',
-  subcategory: 'Interstitial',
-  condition: 'Sarcoidosis',
-  relatedSystems: ['DERM', 'HEENT', 'CV', 'NEURO'], // NEW
-  content: {
-    overview: '...',
-    clinicalPresentation: '...',
-    // ... rest of content
-  }
-}, options);
+await createDraft(
+  prisma,
+  {
+    conditionId: 'PULM__interstitial__sarcoidosis',
+    system: 'PULM',
+    subcategory: 'Interstitial',
+    condition: 'Sarcoidosis',
+    relatedSystems: ['DERM', 'HEENT', 'CV', 'NEURO'], // NEW
+    content: {
+      overview: '...',
+      clinicalPresentation: '...',
+      // ... rest of content
+    },
+  },
+  options
+);
 ```
 
 ### Step 4: Query Multi-System Conditions
@@ -185,30 +198,36 @@ console.log(condition.relatedSystems); // ['DERM', 'HEENT', 'CV', 'NEURO']
 ## Common Multi-System Conditions
 
 ### Pulmonology Primary
+
 - **Sarcoidosis** → DERM, HEENT, CV, NEURO
 - **Tuberculosis** → ID, NEURO, MSK, GU
 
 ### Rheumatology/MSK Primary
+
 - **SLE** → DERM, RENAL, HEME, CV, NEURO
 - **Scleroderma** → DERM, GI, PULM, RENAL, CV
 - **Dermatomyositis** → DERM, PULM, CV
 - **Vasculitis** → DERM, RENAL, NEURO, PULM
 
 ### Infectious Disease Primary
+
 - **Syphilis** → DERM, NEURO, CV
 - **HIV/AIDS** → DERM, NEURO, GI, PULM
 - **Lyme Disease** → MSK, NEURO, CV, DERM
 
 ### Endocrine Primary
+
 - **Diabetes Mellitus** → CV, RENAL, NEURO, DERM
 - **Hyperthyroidism** → CV, NEURO, MSK, HEENT
 - **Hypothyroidism** → CV, NEURO, DERM, GI
 
 ### Hematology Primary
+
 - **Amyloidosis** → CV, RENAL, GI, NEURO
 - **Hemochromatosis** → ENDO, CV, MSK, GI
 
 ### Gastroenterology Primary
+
 - **Wilson's Disease** → NEURO, PSYCH, HEENT
 - **IBD/Crohn's/UC** → MSK, DERM, HEENT
 
@@ -217,6 +236,7 @@ console.log(condition.relatedSystems); // ['DERM', 'HEENT', 'CV', 'NEURO']
 ### Example 1: Sarcoidosis in Dermatology Quiz
 
 **Context-Aware Prompt:**
+
 ```
 Generate a question for Sarcoidosis.
 Context: Dermatology exam.
@@ -225,11 +245,13 @@ Distractors: Other skin conditions (rosacea, cellulitis, Sweet syndrome).
 ```
 
 **Generated Question:**
+
 > A 35-year-old African American woman presents with tender red nodules on her shins and dry cough. Chest X-ray shows bilateral hilar adenopathy. Skin biopsy reveals non-caseating granulomas. What is the diagnosis?
 
 ### Example 2: Sarcoidosis in Pulmonology Quiz
 
 **Context-Aware Prompt:**
+
 ```
 Generate a question for Sarcoidosis.
 Context: Pulmonology exam.
@@ -238,11 +260,13 @@ Distractors: Other ILD conditions (IPF, hypersensitivity pneumonitis).
 ```
 
 **Generated Question:**
+
 > A 40-year-old presents with dyspnea and dry cough. PFTs show restrictive pattern. CT chest reveals bilateral hilar lymphadenopathy and upper lobe fibrosis. BAL shows CD4/CD8 ratio >3.5. What is the diagnosis?
 
 ### Example 3: SLE in Nephrology Quiz
 
 **Context-Aware Prompt:**
+
 ```
 Generate a question for SLE.
 Context: Nephrology exam.
@@ -260,12 +284,12 @@ describe('getConditionsBySystem with relatedSystems', () => {
     const conditions = await getConditionsBySystem('DERM');
     expect(conditions).toContain('DERM__rash__eczema');
   });
-  
+
   it('should return conditions with matching relatedSystems', async () => {
     const conditions = await getConditionsBySystem('DERM');
     expect(conditions).toContain('PULM__interstitial__sarcoidosis');
   });
-  
+
   it('should not duplicate conditions', async () => {
     const conditions = await getConditionsBySystem('DERM');
     const unique = new Set(conditions);
@@ -279,16 +303,20 @@ describe('getConditionsBySystem with relatedSystems', () => {
 ```typescript
 describe('Multi-system condition workflow', () => {
   it('should create condition with relatedSystems', async () => {
-    const condition = await createDraft(prisma, {
-      conditionId: 'TEST__test__multi_system',
-      system: 'CV',
-      relatedSystems: ['NEURO', 'DERM'],
-      // ...
-    }, options);
-    
+    const condition = await createDraft(
+      prisma,
+      {
+        conditionId: 'TEST__test__multi_system',
+        system: 'CV',
+        relatedSystems: ['NEURO', 'DERM'],
+        // ...
+      },
+      options
+    );
+
     expect(condition.relatedSystems).toEqual(['NEURO', 'DERM']);
   });
-  
+
   it('should query by relatedSystems', async () => {
     const neuroConditions = await getConditionsBySystem('NEURO');
     expect(neuroConditions).toContain('TEST__test__multi_system');
@@ -339,6 +367,7 @@ All changes are backward compatible:
 ## Support
 
 For questions or issues:
+
 1. Check migration README: `prisma/migrations/20251211000000_add_related_systems/README.md`
 2. Review this documentation
 3. Run migration script: `npm run migrate:related-systems`

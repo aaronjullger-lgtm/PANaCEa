@@ -58,7 +58,7 @@ export function canManageRoles(userRole: UserRole): boolean {
 export function canModifyUserRole(actorRole: UserRole, targetRole: UserRole): boolean {
   // Only superadmins can modify roles
   if (!canManageRoles(actorRole)) return false;
-  
+
   // Superadmins can modify any role except other superadmins
   // (prevents accidental lockout)
   return targetRole !== ROLES.SUPERADMIN || actorRole === ROLES.SUPERADMIN;
@@ -85,7 +85,7 @@ export function getRoleDisplayName(role: UserRole): string {
  */
 export function getAssignableRoles(userRole: UserRole): UserRole[] {
   if (!canManageRoles(userRole)) return [];
-  
+
   // Superadmins can assign user and admin roles
   // (cannot create other superadmins through UI for security)
   return [ROLES.USER, ROLES.ADMIN];

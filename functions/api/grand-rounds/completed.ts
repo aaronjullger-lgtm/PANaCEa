@@ -1,32 +1,29 @@
 /**
  * API: Check if user has completed today's Grand Rounds challenge
- * GET /api/grandrounds/completed?userId={userId}
+ * GET /api/grand-rounds/completed?userId={userId}
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const CompletedSchema = z.object({
+  query: z.object({
+    userId: z.string().min(1, 'userId is required'),
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(CompletedSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/grand-rounds/completed', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
+    const { userId } = validated.query;
 
-    if (!userId) {
-      return createErrorResponse('Missing userId parameter', 400);
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -36,16 +33,24 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       where: {
         userId_date: {
           userId,
-          date: today
-        }
-      }
+          date: today,
+        },
+      },
     });
 
-    return createSuccessResponse({ completed: !!history });
+    log.info('Checked Grand Rounds completion', { userId, completed: !!history });
+
+    return new Response(JSON.stringify({ completed: !!history }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error: any) {
-    console.error('Error checking Grand Rounds completion:', error);
-    return createErrorResponse('Failed to check completion status', 500);
+    log.error('Error checking Grand Rounds completion', { error: error.message });
+    return new Response(JSON.stringify({ error: 'Failed to check completion status' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

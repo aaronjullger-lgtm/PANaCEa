@@ -1,16 +1,16 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  FileCheck, 
-  ChevronRight, 
-  CheckCircle, 
+import {
+  X,
+  FileCheck,
+  ChevronRight,
+  CheckCircle,
   XCircle,
   ArrowRight,
   Award,
   BookOpen,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
 import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
@@ -24,7 +24,7 @@ interface GuidelineDrillSessionProps {
 
 /**
  * GuidelineDrillSession - Clinical guidelines scoring drill
- * 
+ *
  * Practice scoring systems like CURB-65, Wells Criteria, GCS, etc.
  */
 const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit }) => {
@@ -76,16 +76,16 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     const newSelected = new Set(selectedCriteria);
     if (newSelected.has(criterionId)) {
       newSelected.delete(criterionId);
-      setCalculatedScore(prev => prev - pointValue);
+      setCalculatedScore((prev) => prev - pointValue);
     } else {
       newSelected.add(criterionId);
-      setCalculatedScore(prev => prev + pointValue);
+      setCalculatedScore((prev) => prev + pointValue);
     }
     setSelectedCriteria(newSelected);
   };
 
   const handleSubmitScore = () => {
-    setTotalAttempts(prev => prev + 1);
+    setTotalAttempts((prev) => prev + 1);
     submitScore(calculatedScore);
   };
 
@@ -155,22 +155,26 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'menu' || status === 'selecting') {
     // Group guidelines by category
-    const guidelinesByCategory = allGuidelines.reduce((acc, g) => {
-      // Infer category from guideline characteristics
-      let category = 'General';
-      if (['wells-dvt', 'wells-pe', 'chadsvasc', 'timi-nstemi'].includes(g.id)) category = 'Cardiology';
-      else if (['curb-65'].includes(g.id)) category = 'Pulmonology';
-      else if (['ranson-pancreatitis', 'alvarado'].includes(g.id)) category = 'Gastroenterology';
-      else if (['sirs', 'qsofa', 'gcs'].includes(g.id)) category = 'Emergency';
-      else if (['sigecaps', 'cage'].includes(g.id)) category = 'Psychiatry';
-      else if (['ottawa-ankle', 'kocher'].includes(g.id)) category = 'MSK/Trauma';
-      else if (['amsel'].includes(g.id)) category = 'OB/GYN';
-      else if (['apgar', 'kawasaki'].includes(g.id)) category = 'Pediatrics';
-      
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(g);
-      return acc;
-    }, {} as Record<string, typeof allGuidelines>);
+    const guidelinesByCategory = allGuidelines.reduce(
+      (acc, g) => {
+        // Infer category from guideline characteristics
+        let category = 'General';
+        if (['wells-dvt', 'wells-pe', 'chadsvasc', 'timi-nstemi'].includes(g.id))
+          category = 'Cardiology';
+        else if (['curb-65'].includes(g.id)) category = 'Pulmonology';
+        else if (['ranson-pancreatitis', 'alvarado'].includes(g.id)) category = 'Gastroenterology';
+        else if (['sirs', 'qsofa', 'gcs'].includes(g.id)) category = 'Emergency';
+        else if (['sigecaps', 'cage'].includes(g.id)) category = 'Psychiatry';
+        else if (['ottawa-ankle', 'kocher'].includes(g.id)) category = 'MSK/Trauma';
+        else if (['amsel'].includes(g.id)) category = 'OB/GYN';
+        else if (['apgar', 'kawasaki'].includes(g.id)) category = 'Pediatrics';
+
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(g);
+        return acc;
+      },
+      {} as Record<string, typeof allGuidelines>
+    );
 
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
@@ -198,9 +202,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-6 sm:mb-8"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                Clinical Scoring Guidelines
-              </h2>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">Clinical Scoring Guidelines</h2>
               <p className="text-sm sm:text-base text-[var(--color-text-secondary)]">
                 Practice PANCE high-yield criteria and scoring systems
               </p>
@@ -235,7 +237,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                           <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] flex-shrink-0 ml-2" />
                         </div>
                         <div className="mt-2 text-xs text-[var(--color-text-muted)]">
-                          {g.vignettes.length} case{g.vignettes.length !== 1 ? 's' : ''} • Max score: {g.maxScore}
+                          {g.vignettes.length} case{g.vignettes.length !== 1 ? 's' : ''} • Max
+                          score: {g.maxScore}
                         </div>
                       </motion.button>
                     ))}
@@ -287,7 +290,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] mb-3 text-center">
             Case {currentVignetteIndex + 1} of {totalVignettes}
           </div>
-          
+
           {/* Vignette */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -324,25 +327,34 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                       : 'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:bg-[var(--color-border)]'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
-                    selectedCriteria.has(criterion.id)
-                      ? 'bg-teal-500 border-teal-500'
-                      : 'border-[var(--color-text-muted)]'
-                  }`}>
+                  <div
+                    className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
+                      selectedCriteria.has(criterion.id)
+                        ? 'bg-teal-500 border-teal-500'
+                        : 'border-[var(--color-text-muted)]'
+                    }`}
+                  >
                     {selectedCriteria.has(criterion.id) && (
                       <CheckCircle className="w-4 h-4 text-white" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm text-[var(--color-text-primary)]">{criterion.label}</span>
+                    <span className="text-sm text-[var(--color-text-primary)]">
+                      {criterion.label}
+                    </span>
                     {criterion.description && (
-                      <span className="text-xs text-[var(--color-text-muted)] ml-2">({criterion.description})</span>
+                      <span className="text-xs text-[var(--color-text-muted)] ml-2">
+                        ({criterion.description})
+                      </span>
                     )}
                   </div>
-                  <span className={`text-sm font-bold flex-shrink-0 ${
-                    criterion.pointValue >= 0 ? 'text-teal-400' : 'text-red-400'
-                  }`}>
-                    {criterion.pointValue >= 0 ? '+' : ''}{criterion.pointValue}
+                  <span
+                    className={`text-sm font-bold flex-shrink-0 ${
+                      criterion.pointValue >= 0 ? 'text-teal-400' : 'text-red-400'
+                    }`}
+                  >
+                    {criterion.pointValue >= 0 ? '+' : ''}
+                    {criterion.pointValue}
                   </span>
                 </motion.button>
               ))}
@@ -371,7 +383,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+            <div
+              className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+            >
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
             <p className="text-sm text-[var(--color-text-secondary)]">
@@ -416,8 +430,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`p-6 rounded-xl border mb-4 ${
-              isCorrect 
-                ? 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-600' 
+              isCorrect
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-600'
                 : 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-600'
             }`}
           >
@@ -428,7 +442,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                 <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               )}
               <div>
-                <h2 className={`text-xl font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                <h2
+                  className={`text-xl font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+                >
                   {isCorrect ? 'Correct!' : 'Incorrect'}
                 </h2>
                 <p className="text-sm text-[var(--color-text-secondary)]">
@@ -439,18 +455,27 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
             {/* Explanation */}
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Explanation</h3>
-              <p className="text-sm text-[var(--color-text-secondary)]">{currentVignette.explanation}</p>
+              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
+                Explanation
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                {currentVignette.explanation}
+              </p>
             </div>
 
             {/* Correct Criteria */}
             <div className="mt-4">
-              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Criteria Met in This Case:</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
+                Criteria Met in This Case:
+              </h3>
               <div className="flex flex-wrap gap-2">
-                {currentVignette.metCriteriaIds.map(id => {
-                  const criterion = currentGuideline.components.find(c => c.id === id);
+                {currentVignette.metCriteriaIds.map((id) => {
+                  const criterion = currentGuideline.components.find((c) => c.id === id);
                   return criterion ? (
-                    <span key={id} className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-xs text-[var(--color-text-secondary)]">
+                    <span
+                      key={id}
+                      className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-xs text-[var(--color-text-secondary)]"
+                    >
                       {criterion.label} (+{criterion.pointValue})
                     </span>
                   ) : null;
@@ -474,7 +499,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
                 )}
               </button>
-              
+
               <AnimatePresence>
                 {showDeepDive && (
                   <motion.div
@@ -485,7 +510,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     className="overflow-hidden"
                   >
                     <div className="pt-3 text-sm text-[var(--color-text-secondary)]">
-                      <p>Related guidelines and criteria scoring tools can be found in the Clinical Reference Library.</p>
+                      <p>
+                        Related guidelines and criteria scoring tools can be found in the Clinical
+                        Reference Library.
+                      </p>
                       <button
                         onClick={() => handleDeepDive(currentGuideline.name)}
                         className="mt-2 text-blue-500 hover:text-blue-400 underline"
@@ -507,14 +535,18 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // SUMMARY VIEW
   // =========================================================================
   if (status === 'summary' && sessionResult) {
-    const percentage = sessionResult.totalAttempts > 0 
-      ? Math.round((sessionResult.totalCorrect / sessionResult.totalAttempts) * 100) 
-      : 0;
+    const percentage =
+      sessionResult.totalAttempts > 0
+        ? Math.round((sessionResult.totalCorrect / sessionResult.totalAttempts) * 100)
+        : 0;
 
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button onClick={handleExit} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
+          <button
+            onClick={handleExit}
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+          >
             <X className="w-5 h-5" />
           </button>
           <h1 className="text-base sm:text-lg font-semibold">Session Complete</h1>
@@ -553,8 +585,6 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
       </div>
     );
   }
-
-
 
   // Fallback - Use skeleton loader for zero CLS
   return (

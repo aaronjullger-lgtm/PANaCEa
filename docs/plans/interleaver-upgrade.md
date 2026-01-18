@@ -21,6 +21,7 @@ This plan upgrades the question selection algorithm from a simple "Priority Wate
 **File:** `lib/services/mainSessionQuestionSelector.ts`
 
 #### Issue 1: Weak Interleaving Check (Lines 100-105)
+
 ```typescript
 // CURRENT: Only checks if LAST N questions are ALL the same system
 private wouldViolateInterleaving(selected: SelectedQuestion[], newSystem: string): boolean {
@@ -32,19 +33,23 @@ private wouldViolateInterleaving(selected: SelectedQuestion[], newSystem: string
 ```
 
 #### Issue 2: No Per-System Cap
+
 A high deficit can force 10+ questions from one system, making interleaving **mathematically impossible**.
 
 #### Issue 3: Random Fallback
+
 When no overdue cards exist for a deficit system, the current code falls through to `selectPriorityC()` which picks **random** unseen questions instead of the "riskiest stable" cards.
 
 ### 1.2 Why This Matters (Learning Science)
 
 **Blocked Practice (AAAA-BBBB-CCCC):**
+
 - Creates "Illusion of Competence" - short-term fluency increases but long-term retention suffers
 - Brain stops fully retrieving schema for questions 2-5 because it's already in working memory
 - Reduces "Contextual Interference" necessary for deep encoding
 
 **Interleaved Practice (ABC-ABC-ABC):**
+
 - Forces brain to reload context for every question
 - Higher initial difficulty but significantly better long-term retention
 - Research shows 43% better delayed recall vs. blocked practice
@@ -60,6 +65,7 @@ When no overdue cards exist for a deficit system, the current code falls through
 For **strict interleaving** (no two adjacent same-system), we must ensure no single system exceeds `ceil(n/2)` questions where `n` is session size.
 
 For a 20-question session:
+
 - **Mathematical maximum:** `ceil(20/2) = 10`
 - **Safe cap:** `8 questions (40%)` - provides safety buffer for edge cases
 
@@ -72,21 +78,21 @@ For a 20-question session:
 export const MAX_SINGLE_SYSTEM_CAP = 8;
 
 function calculateSystemQuotas(
-  deficits: SystemDeficit[], 
+  deficits: SystemDeficit[],
   sessionSize: number
 ): Map<string, number> {
   const quotas = new Map<string, number>();
-  
+
   for (const deficit of deficits) {
     // Calculate ideal slots based on deficit
     const idealSlots = Math.ceil((deficit.deficitPercent / 100) * sessionSize);
-    
+
     // STRICT CAP: Never exceed 8 questions per system
     const cappedSlots = Math.min(idealSlots, MAX_SINGLE_SYSTEM_CAP);
-    
+
     quotas.set(deficit.system, cappedSlots);
   }
-  
+
   return quotas;
 }
 ```
@@ -106,6 +112,7 @@ When no FSRS overdue cards exist for a deficit system, we need to fill the quota
 **APPROVED APPROACH:** Compute Retrievability (R) inside the database using `Prisma.$queryRaw`.
 
 **Why SQL, not TypeScript:**
+
 - Computing R in TypeScript requires fetching ALL user cards, deserializing JSON, computing R for each, then sorting
 - For 2,000+ cards, this will timeout Cloudflare Functions
 - SQL handles sorting before data transfer, returning only top N rows
@@ -129,14 +136,14 @@ async selectStableCardsByLowestRetrievability(
     system: string;
     current_r: number;
   }>>`
-    SELECT 
+    SELECT
       up.id,
       up."conditionId",
       mc.system,
       -- FSRS v5: R = (1 + elapsed_days / stability)^-1
       POWER(
         1 + (
-          EXTRACT(EPOCH FROM (NOW() - (up."fsrsCard"->>'last_review')::timestamp)) 
+          EXTRACT(EPOCH FROM (NOW() - (up."fsrsCard"->>'last_review')::timestamp))
           / 86400.0  -- Convert seconds to days
         ) / GREATEST(COALESCE((up."fsrsCard"->>'stability')::float, 1.0), 0.1),
         -1
@@ -150,7 +157,7 @@ async selectStableCardsByLowestRetrievability(
     ORDER BY current_r ASC  -- Lowest retrievability first (hardest safe cards)
     LIMIT ${limit}
   `;
-  
+
   return results.map(r => ({
     questionId: r.id, // Will map to actual question in next step
     conditionId: r.conditionId,
@@ -164,11 +171,11 @@ async selectStableCardsByLowestRetrievability(
 
 #### Desirable Difficulty Rationale
 
-| Card | Retrievability | Last Seen | Selection Priority |
-|------|---------------|-----------|-------------------|
-| A | R = 0.98 | Yesterday | ❌ Too easy |
-| B | R = 0.91 | 4 months ago | ✅ "Edge of forgetting" |
-| C | R = 0.85 | 6 months ago | ✅ High priority |
+| Card | Retrievability | Last Seen    | Selection Priority      |
+| ---- | -------------- | ------------ | ----------------------- |
+| A    | R = 0.98       | Yesterday    | ❌ Too easy             |
+| B    | R = 0.91       | 4 months ago | ✅ "Edge of forgetting" |
+| C    | R = 0.85       | 6 months ago | ✅ High priority        |
 
 Both B and C are "stable" (not overdue), but they're at the edge of the forgetting threshold. Retrieving these strengthens memory more than easy R=0.98 cards.
 
@@ -192,15 +199,16 @@ interface SystemPool {
  * Assemble questions ensuring no two adjacent have the same system.
  * Uses "Largest-First Greedy" to handle hardest constraints first.
  */
-function assembleInterleavedSession(
-  pools: Map<string, SelectedQuestion[]>
-): { questions: SelectedQuestion[]; violations: InterleavingViolation[] } {
+function assembleInterleavedSession(pools: Map<string, SelectedQuestion[]>): {
+  questions: SelectedQuestion[];
+  violations: InterleavingViolation[];
+} {
   const result: SelectedQuestion[] = [];
   const violations: InterleavingViolation[] = [];
-  
+
   // Step 1: Track which system was placed last
   let lastPlacedSystem: string | null = null;
-  
+
   // Step 2: Iteratively pick questions
   while (hasQuestionsRemaining(pools)) {
     // Sort systems by remaining pool size (LARGEST FIRST)
@@ -209,9 +217,9 @@ function assembleInterleavedSession(
       .filter(([_, questions]) => questions.length > 0)
       .sort((a, b) => b[1].length - a[1].length)
       .map(([system]) => system);
-    
+
     let placed = false;
-    
+
     for (const system of currentOrder) {
       // STRICT RULE: Cannot pick same system as last placed
       if (system !== lastPlacedSystem) {
@@ -222,46 +230,47 @@ function assembleInterleavedSession(
         break;
       }
     }
-    
+
     // CORNER CASE: Forced to repeat (only one system has questions left)
     if (!placed && currentOrder.length > 0) {
       const forcedSystem = currentOrder[0];
       const question = pools.get(forcedSystem)!.shift()!;
       result.push(question);
       lastPlacedSystem = forcedSystem;
-      
+
       // LOG WARNING (Permissive Mode - don't crash)
       violations.push({
         position: result.length - 1,
         system: forcedSystem,
         reason: 'only_system_remaining',
       });
-      
-      console.warn(
-        `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`
-      );
+
+      console.warn(`[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`);
     }
   }
-  
+
   return { questions: result, violations };
 }
 
 function hasQuestionsRemaining(pools: Map<string, SelectedQuestion[]>): boolean {
-  return [...pools.values()].some(arr => arr.length > 0);
+  return [...pools.values()].some((arr) => arr.length > 0);
 }
 ```
 
 #### Why Largest-First?
 
 Consider this scenario:
+
 - Pool: `{ Cardio: 8, Pulm: 4, GI: 4, MSK: 4 }` (Total: 20)
 
 **Bad approach (random order):**
+
 ```
 Pulm-GI-MSK-Pulm-GI-MSK-Pulm-GI-MSK-Pulm-GI-MSK → 8 Cardio stuck at end!
 ```
 
 **Good approach (largest first):**
+
 ```
 Cardio-Pulm-Cardio-GI-Cardio-MSK-Cardio-Pulm-Cardio-GI-Cardio-MSK-Cardio-Pulm-Cardio-GI-Cardio-MSK-Pulm-GI
 ```
@@ -275,6 +284,7 @@ By distributing Cardio throughout (odd positions), we guarantee perfect interlea
 #### APPROVED DECISION: Warning Only (Permissive Mode)
 
 **Rationale:**
+
 - A system crash harms user trust more than a single blocked pair
 - In "Cold Start" scenarios (users < 50 questions) or filtered decks, perfect interleaving may be mathematically impossible
 - Maintains the "Zero-Friction" principle
@@ -298,7 +308,7 @@ interface SessionGenerationResult {
     C: number;
   };
   interleavingEnforced: boolean;
-  
+
   // NEW: Track any forced violations
   interleavingViolations: InterleavingViolation[];
 }
@@ -320,6 +330,7 @@ If we separate Selection from Interleaving, the Selector might fetch 20 "Cardiol
 
 **Solution:**
 The new `MainSessionQuestionSelector` acts as a "Constraint-Satisfaction Assembler" that **simultaneously** respects:
+
 1. Blueprint Quota (Selection)
 2. System Variance (Ordering)
 
@@ -344,7 +355,7 @@ Add to `scripts/test-selector.ts`:
  */
 async function testHighDeficitInterleaving(): Promise<void> {
   printSubheader('TEST: High-Deficit Interleaving (8 Cardio)');
-  
+
   // Scenario: User needs 8 Cardio, 4 Pulm, 4 GI, 4 MSK
   const mockPools = new Map<string, MockQuestion[]>([
     ['Cardiovascular', createMockQuestions('Cardiovascular', 8)],
@@ -352,28 +363,30 @@ async function testHighDeficitInterleaving(): Promise<void> {
     ['Gastrointestinal', createMockQuestions('Gastrointestinal', 4)],
     ['Musculoskeletal', createMockQuestions('Musculoskeletal', 4)],
   ]);
-  
+
   const { questions, violations } = assembleInterleavedSession(mockPools);
-  
+
   // ASSERTION 1: No two adjacent questions have the same system
   let adjacentViolations = 0;
   for (let i = 1; i < questions.length; i++) {
     if (questions[i].system === questions[i - 1].system) {
       adjacentViolations++;
-      console.log(colorize(
-        `  ✗ VIOLATION at position ${i}: ${questions[i - 1].system} → ${questions[i].system}`,
-        'red'
-      ));
+      console.log(
+        colorize(
+          `  ✗ VIOLATION at position ${i}: ${questions[i - 1].system} → ${questions[i].system}`,
+          'red'
+        )
+      );
     }
   }
-  
+
   // Print sequence for visual verification
   console.log('\n  Session sequence:');
-  console.log('  ' + questions.map(q => q.system.substring(0, 4)).join(' → '));
-  
+  console.log('  ' + questions.map((q) => q.system.substring(0, 4)).join(' → '));
+
   // ASSERTION 2: Algorithm detected same violations
   console.log(`\n  Algorithm-reported violations: ${violations.length}`);
-  
+
   if (adjacentViolations === 0) {
     console.log(colorize('\n  ✓ PASS: Zero adjacent same-system questions', 'green'));
   } else {
@@ -397,29 +410,29 @@ function createMockQuestions(system: string, count: number): MockQuestion[] {
 
 ### 5.2 Additional Test Cases
 
-| Test Name | Input | Expected |
-|-----------|-------|----------|
-| Single System Dominance | 8 Cardio, 1 Pulm, 1 GI | Minimal forced repeats, logged |
-| Equal Distribution | 5 each of 4 systems | Perfect interleaving, 0 violations |
-| Two Systems Only | 10 Cardio, 10 Pulm | Alternating pattern |
-| Cold Start | 3 Cardio only | Graceful handling, warning logged |
+| Test Name               | Input                  | Expected                           |
+| ----------------------- | ---------------------- | ---------------------------------- |
+| Single System Dominance | 8 Cardio, 1 Pulm, 1 GI | Minimal forced repeats, logged     |
+| Equal Distribution      | 5 each of 4 systems    | Perfect interleaving, 0 violations |
+| Two Systems Only        | 10 Cardio, 10 Pulm     | Alternating pattern                |
+| Cold Start              | 3 Cardio only          | Graceful handling, warning logged  |
 
 ---
 
 ## 6. Implementation Checklist
 
-| Step | Description | File | Priority |
-|------|-------------|------|----------|
-| 1 | Add `MAX_SINGLE_SYSTEM_CAP = 8` constant | `mainSessionQuestionSelector.ts` | P0 |
-| 2 | Modify `calculateSystemDeficits()` to apply cap | `mainSessionQuestionSelector.ts` | P0 |
-| 3 | Add `selectStableCardsByLowestRetrievability()` with SQL | `mainSessionQuestionSelector.ts` | P0 |
-| 4 | Implement `assembleInterleavedSession()` function | `mainSessionQuestionSelector.ts` | P0 |
-| 5 | Add `InterleavingViolation` type and tracking | `mainSessionQuestionSelector.ts` | P0 |
-| 6 | Update `SessionGenerationResult` interface | `mainSessionQuestionSelector.ts` | P1 |
-| 7 | Delete `lib/sessionInterleaving.ts` | - | P1 |
-| 8 | Update imports in any files using old interleaving | Various | P1 |
-| 9 | Add `testHighDeficitInterleaving()` test | `scripts/test-selector.ts` | P1 |
-| 10 | Add telemetry for forced repeats | `mainSessionQuestionSelector.ts` | P2 |
+| Step | Description                                              | File                             | Priority |
+| ---- | -------------------------------------------------------- | -------------------------------- | -------- |
+| 1    | Add `MAX_SINGLE_SYSTEM_CAP = 8` constant                 | `mainSessionQuestionSelector.ts` | P0       |
+| 2    | Modify `calculateSystemDeficits()` to apply cap          | `mainSessionQuestionSelector.ts` | P0       |
+| 3    | Add `selectStableCardsByLowestRetrievability()` with SQL | `mainSessionQuestionSelector.ts` | P0       |
+| 4    | Implement `assembleInterleavedSession()` function        | `mainSessionQuestionSelector.ts` | P0       |
+| 5    | Add `InterleavingViolation` type and tracking            | `mainSessionQuestionSelector.ts` | P0       |
+| 6    | Update `SessionGenerationResult` interface               | `mainSessionQuestionSelector.ts` | P1       |
+| 7    | Delete `lib/sessionInterleaving.ts`                      | -                                | P1       |
+| 8    | Update imports in any files using old interleaving       | Various                          | P1       |
+| 9    | Add `testHighDeficitInterleaving()` test                 | `scripts/test-selector.ts`       | P1       |
+| 10   | Add telemetry for forced repeats                         | `mainSessionQuestionSelector.ts` | P2       |
 
 ---
 
@@ -478,6 +491,7 @@ Where:
 ```
 
 **Example:**
+
 - Card reviewed 30 days ago with Stability = 60 days
 - R = (1 + 30/60)^(-1) = (1.5)^(-1) = 0.667 (67% recall probability)
 

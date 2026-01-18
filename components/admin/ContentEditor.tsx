@@ -48,14 +48,14 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
   }, [editedContent, content]);
 
   const handleFieldChange = (field: string, value: any) => {
-    setEditedContent(prev => ({
+    setEditedContent((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
   const handleArrayFieldChange = (field: string, index: number, value: string) => {
-    setEditedContent(prev => {
+    setEditedContent((prev) => {
       const array = (prev[field as keyof typeof prev] as string[]) || [];
       const newArray = [...array];
       newArray[index] = value;
@@ -67,7 +67,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
   };
 
   const handleAddArrayItem = (field: string) => {
-    setEditedContent(prev => {
+    setEditedContent((prev) => {
       const array = (prev[field as keyof typeof prev] as string[]) || [];
       return {
         ...prev,
@@ -77,7 +77,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
   };
 
   const handleRemoveArrayItem = (field: string, index: number) => {
-    setEditedContent(prev => {
+    setEditedContent((prev) => {
       const array = (prev[field as keyof typeof prev] as string[]) || [];
       const newArray = array.filter((_, i) => i !== index);
       return {
@@ -144,7 +144,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
       const generatedContent = result.content;
 
       // Update the editor with AI-generated content
-      setEditedContent(prev => ({
+      setEditedContent((prev) => ({
         ...prev,
         content: generatedContent.content,
       }));
@@ -180,7 +180,9 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 <div className="text-sm text-[var(--color-text-muted)]">
                   <span className="font-medium">{content.condition}</span>
                   <span className="mx-2">|</span>
-                  <span>{content.system} / {content.subcategory}</span>
+                  <span>
+                    {content.system} / {content.subcategory}
+                  </span>
                   <span className="mx-2">|</span>
                   <span>Version {content.version}</span>
                 </div>
@@ -353,7 +355,8 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
           {/* Footer */}
           <div className="bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] p-4 rounded-b-2xl flex items-center justify-between">
             <div className="text-sm text-[var(--color-text-muted)]">
-              Last saved: {content.updatedAt ? new Date(content.updatedAt).toLocaleString() : 'Never'}
+              Last saved:{' '}
+              {content.updatedAt ? new Date(content.updatedAt).toLocaleString() : 'Never'}
             </div>
             <div className="flex items-center gap-2">
               <button

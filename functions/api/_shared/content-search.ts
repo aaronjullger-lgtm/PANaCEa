@@ -9,9 +9,9 @@ import type { EdgePrismaClient } from './prisma-edge';
 export interface SearchResult {
   id: string;
   title: string;
-  type: "condition" | "drug";
+  type: 'condition' | 'drug';
   snippet: string;
-  matchType: "exact" | "alias" | "fuzzy" | "keyword";
+  matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword';
   score: number;
   metadata?: {
     system?: string;
@@ -23,9 +23,9 @@ export interface SearchResult {
 
 interface RankedResult {
   item: any;
-  type: "condition" | "drug";
+  type: 'condition' | 'drug';
   score: number;
-  matchType: "exact" | "alias" | "fuzzy" | "keyword";
+  matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword';
   matchedAlias?: string;
 }
 
@@ -69,9 +69,7 @@ function calculateSimilarity(query: string, target: string): number {
  * Calculate Levenshtein distance
  */
 function levenshteinDistance(a: string, b: string): number {
-  const dp = Array.from({ length: a.length + 1 }, () =>
-    new Array(b.length + 1).fill(0)
-  );
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
 
   for (let i = 0; i <= a.length; i++) dp[i][0] = i;
   for (let j = 0; j <= b.length; j++) dp[0][j] = j;
@@ -79,11 +77,7 @@ function levenshteinDistance(a: string, b: string): number {
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
-      );
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
     }
   }
 
@@ -132,14 +126,14 @@ function scoreAliasMatch(
 function rankCondition(condition: any, query: string): RankedResult {
   const normalizedQuery = query.toLowerCase().trim();
   let bestScore = 0;
-  let matchType: "exact" | "alias" | "fuzzy" | "keyword" = "fuzzy";
+  let matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword' = 'fuzzy';
   let matchedAlias: string | undefined;
 
   // Score name match
   const nameScore = calculateSimilarity(query, condition.name);
   if (nameScore > bestScore) {
     bestScore = nameScore;
-    matchType = nameScore >= SCORE_STARTS_WITH ? "exact" : "fuzzy";
+    matchType = nameScore >= SCORE_STARTS_WITH ? 'exact' : 'fuzzy';
   }
 
   // Score display name match
@@ -147,7 +141,7 @@ function rankCondition(condition: any, query: string): RankedResult {
     const displayScore = calculateSimilarity(query, condition.displayName);
     if (displayScore > bestScore) {
       bestScore = displayScore;
-      matchType = displayScore >= SCORE_STARTS_WITH ? "exact" : "fuzzy";
+      matchType = displayScore >= SCORE_STARTS_WITH ? 'exact' : 'fuzzy';
     }
   }
 
@@ -155,7 +149,7 @@ function rankCondition(condition: any, query: string): RankedResult {
   const aliasMatch = scoreAliasMatch(query, condition.aliases || []);
   if (aliasMatch.score > bestScore) {
     bestScore = aliasMatch.score;
-    matchType = "alias";
+    matchType = 'alias';
     matchedAlias = aliasMatch.matchedAlias;
   }
 
@@ -166,7 +160,7 @@ function rankCondition(condition: any, query: string): RankedResult {
 
   return {
     item: condition,
-    type: "condition",
+    type: 'condition',
     score: bestScore,
     matchType,
     matchedAlias,
@@ -179,14 +173,14 @@ function rankCondition(condition: any, query: string): RankedResult {
 function rankDrug(drug: any, query: string): RankedResult {
   const normalizedQuery = query.toLowerCase().trim();
   let bestScore = 0;
-  let matchType: "exact" | "alias" | "fuzzy" | "keyword" = "fuzzy";
+  let matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword' = 'fuzzy';
   let matchedAlias: string | undefined;
 
   // Score drug name match
   const nameScore = calculateSimilarity(query, drug.genericName);
   if (nameScore > bestScore) {
     bestScore = nameScore;
-    matchType = nameScore >= SCORE_STARTS_WITH ? "exact" : "fuzzy";
+    matchType = nameScore >= SCORE_STARTS_WITH ? 'exact' : 'fuzzy';
   }
 
   // Score brand name match
@@ -194,7 +188,7 @@ function rankDrug(drug: any, query: string): RankedResult {
     const brandScore = calculateSimilarity(query, drug.brandName);
     if (brandScore > bestScore) {
       bestScore = brandScore;
-      matchType = brandScore >= SCORE_STARTS_WITH ? "exact" : "alias";
+      matchType = brandScore >= SCORE_STARTS_WITH ? 'exact' : 'alias';
       matchedAlias = drug.brandName;
     }
   }
@@ -204,7 +198,7 @@ function rankDrug(drug: any, query: string): RankedResult {
     const aliasMatch = scoreAliasMatch(query, drug.aliases);
     if (aliasMatch.score > bestScore) {
       bestScore = aliasMatch.score;
-      matchType = "alias";
+      matchType = 'alias';
       matchedAlias = aliasMatch.matchedAlias;
     }
   }
@@ -216,7 +210,7 @@ function rankDrug(drug: any, query: string): RankedResult {
         const classScore = SCORE_KEYWORD_MATCH;
         if (classScore > bestScore) {
           bestScore = classScore;
-          matchType = "keyword";
+          matchType = 'keyword';
         }
       }
     }
@@ -224,7 +218,7 @@ function rankDrug(drug: any, query: string): RankedResult {
 
   return {
     item: drug,
-    type: "drug",
+    type: 'drug',
     score: bestScore,
     matchType,
     matchedAlias,
@@ -235,17 +229,17 @@ function rankDrug(drug: any, query: string): RankedResult {
  * Format a ranked result into a search result
  */
 function formatSearchResult(ranked: RankedResult): SearchResult {
-  if (ranked.type === "condition") {
+  if (ranked.type === 'condition') {
     const condition = ranked.item;
     const title = condition.displayName || condition.name;
     const snippet = `${condition.system}${
-      ranked.matchedAlias ? ` • matches "${ranked.matchedAlias}"` : ""
+      ranked.matchedAlias ? ` • matches "${ranked.matchedAlias}"` : ''
     }`;
 
     return {
       id: condition.id,
       title,
-      type: "condition",
+      type: 'condition',
       snippet,
       matchType: ranked.matchType,
       score: ranked.score,
@@ -258,15 +252,15 @@ function formatSearchResult(ranked: RankedResult): SearchResult {
     const drug = ranked.item;
     const title = drug.genericName;
     const drugClassDisplay =
-      drug.drugClass && drug.drugClass.length > 0 ? drug.drugClass[0] : "Drug";
+      drug.drugClass && drug.drugClass.length > 0 ? drug.drugClass[0] : 'Drug';
     const snippet = `${drugClassDisplay}${
-      ranked.matchedAlias ? ` • matches "${ranked.matchedAlias}"` : ""
+      ranked.matchedAlias ? ` • matches "${ranked.matchedAlias}"` : ''
     }`;
 
     return {
       id: drug.id,
       title,
-      type: "drug",
+      type: 'drug',
       snippet,
       matchType: ranked.matchType,
       score: ranked.score,
@@ -285,7 +279,7 @@ export async function searchContent(
   prisma: EdgePrismaClient,
   query: string,
   limit = 10,
-  includeTypes: ("condition" | "drug")[] = ["condition", "drug"]
+  includeTypes: ('condition' | 'drug')[] = ['condition', 'drug']
 ): Promise<SearchResult[]> {
   const sanitizedQuery = query.trim();
 
@@ -298,14 +292,14 @@ export async function searchContent(
 
   try {
     // Search conditions
-    if (includeTypes.includes("condition")) {
+    if (includeTypes.includes('condition')) {
       const conditions = await prisma.condition.findMany({
         where: {
           OR: [
-            { name: { contains: normalizedQuery, mode: "insensitive" } },
-            { displayName: { contains: normalizedQuery, mode: "insensitive" } },
+            { name: { contains: normalizedQuery, mode: 'insensitive' } },
+            { displayName: { contains: normalizedQuery, mode: 'insensitive' } },
             { aliases: { hasSome: [normalizedQuery] } },
-            { system: { contains: normalizedQuery, mode: "insensitive" } },
+            { system: { contains: normalizedQuery, mode: 'insensitive' } },
           ],
         },
         take: limit * 2,
@@ -320,15 +314,15 @@ export async function searchContent(
     }
 
     // Search drugs
-    if (includeTypes.includes("drug")) {
+    if (includeTypes.includes('drug')) {
       const drugs = await prisma.drug.findMany({
         where: {
           OR: [
-            { genericName: { contains: normalizedQuery, mode: "insensitive" } },
-            { brandName: { contains: normalizedQuery, mode: "insensitive" } },
+            { genericName: { contains: normalizedQuery, mode: 'insensitive' } },
+            { brandName: { contains: normalizedQuery, mode: 'insensitive' } },
             { aliases: { hasSome: [normalizedQuery] } },
             { drugClass: { hasSome: [normalizedQuery] } },
-            { displayName: { contains: normalizedQuery, mode: "insensitive" } },
+            { displayName: { contains: normalizedQuery, mode: 'insensitive' } },
           ],
         },
         take: limit * 2,
@@ -348,7 +342,7 @@ export async function searchContent(
 
     return topResults.map(formatSearchResult);
   } catch (error) {
-    console.error("Error searching content:", error);
-    throw new Error("Failed to search content");
+    console.error('Error searching content:', error);
+    throw new Error('Failed to search content');
   }
 }

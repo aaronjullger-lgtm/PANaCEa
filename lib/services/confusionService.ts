@@ -1,6 +1,6 @@
 /**
  * Confusion Mapping Service
- * 
+ *
  * Tracks which incorrect answers users choose and maps confusion patterns
  * between medical conditions. Generates DDx comparison tables for commonly
  * confused condition pairs.
@@ -94,13 +94,13 @@ function loadConfusionRecords(): Map<string, ConfusionRecord> {
   try {
     const stored = localStorage.getItem(CONFUSION_STORAGE_KEY);
     if (!stored) return new Map();
-    
+
     const data = JSON.parse(stored);
     if (data.version !== CONFUSION_VERSION) {
       console.log('[ConfusionMap] Version mismatch, clearing old data');
       return new Map();
     }
-    
+
     const records = new Map<string, ConfusionRecord>();
     for (const record of data.records) {
       const key = `${record.userId}_${record.realConditionId}_${record.mistakenConditionId}`;
@@ -137,7 +137,7 @@ function saveConfusionRecords(records: Map<string, ConfusionRecord>): void {
 
 /**
  * Record a confusion event when user selects wrong answer
- * 
+ *
  * @param userId - User identifier
  * @param realConditionId - The correct answer condition
  * @param mistakenConditionId - The wrong answer the user selected
@@ -148,10 +148,10 @@ export function recordConfusion(
   mistakenConditionId: string
 ): void {
   if (realConditionId === mistakenConditionId) return;
-  
+
   const records = loadConfusionRecords();
   const key = `${userId}_${realConditionId}_${mistakenConditionId}`;
-  
+
   const existing = records.get(key);
   if (existing) {
     existing.times += 1;
@@ -166,13 +166,13 @@ export function recordConfusion(
       lastUpdated: new Date(),
     });
   }
-  
+
   saveConfusionRecords(records);
 }
 
 /**
  * Get top confusions for a specific condition
- * 
+ *
  * @param userId - User identifier
  * @param conditionId - The condition to analyze
  * @param limit - Maximum number of results
@@ -186,24 +186,24 @@ export function getTopConfusionsForCondition(
   const records = loadConfusionRecords();
   const confusions: Map<string, number> = new Map();
   let maxTimes = 0;
-  
+
   // Aggregate confusions where this condition was either real or mistaken
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
-    
+
     if (record.realConditionId === conditionId) {
       const current = confusions.get(record.mistakenConditionId) || 0;
       confusions.set(record.mistakenConditionId, current + record.times);
       maxTimes = Math.max(maxTimes, current + record.times);
     }
-    
+
     if (record.mistakenConditionId === conditionId) {
       const current = confusions.get(record.realConditionId) || 0;
       confusions.set(record.realConditionId, current + record.times);
       maxTimes = Math.max(maxTimes, current + record.times);
     }
   }
-  
+
   // Convert to array and normalize
   const results: TopConfusion[] = [];
   for (const [confusedId, times] of confusions.entries()) {
@@ -214,28 +214,24 @@ export function getTopConfusionsForCondition(
       normalizedScore: maxTimes > 0 ? times / maxTimes : 0,
     });
   }
-  
+
   // Sort by times (descending) and return top N
-  return results
-    .sort((a, b) => b.times - a.times)
-    .slice(0, limit);
+  return results.sort((a, b) => b.times - a.times).slice(0, limit);
 }
 
 /**
  * Build a confusion graph for visualization or analysis
- * 
+ *
  * @param userId - User identifier
  * @returns Adjacency list representation of confusion graph
  */
-export function buildConfusionGraph(
-  userId: string
-): Map<string, Map<string, number>> {
+export function buildConfusionGraph(userId: string): Map<string, Map<string, number>> {
   const records = loadConfusionRecords();
   const graph: Map<string, Map<string, number>> = new Map();
-  
+
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
-    
+
     // Add edge from real to mistaken
     if (!graph.has(record.realConditionId)) {
       graph.set(record.realConditionId, new Map());
@@ -243,7 +239,7 @@ export function buildConfusionGraph(
     const edges = graph.get(record.realConditionId)!;
     edges.set(record.mistakenConditionId, record.times);
   }
-  
+
   return graph;
 }
 
@@ -255,19 +251,19 @@ export function getConfusionEdges(userId: string): ConfusionGraphEdge[] {
   const records = loadConfusionRecords();
   const edges: ConfusionGraphEdge[] = [];
   let maxWeight = 0;
-  
+
   // First pass: collect edges and find max weight
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
     maxWeight = Math.max(maxWeight, record.times);
   }
-  
+
   // Second pass: create normalized edges
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
-    
+
     const normalizedWeight = maxWeight > 0 ? record.times / maxWeight : 0;
-    
+
     // Only include edges above threshold
     if (normalizedWeight >= MINIMUM_DISPLAY_THRESHOLD) {
       edges.push({
@@ -278,7 +274,7 @@ export function getConfusionEdges(userId: string): ConfusionGraphEdge[] {
       });
     }
   }
-  
+
   return edges.sort((a, b) => b.weight - a.weight);
 }
 
@@ -291,18 +287,18 @@ export function getConfusionPairs(
 ): Array<{ conditionA: string; conditionB: string; totalConfusions: number }> {
   const records = loadConfusionRecords();
   const pairCounts: Map<string, number> = new Map();
-  
+
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
-    
+
     // Create canonical pair key (alphabetically sorted)
     const pair = [record.realConditionId, record.mistakenConditionId].sort();
     const pairKey = pair.join('|');
-    
+
     const current = pairCounts.get(pairKey) || 0;
     pairCounts.set(pairKey, current + record.times);
   }
-  
+
   // Convert to array and sort
   const pairs = Array.from(pairCounts.entries())
     .map(([key, count]) => {
@@ -311,7 +307,7 @@ export function getConfusionPairs(
     })
     .sort((a, b) => b.totalConfusions - a.totalConfusions)
     .slice(0, limit);
-  
+
   return pairs;
 }
 
@@ -325,13 +321,13 @@ export function isConfusionPair(
   threshold: number = 2
 ): boolean {
   const records = loadConfusionRecords();
-  
+
   const keyAB = `${userId}_${conditionA}_${conditionB}`;
   const keyBA = `${userId}_${conditionB}_${conditionA}`;
-  
+
   const recordAB = records.get(keyAB);
   const recordBA = records.get(keyBA);
-  
+
   const totalConfusions = (recordAB?.times || 0) + (recordBA?.times || 0);
   return totalConfusions >= threshold;
 }
@@ -341,13 +337,13 @@ export function isConfusionPair(
  */
 export function clearConfusionData(userId: string): void {
   const records = loadConfusionRecords();
-  
+
   for (const [key, record] of records.entries()) {
     if (record.userId === userId) {
       records.delete(key);
     }
   }
-  
+
   saveConfusionRecords(records);
 }
 
@@ -364,32 +360,32 @@ export function getConfusionStats(userId: string): {
   const conditionCounts: Map<string, number> = new Map();
   const seenPairs = new Set<string>();
   let totalConfusions = 0;
-  
+
   for (const record of records.values()) {
     if (record.userId !== userId) continue;
-    
+
     totalConfusions += record.times;
-    
+
     // Track unique pairs
     const pair = [record.realConditionId, record.mistakenConditionId].sort().join('|');
     seenPairs.add(pair);
-    
+
     // Track per-condition confusion count
     const realCount = conditionCounts.get(record.realConditionId) || 0;
     conditionCounts.set(record.realConditionId, realCount + record.times);
   }
-  
+
   // Find most confused condition
   let mostConfusedCondition: string | null = null;
   let mostConfusedCount = 0;
-  
+
   for (const [condition, count] of conditionCounts.entries()) {
     if (count > mostConfusedCount) {
       mostConfusedCondition = condition;
       mostConfusedCount = count;
     }
   }
-  
+
   return {
     totalConfusions,
     uniquePairs: seenPairs.size,

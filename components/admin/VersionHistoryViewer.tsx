@@ -36,7 +36,7 @@ export function VersionHistoryViewer({
   const [selectedVersions, setSelectedVersions] = useState<number[]>([]);
 
   const toggleVersionExpanded = (versionId: string) => {
-    setExpandedVersions(prev => {
+    setExpandedVersions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(versionId)) {
         newSet.delete(versionId);
@@ -48,9 +48,9 @@ export function VersionHistoryViewer({
   };
 
   const toggleVersionSelected = (version: number) => {
-    setSelectedVersions(prev => {
+    setSelectedVersions((prev) => {
       if (prev.includes(version)) {
-        return prev.filter(v => v !== version);
+        return prev.filter((v) => v !== version);
       } else {
         // Only allow 2 versions to be selected for comparison
         if (prev.length >= 2) {

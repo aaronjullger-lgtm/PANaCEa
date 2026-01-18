@@ -1,83 +1,83 @@
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-
-export const onRequestOptions = handleCorsOptions;
-
 /**
- * GET /api/reference/labs
- * Fetch all lab tests, optionally filtered by category or search query
+ * Lab Tests Reference API
+ * 
+ * GET /api/reference/labs - Fetch all lab tests with optional filtering
+ * 
+ * Security: Sprint 3 - Authenticated endpoint with secure middleware
  */
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const category = url.searchParams.get('category');
-  const query = url.searchParams.get('query');
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+// ============================================================================
+// VALIDATION SCHEMAS
+// ============================================================================
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+const LabsQuerySchema = z.object({
+  query: z.object({
+    category: z.string().optional(),
+    query: z.string().max(200).optional(),
+  }).optional(),
+  body: z.object({}).optional(),
+  params: z.object({}).optional(),
+});
+
+// ============================================================================
+// HANDLERS
+// ============================================================================
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(LabsQuerySchema, async ({ env, auth, request }) => {
+  const log = createEndpointLogger('/api/reference/labs', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
+
   try {
+    const url = new URL(request.url);
+    const category = url.searchParams.get('category');
+    const query = url.searchParams.get('query');
+
+    log.info('Fetching lab tests', { 
+      category: category || 'all',
+      searchQuery: query || 'none',
+    });
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     let results;
-    
+
     if (query) {
       // Search mode
       results = await prisma.labTest.findMany({
         where: {
           OR: [
             { name: { contains: query, mode: 'insensitive' } },
-            { abbreviation: { contains: query, mode: 'insensitive' } }
-          ]
+            { abbreviation: { contains: query, mode: 'insensitive' } },
+          ],
         },
         orderBy: { name: 'asc' },
-        take: 20
+        take: 20,
       });
     } else {
       // List mode with optional category filter
       results = await prisma.labTest.findMany({
         where: category ? { category } : undefined,
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' },
       });
     }
-    
-    return new Response(JSON.stringify({ success: true, data: results }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+
+    log.info('Successfully fetched lab tests', { count: results.length });
+
+    return { data: { success: true, data: results } };
   } catch (error: any) {
-    console.error('Error fetching labs:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch labs', details: error.message }), { 
+    log.error('Error fetching labs', error);
+    return {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: 'Failed to fetch labs',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

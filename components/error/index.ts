@@ -1,6 +1,6 @@
 /**
  * Error Components Index
- * 
+ *
  * Centralized error handling components for the application.
  */
 

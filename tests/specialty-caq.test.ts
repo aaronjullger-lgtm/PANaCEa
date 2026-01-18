@@ -11,8 +11,8 @@ describe('Specialty CAQ Packs', () => {
   });
 
   it('should have orthopedics, dermatology, psychiatry, and ER packs', () => {
-    const ids = SPECIALTY_CAQ_PACKS.map(pack => pack.id);
-    
+    const ids = SPECIALTY_CAQ_PACKS.map((pack) => pack.id);
+
     expect(ids).toContain('orthopedics');
     expect(ids).toContain('dermatology');
     expect(ids).toContain('psychiatry');
@@ -20,7 +20,7 @@ describe('Specialty CAQ Packs', () => {
   });
 
   it('should have proper metadata for each pack', () => {
-    SPECIALTY_CAQ_PACKS.forEach(pack => {
+    SPECIALTY_CAQ_PACKS.forEach((pack) => {
       expect(pack.name).toBeDefined();
       expect(pack.description).toBeDefined();
       expect(pack.description.length).toBeGreaterThan(20);
@@ -29,7 +29,7 @@ describe('Specialty CAQ Packs', () => {
 
   it('should check if pack is unlocked correctly', () => {
     const userPurchases = ['orthopedics', 'dermatology'];
-    
+
     expect(isSpecialtyPackUnlocked('orthopedics', userPurchases)).toBe(true);
     expect(isSpecialtyPackUnlocked('psychiatry', userPurchases)).toBe(false);
   });
@@ -40,7 +40,7 @@ describe('Specialty CAQ Packs', () => {
 
   it('should get available specialty packs', () => {
     const available = getAvailableSpecialtyPacks();
-    
+
     // All packs should be available (release dates in past or future)
     expect(available.length).toBeGreaterThan(0);
     expect(available.length).toBeLessThanOrEqual(SPECIALTY_CAQ_PACKS.length);

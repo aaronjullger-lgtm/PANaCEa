@@ -32,7 +32,7 @@ function tokenize(text: string): string[] {
     .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(t => t.length > 0);
+    .filter((t) => t.length > 0);
 }
 
 /**
@@ -42,10 +42,10 @@ function tokenize(text: string): string[] {
 function calculateSimilarity(tokens1: string[], tokens2: string[]): number {
   const set1 = new Set(tokens1);
   const set2 = new Set(tokens2);
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
+
+  const intersection = new Set([...set1].filter((x) => set2.has(x)));
   const union = new Set([...set1, ...set2]);
-  
+
   if (union.size === 0) return 0;
   return intersection.size / union.size;
 }
@@ -56,36 +56,36 @@ function calculateSimilarity(tokens1: string[], tokens2: string[]): number {
  */
 function normalizeMedicalTerms(text: string): string {
   const normalizations: Record<string, string> = {
-    'pericarditis': 'pericarditis',
+    pericarditis: 'pericarditis',
     'acute pericarditis': 'pericarditis',
     'pericardial inflammation': 'pericarditis',
     'myocardial infarction': 'mi',
     'heart attack': 'mi',
-    'mi': 'mi',
-    'stemi': 'mi',
-    'nstemi': 'mi',
+    mi: 'mi',
+    stemi: 'mi',
+    nstemi: 'mi',
     'diabetes mellitus': 'diabetes',
-    'diabetes': 'diabetes',
+    diabetes: 'diabetes',
     'type 2 diabetes': 'diabetes',
-    't2dm': 'diabetes',
+    t2dm: 'diabetes',
     'congestive heart failure': 'chf',
     'heart failure': 'chf',
-    'chf': 'chf',
-    'copd': 'copd',
+    chf: 'chf',
+    copd: 'copd',
     'chronic obstructive pulmonary disease': 'copd',
-    'pneumonia': 'pneumonia',
+    pneumonia: 'pneumonia',
     'community acquired pneumonia': 'pneumonia',
-    'cap': 'pneumonia',
+    cap: 'pneumonia',
   };
-  
+
   let normalized = text.toLowerCase();
-  
+
   // Apply normalizations
   for (const [variant, canonical] of Object.entries(normalizations)) {
     const regex = new RegExp(`\\b${variant}\\b`, 'gi');
     normalized = normalized.replace(regex, canonical);
   }
-  
+
   return normalized;
 }
 
@@ -93,22 +93,20 @@ function normalizeMedicalTerms(text: string): string {
  * Find semantically similar cached questions
  * Returns matches above similarity threshold
  */
-export async function findSimilarCachedQuestion(
-  query: CacheQuery
-): Promise<CacheMatch | null> {
+export async function findSimilarCachedQuestion(query: CacheQuery): Promise<CacheMatch | null> {
   try {
     // For development without database
     if (!process.env.DATABASE_URL) {
       console.log('[SemanticCache] Database not configured, skipping cache lookup');
       return null;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Normalize and tokenize query
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
     const queryTokens = tokenize(normalizedQuery);
-    
+
     // Fetch recent cache entries of same type
     const cacheEntries = await prisma.semanticCache.findMany({
       where: {
@@ -121,17 +119,17 @@ export async function findSimilarCachedQuestion(
       },
       take: 50, // Check last 50 entries
     });
-    
+
     let bestMatch: CacheMatch | null = null;
     let highestSimilarity = 0;
-    
+
     // Calculate similarity for each cached entry
     for (const entry of cacheEntries) {
       const normalizedCache = normalizeMedicalTerms(entry.queryText);
       const cacheTokens = tokenize(normalizedCache);
-      
+
       const similarity = calculateSimilarity(queryTokens, cacheTokens);
-      
+
       if (similarity > highestSimilarity && similarity >= SIMILARITY_THRESHOLD) {
         highestSimilarity = similarity;
         bestMatch = {
@@ -141,7 +139,7 @@ export async function findSimilarCachedQuestion(
         };
       }
     }
-    
+
     if (bestMatch) {
       // Update usage stats
       await prisma.semanticCache.update({
@@ -151,12 +149,14 @@ export async function findSimilarCachedQuestion(
           useCount: { increment: 1 },
         },
       });
-      
-      console.log(`[SemanticCache] Cache HIT - similarity: ${(highestSimilarity * 100).toFixed(1)}%`);
+
+      console.log(
+        `[SemanticCache] Cache HIT - similarity: ${(highestSimilarity * 100).toFixed(1)}%`
+      );
     } else {
       console.log('[SemanticCache] Cache MISS');
     }
-    
+
     return bestMatch;
   } catch (error) {
     console.error('[SemanticCache] Error finding cached question:', error);
@@ -178,12 +178,12 @@ export async function cacheGeneratedQuestion(
       console.log('[SemanticCache] Database not configured, skipping cache storage');
       return;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Store normalized query for better future matches
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
-    
+
     await prisma.semanticCache.create({
       data: {
         queryText: normalizedQuery,
@@ -194,7 +194,7 @@ export async function cacheGeneratedQuestion(
         qualityScore: qualityScore || 0,
       },
     });
-    
+
     console.log('[SemanticCache] Question cached successfully');
   } catch (error) {
     console.error('[SemanticCache] Error caching question:', error);
@@ -220,9 +220,9 @@ export async function getCacheStats(): Promise<{
         topConditions: [],
       };
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const entries = await prisma.semanticCache.findMany({
       select: {
         system: true,
@@ -230,26 +230,28 @@ export async function getCacheStats(): Promise<{
         qualityScore: true,
       },
     });
-    
+
     const totalEntries = entries.length;
     const totalHits = entries.reduce((sum, e) => sum + e.useCount - 1, 0); // Subtract 1 for initial creation
-    const avgQualityScore = entries.length > 0
-      ? entries.reduce((sum, e) => sum + e.qualityScore, 0) / entries.length
-      : 0;
-    
+    const avgQualityScore =
+      entries.length > 0 ? entries.reduce((sum, e) => sum + e.qualityScore, 0) / entries.length : 0;
+
     // Count by system
-    const systemCounts = entries.reduce((acc, e) => {
-      if (e.system) {
-        acc[e.system] = (acc[e.system] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-    
+    const systemCounts = entries.reduce(
+      (acc, e) => {
+        if (e.system) {
+          acc[e.system] = (acc[e.system] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
     const topConditions = Object.entries(systemCounts)
       .map(([system, count]) => ({ system, count: count as number }))
       .sort((a, b) => (b.count as number) - (a.count as number))
       .slice(0, 10);
-    
+
     return {
       totalEntries,
       totalHits,
@@ -279,21 +281,18 @@ export async function pruneCache(
     if (!process.env.DATABASE_URL) {
       return 0;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAge);
-    
+
     const result = await prisma.semanticCache.deleteMany({
       where: {
-        OR: [
-          { lastUsedAt: { lt: cutoffDate } },
-          { qualityScore: { lt: minQualityScore } },
-        ],
+        OR: [{ lastUsedAt: { lt: cutoffDate } }, { qualityScore: { lt: minQualityScore } }],
       },
     });
-    
+
     console.log(`[SemanticCache] Pruned ${result.count} old cache entries`);
     return result.count;
   } catch (error) {

@@ -1,9 +1,9 @@
 /**
  * GFR Calculator (MDRD Equation)
- * 
+ *
  * Estimates glomerular filtration rate for chronic kidney disease staging.
  * Uses the MDRD (Modification of Diet in Renal Disease) equation.
- * 
+ *
  * CKD Stages:
  * - Stage 1: ≥90 (normal/high with kidney damage)
  * - Stage 2: 60-89 (mild reduction with kidney damage)
@@ -49,7 +49,8 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     if (gfr >= 90) {
       stage = 'Stage 1';
       interpretation = 'Normal or High (with kidney damage markers)';
-      recommendation = 'Normal kidney function. If proteinuria or structural abnormalities present, monitor annually.';
+      recommendation =
+        'Normal kidney function. If proteinuria or structural abnormalities present, monitor annually.';
       riskLevel = 'low';
     } else if (gfr >= 60) {
       stage = 'Stage 2';
@@ -59,22 +60,26 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     } else if (gfr >= 45) {
       stage = 'Stage 3a';
       interpretation = 'Mild to Moderate Reduction';
-      recommendation = 'Evaluate and treat complications. Monitor every 6-12 months. Nephrology referral if rapid decline.';
+      recommendation =
+        'Evaluate and treat complications. Monitor every 6-12 months. Nephrology referral if rapid decline.';
       riskLevel = 'moderate';
     } else if (gfr >= 30) {
       stage = 'Stage 3b';
       interpretation = 'Moderate to Severe Reduction';
-      recommendation = 'Nephrology referral recommended. Monitor every 3-6 months. Prepare for renal replacement therapy.';
+      recommendation =
+        'Nephrology referral recommended. Monitor every 3-6 months. Prepare for renal replacement therapy.';
       riskLevel = 'moderate';
     } else if (gfr >= 15) {
       stage = 'Stage 4';
       interpretation = 'Severe Reduction';
-      recommendation = 'Nephrology co-management required. Prepare for dialysis or transplant. Monitor monthly.';
+      recommendation =
+        'Nephrology co-management required. Prepare for dialysis or transplant. Monitor monthly.';
       riskLevel = 'high';
     } else {
       stage = 'Stage 5';
       interpretation = 'Kidney Failure';
-      recommendation = 'Renal replacement therapy (dialysis or transplant) required. Immediate nephrology referral.';
+      recommendation =
+        'Renal replacement therapy (dialysis or transplant) required. Immediate nephrology referral.';
       riskLevel = 'high';
     }
 
@@ -129,10 +134,12 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         <div className="space-y-2">
           <label className="text-sm font-semibold text-slate-200">Race</label>
           <div className="flex gap-4">
-            {([
-              { value: 'black', label: 'Black/African American' },
-              { value: 'other', label: 'Other' },
-            ] as const).map((r) => (
+            {(
+              [
+                { value: 'black', label: 'Black/African American' },
+                { value: 'other', label: 'Other' },
+              ] as const
+            ).map((r) => (
               <label key={r.value} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"

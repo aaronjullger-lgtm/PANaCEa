@@ -1,6 +1,6 @@
 /**
  * Comprehensive LabTest Enhancer
- * 
+ *
  * Fills ALL missing fields for incomplete LabTest records using Gemini 2.5 Flash.
  * Works on complete records one at a time - no partial filling.
  */
@@ -17,11 +17,11 @@ class TokenBucket {
   async acquire(): Promise<void> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequest;
-    
+
     if (timeSinceLastRequest < 2000) {
-      await new Promise(resolve => setTimeout(resolve, 2000 - timeSinceLastRequest));
+      await new Promise((resolve) => setTimeout(resolve, 2000 - timeSinceLastRequest));
     }
-    
+
     this.lastRequest = Date.now();
   }
 }
@@ -58,8 +58,8 @@ async function enhanceLabTest(labTest: any): Promise<LabTestEnhancement> {
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
 
   await rateLimiter.acquire();
@@ -128,12 +128,14 @@ Return JSON:
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   try {
     const parsed: LabTestEnhancement = JSON.parse(text);
     return parsed;
   } catch (e) {
-    throw new Error(`JSON parse error for ${labTest.name}: ${e}. Response: ${text.substring(0, 200)}`);
+    throw new Error(
+      `JSON parse error for ${labTest.name}: ${e}. Response: ${text.substring(0, 200)}`
+    );
   }
 }
 
@@ -142,13 +144,13 @@ async function main() {
   console.log('============================================================\n');
 
   const args = process.argv.slice(2);
-  const batchArg = args.find(arg => arg.startsWith('--batch='));
+  const batchArg = args.find((arg) => arg.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : 10;
 
   // Find incomplete LabTest records
   const incompleteLabTests = await prisma.labTest.findMany({
     where: { boardYieldFacts: { isEmpty: true } },
-    take: batchSize
+    take: batchSize,
   });
 
   console.log(`Found ${incompleteLabTests.length} incomplete LabTest records`);
@@ -160,7 +162,7 @@ async function main() {
   for (const labTest of incompleteLabTests) {
     try {
       console.log(`\n🔬 Processing: ${labTest.name}`);
-      
+
       const enhancement = await enhanceLabTest(labTest);
 
       await prisma.labTest.update({
@@ -182,7 +184,7 @@ async function main() {
           interferingFactors: enhancement.interferingFactors,
           increaseIndicates: enhancement.increaseIndicates,
           decreaseIndicates: enhancement.decreaseIndicates,
-        }
+        },
       });
 
       console.log(`✅ Enhanced with:`);
@@ -190,9 +192,8 @@ async function main() {
       console.log(`   Collection: ${enhancement.collectionTube}`);
       console.log(`   Board facts: ${enhancement.boardYieldFacts.length}`);
       console.log(`   Clinical pearls: ${enhancement.clinicalPearls.length}`);
-      
+
       successCount++;
-      
     } catch (error) {
       console.error(`❌ Error enhancing ${labTest.name}:`, error);
       errorCount++;
@@ -202,7 +203,9 @@ async function main() {
   console.log('\n============================================================');
   console.log(`✅ Successfully enhanced: ${successCount}`);
   console.log(`❌ Errors: ${errorCount}`);
-  console.log(`📊 Completion rate: ${((successCount / incompleteLabTests.length) * 100).toFixed(1)}%`);
+  console.log(
+    `📊 Completion rate: ${((successCount / incompleteLabTests.length) * 100).toFixed(1)}%`
+  );
   console.log(`\n💡 Remaining incomplete: ${116 - successCount}`);
 
   await prisma.$disconnect();

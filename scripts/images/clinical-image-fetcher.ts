@@ -1,8 +1,8 @@
 /**
  * Clinical Image Acquisition Script
- * 
+ *
  * Fetches pathognomonic clinical images for photo drill modes using ImageSorcery API.
- * 
+ *
  * Categories:
  * - ECG strips (pathognomonic rhythms)
  * - ECG 12-leads
@@ -11,12 +11,12 @@
  * - MRI images
  * - Dermatology lesions
  * - Physical exam findings (pathognomonic signs)
- * 
+ *
  * Usage:
  *   IMAGESORCERY_API_KEY=xxx npm run images:fetch
  *   IMAGESORCERY_API_KEY=xxx npm run images:fetch -- --category=ecg
  *   IMAGESORCERY_API_KEY=xxx npm run images:fetch -- --dry-run
- * 
+ *
  * @see https://imagesorcery.ai/docs (update with actual docs URL)
  */
 
@@ -99,7 +99,11 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
   {
     name: 'Ventricular Tachycardia',
     category: 'ecg',
-    searchTerms: ['ventricular tachycardia ECG', 'VT rhythm strip', 'wide complex tachycardia monomorphic'],
+    searchTerms: [
+      'ventricular tachycardia ECG',
+      'VT rhythm strip',
+      'wide complex tachycardia monomorphic',
+    ],
     correctDiagnosis: 'Ventricular Tachycardia',
     distractors: ['SVT with Aberrancy', 'Torsades de Pointes', 'Ventricular Fibrillation'],
     clinicalContext: 'Wide complex tachycardia with AV dissociation',
@@ -222,7 +226,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     searchTerms: ['RBBB ECG', 'right bundle branch block', 'MaRRoW pattern'],
     correctDiagnosis: 'Right Bundle Branch Block',
     distractors: ['Left Bundle Branch Block', 'WPW', 'RVH'],
-    clinicalContext: 'QRS >120ms, RSR\' in V1-V2, wide S in I/V6',
+    clinicalContext: "QRS >120ms, RSR' in V1-V2, wide S in I/V6",
   },
 
   // =========== CHEST X-RAYS ===========
@@ -317,11 +321,11 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     clinicalContext: 'Distal radius fracture with volar angulation - garden spade deformity',
   },
   {
-    name: 'Boxer\'s Fracture',
+    name: "Boxer's Fracture",
     category: 'xray',
     searchTerms: ['boxers fracture xray', '5th metacarpal fracture', 'metacarpal neck fracture'],
-    correctDiagnosis: 'Boxer\'s Fracture',
-    distractors: ['Bennett Fracture', 'Metacarpal Shaft Fracture', 'Gamekeeper\'s Thumb'],
+    correctDiagnosis: "Boxer's Fracture",
+    distractors: ['Bennett Fracture', 'Metacarpal Shaft Fracture', "Gamekeeper's Thumb"],
     clinicalContext: 'Fracture of 5th metacarpal neck with volar angulation',
   },
   {
@@ -345,14 +349,14 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     category: 'xray',
     searchTerms: ['Jefferson fracture xray', 'C1 burst fracture', 'atlas fracture'],
     correctDiagnosis: 'Jefferson Fracture',
-    distractors: ['Hangman\'s Fracture', 'Odontoid Fracture', 'Clay Shoveler\'s Fracture'],
+    distractors: ["Hangman's Fracture", 'Odontoid Fracture', "Clay Shoveler's Fracture"],
     clinicalContext: 'C1 burst fracture - lateral mass offset on open mouth view',
   },
   {
-    name: 'Hangman\'s Fracture',
+    name: "Hangman's Fracture",
     category: 'xray',
     searchTerms: ['hangmans fracture xray', 'C2 pars fracture', 'traumatic spondylolisthesis C2'],
-    correctDiagnosis: 'Hangman\'s Fracture',
+    correctDiagnosis: "Hangman's Fracture",
     distractors: ['Jefferson Fracture', 'Odontoid Fracture', 'C3 Fracture'],
     clinicalContext: 'Bilateral C2 pars interarticularis fractures',
   },
@@ -363,7 +367,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     category: 'ct',
     searchTerms: ['appendicitis CT', 'dilated appendix CT', 'periappendiceal fat stranding'],
     correctDiagnosis: 'Acute Appendicitis',
-    distractors: ['Mesenteric Adenitis', 'Ovarian Cyst', 'Crohn\'s Disease'],
+    distractors: ['Mesenteric Adenitis', 'Ovarian Cyst', "Crohn's Disease"],
     clinicalContext: 'Dilated appendix >6mm, periappendiceal fat stranding, appendicolith',
   },
   {
@@ -446,7 +450,8 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     searchTerms: ['multiple sclerosis MRI', 'periventricular lesions MS', 'Dawson fingers MRI'],
     correctDiagnosis: 'Multiple Sclerosis',
     distractors: ['Small Vessel Disease', 'ADEM', 'NMO'],
-    clinicalContext: 'Periventricular white matter lesions perpendicular to ventricles (Dawson fingers)',
+    clinicalContext:
+      'Periventricular white matter lesions perpendicular to ventricles (Dawson fingers)',
   },
   {
     name: 'ACL Tear',
@@ -576,7 +581,8 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     searchTerms: ['melanoma ABCDE', 'malignant melanoma', 'irregular pigmented lesion'],
     correctDiagnosis: 'Melanoma',
     distractors: ['Dysplastic Nevus', 'Seborrheic Keratosis', 'Lentigo'],
-    clinicalContext: 'Pigmented lesion with ABCDE features - asymmetry, border, color, diameter, evolution',
+    clinicalContext:
+      'Pigmented lesion with ABCDE features - asymmetry, border, color, diameter, evolution',
   },
   {
     name: 'Actinic Keratosis',
@@ -632,7 +638,8 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     searchTerms: ['kawasaki rash', 'strawberry tongue kawasaki', 'desquamating fingertips'],
     correctDiagnosis: 'Kawasaki Disease',
     distractors: ['Scarlet Fever', 'Measles', 'Drug Reaction'],
-    clinicalContext: 'Polymorphous rash, strawberry tongue, conjunctival injection, desquamating fingertips',
+    clinicalContext:
+      'Polymorphous rash, strawberry tongue, conjunctival injection, desquamating fingertips',
   },
   {
     name: 'Scarlet Fever',
@@ -648,7 +655,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     name: 'Kayser-Fleischer Rings',
     category: 'physical_exam',
     searchTerms: ['Kayser Fleischer rings', 'Wilson disease eyes', 'copper cornea'],
-    correctDiagnosis: 'Wilson\'s Disease',
+    correctDiagnosis: "Wilson's Disease",
     distractors: ['Arcus Senilis', 'Pterygium', 'Normal Variant'],
     clinicalContext: 'Golden-brown ring at corneal limbus from copper deposition',
   },
@@ -703,7 +710,11 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
   {
     name: 'Swan Neck Deformity',
     category: 'physical_exam',
-    searchTerms: ['swan neck deformity', 'rheumatoid arthritis hands', 'PIP hyperextension DIP flexion'],
+    searchTerms: [
+      'swan neck deformity',
+      'rheumatoid arthritis hands',
+      'PIP hyperextension DIP flexion',
+    ],
     correctDiagnosis: 'Rheumatoid Arthritis',
     distractors: ['Osteoarthritis', 'Psoriatic Arthritis', 'Trauma'],
     clinicalContext: 'PIP hyperextension with DIP flexion',
@@ -711,7 +722,11 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
   {
     name: 'Boutonniere Deformity',
     category: 'physical_exam',
-    searchTerms: ['boutonniere deformity', 'PIP flexion DIP hyperextension', 'central slip rupture'],
+    searchTerms: [
+      'boutonniere deformity',
+      'PIP flexion DIP hyperextension',
+      'central slip rupture',
+    ],
     correctDiagnosis: 'Boutonniere Deformity (Rheumatoid Arthritis or Trauma)',
     distractors: ['Swan Neck Deformity', 'Trigger Finger', 'Mallet Finger'],
     clinicalContext: 'PIP flexion with DIP hyperextension',
@@ -722,7 +737,8 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     searchTerms: ['digital clubbing', 'nail clubbing', 'Schamroth sign'],
     correctDiagnosis: 'Digital Clubbing',
     distractors: ['Normal Variant', 'Nail Dystrophy', 'Koilonychia'],
-    clinicalContext: 'Loss of nail bed angle, bulbous fingertips - pulmonary, cardiac, or GI disease',
+    clinicalContext:
+      'Loss of nail bed angle, bulbous fingertips - pulmonary, cardiac, or GI disease',
   },
   {
     name: 'Xanthelasma',
@@ -736,7 +752,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     name: 'Exophthalmos',
     category: 'physical_exam',
     searchTerms: ['exophthalmos', 'proptosis Graves', 'thyroid eye disease'],
-    correctDiagnosis: 'Graves\' Disease (Thyroid Eye Disease)',
+    correctDiagnosis: "Graves' Disease (Thyroid Eye Disease)",
     distractors: ['Orbital Tumor', 'Orbital Cellulitis', 'Normal Variant'],
     clinicalContext: 'Protrusion of eyeballs, lid retraction, lid lag',
   },
@@ -745,7 +761,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     category: 'physical_exam',
     searchTerms: ['lid lag hyperthyroidism', 'von Graefe sign', 'thyroid lid retraction'],
     correctDiagnosis: 'Hyperthyroidism',
-    distractors: ['Myasthenia Gravis', 'Normal Variant', 'Bell\'s Palsy'],
+    distractors: ['Myasthenia Gravis', 'Normal Variant', "Bell's Palsy"],
     clinicalContext: 'Upper lid lags behind globe on downward gaze',
   },
   {
@@ -759,7 +775,11 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
   {
     name: 'Spider Angioma',
     category: 'physical_exam',
-    searchTerms: ['spider angioma', 'spider nevus liver disease', 'telangiectasia central arteriole'],
+    searchTerms: [
+      'spider angioma',
+      'spider nevus liver disease',
+      'telangiectasia central arteriole',
+    ],
     correctDiagnosis: 'Spider Angioma (consider Liver Disease)',
     distractors: ['Cherry Angioma', 'Petechiae', 'Telangiectasia'],
     clinicalContext: 'Central arteriole with radiating vessels that blanch with pressure',
@@ -793,7 +813,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
     category: 'physical_exam',
     searchTerms: ['Chvostek sign', 'hypocalcemia facial twitch', 'facial nerve tap'],
     correctDiagnosis: 'Hypocalcemia',
-    distractors: ['Bell\'s Palsy', 'Normal Variant', 'Tetany'],
+    distractors: ["Bell's Palsy", 'Normal Variant', 'Tetany'],
     clinicalContext: 'Facial muscle contraction when tapping over facial nerve',
   },
   {
@@ -811,7 +831,7 @@ const VISUAL_CONDITIONS: VisualCondition[] = [
 // ============================================================================
 
 function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function generateId(): string {
@@ -820,13 +840,13 @@ function generateId(): string {
 
 function mapCategoryToDbType(category: ImageCategory): string {
   const mapping: Record<ImageCategory, string> = {
-    'ecg': 'ecg',
-    'ecg_12lead': 'ecg',
-    'xray': 'radiology',
-    'ct': 'radiology',
-    'mri': 'radiology',
-    'derm': 'derm',
-    'physical_exam': 'derm',
+    ecg: 'ecg',
+    ecg_12lead: 'ecg',
+    xray: 'radiology',
+    ct: 'radiology',
+    mri: 'radiology',
+    derm: 'derm',
+    physical_exam: 'derm',
   };
   return mapping[category] || 'other';
 }
@@ -839,10 +859,13 @@ function mapCategoryToDbType(category: ImageCategory): string {
  * Search ImageSorcery for clinical images
  * NOTE: Update this function with actual ImageSorcery API format
  */
-async function searchImageSorcery(query: string, options: {
-  limit?: number;
-  category?: string;
-} = {}): Promise<ImageSearchResult[]> {
+async function searchImageSorcery(
+  query: string,
+  options: {
+    limit?: number;
+    category?: string;
+  } = {}
+): Promise<ImageSearchResult[]> {
   if (!IMAGESORCERY_API_KEY) {
     throw new Error('IMAGESORCERY_API_KEY not set');
   }
@@ -859,7 +882,7 @@ async function searchImageSorcery(query: string, options: {
 
   const response = await fetch(`${IMAGESORCERY_BASE_URL}/search?${params}`, {
     headers: {
-      'Authorization': `Bearer ${IMAGESORCERY_API_KEY}`,
+      Authorization: `Bearer ${IMAGESORCERY_API_KEY}`,
       'Content-Type': 'application/json',
     },
   });
@@ -870,7 +893,7 @@ async function searchImageSorcery(query: string, options: {
   }
 
   const data: ImageSorceryResponse = await response.json();
-  
+
   if (!data.success) {
     throw new Error(`ImageSorcery error: ${data.error}`);
   }
@@ -882,8 +905,8 @@ async function searchImageSorcery(query: string, options: {
  * Download image and upload to Supabase Storage
  */
 async function downloadAndStoreImage(
-  imageUrl: string, 
-  filename: string, 
+  imageUrl: string,
+  filename: string,
   folder: string
 ): Promise<string | null> {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -908,7 +931,7 @@ async function downloadAndStoreImage(
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
           'Content-Type': contentType,
           'x-upsert': 'true',
         },
@@ -975,7 +998,7 @@ async function acquireImagesForCondition(
 
         // Download and store
         const storedUrl = await downloadAndStoreImage(result.url, filename, folder);
-        
+
         if (!storedUrl) {
           console.log(`   ❌ Failed to store: ${result.title}`);
           continue;
@@ -1018,7 +1041,6 @@ async function acquireImagesForCondition(
 
       // Don't search all terms if we got results from first one
       if (results.length >= 3) break;
-
     } catch (error) {
       console.error(`   ❌ Error searching "${searchTerm}":`, error);
     }
@@ -1039,8 +1061,8 @@ async function main() {
   // Parse CLI args
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const categoryArg = args.find(a => a.startsWith('--category='))?.split('=')[1];
-  const limitArg = args.find(a => a.startsWith('--limit='))?.split('=')[1];
+  const categoryArg = args.find((a) => a.startsWith('--category='))?.split('=')[1];
+  const limitArg = args.find((a) => a.startsWith('--limit='))?.split('=')[1];
   const limit = limitArg ? parseInt(limitArg, 10) : undefined;
 
   // Validate environment
@@ -1070,7 +1092,9 @@ async function main() {
   // Filter conditions if category specified
   let conditions = VISUAL_CONDITIONS;
   if (categoryArg) {
-    conditions = conditions.filter(c => c.category === categoryArg || c.category.startsWith(categoryArg));
+    conditions = conditions.filter(
+      (c) => c.category === categoryArg || c.category.startsWith(categoryArg)
+    );
     console.log(`\n  Filtered to ${conditions.length} conditions for category "${categoryArg}"`);
   }
 
@@ -1119,7 +1143,6 @@ async function main() {
       console.log('\n✅ Images stored in Supabase and MediaAsset records created.');
       console.log('   They are pending approval - use the Admin Media Dashboard to review.');
     }
-
   } finally {
     await prisma.$disconnect();
   }

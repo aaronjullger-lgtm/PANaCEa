@@ -1,6 +1,6 @@
 /**
  * Browser-Safe Condition Content Service
- * 
+ *
  * This service provides condition content fetching via API calls,
  * safe for use in browser environments (no Prisma/fs imports).
  */
@@ -76,29 +76,35 @@ function hasArrayContent(value: unknown): boolean {
 /**
  * Fetch condition content from the API (browser-safe)
  */
-export async function fetchConditionContent(conditionName: string): Promise<LoadedConditionContent> {
+export async function fetchConditionContent(
+  conditionName: string
+): Promise<LoadedConditionContent> {
   const cacheKey = conditionName.toLowerCase();
   const now = Date.now();
-  
+
   // Check cache first
   const cached = contentCache.get(cacheKey);
-  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+  if (cached && now - cached.timestamp < CACHE_DURATION) {
     return cached.data;
   }
-  
+
   try {
-    const response = await fetch(`/api/conditions/content?name=${encodeURIComponent(conditionName)}`);
-    
+    const response = await fetch(
+      `/api/conditions/content?name=${encodeURIComponent(conditionName)}`
+    );
+
     if (!response.ok) {
-      console.warn(`[ConditionContentService] Failed to fetch content for ${conditionName}: ${response.status}`);
+      console.warn(
+        `[ConditionContentService] Failed to fetch content for ${conditionName}: ${response.status}`
+      );
       return { found: false, message: `API error: ${response.status}` };
     }
-    
+
     const data: LoadedConditionContent = await response.json();
-    
+
     // Cache the result
     contentCache.set(cacheKey, { data, timestamp: now });
-    
+
     return data;
   } catch (error) {
     console.error(`[ConditionContentService] Error fetching ${conditionName}:`, error);
@@ -111,18 +117,20 @@ export async function fetchConditionContent(conditionName: string): Promise<Load
  */
 export function hasCompleteContent(content: LoadedConditionContent): boolean {
   if (!content.found || !content.content) return false;
-  
+
   const c = content.content;
-  
+
   // Check for key content fields (using safe array check)
   const hasOverview = Boolean(c.overview && c.overview.length > 50);
   const hasSymptoms = hasArrayContent(c.symptoms);
   const hasTreatment = hasArrayContent(c.treatment);
   const hasPearls = Boolean(c.clinicalPearls);
-  
+
   // Require at least 2 meaningful content areas
-  const meaningfulAreas = [hasOverview, hasSymptoms, hasTreatment, hasPearls].filter(Boolean).length;
-  
+  const meaningfulAreas = [hasOverview, hasSymptoms, hasTreatment, hasPearls].filter(
+    Boolean
+  ).length;
+
   return meaningfulAreas >= 2;
 }
 
@@ -131,73 +139,75 @@ export function hasCompleteContent(content: LoadedConditionContent): boolean {
  */
 export function buildDatabaseContext(content: LoadedConditionContent): string {
   if (!content.found || !content.content) return '';
-  
+
   const c = content.content;
   const parts: string[] = [];
-  
-  parts.push(`=== Database Content for ${content.condition || 'Unknown'} (${content.system || 'Unknown'}) ===`);
-  
+
+  parts.push(
+    `=== Database Content for ${content.condition || 'Unknown'} (${content.system || 'Unknown'}) ===`
+  );
+
   if (c.overview) {
     parts.push(`\nOverview: ${c.overview}`);
   }
-  
+
   if (c.pathophysiology) {
     parts.push(`\nPathophysiology: ${c.pathophysiology}`);
   }
-  
+
   // Use safeArrayJoin for all array-like fields to handle string/array/null inconsistency
   if (hasArrayContent(c.symptoms)) {
     parts.push(`\nKey Symptoms: ${safeArrayJoin(c.symptoms)}`);
   }
-  
+
   if (hasArrayContent(c.signs)) {
     parts.push(`\nClinical Signs: ${safeArrayJoin(c.signs)}`);
   }
-  
+
   if (hasArrayContent(c.examFindings)) {
     parts.push(`\nExam Findings: ${safeArrayJoin(c.examFindings)}`);
   }
-  
+
   if (hasArrayContent(c.classicTriad)) {
     parts.push(`\nClassic Triad: ${safeArrayJoin(c.classicTriad)}`);
   }
-  
+
   if (hasArrayContent(c.buzzwords)) {
     parts.push(`\nBuzzwords: ${safeArrayJoin(c.buzzwords)}`);
   }
-  
+
   if (hasArrayContent(c.riskFactors)) {
     parts.push(`\nRisk Factors: ${safeArrayJoin(c.riskFactors)}`);
   }
-  
+
   if (hasArrayContent(c.firstLineTests)) {
     parts.push(`\nFirst-Line Tests: ${safeArrayJoin(c.firstLineTests)}`);
   }
-  
+
   if (c.goldStandardTest) {
     parts.push(`\nGold Standard Test: ${c.goldStandardTest}`);
   }
-  
+
   if (hasArrayContent(c.treatment)) {
     parts.push(`\nTreatment: ${safeArrayJoin(c.treatment)}`);
   }
-  
+
   if (c.firstLineTreatment) {
     parts.push(`\nFirst-Line Treatment: ${c.firstLineTreatment}`);
   }
-  
+
   if (hasArrayContent(c.differentialDiagnosis)) {
     parts.push(`\nDifferential Diagnosis: ${safeArrayJoin(c.differentialDiagnosis)}`);
   }
-  
+
   if (hasArrayContent(c.complications)) {
     parts.push(`\nComplications: ${safeArrayJoin(c.complications)}`);
   }
-  
+
   if (c.prognosis) {
     parts.push(`\nPrognosis: ${c.prognosis}`);
   }
-  
+
   // Handle clinical pearls (could be array or object)
   if (c.clinicalPearls) {
     if (Array.isArray(c.clinicalPearls)) {
@@ -211,9 +221,9 @@ export function buildDatabaseContext(content: LoadedConditionContent): string {
       }
     }
   }
-  
+
   parts.push('\n=== End Database Content ===');
-  
+
   return parts.join('\n');
 }
 

@@ -20,7 +20,9 @@ Your repository is **already correctly configured** for Cloudflare Pages Functio
 ## How Cloudflare Pages Functions Work
 
 ### Automatic Detection
+
 Cloudflare Pages automatically:
+
 1. **Detects** any `/functions` folder at your project root
 2. **Compiles** TypeScript files natively (no need for .js conversion)
 3. **Creates** API endpoints based on file names:
@@ -28,6 +30,7 @@ Cloudflare Pages automatically:
 4. **Enables** environment variable configuration in the dashboard
 
 ### The Function Endpoint
+
 - **File**: `/functions/geminiProxy.ts`
 - **URL**: `https://studypanacea.com/geminiProxy`
 - **Method**: POST (via `onRequestPost` export)
@@ -38,11 +41,13 @@ Cloudflare Pages automatically:
 ### Step 1: Deploy to Cloudflare Pages
 
 Using Wrangler CLI:
+
 ```bash
 npx wrangler pages deploy .
 ```
 
 Or via GitHub integration:
+
 1. Push your code to GitHub
 2. Cloudflare will automatically deploy
 
@@ -57,14 +62,14 @@ To add your environment variables:
    - Click on **Settings** → **Environment variables**
 
 2. **Add Required Variables**
-   
+
    **GEMINI_API_KEY** (Required for AI features):
    - Click **"Add variable"**
    - **Name**: `GEMINI_API_KEY`
    - **Value**: Your Google Gemini API key
    - **Environment**: Select both "Production" and "Preview"
    - Click **"Save"**
-   
+
    **DATABASE_URL** (Required for database functions):
    - Click **"Add variable"**
    - **Name**: `DATABASE_URL`
@@ -72,7 +77,7 @@ To add your environment variables:
    - **Environment**: Select both "Production" and "Preview"
    - Click **"Save"**
    - **Note**: Must be compatible with `@neondatabase/serverless` driver
-   
+
    **CLERK_SECRET_KEY** (Required for authentication):
    - Click **"Add variable"**
    - **Name**: `CLERK_SECRET_KEY`
@@ -89,6 +94,7 @@ To add your environment variables:
 ### 1. Check Functions are Detected
 
 After deployment, check your Cloudflare Pages deployment logs for:
+
 ```
 ✅ Functions deployed successfully:
    - /geminiProxy (POST, OPTIONS)
@@ -97,6 +103,7 @@ After deployment, check your Cloudflare Pages deployment logs for:
 ### 2. Test the Endpoint
 
 Use curl to test the function:
+
 ```bash
 curl -X POST https://studypanacea.com/geminiProxy \
   -H "Content-Type: application/json" \
@@ -108,18 +115,21 @@ curl -X POST https://studypanacea.com/geminiProxy \
 ```
 
 Expected response:
+
 ```json
-{"text":"Hello! How can I help you today?"}
+{ "text": "Hello! How can I help you today?" }
 ```
 
 ### 3. Verify Environment Variables Work
 
 If you get an error about missing API key:
+
 ```json
-{"error": "Missing API Key on Server"}
+{ "error": "Missing API Key on Server" }
 ```
 
 This means:
+
 - ✅ The function is working correctly
 - ❌ The `GEMINI_API_KEY` environment variable is not set
 - **Action**: Go back to Step 2 above and add the environment variable
@@ -138,6 +148,7 @@ This means:
 **Cause**: Cloudflare hasn't detected the functions folder yet.
 
 **Solution**:
+
 1. Verify `/functions/geminiProxy.ts` is committed to git: `git ls-files functions/`
 2. Make sure the file is pushed to your repository
 3. Trigger a new deployment
@@ -148,6 +159,7 @@ This means:
 **Cause**: Function not deployed correctly.
 
 **Solution**:
+
 1. Check Cloudflare deployment logs
 2. Verify the build was successful
 3. Ensure `/functions/geminiProxy.ts` is in your repository
@@ -158,6 +170,7 @@ This means:
 **Cause**: Missing CORS headers.
 
 **Solution**: The function already includes CORS headers, but verify:
+
 - `onRequestOptions` handler is exported
 - All responses include `Access-Control-Allow-Origin: *`
 
@@ -168,6 +181,7 @@ This means:
 **Solution**: This has been fixed! All database functions now use `createEdgePrismaClient()` which provides edge-compatible Prisma access using driver adapters.
 
 **For new functions**:
+
 1. Import the helper: `import { createEdgePrismaClient } from './_shared/prisma-edge'`
 2. Create client: `const prisma = createEdgePrismaClient(env.DATABASE_URL)`
 3. Never use: `new PrismaClient()` directly in Cloudflare Functions
@@ -200,6 +214,7 @@ export async function onRequestOptions(): Promise<Response> {
 ### Routes Configuration
 
 Cloudflare Pages automatically creates routes for functions based on their filenames:
+
 - `functions/geminiProxy.ts` → Automatically available at `/geminiProxy`
 - No manual route configuration needed
 

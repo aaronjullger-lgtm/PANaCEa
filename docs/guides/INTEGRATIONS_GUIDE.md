@@ -121,12 +121,14 @@ Export your study plan and review tasks to Todoist for smart task management.
 ### Export Modes
 
 #### Study Plan Mode
+
 - Exam day task (P4 priority)
 - Weekly overview tasks (P3 priority)
 - Daily study sessions (P2 priority)
 - Daily practice questions (P2 priority, weekdays only)
 
 #### Missed Questions Mode
+
 - Review tasks grouped by topic
 - Spread across the week for manageable workload
 - P3 priority for timely completion
@@ -164,31 +166,37 @@ Create a visual Kanban board to track your study progress through each phase.
 ### Board Structure
 
 #### 🎯 Exam Overview
+
 - Exam date card with countdown
 - Study plan summary
 - Overall strategy
 
 #### 📚 To Do
+
 - Upcoming study weeks
 - Future topics to cover
 - Planned milestones
 
 #### ⚡ In Progress
+
 - Current week's focus
 - Active study sessions
 - Weekly goals checklist
 
 #### 🔴 Weak Areas
+
 - Topics requiring extra attention
 - Missed question patterns
 - Re-study priorities
 
 #### ✅ Completed
+
 - Finished topics
 - Archived study modules
 - Completed weeks
 
 #### 📖 Resources
+
 - Study materials links
 - Reference guides
 - Study technique reminders
@@ -243,18 +251,21 @@ Embed live widgets in your note-taking apps for at-a-glance progress tracking.
 ### Widget Types
 
 #### Streak Widget
+
 - Current streak in days
 - Longest streak achieved
 - Last study date
 - Visual fire emoji for motivation
 
 #### Question of Day
+
 - One missed question displayed daily
 - Topic and system tags
 - Multiple choice options
 - Encouragement to review in PANaCEa
 
 #### Stats Summary
+
 - Total questions answered
 - Overall accuracy percentage
 - Total correct answers
@@ -263,6 +274,7 @@ Embed live widgets in your note-taking apps for at-a-glance progress tracking.
 ### Server-Hosted Widgets
 
 Widgets are now served from PANaCEa servers (not data URIs) for:
+
 - ✅ Notion security compatibility
 - ✅ Real-time data updates
 - ✅ Better caching and performance
@@ -293,59 +305,70 @@ Replace `USER_ID` with your actual user ID and `yourserver.com` with your PANaCE
 ### Anki Import Issues
 
 **Problem**: Anki won't import the deck
+
 - **Solution**: Ensure you have Anki 2.1.49 or later
 - **Solution**: Try "Import" instead of "Import from backup"
 
 **Problem**: Questions appear empty
+
 - **Solution**: Re-download the APKG file and try again
 - **Solution**: Check that you have questions in the export filter
 
 ### Calendar Import Issues
 
 **Problem**: Calendar events don't show up
+
 - **Solution**: Check calendar date range (events may be in future)
 - **Solution**: Verify .ics file downloaded completely
 - **Solution**: Try importing to a new calendar first
 
 **Problem**: Times are wrong
+
 - **Solution**: Calendar uses UTC times - adjust to your timezone
 - **Solution**: Edit individual events after import
 
 ### Todoist Import Issues
 
 **Problem**: CSV import fails
+
 - **Solution**: Ensure file is saved as `.csv` not `.txt`
 - **Solution**: Use Todoist web version, not mobile app
 - **Solution**: Check file wasn't corrupted during download
 
 **Problem**: Tasks have wrong dates
+
 - **Solution**: Todoist interprets dates relative to import time
 - **Solution**: Manually adjust if needed after import
 
 ### Trello Import Issues
 
 **Problem**: Can't import JSON directly
+
 - **Solution**: Trello doesn't support direct JSON import
 - **Solution**: Use JSON as template to manually create board
 - **Solution**: Consider using Trello Power-Up for import
 
 **Problem**: Board structure looks wrong
+
 - **Solution**: Double-check you're using latest export version
 - **Solution**: Manually reorganize lists after creation
 
 ### Widget Display Issues
 
 **Problem**: Widget shows "Database not configured"
+
 - **Solution**: Ensure server is running with DATABASE_URL set
 - **Solution**: Verify you're using correct server URL
 - **Solution**: Check CORS settings if accessing from Notion
 
 **Problem**: Widget shows outdated data
+
 - **Solution**: Refresh the Notion page
 - **Solution**: Clear browser cache
 - **Solution**: Check server widget endpoint is accessible
 
 **Problem**: Widget doesn't display in Notion
+
 - **Solution**: Use server-hosted widget URLs, not data URIs
 - **Solution**: Verify URL is publicly accessible
 - **Solution**: Check Notion hasn't blocked the domain
@@ -353,11 +376,13 @@ Replace `USER_ID` with your actual user ID and `yourserver.com` with your PANaCE
 ### General Issues
 
 **Problem**: Features are grayed out
+
 - **Solution**: Complete some questions first to generate data
 - **Solution**: Set your exam date in settings
 - **Solution**: Check internet connection
 
 **Problem**: Export file is empty
+
 - **Solution**: Ensure you have data to export (questions, exam date, etc.)
 - **Solution**: Try a different export mode
 - **Solution**: Check browser console for errors
@@ -377,17 +402,20 @@ Replace `USER_ID` with your actual user ID and `yourserver.com` with your PANaCE
 ### Workflow Example
 
 **Week Start:**
+
 - Check Trello board for current week's topics
 - Move current week card to "In Progress"
 - Review Todoist tasks for the week
 
 **Daily:**
+
 - Check Notion widget for study streak
 - Complete PANaCEa study session
 - Mark off Todoist daily tasks
 - Update Trello weak areas if needed
 
 **Week End:**
+
 - Export new missed questions to Anki
 - Move completed week to "Completed" in Trello
 - Review progress in calendar
@@ -416,6 +444,7 @@ Replace `USER_ID` with your actual user ID and `yourserver.com` with your PANaCE
 ## Support
 
 For integration issues:
+
 1. Check [Troubleshooting](#troubleshooting) section above
 2. Review app documentation
 3. Contact PANaCEa support

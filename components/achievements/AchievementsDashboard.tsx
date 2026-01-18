@@ -9,11 +9,7 @@ import { Trophy, Award, Star, TrendingUp, Calendar } from 'lucide-react';
 import { AchievementMedal } from './AchievementMedal';
 import { StreakFlame } from './StreakFlame';
 import { UnlockAnimation } from './UnlockAnimation';
-import {
-  ACHIEVEMENTS,
-  sortAchievements,
-  type AchievementRarity,
-} from '../../config/achievements';
+import { ACHIEVEMENTS, sortAchievements, type AchievementRarity } from '../../config/achievements';
 
 interface UserAchievement {
   achievementId: string;
@@ -49,13 +45,16 @@ export function AchievementsDashboard({
   // Count by rarity
   const unlockedByRarity = userAchievements
     .filter((ua) => ua.isUnlocked)
-    .reduce((acc, ua) => {
-      const achievement = ACHIEVEMENTS.find((a) => a.id === ua.achievementId);
-      if (achievement) {
-        acc[achievement.rarity] = (acc[achievement.rarity] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+    .reduce(
+      (acc, ua) => {
+        const achievement = ACHIEVEMENTS.find((a) => a.id === ua.achievementId);
+        if (achievement) {
+          acc[achievement.rarity] = (acc[achievement.rarity] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
   // Filter achievements
   const filteredAchievements = sortAchievements(ACHIEVEMENTS).filter((achievement) => {
@@ -95,7 +94,12 @@ export function AchievementsDashboard({
                   className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
@@ -144,9 +148,7 @@ export function AchievementsDashboard({
                     (unlockedByRarity.epic || 0) +
                     (unlockedByRarity.legendary || 0)}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                  Rare or better
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">Rare or better</div>
               </div>
 
               {/* Recent */}
@@ -156,17 +158,16 @@ export function AchievementsDashboard({
                   <div className="text-xs text-[var(--color-text-muted)]">Recent</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
-                  {userAchievements
-                    .filter((a) => {
+                  {
+                    userAchievements.filter((a) => {
                       if (!a.unlockedAt) return false;
-                      const daysSince = (Date.now() - a.unlockedAt.getTime()) / (1000 * 60 * 60 * 24);
+                      const daysSince =
+                        (Date.now() - a.unlockedAt.getTime()) / (1000 * 60 * 60 * 24);
                       return daysSince <= 7;
-                    })
-                    .length}
+                    }).length
+                  }
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                  This week
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">This week</div>
               </div>
             </div>
           </div>
@@ -195,19 +196,21 @@ export function AchievementsDashboard({
 
               {/* Rarity Filter */}
               <div className="flex gap-2 flex-wrap">
-                {(['all', 'common', 'uncommon', 'rare', 'epic', 'legendary'] as const).map((rarity) => (
-                  <button
-                    key={rarity}
-                    onClick={() => setFilterRarity(rarity)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      filterRarity === rarity
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                  </button>
-                ))}
+                {(['all', 'common', 'uncommon', 'rare', 'epic', 'legendary'] as const).map(
+                  (rarity) => (
+                    <button
+                      key={rarity}
+                      onClick={() => setFilterRarity(rarity)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        filterRarity === rarity
+                          ? 'bg-[var(--color-accent)] text-white'
+                          : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                      }`}
+                    >
+                      {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                    </button>
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -236,9 +239,7 @@ export function AchievementsDashboard({
             {filteredAchievements.length === 0 && (
               <div className="text-center py-12">
                 <Trophy className="w-16 h-16 text-[var(--color-text-muted)] mx-auto mb-4 opacity-50" />
-                <p className="text-[var(--color-text-muted)]">
-                  No achievements match your filters
-                </p>
+                <p className="text-[var(--color-text-muted)]">No achievements match your filters</p>
               </div>
             )}
           </div>

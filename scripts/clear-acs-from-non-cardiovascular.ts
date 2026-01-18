@@ -12,46 +12,48 @@ async function clearACSFromNonCardiovascular() {
       where: {
         AND: [
           { system: { not: 'Cardiovascular System' } },
-          { subcategory: 'Acute Coronary Syndrome' }
-        ]
+          { subcategory: 'Acute Coronary Syndrome' },
+        ],
       },
-      select: { id: true, name: true, system: true }
+      select: { id: true, name: true, system: true },
     });
-    
+
     console.log(`Found ${toFix.length} non-cardiovascular conditions with ACS subcategory`);
-    console.log('Sample:', toFix.slice(0, 5).map(c => `${c.name} (${c.system})`));
-    
+    console.log(
+      'Sample:',
+      toFix.slice(0, 5).map((c) => `${c.name} (${c.system})`)
+    );
+
     if (toFix.length > 0) {
       // Clear subcategory and parent_category
       await prisma.condition.updateMany({
         where: {
           AND: [
             { system: { not: 'Cardiovascular System' } },
-            { subcategory: 'Acute Coronary Syndrome' }
-          ]
+            { subcategory: 'Acute Coronary Syndrome' },
+          ],
         },
         data: {
           subcategory: null,
-          parent_category: null
-        }
+          parent_category: null,
+        },
       });
-      
+
       await prisma.medicalContent.updateMany({
         where: {
           AND: [
             { system: { not: 'Cardiovascular System' } },
-            { subcategory: 'Acute Coronary Syndrome' }
-          ]
+            { subcategory: 'Acute Coronary Syndrome' },
+          ],
         },
         data: {
           subcategory: null,
-          parent_category: null
-        }
+          parent_category: null,
+        },
       });
-      
+
       console.log(`✅ Cleared ACS subcategory from ${toFix.length} non-cardiovascular conditions`);
     }
-    
   } finally {
     await disconnectPrisma();
   }

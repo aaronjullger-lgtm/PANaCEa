@@ -9,10 +9,10 @@ interface KeyValueRendererProps {
 
 /**
  * KeyValueRenderer - Renders an object as key-value pairs
- * 
+ *
  * Useful for structured data like diagnostic criteria, treatment protocols,
  * or any nested object that needs to be displayed in a readable format.
- * 
+ *
  * @param data - Object with key-value pairs to render
  * @param className - Additional CSS classes for container
  * @param keyClassName - Additional CSS classes for keys
@@ -28,8 +28,8 @@ export const KeyValueRenderer: React.FC<KeyValueRendererProps> = ({
     return null;
   }
 
-  const entries = Object.entries(data).filter(([_, value]) => 
-    value !== null && value !== undefined && value !== ''
+  const entries = Object.entries(data).filter(
+    ([_, value]) => value !== null && value !== undefined && value !== ''
   );
 
   if (entries.length === 0) {
@@ -41,18 +41,22 @@ export const KeyValueRenderer: React.FC<KeyValueRendererProps> = ({
       {entries.map(([key, value]) => (
         <div key={key} className="flex flex-col sm:flex-row sm:gap-4">
           {/* Key */}
-          <dt className={`
+          <dt
+            className={`
             font-semibold text-[var(--color-accent)] capitalize min-w-[140px]
             ${keyClassName}
-          `}>
+          `}
+          >
             {formatKey(key)}:
           </dt>
-          
+
           {/* Value */}
-          <dd className={`
+          <dd
+            className={`
             text-[var(--color-text-primary)] flex-1
             ${valueClassName}
-          `}>
+          `}
+          >
             {renderValue(value)}
           </dd>
         </div>
@@ -68,7 +72,7 @@ function formatKey(key: string): string {
   return key
     .replace(/_/g, ' ')
     .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase())
+    .replace(/^./, (str) => str.toUpperCase())
     .trim();
 }
 
@@ -102,9 +106,7 @@ function renderValue(value: unknown): React.ReactNode {
             <span className="font-medium text-[var(--color-text-muted)]">
               {formatKey(nestedKey)}:
             </span>{' '}
-            <span className="text-[var(--color-text-primary)]">
-              {String(nestedValue)}
-            </span>
+            <span className="text-[var(--color-text-primary)]">{String(nestedValue)}</span>
           </div>
         ))}
       </div>

@@ -20,25 +20,26 @@ The codebase contains the **official 2025 NCCPA PANCE Blueprint** weights:
 
 ```typescript
 export const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
-  'Cardiovascular': 0.11,       // 11% (Tier 1)
-  'Pulmonary': 0.09,            // 9%  (Tier 2)
-  'Gastrointestinal': 0.08,     // 8%  (Tier 2)
-  'Musculoskeletal': 0.08,      // 8%  (Tier 2)
-  'Infectious Disease': 0.07,   // 7%  (Tier 3)
-  'Neurological': 0.07,         // 7%  (Tier 3)
-  'Psychiatry': 0.07,           // 7%  (Tier 3)
-  'Reproductive': 0.07,         // 7%  (Tier 3)
-  'Endocrine': 0.06,            // 6%
-  'HEENT': 0.06,                // 6%
+  Cardiovascular: 0.11, // 11% (Tier 1)
+  Pulmonary: 0.09, // 9%  (Tier 2)
+  Gastrointestinal: 0.08, // 8%  (Tier 2)
+  Musculoskeletal: 0.08, // 8%  (Tier 2)
+  'Infectious Disease': 0.07, // 7%  (Tier 3)
+  Neurological: 0.07, // 7%  (Tier 3)
+  Psychiatry: 0.07, // 7%  (Tier 3)
+  Reproductive: 0.07, // 7%  (Tier 3)
+  Endocrine: 0.06, // 6%
+  HEENT: 0.06, // 6%
   'Professional Practice': 0.06, // 6%
-  'Hematology': 0.05,           // 5%
-  'Renal': 0.05,                // 5%
-  'Dermatology': 0.04,          // 4%
-  'Genitourinary': 0.04,        // 4%
+  Hematology: 0.05, // 5%
+  Renal: 0.05, // 5%
+  Dermatology: 0.04, // 4%
+  Genitourinary: 0.04, // 4%
 };
 ```
 
 **Additional Features:**
+
 - System aliases for flexible matching (`MSK` → `Musculoskeletal`)
 - `MIN_SYSTEMS_PER_BLOCK = 3` for interleaving validation
 - Blueprint adherence scoring (cosine similarity)
@@ -78,6 +79,7 @@ colors: {
 ```
 
 **Additional Palettes:**
+
 - Muted semantic colors: `sage`, `slate-teal`, `dusty-rose`, `steel-blue`, `muted-amber`, `deep-plum`
 - Clinical palette: `clinical-navy`, `clinical-white`, `clinical-blue`, `clinical-slate`
 
@@ -108,6 +110,7 @@ return (
 ```
 
 **Features:**
+
 - `ExamReadinessSkeleton` for zero layout shift (CLS = 0.0)
 - `CalibrationProtocolUI` component for users with N < 60 questions
 - Progressive confidence states: Collecting → Provisional → Confident
@@ -126,21 +129,23 @@ Full behavioral tracking is operational:
 
 ```typescript
 export interface QuestionImplicitMetrics {
-  timeToFirstClick: number | null;   // Response latency (ms)
-  answerSwitches: number;            // Hesitation behavior
-  totalDwellTime: number;            // Total time on question (ms)
-  timezone: string;                  // Circadian context
-  questionStartTime: string;         // ISO timestamp
-  submitTime: string | null;         // ISO timestamp
+  timeToFirstClick: number | null; // Response latency (ms)
+  answerSwitches: number; // Hesitation behavior
+  totalDwellTime: number; // Total time on question (ms)
+  timezone: string; // Circadian context
+  questionStartTime: string; // ISO timestamp
+  submitTime: string | null; // ISO timestamp
 }
 ```
 
 **API Integration:**
+
 - Automatically POSTs to `/api/user/behavior-metrics` on answer submission
 - Payload includes: `questionId`, `timeToFirstClick`, `dwellTime`, `answerChanges`, `wasCorrect`
 - Async submission (non-blocking UI)
 
 **Additional Telemetry:**
+
 - `hooks/useTelemetry.ts` - Content engagement (scroll depth, quartile dwell, skimming detection)
 - `calculateS0Adjustment()` - FSRS initial stability modifier based on engagement
 
@@ -161,6 +166,7 @@ export interface QuestionImplicitMetrics {
 | Pink | Derm drills, rapport meter | ✅ Mode-specific |
 
 **Candidates for Refactoring:**
+
 1. `components/MenuView.tsx` - Generic yellow CTA button
 2. `components/modes/CramMode.tsx` - Orange brand buttons
 3. `components/modes/AntibioticMode.tsx` - Heavy purple usage
@@ -172,9 +178,11 @@ export interface QuestionImplicitMetrics {
 ## Recommendations
 
 ### Immediate (No Action Required)
+
 All Phase 2.2 core features are deployed and functional.
 
 ### Future Enhancements
+
 1. **Create Mode Theme Provider** - Wrap mode components with theme context
 2. **Button Variant System** - Extend `SemanticButton` with mode-aware variants
 3. **Color Token Migration** - Gradually replace hardcoded colors with Tailwind tokens

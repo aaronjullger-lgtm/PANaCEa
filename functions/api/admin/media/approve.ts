@@ -1,16 +1,20 @@
 /**
  * Media Approval API Endpoint
- * 
+ *
  * Handles approval/rejection of media assets by admins.
- * 
+ *
  * POST /api/admin/media/approve
  * - mediaId: ID of the media asset
  * - action: 'approve' | 'reject'
  * - reason: optional rejection reason
  */
 
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
-import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../_shared/auth';
 import { validateRequest, AdminMediaApproveSchema } from '../../_shared/schemas';
 import { z } from 'zod';
 
@@ -52,7 +56,11 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     if (!validation.success) {
       return (validation as { success: false; response: Response }).response;
     }
-    const { mediaId, action, rejectionReason: reason } = (validation as { success: true; data: any }).data;
+    const {
+      mediaId,
+      action,
+      rejectionReason: reason,
+    } = (validation as { success: true; data: any }).data;
 
     // Get the media asset
     const media = await prisma.mediaAsset.findUnique({
@@ -96,12 +104,9 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     });
   } catch (error) {
     console.error('Media approval error:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Approval failed',
-      500
-    );
+    return createErrorResponse(error instanceof Error ? error.message : 'Approval failed', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
 
@@ -165,6 +170,6 @@ export const onRequestPut = async (context: { request: Request; env: Env }) => {
       500
     );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };

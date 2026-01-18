@@ -1,16 +1,16 @@
 // scripts/generateClinicalContent.ts
 // Generates clinical cases for Mini Mode training using Gemini API
 
-import fs from "fs";
-import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ClinicalCase } from "../src/types/content";
+import fs from 'fs';
+import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { ClinicalCase } from '../src/types/content';
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.0-flash-exp";
-const OUTPUT_FILE = path.resolve("src/data/clinicalCases.json");
+const MODEL_NAME = 'gemini-2.0-flash-exp';
+const OUTPUT_FILE = path.resolve('src/data/clinicalCases.json');
 const TARGET_CASES = 250;
 const BATCH_SIZE = 25; // Generate in batches to handle rate limits
 const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
@@ -18,12 +18,12 @@ const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 // ======================================================
 // API KEY
 // ======================================================
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
-  console.error("   Please set your API key before running this script:");
-  console.error("   export GEMINI_API_KEY=your_key_here");
+  console.error('[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required');
+  console.error('   Please set your API key before running this script:');
+  console.error('   export GEMINI_API_KEY=your_key_here');
   process.exit(1);
 }
 
@@ -36,72 +36,72 @@ console.log(`✅ Using Gemini model: ${MODEL_NAME}`);
 // HIGH-YIELD CONDITIONS TO PRIORITIZE
 // ======================================================
 const HIGH_YIELD_NEURO_CONDITIONS = [
-  "Stroke (Ischemic)",
-  "Hemorrhagic Stroke",
-  "Subarachnoid Hemorrhage",
-  "Subdural Hematoma",
-  "Epidural Hematoma",
-  "Meningitis",
-  "Encephalitis",
-  "Guillain-Barré Syndrome",
-  "Myasthenia Gravis",
-  "Multiple Sclerosis",
+  'Stroke (Ischemic)',
+  'Hemorrhagic Stroke',
+  'Subarachnoid Hemorrhage',
+  'Subdural Hematoma',
+  'Epidural Hematoma',
+  'Meningitis',
+  'Encephalitis',
+  'Guillain-Barré Syndrome',
+  'Myasthenia Gravis',
+  'Multiple Sclerosis',
   "Parkinson's Disease",
   "Alzheimer's Disease",
-  "Seizure Disorder",
-  "Status Epilepticus",
-  "Migraine with Aura",
-  "Cluster Headache",
-  "Temporal Arteritis",
+  'Seizure Disorder',
+  'Status Epilepticus',
+  'Migraine with Aura',
+  'Cluster Headache',
+  'Temporal Arteritis',
   "Bell's Palsy",
-  "Trigeminal Neuralgia",
-  "Peripheral Neuropathy",
+  'Trigeminal Neuralgia',
+  'Peripheral Neuropathy',
 ];
 
 const HIGH_YIELD_MSK_CONDITIONS = [
-  "Septic Arthritis",
-  "Osteomyelitis",
-  "Compartment Syndrome",
-  "Rheumatoid Arthritis",
-  "Osteoarthritis",
-  "Gout",
-  "Pseudogout",
-  "Ankylosing Spondylitis",
-  "Lumbar Disc Herniation",
-  "Spinal Stenosis",
-  "Cauda Equina Syndrome",
-  "Rotator Cuff Tear",
-  "Carpal Tunnel Syndrome",
-  "Anterior Cruciate Ligament (ACL) Tear",
-  "Meniscal Tear",
-  "Hip Fracture",
-  "Pelvic Fracture",
-  "Femoral Neck Fracture",
-  "Compression Fracture",
-  "Pathologic Fracture",
+  'Septic Arthritis',
+  'Osteomyelitis',
+  'Compartment Syndrome',
+  'Rheumatoid Arthritis',
+  'Osteoarthritis',
+  'Gout',
+  'Pseudogout',
+  'Ankylosing Spondylitis',
+  'Lumbar Disc Herniation',
+  'Spinal Stenosis',
+  'Cauda Equina Syndrome',
+  'Rotator Cuff Tear',
+  'Carpal Tunnel Syndrome',
+  'Anterior Cruciate Ligament (ACL) Tear',
+  'Meniscal Tear',
+  'Hip Fracture',
+  'Pelvic Fracture',
+  'Femoral Neck Fracture',
+  'Compression Fracture',
+  'Pathologic Fracture',
 ];
 
 const HIGH_YIELD_CARDIAC_CONDITIONS = [
-  "Acute Coronary Syndrome",
-  "STEMI",
-  "NSTEMI",
-  "Unstable Angina",
-  "Aortic Dissection",
-  "Cardiac Tamponade",
-  "Acute Pericarditis",
-  "Endocarditis",
-  "Myocarditis",
-  "Hypertrophic Cardiomyopathy",
-  "Dilated Cardiomyopathy",
-  "Restrictive Cardiomyopathy",
-  "Acute Heart Failure",
-  "Atrial Fibrillation",
-  "Ventricular Tachycardia",
-  "Atrial Flutter",
-  "Bradycardia",
-  "Heart Block (Complete)",
-  "Pulmonary Embolism",
-  "Deep Vein Thrombosis",
+  'Acute Coronary Syndrome',
+  'STEMI',
+  'NSTEMI',
+  'Unstable Angina',
+  'Aortic Dissection',
+  'Cardiac Tamponade',
+  'Acute Pericarditis',
+  'Endocarditis',
+  'Myocarditis',
+  'Hypertrophic Cardiomyopathy',
+  'Dilated Cardiomyopathy',
+  'Restrictive Cardiomyopathy',
+  'Acute Heart Failure',
+  'Atrial Fibrillation',
+  'Ventricular Tachycardia',
+  'Atrial Flutter',
+  'Bradycardia',
+  'Heart Block (Complete)',
+  'Pulmonary Embolism',
+  'Deep Vein Thrombosis',
 ];
 
 const ALL_CONDITIONS = [
@@ -113,10 +113,13 @@ const ALL_CONDITIONS = [
 // ======================================================
 // GENERATE CLINICAL CASES
 // ======================================================
-async function generateClinicalCaseBatch(batchNumber: number, casesInBatch: number): Promise<ClinicalCase[]> {
+async function generateClinicalCaseBatch(
+  batchNumber: number,
+  casesInBatch: number
+): Promise<ClinicalCase[]> {
   const startId = batchNumber * casesInBatch + 1;
   const endId = (batchNumber + 1) * casesInBatch;
-  
+
   const prompt = `You are a medical education expert generating clinical presentation cases for PANCE preparation.
 
 Generate exactly ${casesInBatch} unique, complex clinical cases in JSON format. Each case must:
@@ -163,37 +166,47 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
   }
 ]
 
-Generate ${casesInBatch} diverse cases covering different high-yield conditions from: ${ALL_CONDITIONS.slice(0, 15).join(", ")}, and similar conditions.
+Generate ${casesInBatch} diverse cases covering different high-yield conditions from: ${ALL_CONDITIONS.slice(0, 15).join(', ')}, and similar conditions.
 Start IDs at clinical_case_${startId} and end at clinical_case_${endId}.
 Ensure each case has clinically accurate and distinctive presentation clues that would help a PA student recognize the pattern.`;
 
   try {
-    console.log(`   Generating batch ${batchNumber + 1} (cases ${batchNumber * casesInBatch + 1}-${(batchNumber + 1) * casesInBatch})...`);
-    
+    console.log(
+      `   Generating batch ${batchNumber + 1} (cases ${batchNumber * casesInBatch + 1}-${(batchNumber + 1) * casesInBatch})...`
+    );
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    
+
     // Clean up response - remove markdown code blocks if present
     const cleanedText = text
       .replace(/```json\s*/g, '')
       .replace(/```\s*/g, '')
       .trim();
-    
+
     let parsed: ClinicalCase[];
     try {
       parsed = JSON.parse(cleanedText);
-      
+
       if (!Array.isArray(parsed)) {
-        throw new Error("Response is not an array");
+        throw new Error('Response is not an array');
       }
-      
+
       // Validate structure of each case
       for (const clinicalCase of parsed) {
-        if (!clinicalCase.id || !clinicalCase.correctDiagnosis || !clinicalCase.vignette || !clinicalCase.presentationClues) {
+        if (
+          !clinicalCase.id ||
+          !clinicalCase.correctDiagnosis ||
+          !clinicalCase.vignette ||
+          !clinicalCase.presentationClues
+        ) {
           throw new Error(`Invalid case structure: missing required fields`);
         }
-        if (!Array.isArray(clinicalCase.presentationClues) || clinicalCase.presentationClues.length < 3) {
+        if (
+          !Array.isArray(clinicalCase.presentationClues) ||
+          clinicalCase.presentationClues.length < 3
+        ) {
           throw new Error(`Invalid case structure: must have at least 3 presentation clues`);
         }
         // Validate each clue
@@ -206,16 +219,14 @@ Ensure each case has clinically accurate and distinctive presentation clues that
           }
         }
       }
-      
+
       console.log(`   [OK] Successfully generated ${parsed.length} cases`);
       return parsed;
-      
     } catch (parseError) {
       console.error(`   ✗ Failed to parse batch ${batchNumber + 1}`);
-      console.error("   Response snippet:", cleanedText.substring(0, 500));
+      console.error('   Response snippet:', cleanedText.substring(0, 500));
       throw new Error(`JSON parse error in batch ${batchNumber + 1}: ${parseError}`);
     }
-    
   } catch (error) {
     console.error(`   ✗ Error generating batch ${batchNumber + 1}:`, error);
     throw error;
@@ -226,60 +237,55 @@ Ensure each case has clinically accurate and distinctive presentation clues that
 // MAIN EXECUTION
 // ======================================================
 async function main() {
-  console.log("\n" + "=".repeat(60));
-  console.log("CLINICAL CASES CONTENT GENERATOR");
-  console.log("=".repeat(60));
+  console.log('\n' + '='.repeat(60));
+  console.log('CLINICAL CASES CONTENT GENERATOR');
+  console.log('='.repeat(60));
   console.log(`Target: ${TARGET_CASES} unique clinical cases`);
   console.log(`Output: ${OUTPUT_FILE}`);
   console.log(`Batch size: ${BATCH_SIZE} cases per batch`);
-  console.log("=".repeat(60) + "\n");
-  
+  console.log('='.repeat(60) + '\n');
+
   const allCases: ClinicalCase[] = [];
   const numberOfBatches = Math.ceil(TARGET_CASES / BATCH_SIZE);
-  
+
   try {
     for (let batchNum = 0; batchNum < numberOfBatches; batchNum++) {
       const casesInThisBatch = Math.min(BATCH_SIZE, TARGET_CASES - allCases.length);
-      
+
       const batchCases = await generateClinicalCaseBatch(batchNum, casesInThisBatch);
       allCases.push(...batchCases);
-      
+
       console.log(`   Progress: ${allCases.length}/${TARGET_CASES} cases generated\n`);
-      
+
       // Delay between batches to respect rate limits
       if (batchNum < numberOfBatches - 1) {
         console.log(`   Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...\n`);
-        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
       }
     }
-    
+
     // Ensure output directory exists
     const outputDir = path.dirname(OUTPUT_FILE);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
-    
+
     // Write to file
-    fs.writeFileSync(
-      OUTPUT_FILE,
-      JSON.stringify(allCases, null, 2),
-      "utf-8"
-    );
-    
-    console.log("\n" + "=".repeat(60));
-    console.log("✅ SUCCESS!");
-    console.log("=".repeat(60));
+    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allCases, null, 2), 'utf-8');
+
+    console.log('\n' + '='.repeat(60));
+    console.log('✅ SUCCESS!');
+    console.log('='.repeat(60));
     console.log(`Generated: ${allCases.length} clinical cases`);
     console.log(`Saved to: ${OUTPUT_FILE}`);
     console.log(`File size: ${(fs.statSync(OUTPUT_FILE).size / 1024).toFixed(2)} KB`);
-    console.log("=".repeat(60) + "\n");
-    
+    console.log('='.repeat(60) + '\n');
   } catch (error) {
-    console.error("\n" + "=".repeat(60));
-    console.error("[ERROR] GENERATION FAILED");
-    console.error("=".repeat(60));
+    console.error('\n' + '='.repeat(60));
+    console.error('[ERROR] GENERATION FAILED');
+    console.error('='.repeat(60));
     console.error(error);
-    console.error("=".repeat(60) + "\n");
+    console.error('='.repeat(60) + '\n');
     process.exit(1);
   }
 }

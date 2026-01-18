@@ -39,7 +39,7 @@ function createTransporter() {
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: process.env.SMTP_FROM || 'PANaCEa <noreply@panacea.app>',
       to: options.to,
@@ -77,7 +77,7 @@ function stripHtml(html: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&')  // Decode &amp; last
+    .replace(/&amp;/g, '&') // Decode &amp; last
     .trim();
 }
 
@@ -91,7 +91,7 @@ export async function sendPasswordResetEmail(
 ): Promise<boolean> {
   const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
   const resetUrl = `${appUrl}/reset-password/${resetToken}`;
-  
+
   const subject = 'PANaCEa - Password Reset Request';
   const html = `
     <!DOCTYPE html>
@@ -171,7 +171,7 @@ export async function sendVerificationEmail(
 ): Promise<boolean> {
   const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
   const verifyUrl = `${appUrl}/verify/${verifyToken}`;
-  
+
   const subject = 'PANaCEa - Verify Your Email Address';
   const html = `
     <!DOCTYPE html>

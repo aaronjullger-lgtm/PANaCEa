@@ -15,28 +15,30 @@ This plan focuses specifically on improving statistics collection across the PAN
 ## Current Statistics Infrastructure
 
 ### ✅ What's Working
-| Component | Location | Status |
-|-----------|----------|--------|
-| User Streak Tracking | `userStatistics.ts` | ✅ Hourly job |
-| FSRS Due Card Calculation | `userStatistics.ts` | ✅ Hourly job |
-| DAU/Retention Metrics | `userStatistics.ts` | ✅ Daily job |
-| Weekly Progress Reports | `userStatistics.ts` | ✅ Weekly job |
-| Session Analytics | `StudySession` model | ✅ Recording |
-| Question Attempts | `QuestionAttempt` model | ✅ Recording |
-| Cognitive State | `advancedUserAnalyticsEngine.ts` | ✅ In-memory |
-| Circadian Analytics | `circadianAnalyticsService.ts` | ✅ Client-side |
+
+| Component                 | Location                         | Status         |
+| ------------------------- | -------------------------------- | -------------- |
+| User Streak Tracking      | `userStatistics.ts`              | ✅ Hourly job  |
+| FSRS Due Card Calculation | `userStatistics.ts`              | ✅ Hourly job  |
+| DAU/Retention Metrics     | `userStatistics.ts`              | ✅ Daily job   |
+| Weekly Progress Reports   | `userStatistics.ts`              | ✅ Weekly job  |
+| Session Analytics         | `StudySession` model             | ✅ Recording   |
+| Question Attempts         | `QuestionAttempt` model          | ✅ Recording   |
+| Cognitive State           | `advancedUserAnalyticsEngine.ts` | ✅ In-memory   |
+| Circadian Analytics       | `circadianAnalyticsService.ts`   | ✅ Client-side |
 
 ### ⚠️ Gaps Identified
-| Gap | Impact | Current State |
-|-----|--------|---------------|
-| No **Platform-wide Statistics Table** | Can't track trends over time | Calculated on-demand |
-| No **Question Quality Statistics** | Can't identify bad questions | Only `flagCount` tracked |
-| **Content Usage Statistics** missing | Don't know which conditions are studied | No tracking |
-| **System-level Aggregate Stats** not persisted | Recalculated every request | Slow dashboard loads |
-| No **Cohort Comparison Statistics** | Can't compare user groups | Schema exists, not populated |
-| **Real-time Analytics Stream** missing | No live dashboard | Polling only |
-| **Historical Snapshots** not stored | Can't show progress over months | Only current state |
-| No **Question Difficulty Calibration** | Difficulty ratings may be wrong | Static labels |
+
+| Gap                                            | Impact                                  | Current State                |
+| ---------------------------------------------- | --------------------------------------- | ---------------------------- |
+| No **Platform-wide Statistics Table**          | Can't track trends over time            | Calculated on-demand         |
+| No **Question Quality Statistics**             | Can't identify bad questions            | Only `flagCount` tracked     |
+| **Content Usage Statistics** missing           | Don't know which conditions are studied | No tracking                  |
+| **System-level Aggregate Stats** not persisted | Recalculated every request              | Slow dashboard loads         |
+| No **Cohort Comparison Statistics**            | Can't compare user groups               | Schema exists, not populated |
+| **Real-time Analytics Stream** missing         | No live dashboard                       | Polling only                 |
+| **Historical Snapshots** not stored            | Can't show progress over months         | Only current state           |
+| No **Question Difficulty Calibration**         | Difficulty ratings may be wrong         | Static labels                |
 
 ---
 
@@ -49,6 +51,7 @@ This plan focuses specifically on improving statistics collection across the PAN
 **Solution**: Daily cron job collecting platform-wide metrics.
 
 **Implementation**: `scripts/automation/jobs/platformStatistics.ts` (420+ lines)
+
 - `calculateActiveUsers()`: DAU/WAU/MAU from QuestionAttempt.createdAt
 - `calculateUserCohorts()`: New vs. returning users
 - `calculateRetention()`: 7-day and 30-day retention rates
@@ -57,6 +60,7 @@ This plan focuses specifically on improving statistics collection across the PAN
 - `calculateFSRSMetrics()`: Cards reviewed, mature cards, retention
 
 **Schema**: `PlatformStatistics` table (already exists)
+
 ```prisma
 model PlatformStatistics {
   id                      String    @id
@@ -97,6 +101,7 @@ model PlatformStatistics {
 **Solution**: Daily cron job collecting per-condition usage metrics.
 
 **Implementation**: `scripts/automation/jobs/contentStatistics.ts` (350+ lines)
+
 - `getActiveConditions()`: Finds conditions with activity
 - `calculateQuestionMetrics()`: Questions answered, accuracy, time spent
 - `calculateViews()`: Approximate views from attempts
@@ -105,6 +110,7 @@ model PlatformStatistics {
 - `processCondition()`: Batch processing with validation
 
 **Schema**: `ContentStatistics` table (already exists)
+
 ```prisma
 model ContentStatistics {
   id                String          @id
@@ -122,7 +128,8 @@ model ContentStatistics {
 }
 ```
 
-**Benefits**: 
+**Benefits**:
+
 - Know which conditions need more questions
 - Identify trending topics
 - Find under-studied high-yield conditions
@@ -140,6 +147,7 @@ model ContentStatistics {
 **Problem**: Can't identify problematic questions systematically.
 
 **Implementation**:
+
 - Track `timesServed`, `timesCorrect`, `avgTimeMs` on each question
 - Auto-flag questions with `flagRate > 0.1` or `accuracy < 0.2`
 - Weekly quality report
@@ -179,6 +187,7 @@ model ContentStatistics {
 **Problem**: Question difficulty is static but doesn't reflect actual performance.
 
 **Implementation**:
+
 - Weekly job analyzes actual accuracy
 - Recalibrates difficulty: >80% = easy, 50-80% = medium, <50% = hard
 - Minimum 20 attempts required for calibration
@@ -208,6 +217,7 @@ model ContentStatistics {
 **Problem**: No alerts when statistics jobs fail or anomalies occur.
 
 **Implementation**:
+
 - Check platform stats are up to date
 - DAU anomaly detection (50%+ drops)
 - Question stats integrity checks
@@ -217,18 +227,18 @@ model ContentStatistics {
 
 ## Implementation Priority Matrix
 
-| Step | Effort | Impact | Priority | Sprint |
-|------|--------|--------|----------|--------|
-| 1. Platform Statistics Table | Medium | Very High | 🔴 P0 | A |
-| 2. Content Usage Statistics | Medium | Very High | 🔴 P0 | A |
-| 3. Question Quality Statistics | Low | High | 🟠 P1 | B |
-| 4. User Statistics Snapshots | Medium | High | 🟠 P1 | B |
-| 5. Real-Time Stats Endpoint | Medium | Medium | 🟠 P1 | B |
-| 6. Cohort Statistics | Medium | Medium | 🟡 P2 | C |
-| 7. Difficulty Calibration | Low | High | 🟡 P2 | C |
-| 8. Admin Dashboard API | Medium | Medium | 🟡 P2 | C |
-| 9. Time-Series Export | Low | Low | 🟢 P3 | D |
-| 10. Statistics Health Monitor | Medium | Medium | 🟢 P3 | D |
+| Step                           | Effort | Impact    | Priority | Sprint |
+| ------------------------------ | ------ | --------- | -------- | ------ |
+| 1. Platform Statistics Table   | Medium | Very High | 🔴 P0    | A      |
+| 2. Content Usage Statistics    | Medium | Very High | 🔴 P0    | A      |
+| 3. Question Quality Statistics | Low    | High      | 🟠 P1    | B      |
+| 4. User Statistics Snapshots   | Medium | High      | 🟠 P1    | B      |
+| 5. Real-Time Stats Endpoint    | Medium | Medium    | 🟠 P1    | B      |
+| 6. Cohort Statistics           | Medium | Medium    | 🟡 P2    | C      |
+| 7. Difficulty Calibration      | Low    | High      | 🟡 P2    | C      |
+| 8. Admin Dashboard API         | Medium | Medium    | 🟡 P2    | C      |
+| 9. Time-Series Export          | Low    | Low       | 🟢 P3    | D      |
+| 10. Statistics Health Monitor  | Medium | Medium    | 🟢 P3    | D      |
 
 ---
 
@@ -237,21 +247,21 @@ model ContentStatistics {
 **Sprint A (1 week)**: Steps 1-2 - Core statistics tables  
 **Sprint B (1 week)**: Steps 3-5 - Quality tracking & real-time  
 **Sprint C (1 week)**: Steps 6-8 - Cohorts & admin dashboard  
-**Sprint D (1 week)**: Steps 9-10 - Export & monitoring  
+**Sprint D (1 week)**: Steps 9-10 - Export & monitoring
 
 ---
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
-| `prisma/migrations/add_platform_statistics.sql` | Schema for Steps 1, 2, 4 |
-| `scripts/automation/jobs/platformStatistics.ts` | Daily aggregation job |
-| `scripts/automation/jobs/questionQuality.ts` | Question quality tracking |
-| `scripts/automation/jobs/userSnapshots.ts` | Weekly user snapshots |
-| `functions/api/admin/analytics-dashboard.ts` | Unified admin stats API |
-| `functions/api/analytics/live-stats.ts` | Real-time SSE endpoint |
-| `scripts/automation/jobs/statisticsHealthCheck.ts` | Health monitoring |
+| File                                               | Purpose                   |
+| -------------------------------------------------- | ------------------------- |
+| `prisma/migrations/add_platform_statistics.sql`    | Schema for Steps 1, 2, 4  |
+| `scripts/automation/jobs/platformStatistics.ts`    | Daily aggregation job     |
+| `scripts/automation/jobs/questionQuality.ts`       | Question quality tracking |
+| `scripts/automation/jobs/userSnapshots.ts`         | Weekly user snapshots     |
+| `functions/api/admin/analytics-dashboard.ts`       | Unified admin stats API   |
+| `functions/api/analytics/live-stats.ts`            | Real-time SSE endpoint    |
+| `scripts/automation/jobs/statisticsHealthCheck.ts` | Health monitoring         |
 
 ---
 

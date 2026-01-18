@@ -20,7 +20,7 @@ interface FlagQuestionModalProps {
   userFirstName?: string;
 }
 
-type FlagType = 'incorrect_fact' | 'typo' | 'confusing_options' | 'image_unclear' | 'other';
+type FlagType = 'typo' | 'incorrect_answer' | 'incorrect_fact' | 'unclear' | 'outdated' | 'other';
 
 export function FlagQuestionModal({
   isOpen,
@@ -34,16 +34,16 @@ export function FlagQuestionModal({
   userEmail,
   userFirstName,
 }: FlagQuestionModalProps) {
-  const [flagType, setFlagType] = useState<FlagType>('incorrect_fact');
+  const [flagType, setFlagType] = useState<FlagType>('incorrect_answer');
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { flagQuestion, loading, error } = useQuestionFlag();
 
   const flagTypes: Array<{ value: FlagType; label: string; description: string }> = [
     {
-      value: 'incorrect_fact',
-      label: 'Incorrect Fact',
-      description: 'The question or rationale contains a factual error.',
+      value: 'incorrect_answer',
+      label: 'Incorrect Answer',
+      description: 'The marked correct answer appears to be wrong.',
     },
     {
       value: 'typo',
@@ -51,14 +51,14 @@ export function FlagQuestionModal({
       description: 'Spelling mistake, grammatical error, or formatting issue.',
     },
     {
-      value: 'confusing_options',
-      label: 'Confusing Options',
-      description: 'Answer choices are ambiguous, too similar, or poorly worded.',
+      value: 'unclear',
+      label: 'Unclear or Confusing',
+      description: 'Question wording is ambiguous or difficult to understand.',
     },
     {
-      value: 'image_unclear',
-      label: 'Image is Unclear',
-      description: 'The attached image is low quality, confusing, or irrelevant.',
+      value: 'outdated',
+      label: 'Outdated Information',
+      description: 'Content reflects old guidelines or deprecated practices.',
     },
     {
       value: 'other',
@@ -85,7 +85,7 @@ export function FlagQuestionModal({
       system,
       flagType,
       description: description.trim(),
-      priority: flagType === 'incorrect_fact' ? 'high' : 'medium',
+      priority: flagType === 'incorrect_answer' ? 'high' : 'medium',
     });
 
     if (result.success) {

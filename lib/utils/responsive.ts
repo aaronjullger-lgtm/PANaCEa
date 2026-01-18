@@ -1,6 +1,6 @@
 /**
  * responsive.ts
- * 
+ *
  * Responsive utility hooks for detecting mobile/tablet breakpoints
  * and providing device-specific UI behaviors.
  */
@@ -14,9 +14,9 @@ export const MOBILE_BREAKPOINT = 768;
 
 /**
  * Hook to detect if the current viewport is mobile (<768px)
- * 
+ *
  * @returns {boolean} true if viewport width is less than 768px
- * 
+ *
  * @example
  * ```tsx
  * const isMobile = useIsMobile();
@@ -46,7 +46,7 @@ export function useIsMobile(): boolean {
 
 /**
  * Hook to detect tablet viewport (768px - 1024px)
- * 
+ *
  * @returns {boolean} true if viewport is in tablet range
  */
 export function useIsTablet(): boolean {
@@ -68,7 +68,7 @@ export function useIsTablet(): boolean {
 
 /**
  * Hook to get current viewport width category
- * 
+ *
  * @returns {'mobile' | 'tablet' | 'desktop'}
  */
 export function useViewportCategory(): 'mobile' | 'tablet' | 'desktop' {

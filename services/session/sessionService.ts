@@ -24,17 +24,17 @@ export {
   initializeSession,
   getSessionState,
   endSession,
-  
+
   // Question management
   fetchSessionQuestions,
   prefetchQuestions,
-  
+
   // Recording
   recordSessionAnswer,
-  
+
   // Summary
   getSessionSummary,
-  
+
   // Pool management
   getPoolStatus,
   checkAndReplenishPool,
@@ -53,10 +53,10 @@ export {
   calculateMomentum,
   resetMomentum,
   getMomentumInsights,
-  
+
   // Fatigue detection
   detectFatigueSignals,
-  
+
   // Types
   type MomentumLevel,
   type MomentumState,
@@ -69,12 +69,12 @@ export {
 export {
   // Cognitive analysis
   analyzeCognitiveState,
-  
+
   // Session optimization
   optimizeSession,
   calculateOptimalSessionLength,
   predictFatiguePoint,
-  
+
   // Types
   type CognitiveSnapshot,
   type SessionOptimization,
@@ -109,7 +109,7 @@ export function recordQuestionAttempt(
 ): void {
   // Record in main session
   mainSession.recordSessionAnswer(questionId, isCorrect, system, timeSpentMs);
-  
+
   // Record for momentum tracking
   momentum.recordMomentumResult(isCorrect, timeSpentMs, parTimeMs);
 }
@@ -123,35 +123,39 @@ export function getFullSessionState(
   const session = mainSession.getSessionState();
   const momentumState = momentum.calculateMomentum();
   const fatigueSignals = momentum.detectFatigueSignals();
-  
+
   let cognitive: optimizer.CognitiveSnapshot | null = null;
   let optimizationResult: optimizer.SessionOptimization | null = null;
-  
+
   if (recentAttempts && recentAttempts.length > 0 && session) {
-    cognitive = optimizer.analyzeCognitiveState(
-      recentAttempts,
-      new Date(session.startTime)
-    );
-    
+    cognitive = optimizer.analyzeCognitiveState(recentAttempts, new Date(session.startTime));
+
     const metrics: optimizer.PerformanceMetrics = {
       questionsAttempted: session.questionsAnswered,
       correctAnswers: session.correctAnswers,
-      avgResponseTimeMs: session.questionsAnswered > 0 
-        ? session.totalTimeMs / session.questionsAnswered 
-        : 0,
-      responseTimeTrend: momentumState.speedTrend === 'faster' ? 'faster' : 
-        momentumState.speedTrend === 'slower' ? 'slower' : 'stable',
-      accuracyTrend: momentumState.recentAccuracy > 70 ? 'improving' :
-        momentumState.recentAccuracy < 50 ? 'declining' : 'stable',
+      avgResponseTimeMs:
+        session.questionsAnswered > 0 ? session.totalTimeMs / session.questionsAnswered : 0,
+      responseTimeTrend:
+        momentumState.speedTrend === 'faster'
+          ? 'faster'
+          : momentumState.speedTrend === 'slower'
+            ? 'slower'
+            : 'stable',
+      accuracyTrend:
+        momentumState.recentAccuracy > 70
+          ? 'improving'
+          : momentumState.recentAccuracy < 50
+            ? 'declining'
+            : 'stable',
       sessionDurationMinutes: (Date.now() - session.startTime) / 60000,
     };
-    
+
     // Convert system performance to accuracy map
     const systemAccuracies: Record<string, number> = {};
     for (const [sys, stats] of Object.entries(session.systemPerformance)) {
       systemAccuracies[sys] = stats.total > 0 ? stats.correct / stats.total : 0;
     }
-    
+
     const currentSystem = Object.keys(session.systemPerformance)[0] || 'general';
     optimizationResult = optimizer.optimizeSession(
       cognitive,
@@ -160,7 +164,7 @@ export function getFullSessionState(
       systemAccuracies
     );
   }
-  
+
   return {
     session,
     momentum: momentumState,
@@ -182,22 +186,22 @@ export function shouldTakeBreak(): {
   const fatigue = momentum.detectFatigueSignals();
   const reasons: string[] = [];
   let urgency: 'low' | 'medium' | 'high' = 'low';
-  
+
   if (fatigue.isFatigued) {
     reasons.push(...fatigue.signals);
     urgency = 'high';
   }
-  
+
   if (momentumState.level === 'cold' || momentumState.level === 'cooling') {
     reasons.push(`Momentum is ${momentumState.level}`);
     if (urgency === 'low') urgency = 'medium';
   }
-  
+
   if (momentumState.recommendation?.toLowerCase().includes('break')) {
     reasons.push(momentumState.recommendation);
     if (urgency === 'low') urgency = 'medium';
   }
-  
+
   return {
     shouldBreak: reasons.length > 0,
     urgency,
@@ -220,7 +224,7 @@ export function endSessionWithSummary() {
   const summary = mainSession.getSessionSummary();
   const momentumInsights = momentum.getMomentumInsights();
   const session = mainSession.endSession();
-  
+
   return {
     session,
     summary,
@@ -237,14 +241,14 @@ export default {
   mainSession,
   momentum,
   optimizer,
-  
+
   // Unified API
   recordQuestionAttempt,
   getFullSessionState,
   shouldTakeBreak,
   startNewSession,
   endSessionWithSummary,
-  
+
   // Main session
   initializeSession: mainSession.initializeSession,
   getSessionState: mainSession.getSessionState,
@@ -252,12 +256,12 @@ export default {
   fetchSessionQuestions: mainSession.fetchSessionQuestions,
   recordSessionAnswer: mainSession.recordSessionAnswer,
   getSessionSummary: mainSession.getSessionSummary,
-  
+
   // Momentum
   calculateMomentum: momentum.calculateMomentum,
   getMomentumInsights: momentum.getMomentumInsights,
   detectFatigueSignals: momentum.detectFatigueSignals,
-  
+
   // Optimizer
   analyzeCognitiveState: optimizer.analyzeCognitiveState,
   optimizeSession: optimizer.optimizeSession,

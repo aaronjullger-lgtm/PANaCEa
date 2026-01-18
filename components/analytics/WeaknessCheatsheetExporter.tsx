@@ -1,8 +1,8 @@
 /**
  * Weakness Cheatsheet Exporter Component
- * 
+ *
  * UI component for generating and exporting weakness study guides.
- * 
+ *
  * Note: This component generates a simplified cheatsheet based on performance
  * data only. Full question details (including options and explanations) are
  * not available in this context. The generated PDF includes condition names,
@@ -42,7 +42,10 @@ export default function WeaknessCheatsheetExporter({
       // we'll generate a simplified HTML export based on performance data alone
       const success = generateSimplifiedCheatsheet(performanceData, days);
       if (!success) {
-        showToast({ type: 'warning', message: 'Please allow pop-ups to generate the study guide.' });
+        showToast({
+          type: 'warning',
+          message: 'Please allow pop-ups to generate the study guide.',
+        });
         return;
       }
       setExportStatus('success');
@@ -81,8 +84,8 @@ export default function WeaknessCheatsheetExporter({
           theme === 'light' ? 'text-[var(--color-text-muted)]' : 'text-gray-400'
         }`}
       >
-        Generate a professional PDF study guide based on questions you've missed.
-        Perfect for focused review and cramming sessions.
+        Generate a professional PDF study guide based on questions you've missed. Perfect for
+        focused review and cramming sessions.
       </p>
 
       {/* Time Period Selector */}
@@ -105,8 +108,8 @@ export default function WeaknessCheatsheetExporter({
                     ? 'bg-[var(--color-accent)] text-white'
                     : 'bg-blue-600 text-white'
                   : theme === 'light'
-                  ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               {d}d
@@ -136,13 +139,10 @@ export default function WeaknessCheatsheetExporter({
                   theme === 'light' ? 'text-blue-900' : 'text-blue-100'
                 }`}
               >
-                Found {summary.totalWeaknesses} area{summary.totalWeaknesses > 1 ? 's' : ''} to review
+                Found {summary.totalWeaknesses} area{summary.totalWeaknesses > 1 ? 's' : ''} to
+                review
               </p>
-              <p
-                className={`text-xs ${
-                  theme === 'light' ? 'text-blue-700' : 'text-blue-300'
-                }`}
-              >
+              <p className={`text-xs ${theme === 'light' ? 'text-blue-700' : 'text-blue-300'}`}>
                 {summary.totalQuestions} questions from last {days} days
               </p>
               <div className="mt-2 flex flex-wrap gap-1">
@@ -150,9 +150,7 @@ export default function WeaknessCheatsheetExporter({
                   <span
                     key={sys.system}
                     className={`text-xs px-2 py-1 rounded ${
-                      theme === 'light'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-blue-800 text-blue-200'
+                      theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-800 text-blue-200'
                     }`}
                   >
                     {sys.system} ({sys.errorCount})
@@ -161,9 +159,7 @@ export default function WeaknessCheatsheetExporter({
                 {summary.systems.length > 3 && (
                   <span
                     className={`text-xs px-2 py-1 rounded ${
-                      theme === 'light'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-blue-800 text-blue-200'
+                      theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-800 text-blue-200'
                     }`}
                   >
                     +{summary.systems.length - 3} more
@@ -186,11 +182,7 @@ export default function WeaknessCheatsheetExporter({
               theme === 'light' ? 'text-green-600' : 'text-green-400'
             }`}
           />
-          <p
-            className={`text-sm ${
-              theme === 'light' ? 'text-green-900' : 'text-green-100'
-            }`}
-          >
+          <p className={`text-sm ${theme === 'light' ? 'text-green-900' : 'text-green-100'}`}>
             No significant weaknesses in the last {days} days!
           </p>
         </div>
@@ -204,14 +196,14 @@ export default function WeaknessCheatsheetExporter({
           exportStatus === 'success'
             ? 'bg-green-500 text-white'
             : exportStatus === 'error'
-            ? 'bg-red-500 text-white'
-            : summary.totalWeaknesses === 0
-              ? theme === 'light'
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              : theme === 'light'
-              ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-red-500 text-white'
+              : summary.totalWeaknesses === 0
+                ? theme === 'light'
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : theme === 'light'
+                  ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
         }`}
       >
         {exportStatus === 'success' ? (
@@ -248,10 +240,7 @@ export default function WeaknessCheatsheetExporter({
  * (without full question details)
  * @returns boolean - true if window opened successfully
  */
-function generateSimplifiedCheatsheet(
-  performanceData: PerformanceRecord[],
-  days: number
-): boolean {
+function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days: number): boolean {
   const cutoffDate = Date.now() - days * 24 * 60 * 60 * 1000;
   const recentData = performanceData.filter(
     (record) => record.timestamp >= cutoffDate && !record.isCorrect

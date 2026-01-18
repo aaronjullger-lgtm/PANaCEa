@@ -1,17 +1,17 @@
 /**
  * scripts/content-doctor.ts
- * 
+ *
  * 🩺 PANaCEa Content Doctor - Autonomous Medical Director for the Database
- * 
+ *
  * This script acts as an intelligent content curator that:
  * 1. Phase 1: PANCE Gap Analysis - Identifies missing high-yield conditions
  * 2. Phase 2: Reference Grade Content Generation - Fills content gaps with AI
- * 
+ *
  * Architecture:
  * - Registry: Condition table (Prisma)
  * - Content: MedicalContent table (Prisma)
  * - AI: Google Gemini API
- * 
+ *
  * Usage: npx ts-node scripts/content-doctor.ts [--phase1] [--phase2] [--system CV]
  */
 
@@ -36,8 +36,23 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
 // System codes and labels
-const SYSTEM_CODES = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'] as const;
-type SystemCode = typeof SYSTEM_CODES[number];
+const SYSTEM_CODES = [
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
+] as const;
+type SystemCode = (typeof SYSTEM_CODES)[number];
 
 const SYSTEM_LABELS: Record<string, string> = {
   CV: 'Cardiovascular',
@@ -65,7 +80,7 @@ const CONCURRENT_BATCH_SIZE = 10; // Process 10 conditions concurrently
 const BATCH_DELAY = 1000; // 1 second between batches
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function callGeminiWithRetry(prompt: string, retries = 0): Promise<string> {
@@ -90,7 +105,10 @@ async function callGeminiWithRetry(prompt: string, retries = 0): Promise<string>
  */
 function generateConditionId(system: string, subcategory: string, name: string): string {
   const sanitize = (str: string) =>
-    str.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
   return `${system}__${sanitize(subcategory || 'general')}__${sanitize(name)}`;
 }
 
@@ -104,27 +122,30 @@ function parseGeminiJson<T>(text: string): T | null {
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim();
-    
+
     // Try standard parse first
     try {
       return JSON.parse(cleaned);
     } catch (firstError) {
       // Attempt to fix common JSON issues
-      
+
       // Fix unescaped quotes in strings (but not in property names)
       // This is a heuristic - look for patterns like: "text with "quotes" inside"
-      cleaned = cleaned.replace(/("(?:[^"\\]|\\.)*?")\s*:\s*"((?:[^"\\]|\\.)*)"/g, (match, key, value) => {
-        // Escape unescaped quotes in the value
-        const fixedValue = value.replace(/(?<!\\)"/g, '\\"');
-        return `${key}: "${fixedValue}"`;
-      });
-      
+      cleaned = cleaned.replace(
+        /("(?:[^"\\]|\\.)*?")\s*:\s*"((?:[^"\\]|\\.)*)"/g,
+        (match, key, value) => {
+          // Escape unescaped quotes in the value
+          const fixedValue = value.replace(/(?<!\\)"/g, '\\"');
+          return `${key}: "${fixedValue}"`;
+        }
+      );
+
       // Fix trailing commas
       cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-      
+
       // Fix single quotes (should be double quotes)
       cleaned = cleaned.replace(/'/g, '"');
-      
+
       // Try parsing again
       return JSON.parse(cleaned);
     }
@@ -150,13 +171,15 @@ async function generateContentForCondition(
   console.log(`\n📝 Generating content for: ${condition.name} (${condition.system})`);
 
   const isPartial = missingFields && missingFields.length > 0;
-  
+
   let prompt: string;
-  
+
   if (isPartial) {
     console.log(`  🔧 Partial update mode - regenerating ${missingFields.length} fields`);
-    console.log(`     Fields to generate: ${missingFields.slice(0, 10).join(', ')}${missingFields.length > 10 ? '...' : ''}`);
-    
+    console.log(
+      `     Fields to generate: ${missingFields.slice(0, 10).join(', ')}${missingFields.length > 10 ? '...' : ''}`
+    );
+
     // Create a minimal prompt that only asks for the missing fields
     prompt = `You are an expert medical educator creating PANCE/PANRE study content for PA students.
 
@@ -167,13 +190,16 @@ SUBCATEGORY: ${condition.subcategory || 'General'}
 
 Return ONLY a valid JSON object with ONLY these fields (no markdown, no code blocks, no explanation):
 {
-${missingFields.map(field => {
-  if (field === 'mnemonic') return '  "mnemonic": "Memory aid if one exists, else null"';
-  if (field === 'guidelines') return '  "guidelines": "Relevant guideline name and year, else null"';
-  if (field === 'classic_triad') return '  "classic_triad": ["Sign 1", "Sign 2", "Sign 3"]';
-  if (field === 'relatedSystems') return '  "relatedSystems": ["SYSTEM_CODE"]';
-  return `  "${field}": "..."`;
-}).join(',\n')}
+${missingFields
+  .map((field) => {
+    if (field === 'mnemonic') return '  "mnemonic": "Memory aid if one exists, else null"';
+    if (field === 'guidelines')
+      return '  "guidelines": "Relevant guideline name and year, else null"';
+    if (field === 'classic_triad') return '  "classic_triad": ["Sign 1", "Sign 2", "Sign 3"]';
+    if (field === 'relatedSystems') return '  "relatedSystems": ["SYSTEM_CODE"]';
+    return `  "${field}": "..."`;
+  })
+  .join(',\n')}
 }
 
 CRITICAL RULES:
@@ -270,7 +296,7 @@ All content must be medically accurate and PANCE-relevant.`;
       if (!val) return undefined;
       if (typeof val === 'string') return val;
       if (Array.isArray(val) && val.length > 0) {
-        return val.map(item => `- ${item}`).join('\n');
+        return val.map((item) => `- ${item}`).join('\n');
       }
       return undefined;
     };
@@ -302,13 +328,22 @@ All content must be medically accurate and PANCE-relevant.`;
     if (isPartial && existingContent) {
       // Partial update - merge with existing
       upsertData = { ...existingContent };
-      
+
       for (const field of missingFields!) {
         let val = content[field];
         if (val === undefined || val === null) continue;
 
         // Apply transformations based on schema type
-        if (['riskFactors', 'symptoms', 'physicalExam', 'differentialDiagnosis', 'treatment', 'complications'].includes(field)) {
+        if (
+          [
+            'riskFactors',
+            'symptoms',
+            'physicalExam',
+            'differentialDiagnosis',
+            'treatment',
+            'complications',
+          ].includes(field)
+        ) {
           val = toMarkdownList(val);
         } else if (field === 'diagnostics') {
           // diagnostics can come as array but must be stored as Text
@@ -316,14 +351,18 @@ All content must be medically accurate and PANCE-relevant.`;
         } else if (field === 'rx_side_effects') {
           // rx_side_effects can come as array but must be stored as Text
           val = toMarkdownList(val) || (typeof val === 'string' ? val : undefined);
-        } else if (['gold_standard_dx', 'first_line_rx', 'classic_patient', 'best_initial_test'].includes(field)) {
+        } else if (
+          ['gold_standard_dx', 'first_line_rx', 'classic_patient', 'best_initial_test'].includes(
+            field
+          )
+        ) {
           val = cleanBadge(val);
         } else if (field === 'buzzwords') {
           val = cleanBuzzwords(val);
         } else if (field === 'pance_yield') {
           val = parsePanceYield(val);
         } else if (field === 'relatedSystems') {
-          val = (val && Array.isArray(val) && val.length > 0) ? val : [condition.system];
+          val = val && Array.isArray(val) && val.length > 0 ? val : [condition.system];
         }
 
         if (val !== undefined && val !== null) {
@@ -332,9 +371,12 @@ All content must be medically accurate and PANCE-relevant.`;
       }
     } else {
       // Full generation
-      const relatedSystems = (content.relatedSystems && Array.isArray(content.relatedSystems) && content.relatedSystems.length > 0)
-        ? content.relatedSystems
-        : [condition.system];
+      const relatedSystems =
+        content.relatedSystems &&
+        Array.isArray(content.relatedSystems) &&
+        content.relatedSystems.length > 0
+          ? content.relatedSystems
+          : [condition.system];
 
       upsertData = {
         relatedSystems,
@@ -425,16 +467,13 @@ async function phase1GapAnalysis(targetSystem?: string): Promise<void> {
 
     // Get current conditions for this system
     const existingConditions = await prisma.condition.findMany({
-      where: { 
-        OR: [
-          { system },
-          { relatedSystems: { has: system } },
-        ]
+      where: {
+        OR: [{ system }, { relatedSystems: { has: system } }],
       },
       select: { name: true, subcategory: true },
     });
 
-    const conditionList = existingConditions.map(c => c.name).join('\n- ');
+    const conditionList = existingConditions.map((c) => c.name).join('\n- ');
     console.log(`  📊 Current count: ${existingConditions.length} conditions`);
 
     // Ask Gemini for gap analysis
@@ -521,7 +560,9 @@ Valid system codes: ${SYSTEM_CODES.join(', ')}`;
   }
 
   console.log('\n' + '─'.repeat(70));
-  console.log(`📈 Phase 1 Summary: Found ${totalGaps} gaps, registered ${totalRegistered} new conditions`);
+  console.log(
+    `📈 Phase 1 Summary: Found ${totalGaps} gaps, registered ${totalRegistered} new conditions`
+  );
 }
 
 // ============================================================================
@@ -542,48 +583,49 @@ interface MedicalContentSchema {
   treatment: string[];
   complications: string[];
   prognosis: string;
-  
+
   // High-yield exam fields
-  buzzwords: string[];          // <5 words each, no punctuation
-  classic_triad: string[];      // 2-4 cardinal signs
-  clinical_pearls: string[];    // Full sentences with rationale
-  gold_standard_dx: string;     // Single definitive test
-  first_line_rx: string;        // First-line treatment
-  
+  buzzwords: string[]; // <5 words each, no punctuation
+  classic_triad: string[]; // 2-4 cardinal signs
+  clinical_pearls: string[]; // Full sentences with rationale
+  gold_standard_dx: string; // Single definitive test
+  first_line_rx: string; // First-line treatment
+
   // Search & Discovery
-  synonyms?: string[];          // Alternative names ["GCA", "Temporal Arteritis"]
-  classic_patient?: string;     // Demographic snapshot "Elderly female with jaw claudication"
-  mnemonic?: string;            // Memory aid if applicable
-  guidelines?: string;          // "2023 AHA Guidelines", "USPSTF Grade A"
-  
+  synonyms?: string[]; // Alternative names ["GCA", "Temporal Arteritis"]
+  classic_patient?: string; // Demographic snapshot "Elderly female with jaw claudication"
+  mnemonic?: string; // Memory aid if applicable
+  guidelines?: string; // "2023 AHA Guidelines", "USPSTF Grade A"
+
   // Structured Differentials
-  differentials?: Array<{       // Enhanced DDx with rule-out logic
+  differentials?: Array<{
+    // Enhanced DDx with rule-out logic
     condition: string;
-    rule_out: string;           // Key differentiating feature
+    rule_out: string; // Key differentiating feature
   }>;
-  
+
   // Study Prioritization
-  pance_yield?: number;         // 1=Low, 2=Mid, 3=High
-  image_query?: string;         // Search term for educational images
-  
+  pance_yield?: number; // 1=Low, 2=Mid, 3=High
+  image_query?: string; // Search term for educational images
+
   // Diagnostic Nuance
-  best_initial_test?: string;   // Screening/initial workup test
-  
+  best_initial_test?: string; // Screening/initial workup test
+
   // Pharmacology Context
-  rx_mechanism?: string;        // MOA of first-line treatment
-  rx_side_effects?: string;     // Top adverse effects to know
-  
+  rx_mechanism?: string; // MOA of first-line treatment
+  rx_side_effects?: string; // Top adverse effects to know
+
   // Demographics
-  age_demographic?: string[];   // ["Elderly", "Adult"] or ["Child", "Adolescent"]
-  gender_bias?: string;         // "Female > Male (9:1)" or "No significant bias"
-  
+  age_demographic?: string[]; // ["Elderly", "Adult"] or ["Child", "Adolescent"]
+  gender_bias?: string; // "Female > Male (9:1)" or "No significant bias"
+
   // Clinical Management
-  patient_education?: string;   // Key counseling points
-  disposition?: string;         // Admission criteria / outpatient management
-  prevention?: string;          // Screening/prevention recommendations
-  
+  patient_education?: string; // Key counseling points
+  disposition?: string; // Admission criteria / outpatient management
+  prevention?: string; // Screening/prevention recommendations
+
   // Multi-system tagging
-  relatedSystems?: string[];    // Additional systems involved
+  relatedSystems?: string[]; // Additional systems involved
 }
 
 async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
@@ -603,22 +645,49 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
   // Only select minimal fields for completeness checks to avoid response size limits
   // CORE REQUIRED FIELDS - Essential clinical content that MUST be present
   const requiredFields = [
-    'overview', 'etiology', 'epidemiology', 'pathophysiology', 'riskFactors', 'symptoms', 'physicalExam', 'diagnostics',
-    'differentialDiagnosis', 'treatment', 'complications', 'prognosis', 'buzzwords', 'clinical_pearls',
-    'gold_standard_dx', 'first_line_rx', 'synonyms', 'classic_patient', 'differentials',
-    'pance_yield', 'image_query', 'best_initial_test', 'rx_mechanism', 'rx_side_effects', 'age_demographic', 'gender_bias',
-    'patient_education', 'disposition', 'prevention',
-    'mnemonic', 'classic_triad', 'guidelines', 'relatedSystems'
+    'overview',
+    'etiology',
+    'epidemiology',
+    'pathophysiology',
+    'riskFactors',
+    'symptoms',
+    'physicalExam',
+    'diagnostics',
+    'differentialDiagnosis',
+    'treatment',
+    'complications',
+    'prognosis',
+    'buzzwords',
+    'clinical_pearls',
+    'gold_standard_dx',
+    'first_line_rx',
+    'synonyms',
+    'classic_patient',
+    'differentials',
+    'pance_yield',
+    'image_query',
+    'best_initial_test',
+    'rx_mechanism',
+    'rx_side_effects',
+    'age_demographic',
+    'gender_bias',
+    'patient_education',
+    'disposition',
+    'prevention',
+    'mnemonic',
+    'classic_triad',
+    'guidelines',
+    'relatedSystems',
   ];
-  
+
   // OPTIONAL FIELDS - Not all conditions have these
   // Missing these should NOT trigger regeneration
   const optionalFields: string[] = [];
-  
+
   // MEDIA FIELDS - Fields that require manual upload/processing (NOT generated by AI)
   // These should NOT be checked for completeness to avoid infinite regeneration loops
   const mediaFields = ['image_url', 'image_caption', 'image_source'];
-  
+
   console.log('ℹ️  Checking only REQUIRED fields (excluding optional/media)');
   console.log('   Optional fields (not checked):', optionalFields.join(', '));
   console.log('   Media fields (not checked):', mediaFields.join(', '));
@@ -628,14 +697,17 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
   let allContent = [];
   const fieldsToFetch = [...requiredFields, ...optionalFields]; // Fetch all to check properly
   for (let i = 0; i < allConditions.length; i += BATCH_SIZE) {
-    const batchIds = allConditions.slice(i, i + BATCH_SIZE).map(c => c.id);
+    const batchIds = allConditions.slice(i, i + BATCH_SIZE).map((c) => c.id);
     const batchContent = await prisma.medicalContent.findMany({
       where: { conditionId: { in: batchIds }, status: 'published' },
-      select: fieldsToFetch.concat(['conditionId']).reduce((acc, f) => { acc[f] = true; return acc; }, {} as any),
+      select: fieldsToFetch.concat(['conditionId']).reduce((acc, f) => {
+        acc[f] = true;
+        return acc;
+      }, {} as any),
     });
     allContent = allContent.concat(batchContent);
   }
-  const contentMap = new Map(allContent.map(c => [c.conditionId, c]));
+  const contentMap = new Map(allContent.map((c) => [c.conditionId, c]));
 
   // Find conditions missing any REQUIRED field (not optional fields)
   const needsContent: typeof allConditions = [];
@@ -666,18 +738,20 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
 
   let generated = 0;
   let errors = 0;
-  
+
   // Process in concurrent batches for better performance
   for (let i = 0; i < needsContent.length; i += CONCURRENT_BATCH_SIZE) {
     const batch = needsContent.slice(i, i + CONCURRENT_BATCH_SIZE);
-    console.log(`\n🔄 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(needsContent.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`);
-    
+    console.log(
+      `\n🔄 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(needsContent.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`
+    );
+
     const promises = batch.map(async (condition) => {
       try {
         // Get existing content if present
         const existingContent = contentMap.get(condition.id) || {};
         // Determine which fields are missing (excluding media fields)
-        const missingFields = requiredFields.filter(field => {
+        const missingFields = requiredFields.filter((field) => {
           return (
             !(field in existingContent) ||
             existingContent[field] === null ||
@@ -686,10 +760,10 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
             (typeof existingContent[field] === 'string' && existingContent[field].trim() === '')
           );
         });
-        
+
         // Skip if no AI-generatable fields are missing
         if (missingFields.length === 0) return { success: true, skipped: true };
-        
+
         // IMPROVED DEBUGGING: Show exactly which fields are missing
         console.log(`  📋 Missing fields for ${condition.name}: ${missingFields.join(', ')}`);
 
@@ -701,11 +775,11 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
         return { success: false, skipped: false };
       }
     });
-    
+
     const results = await Promise.all(promises);
-    generated += results.filter(r => r.success && !r.skipped).length;
-    errors += results.filter(r => !r.success).length;
-    
+    generated += results.filter((r) => r.success && !r.skipped).length;
+    errors += results.filter((r) => !r.success).length;
+
     // Delay between batches to avoid rate limiting
     if (i + CONCURRENT_BATCH_SIZE < needsContent.length) {
       await sleep(BATCH_DELAY);
@@ -725,35 +799,23 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
 
   // Build query based on field type
   let whereClause: any = {
-    AND: [
-      targetSystem ? { system: targetSystem } : {},
-    ]
+    AND: [targetSystem ? { system: targetSystem } : {}],
   };
 
   // Handle different field types
   if (fieldName === 'buzzwords' || fieldName === 'clinical_pearls') {
     whereClause.AND.push({
-      OR: [
-        { [fieldName]: { isEmpty: true } },
-        { [fieldName]: { has: 'NONE' } }
-      ]
+      OR: [{ [fieldName]: { isEmpty: true } }, { [fieldName]: { has: 'NONE' } }],
     });
   } else if (fieldName === 'classic_triad') {
     // JSONB field
     whereClause.AND.push({
-      OR: [
-        { [fieldName]: null },
-        { [fieldName]: { equals: null } }
-      ]
+      OR: [{ [fieldName]: null }, { [fieldName]: { equals: null } }],
     });
   } else {
     // String fields
     whereClause.AND.push({
-      OR: [
-        { [fieldName]: null },
-        { [fieldName]: 'NONE' },
-        { [fieldName]: '' }
-      ]
+      OR: [{ [fieldName]: null }, { [fieldName]: 'NONE' }, { [fieldName]: '' }],
     });
   }
 
@@ -766,12 +828,12 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
       system: true,
       overview: true,
       symptoms: true,
-      physicalExam: true
-    }
+      physicalExam: true,
+    },
   });
 
   console.log(`Found ${conditions.length} conditions needing ${fieldName}`);
-  
+
   if (conditions.length === 0) {
     console.log(`✅ All conditions have ${fieldName}!`);
     return;
@@ -783,7 +845,9 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
   // Process in concurrent batches
   for (let i = 0; i < conditions.length; i += CONCURRENT_BATCH_SIZE) {
     const batch = conditions.slice(i, i + CONCURRENT_BATCH_SIZE);
-    console.log(`\n📦 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(conditions.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`);
+    console.log(
+      `\n📦 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(conditions.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`
+    );
 
     const promises = batch.map(async (condition) => {
       try {
@@ -800,14 +864,13 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
         // Update only the specific field
         await prisma.medicalContent.update({
           where: { id: condition.id },
-          data: { [fieldName]: data[fieldName] }
+          data: { [fieldName]: data[fieldName] },
         });
 
         const count = Array.isArray(data[fieldName]) ? data[fieldName].length : 1;
         console.log(`  ✅ ${condition.conditionId}: Added ${count} ${fieldName}`);
         await sleep(RATE_LIMIT_DELAY);
         return { success: true };
-
       } catch (error) {
         console.error(`  ❌ ${condition.conditionId}:`, error);
         return { success: false };
@@ -815,8 +878,8 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
     });
 
     const results = await Promise.all(promises);
-    generated += results.filter(r => r.success).length;
-    errors += results.filter(r => !r.success).length;
+    generated += results.filter((r) => r.success).length;
+    errors += results.filter((r) => !r.success).length;
 
     if (i + CONCURRENT_BATCH_SIZE < conditions.length) {
       await sleep(BATCH_DELAY);
@@ -931,7 +994,7 @@ Requirements:
 - Must be clinically accurate and PANCE-relevant
 - 3-5 pearls per condition
 
-Return ONLY valid JSON, no markdown.`
+Return ONLY valid JSON, no markdown.`,
   };
 
   return prompts[fieldName] || prompts.buzzwords;
@@ -955,7 +1018,7 @@ async function main() {
   const runGuidelines = args.includes('--guidelines');
   const runTriads = args.includes('--triads');
   const runPearls = args.includes('--pearls');
-  const systemArg = args.find(arg => arg.startsWith('--system='));
+  const systemArg = args.find((arg) => arg.startsWith('--system='));
   const targetSystem = systemArg ? systemArg.split('=')[1] : undefined;
 
   console.log('🩺 PANaCEa Content Doctor Starting...\n');

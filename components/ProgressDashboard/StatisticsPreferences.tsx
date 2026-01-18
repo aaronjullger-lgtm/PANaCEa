@@ -1,6 +1,6 @@
 /**
  * Statistics Preferences Panel
- * 
+ *
  * Allows users to toggle specific widgets ON/OFF to customize their dashboard view.
  * Includes new Deep Insight metrics (Speed, Second-Guess, Topic Split).
  */
@@ -25,12 +25,14 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
   onToggleWidget,
   onResetToDefaults,
 }) => {
-  const standardWidgets = DEFAULT_WIDGET_CONFIG.filter(w => !DEEP_INSIGHT_WIDGETS.includes(w.id));
-  const deepInsightWidgets = DEFAULT_WIDGET_CONFIG.filter(w => DEEP_INSIGHT_WIDGETS.includes(w.id));
+  const standardWidgets = DEFAULT_WIDGET_CONFIG.filter((w) => !DEEP_INSIGHT_WIDGETS.includes(w.id));
+  const deepInsightWidgets = DEFAULT_WIDGET_CONFIG.filter((w) =>
+    DEEP_INSIGHT_WIDGETS.includes(w.id)
+  );
 
   const renderWidgetToggle = (widget: WidgetConfig) => {
     const isEnabled = enabledWidgets.includes(widget.id);
-    
+
     return (
       <motion.button
         key={widget.id}
@@ -44,12 +46,22 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
         }`}
       >
         <div className="flex items-center gap-3">
-          <span className={isEnabled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}>
+          <span
+            className={
+              isEnabled
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-400 dark:text-slate-500'
+            }
+          >
             {widget.icon}
           </span>
           <span className="text-sm font-medium">{widget.label}</span>
         </div>
-        <span className={isEnabled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}>
+        <span
+          className={
+            isEnabled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
+          }
+        >
           {isEnabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
         </span>
       </motion.button>
@@ -72,14 +84,12 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
             Reset to defaults
           </button>
         </div>
-        
+
         <p className="text-xs text-slate-500 dark:text-slate-400">
           Choose which statistics to display on your dashboard.
         </p>
-        
-        <div className="space-y-2">
-          {standardWidgets.map(renderWidgetToggle)}
-        </div>
+
+        <div className="space-y-2">{standardWidgets.map(renderWidgetToggle)}</div>
       </div>
 
       {/* Deep Insight Widgets Section */}
@@ -91,14 +101,12 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
             Advanced
           </span>
         </div>
-        
+
         <p className="text-xs text-slate-500 dark:text-slate-400">
           Advanced analytics for deeper learning insights.
         </p>
-        
-        <div className="space-y-2">
-          {deepInsightWidgets.map(renderWidgetToggle)}
-        </div>
+
+        <div className="space-y-2">{deepInsightWidgets.map(renderWidgetToggle)}</div>
       </div>
     </div>
   );

@@ -1,23 +1,23 @@
 /**
  * LibraryCard - Renders medical content with proper formatting
- * 
+ *
  * Displays condition details with collapsible sections for:
  * - Definition
  * - Symptoms & Presentation
  * - Diagnostics
  * - Treatment
  * - Pearls
- * 
+ *
  * UPDATED: Now uses ContentFieldRenderer to fix [object Object] rendering bugs
  */
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Star, AlertCircle } from 'lucide-react';
 import type { MedicalContentDisplay } from '@/types/medical-content';
-import { 
-  ContentFieldRenderer, 
+import {
+  ContentFieldRenderer,
   ClinicalPearlsRenderer,
-  ClassicTriadRenderer 
+  ClassicTriadRenderer,
 } from '@/components/ui/content-renderers';
 import { safeParseJson, normalizeToStringArray, handleFakeNull } from '@/lib/utils/jsonParser';
 
@@ -65,7 +65,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
   const classicTriad = safeParseJson(handleFakeNull(content.classic_triad, null), []);
   const buzzwords = normalizeToStringArray(handleFakeNull(content.buzzwords, []));
   const synonyms = normalizeToStringArray(safeParseJson(handleFakeNull(content.synonyms, []), []));
-  
+
   return (
     <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
@@ -75,25 +75,25 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {content.condition}
             </h2>
-            
+
             {/* Badges Row */}
             <div className="flex items-center gap-3 text-sm flex-wrap">
               <span className="px-3 py-1 bg-[var(--color-bg-secondary)] rounded-lg text-[var(--color-text-secondary)] font-medium border border-[var(--color-border)]">
                 {content.system}
               </span>
-              
+
               {content.subcategory && (
                 <span className="text-[var(--color-text-muted)]">{content.subcategory}</span>
               )}
-              
+
               {content.pance_yield && (
                 <span
                   className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
                     Number(content.pance_yield) >= 8
                       ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                       : Number(content.pance_yield) >= 5
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                   }`}
                 >
                   <Star className="w-3 h-3" />
@@ -101,7 +101,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
                 </span>
               )}
             </div>
-            
+
             {/* Synonyms */}
             {synonyms.length > 0 && (
               <div className="mt-2 text-xs text-[var(--color-text-muted)]">
@@ -110,7 +110,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
             )}
           </div>
         </div>
-        
+
         {/* Classic Patient Presentation */}
         {content.classic_patient && (
           <div className="mt-4 p-4 bg-white/50 dark:bg-black/20 rounded-lg border border-[var(--color-border)]">
@@ -176,9 +176,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
             <ContentFieldRenderer value={handleFakeNull(content.diagnostics, null)} />
             {handleFakeNull(content.gold_standard_dx, null) && (
               <div className="mt-3 p-3 bg-emerald-950/20 border border-emerald-800/30 rounded-lg">
-                <div className="text-xs font-semibold text-emerald-400 mb-1">
-                  Gold Standard
-                </div>
+                <div className="text-xs font-semibold text-emerald-400 mb-1">Gold Standard</div>
                 <div className="text-sm text-[var(--color-text-primary)]">
                   {handleFakeNull(content.gold_standard_dx, null)}
                 </div>
@@ -186,9 +184,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
             )}
             {handleFakeNull(content.best_initial_test, null) && (
               <div className="mt-2 p-3 bg-blue-950/20 border border-blue-800/30 rounded-lg">
-                <div className="text-xs font-semibold text-blue-400 mb-1">
-                  Best Initial Test
-                </div>
+                <div className="text-xs font-semibold text-blue-400 mb-1">Best Initial Test</div>
                 <div className="text-sm text-[var(--color-text-primary)]">
                   {handleFakeNull(content.best_initial_test, null)}
                 </div>

@@ -2,65 +2,42 @@
  * User Confusion Tracking API
  *
  * POST /api/user/confusion    - Upsert a confusion pair when a user answers incorrectly
- * GET  /api/user/confusions   - Fetch a user's top confusion pairs
+ * GET  /api/user/confusion    - Fetch a user's top confusion pairs
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-}
+const ConfusionPostSchema = z.object({
+  body: z.object({
+    correctConditionId: z.string().min(1),
+    selectedConditionId: z.string().min(1),
+  }).refine((data) => data.correctConditionId !== data.selectedConditionId, {
+    message: 'correctConditionId and selectedConditionId must differ',
+  }),
+});
 
-interface ConfusionBody {
-  correctConditionId?: string;
-  selectedConditionId?: string;
-}
+const ConfusionGetSchema = z.object({
+  query: z.object({
+    limit: z.string().optional(),
+  }),
+});
 
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-export const onRequestOptions = () =>
-  new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+export const onRequestOptions = withCors();
 
 /**
  * Upsert a confusion pair for the authenticated user
  */
-export async function onRequestPost(context: { request: Request; env: Env }) {
+export const onRequestPost = authenticatedEndpoint(ConfusionPostSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/confusion');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const { request, env } = context;
-    const auth = await authenticateRequest(request, env);
-    if (!auth?.userId) {
-      return jsonResponse({ error: 'Unauthorized' }, 401);
-    }
-
-    let payload: ConfusionBody;
-    try {
-      payload = await request.json();
-    } catch (error) {
-      return jsonResponse({ error: 'Invalid JSON payload' }, 400);
-    }
-
-    const { correctConditionId, selectedConditionId } = payload;
-    if (!correctConditionId || !selectedConditionId) {
-      return jsonResponse({ error: 'correctConditionId and selectedConditionId are required' }, 400);
-    }
-    if (correctConditionId === selectedConditionId) {
-      return jsonResponse({ error: 'correctConditionId and selectedConditionId must differ' }, 400);
-    }
-
     prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const { correctConditionId, selectedConditionId } = validated.body;
 
     // Fetch condition metadata for compatibility fields
     const [correctContent, selectedContent] = await Promise.all([
@@ -75,7 +52,10 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     ]);
 
     if (!correctContent || !selectedContent) {
-      return jsonResponse({ error: 'One or more condition IDs are invalid' }, 404);
+      return {
+        data: { error: 'One or more condition IDs are invalid' },
+        status: 404,
+      };
     }
 
     const pair = await prisma.confusionPair.upsert({
@@ -108,32 +88,37 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       },
     });
 
-    return jsonResponse({ success: true, pair });
+    logger.info('Tracked confusion pair', {
+      userId: auth.userId,
+      correctConditionId,
+      selectedConditionId,
+      count: pair.count,
+    });
+
+    return { data: { success: true, pair } };
   } catch (error) {
-    console.error('Error tracking confusion:', error);
-    return jsonResponse({ error: 'Failed to track confusion' }, 500);
+    logger.error('Error tracking confusion', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to track confusion');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
  * Fetch top confusion pairs for the authenticated user
  */
-export async function onRequestGet(context: { request: Request; env: Env }) {
+export const onRequestGet = authenticatedEndpoint(ConfusionGetSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/confusion');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const { request, env } = context;
-    const auth = await authenticateRequest(request, env);
-    if (!auth?.userId) {
-      return jsonResponse({ error: 'Unauthorized' }, 401);
-    }
-
-    const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '10', 10), 25);
-
     prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const limit = Math.min(parseInt(validated.query?.limit || '10', 10), 25);
 
     const pairs = await prisma.confusionPair.findMany({
       where: { userId: auth.userId },
@@ -141,10 +126,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
         CorrectCondition: { select: { id: true, condition: true, system: true } },
         SelectedCondition: { select: { id: true, condition: true, system: true } },
       },
-      orderBy: [
-        { count: 'desc' },
-        { lastOccurrence: 'desc' },
-      ],
+      orderBy: [{ count: 'desc' }, { lastOccurrence: 'desc' }],
       take: limit,
     });
 
@@ -160,15 +142,25 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       lastOccurred: pair.lastOccurrence,
     }));
 
-    return jsonResponse({
-      success: true,
-      pairs: payload,
-      total: payload.length,
+    logger.info('Fetched confusion pairs', {
+      userId: auth.userId,
+      count: payload.length,
     });
+
+    return {
+      data: {
+        success: true,
+        pairs: payload,
+        total: payload.length,
+      },
+    };
   } catch (error) {
-    console.error('Error fetching confusion pairs:', error);
-    return jsonResponse({ error: 'Failed to fetch confusion pairs' }, 500);
+    logger.error('Error fetching confusion pairs', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch confusion pairs');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

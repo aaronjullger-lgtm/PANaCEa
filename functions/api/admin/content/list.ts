@@ -1,7 +1,7 @@
 /**
  * API: List medical content with filtering and pagination
  * GET /api/admin/content/list
- * 
+ *
  * Query parameters:
  * - system: Filter by system code
  * - status: Filter by content status
@@ -12,9 +12,15 @@
  * - sortOrder: asc or desc
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
+import {
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+  type Env,
+} from '../../_shared/auth';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
-import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -32,11 +38,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
   // Get user from database to check role
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+
   try {
     const user = await prisma.user.findUnique({
       where: { clerkId: authContext.clerkId },
-      select: { role: true }
+      select: { role: true },
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
@@ -63,7 +69,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       where.OR = [
         { condition: { contains: search, mode: 'insensitive' } },
         { conditionId: { contains: search, mode: 'insensitive' } },
-        { subcategory: { contains: search, mode: 'insensitive' } }
+        { subcategory: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -90,7 +96,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
         updatedBy: true,
         publishedAt: true,
         approvedAt: true,
-      }
+      },
     });
 
     return createSuccessResponse({
@@ -99,13 +105,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
         page,
         perPage,
         total,
-        totalPages: Math.ceil(total / perPage)
-      }
+        totalPages: Math.ceil(total / perPage),
+      },
     });
   } catch (error: any) {
     console.error('Error listing content:', error);
     return createErrorResponse('Failed to list content', 500);
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

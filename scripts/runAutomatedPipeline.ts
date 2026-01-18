@@ -1,6 +1,6 @@
 /**
  * Run Automated Content Pipeline
- * 
+ *
  * Orchestrates the entire automated content management system:
  * 1. Process existing photos
  * 2. Identify content gaps
@@ -17,14 +17,13 @@ async function main() {
   console.log('║    PANaCEa Automated Content Pipeline                     ║');
   console.log('║    Building a guaranteed-correct medical content database ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
-  
+
   try {
     await runAutomatedPipeline();
-    
+
     console.log('\n╔════════════════════════════════════════════════════════════╗');
     console.log('║    ✨ Pipeline Complete! Database topped off.              ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
-    
   } catch (error) {
     console.error('\n❌ Pipeline failed:', error);
     process.exit(1);

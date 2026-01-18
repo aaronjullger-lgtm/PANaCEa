@@ -13,7 +13,10 @@ export class QuestionGenerationService {
   /**
    * Generate a review question based on medical content
    */
-  async generateReviewQuestion(content: MedicalContentData, difficulty: string = 'medium'): Promise<any> {
+  async generateReviewQuestion(
+    content: MedicalContentData,
+    difficulty: string = 'medium'
+  ): Promise<any> {
     const prompt = `Generate a PANCE-style follow-up review question about ${content.condition}.
 
 This is a spaced repetition review. Create a DIFFERENT clinical vignette than typical questions for this condition, but test the SAME core concepts:

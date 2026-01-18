@@ -1,9 +1,9 @@
 /**
  * ConditionDetailPanel - Full detail view for medical conditions
- * 
+ *
  * Organizes 40+ fields into 6 logical sections:
  * 1. Clinical Presentation
- * 2. Diagnostic Workup  
+ * 2. Diagnostic Workup
  * 3. Management
  * 4. Pathophysiology
  * 5. Prognosis & Complications
@@ -13,8 +13,15 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Stethoscope, TestTube, Pill, Brain, AlertTriangle, BookOpen,
-  X, ChevronDown, ChevronUp
+  Stethoscope,
+  TestTube,
+  Pill,
+  Brain,
+  AlertTriangle,
+  BookOpen,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { normalizeMedicalContent, parseListField, parseTextField } from '@/lib/utils/normalization';
@@ -112,7 +119,7 @@ const DetailSection: React.FC<{
   const Icon = section.icon;
 
   // Check if section has any content
-  const hasContent = section.fields.some(field => {
+  const hasContent = section.fields.some((field) => {
     const value = data[field.key];
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'string') return value.trim() !== '';
@@ -149,7 +156,7 @@ const DetailSection: React.FC<{
           className="border-t border-[var(--color-border)]"
         >
           <div className="p-4 space-y-4">
-            {section.fields.map(field => {
+            {section.fields.map((field) => {
               const value = data[field.key];
               if (!value) return null;
 
@@ -181,13 +188,17 @@ const DetailSection: React.FC<{
                 const triad = parseListField(value);
                 if (triad.length === 0) return null;
                 return (
-                  <div key={field.key} className="bg-amber-950/20 border border-amber-800/30 rounded-xl p-4">
-                    <h4 className="text-sm font-semibold text-amber-400 mb-2">
-                      {field.label}
-                    </h4>
+                  <div
+                    key={field.key}
+                    className="bg-amber-950/20 border border-amber-800/30 rounded-xl p-4"
+                  >
+                    <h4 className="text-sm font-semibold text-amber-400 mb-2">{field.label}</h4>
                     <ul className="space-y-1">
                       {triad.map((item, idx) => (
-                        <li key={idx} className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2">
+                        <li
+                          key={idx}
+                          className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
+                        >
                           <span className="text-amber-400">•</span>
                           <span>{item}</span>
                         </li>
@@ -237,10 +248,7 @@ const DetailSection: React.FC<{
 /**
  * ConditionDetailPanel - Main component
  */
-export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({
-  content,
-  onClose,
-}) => {
+export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ content, onClose }) => {
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
 
   return (

@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import { CONDITION_REGISTRY } from '../config/conditionRegistry';
@@ -20,11 +19,14 @@ const REQUIRED_SECTIONS = [
   'differential_diagnosis',
   'risk_factors',
   'complications',
-  'buzzwords'
+  'buzzwords',
 ];
 
 function normalize(s: string) {
-  return s.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  return s
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 }
 
 async function verifyCompleteness() {
@@ -37,8 +39,8 @@ async function verifyCompleteness() {
   }
 
   // 1. Load Registry
-  const registryConditions = new Set(CONDITION_REGISTRY.map(c => c.condition));
-  const registryNorm = new Set(CONDITION_REGISTRY.map(c => normalize(c.condition)));
+  const registryConditions = new Set(CONDITION_REGISTRY.map((c) => c.condition));
+  const registryNorm = new Set(CONDITION_REGISTRY.map((c) => normalize(c.condition)));
   console.log(`Registry count: ${registryConditions.size}`);
 
   // 2. Load Content File
@@ -48,26 +50,33 @@ async function verifyCompleteness() {
   // 3. Check for Content in File NOT in Registry
   // Build a map of Registry ID -> Condition Name
   const registryIdMap = new Set<string>();
-  
-  CONDITION_REGISTRY.forEach(c => {
-    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+  CONDITION_REGISTRY.forEach((c) => {
+    const norm = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
     const id = `${c.system}__${norm(c.subcategory)}__${norm(c.condition)}`;
     registryIdMap.add(id);
   });
 
   const orphanedContent: string[] = [];
   const missingSectionsMap: Record<string, string[]> = {};
-  
-  contentList.forEach(item => {
+
+  contentList.forEach((item) => {
     // Check Registry Match
     if (!registryIdMap.has(item.conditionId)) {
-        orphanedContent.push(item.conditionName || item.conditionId);
+      orphanedContent.push(item.conditionName || item.conditionId);
     }
 
     // Check Missing Sections
     const missing: string[] = [];
     for (const section of REQUIRED_SECTIONS) {
-      if (!item.content[section] || (Array.isArray(item.content[section]) && item.content[section].length === 0)) {
+      if (
+        !item.content[section] ||
+        (Array.isArray(item.content[section]) && item.content[section].length === 0)
+      ) {
         missing.push(section);
       }
     }
@@ -87,11 +96,15 @@ async function verifyCompleteness() {
   });
 
   // 4. Check for Registry items NOT in Content
-  const contentIdSet = new Set(contentList.map(c => c.conditionId));
+  const contentIdSet = new Set(contentList.map((c) => c.conditionId));
   const missingContent: string[] = [];
-  
-  CONDITION_REGISTRY.forEach(c => {
-    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+  CONDITION_REGISTRY.forEach((c) => {
+    const norm = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
     const id = `${c.system}__${norm(c.subcategory)}__${norm(c.condition)}`;
     if (!contentIdSet.has(id)) {
       missingContent.push(c.condition);
@@ -100,7 +113,6 @@ async function verifyCompleteness() {
 
   console.log(`\n🔍 Missing Content (In Registry but not JSON): ${missingContent.length}`);
   // console.log(missingContent.join(', ')); // Too many likely
-
 }
 
 verifyCompleteness().catch(console.error);

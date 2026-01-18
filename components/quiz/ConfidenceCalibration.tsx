@@ -1,6 +1,6 @@
 /**
  * Confidence Calibration
- * 
+ *
  * Tracks how well users' confidence aligns with actual performance.
  * Helps identify overconfidence or underconfidence patterns.
  * Key for PANCE success: knowing what you don't know.
@@ -38,11 +38,26 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
   selectedConfidence = null,
 }) => {
   const options: { value: ConfidenceLevel; label: string; shortLabel: string; color: string }[] = [
-    { value: 'very_sure', label: 'Very Sure', shortLabel: 'Sure', color: 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200' },
-    { value: 'somewhat_sure', label: 'Somewhat Sure', shortLabel: 'Maybe', color: 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200' },
-    { value: 'guessing', label: 'Guessing', shortLabel: 'Guess', color: 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200' },
+    {
+      value: 'very_sure',
+      label: 'Very Sure',
+      shortLabel: 'Sure',
+      color: 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200',
+    },
+    {
+      value: 'somewhat_sure',
+      label: 'Somewhat Sure',
+      shortLabel: 'Maybe',
+      color: 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200',
+    },
+    {
+      value: 'guessing',
+      label: 'Guessing',
+      shortLabel: 'Guess',
+      color: 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200',
+    },
   ];
-  
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-slate-500 mr-1">Confidence:</span>
@@ -73,52 +88,53 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
 }) => {
   const stats = useMemo(() => {
     if (records.length === 0) return null;
-    
+
     const byConfidence = {
       very_sure: { correct: 0, total: 0 },
       somewhat_sure: { correct: 0, total: 0 },
       guessing: { correct: 0, total: 0 },
     };
-    
-    records.forEach(r => {
+
+    records.forEach((r) => {
       byConfidence[r.confidence].total++;
       if (r.wasCorrect) byConfidence[r.confidence].correct++;
     });
-    
+
     // Calculate accuracy for each level
     const getAccuracy = (level: ConfidenceLevel) => {
       const { correct, total } = byConfidence[level];
       return total > 0 ? Math.round((correct / total) * 100) : null;
     };
-    
+
     // Expected accuracy ranges
     const expectedRanges = {
       very_sure: { min: 85, max: 100 },
       somewhat_sure: { min: 50, max: 85 },
       guessing: { min: 20, max: 50 },
     };
-    
+
     // Calculate calibration score (how well confidence matches performance)
     let calibrationScore = 0;
     let calibrationCount = 0;
-    
+
     Object.entries(byConfidence).forEach(([level, data]) => {
       if (data.total >= 3) {
         const accuracy = (data.correct / data.total) * 100;
         const expected = expectedRanges[level as ConfidenceLevel];
         const midpoint = (expected.min + expected.max) / 2;
-        
+
         // Perfect calibration = 100, off by 50 percentage points = 0
         const deviation = Math.abs(accuracy - midpoint);
-        const levelScore = Math.max(0, 100 - (deviation * 2));
-        
+        const levelScore = Math.max(0, 100 - deviation * 2);
+
         calibrationScore += levelScore;
         calibrationCount++;
       }
     });
-    
-    const finalScore = calibrationCount > 0 ? Math.round(calibrationScore / calibrationCount) : null;
-    
+
+    const finalScore =
+      calibrationCount > 0 ? Math.round(calibrationScore / calibrationCount) : null;
+
     return {
       byConfidence,
       verySureAccuracy: getAccuracy('very_sure'),
@@ -128,7 +144,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
       total: records.length,
     };
   }, [records]);
-  
+
   if (!stats || stats.total < 5) {
     return (
       <div className="text-xs text-slate-500 italic">
@@ -136,8 +152,11 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
       </div>
     );
   }
-  
-  const getCalibrationStatus = (accuracy: number | null, expected: { min: number; max: number }) => {
+
+  const getCalibrationStatus = (
+    accuracy: number | null,
+    expected: { min: number; max: number }
+  ) => {
     if (accuracy === null) return { icon: Minus, color: 'text-slate-400', label: 'N/A' };
     if (accuracy >= expected.min && accuracy <= expected.max) {
       return { icon: TrendingUp, color: 'text-emerald-600', label: 'Well calibrated' };
@@ -147,7 +166,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
     }
     return { icon: TrendingDown, color: 'text-amber-600', label: 'Overconfident' };
   };
-  
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
@@ -163,11 +182,15 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
             </span>
           </div>
           {stats.calibrationScore !== null && (
-            <div className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-              stats.calibrationScore >= 75 ? 'bg-emerald-100 text-emerald-700' :
-              stats.calibrationScore >= 50 ? 'bg-amber-100 text-amber-700' :
-              'bg-red-100 text-red-700'
-            }`}>
+            <div
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                stats.calibrationScore >= 75
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : stats.calibrationScore >= 50
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-red-100 text-red-700'
+              }`}
+            >
               {stats.calibrationScore}%
             </div>
           )}
@@ -178,7 +201,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
           <ChevronDown className="w-4 h-4 text-slate-400" />
         )}
       </button>
-      
+
       {/* Expanded content */}
       <AnimatePresence>
         {isExpanded && (
@@ -198,7 +221,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
                 expected={{ min: 85, max: 100 }}
                 color="emerald"
               />
-              
+
               {/* Somewhat Sure */}
               <ConfidenceRow
                 label="Somewhat Sure"
@@ -207,7 +230,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
                 expected={{ min: 50, max: 85 }}
                 color="amber"
               />
-              
+
               {/* Guessing */}
               <ConfidenceRow
                 label="Guessing"
@@ -216,7 +239,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
                 expected={{ min: 20, max: 50 }}
                 color="slate"
               />
-              
+
               {/* Interpretation */}
               <div className="pt-2 text-xs text-slate-500 leading-relaxed">
                 {stats.calibrationScore !== null && stats.calibrationScore >= 75 ? (
@@ -256,14 +279,14 @@ const ConfidenceRow: React.FC<{
     amber: 'bg-amber-100 border-amber-200',
     slate: 'bg-slate-100 border-slate-200',
   };
-  
+
   const status = (() => {
     if (accuracy === null || count < 3) return null;
     if (accuracy >= expected.min && accuracy <= expected.max) return 'calibrated';
     if (accuracy > expected.max) return 'underconfident';
     return 'overconfident';
   })();
-  
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -274,12 +297,17 @@ const ConfidenceRow: React.FC<{
       <div className="flex items-center gap-2">
         {accuracy !== null ? (
           <>
-            <span className={`text-sm font-medium ${
-              status === 'calibrated' ? 'text-emerald-600' :
-              status === 'underconfident' ? 'text-blue-600' :
-              status === 'overconfident' ? 'text-amber-600' :
-              'text-slate-600'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                status === 'calibrated'
+                  ? 'text-emerald-600'
+                  : status === 'underconfident'
+                    ? 'text-blue-600'
+                    : status === 'overconfident'
+                      ? 'text-amber-600'
+                      : 'text-slate-600'
+              }`}
+            >
               {accuracy}%
             </span>
             <span className="text-xs text-slate-400">
@@ -301,32 +329,32 @@ export function useConfidenceTracking() {
     const stored = sessionStorage.getItem('panceai_confidence_records');
     return stored ? JSON.parse(stored) : [];
   });
-  
+
   const [currentConfidence, setCurrentConfidence] = useState<ConfidenceLevel | null>(null);
-  
+
   const recordConfidence = (wasCorrect: boolean) => {
     if (!currentConfidence) return;
-    
+
     const newRecord: ConfidenceRecord = {
       confidence: currentConfidence,
       wasCorrect,
       timestamp: Date.now(),
     };
-    
-    setRecords(prev => {
+
+    setRecords((prev) => {
       const updated = [...prev, newRecord];
       sessionStorage.setItem('panceai_confidence_records', JSON.stringify(updated));
       return updated;
     });
-    
+
     setCurrentConfidence(null);
   };
-  
+
   const resetRecords = () => {
     setRecords([]);
     sessionStorage.removeItem('panceai_confidence_records');
   };
-  
+
   return {
     records,
     currentConfidence,

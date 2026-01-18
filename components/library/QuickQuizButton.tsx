@@ -1,6 +1,6 @@
 /**
  * QuickQuizButton - Jump to drill questions for a specific condition
- * 
+ *
  * Small button that appears on condition cards to start a focused quiz
  */
 
@@ -144,7 +144,9 @@ export const QuickQuizButton: React.FC<QuickQuizButtonProps> = ({
             >
               <PlayCircle className="w-3.5 h-3.5 text-green-400" />
               <div>
-                <p className="text-xs font-medium text-[var(--color-text-primary)]">Mixed Practice</p>
+                <p className="text-xs font-medium text-[var(--color-text-primary)]">
+                  Mixed Practice
+                </p>
                 <p className="text-[10px] text-[var(--color-text-muted)]">All question types</p>
               </div>
             </button>

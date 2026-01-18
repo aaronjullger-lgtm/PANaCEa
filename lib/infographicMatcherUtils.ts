@@ -8,10 +8,10 @@
  * functions like bracket tag parsing.
  */
 
-import { similarityScore as baseSimilarityScore } from "./mediaMatcherUtils.js";
+import { similarityScore as baseSimilarityScore } from './mediaMatcherUtils.js';
 
 // Re-export core utilities from mediaMatcherUtils
-export { normalize, similarityScore, extractTags } from "./mediaMatcherUtils.js";
+export { normalize, similarityScore, extractTags } from './mediaMatcherUtils.js';
 
 /**
  * Parses bracket-enclosed tags from a filename.
@@ -31,12 +31,9 @@ export function parseBracketTags(filename: string): string[] {
     const bracketContent = match[1];
 
     // Split by hyphens and dashes within brackets
-    const innerTags = bracketContent.split(/[-_]/).map((tag) =>
-      tag
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w]/g, "")
-    );
+    const innerTags = bracketContent
+      .split(/[-_]/)
+      .map((tag) => tag.toLowerCase().trim().replace(/[^\w]/g, ''));
 
     // Filter out empty strings
     tags.push(...innerTags.filter((t) => t.length > 0));
@@ -56,7 +53,7 @@ export function normalizeForMatch(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]/g, ""); // Remove everything except alphanumeric
+    .replace(/[^a-z0-9]/g, ''); // Remove everything except alphanumeric
 }
 
 /**
@@ -98,13 +95,13 @@ export function substringScore(haystack: string, needle: string): number {
  */
 export function extractBaseName(filename: string): string {
   // Remove file extension
-  let baseName = filename.replace(/\.[^.]+$/, "");
+  let baseName = filename.replace(/\.[^.]+$/, '');
 
   // Remove bracket content
-  baseName = baseName.replace(/\[[^\]]*\]/g, "");
+  baseName = baseName.replace(/\[[^\]]*\]/g, '');
 
   // Clean up any trailing/leading dashes or underscores
-  baseName = baseName.replace(/^[-_]+|[-_]+$/g, "");
+  baseName = baseName.replace(/^[-_]+|[-_]+$/g, '');
 
   return baseName;
 }

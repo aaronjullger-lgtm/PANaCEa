@@ -1,61 +1,62 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+/**
+ * Physiology Concepts Reference API
+ * 
+ * GET /api/reference/physiology - Fetch physiology concepts
+ * Query params: category (optional)
+ * 
+ * Security: authenticatedEndpoint with Zod validation
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const category = url.searchParams.get('category');
+// ============================================================================
+// SCHEMA DEFINITIONS
+// ============================================================================
 
-  // Verify authentication
-  const authHeader = request.headers.get('Authorization');
-  const userId = await verifyAuthToken(authHeader, env.CLERK_SECRET_KEY);
-  
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+const GetPhysiologySchema = z.object({
+  query: z.object({
+    category: z.string().optional(),
+  }).optional(),
+});
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+// ============================================================================
+// ENDPOINT HANDLERS
+// ============================================================================
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(GetPhysiologySchema, async ({ env, auth, validated }) => {
+  const log = createEndpointLogger('/api/reference/physiology', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
+
   try {
+    log.info('Fetching physiology concepts', { category: validated?.query?.category });
+
+    if (!env.DATABASE_URL) {
+      log.error('Database not configured');
+      return { status: 500, error: 'Database not configured' };
+    }
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const category = validated?.query?.category;
+
     const results = await prisma.physiologyConcept.findMany({
       where: category ? { category } : undefined,
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
-    
-    return new Response(JSON.stringify({ success: true, data: results }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+
+    log.info('Physiology concepts fetched successfully', { count: results.length });
+    return { data: { success: true, data: results } };
   } catch (error: any) {
-    console.error('Error fetching physiology:', error);
-    return new Response(JSON.stringify({ success: false, error: 'Failed to fetch physiology', details: error.message }), { 
+    log.error('Error fetching physiology concepts', error);
+    return {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      error: 'Failed to fetch physiology concepts',
+    };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

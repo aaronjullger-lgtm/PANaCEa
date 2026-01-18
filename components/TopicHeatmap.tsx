@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { TopicStats } from '../types';
@@ -10,7 +9,7 @@ interface TopicHeatmapProps {
 }
 
 const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }) => {
-  const topicStatsMap = new Map<string, TopicStats>(topicScores.map(item => [item.topic, item]));
+  const topicStatsMap = new Map<string, TopicStats>(topicScores.map((item) => [item.topic, item]));
 
   const getTileStyle = (topicAbbr: string): { bg: string; border: string; text: string } => {
     const score = topicStatsMap.get(topicAbbr)?.score;
@@ -19,7 +18,7 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
       return {
         bg: 'bg-white/70 dark:bg-slate-800/50',
         border: 'border-slate-200 dark:border-slate-700',
-        text: 'text-slate-500 dark:text-slate-400'
+        text: 'text-slate-500 dark:text-slate-400',
       };
     }
     if (score < 75) {
@@ -27,7 +26,7 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
       return {
         bg: 'bg-red-50 dark:bg-red-900/20',
         border: 'border-red-200 dark:border-red-800/50',
-        text: 'text-red-800 dark:text-red-300'
+        text: 'text-red-800 dark:text-red-300',
       };
     }
     if (score < 85) {
@@ -35,14 +34,14 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
       return {
         bg: 'bg-amber-50 dark:bg-amber-900/20',
         border: 'border-amber-200 dark:border-amber-800/50',
-        text: 'text-amber-800 dark:text-amber-300'
+        text: 'text-amber-800 dark:text-amber-300',
       };
     }
     // Strong - subtle green tinting
     return {
       bg: 'bg-emerald-50 dark:bg-emerald-900/20',
       border: 'border-emerald-200 dark:border-emerald-800/50',
-      text: 'text-emerald-800 dark:text-emerald-300'
+      text: 'text-emerald-800 dark:text-emerald-300',
     };
   };
 
@@ -60,7 +59,9 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.02 }}
-            onClick={() => { if (stats) onTopicClick(stats); }}
+            onClick={() => {
+              if (stats) onTopicClick(stats);
+            }}
             disabled={!hasData}
             whileHover={hasData ? { scale: 1.03, y: -1 } : {}}
             whileTap={hasData ? { scale: 0.98 } : {}}

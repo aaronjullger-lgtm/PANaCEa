@@ -1,6 +1,6 @@
 /**
  * Time Scope Filter Component
- * 
+ *
  * Global control for filtering dashboard statistics by time period.
  */
 
@@ -39,7 +39,11 @@ const TimeScopeFilter: React.FC<TimeScopeFilterProps> = ({ value, onChange }) =>
               transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
             />
           )}
-          <span className={`relative z-10 ${value === option.value ? 'text-white dark:text-slate-900' : ''}`}>{option.label}</span>
+          <span
+            className={`relative z-10 ${value === option.value ? 'text-white dark:text-slate-900' : ''}`}
+          >
+            {option.label}
+          </span>
         </button>
       ))}
     </div>

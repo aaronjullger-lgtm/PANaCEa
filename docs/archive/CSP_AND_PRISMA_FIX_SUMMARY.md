@@ -5,32 +5,39 @@
 The application was experiencing two critical issues in production:
 
 ### 1. Content Security Policy Violations
+
 ```
-Loading the script '<URL>' violates the following Content Security Policy directive: 
-"script-src 'none'". The policy is report-only, so the violation has been logged 
+Loading the script '<URL>' violates the following Content Security Policy directive:
+"script-src 'none'". The policy is report-only, so the violation has been logged
 but no further action has been taken.
 ```
 
 ### 2. Prisma Module Resolution Error
+
 ```
-Uncaught TypeError: Failed to resolve module specifier ".prisma/client/edge". 
+Uncaught TypeError: Failed to resolve module specifier ".prisma/client/edge".
 Relative references must start with either "/", "./", or "../".
 ```
 
 ## Root Causes
 
 ### Browser-Side Prisma Imports
+
 Several frontend files were attempting to import Prisma client, which:
+
 1. Is a Node.js/Edge runtime library and cannot run in browsers
 2. Caused Vite to bundle Prisma and its dependencies
 3. Led to module resolution errors when the browser tried to load `.prisma/client/edge`
 
 **Affected Files:**
+
 - `src/lib/conditionSearch.ts` - Dynamic import on line 101
 - `services/conditionDataLoader.ts` - Top-level import on line 8
 
 ### Prisma Extension in Bundle
+
 The `@prisma/extension-accelerate` package was being bundled into `vendor-common.js`:
+
 - Increased bundle size unnecessarily
 - Included server-only code in browser bundles
 - Created additional module resolution issues
@@ -42,6 +49,7 @@ The `@prisma/extension-accelerate` package was being bundled into `vendor-common
 **File:** `src/lib/conditionSearch.ts`
 
 **Before:**
+
 ```typescript
 export async function searchConditions(...) {
   if (process.env.DATABASE_URL) {
@@ -58,12 +66,13 @@ export async function searchConditions(...) {
 ```
 
 **After:**
+
 ```typescript
 export async function searchConditions(...) {
   // Skip database search in browser environment
   // Database queries should only run in server context (Node.js/Edge runtime)
   // The browser cannot and should not import Prisma client
-  
+
   // Fallback to existing registry search
   const results: ConditionSearchResult[] = [];
   for (const meta of CONDITION_REGISTRY) {
@@ -79,6 +88,7 @@ export async function searchConditions(...) {
 **File:** `services/conditionDataLoader.ts`
 
 **Before:**
+
 ```typescript
 import { prisma } from '../lib/prisma'; // ❌ Top-level import
 
@@ -92,6 +102,7 @@ export async function loadConditionData(conditionId: string) {
 ```
 
 **After:**
+
 ```typescript
 // ✅ No top-level Prisma import
 
@@ -101,7 +112,7 @@ export async function loadConditionData(conditionId: string) {
     console.error('loadConditionData should not be called in browser');
     return null;
   }
-  
+
   if (!process.env.DATABASE_URL) {
     return null;
   }
@@ -113,7 +124,8 @@ export async function loadConditionData(conditionId: string) {
 }
 ```
 
-**Why:** 
+**Why:**
+
 - Top-level imports are always bundled by Vite, even if never used
 - Dynamic imports + runtime checks ensure code only loads server-side
 - Browser environment check provides immediate feedback if misused
@@ -123,6 +135,7 @@ export async function loadConditionData(conditionId: string) {
 **File:** `vite.config.ts`
 
 **Added:**
+
 ```typescript
 export default defineConfig(({ mode }) => {
   return {
@@ -139,15 +152,16 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             // ... existing chunk configuration
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
 });
 ```
 
 **Impact:**
+
 - Prevented Vite from bundling Prisma packages
 - Reduced `vendor-common.js` from 293.55 kB to 287.77 kB
 - Eliminated @prisma/extension-accelerate from browser bundles
@@ -157,24 +171,27 @@ export default defineConfig(({ mode }) => {
 **File:** `public/_headers`
 
 The CSP was already correctly configured, but the issue was likely from:
+
 - Cloudflare Pages default CSP being applied before deployment
 - Preview environments using restrictive defaults
 - Old deployments with `script-src 'none'`
 
 **Current CSP:**
+
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' 
-    https://*.clerk.accounts.dev 
-    https://challenges.cloudflare.com 
-    https://static.cloudflareinsights.com 
-    https://aistudiocdn.com; 
-  worker-src 'self' blob:; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+    https://*.clerk.accounts.dev
+    https://challenges.cloudflare.com
+    https://static.cloudflareinsights.com
+    https://aistudiocdn.com;
+  worker-src 'self' blob:;
   ... (complete policy)
 ```
 
 **Allows:**
+
 - ✅ Application scripts (`'self'`)
 - ✅ Clerk authentication
 - ✅ Cloudflare infrastructure
@@ -184,6 +201,7 @@ Content-Security-Policy:
 ## Build Verification
 
 ### Before Fixes
+
 ```bash
 $ npm run build
 # Warning: ".prisma/client/edge" is imported but could not be resolved
@@ -192,6 +210,7 @@ $ npm run build
 ```
 
 ### After Fixes
+
 ```bash
 $ npm run build
 ✓ built in 6.31s
@@ -201,6 +220,7 @@ $ npm run build
 ```
 
 ### Bundle Analysis
+
 ```bash
 # Check for Prisma in main bundles
 $ grep -r "\.prisma\|@prisma" dist/assets/*.js | grep -v "prisma-"
@@ -214,6 +234,7 @@ $ grep "import.*prisma" dist/assets/index-*.js
 ## Testing Recommendations
 
 ### 1. Manual Testing
+
 1. **Deploy to Cloudflare Pages**
    - Verify `_headers` file is present in deployment
    - Check browser console for CSP violations
@@ -230,15 +251,17 @@ $ grep "import.*prisma" dist/assets/index-*.js
    - No browser errors related to Prisma
 
 ### 2. Browser DevTools Checks
+
 ```javascript
 // Open browser console
 // Check for errors:
-typeof window !== 'undefined' // Should be true in browser
+typeof window !== 'undefined'; // Should be true in browser
 // No errors about .prisma/client/edge
 // No CSP violations about script-src 'none'
 ```
 
 ### 3. Network Tab
+
 - Verify no requests for `.prisma/` resources
 - Check CSP headers in response headers
 - Confirm `_headers` file is being served
@@ -246,14 +269,18 @@ typeof window !== 'undefined' // Should be true in browser
 ## Architecture Guidelines
 
 ### Server-Only Code (Node.js/Edge Runtime)
+
 Use Prisma, database queries, and server-side logic:
+
 - ✅ `server.ts` - Express server
 - ✅ `functions/` - Cloudflare Functions
 - ✅ API routes and serverless functions
 - ✅ Build scripts (e.g., `scripts/`)
 
 ### Browser Code (React/Frontend)
+
 Use pre-loaded data and registries:
+
 - ✅ `components/` - React components
 - ✅ `src/` - Frontend services and utilities
 - ✅ `services/` - Client-side logic (with runtime checks if shared)
@@ -261,19 +288,22 @@ Use pre-loaded data and registries:
 - ❌ Never import `lib/prisma.ts` or `lib/db.ts`
 
 ### Shared Code (Hybrid)
+
 If code must work in both environments:
+
 1. Add runtime environment check: `typeof window !== 'undefined'`
 2. Use dynamic imports for server-only dependencies
 3. Provide fallback behavior for browser environment
 
 **Example:**
+
 ```typescript
 export async function loadData(id: string) {
   // Browser: use registry
   if (typeof window !== 'undefined') {
-    return REGISTRY.find(item => item.id === id);
+    return REGISTRY.find((item) => item.id === id);
   }
-  
+
   // Server: use database
   const { prisma } = await import('../lib/prisma');
   return await prisma.table.findUnique({ where: { id } });
@@ -283,27 +313,30 @@ export async function loadData(id: string) {
 ## Future Improvements
 
 ### 1. Remove 'unsafe-inline' and 'unsafe-eval'
+
 - Generate nonces for inline scripts
 - Replace libraries using `eval()`
 - Use `strict-dynamic` for better security
 
 ### 2. Add CSP Reporting
+
 ```
 Content-Security-Policy-Report-Only: ... report-uri /csp-report
 ```
+
 - Monitor violations in production
 - Tighten policy based on real usage
 
 ### 3. Implement Subresource Integrity (SRI)
+
 ```html
-<script src="https://example.com/script.js" 
-        integrity="sha384-..." 
-        crossorigin="anonymous">
-</script>
+<script src="https://example.com/script.js" integrity="sha384-..." crossorigin="anonymous"></script>
 ```
 
 ### 4. Consider Server-Side Search
+
 If database search is needed:
+
 - Create API endpoint: `/api/search`
 - Frontend calls API instead of direct database access
 - Proper separation of concerns
@@ -326,16 +359,19 @@ If database search is needed:
 The issues were caused by attempting to use server-side database code (Prisma) in browser bundles. The fixes ensure a clean separation:
 
 **Browser:**
+
 - Uses condition registry for searches
 - No Prisma code loaded or executed
 - Fast, client-side search functionality
 
 **Server:**
+
 - Uses Prisma for database queries
 - Loads data from Supabase
 - Powers API endpoints and serverless functions
 
 **CSP:**
+
 - Properly configured in `_headers`
 - Allows all necessary scripts
 - Blocks unauthorized sources

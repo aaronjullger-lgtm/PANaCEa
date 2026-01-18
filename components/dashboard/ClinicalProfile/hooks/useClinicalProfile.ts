@@ -3,7 +3,13 @@ import { useAuth } from '@clerk/clerk-react';
 
 export interface ClinicalProfileData {
   overall: { accuracy: number; totalQuestions: number; avgTimeMs: number | null };
-  systemBreakdown: Array<{ system: string; total: number; correct: number; accuracy: number; avgTimeMs: number | null }>;
+  systemBreakdown: Array<{
+    system: string;
+    total: number;
+    correct: number;
+    accuracy: number;
+    avgTimeMs: number | null;
+  }>;
   strengths: string[];
   weaknesses: string[];
   patterns: { rushedSystems: string[]; overthinkingSystems: string[] };
@@ -35,7 +41,11 @@ export function useClinicalProfile() {
       const payload = await res.json();
       setState({ data: payload.data as ClinicalProfileData, isLoading: false, error: null });
     } catch (error) {
-      setState({ data: null, isLoading: false, error: error instanceof Error ? error.message : 'Failed to load profile' });
+      setState({
+        data: null,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to load profile',
+      });
     }
   }, [getToken]);
 

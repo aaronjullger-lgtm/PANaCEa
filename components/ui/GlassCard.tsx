@@ -4,7 +4,7 @@ import { LucideIcon } from 'lucide-react';
 
 /**
  * GlassCard - Standardized card component with glassmorphism design
- * 
+ *
  * Design System Standards:
  * - Subtle gradient backgrounds with colored glows
  * - Consistent border radius: 16px (rounded-2xl)
@@ -12,12 +12,12 @@ import { LucideIcon } from 'lucide-react';
  * - Hover effects: border color change, shadow enhancement
  */
 
-export type CardVariant = 
-  | 'primary'   // Blue glow
-  | 'success'   // Green glow
-  | 'warning'   // Amber glow
-  | 'info'      // Cyan glow
-  | 'neutral';  // Slate/no glow
+export type CardVariant =
+  | 'primary' // Blue glow
+  | 'success' // Green glow
+  | 'warning' // Amber glow
+  | 'info' // Cyan glow
+  | 'neutral'; // Slate/no glow
 
 interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   variant?: CardVariant;
@@ -86,9 +86,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </motion.div>
   );
 };
@@ -116,21 +114,23 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
 }) => {
   return (
     <div className="flex items-start gap-4 mb-4">
-      <div className={`p-3 rounded-xl bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20`}>
+      <div
+        className={`p-3 rounded-xl bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20`}
+      >
         <Icon className={`w-7 h-7 ${iconColor}`} />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
           <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
           {badge && (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}
+            >
               {badge.text}
             </span>
           )}
         </div>
-        {subtitle && (
-          <p className="text-sm text-[var(--color-text-secondary)]">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-sm text-[var(--color-text-secondary)]">{subtitle}</p>}
       </div>
     </div>
   );
@@ -159,7 +159,9 @@ export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
           className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-blue-500/10 border-blue-400/20'}`}
         >
           <stat.icon className="w-4 h-4" />
-          <span className="text-sm font-medium">{stat.value} {stat.label}</span>
+          <span className="text-sm font-medium">
+            {stat.value} {stat.label}
+          </span>
         </div>
       ))}
     </div>

@@ -44,7 +44,7 @@ function getRecentPerformance(
   cutoffDate.setDate(cutoffDate.getDate() - days);
   const cutoffTimestamp = cutoffDate.getTime();
 
-  return performanceData.filter(record => record.timestamp >= cutoffTimestamp);
+  return performanceData.filter((record) => record.timestamp >= cutoffTimestamp);
 }
 
 /**
@@ -54,22 +54,25 @@ function identifyWeakTopics(
   recentPerformance: PerformanceRecord[],
   minQuestions: number = 3
 ): WeakTopic[] {
-  const topicStats: Record<string, {
-    system: string;
-    correct: number;
-    total: number;
-    mistakes: Set<string>;
-  }> = {};
+  const topicStats: Record<
+    string,
+    {
+      system: string;
+      correct: number;
+      total: number;
+      mistakes: Set<string>;
+    }
+  > = {};
 
   // Aggregate stats by topic
-  recentPerformance.forEach(record => {
+  recentPerformance.forEach((record) => {
     const topic = record.topic;
     if (!topicStats[topic]) {
       topicStats[topic] = {
         system: record.system || 'OTHER',
         correct: 0,
         total: 0,
-        mistakes: new Set()
+        mistakes: new Set(),
       };
     }
 
@@ -92,9 +95,9 @@ function identifyWeakTopics(
       system: stats.system,
       accuracy: (stats.correct / stats.total) * 100,
       totalQuestions: stats.total,
-      commonMistakes: Array.from(stats.mistakes)
+      commonMistakes: Array.from(stats.mistakes),
     }))
-    .filter(t => t.accuracy < 70) // Only include topics with < 70% accuracy
+    .filter((t) => t.accuracy < 70) // Only include topics with < 70% accuracy
     .sort((a, b) => a.accuracy - b.accuracy); // Weakest first
 
   return weakTopics.slice(0, 10); // Top 10 weakest topics
@@ -110,7 +113,7 @@ function generateMarkdownContent(studyGuide: StudyGuide): string {
   markdown += `**Generated:** ${generatedDate}\n\n`;
   markdown += `**Period Covered:** ${dateRange.start} to ${dateRange.end}\n\n`;
   markdown += `---\n\n`;
-  
+
   markdown += `## Summary\n\n${summary}\n\n`;
   markdown += `---\n\n`;
 
@@ -134,11 +137,10 @@ function generateMarkdownContent(studyGuide: StudyGuide): string {
   markdown += `---\n\n`;
 
   // Study Recommendations
-  sections.forEach(section => {
-    const priorityEmoji = 
-      section.priority === 'high' ? '🔴' :
-      section.priority === 'medium' ? '🟡' : '🟢';
-    
+  sections.forEach((section) => {
+    const priorityEmoji =
+      section.priority === 'high' ? '🔴' : section.priority === 'medium' ? '🟡' : '🟢';
+
     markdown += `## ${priorityEmoji} ${section.title}\n\n`;
     markdown += `${section.content}\n\n`;
   });
@@ -149,7 +151,7 @@ function generateMarkdownContent(studyGuide: StudyGuide): string {
   markdown += `2. Practice questions specifically targeting weak areas\n`;
   markdown += `3. Use spaced repetition to reinforce learning\n`;
   markdown += `4. Revisit this guide weekly to track improvement\n\n`;
-  
+
   markdown += `*This study guide was automatically generated based on your performance data. `;
   markdown += `Focus on understanding concepts rather than memorization.*\n`;
 
@@ -164,7 +166,7 @@ export function generateWeeklyStudyGuide(
   days: number = 7
 ): StudyGuide {
   const recentPerformance = getRecentPerformance(performanceData, days);
-  
+
   // Calculate date range
   const endDate = new Date();
   const startDate = new Date();
@@ -172,7 +174,7 @@ export function generateWeeklyStudyGuide(
 
   const dateRange = {
     start: startDate.toLocaleDateString(),
-    end: endDate.toLocaleDateString()
+    end: endDate.toLocaleDateString(),
   };
 
   // Identify weak topics
@@ -180,14 +182,13 @@ export function generateWeeklyStudyGuide(
 
   // Calculate overall stats
   const totalQuestions = recentPerformance.length;
-  const correctQuestions = recentPerformance.filter(r => r.isCorrect).length;
-  const overallAccuracy = totalQuestions > 0 
-    ? ((correctQuestions / totalQuestions) * 100).toFixed(1)
-    : '0.0';
+  const correctQuestions = recentPerformance.filter((r) => r.isCorrect).length;
+  const overallAccuracy =
+    totalQuestions > 0 ? ((correctQuestions / totalQuestions) * 100).toFixed(1) : '0.0';
 
   // Generate summary
   let summary = `Over the past ${days} days, you attempted ${totalQuestions} questions with an overall accuracy of ${overallAccuracy}%. `;
-  
+
   if (weakTopics.length > 0) {
     summary += `${weakTopics.length} topic${weakTopics.length > 1 ? 's' : ''} identified for focused review. `;
   } else {
@@ -210,17 +211,20 @@ export function generateWeeklyStudyGuide(
     const topThree = weakTopics.slice(0, 3);
     sections.push({
       title: 'High-Priority Review Topics',
-      content: topThree.map((t, i) => 
-        `${i + 1}. **${t.topic}** - Current accuracy: ${t.accuracy.toFixed(1)}%. ` +
-        `Review core concepts and practice 5-10 questions daily.`
-      ).join('\n\n'),
-      priority: 'high'
+      content: topThree
+        .map(
+          (t, i) =>
+            `${i + 1}. **${t.topic}** - Current accuracy: ${t.accuracy.toFixed(1)}%. ` +
+            `Review core concepts and practice 5-10 questions daily.`
+        )
+        .join('\n\n'),
+      priority: 'high',
     });
   }
 
   // System-specific recommendations
   const systemPerformance: Record<string, { correct: number; total: number }> = {};
-  recentPerformance.forEach(record => {
+  recentPerformance.forEach((record) => {
     const system = record.system || 'OTHER';
     if (!systemPerformance[system]) {
       systemPerformance[system] = { correct: 0, total: 0 };
@@ -230,19 +234,21 @@ export function generateWeeklyStudyGuide(
   });
 
   const weakSystems = Object.entries(systemPerformance)
-    .filter(([_, stats]) => stats.total >= 3 && (stats.correct / stats.total) < 0.7)
+    .filter(([_, stats]) => stats.total >= 3 && stats.correct / stats.total < 0.7)
     .map(([system, stats]) => ({
       system,
-      accuracy: ((stats.correct / stats.total) * 100).toFixed(1)
+      accuracy: ((stats.correct / stats.total) * 100).toFixed(1),
     }));
 
   if (weakSystems.length > 0) {
     sections.push({
       title: 'System-Level Focus Areas',
-      content: weakSystems.map(s => 
-        `- **${s.system}** (${s.accuracy}%): Dedicate focused study time to this system`
-      ).join('\n'),
-      priority: 'medium'
+      content: weakSystems
+        .map(
+          (s) => `- **${s.system}** (${s.accuracy}%): Dedicate focused study time to this system`
+        )
+        .join('\n'),
+      priority: 'medium',
     });
   }
 
@@ -264,7 +270,7 @@ export function generateWeeklyStudyGuide(
   sections.push({
     title: 'Recommended Study Strategy',
     content: strategies.map((s, i) => `${i + 1}. ${s}`).join('\n'),
-    priority: 'medium'
+    priority: 'medium',
   });
 
   const studyGuide: StudyGuide = {
@@ -274,7 +280,7 @@ export function generateWeeklyStudyGuide(
     summary,
     weakTopics,
     sections,
-    markdownContent: '' // Will be populated next
+    markdownContent: '', // Will be populated next
   };
 
   // Generate markdown
@@ -286,15 +292,15 @@ export function generateWeeklyStudyGuide(
 /**
  * Export study guide to downloadable file
  */
-export function exportStudyGuide(studyGuide: StudyGuide): { 
-  filename: string; 
-  content: string; 
-  mimeType: string 
+export function exportStudyGuide(studyGuide: StudyGuide): {
+  filename: string;
+  content: string;
+  mimeType: string;
 } {
   const filename = `study-guide-${new Date().toISOString().split('T')[0]}.md`;
   return {
     filename,
     content: studyGuide.markdownContent,
-    mimeType: 'text/markdown'
+    mimeType: 'text/markdown',
   };
 }

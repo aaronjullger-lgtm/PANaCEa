@@ -1,14 +1,14 @@
 /**
  * User Goals API
- * 
+ *
  * Sprint: User Data Improvement Plan - Step 5 (Sprint B)
- * 
+ *
  * Full CRUD for user goal tracking:
  * - GET: List all goals (with filtering)
  * - POST: Create new goal
  * - PATCH /:id: Update goal (including progress)
  * - DELETE /:id: Delete goal
- * 
+ *
  * Goal types supported:
  * - daily: X questions/minutes per day
  * - weekly: X questions/minutes per week
@@ -16,73 +16,78 @@
  * - mastery: Reach stability threshold for system
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-}
+// Validation schemas
+const GoalListSchema = z.object({
+  query: z.object({
+    status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
+    goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
+    limit: z.string().regex(/^\d+$/).optional(),
+  }).optional(),
+});
 
-interface GoalCreateBody {
-  title: string;
-  description?: string;
-  goalType: 'daily' | 'weekly' | 'exam_date' | 'mastery';
-  targetValue?: number;
-  targetUnit?: 'questions' | 'minutes' | 'conditions' | 'accuracy';
-  targetDate?: string;
-  targetSystem?: string;
-  targetStability?: number;
-  isRecurring?: boolean;
-  motivationNotes?: string;
-  rewardMessage?: string;
-}
+const GoalCreateSchema = z.object({
+  body: z.object({
+    title: z.string().min(1).max(200),
+    description: z.string().max(1000).optional(),
+    goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']),
+    targetValue: z.number().int().min(0).max(10000).optional(),
+    targetUnit: z.enum(['questions', 'minutes', 'conditions', 'accuracy']).optional(),
+    targetDate: z.string().datetime().optional(),
+    targetSystem: z.string().max(50).optional(),
+    targetStability: z.number().min(0).max(100).optional(),
+    isRecurring: z.boolean().optional(),
+    motivationNotes: z.string().max(500).optional(),
+    rewardMessage: z.string().max(200).optional(),
+  }),
+});
 
-interface GoalUpdateBody {
-  currentValue?: number;
-  status?: string;
-  completedAt?: Date;
-  currentStreak?: number;
-  bestStreak?: number;
-  lastMetDate?: Date;
-  [key: string]: any;
-}
+const GoalUpdateSchema = z.object({
+  body: z.object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(1000).optional(),
+    currentValue: z.number().int().min(0).max(10000).optional(),
+    status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
+    completedAt: z.string().datetime().optional(),
+    currentStreak: z.number().int().min(0).optional(),
+    bestStreak: z.number().int().min(0).optional(),
+    lastMetDate: z.string().datetime().optional(),
+    targetValue: z.number().int().min(0).max(10000).optional(),
+    targetDate: z.string().datetime().optional(),
+    motivationNotes: z.string().max(500).optional(),
+    rewardMessage: z.string().max(200).optional(),
+  }),
+});
+
+const EmptySchema = z.object({});
+
+export const onRequestOptions = withCors();
 
 /**
- * GET /api/user/goals
- * List user's goals with optional filtering
- * 
- * Query params:
- * - status: Filter by status ('active', 'completed', 'paused', 'failed')
- * - goalType: Filter by type ('daily', 'weekly', 'exam_date', 'mastery')
- * - limit: Max results (default 50)
+ * GET - List user's goals with optional filtering
  */
-export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  let prisma;
-  
+export const onRequestGet = authenticatedEndpoint(GoalListSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/goals');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Authenticate
-    const userId = await authenticateRequest(context.request, context.env);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
+    logger.addContext({ userId: auth.userId });
+
     // Parse query params
-    const url = new URL(context.request.url);
-    const status = url.searchParams.get('status');
-    const goalType = url.searchParams.get('goalType');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    
+    const status = validated.query?.status;
+    const goalType = validated.query?.goalType;
+    const limit = validated.query?.limit ? parseInt(validated.query.limit) : 50;
+
     // Build where clause
-    const where: any = { userId };
+    const where: any = { userId: auth.userId };
     if (status) where.status = status;
     if (goalType) where.goalType = goalType;
-    
+
     // Fetch goals
     const goals = await prisma.userGoal.findMany({
       where,
@@ -92,48 +97,37 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       ],
       take: Math.min(limit, 100),
     });
-    
-    return new Response(
-      JSON.stringify({
+
+    logger.info('Goals fetched', { count: goals.length, status, goalType });
+
+    return {
+      data: {
         success: true,
         goals,
         count: goals.length,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error fetching goals:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch goals',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    logger.error('Error fetching goals', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to fetch goals');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * POST /api/user/goals
- * Create a new goal
+ * POST - Create a new goal
  */
-export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
-  let prisma;
-  
+export const onRequestPost = authenticatedEndpoint(GoalCreateSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/goals');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Authenticate
-    const userId = await authenticateRequest(context.request, context.env);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Parse body
-    const body = await context.request.json() as GoalCreateBody;
+    logger.addContext({ userId: auth.userId });
+
     const {
       title,
       description,
@@ -146,38 +140,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       isRecurring,
       motivationNotes,
       rewardMessage,
-    } = body;
-    
-    // Validate required fields
-    if (!title || !goalType) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Missing required fields: title, goalType',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Validate goalType
-    const validGoalTypes = ['daily', 'weekly', 'exam_date', 'mastery'];
-    if (!validGoalTypes.includes(goalType)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `Invalid goalType. Must be one of: ${validGoalTypes.join(', ')}`,
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    
+    } = validated.body;
+
     // Create goal
     const goal = await prisma.userGoal.create({
       data: {
-        userId,
+        userId: auth.userId,
         title,
         description,
         goalType,
@@ -194,83 +162,74 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         progressPercentage: 0,
       },
     });
-    
-    return new Response(
-      JSON.stringify({
+
+    logger.info('Goal created', { goalId: goal.id, goalType, title });
+
+    return {
+      data: {
         success: true,
         goal,
         message: 'Goal created successfully',
-      }),
-      { status: 201, headers: { 'Content-Type': 'application/json' } }
-    );
+      },
+      status: 201,
+    };
   } catch (error) {
-    console.error('Error creating goal:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to create goal',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    logger.error('Error creating goal', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to create goal');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * PATCH /api/user/goals/:id
- * Update goal (progress, status, or any field)
+ * PATCH - Update goal (progress, status, or any field)
  */
-export async function onRequestPatch(context: { request: Request; env: Env }): Promise<Response> {
-  let prisma;
-  
+export const onRequestPatch = authenticatedEndpoint(GoalUpdateSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/user/goals');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Authenticate
-    const userId = await authenticateRequest(context.request, context.env);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
+    logger.addContext({ userId: auth.userId });
+
     // Get goal ID from path
     const url = new URL(context.request.url);
     const pathParts = url.pathname.split('/');
     const goalId = pathParts[pathParts.length - 1];
-    
+
     if (!goalId || goalId === 'goals') {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Goal ID required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      logger.warn('Goal ID missing in PATCH request');
+      return {
+        data: { success: false, error: 'Goal ID required' },
+        status: 400,
+      };
     }
-    
-    // Parse body
-    const updates = await context.request.json() as GoalUpdateBody;
-    
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    
+
+    const updates = validated.body;
+
     // Check ownership
     const existingGoal = await prisma.userGoal.findUnique({
       where: { id: goalId },
     });
-    
+
     if (!existingGoal) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Goal not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      logger.warn('Goal not found', { goalId });
+      return {
+        data: { success: false, error: 'Goal not found' },
+        status: 404,
+      };
     }
-    
-    if (existingGoal.userId !== userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+
+    if (existingGoal.userId !== auth.userId) {
+      logger.warn('Unauthorized goal access attempt', { goalId, attemptedBy: auth.userId });
+      return {
+        data: { success: false, error: 'Unauthorized' },
+        status: 403,
+      };
     }
-    
+
     // Calculate new progress percentage
     let progressPercentage = existingGoal.progressPercentage ?? 0;
     let status = existingGoal.status;
@@ -278,18 +237,13 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
     let currentStreak = existingGoal.currentStreak ?? 0;
     let bestStreak = existingGoal.bestStreak ?? 0;
     let lastMetDate = existingGoal.lastMetDate;
-    
+
     const currentValue = existingGoal.currentValue ?? 0;
-    const newCurrentValue = updates.currentValue !== undefined
-      ? updates.currentValue
-      : currentValue;
-    
+    const newCurrentValue = updates.currentValue !== undefined ? updates.currentValue : currentValue;
+
     if (existingGoal.targetValue) {
-      progressPercentage = Math.min(
-        100,
-        (newCurrentValue / existingGoal.targetValue) * 100
-      );
-      
+      progressPercentage = Math.min(100, (newCurrentValue / existingGoal.targetValue) * 100);
+
       // Auto-complete if target reached
       if (newCurrentValue >= existingGoal.targetValue && existingGoal.status === 'active') {
         status = 'completed';
@@ -297,7 +251,7 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
         currentStreak++;
         bestStreak = Math.max(bestStreak, currentStreak);
         lastMetDate = new Date();
-        
+
         // Reset for recurring goals
         if (existingGoal.isRecurring) {
           updates.currentValue = 0;
@@ -307,117 +261,112 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
         }
       }
     }
-    
+
+    // Prepare update data
+    const updateData: any = {
+      ...updates,
+      progressPercentage,
+      status: updates.status || status,
+      completedAt: updates.completedAt ? new Date(updates.completedAt) : completedAt,
+      currentStreak: updates.currentStreak !== undefined ? updates.currentStreak : currentStreak,
+      bestStreak: updates.bestStreak !== undefined ? updates.bestStreak : bestStreak,
+      lastMetDate: updates.lastMetDate ? new Date(updates.lastMetDate) : lastMetDate,
+      updatedAt: new Date(),
+    };
+
+    if (updates.targetDate) {
+      updateData.targetDate = new Date(updates.targetDate);
+    }
+
     // Update goal
     const goal = await prisma.userGoal.update({
       where: { id: goalId },
-      data: {
-        ...updates,
-        progressPercentage,
-        status: updates.status || status,
-        completedAt: updates.completedAt || completedAt,
-        currentStreak: updates.currentStreak !== undefined ? updates.currentStreak : currentStreak,
-        bestStreak: updates.bestStreak !== undefined ? updates.bestStreak : bestStreak,
-        lastMetDate: updates.lastMetDate || lastMetDate,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
-    
-    return new Response(
-      JSON.stringify({
+
+    logger.info('Goal updated', { goalId, updates: Object.keys(updates) });
+
+    return {
+      data: {
         success: true,
         goal,
         message: 'Goal updated successfully',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error updating goal:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to update goal',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    logger.error('Error updating goal', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to update goal');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
- * DELETE /api/user/goals/:id
- * Delete a goal
+ * DELETE - Delete a goal
  */
-export async function onRequestDelete(context: { request: Request; env: Env }): Promise<Response> {
-  let prisma;
-  
+export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/user/goals');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Authenticate
-    const userId = await authenticateRequest(context.request, context.env);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
+    logger.addContext({ userId: auth.userId });
+
     // Get goal ID from path
     const url = new URL(context.request.url);
     const pathParts = url.pathname.split('/');
     const goalId = pathParts[pathParts.length - 1];
-    
+
     if (!goalId || goalId === 'goals') {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Goal ID required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      logger.warn('Goal ID missing in DELETE request');
+      return {
+        data: { success: false, error: 'Goal ID required' },
+        status: 400,
+      };
     }
-    
-    // Create Prisma client
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    
+
     // Check ownership
     const existingGoal = await prisma.userGoal.findUnique({
       where: { id: goalId },
     });
-    
+
     if (!existingGoal) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Goal not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      logger.warn('Goal not found for deletion', { goalId });
+      return {
+        data: { success: false, error: 'Goal not found' },
+        status: 404,
+      };
     }
-    
-    if (existingGoal.userId !== userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+
+    if (existingGoal.userId !== auth.userId) {
+      logger.warn('Unauthorized goal deletion attempt', { goalId, attemptedBy: auth.userId });
+      return {
+        data: { success: false, error: 'Unauthorized' },
+        status: 403,
+      };
     }
-    
+
     // Delete goal
     await prisma.userGoal.delete({
       where: { id: goalId },
     });
-    
-    return new Response(
-      JSON.stringify({
+
+    logger.info('Goal deleted', { goalId });
+
+    return {
+      data: {
         success: true,
         message: 'Goal deleted successfully',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+      },
+    };
   } catch (error) {
-    console.error('Error deleting goal:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete goal',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    logger.error('Error deleting goal', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('Failed to delete goal');
   } finally {
-    if (prisma) await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

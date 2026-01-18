@@ -1,6 +1,6 @@
 /**
  * useVentilatorDrill - Hook for Ventilator Management drill mode
- * 
+ *
  * Fetches ventilator scenarios from the database and manages drill state.
  * Practice adjusting ventilator settings based on clinical scenarios and ABG results.
  */
@@ -93,13 +93,13 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
 
     try {
       const response = await fetch('/api/questions?category=ventilator&limit=20');
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch questions: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.questions || data.questions.length === 0) {
         throw new Error('No ventilator questions available. Please run seed script.');
       }
@@ -108,7 +108,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
       const transformedCases: VentCase[] = data.questions.map((q: any) => {
         const questionData = typeof q.question === 'string' ? JSON.parse(q.question) : q.question;
         const options = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : (q.tags || []);
+        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags || [];
 
         return {
           id: q.id,
@@ -189,8 +189,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });
@@ -236,8 +235,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
         questionsAttempted: sessionDataRef.current.questionsAttempted,
         correctAnswers: sessionDataRef.current.correctAnswers,
         accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) *
-          100,
+          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
         bestStreak: sessionDataRef.current.bestStreak,
       });

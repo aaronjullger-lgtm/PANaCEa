@@ -1,6 +1,6 @@
 /**
  * Step 5: Apply Full-Text Search Migration
- * 
+ *
  * This script applies the PostgreSQL full-text search migration to the MedicalContent table.
  * It adds a tsvector column, creates indexes, and sets up triggers for automatic updates.
  */
@@ -22,7 +22,7 @@ async function applyMigration(): Promise<void> {
     const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
     console.log('📝 Executing migration SQL...');
-    
+
     // Execute the migration using raw SQL
     await prisma.$executeRawUnsafe(migrationSQL);
 
@@ -33,13 +33,15 @@ async function applyMigration(): Promise<void> {
 
     // Test 1: Search for "diabetes"
     console.log('Test 1: Searching for "diabetes"...');
-    const diabetesResults = await prisma.$queryRaw<Array<{
-      id: string;
-      condition: string;
-      system: string;
-      rank: number;
-      headline: string;
-    }>>`
+    const diabetesResults = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        condition: string;
+        system: string;
+        rank: number;
+        headline: string;
+      }>
+    >`
       SELECT 
         id,
         condition,
@@ -58,16 +60,20 @@ async function applyMigration(): Promise<void> {
 
     console.log(`  Found ${diabetesResults.length} results:`);
     diabetesResults.forEach((result, i) => {
-      console.log(`  ${i + 1}. [${result.system}] ${result.condition} (rank: ${result.rank.toFixed(3)})`);
+      console.log(
+        `  ${i + 1}. [${result.system}] ${result.condition} (rank: ${result.rank.toFixed(3)})`
+      );
       console.log(`     ${result.headline.substring(0, 80)}...`);
     });
 
     // Test 2: Search for "chest pain"
     console.log('\nTest 2: Searching for "chest pain"...');
-    const chestPainResults = await prisma.$queryRaw<Array<{
-      condition: string;
-      rank: number;
-    }>>`
+    const chestPainResults = await prisma.$queryRaw<
+      Array<{
+        condition: string;
+        rank: number;
+      }>
+    >`
       SELECT condition, ts_rank(search_vector, websearch_to_tsquery('english', 'chest pain')) AS rank
       FROM "MedicalContent"
       WHERE search_vector @@ websearch_to_tsquery('english', 'chest pain')
@@ -112,10 +118,9 @@ async function applyMigration(): Promise<void> {
 
     console.log('\n✅ Full-text search is ready to use!\n');
     console.log('💡 Usage in API endpoints:');
-    console.log('   Use: WHERE search_vector @@ websearch_to_tsquery(\'english\', $1)');
-    console.log('   Instead of: WHERE condition LIKE \'%search%\'');
+    console.log("   Use: WHERE search_vector @@ websearch_to_tsquery('english', $1)");
+    console.log("   Instead of: WHERE condition LIKE '%search%'");
     console.log('\n💡 The search_vector is automatically updated via triggers on INSERT/UPDATE\n');
-
   } catch (error) {
     console.error('❌ Error applying migration:', error);
     throw error;
@@ -149,21 +154,23 @@ async function main() {
   if (alreadyApplied && !force) {
     console.log('ℹ️  Full-text search is already set up.');
     console.log('   Use --force to reapply the migration.\n');
-    
+
     // Just run tests
     console.log('🧪 Running search tests...\n');
-    
-    const testResults = await prisma.$queryRaw<Array<{
-      condition: string;
-      system: string;
-    }>>`
+
+    const testResults = await prisma.$queryRaw<
+      Array<{
+        condition: string;
+        system: string;
+      }>
+    >`
       SELECT condition, system
       FROM "MedicalContent"
       WHERE search_vector @@ websearch_to_tsquery('english', 'heart attack')
       ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', 'heart attack')) DESC
       LIMIT 3
     `;
-    
+
     console.log('  Search for "heart attack":');
     testResults.forEach((r, i) => {
       console.log(`  ${i + 1}. [${r.system}] ${r.condition}`);
@@ -176,7 +183,7 @@ async function main() {
 }
 
 main()
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);
   })

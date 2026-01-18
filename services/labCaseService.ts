@@ -1,6 +1,6 @@
 /**
  * Lab Case Service
- * 
+ *
  * Fetches lab cases from the database API for Mini Lab Drill mode.
  * Follows the Database-First architecture - no static fallbacks.
  */
@@ -42,7 +42,8 @@ export async function fetchLabCases(
   params.set('limit', limit.toString());
   params.set('shuffle', 'true');
 
-  const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+  const baseUrl =
+    typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
 
   const response = await fetch(`${baseUrl}/api/drills/lab-cases?${params.toString()}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -53,7 +54,7 @@ export async function fetchLabCases(
   }
 
   const data: LabCasesResponse = await response.json();
-  
+
   if (!data.success) {
     throw new Error(data.error || 'Failed to fetch lab cases');
   }
@@ -72,7 +73,8 @@ export async function fetchValidDiagnoses(token?: string | null): Promise<string
     return [];
   }
 
-  const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+  const baseUrl =
+    typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
 
   const response = await fetch(`${baseUrl}/api/drills/lab-cases`, {
     method: 'POST',
@@ -88,7 +90,7 @@ export async function fetchValidDiagnoses(token?: string | null): Promise<string
   }
 
   const data: DiagnosesResponse = await response.json();
-  
+
   if (!data.success) {
     throw new Error(data.error || 'Failed to fetch diagnoses');
   }
@@ -121,13 +123,16 @@ export async function getCachedDiagnoses(token?: string | null): Promise<string[
 
   // Fetch from API
   const diagnoses = await fetchValidDiagnoses(token);
-  
+
   // Update cache
   try {
-    localStorage.setItem(DIAGNOSES_CACHE_KEY, JSON.stringify({
-      diagnoses,
-      timestamp: Date.now(),
-    }));
+    localStorage.setItem(
+      DIAGNOSES_CACHE_KEY,
+      JSON.stringify({
+        diagnoses,
+        timestamp: Date.now(),
+      })
+    );
   } catch {
     // Storage full, ignore
   }

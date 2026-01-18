@@ -1,6 +1,6 @@
 /**
  * Quiz Components Export
- * 
+ *
  * Exports all quiz-related components for the main study session.
  */
 
@@ -12,8 +12,8 @@ export { SessionEndSummary } from './SessionEndSummary';
 export { SRSFeedbackBadge } from './SRSFeedbackBadge';
 export { QuestionTimer } from './QuestionTimer';
 // Behavioral confidence (no manual input needed)
-export { 
-  BehavioralCalibration, 
+export {
+  BehavioralCalibration,
   ConfidenceBadge,
   useBehavioralTracking,
 } from './BehavioralCalibration';

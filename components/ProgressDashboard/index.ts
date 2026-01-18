@@ -1,6 +1,6 @@
 /**
  * Progress Dashboard Components
- * 
+ *
  * Re-exports all progress visualization components.
  */
 

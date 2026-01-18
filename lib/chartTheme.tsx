@@ -2,7 +2,7 @@ import React from 'react';
 
 /**
  * Recharts Theme Configuration
- * 
+ *
  * Centralized styling for all Recharts components using CSS variables.
  * Ensures consistent theming across light/dark modes.
  */
@@ -72,8 +72,8 @@ export const chartTheme = {
     secondary: 'var(--color-accent-secondary)',
     success: '#10b981', // Emerald 500
     warning: '#f59e0b', // Amber 500
-    error: '#ef4444',   // Red 500
-    info: '#3b82f6',    // Blue 500
+    error: '#ef4444', // Red 500
+    info: '#3b82f6', // Blue 500
     neutral: '#64748b', // Slate 500
   },
 
@@ -81,19 +81,19 @@ export const chartTheme = {
    * Gradient definitions for areas/bars
    */
   gradients: {
-    primary: ['#3b82f6', '#1e40af'],      // Blue gradient
-    success: ['#10b981', '#059669'],      // Emerald gradient
-    warning: ['#f59e0b', '#d97706'],      // Amber gradient
-    error: ['#ef4444', '#dc2626'],        // Red gradient
-    accent: ['#8b5cf6', '#7c3aed'],       // Purple gradient
-    performance: ['#3b82f6', '#10b981'],  // Blue to emerald
+    primary: ['#3b82f6', '#1e40af'], // Blue gradient
+    success: ['#10b981', '#059669'], // Emerald gradient
+    warning: ['#f59e0b', '#d97706'], // Amber gradient
+    error: ['#ef4444', '#dc2626'], // Red gradient
+    accent: ['#8b5cf6', '#7c3aed'], // Purple gradient
+    performance: ['#3b82f6', '#10b981'], // Blue to emerald
   },
 };
 
 /**
  * Helper to create a linear gradient definition for Recharts
  * Usage: <defs>{createGradient('myGradient', chartTheme.gradients.primary)}</defs>
- * 
+ *
  * Returns JSX.Element that should be placed inside a <defs> tag in your chart
  */
 export const createGradient = (id: string, colors: string[]): JSX.Element => {
@@ -110,9 +110,9 @@ export const createGradient = (id: string, colors: string[]): JSX.Element => {
  * Returns appropriate height based on container width
  */
 export const getResponsiveHeight = (width: number): number => {
-  if (width < 640) return 200;  // Mobile
+  if (width < 640) return 200; // Mobile
   if (width < 1024) return 250; // Tablet
-  return 300;                    // Desktop
+  return 300; // Desktop
 };
 
 export default chartTheme;

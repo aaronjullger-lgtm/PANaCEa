@@ -15,6 +15,7 @@ Successfully migrated photo/ECG/derm drills from static mock data to real databa
 ## Changes Made
 
 ### 1. Schema Update ✅
+
 **File**: `prisma/schema.prisma`
 
 Added three new fields to `MediaAsset` model to support drill quiz functionality:
@@ -27,11 +28,13 @@ clinicalContext  Json?   // Patient demographics, vitals, chief complaint
 ```
 
 **Action Required**: User must run database migration:
+
 ```bash
 npx prisma db push
 ```
 
 ### 2. API Endpoint Creation ✅
+
 **File**: `functions/api/drills/media.ts` (NEW - 265 lines)
 
 Created Cloudflare Function endpoint for database-driven media drill questions:
@@ -53,9 +56,11 @@ Created Cloudflare Function endpoint for database-driven media drill questions:
   - Shuffle for randomization
 
 ### 3. Hook Refactor ✅
+
 **File**: `hooks/game/use-photo-drill.ts` (770 → 530 lines, -240 lines)
 
 **Deleted**:
+
 - ❌ `MASTER_CONDITION_LIST` (28 static conditions)
 - ❌ `ECG_CONDITIONS` (10 conditions)
 - ❌ `DERM_CONDITIONS` (8 conditions)
@@ -67,6 +72,7 @@ Created Cloudflare Function endpoint for database-driven media drill questions:
 - ❌ All placeholder image generation logic
 
 **Added**:
+
 - ✅ `fetchPhotoCases()` - API consumer function
 - ✅ `fetchMoreCases()` - wrapper callback for category-aware fetching
 - ✅ Background queue refill via `useEffect` (auto-refills at 5 remaining)
@@ -75,11 +81,13 @@ Created Cloudflare Function endpoint for database-driven media drill questions:
 - ✅ Dynamic `validDiagnoses` - extracted from current queue (all diagnoses + distractors)
 
 **Modified**:
+
 - `nextCase()` - simplified, relies on background refill
 - `skipCase()` - simplified, no generation logic
 - `validDiagnoses` - now derived from actual API data (not static lists)
 
 ### 4. Component Update ✅
+
 **File**: `components/drill/DiagnosisInput.tsx`
 
 - Removed import of deleted `MASTER_CONDITION_LIST`
@@ -91,17 +99,20 @@ Created Cloudflare Function endpoint for database-driven media drill questions:
 ## Impact Analysis
 
 ### Bundle Size Reduction
+
 - Photo drill hook: **-240 lines** (-31%)
 - Eliminated static condition arrays and templates
 - Data now fetched on-demand from database
 
 ### Performance Improvements
+
 - ✅ Smart queue management (refills at 5 remaining)
 - ✅ Background prefetch (non-blocking)
 - ✅ Real images replace placeholders
 - ✅ Server-side data generation offloads client
 
 ### Database Requirements
+
 **Critical**: MediaAsset table must have approved images with quiz fields populated:
 
 ```sql
@@ -114,6 +125,7 @@ WHERE status = 'approved'
 ```
 
 If count is 0, photo drills will fail to load. Must populate quiz fields via:
+
 1. Manual data entry (Prisma Studio)
 2. Migration script (bulk import)
 3. Admin CMS (future feature)
@@ -123,11 +135,13 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 ## Testing Checklist
 
 ### Pre-Testing Setup
+
 - [ ] Run `npx prisma db push` to apply schema changes
 - [ ] Verify MediaAsset table has approved images with quiz data
 - [ ] Check Cloudflare environment variables set (DATABASE_URL)
 
 ### Functionality Tests
+
 - [ ] Start ECG drill - images load from database
 - [ ] Start Derm drill - images load with clinical context
 - [ ] Start Radiology drill - X-ray images load
@@ -138,11 +152,13 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 - [ ] Reset drill - fetches fresh queue
 
 ### Error Handling Tests
+
 - [ ] No approved images - shows error alert, stays on menu
 - [ ] API fails mid-session - continues with existing queue
 - [ ] Background refill fails - continues silently (logs error)
 
 ### Build Verification
+
 - [x] `npm run build` - passes (6.60s)
 - [x] No TypeScript errors
 - [x] No import errors
@@ -156,11 +172,13 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 **To**: Database-first via `/api/drills/media`
 
 ### For Developers
+
 1. **No breaking changes** to existing drill UI components
 2. PhotoCase interface unchanged - API response matches exactly
 3. DiagnosisInput now requires `options` prop (was optional)
 
 ### For Content Editors
+
 1. Add quiz data to MediaAsset table via Prisma Studio:
    - Set `correctDiagnosis` (string)
    - Set `distractors` (JSON array of strings)
@@ -173,21 +191,25 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 ## Next Steps (Sprint 2 Remaining)
 
 ### Step 3: Condition Drill API
+
 - [ ] Create `/api/drills/condition` endpoint
 - [ ] Query MedicalContent table for condition-based questions
 - [ ] Refactor `use-condition-drill.ts` hook
 
 ### Step 4: Lab Drill API
+
 - [ ] Create `/api/drills/lab` endpoint
 - [ ] Query Lab table for lab values/scenarios
 - [ ] Refactor `use-lab-drill.ts` hook
 
 ### Step 5: Imaging Drill API
+
 - [ ] Create `/api/drills/imaging` endpoint
 - [ ] Use MediaAsset for imaging-specific questions
 - [ ] Refactor `use-imaging-drill.ts` hook
 
 ### Step 6: ECG Drill API
+
 - [ ] Update `/api/drills/media` or create separate endpoint
 - [ ] ECG-specific filtering and metadata
 - [ ] Refactor `use-ecg-drill.ts` hook
@@ -197,14 +219,17 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 ## Files Modified
 
 **Created**:
+
 - `functions/api/drills/media.ts` (265 lines)
 
 **Modified**:
+
 - `prisma/schema.prisma` (+6 lines: 3 new MediaAsset fields)
 - `hooks/game/use-photo-drill.ts` (770 → 530 lines, -240 lines)
 - `components/drill/DiagnosisInput.tsx` (-13 lines: removed import/export)
 
 **Deleted** (code removal, not file deletion):
+
 - Static condition arrays (MASTER_CONDITION_LIST, etc.)
 - Mock data generation functions (generateRandomCase, etc.)
 - Clinical context templates (DERM_CLINICAL_CONTEXTS)
@@ -214,7 +239,9 @@ If count is 0, photo drills will fail to load. Must populate quiz fields via:
 ## Architecture Notes
 
 ### Database-First Pattern Established
+
 Following the pharm drill pattern from Step 1:
+
 1. ✅ API endpoint in `/functions/api/drills/`
 2. ✅ Prisma Edge client for database access
 3. ✅ Hook consumes API, no local generation
@@ -222,12 +249,14 @@ Following the pharm drill pattern from Step 1:
 5. ✅ Async session initialization
 
 ### Key Differences from Pharm Drill
+
 - **Photo drill**: Uses MediaAsset table (images)
 - **Pharm drill**: Uses Drug table (text/JSON)
 - **Photo drill**: Requires approved clinical images
 - **Pharm drill**: Generates questions from drug metadata
 
 ### Cloudflare Functions Advantages
+
 - ✅ Zero cold start (always warm)
 - ✅ Global edge deployment
 - ✅ Automatic scaling
@@ -243,6 +272,7 @@ Following the pharm drill pattern from Step 1:
 3. **No Offline Mode**: Requires API connection (no static fallback)
 
 ### Recommended Mitigations
+
 - Maintain minimum 50 approved images per modality in production
 - Monitor API logs for refill failures
 - Consider implementing queue size warnings in UI

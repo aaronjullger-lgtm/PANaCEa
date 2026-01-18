@@ -3,12 +3,14 @@
 ## 🚀 Quick Setup (5 Minutes)
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 npx prisma generate
 ```
 
 ### 2. Set Up Database
+
 ```bash
 # Option A: Use existing DATABASE_URL from .env
 # Option B: Set up fresh database
@@ -16,6 +18,7 @@ npx prisma migrate dev --name init
 ```
 
 ### 3. Start Development
+
 ```bash
 # Terminal 1: Frontend + Backend
 npm run dev:all
@@ -25,6 +28,7 @@ npm run worker
 ```
 
 ### 4. Access the Application
+
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 - Prisma Studio: `npx prisma studio`
@@ -132,26 +136,30 @@ lib/services/
 ## 🧪 Testing
 
 ### Run All Tests
+
 ```bash
 npm test
 ```
 
 ### Run Specific Test Suite
+
 ```bash
 npm test tests/cms          # CMS tests only
 npm test tests/cms/rbac     # RBAC tests only
 ```
 
 ### Test RBAC Permissions
+
 ```typescript
 import { canEditContent } from './functions/api/_shared/rbac';
 
-canEditContent('viewer')   // false
-canEditContent('editor')   // true
-canEditContent('admin')    // true
+canEditContent('viewer'); // false
+canEditContent('editor'); // true
+canEditContent('admin'); // true
 ```
 
 ### Test State Machine
+
 ```typescript
 import { transitionStatus } from './lib/services/cms/contentService';
 
@@ -165,27 +173,31 @@ await transitionStatus(prisma, contentId, 'published', options); // ❌
 ## 🔍 Debugging
 
 ### View Database
+
 ```bash
 npx prisma studio
 # Opens GUI at http://localhost:5555
 ```
 
 ### Check Job Queue
+
 ```sql
-SELECT * FROM "BackgroundJob" 
-WHERE status = 'pending' 
-ORDER BY priority DESC, "scheduledFor" ASC 
+SELECT * FROM "BackgroundJob"
+WHERE status = 'pending'
+ORDER BY priority DESC, "scheduledFor" ASC
 LIMIT 10;
 ```
 
 ### Monitor Audit Logs
+
 ```sql
-SELECT * FROM "ContentAuditLog" 
-WHERE "contentId" = 'your-uuid' 
+SELECT * FROM "ContentAuditLog"
+WHERE "contentId" = 'your-uuid'
 ORDER BY "changedAt" DESC;
 ```
 
 ### Test Offline Sync
+
 ```javascript
 // In browser console
 import { queueOperation, getQueueStatus } from './lib/services/sync/offlineSync';
@@ -229,29 +241,30 @@ npx prisma generate
 ## 🎯 RBAC Quick Reference
 
 ### Role Hierarchy
+
 ```
 user < viewer < editor < approver < admin < superadmin
 ```
 
 ### Permissions Matrix
 
-| Action | User | Viewer | Editor | Approver | Admin | Superadmin |
-|--------|------|--------|--------|----------|-------|------------|
-| View CMS | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create/Edit | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Approve | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Publish | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Manage Roles | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Action       | User | Viewer | Editor | Approver | Admin | Superadmin |
+| ------------ | ---- | ------ | ------ | -------- | ----- | ---------- |
+| View CMS     | ❌   | ✅     | ✅     | ✅       | ✅    | ✅         |
+| Create/Edit  | ❌   | ❌     | ✅     | ✅       | ✅    | ✅         |
+| Approve      | ❌   | ❌     | ❌     | ✅       | ✅    | ✅         |
+| Publish      | ❌   | ❌     | ❌     | ❌       | ✅    | ✅         |
+| Manage Roles | ❌   | ❌     | ❌     | ❌       | ❌    | ✅         |
 
 ### Check Permissions
 
 ```typescript
-import { 
-  canViewCMS, 
-  canEditContent, 
-  canApproveContent, 
+import {
+  canViewCMS,
+  canEditContent,
+  canApproveContent,
   canPublishContent,
-  getAllowedOperations 
+  getAllowedOperations,
 } from './functions/api/_shared/rbac';
 
 // Check specific permission
@@ -317,11 +330,13 @@ await transitionStatus(prisma, content.id, 'published', options);
 ## 🐛 Common Issues
 
 ### Issue: Prisma Client Not Generated
+
 ```bash
 npx prisma generate
 ```
 
 ### Issue: Database Connection Error
+
 ```bash
 # Check DATABASE_URL in .env
 echo $DATABASE_URL
@@ -331,6 +346,7 @@ npx prisma db pull
 ```
 
 ### Issue: Tests Failing
+
 ```bash
 # Clear cache
 rm -rf node_modules/.vite
@@ -338,6 +354,7 @@ npm test
 ```
 
 ### Issue: Build Errors
+
 ```bash
 # Clean and rebuild
 rm -rf dist
@@ -363,30 +380,35 @@ npm run build
 ## 🎓 Learning Path
 
 ### Day 1: Setup & Basics
+
 1. Set up environment
 2. Run tests
 3. Explore Prisma Studio
 4. Test API endpoints with Postman
 
 ### Day 2: RBAC & Permissions
+
 1. Review `rbac.ts`
 2. Test different user roles
 3. Understand permission checks
 4. Write custom permission logic
 
 ### Day 3: Content Management
+
 1. Study `contentService.ts`
 2. Test state machine transitions
 3. Review audit logging
 4. Create/update content via API
 
 ### Day 4: Background Jobs
+
 1. Study `jobQueue.ts`
 2. Run background worker
 3. Create custom job types
 4. Test job scheduling
 
 ### Day 5: Integration
+
 1. Connect frontend to new APIs
 2. Test complete workflows
 3. Review error handling

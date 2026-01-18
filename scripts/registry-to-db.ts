@@ -48,8 +48,10 @@ interface RegistryMeta {
   [key: string]: any;
 }
 
-async function loadRegistry(): Promise<{ registry: RegistryMeta[]; buildConditionDefinition: (meta: any) => any }>
-{  
+async function loadRegistry(): Promise<{
+  registry: RegistryMeta[];
+  buildConditionDefinition: (meta: any) => any;
+}> {
   const registryPath = path.resolve(process.cwd(), 'conditionRegistry.ts');
   const registryUrl = pathToFileURL(registryPath).href;
   const mod = await import(registryUrl);
@@ -92,7 +94,11 @@ async function upsertRegistryEntries() {
     const subcategory = def.subcategory || meta.subcategory || 'General';
 
     if (!conditionId || !conditionName || !system) {
-      console.warn(`[registry-to-db] Skipping entry missing required fields`, { conditionId, conditionName, system });
+      console.warn(`[registry-to-db] Skipping entry missing required fields`, {
+        conditionId,
+        conditionName,
+        system,
+      });
       stats.skipped++;
       continue;
     }

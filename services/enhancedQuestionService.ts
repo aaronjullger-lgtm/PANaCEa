@@ -1,17 +1,17 @@
 /**
  * Enhanced Question Generation Service
- * 
+ *
  * Generates high-quality PANCE questions by leveraging the rich database content.
  * Uses MedicalContent, Condition, and linked entities for contextual generation.
  */
 
 import type { Question, SessionSettings } from '../types';
-import { 
-  getWeightedRandomSystem, 
-  getWeightedRandomTask, 
-  recordQuestion, 
+import {
+  getWeightedRandomSystem,
+  getWeightedRandomTask,
+  recordQuestion,
   normalizeSystemCode,
-  PANCE_SYSTEM_PERCENTAGES
+  PANCE_SYSTEM_PERCENTAGES,
 } from './panceDistributionService';
 
 interface DatabaseCondition {
@@ -60,9 +60,11 @@ interface EnhancedQuestionContext {
  */
 async function fetchRandomConditionBySystem(system: string): Promise<DatabaseCondition | null> {
   try {
-    const response = await fetch(`/api/conditions?system=${system}&status=published&random=true&limit=1`);
+    const response = await fetch(
+      `/api/conditions?system=${system}&status=published&random=true&limit=1`
+    );
     if (!response.ok) return null;
-    
+
     const data = await response.json();
     if (data.conditions && data.conditions.length > 0) {
       return data.conditions[0];
@@ -77,9 +79,11 @@ async function fetchRandomConditionBySystem(system: string): Promise<DatabaseCon
 /**
  * Fetch linked entities for a condition
  */
-async function fetchLinkedEntities(conditionId: string): Promise<EnhancedQuestionContext['linkedEntities']> {
+async function fetchLinkedEntities(
+  conditionId: string
+): Promise<EnhancedQuestionContext['linkedEntities']> {
   const entities: EnhancedQuestionContext['linkedEntities'] = {};
-  
+
   try {
     // Fetch lab tests linked to this condition
     const labResponse = await fetch(`/api/labtests?conditionId=${conditionId}&limit=5`);
@@ -87,14 +91,14 @@ async function fetchLinkedEntities(conditionId: string): Promise<EnhancedQuestio
       const labData = await labResponse.json();
       entities.labs = labData.labTests?.slice(0, 5);
     }
-    
+
     // Fetch imaging studies linked to this condition
     const imagingResponse = await fetch(`/api/imaging?conditionId=${conditionId}&limit=3`);
     if (imagingResponse.ok) {
       const imagingData = await imagingResponse.json();
       entities.imaging = imagingData.imagingStudies?.slice(0, 3);
     }
-    
+
     // Fetch drugs linked to this condition
     const drugResponse = await fetch(`/api/drugs?conditionId=${conditionId}&limit=5`);
     if (drugResponse.ok) {
@@ -104,7 +108,7 @@ async function fetchLinkedEntities(conditionId: string): Promise<EnhancedQuestio
   } catch (error) {
     console.warn('[EnhancedQuestionService] Failed to fetch linked entities:', error);
   }
-  
+
   return entities;
 }
 
@@ -114,7 +118,7 @@ async function fetchLinkedEntities(conditionId: string): Promise<EnhancedQuestio
 function buildEnhancedContext(context: EnhancedQuestionContext): string {
   const { condition, linkedEntities, task, difficulty } = context;
   const content = condition.content || {};
-  
+
   let contextStr = `## Condition: ${condition.name}
 System: ${condition.system}
 ${condition.subcategory ? `Subcategory: ${condition.subcategory}` : ''}
@@ -168,7 +172,7 @@ ${content.treatment || ''}
   // Add linked lab tests
   if (linkedEntities.labs && linkedEntities.labs.length > 0) {
     contextStr += `### Relevant Lab Tests
-${linkedEntities.labs.map(lab => `- ${lab.name}: ${lab.significance || ''}`).join('\n')}
+${linkedEntities.labs.map((lab) => `- ${lab.name}: ${lab.significance || ''}`).join('\n')}
 
 `;
   }
@@ -176,7 +180,7 @@ ${linkedEntities.labs.map(lab => `- ${lab.name}: ${lab.significance || ''}`).joi
   // Add linked imaging
   if (linkedEntities.imaging && linkedEntities.imaging.length > 0) {
     contextStr += `### Relevant Imaging
-${linkedEntities.imaging.map(img => `- ${img.name}: ${img.findings || ''}`).join('\n')}
+${linkedEntities.imaging.map((img) => `- ${img.name}: ${img.findings || ''}`).join('\n')}
 
 `;
   }
@@ -210,7 +214,7 @@ export async function generateEnhancedQuestion(
   try {
     // Determine system based on PANCE distribution
     let targetSystem: string;
-    
+
     if (settings.focus === 'topic' && settings.topic) {
       targetSystem = normalizeSystemCode(settings.topic) || settings.topic;
     } else if (settings.focus === 'growth' && growthAreas.length > 0) {
@@ -220,21 +224,21 @@ export async function generateEnhancedQuestion(
       // Use PANCE-weighted distribution
       targetSystem = getWeightedRandomSystem(enabledSystems);
     }
-    
+
     // Get random task
     const task = getWeightedRandomTask();
-    
+
     // Fetch a random condition from this system
     const condition = await fetchRandomConditionBySystem(targetSystem);
-    
+
     if (!condition) {
       console.warn(`[EnhancedQuestionService] No condition found for system ${targetSystem}`);
       return null;
     }
-    
+
     // Fetch linked entities for richer context
     const linkedEntities = await fetchLinkedEntities(condition.id);
-    
+
     // Build enhanced context
     const context: EnhancedQuestionContext = {
       condition,
@@ -242,7 +246,7 @@ export async function generateEnhancedQuestion(
       task,
       difficulty: settings.difficulty || 'same',
     };
-    
+
     // Generate question via API with enhanced context
     const response = await fetch('/api/questions/generate-enhanced', {
       method: 'POST',
@@ -256,17 +260,17 @@ export async function generateEnhancedQuestion(
         difficulty: settings.difficulty || 'same',
       }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Generation API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (data.question) {
       // Record this question in distribution tracker
       recordQuestion(targetSystem, task);
-      
+
       return {
         id: data.question.id || `enhanced-${Date.now()}`,
         question: data.question.vignette || data.question.question,
@@ -286,7 +290,7 @@ export async function generateEnhancedQuestion(
         },
       } as Question;
     }
-    
+
     return null;
   } catch (error) {
     console.error('[EnhancedQuestionService] Generation failed:', error);

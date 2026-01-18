@@ -373,3 +373,4 @@ NODE_ENV=production
 ### Issue: "Skeleton doesn't match content layout"
 -   **Cause:** Skeleton structure differs from actual component
 -   **Fix:** Match skeleton dimensions to loaded content (use same height/width)
+-   ALWAYS use the full absolute path

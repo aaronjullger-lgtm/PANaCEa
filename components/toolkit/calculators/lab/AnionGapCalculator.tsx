@@ -1,11 +1,11 @@
 /**
  * Anion Gap Calculator
- * 
+ *
  * Calculates serum anion gap for metabolic acidosis assessment.
  * Formula: AG = Na⁺ − (Cl⁻ + HCO₃⁻)
- * 
+ *
  * Optional albumin correction: Corrected AG = AG + 2.5 × (4 − albumin)
- * 
+ *
  * Interpretation:
  * - <3: Low AG (hypoalbuminemia, lab error)
  * - 8-12: Normal AG
@@ -51,7 +51,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       return {
         score: gap,
         interpretation: 'Low Anion Gap',
-        recommendation: 'Consider hypoalbuminemia, hypercalcemia, hypermag nesemia, lithium toxicity, or lab error.',
+        recommendation:
+          'Consider hypoalbuminemia, hypercalcemia, hypermag nesemia, lithium toxicity, or lab error.',
         riskLevel: 'low',
         details: 'Low AG is uncommon. Verify lab values and consider repeat testing.',
       };
@@ -61,23 +62,28 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         interpretation: 'Normal Anion Gap',
         recommendation: 'No metabolic acidosis or normal AG acidosis (non-AG metabolic acidosis).',
         riskLevel: 'low',
-        details: 'Normal range: 8-12 mEq/L. If acidotic with normal AG, consider diarrhea, RTA, or early kidney disease.',
+        details:
+          'Normal range: 8-12 mEq/L. If acidotic with normal AG, consider diarrhea, RTA, or early kidney disease.',
       };
     } else if (gap <= 20) {
       return {
         score: gap,
         interpretation: 'Elevated Anion Gap',
-        recommendation: 'Evaluate for MUDPILES causes (methanol, uremia, DKA, propylene glycol, INH/iron, lactic acidosis, ethylene glycol, salicylates).',
+        recommendation:
+          'Evaluate for MUDPILES causes (methanol, uremia, DKA, propylene glycol, INH/iron, lactic acidosis, ethylene glycol, salicylates).',
         riskLevel: 'moderate',
-        details: 'Mild elevation (12-20). Consider lactic acidosis (most common) or early ketoacidosis.',
+        details:
+          'Mild elevation (12-20). Consider lactic acidosis (most common) or early ketoacidosis.',
       };
     } else {
       return {
         score: gap,
         interpretation: 'Significantly Elevated',
-        recommendation: 'High AG metabolic acidosis. Urgent workup for MUDPILES causes. Check lactate, ketones, osmolar gap, and toxicology screen.',
+        recommendation:
+          'High AG metabolic acidosis. Urgent workup for MUDPILES causes. Check lactate, ketones, osmolar gap, and toxicology screen.',
         riskLevel: 'high',
-        details: 'Severe elevation (>20). Common causes: severe DKA, uremia, lactic acidosis (sepsis/shock), toxic alcohols.',
+        details:
+          'Severe elevation (>20). Common causes: severe DKA, uremia, lactic acidosis (sepsis/shock), toxic alcohols.',
       };
     }
   };
@@ -112,9 +118,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             <div className="font-mono text-lg font-semibold text-blue-200">
               AG = Na⁺ − (Cl⁻ + HCO₃⁻)
             </div>
-            <div className="text-sm text-blue-300 mt-1">
-              Normal range: 8-12 mEq/L
-            </div>
+            <div className="text-sm text-blue-300 mt-1">Normal range: 8-12 mEq/L</div>
           </div>
         </div>
       </div>
@@ -168,7 +172,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         {correctedAG && ag && correctedAG !== ag && (
           <div className="p-3 bg-blue-950/30 border border-blue-800 rounded-lg">
             <p className="text-sm text-blue-200">
-              <strong>Albumin-corrected:</strong> Uncorrected AG = {ag}, Corrected AG = {correctedAG}
+              <strong>Albumin-corrected:</strong> Uncorrected AG = {ag}, Corrected AG ={' '}
+              {correctedAG}
             </p>
           </div>
         )}
@@ -185,7 +190,10 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6"
           >
-            <h3 className="text-xl font-bold text-slate-100 mb-4" style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}>
+            <h3
+              className="text-xl font-bold text-slate-100 mb-4"
+              style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+            >
               MUDPILES Differential
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

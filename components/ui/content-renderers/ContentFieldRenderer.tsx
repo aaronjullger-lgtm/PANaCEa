@@ -2,10 +2,10 @@ import React from 'react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { BulletListRenderer } from './BulletListRenderer';
 import { KeyValueRenderer } from './KeyValueRenderer';
-import { 
-  getFieldRenderType, 
+import {
+  getFieldRenderType,
   type ContentFieldValue,
-  type FieldRenderType 
+  type FieldRenderType,
 } from '@/types/medical-content';
 import { normalizeToStringArray } from '@/lib/utils/jsonParser';
 
@@ -17,16 +17,16 @@ interface ContentFieldRendererProps {
 
 /**
  * ContentFieldRenderer - Master component that routes to appropriate renderer
- * 
+ *
  * Intelligently determines how to render medical content based on its structure:
  * - null/undefined → Returns null (hides section)
  * - string → MarkdownRenderer
  * - string[] → BulletListRenderer
  * - object with treatment steps → Numbered list with clinical styling
  * - object (generic) → KeyValueRenderer
- * 
+ *
  * This solves the [object Object] rendering bug by properly handling all data types.
- * 
+ *
  * @param value - The content to render
  * @param className - Additional CSS classes
  * @param variant - Visual style variant for lists
@@ -43,50 +43,30 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
       return null;
 
     case 'markdown':
-      return (
-        <MarkdownRenderer 
-          content={value as string} 
-          className={className}
-        />
-      );
+      return <MarkdownRenderer content={value as string} className={className} />;
 
     case 'bullet-list':
       return (
-        <BulletListRenderer 
-          items={value as string[]} 
-          variant={variant}
-          className={className}
-        />
+        <BulletListRenderer items={value as string[]} variant={variant} className={className} />
       );
 
     case 'steps':
       // Treatment steps or ordered procedures
       const steps = extractSteps(value);
       return (
-        <BulletListRenderer 
-          items={steps} 
-          variant="clinical"
-          showNumbers
-          className={className}
-        />
+        <BulletListRenderer items={steps} variant="clinical" showNumbers className={className} />
       );
 
     case 'key-value':
-      return (
-        <KeyValueRenderer 
-          data={value as Record<string, unknown>}
-          className={className}
-        />
-      );
+      return <KeyValueRenderer data={value as Record<string, unknown>} className={className} />;
 
     default:
       // Fallback: try to render as string
-      console.warn('[ContentFieldRenderer] Unknown render type, falling back to string:', { value, renderType });
-      return (
-        <div className={`text-[var(--color-text-primary)] ${className}`}>
-          {String(value)}
-        </div>
-      );
+      console.warn('[ContentFieldRenderer] Unknown render type, falling back to string:', {
+        value,
+        renderType,
+      });
+      return <div className={`text-[var(--color-text-primary)] ${className}`}>{String(value)}</div>;
   }
 };
 
@@ -150,7 +130,7 @@ export const ClassicTriadRenderer: React.FC<{
   className?: string;
 }> = ({ triad, className }) => {
   const items = normalizeToStringArray(triad);
-  
+
   if (items.length === 0) return null;
 
   return (

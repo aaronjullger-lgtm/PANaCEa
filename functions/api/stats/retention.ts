@@ -1,78 +1,39 @@
 /**
  * Retention Stats API Endpoint
  * GET /api/stats/retention
- * 
- * Returns retention analytics for dashboard visualizations:
- * - Decay curve data (30-day projection)
- * - Stability distribution (buckets)
- * - Due count and review stats
+ * Returns retention analytics for dashboard visualizations
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken, type Env } from '../_shared/auth';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+const RetentionStatsSchema = z.object({});
 
-export const onRequestOptions = handleCorsOptions;
+export const onRequestOptions = withCors();
 
-/**
- * GET /api/stats/retention
- */
-export const onRequestGet = async (context: PagesContext): Promise<Response> => {
-
-  const { request, env } = context;
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/stats/retention');
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
-    // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
-      where: { clerkId },
+      where: { clerkId: auth.userId },
       select: { id: true },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'User not found',
-        message: 'Your user account has not been synced yet. Please refresh and try again.',
-      }), {
+      return {
+        data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
         status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      };
     }
 
     const userId = user.id;
     const now = new Date();
 
-    // Get all SRS items for this user
     const srsItems = await prisma.sRSItem.findMany({
       where: { userId },
       select: {
@@ -86,21 +47,16 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
       },
     });
 
-    // Calculate due count
     const dueCount = srsItems.filter((item) => item.dueDate <= now).length;
 
-    // Generate decay curve data (0-30 days)
-    const decayCurveData = Array.from({ length: 31 }, (_, day) => {
-      // Simplified retention probability based on FSRS average
-      const avgStability = srsItems.reduce((sum, item) => sum + (item.fsrsStability || 5), 0) / (srsItems.length || 1);
-      const retentionProb = Math.exp(-day / avgStability) * 100;
-      return {
-        day,
-        retentionProb: Math.max(0, Math.min(100, retentionProb)),
-      };
-    });
+    const avgStability =
+      srsItems.reduce((sum, item) => sum + (item.fsrsStability || 5), 0) / (srsItems.length || 1);
 
-    // Stability distribution buckets
+    const decayCurveData = Array.from({ length: 31 }, (_, day) => ({
+      day,
+      retentionProb: Math.max(0, Math.min(100, Math.exp(-day / avgStability) * 100)),
+    }));
+
     const stabilityBuckets = [
       { bucket: '<1d', count: 0, color: '#ef4444' },
       { bucket: '1-3d', count: 0, color: '#f97316' },
@@ -118,13 +74,14 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
       else stabilityBuckets[4].count++;
     });
 
-    // Get recent tuning info (mock for now)
-    const lastTuned = new Date(now.getTime() - 6 * 60 * 60 * 1000); // 6 hours ago
+    const lastTuned = new Date(now.getTime() - 6 * 60 * 60 * 1000);
     const tuningReason = 'Pharmacology';
     const adjustment: 'tighten' | 'loosen' = 'tighten';
 
-    return new Response(
-      JSON.stringify({
+    logger.info('Fetched retention stats', { userId: auth.userId, dueCount, totalCards: srsItems.length });
+
+    return {
+      data: {
         success: true,
         data: {
           dueCount,
@@ -135,29 +92,15 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
           tuningReason,
           adjustment,
         },
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error('Retention stats error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch retention stats', details: error?.message }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+      },
+    };
+  } catch (error) {
+    logger.error('Retention stats error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch retention stats');
   } finally {
-    if (prisma) {
-      await prisma.$disconnect().catch(() => {});
-    }
+    await safePrismaDisconnect(prisma);
   }
-};
+});

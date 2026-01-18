@@ -1,15 +1,15 @@
 /**
  * Prisma Client Helper for Scripts
- * 
+ *
  * Provides a properly configured PrismaClient instance for use in scripts.
  * Handles Prisma v7 adapter requirements and environment variable loading.
- * 
+ *
  * Usage:
  *   import { prisma } from './helpers/prisma-client';
- *   
+ *
  *   // Use prisma as normal
  *   const records = await prisma.medicalContent.findMany();
- *   
+ *
  *   // Don't forget to disconnect when done
  *   await prisma.$disconnect();
  */
@@ -35,7 +35,7 @@ if (!directUrl) {
 const pool = new Pool({ connectionString: directUrl });
 const adapter = new PrismaPg(pool);
 
-export const prisma = new PrismaClient({ 
+export const prisma = new PrismaClient({
   adapter,
   log: process.env.DEBUG ? ['query', 'error', 'warn'] : ['error'],
 });

@@ -9,6 +9,7 @@
 Sprint 6 focuses on **The Core Experience** - fixing the Clinical Library and implementing basic database-driven drills.
 
 ### User Value
+
 - Students can browse comprehensive medical content from PostgreSQL ✅
 - System and Pharmacology drills work with real database questions ✅
 - Content widgets show related pharmacology and pathophysiology ✅
@@ -103,10 +104,11 @@ Sprint 6 focuses on **The Core Experience** - fixing the Clinical Library and im
 ---
 
 ## ❌ Not Started (2/10 tasks)
-   - Use `/api/questions/system-drill` endpoint
-   - Pattern: Same as QuizView.tsx (fetchNewQuestion)
-   - Maintain existing landing page UI
-   - **Complexity**: Medium (1-2 hours)
+
+- Use `/api/questions/system-drill` endpoint
+- Pattern: Same as QuizView.tsx (fetchNewQuestion)
+- Maintain existing landing page UI
+- **Complexity**: Medium (1-2 hours)
 
 2. **`/components/drill/PharmacologyDrillSession.tsx`** (NEW FILE)
    - Create from scratch or copy SystemDrillSession pattern
@@ -141,12 +143,14 @@ Sprint 6 focuses on **The Core Experience** - fixing the Clinical Library and im
 ## Dependencies
 
 ### npm Packages Needed
+
 - ✅ `react` (already installed)
 - ✅ `framer-motion` (already installed)
 - ✅ `lucide-react` (already installed)
 - ❓ `react-markdown` (need to check/install)
 
 ### Database State
+
 - ✅ MedicalContent table populated
 - ✅ Question table populated
 - ✅ API routes authenticated with Clerk
@@ -197,11 +201,13 @@ Sprint 6 focuses on **The Core Experience** - fixing the Clinical Library and im
 ### Content Rendering Logic
 
 **LibraryCard handles 3 data formats**:
+
 1. **Arrays**: Rendered as bullet lists
 2. **Structured objects (steps)**: First Line, Second Line, Acute, Chronic
 3. **Grid objects**: Key-value pairs in grid layout
 
 Example:
+
 ```json
 {
   "type": "steps",
@@ -217,24 +223,28 @@ Example:
 ## Next Steps
 
 ### Immediate (Next 1-2 hours)
+
 1. ✅ Fix ClinicalLibrary.tsx file (clean refactor)
 2. ✅ Install react-markdown if needed
 3. ✅ Test API endpoints manually
 4. ✅ Verify component renders correctly
 
 ### Short-term (Next 4-6 hours)
+
 1. ❌ Refactor SystemDrillSession.tsx
 2. ❌ Create PharmacologyDrillSession.tsx
 3. ❌ Test both drill modes
 4. ❌ Fix any API issues
 
 ### Medium-term (Next 1-2 days)
+
 1. ❌ Add loading states to drills
 2. ❌ Add error handling to drills
 3. ❌ Mobile responsive testing
 4. ❌ Performance optimization
 
 ### Sprint 6 Completion Criteria
+
 - ✅ Clinical Library shows all conditions from database
 - ✅ Context widgets load related content in <500ms
 - ✅ System Drill generates questions for all 13 systems
@@ -248,14 +258,17 @@ Example:
 ## Issues & Blockers
 
 ### Current Issues
+
 1. **ClinicalLibrary.tsx refactor incomplete** - File has old code mixed with new
 2. **react-markdown dependency** - Need to verify installation
 3. **Content coverage unknown** - Need to verify all 2195 conditions in database
 
 ### Resolved Issues
+
 - None yet (just started)
 
 ### Potential Blockers
+
 1. **Missing content in database** - If MedicalContent table incomplete
 2. **API performance** - If queries too slow (>1s)
 3. **Bundle size** - react-markdown might add significant size
@@ -265,18 +278,21 @@ Example:
 ## Technical Decisions
 
 ### Why react-markdown?
+
 - Industry standard for markdown rendering
 - Supports GitHub Flavored Markdown
 - Good security (sanitizes HTML)
 - Tree-shakeable
 
 ### Why Master-Detail Pattern?
+
 - Better mobile UX (one view at a time)
 - Cleaner than modal overlays
 - Easier state management
 - Natural back button behavior
 
 ### Why Context Widgets?
+
 - Shows relationships between conditions/drugs
 - Helps students make connections
 - Utilizes existing database data
@@ -287,6 +303,7 @@ Example:
 ## Files Modified/Created
 
 ### Created (New Files)
+
 - `functions/api/content/library.ts` (112 lines)
 - `functions/api/content/context-widgets.ts` (153 lines)
 - `functions/api/questions/system-drill.ts` (109 lines)
@@ -297,12 +314,15 @@ Example:
 - `SPRINT_6_IMPLEMENTATION.md` (this file)
 
 ### Modified (Existing Files)
+
 - `components/toolkit/ClinicalLibrary.tsx` (in progress - needs cleanup)
 
 ### To Create (Pending)
+
 - `components/drill/PharmacologyDrillSession.tsx`
 
 ### To Modify (Pending)
+
 - `components/drill/SystemDrillSession.tsx`
 
 ---
@@ -310,17 +330,20 @@ Example:
 ## Learning & Observations
 
 ### What Worked Well
+
 1. **Cloudflare Functions pattern** - Clean separation of concerns
 2. **Prisma Edge** - Fast database queries
 3. **Component composition** - Reusable UI pieces
 4. **Type safety** - TypeScript caught several bugs early
 
 ### What Needs Improvement
+
 1. **File refactoring** - Should use replace tools more carefully
 2. **Testing strategy** - Need automated tests
 3. **Documentation** - Should document API contracts
 
 ### Lessons for Sprint 7
+
 1. **Test endpoints first** - Before building UI
 2. **Mock data initially** - Faster UI iteration
 3. **Mobile-first design** - Easier to scale up

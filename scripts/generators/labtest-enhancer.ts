@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
  * LabTest Enhancer - Fill empty fields in LabTest table
- * 
+ *
  * CRITICAL: This table has 228 records but almost all clinical fields are empty.
  * This script fills the comprehensive clinical data needed for PANCE preparation.
- * 
+ *
  * Fields to fill:
  *   - commonAbnormalities[], increaseIndicates[], decreaseIndicates[]
  *   - conventionalRange, siRange, siUnits, units
@@ -17,7 +17,7 @@
  *   - clinicalScenarios (jsonb)
  *   - interpretationSteps, specialInstructions
  *   - conversionFactor
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/labtest-enhancer.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/labtest-enhancer.ts --batch=10
@@ -36,7 +36,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -44,16 +44,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -66,50 +66,158 @@ const rateLimiter = new TokenBucket(5, 0.5);
 // High-yield lab tests for PANCE (process these first)
 const HIGH_YIELD_LABS = [
   // CBC
-  'hemoglobin', 'hematocrit', 'wbc', 'platelet', 'mcv', 'mch', 'mchc', 'rdw', 'reticulocyte',
+  'hemoglobin',
+  'hematocrit',
+  'wbc',
+  'platelet',
+  'mcv',
+  'mch',
+  'mchc',
+  'rdw',
+  'reticulocyte',
   // BMP/CMP
-  'sodium', 'potassium', 'chloride', 'bicarbonate', 'co2', 'bun', 'creatinine', 'glucose', 'calcium',
-  'magnesium', 'phosphorus', 'albumin', 'total protein', 'ast', 'alt', 'alp', 'bilirubin', 'ggt',
+  'sodium',
+  'potassium',
+  'chloride',
+  'bicarbonate',
+  'co2',
+  'bun',
+  'creatinine',
+  'glucose',
+  'calcium',
+  'magnesium',
+  'phosphorus',
+  'albumin',
+  'total protein',
+  'ast',
+  'alt',
+  'alp',
+  'bilirubin',
+  'ggt',
   // Cardiac
-  'troponin', 'bnp', 'nt-probnp', 'ck-mb', 'd-dimer', 'ldh',
+  'troponin',
+  'bnp',
+  'nt-probnp',
+  'ck-mb',
+  'd-dimer',
+  'ldh',
   // Thyroid
-  'tsh', 't4', 't3', 'free t4', 'free t3',
+  'tsh',
+  't4',
+  't3',
+  'free t4',
+  'free t3',
   // Lipids
-  'total cholesterol', 'ldl', 'hdl', 'triglycerides',
+  'total cholesterol',
+  'ldl',
+  'hdl',
+  'triglycerides',
   // Coagulation
-  'pt', 'inr', 'ptt', 'aptt', 'fibrinogen',
+  'pt',
+  'inr',
+  'ptt',
+  'aptt',
+  'fibrinogen',
   // Urinalysis
-  'urinalysis', 'urine protein', 'urine glucose', 'urine ketones', 'urine blood',
+  'urinalysis',
+  'urine protein',
+  'urine glucose',
+  'urine ketones',
+  'urine blood',
   // Inflammatory
-  'crp', 'esr', 'procalcitonin', 'ferritin',
+  'crp',
+  'esr',
+  'procalcitonin',
+  'ferritin',
   // Diabetes
-  'hba1c', 'fasting glucose', 'ogtt',
+  'hba1c',
+  'fasting glucose',
+  'ogtt',
   // Renal
-  'gfr', 'egfr', 'uric acid', 'cystatin c',
+  'gfr',
+  'egfr',
+  'uric acid',
+  'cystatin c',
   // Iron studies
-  'iron', 'tibc', 'ferritin', 'transferrin saturation',
+  'iron',
+  'tibc',
+  'ferritin',
+  'transferrin saturation',
   // ABG/VBG
-  'ph', 'pco2', 'po2', 'hco3', 'base excess', 'lactate',
+  'ph',
+  'pco2',
+  'po2',
+  'hco3',
+  'base excess',
+  'lactate',
   // Electrolytes
-  'anion gap', 'osmolality', 'osmolar gap',
+  'anion gap',
+  'osmolality',
+  'osmolar gap',
   // Infection
-  'blood culture', 'urine culture', 'csf', 'gram stain',
+  'blood culture',
+  'urine culture',
+  'csf',
+  'gram stain',
   // Autoimmune
-  'ana', 'rf', 'anti-ccp', 'anca', 'complement', 'c3', 'c4',
+  'ana',
+  'rf',
+  'anti-ccp',
+  'anca',
+  'complement',
+  'c3',
+  'c4',
   // Vitamins
-  'vitamin d', 'vitamin b12', 'folate', 'thiamine',
+  'vitamin d',
+  'vitamin b12',
+  'folate',
+  'thiamine',
   // Hormones
-  'cortisol', 'acth', 'aldosterone', 'renin', 'pth', 'prolactin', 'lh', 'fsh', 'estrogen', 'testosterone',
+  'cortisol',
+  'acth',
+  'aldosterone',
+  'renin',
+  'pth',
+  'prolactin',
+  'lh',
+  'fsh',
+  'estrogen',
+  'testosterone',
   // Tumor markers
-  'psa', 'cea', 'afp', 'ca-125', 'ca 19-9', 'hcg', 'beta-hcg',
+  'psa',
+  'cea',
+  'afp',
+  'ca-125',
+  'ca 19-9',
+  'hcg',
+  'beta-hcg',
   // Drug levels
-  'vancomycin', 'digoxin', 'lithium', 'phenytoin', 'valproic acid', 'theophylline', 'aminoglycoside',
+  'vancomycin',
+  'digoxin',
+  'lithium',
+  'phenytoin',
+  'valproic acid',
+  'theophylline',
+  'aminoglycoside',
   // Hepatitis
-  'hepatitis a', 'hepatitis b', 'hepatitis c', 'hbsag', 'anti-hbs', 'anti-hbc', 'hbeag', 'hcv antibody',
+  'hepatitis a',
+  'hepatitis b',
+  'hepatitis c',
+  'hbsag',
+  'anti-hbs',
+  'anti-hbc',
+  'hbeag',
+  'hcv antibody',
   // HIV
-  'hiv', 'cd4', 'viral load',
+  'hiv',
+  'cd4',
+  'viral load',
   // Other important
-  'ammonia', 'lipase', 'amylase', 'ige', 'tryptase'
+  'ammonia',
+  'lipase',
+  'amylase',
+  'ige',
+  'tryptase',
 ];
 
 interface LabTestContent {
@@ -119,14 +227,14 @@ interface LabTestContent {
   siUnits: string;
   units: string;
   conversionFactor: number | null;
-  
+
   // Critical values
   criticalValues: {
     low?: string;
     high?: string;
     notes?: string;
   };
-  
+
   // Sample info
   sampleType: string;
   collectionTube: string;
@@ -134,7 +242,7 @@ interface LabTestContent {
   turnaroundTime: string;
   fastingRequired: boolean;
   specialInstructions: string;
-  
+
   // Clinical interpretation
   increaseIndicates: string[];
   decreaseIndicates: string[];
@@ -142,20 +250,20 @@ interface LabTestContent {
   interpretationSteps: string;
   falsePosNeg: string;
   interferingFactors: string[];
-  
+
   // Reference ranges by population
   referenceRanges: {
-    adult?: { male?: string; female?: string; };
+    adult?: { male?: string; female?: string };
     pediatric?: string;
     geriatric?: string;
     pregnancy?: string;
   };
-  
+
   // Ordering guidance
   whenToOrder: string[];
   relatedTests: string[];
   followUpTests: string[];
-  
+
   // Board prep
   clinicalPearls: string[];
   boardYieldFacts: string[];
@@ -163,7 +271,7 @@ interface LabTestContent {
   testQuestionTips: string[];
   isHighYield: boolean;
   panceYield: number;
-  
+
   // Clinical scenarios
   clinicalScenarios: Array<{
     scenario: string;
@@ -177,24 +285,25 @@ async function generateLabTestContent(labTest: any): Promise<LabTestContent> {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not set');
   }
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
-  
+
   await rateLimiter.acquire();
-  
+
   // Check if this is a high-yield lab
-  const isHighYield = HIGH_YIELD_LABS.some(hy => 
-    labTest.name.toLowerCase().includes(hy) || 
-    (labTest.category && labTest.category.toLowerCase().includes(hy))
+  const isHighYield = HIGH_YIELD_LABS.some(
+    (hy) =>
+      labTest.name.toLowerCase().includes(hy) ||
+      (labTest.category && labTest.category.toLowerCase().includes(hy))
   );
-  
+
   const prompt = `Generate comprehensive clinical laboratory data for "${labTest.name}" for PANCE/PA board exam preparation.
 
 Current info:
@@ -310,7 +419,7 @@ Be thorough and clinically accurate. This is for PA students preparing for board
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -325,10 +434,10 @@ Be thorough and clinically accurate. This is for PA students preparing for board
 
 async function enhanceLabTest(labTest: any, dryRun: boolean): Promise<boolean> {
   console.log(`\n📋 Enhancing: ${labTest.name}`);
-  
+
   try {
     const content = await generateLabTestContent(labTest);
-    
+
     if (dryRun) {
       console.log(`  [DRY RUN] Would update with:`);
       console.log(`    - conventionalRange: ${content.conventionalRange}`);
@@ -341,7 +450,7 @@ async function enhanceLabTest(labTest: any, dryRun: boolean): Promise<boolean> {
       console.log(`    - panceYield: ${content.panceYield}`);
       return true;
     }
-    
+
     await prisma.labTest.update({
       where: { id: labTest.id },
       data: {
@@ -350,47 +459,46 @@ async function enhanceLabTest(labTest: any, dryRun: boolean): Promise<boolean> {
         siUnits: content.siUnits || null,
         units: content.units || null,
         conversionFactor: content.conversionFactor || null,
-        
+
         criticalValues: content.criticalValues || null,
-        
+
         sampleType: content.sampleType || null,
         collectionTube: content.collectionTube || null,
         stability: content.stability || null,
         turnaroundTime: content.turnaroundTime || null,
         fastingRequired: content.fastingRequired ?? false,
         specialInstructions: content.specialInstructions || null,
-        
+
         increaseIndicates: content.increaseIndicates || [],
         decreaseIndicates: content.decreaseIndicates || [],
         commonAbnormalities: content.commonAbnormalities || [],
-        
+
         interpretationSteps: content.interpretationSteps || null,
         falsePosNeg: content.falsePosNeg || null,
         interferingFactors: content.interferingFactors || [],
-        
+
         referenceRanges: content.referenceRanges || null,
-        
+
         whenToOrder: content.whenToOrder || [],
         relatedTests: content.relatedTests || [],
         followUpTests: content.followUpTests || [],
-        
+
         clinicalPearls: content.clinicalPearls || [],
         boardYieldFacts: content.boardYieldFacts || [],
         mnemonics: content.mnemonics || [],
         testQuestionTips: content.testQuestionTips || [],
-        
+
         isHighYield: content.isHighYield ?? false,
         panceYield: content.panceYield || 3,
-        
+
         clinicalScenarios: content.clinicalScenarios || null,
-        
-        updatedAt: new Date()
-      }
+
+        updatedAt: new Date(),
+      },
     });
-    
+
     console.log(`  ✅ Updated successfully`);
     return true;
-    
   } catch (error) {
     console.error(`  ❌ Error enhancing ${labTest.name}:`, error);
     return false;
@@ -401,18 +509,18 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const highYieldOnly = args.includes('--high-yield-only');
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : 50;
-  const skipArg = args.find(a => a.startsWith('--skip='));
+  const skipArg = args.find((a) => a.startsWith('--skip='));
   const skipCount = skipArg ? parseInt(skipArg.split('=')[1]) : 0;
-  
+
   console.log('🧪 LabTest Enhancer - Fill Empty Fields');
   console.log('=========================================');
   console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE UPDATE'}`);
   console.log(`Batch size: ${batchSize}`);
   console.log(`Skip: ${skipCount}`);
   console.log(`High-yield only: ${highYieldOnly}`);
-  
+
   try {
     // Get lab tests that need enhancement (missing key fields)
     const labTests = await prisma.labTest.findMany({
@@ -421,31 +529,32 @@ async function main() {
           { conventionalRange: null },
           { conventionalRange: '' },
           { increaseIndicates: { isEmpty: true } },
-          { clinicalPearls: { isEmpty: true } }
-        ]
+          { clinicalPearls: { isEmpty: true } },
+        ],
       },
       orderBy: { name: 'asc' },
       skip: skipCount,
-      take: batchSize
+      take: batchSize,
     });
-    
+
     console.log(`\nFound ${labTests.length} lab tests needing enhancement`);
-    
+
     // Filter for high-yield if requested
     let testsToProcess = labTests;
     if (highYieldOnly) {
-      testsToProcess = labTests.filter(lt => 
-        HIGH_YIELD_LABS.some(hy => 
-          lt.name.toLowerCase().includes(hy) ||
-          (lt.category && lt.category.toLowerCase().includes(hy))
+      testsToProcess = labTests.filter((lt) =>
+        HIGH_YIELD_LABS.some(
+          (hy) =>
+            lt.name.toLowerCase().includes(hy) ||
+            (lt.category && lt.category.toLowerCase().includes(hy))
         )
       );
       console.log(`Filtered to ${testsToProcess.length} high-yield tests`);
     }
-    
+
     let success = 0;
     let failed = 0;
-    
+
     for (const labTest of testsToProcess) {
       const result = await enhanceLabTest(labTest, dryRun);
       if (result) {
@@ -453,21 +562,20 @@ async function main() {
       } else {
         failed++;
       }
-      
+
       // Small delay between requests
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     }
-    
+
     console.log('\n=========================================');
     console.log('Summary:');
     console.log(`  ✅ Success: ${success}`);
     console.log(`  ❌ Failed: ${failed}`);
     console.log(`  📊 Total: ${testsToProcess.length}`);
-    
+
     if (!dryRun && testsToProcess.length < labTests.length) {
       console.log(`\n💡 Run with --batch=${batchSize} --skip=${skipCount + batchSize} to continue`);
     }
-    
   } catch (error) {
     console.error('Fatal error:', error);
     process.exit(1);

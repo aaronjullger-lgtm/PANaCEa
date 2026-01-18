@@ -1,6 +1,6 @@
 /**
  * LibraryBreadcrumb - Navigation trail for Clinical Reference Library
- * 
+ *
  * Shows: Library › System › Subcategory
  * Clickable segments for quick navigation back up the hierarchy
  */
@@ -44,9 +44,10 @@ export const LibraryBreadcrumb: React.FC<LibraryBreadcrumbProps> = ({
             onClick={onSystemClick}
             className={`
               px-2 py-1 rounded-md transition-colors
-              ${subcategory 
-                ? 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
-                : 'text-[var(--color-accent)] font-semibold'
+              ${
+                subcategory
+                  ? 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+                  : 'text-[var(--color-accent)] font-semibold'
               }
             `}
           >
@@ -72,9 +73,7 @@ export const LibraryBreadcrumb: React.FC<LibraryBreadcrumbProps> = ({
       {isAllSystems && (
         <>
           <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <span className="px-2 py-1 text-[var(--color-accent)] font-semibold">
-            All Systems
-          </span>
+          <span className="px-2 py-1 text-[var(--color-accent)] font-semibold">All Systems</span>
         </>
       )}
     </nav>

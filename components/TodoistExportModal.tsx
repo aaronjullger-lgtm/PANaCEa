@@ -11,7 +11,7 @@ import {
   TODOIST_IMPORT_INSTRUCTIONS,
   type TodoistTask,
   type StudyTaskExport,
-  type TodoistOAuthConfig
+  type TodoistOAuthConfig,
 } from '../lib/services/todoistService';
 
 interface TodoistExportModalProps {
@@ -39,14 +39,14 @@ export default function TodoistExportModal({
   onClose,
   examDate,
   weeklyPlan = [],
-  missedQuestions = []
+  missedQuestions = [],
 }: TodoistExportModalProps) {
   const [options, setOptions] = useState<ExportOptions>({
     includeStudyPlan: true,
     includeMissedQuestions: true,
     exportMethod: 'csv',
   });
-  
+
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -142,9 +142,7 @@ export default function TodoistExportModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Export to Todoist
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Export to Todoist</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -164,19 +162,23 @@ export default function TodoistExportModal({
                 <input
                   type="checkbox"
                   checked={options.includeStudyPlan}
-                  onChange={(e) => setOptions(prev => ({ ...prev, includeStudyPlan: e.target.checked }))}
+                  onChange={(e) =>
+                    setOptions((prev) => ({ ...prev, includeStudyPlan: e.target.checked }))
+                  }
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-gray-700 dark:text-gray-300">
                   Study Plan ({weeklyPlan.length} weeks)
                 </span>
               </label>
-              
+
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={options.includeMissedQuestions}
-                  onChange={(e) => setOptions(prev => ({ ...prev, includeMissedQuestions: e.target.checked }))}
+                  onChange={(e) =>
+                    setOptions((prev) => ({ ...prev, includeMissedQuestions: e.target.checked }))
+                  }
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-gray-700 dark:text-gray-300">
@@ -198,26 +200,28 @@ export default function TodoistExportModal({
                   name="exportMethod"
                   value="csv"
                   checked={options.exportMethod === 'csv'}
-                  onChange={(e) => setOptions(prev => ({ ...prev, exportMethod: e.target.value as 'csv' }))}
+                  onChange={(e) =>
+                    setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'csv' }))
+                  }
                   className="border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-gray-700 dark:text-gray-300">
                   Download CSV (Manual Import)
                 </span>
               </label>
-              
+
               <label className="flex items-center">
                 <input
                   type="radio"
                   name="exportMethod"
                   value="oauth"
                   checked={options.exportMethod === 'oauth'}
-                  onChange={(e) => setOptions(prev => ({ ...prev, exportMethod: e.target.value as 'oauth' }))}
+                  onChange={(e) =>
+                    setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'oauth' }))
+                  }
                   className="border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">
-                  Direct Export (OAuth)
-                </span>
+                <span className="ml-2 text-gray-700 dark:text-gray-300">Direct Export (OAuth)</span>
               </label>
             </div>
           </div>
@@ -243,7 +247,7 @@ export default function TodoistExportModal({
                     </>
                   )}
                 </div>
-                
+
                 {isConnected ? (
                   <button
                     onClick={handleDisconnect}
@@ -278,9 +282,7 @@ export default function TodoistExportModal({
                         {task.content}
                       </div>
                       {task.due_date && (
-                        <div className="text-gray-500 dark:text-gray-400">
-                          Due: {task.due_date}
-                        </div>
+                        <div className="text-gray-500 dark:text-gray-400">Due: {task.due_date}</div>
                       )}
                     </div>
                   ))}
@@ -304,8 +306,8 @@ export default function TodoistExportModal({
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
                 <span className="text-green-700 dark:text-green-300">
-                  {options.exportMethod === 'csv' 
-                    ? 'CSV file downloaded successfully!' 
+                  {options.exportMethod === 'csv'
+                    ? 'CSV file downloaded successfully!'
                     : 'Tasks exported to Todoist successfully!'}
                 </span>
               </div>
@@ -316,9 +318,7 @@ export default function TodoistExportModal({
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                <span className="text-red-700 dark:text-red-300">
-                  {errorMessage}
-                </span>
+                <span className="text-red-700 dark:text-red-300">{errorMessage}</span>
               </div>
             </div>
           )}
@@ -344,10 +344,14 @@ export default function TodoistExportModal({
           >
             Cancel
           </button>
-          
+
           <button
             onClick={handleExport}
-            disabled={isLoading || generatedTasks.length === 0 || (options.exportMethod === 'oauth' && !isConnected)}
+            disabled={
+              isLoading ||
+              generatedTasks.length === 0 ||
+              (options.exportMethod === 'oauth' && !isConnected)
+            }
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (

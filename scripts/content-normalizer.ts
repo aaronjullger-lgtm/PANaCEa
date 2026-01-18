@@ -1,18 +1,18 @@
 /**
  * Content Normalizer Script - Database Metadata Standardization
- * 
+ *
  * Purpose:
  * - Enforce consistent formatting across all medical content
  * - Standardize system codes to official PANCE abbreviations
  * - Clean up badges (remove trailing periods, normalize capitalization)
  * - Ensure arrays are properly formatted (not stringified JSON)
  * - Fix common data quality issues
- * 
+ *
  * Usage:
  *   npx ts-node scripts/content-normalizer.ts           # Dry run (preview changes)
  *   npx ts-node scripts/content-normalizer.ts --apply   # Apply changes to database
  *   npx ts-node scripts/content-normalizer.ts --system=CV --apply  # Normalize specific system
- * 
+ *
  * Safety:
  *   - Runs in dry-run mode by default
  *   - Only updates records where changes are detected
@@ -48,103 +48,103 @@ const prisma = new PrismaClient({ adapter });
  */
 const SYSTEM_CODE_MAP: Record<string, string> = {
   // Cardiovascular variations
-  'CV': 'CV',
-  'CARDIO': 'CV',
-  'CARDIOLOGY': 'CV',
-  'CARDIAC': 'CV',
-  'HEART': 'CV',
-  'CARDIOVASCULAR': 'CV',
-  
+  CV: 'CV',
+  CARDIO: 'CV',
+  CARDIOLOGY: 'CV',
+  CARDIAC: 'CV',
+  HEART: 'CV',
+  CARDIOVASCULAR: 'CV',
+
   // Pulmonary variations
-  'PULM': 'PULM',
-  'PULMONARY': 'PULM',
-  'RESPIRATORY': 'PULM',
-  'LUNG': 'PULM',
-  'RESP': 'PULM',
-  
+  PULM: 'PULM',
+  PULMONARY: 'PULM',
+  RESPIRATORY: 'PULM',
+  LUNG: 'PULM',
+  RESP: 'PULM',
+
   // Gastrointestinal variations
-  'GI': 'GI',
-  'GASTRO': 'GI',
-  'GASTROINTESTINAL': 'GI',
-  'DIGESTIVE': 'GI',
-  
+  GI: 'GI',
+  GASTRO: 'GI',
+  GASTROINTESTINAL: 'GI',
+  DIGESTIVE: 'GI',
+
   // Neurologic variations
-  'NEURO': 'NEURO',
-  'NEUROLOGIC': 'NEURO',
-  'NEUROLOGY': 'NEURO',
-  'NEUROLOGICAL': 'NEURO',
-  'CNS': 'NEURO',
-  
+  NEURO: 'NEURO',
+  NEUROLOGIC: 'NEURO',
+  NEUROLOGY: 'NEURO',
+  NEUROLOGICAL: 'NEURO',
+  CNS: 'NEURO',
+
   // Musculoskeletal variations
-  'MSK': 'MSK',
-  'MUSCULOSKELETAL': 'MSK',
-  'ORTHOPEDIC': 'MSK',
-  'ORTHO': 'MSK',
-  'BONES': 'MSK',
-  
+  MSK: 'MSK',
+  MUSCULOSKELETAL: 'MSK',
+  ORTHOPEDIC: 'MSK',
+  ORTHO: 'MSK',
+  BONES: 'MSK',
+
   // Dermatology variations
-  'DERM': 'DERM',
-  'DERMATOLOGY': 'DERM',
-  'SKIN': 'DERM',
-  
+  DERM: 'DERM',
+  DERMATOLOGY: 'DERM',
+  SKIN: 'DERM',
+
   // Hematology variations
-  'HEME': 'HEME',
-  'HEMATOLOGY': 'HEME',
-  'BLOOD': 'HEME',
-  
+  HEME: 'HEME',
+  HEMATOLOGY: 'HEME',
+  BLOOD: 'HEME',
+
   // Endocrine variations
-  'ENDO': 'ENDO',
-  'ENDOCRINE': 'ENDO',
-  'ENDOCRINOLOGY': 'ENDO',
-  'HORMONES': 'ENDO',
-  
+  ENDO: 'ENDO',
+  ENDOCRINE: 'ENDO',
+  ENDOCRINOLOGY: 'ENDO',
+  HORMONES: 'ENDO',
+
   // HEENT variations
-  'HEENT': 'HEENT',
-  'ENT': 'HEENT',
-  'EYE': 'HEENT',
-  'EAR': 'HEENT',
-  'NOSE': 'HEENT',
-  'THROAT': 'HEENT',
-  
+  HEENT: 'HEENT',
+  ENT: 'HEENT',
+  EYE: 'HEENT',
+  EAR: 'HEENT',
+  NOSE: 'HEENT',
+  THROAT: 'HEENT',
+
   // Renal variations
-  'RENAL': 'RENAL',
-  'KIDNEY': 'RENAL',
-  'NEPHROLOGY': 'RENAL',
-  
+  RENAL: 'RENAL',
+  KIDNEY: 'RENAL',
+  NEPHROLOGY: 'RENAL',
+
   // Reproductive variations
-  'REPRO': 'REPRO',
-  'REPRODUCTIVE': 'REPRO',
-  'OB': 'REPRO',
-  'GYN': 'REPRO',
-  'OBGYN': 'REPRO',
-  
+  REPRO: 'REPRO',
+  REPRODUCTIVE: 'REPRO',
+  OB: 'REPRO',
+  GYN: 'REPRO',
+  OBGYN: 'REPRO',
+
   // Psychiatric variations
-  'PSYCH': 'PSYCH',
-  'PSYCHIATRIC': 'PSYCH',
-  'PSYCHIATRY': 'PSYCH',
-  'MENTAL': 'PSYCH',
-  
+  PSYCH: 'PSYCH',
+  PSYCHIATRIC: 'PSYCH',
+  PSYCHIATRY: 'PSYCH',
+  MENTAL: 'PSYCH',
+
   // Infectious Disease variations
-  'ID': 'ID',
-  'INFECTIOUS': 'ID',
-  'INFECTIOUS_DISEASE': 'ID',
-  'INFECTION': 'ID',
-  
+  ID: 'ID',
+  INFECTIOUS: 'ID',
+  INFECTIOUS_DISEASE: 'ID',
+  INFECTION: 'ID',
+
   // Genitourinary variations
-  'GU': 'GU',
-  'GENITOURINARY': 'GU',
-  'URINARY': 'GU',
-  'UROLOGY': 'GU',
-  
+  GU: 'GU',
+  GENITOURINARY: 'GU',
+  URINARY: 'GU',
+  UROLOGY: 'GU',
+
   // Professional Practice variations
-  'PRO': 'PRO',
-  'PROFESSIONAL': 'PRO',
-  'PRACTICE': 'PRO',
-  
+  PRO: 'PRO',
+  PROFESSIONAL: 'PRO',
+  PRACTICE: 'PRO',
+
   // Other/Misc
-  'OTHER': 'OTHER',
-  'MISC': 'OTHER',
-  'MISCELLANEOUS': 'OTHER',
+  OTHER: 'OTHER',
+  MISC: 'OTHER',
+  MISCELLANEOUS: 'OTHER',
 };
 
 // ============================================================================
@@ -156,7 +156,7 @@ const SYSTEM_CODE_MAP: Record<string, string> = {
  */
 function normalizeSystemCode(system: string | null): string | null {
   if (!system) return null;
-  
+
   const uppercase = system.toUpperCase().trim();
   return SYSTEM_CODE_MAP[uppercase] || system; // Return original if no mapping found
 }
@@ -167,7 +167,7 @@ function normalizeSystemCode(system: string | null): string | null {
  */
 function normalizeBadge(badge: string | null): string | null {
   if (!badge) return null;
-  
+
   return badge
     .trim()
     .replace(/\.+$/, '') // Remove trailing periods
@@ -187,26 +187,26 @@ function normalizeArray(value: any): string[] | null {
   if (value === null || value === undefined) {
     return null;
   }
-  
+
   // Already a proper array
   if (Array.isArray(value)) {
     // Filter out empty strings and trim
     const cleaned = value
-      .map(item => typeof item === 'string' ? item.trim() : String(item))
-      .filter(item => item.length > 0);
-    
+      .map((item) => (typeof item === 'string' ? item.trim() : String(item)))
+      .filter((item) => item.length > 0);
+
     return cleaned.length > 0 ? cleaned : null;
   }
-  
+
   // Stringified JSON array
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    
+
     // Empty string
     if (trimmed.length === 0) {
       return null;
     }
-    
+
     // Try to parse as JSON
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       try {
@@ -218,21 +218,21 @@ function normalizeArray(value: any): string[] | null {
         console.warn('Failed to parse JSON array:', trimmed);
       }
     }
-    
+
     // Comma-separated string
     if (trimmed.includes(',')) {
       const items = trimmed
         .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-      
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+
       return items.length > 0 ? items : null;
     }
-    
+
     // Single item (not an array, but treat as one)
     return [trimmed];
   }
-  
+
   // Fallback: convert to string array
   return [String(value)];
 }
@@ -240,24 +240,24 @@ function normalizeArray(value: any): string[] | null {
 /**
  * Normalize differentials array (special handling for structured data)
  */
-function normalizeDifferentialsArray(value: any): Array<{ condition: string; reason: string }> | null {
+function normalizeDifferentialsArray(
+  value: any
+): Array<{ condition: string; reason: string }> | null {
   if (!value) return null;
-  
+
   // Already proper format
   if (Array.isArray(value) && value.length > 0) {
     // Validate structure
-    const isValid = value.every(
-      item => item && typeof item === 'object' && 'condition' in item
-    );
-    
+    const isValid = value.every((item) => item && typeof item === 'object' && 'condition' in item);
+
     if (isValid) {
-      return value.map(item => ({
+      return value.map((item) => ({
         condition: String(item.condition).trim(),
-        reason: item.reason ? String(item.reason).trim() : ''
+        reason: item.reason ? String(item.reason).trim() : '',
       }));
     }
   }
-  
+
   // Try to parse stringified JSON
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -270,7 +270,7 @@ function normalizeDifferentialsArray(value: any): Array<{ condition: string; rea
       }
     }
   }
-  
+
   return null;
 }
 
@@ -294,12 +294,12 @@ function detectChanges(
   conditionId: string
 ): ChangeLog | null {
   const changes: string[] = [];
-  
+
   // Check system code
   if (before.system !== after.system) {
     changes.push(`System: "${before.system}" → "${after.system}"`);
   }
-  
+
   // Check badge fields
   const badgeFields = ['first_line_rx', 'gold_standard_dx'];
   for (const field of badgeFields) {
@@ -307,7 +307,7 @@ function detectChanges(
       changes.push(`${field}: "${before[field]}" → "${after[field]}"`);
     }
   }
-  
+
   // Check array fields
   const arrayFields = ['clinical_pearls', 'synonyms'];
   for (const field of arrayFields) {
@@ -317,16 +317,16 @@ function detectChanges(
       changes.push(`${field}: ${beforeStr} → ${afterStr}`);
     }
   }
-  
+
   // Check differentials
   if (JSON.stringify(before.differentials) !== JSON.stringify(after.differentials)) {
     changes.push(`differentials: normalized structure`);
   }
-  
+
   if (changes.length === 0) {
     return null;
   }
-  
+
   return {
     condition: conditionName,
     conditionId,
@@ -351,21 +351,21 @@ async function normalizeContent(options: {
   system?: string;
 }): Promise<NormalizationStats> {
   const { dryRun, system } = options;
-  
+
   console.log('🔧 Starting Content Normalization...\n');
-  
+
   if (dryRun) {
     console.log('⚠️  DRY RUN MODE - No changes will be written to database');
     console.log('   Run with --apply flag to apply changes\n');
   } else {
     console.log('⚠️  LIVE MODE - Changes will be written to database');
     console.log('   Press Ctrl+C within 3 seconds to cancel...\n');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
-  
+
   // Build query filter
   const whereClause = system ? { system } : {};
-  
+
   // Fetch all content
   console.log('📊 Fetching medical content from database...');
   const allContent = await prisma.medicalContent.findMany({
@@ -381,9 +381,9 @@ async function normalizeContent(options: {
       differentials: true,
     },
   });
-  
+
   console.log(`   Found ${allContent.length} records\n`);
-  
+
   const stats: NormalizationStats = {
     totalRecords: allContent.length,
     recordsWithChanges: 0,
@@ -391,9 +391,9 @@ async function normalizeContent(options: {
     changesByType: {},
     errors: 0,
   };
-  
+
   const changeLogs: ChangeLog[] = [];
-  
+
   // Process each record
   for (const record of allContent) {
     try {
@@ -406,25 +406,20 @@ async function normalizeContent(options: {
         synonyms: normalizeArray(record.synonyms),
         differentials: normalizeDifferentialsArray(record.differentials),
       };
-      
+
       // Detect changes
-      const changeLog = detectChanges(
-        record,
-        normalized,
-        record.condition,
-        record.id
-      );
-      
+      const changeLog = detectChanges(record, normalized, record.condition, record.id);
+
       if (changeLog) {
         stats.recordsWithChanges++;
         changeLogs.push(changeLog);
-        
+
         // Track change types
         for (const change of changeLog.changes) {
           const changeType = change.split(':')[0];
           stats.changesByType[changeType] = (stats.changesByType[changeType] || 0) + 1;
         }
-        
+
         // Apply changes if not dry run
         if (!dryRun) {
           await prisma.medicalContent.update({
@@ -439,19 +434,19 @@ async function normalizeContent(options: {
       stats.errors++;
     }
   }
-  
+
   // Print results
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log('          NORMALIZATION REPORT');
   console.log('═══════════════════════════════════════════════════════════════\n');
-  
+
   console.log('📊 STATISTICS');
   console.log(`   Total Records Scanned:  ${stats.totalRecords}`);
   console.log(`   Records with Changes:   ${stats.recordsWithChanges}`);
   console.log(`   Records Updated:        ${stats.recordsUpdated}`);
   console.log(`   Errors:                 ${stats.errors}`);
   console.log();
-  
+
   if (Object.keys(stats.changesByType).length > 0) {
     console.log('📋 CHANGES BY TYPE');
     for (const [changeType, count] of Object.entries(stats.changesByType)) {
@@ -459,7 +454,7 @@ async function normalizeContent(options: {
     }
     console.log();
   }
-  
+
   if (changeLogs.length > 0) {
     console.log('🔍 DETAILED CHANGES\n');
     for (const log of changeLogs) {
@@ -470,9 +465,9 @@ async function normalizeContent(options: {
       console.log();
     }
   }
-  
+
   console.log('═══════════════════════════════════════════════════════════════');
-  
+
   if (dryRun && stats.recordsWithChanges > 0) {
     console.log('\n💡 To apply these changes, run:');
     console.log('   npx ts-node scripts/content-normalizer.ts --apply\n');
@@ -481,7 +476,7 @@ async function normalizeContent(options: {
   } else if (stats.recordsWithChanges === 0) {
     console.log('\n✨ All content is already normalized! No changes needed.\n');
   }
-  
+
   return stats;
 }
 
@@ -491,12 +486,12 @@ async function normalizeContent(options: {
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  
+
   const options = {
     dryRun: true,
     system: undefined as string | undefined,
   };
-  
+
   for (const arg of args) {
     if (arg === '--apply') {
       options.dryRun = false;
@@ -532,7 +527,7 @@ Safety:
       process.exit(0);
     }
   }
-  
+
   return options;
 }
 
@@ -544,7 +539,7 @@ async function main() {
   try {
     const options = parseArgs();
     const stats = await normalizeContent(options);
-    
+
     // Exit with status code based on results
     if (stats.errors > 0) {
       console.log('⚠️  Completed with errors. Please review the output above.\n');

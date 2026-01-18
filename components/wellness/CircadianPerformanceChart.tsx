@@ -11,7 +11,7 @@ import type { PerformanceRecord } from '../../types';
 import {
   analyzeCircadianPerformance,
   getCircadianInsights,
-  formatHour
+  formatHour,
 } from '@/services/analytics';
 
 interface CircadianPerformanceChartProps {
@@ -19,17 +19,14 @@ interface CircadianPerformanceChartProps {
 }
 
 export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps> = ({
-  performanceRecords
+  performanceRecords,
 }) => {
   const hourlyStats = useMemo(
     () => analyzeCircadianPerformance(performanceRecords),
     [performanceRecords]
   );
 
-  const insights = useMemo(
-    () => getCircadianInsights(performanceRecords),
-    [performanceRecords]
-  );
+  const insights = useMemo(() => getCircadianInsights(performanceRecords), [performanceRecords]);
 
   if (!insights) {
     return (
@@ -55,7 +52,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
   };
 
   // Filter hours with data
-  const hoursWithData = hourlyStats.filter(stat => stat.totalQuestions > 0);
+  const hoursWithData = hourlyStats.filter((stat) => stat.totalQuestions > 0);
 
   return (
     <div className="space-y-6">
@@ -67,9 +64,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
               Circadian Performance Analytics
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Discover your peak study hours
-            </p>
+            <p className="text-gray-600 dark:text-gray-300">Discover your peak study hours</p>
           </div>
         </div>
 
@@ -89,9 +84,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
             <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
               {insights.averageAccuracy.toFixed(0)}%
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              Overall performance
-            </div>
+            <div className="text-xs text-gray-500 mt-1">Overall performance</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Lowest Time</div>
@@ -207,18 +200,19 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
               { start: 6, end: 12 },
               { start: 12, end: 17 },
               { start: 17, end: 21 },
-              { start: 21, end: 6 }
+              { start: 21, end: 6 },
             ];
             const range = ranges[idx];
-            const periodStats = hourlyStats.filter(
-              s => (range.start < range.end 
+            const periodStats = hourlyStats.filter((s) =>
+              range.start < range.end
                 ? s.hour >= range.start && s.hour < range.end
-                : s.hour >= range.start || s.hour < range.end)
+                : s.hour >= range.start || s.hour < range.end
             );
             const totalQ = periodStats.reduce((sum, s) => sum + s.totalQuestions, 0);
-            const avgAcc = totalQ > 0 
-              ? periodStats.reduce((sum, s) => sum + (s.accuracy * s.totalQuestions), 0) / totalQ
-              : 0;
+            const avgAcc =
+              totalQ > 0
+                ? periodStats.reduce((sum, s) => sum + s.accuracy * s.totalQuestions, 0) / totalQ
+                : 0;
 
             return (
               <div key={period} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">

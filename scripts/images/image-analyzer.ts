@@ -1,12 +1,12 @@
 /**
  * AI-Powered Image Analyzer
- * 
+ *
  * Uses Gemini Vision API to:
  * 1. Verify medical image content matches expected condition
  * 2. Detect annotations/labels that would give away the answer
  * 3. Suggest appropriate cropping regions
  * 4. Generate perceptual hashes for duplicate detection
- * 
+ *
  * Usage: Import and use in process-local-images.ts
  */
 
@@ -27,11 +27,25 @@ interface ImageAnalysis {
   suggestedConditionId: string | null; // NEW: If AI thinks it belongs to different condition
   matchesExpected: boolean;
   hasAnnotations: boolean; // Now means "has PROBLEMATIC annotations"
-  annotationType: 'diagnostic_label' | 'educational_overlay' | 'answer_revealing' | 'watermark_with_diagnosis' | 'none';
+  annotationType:
+    | 'diagnostic_label'
+    | 'educational_overlay'
+    | 'answer_revealing'
+    | 'watermark_with_diagnosis'
+    | 'none';
   annotationDetails: string[];
   hasSourceText: boolean; // NEW: Has croppable source/copyright text
   suggestedCrop: CropRegion | null;
-  imageType: 'ecg' | 'xray' | 'ct' | 'mri' | 'clinical_photo' | 'dermoscopy' | 'ultrasound' | 'fundoscopy' | 'unknown';
+  imageType:
+    | 'ecg'
+    | 'xray'
+    | 'ct'
+    | 'mri'
+    | 'clinical_photo'
+    | 'dermoscopy'
+    | 'ultrasound'
+    | 'fundoscopy'
+    | 'unknown';
   quizSuitability: 'excellent' | 'good' | 'fair' | 'poor' | 'unusable';
   quizSuitabilityReason: string;
   perceptualHash: string;
@@ -58,12 +72,12 @@ interface AnalysisOptions {
  */
 export async function generatePerceptualHash(imagePath: string): Promise<string> {
   const imageBuffer = fs.readFileSync(imagePath);
-  
+
   // For now, use a combination of file size and content hash
   // In production, use a proper perceptual hash library like sharp + blockhash
   const contentHash = crypto.createHash('md5').update(imageBuffer).digest('hex');
   const fileSize = imageBuffer.length;
-  
+
   // Create a simple hash combining size and content characteristics
   return `ph_${fileSize}_${contentHash.substring(0, 16)}`;
 }
@@ -123,76 +137,77 @@ export async function analyzeImage(
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`,
         {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
               {
-                inline_data: {
-                  mime_type: mimeType,
-                  data: base64Image,
-                },
+                parts: [
+                  { text: prompt },
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: base64Image,
+                    },
+                  },
+                ],
               },
             ],
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+            generationConfig: {
+              temperature: 0.1,
+              maxOutputTokens: 2048,
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      // Check for rate limiting (429) or server errors (5xx)
-      if (response.status === 429 || response.status >= 500) {
+      if (!response.ok) {
+        const errorBody = await response.text();
+        // Check for rate limiting (429) or server errors (5xx)
+        if (response.status === 429 || response.status >= 500) {
+          if (attempt < MAX_RETRIES - 1) {
+            const delayMs = BASE_DELAY_MS * Math.pow(2, attempt);
+            console.warn(`⚠️ Rate limited (${response.status}), retrying in ${delayMs / 1000}s...`);
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
+        }
+        console.warn(`⚠️ Gemini API error: ${response.status} - ${errorBody.substring(0, 100)}`);
+        return defaultAnalysis;
+      }
+
+      const data = await response.json();
+      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!textResponse) {
         if (attempt < MAX_RETRIES - 1) {
           const delayMs = BASE_DELAY_MS * Math.pow(2, attempt);
-          console.warn(`⚠️ Rate limited (${response.status}), retrying in ${delayMs/1000}s...`);
-          await new Promise(r => setTimeout(r, delayMs));
+          console.warn(`⚠️ No response from Gemini, retrying in ${delayMs / 1000}s...`);
+          await new Promise((r) => setTimeout(r, delayMs));
           continue;
         }
+        console.warn('⚠️ No response from Gemini after retries');
+        return defaultAnalysis;
       }
-      console.warn(`⚠️ Gemini API error: ${response.status} - ${errorBody.substring(0, 100)}`);
-      return defaultAnalysis;
-    }
 
-    const data = await response.json();
-    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      // Parse the structured response
+      const analysis = parseGeminiResponse(textResponse, expectedCondition);
+      analysis.perceptualHash = await generatePerceptualHash(imagePath);
 
-    if (!textResponse) {
-      if (attempt < MAX_RETRIES - 1) {
-        const delayMs = BASE_DELAY_MS * Math.pow(2, attempt);
-        console.warn(`⚠️ No response from Gemini, retrying in ${delayMs/1000}s...`);
-        await new Promise(r => setTimeout(r, delayMs));
-        continue;
-      }
-      console.warn('⚠️ No response from Gemini after retries');
-      return defaultAnalysis;
-    }
-
-    // Parse the structured response
-    const analysis = parseGeminiResponse(textResponse, expectedCondition);
-    analysis.perceptualHash = await generatePerceptualHash(imagePath);
-
-    return analysis;
-
+      return analysis;
     } catch (error) {
       if (attempt < MAX_RETRIES - 1) {
         const delayMs = BASE_DELAY_MS * Math.pow(2, attempt);
-        console.warn(`⚠️ Analysis error: ${error}, retrying in ${delayMs/1000}s...`);
-        await new Promise(r => setTimeout(r, delayMs));
+        console.warn(`⚠️ Analysis error: ${error}, retrying in ${delayMs / 1000}s...`);
+        await new Promise((r) => setTimeout(r, delayMs));
         continue;
       }
       console.warn(`⚠️ Analysis error after retries: ${error}`);
       return defaultAnalysis;
     }
   }
-  
+
   return defaultAnalysis;
 }
 
@@ -221,16 +236,16 @@ function parseGeminiResponse(response: string, expectedCondition?: string): Imag
   } else if (response.includes('```')) {
     cleanResponse = response.replace(/```\n?/g, '');
   }
-  
+
   // Try to extract complete JSON object
   let jsonStr: string | null = null;
-  
+
   // First try: find complete JSON with balanced braces
   const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     jsonStr = jsonMatch[0];
   }
-  
+
   // Second try: if response starts with { but is incomplete, try parsing anyway
   if (!jsonStr && cleanResponse.trim().startsWith('{')) {
     // Try to find the JSON object and complete it if needed
@@ -248,7 +263,7 @@ function parseGeminiResponse(response: string, expectedCondition?: string): Imag
       jsonStr = cleanResponse.substring(0, endIndex + 1);
     }
   }
-  
+
   if (!jsonStr) {
     // Log what we got instead
     console.warn(`⚠️ Response without JSON (first 200 chars): ${response.substring(0, 200)}`);
@@ -269,7 +284,7 @@ function parseGeminiResponse(response: string, expectedCondition?: string): Imag
     confidence: parsed.confidence ?? 0.5,
     detectedCondition: parsed.detectedCondition || null,
     suggestedConditionId: parsed.betterConditionMatch || null, // NEW: for rerouting
-    matchesExpected: expectedCondition 
+    matchesExpected: expectedCondition
       ? (parsed.matchesExpected ?? isConditionMatch(parsed.detectedCondition, expectedCondition))
       : true,
     // Use new field name - only flag PROBLEMATIC annotations
@@ -277,13 +292,15 @@ function parseGeminiResponse(response: string, expectedCondition?: string): Imag
     annotationType: parsed.annotationType || 'none',
     annotationDetails: parsed.annotationDetails || [],
     hasSourceText: parsed.hasSourceText ?? false, // NEW: track croppable source text
-    suggestedCrop: parsed.suggestedCrop?.needed ? {
-      x: parsed.suggestedCrop.x || 0,
-      y: parsed.suggestedCrop.y || 0,
-      width: parsed.suggestedCrop.width || 100,
-      height: parsed.suggestedCrop.height || 100,
-      reason: parsed.suggestedCrop.reason || '',
-    } : null,
+    suggestedCrop: parsed.suggestedCrop?.needed
+      ? {
+          x: parsed.suggestedCrop.x || 0,
+          y: parsed.suggestedCrop.y || 0,
+          width: parsed.suggestedCrop.width || 100,
+          height: parsed.suggestedCrop.height || 100,
+          reason: parsed.suggestedCrop.reason || '',
+        }
+      : null,
     imageType: parsed.imageType || 'unknown',
     quizSuitability: parsed.quizSuitability || 'fair',
     quizSuitabilityReason: parsed.quizSuitabilityReason || '',
@@ -298,13 +315,15 @@ function parseGeminiResponse(response: string, expectedCondition?: string): Imag
  */
 function isConditionMatch(detected: string | null, expected: string): boolean {
   if (!detected) return false;
-  
+
   const normalizedDetected = detected.toLowerCase().replace(/[^a-z0-9]/g, '');
   const normalizedExpected = expected.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
+
   // Check for substring match
-  return normalizedDetected.includes(normalizedExpected) || 
-         normalizedExpected.includes(normalizedDetected);
+  return (
+    normalizedDetected.includes(normalizedExpected) ||
+    normalizedExpected.includes(normalizedDetected)
+  );
 }
 
 /**
@@ -335,11 +354,13 @@ export async function batchAnalyzeImages(
   // Process in batches
   for (let i = 0; i < images.length; i += maxConcurrent) {
     const batch = images.slice(i, i + maxConcurrent);
-    
+
     const batchResults = await Promise.all(
-      batch.map(img => 
-        analyzeImage(img.path, { expectedCondition: img.expectedCondition })
-          .then(analysis => ({ path: img.path, analysis }))
+      batch.map((img) =>
+        analyzeImage(img.path, { expectedCondition: img.expectedCondition }).then((analysis) => ({
+          path: img.path,
+          analysis,
+        }))
       )
     );
 
@@ -349,7 +370,7 @@ export async function batchAnalyzeImages(
 
     // Rate limiting delay
     if (i + maxConcurrent < images.length) {
-      await new Promise(r => setTimeout(r, delayMs));
+      await new Promise((r) => setTimeout(r, delayMs));
     }
   }
 
@@ -361,7 +382,7 @@ export async function batchAnalyzeImages(
  */
 export class DuplicateDetector {
   private hashMap = new Map<string, string[]>(); // hash -> paths
-  
+
   addImage(imagePath: string, hash: string): boolean {
     // Check if hash already exists
     if (this.hashMap.has(hash)) {
@@ -369,7 +390,7 @@ export class DuplicateDetector {
       existing.push(imagePath);
       return true; // Is duplicate
     }
-    
+
     this.hashMap.set(hash, [imagePath]);
     return false; // Not duplicate
   }
@@ -394,13 +415,17 @@ export class DuplicateDetector {
         SELECT "originalUrl", filename FROM "MediaAsset" 
         WHERE "originalUrl" IS NOT NULL
       `);
-      
+
       // For existing images, use URL as a simple hash
       for (const row of result.rows) {
-        const simpleHash = `existing_${crypto.createHash('md5').update(row.originalUrl || row.filename || '').digest('hex').substring(0, 16)}`;
+        const simpleHash = `existing_${crypto
+          .createHash('md5')
+          .update(row.originalUrl || row.filename || '')
+          .digest('hex')
+          .substring(0, 16)}`;
         this.hashMap.set(simpleHash, [row.originalUrl || row.filename]);
       }
-      
+
       console.log(`Loaded ${result.rows.length} existing image hashes`);
     } catch (err) {
       console.warn('Could not load existing hashes:', err);

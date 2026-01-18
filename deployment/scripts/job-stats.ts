@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Job Queue Statistics Display
- * 
+ *
  * Displays current job queue statistics for monitoring
  */
 
@@ -42,10 +42,11 @@ async function displayJobStats() {
 
       console.log('\n  Recent Failed Jobs:');
       recentFailed.forEach((job, i) => {
-        console.log(`    ${i + 1}. [${job.jobType}] ${job.error?.substring(0, 60) || 'Unknown error'}`);
+        console.log(
+          `    ${i + 1}. [${job.jobType}] ${job.error?.substring(0, 60) || 'Unknown error'}`
+        );
       });
     }
-
   } catch (error: any) {
     console.error('  ✗ Error fetching job statistics:', error.message);
   } finally {

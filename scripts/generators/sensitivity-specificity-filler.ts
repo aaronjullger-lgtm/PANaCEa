@@ -1,16 +1,16 @@
 #!/usr/bin/env npx tsx
 /**
  * Sensitivity/Specificity Filler - Add diagnostic accuracy data
- * 
+ *
  * Tables with missing sens/spec:
  *   - PhysicalExamFinding: 161 missing (75/236 = 32%)
  *   - SpecialTest: 70 missing (372/442 = 84%)
- * 
+ *
  * Also fills related diagnostic utility fields:
  *   - Positive/Negative Likelihood Ratios (LR+/LR-)
  *   - Negative indicates (for PE findings)
  *   - Board yield facts
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/sensitivity-specificity-filler.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/sensitivity-specificity-filler.ts --table=PhysicalExamFinding
@@ -29,7 +29,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -37,16 +37,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -75,20 +75,20 @@ async function generateDiagnosticAccuracy(
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not set');
   }
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
-  
+
   await rateLimiter.acquire();
-  
+
   let context = '';
-  
+
   if (tableName === 'PhysicalExamFinding') {
     context = `Physical Exam Finding: ${record.name}
 System: ${record.system}
@@ -105,7 +105,7 @@ Technique: ${record.technique || ''}
 Positive Test: ${record.positiveTest || ''}
 Interpretation: ${record.interpretation || ''}`;
   }
-  
+
   const prompt = `Provide evidence-based diagnostic accuracy data for this clinical finding/test for PANCE board preparation:
 
 ${context}
@@ -120,11 +120,15 @@ Return a JSON object:
   "positiveLR": <positive likelihood ratio as decimal, e.g., 5.2, or null>,
   "negativeLR": <negative likelihood ratio as decimal, e.g., 0.2, or null>,
   "evidenceQuality": "high|moderate|low|very-low|estimated",
-  ${tableName === 'PhysicalExamFinding' ? `"negativeIndicates": [
+  ${
+    tableName === 'PhysicalExamFinding'
+      ? `"negativeIndicates": [
     "What a NEGATIVE finding suggests - condition 1",
     "What a NEGATIVE finding suggests - condition 2",
     // 3-5 items
-  ],` : ''}
+  ],`
+      : ''
+  }
   "boardYieldFacts": [
     "High-yield board fact about this test's utility",
     "Another clinically important fact",
@@ -142,7 +146,7 @@ Important:
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -154,28 +158,28 @@ Important:
   }
 }
 
-async function processPhysicalExamFindings(batchSize: number, dryRun: boolean): Promise<{ success: number; failed: number }> {
+async function processPhysicalExamFindings(
+  batchSize: number,
+  dryRun: boolean
+): Promise<{ success: number; failed: number }> {
   console.log('\n🩺 Processing PhysicalExamFinding...');
-  
+
   const records = await prisma.physicalExamFinding.findMany({
     where: {
-      OR: [
-        { sensitivity: null },
-        { specificity: null }
-      ]
+      OR: [{ sensitivity: null }, { specificity: null }],
     },
-    take: batchSize
+    take: batchSize,
   });
-  
+
   console.log(`  Found ${records.length} records missing sensitivity/specificity`);
-  
+
   let success = 0;
   let failed = 0;
-  
+
   for (const record of records) {
     try {
       const data = await generateDiagnosticAccuracy('PhysicalExamFinding', record);
-      
+
       if (dryRun) {
         console.log(`  [DRY RUN] ${record.name}:`);
         console.log(`    Sens: ${data.sensitivity}% | Spec: ${data.specificity}%`);
@@ -185,7 +189,7 @@ async function processPhysicalExamFindings(batchSize: number, dryRun: boolean): 
         const updateData: any = {
           evidenceQuality: data.evidenceQuality,
         };
-        
+
         if (data.sensitivity !== null) {
           updateData.sensitivity = data.sensitivity;
         }
@@ -207,12 +211,12 @@ async function processPhysicalExamFindings(batchSize: number, dryRun: boolean): 
             updateData.boardYieldFacts = data.boardYieldFacts;
           }
         }
-        
+
         await prisma.physicalExamFinding.update({
           where: { id: record.id },
-          data: updateData
+          data: updateData,
         });
-        
+
         console.log(`  ✅ ${record.name}: ${data.sensitivity}% / ${data.specificity}%`);
       }
       success++;
@@ -220,56 +224,56 @@ async function processPhysicalExamFindings(batchSize: number, dryRun: boolean): 
       console.log(`  ❌ ${record.name}: ${e}`);
       failed++;
     }
-    
-    await new Promise(r => setTimeout(r, 400));
+
+    await new Promise((r) => setTimeout(r, 400));
   }
-  
+
   return { success, failed };
 }
 
-async function processSpecialTests(batchSize: number, dryRun: boolean): Promise<{ success: number; failed: number }> {
+async function processSpecialTests(
+  batchSize: number,
+  dryRun: boolean
+): Promise<{ success: number; failed: number }> {
   console.log('\n🔬 Processing SpecialTest...');
-  
+
   const records = await prisma.specialTest.findMany({
     where: {
-      OR: [
-        { sensitivity: null },
-        { specificity: null }
-      ]
+      OR: [{ sensitivity: null }, { specificity: null }],
     },
-    take: batchSize
+    take: batchSize,
   });
-  
+
   console.log(`  Found ${records.length} records missing sensitivity/specificity`);
-  
+
   let success = 0;
   let failed = 0;
-  
+
   for (const record of records) {
     try {
       const data = await generateDiagnosticAccuracy('SpecialTest', record);
-      
+
       if (dryRun) {
         console.log(`  [DRY RUN] ${record.name}:`);
         console.log(`    Sens: ${data.sensitivity}% | Spec: ${data.specificity}%`);
         console.log(`    Evidence: ${data.evidenceQuality}`);
       } else {
         const updateData: any = {};
-        
+
         if (data.sensitivity !== null) {
           updateData.sensitivity = data.sensitivity;
         }
         if (data.specificity !== null) {
           updateData.specificity = data.specificity;
         }
-        
+
         if (Object.keys(updateData).length > 0) {
           await prisma.specialTest.update({
             where: { id: record.id },
-            data: updateData
+            data: updateData,
           });
         }
-        
+
         console.log(`  ✅ ${record.name}: ${data.sensitivity}% / ${data.specificity}%`);
       }
       success++;
@@ -277,44 +281,43 @@ async function processSpecialTests(batchSize: number, dryRun: boolean): Promise<
       console.log(`  ❌ ${record.name}: ${e}`);
       failed++;
     }
-    
-    await new Promise(r => setTimeout(r, 400));
+
+    await new Promise((r) => setTimeout(r, 400));
   }
-  
+
   return { success, failed };
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const tableArg = args.find(a => a.startsWith('--table='));
+  const tableArg = args.find((a) => a.startsWith('--table='));
   const tableName = tableArg ? tableArg.split('=')[1] : 'all';
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : 30;
-  
+
   console.log('📊 Sensitivity/Specificity Filler');
   console.log('==================================');
   console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE UPDATE'}`);
   console.log(`Table: ${tableName}`);
   console.log(`Batch size: ${batchSize}`);
-  
+
   const results: Record<string, { success: number; failed: number }> = {};
-  
+
   try {
     if (tableName === 'all' || tableName === 'PhysicalExamFinding') {
       results.PhysicalExamFinding = await processPhysicalExamFindings(batchSize, dryRun);
     }
-    
+
     if (tableName === 'all' || tableName === 'SpecialTest') {
       results.SpecialTest = await processSpecialTests(batchSize, dryRun);
     }
-    
+
     console.log('\n==================================');
     console.log('Summary:');
     for (const [table, { success, failed }] of Object.entries(results)) {
       console.log(`  ${table}: ✅ ${success} | ❌ ${failed}`);
     }
-    
   } catch (error) {
     console.error('Fatal error:', error);
     process.exit(1);

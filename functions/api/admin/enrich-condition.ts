@@ -1,40 +1,14 @@
 /**
  * AI Content Enrichment API - Admin-only endpoint to fill missing MedicalContent fields
- * 
+ *
  * POST /api/admin/enrich-condition
  * Uses Gemini AI to generate missing content and determine display priority
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
-
-interface CloudflareEnv {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-  GEMINI_API_KEY: string;
-}
-
-interface EnrichRequest {
-  conditionId: string;
-  fieldsToEnrich?: string[];
-  forceRegenerate?: boolean;
-}
-
-interface EnrichResult {
-  conditionId: string;
-  condition: string;
-  fieldsUpdated: string[];
-  displayPriority: DisplayPriority | null;
-  success: boolean;
-  error?: string;
-}
-
-interface DisplayPriority {
-  primary: string;
-  secondary?: string;
-  tertiary?: string;
-  reasoning: string;
-}
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
 // All enrichable fields
 const ENRICHABLE_FIELDS = [
@@ -59,6 +33,22 @@ const ENRICHABLE_FIELDS = [
   'classic_triad',
   'mnemonic',
 ] as const;
+
+interface DisplayPriority {
+  primary: string;
+  secondary?: string;
+  tertiary?: string;
+  reasoning: string;
+}
+
+interface EnrichResult {
+  conditionId: string;
+  condition: string;
+  fieldsUpdated: string[];
+  displayPriority: DisplayPriority | null;
+  success: boolean;
+  error?: string;
+}
 
 function isFieldEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true;
@@ -119,11 +109,13 @@ SUBCATEGORY: ${subcategory}
 EXISTING CONTENT (for context):
 ${Object.entries(existingContent)
   .filter(([k, v]) => v && !isFieldEmpty(v))
-  .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v.substring(0, 200) + '...' : JSON.stringify(v)}`)
+  .map(
+    ([k, v]) => `- ${k}: ${typeof v === 'string' ? v.substring(0, 200) + '...' : JSON.stringify(v)}`
+  )
   .join('\n')}
 
 FIELDS TO GENERATE:
-${missingFields.map(f => `- ${f}`).join('\n')}
+${missingFields.map((f) => `- ${f}`).join('\n')}
 
 INSTRUCTIONS:
 1. For each missing field, provide PANCE-focused, high-yield content
@@ -160,44 +152,69 @@ Return a JSON object with this structure:
 Return ONLY valid JSON, no markdown code blocks.`;
 }
 
-export async function onRequestPost(context: { request: Request; env: CloudflareEnv }): Promise<Response> {
-  const { request, env } = context;
+const EnrichConditionSchema = z.object({
+  body: z.object({
+    conditionId: z.string().min(1),
+    fieldsToEnrich: z.array(z.string()).optional(),
+    forceRegenerate: z.boolean().optional(),
+  }),
+});
 
-  // Authenticate
-  const auth = await authenticateRequest(request, env);
-  if (!auth) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+const EnrichGetSchema = z.object({
+  query: z.object({}).optional(),
+});
 
+export const onRequestOptions = withCors();
+
+// GET returns usage info
+export const onRequestGet = authenticatedEndpoint(EnrichGetSchema, async (context) => {
+  const { auth } = context;
+  const logger = createEndpointLogger('/api/admin/enrich-condition');
+
+  logger.info('Usage info requested', { userId: auth.userId });
+
+  return {
+    data: {
+      endpoint: '/api/admin/enrich-condition',
+      method: 'POST',
+      description: 'AI-powered content enrichment for MedicalContent entries',
+      body: {
+        conditionId: 'string (required) - The conditionId to enrich',
+        fieldsToEnrich:
+          'string[] (optional) - Specific fields to enrich, defaults to all empty fields',
+        forceRegenerate: 'boolean (optional) - Regenerate even if field has content',
+      },
+      enrichableFields: ENRICHABLE_FIELDS,
+      rateLimit: 'Admin-only, use responsibly',
+    },
+  };
+});
+
+export const onRequestPost = authenticatedEndpoint(EnrichConditionSchema, async (context) => {
+  const { env, auth, validated } = context;
+  const logger = createEndpointLogger('/api/admin/enrich-condition');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     // Check admin role
     const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { role: true },
+      where: { clerkId: auth.userId },
+      select: { role: true, id: true },
     });
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && user.role !== 'admin' && user.role !== 'superadmin')) {
+      logger.warn('Non-admin attempted content enrichment', {
+        userId: auth.userId,
+        role: user?.role,
+      });
+
+      return {
+        data: { error: 'Admin access required' },
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      };
     }
 
-    // Parse request body
-    const body: EnrichRequest = await request.json();
-    const { conditionId, fieldsToEnrich, forceRegenerate } = body;
-
-    if (!conditionId) {
-      return new Response(JSON.stringify({ error: 'conditionId is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const { conditionId, fieldsToEnrich, forceRegenerate } = validated.body;
 
     // Fetch existing content
     const content = await prisma.medicalContent.findUnique({
@@ -205,10 +222,12 @@ export async function onRequestPost(context: { request: Request; env: Cloudflare
     });
 
     if (!content) {
-      return new Response(JSON.stringify({ error: 'Condition not found' }), {
+      logger.info('Condition not found', { conditionId, userId: user.id });
+
+      return {
+        data: { error: 'Condition not found' },
         status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      };
     }
 
     // Determine which fields need enrichment
@@ -218,33 +237,37 @@ export async function onRequestPost(context: { request: Request; env: Cloudflare
     if (fieldsToEnrich && fieldsToEnrich.length > 0) {
       // Use specified fields
       missingFields = forceRegenerate
-        ? fieldsToEnrich.filter(f => ENRICHABLE_FIELDS.includes(f as any))
-        : fieldsToEnrich.filter(f => ENRICHABLE_FIELDS.includes(f as any) && isFieldEmpty(contentObj[f]));
+        ? fieldsToEnrich.filter((f) => ENRICHABLE_FIELDS.includes(f as any))
+        : fieldsToEnrich.filter(
+            (f) => ENRICHABLE_FIELDS.includes(f as any) && isFieldEmpty(contentObj[f])
+          );
     } else {
       // Find all empty fields
-      missingFields = ENRICHABLE_FIELDS.filter(f => isFieldEmpty(contentObj[f]));
+      missingFields = ENRICHABLE_FIELDS.filter((f) => isFieldEmpty(contentObj[f]));
     }
 
     if (missingFields.length === 0) {
-      return new Response(JSON.stringify({
+      logger.info('No fields need enrichment', {
         conditionId,
-        condition: content.condition,
-        fieldsUpdated: [],
-        displayPriority: null,
-        success: true,
-        message: 'No fields need enrichment',
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        userId: user.id,
       });
+
+      return {
+        data: {
+          conditionId,
+          condition: content.condition,
+          fieldsUpdated: [],
+          displayPriority: null,
+          success: true,
+          message: 'No fields need enrichment',
+        },
+      };
     }
 
     // Check for API key
     if (!env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      logger.error('GEMINI_API_KEY not configured', { userId: user.id });
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     // Build and send prompt
@@ -265,14 +288,19 @@ export async function onRequestPost(context: { request: Request; env: Cloudflare
       const cleaned = aiResponse.replace(/```json\n?|```/g, '').trim();
       parsed = JSON.parse(cleaned);
     } catch (parseErr) {
-      console.error('[enrich-condition] Failed to parse AI response:', aiResponse);
-      return new Response(JSON.stringify({
-        error: 'Failed to parse AI response',
-        rawResponse: aiResponse.substring(0, 500),
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+      logger.error('Failed to parse AI response', {
+        userId: user.id,
+        conditionId,
+        error: parseErr instanceof Error ? parseErr.message : String(parseErr),
       });
+
+      return {
+        data: {
+          error: 'Failed to parse AI response',
+          rawResponse: aiResponse.substring(0, 500),
+        },
+        status: 500,
+      };
     }
 
     // Prepare update data
@@ -302,7 +330,7 @@ export async function onRequestPost(context: { request: Request; env: Cloudflare
         where: { conditionId },
         data: {
           ...updateData,
-          updatedBy: auth.userId,
+          updatedBy: user.id,
           updatedAt: new Date(),
         },
       });
@@ -316,41 +344,22 @@ export async function onRequestPost(context: { request: Request; env: Cloudflare
       success: true,
     };
 
-    return new Response(JSON.stringify(result, null, 2), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    logger.info('Content enriched successfully', {
+      userId: user.id,
+      conditionId,
+      fieldsUpdated: fieldsUpdated.length,
     });
 
+    return {
+      data: result,
+    };
   } catch (error) {
-    console.error('[enrich-condition] Error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to enrich condition',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    logger.error('Content enrichment error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
     });
+    throw new Error('Failed to enrich condition');
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
-
-// Also support batch enrichment
-export async function onRequestGet(context: { request: Request; env: CloudflareEnv }): Promise<Response> {
-  // GET returns usage info
-  return new Response(JSON.stringify({
-    endpoint: '/api/admin/enrich-condition',
-    method: 'POST',
-    description: 'AI-powered content enrichment for MedicalContent entries',
-    body: {
-      conditionId: 'string (required) - The conditionId to enrich',
-      fieldsToEnrich: 'string[] (optional) - Specific fields to enrich, defaults to all empty fields',
-      forceRegenerate: 'boolean (optional) - Regenerate even if field has content',
-    },
-    enrichableFields: ENRICHABLE_FIELDS,
-    rateLimit: 'Admin-only, use responsibly',
-  }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+});

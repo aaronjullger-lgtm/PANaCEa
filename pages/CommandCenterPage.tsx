@@ -1,6 +1,6 @@
 /**
  * CommandCenterPage - Training Command Center Dedicated Page
- * 
+ *
  * Hub for accessing all training modes and resources
  * Replaces the modal flow with a dedicated route at /training/command-center
  */
@@ -58,7 +58,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             <ChevronLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
-          
+
           <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
             Training Command Center
           </h1>

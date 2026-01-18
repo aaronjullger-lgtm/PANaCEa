@@ -1,6 +1,6 @@
 /**
  * Anki Export Service
- * 
+ *
  * Provides functionality to export questions to Anki format.
  * Supports "Sync Missed" - exports only questions the user got wrong today.
  */
@@ -37,30 +37,28 @@ export function getMissedQuestionsToday(
   // Use conditionId as primary identifier, falling back to condition name for legacy data
   const missedTodayIds = new Set(
     performanceData
-      .filter(record => {
+      .filter((record) => {
         const recordDate = new Date(Number(record.timestamp));
         recordDate.setHours(0, 0, 0, 0);
         return !record.isCorrect && recordDate.getTime() === todayTimestamp;
       })
-      .map(record => record.conditionId || record.condition || record.topic)
+      .map((record) => record.conditionId || record.condition || record.topic)
   );
 
   // Filter missed questions to only include today's mistakes
   // Match by conditionId first, then fall back to condition name
-  return missedQuestions.filter(question => 
-    missedTodayIds.has(question.conditionId) || 
-    missedTodayIds.has(question.condition) ||
-    missedTodayIds.has(question.topic)
+  return missedQuestions.filter(
+    (question) =>
+      missedTodayIds.has(question.conditionId) ||
+      missedTodayIds.has(question.condition) ||
+      missedTodayIds.has(question.topic)
   );
 }
 
 /**
  * Convert a question to an Anki card format
  */
-export function questionToAnkiCard(
-  question: Question,
-  options: AnkiExportOptions = {}
-): AnkiCard {
+export function questionToAnkiCard(question: Question, options: AnkiExportOptions = {}): AnkiCard {
   const {
     includeRationale = true,
     includePearls = true,
@@ -72,13 +70,13 @@ export function questionToAnkiCard(
   const optionsText = question.options
     .map((opt, idx) => `${String.fromCharCode(65 + idx)}) ${opt}`)
     .join('\n');
-  
+
   const front = `${question.question}\n\n${optionsText}`;
 
   // Build the back of the card (answer + explanation)
   const correctLetter = String.fromCharCode(65 + question.correctAnswerIndex);
   const correctAnswer = question.options[question.correctAnswerIndex];
-  
+
   let back = `<strong>Answer: ${correctLetter}) ${correctAnswer}</strong>`;
 
   if (includeRationale && question.rationale) {
@@ -87,7 +85,7 @@ export function questionToAnkiCard(
 
   if (includePearls && question.pearls && question.pearls.length > 0) {
     back += '\n\n<strong>Key Pearls:</strong>\n';
-    back += question.pearls.map(pearl => `• ${pearl}`).join('\n');
+    back += question.pearls.map((pearl) => `• ${pearl}`).join('\n');
   }
 
   // Build tags
@@ -99,16 +97,12 @@ export function questionToAnkiCard(
 
   if (tagWithCondition && question.condition) {
     // Sanitize condition name for tag (remove special chars, spaces to underscores)
-    const conditionTag = question.condition
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '_');
+    const conditionTag = question.condition.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
     tags.push(conditionTag);
   }
 
   if (question.subcategory) {
-    const subcategoryTag = question.subcategory
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '_');
+    const subcategoryTag = question.subcategory.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
     tags.push(subcategoryTag);
   }
 
@@ -127,25 +121,22 @@ export function questionToAnkiCard(
  * Convert questions to Anki deck format (.txt format)
  * This format can be imported directly into Anki
  */
-export function exportToAnkiText(
-  questions: Question[],
-  options: AnkiExportOptions = {}
-): string {
+export function exportToAnkiText(questions: Question[], options: AnkiExportOptions = {}): string {
   const deckName = options.deckName || 'PANaCEa_Missed_Questions';
-  
+
   let output = `#separator:tab\n`;
   output += `#html:true\n`;
   output += `#deck:${deckName}\n`;
   output += `#tags column:3\n\n`;
 
-  questions.forEach(question => {
+  questions.forEach((question) => {
     const card = questionToAnkiCard(question, options);
-    
+
     // Format: Front\tBack\tTags
     const front = card.front.replace(/\n/g, '<br>');
     const back = card.back.replace(/\n/g, '<br>');
     const tags = card.tags.join(' ');
-    
+
     output += `${front}\t${back}\t${tags}\n`;
   });
 
@@ -161,10 +152,10 @@ export function exportToAnkiConnect(
   options: AnkiExportOptions = {}
 ): object {
   const deckName = options.deckName || 'PANaCEa_Missed_Questions';
-  
-  const notes = questions.map(question => {
+
+  const notes = questions.map((question) => {
     const card = questionToAnkiCard(question, options);
-    
+
     return {
       deckName: deckName,
       modelName: 'Basic',
@@ -214,7 +205,7 @@ export function exportMissedTodayToAnki(
 ): { success: boolean; count: number; error?: string } {
   try {
     const missedToday = getMissedQuestionsToday(performanceData, missedQuestions);
-    
+
     if (missedToday.length === 0) {
       return {
         success: false,
@@ -225,7 +216,7 @@ export function exportMissedTodayToAnki(
 
     const ankiText = exportToAnkiText(missedToday, options);
     const filename = `panacea_missed_${new Date().toISOString().split('T')[0]}.txt`;
-    
+
     downloadFile(ankiText, filename);
 
     return {

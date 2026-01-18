@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { TopicStats } from '../types';
 
@@ -19,7 +18,9 @@ const TopicBarChart: React.FC<TopicBarChartProps> = ({ topicScores }) => {
         <div key={topic} className="w-full">
           <div className="flex justify-between items-center mb-1 text-sm">
             <span className="font-semibold text-slate-700">{topic}</span>
-            <span className="font-medium text-slate-500">{score.toFixed(0)}% ({correct}/{total})</span>
+            <span className="font-medium text-slate-500">
+              {score.toFixed(0)}% ({correct}/{total})
+            </span>
           </div>
           <div className="w-full bg-slate-200 rounded-full h-2.5">
             <div

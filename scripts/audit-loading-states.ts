@@ -1,6 +1,6 @@
 /**
  * Audit Script: Loading State Consistency
- * 
+ *
  * Sprint B: UX Consistency
  * Finds components using generic loading patterns instead of SkeletonLoader
  */
@@ -23,10 +23,7 @@ interface AuditResult {
   conditionalLoading: LoadingPattern[];
 }
 
-const COMPONENT_DIRS = [
-  'components',
-  'pages',
-];
+const COMPONENT_DIRS = ['components', 'pages'];
 
 // Patterns that indicate non-skeleton loading
 const LOADING_PATTERNS = {
@@ -39,8 +36,8 @@ const LOADING_PATTERNS = {
 // Pattern that indicates proper skeleton usage
 const SKELETON_PATTERN = /<Skeleton(Loader|Text|Card)|SkeletonLoader/g;
 
-function scanFile(filePath: string): { 
-  usesSkeletons: boolean; 
+function scanFile(filePath: string): {
+  usesSkeletons: boolean;
   loadingPatterns: LoadingPattern[];
   spinnerPatterns: LoadingPattern[];
   textLoadingPatterns: LoadingPattern[];
@@ -91,11 +88,11 @@ function scanFile(filePath: string): {
 
 function walkDir(dir: string, fileList: string[] = []): string[] {
   const files = fs.readdirSync(dir);
-  
+
   for (const file of files) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
+
     if (stat.isDirectory()) {
       // Skip node_modules and hidden directories
       if (!file.startsWith('.') && file !== 'node_modules') {
@@ -105,7 +102,7 @@ function walkDir(dir: string, fileList: string[] = []): string[] {
       fileList.push(filePath);
     }
   }
-  
+
   return fileList;
 }
 
@@ -120,16 +117,16 @@ function runAudit(): AuditResult {
 
   for (const dir of COMPONENT_DIRS) {
     if (!fs.existsSync(dir)) continue;
-    
+
     const files = walkDir(dir);
-    
+
     for (const file of files) {
       const scanResult = scanFile(file);
-      
+
       if (scanResult.usesSkeletons) {
         result.skeletonLoaders.push(file);
       }
-      
+
       result.spinners.push(...scanResult.spinnerPatterns);
       result.textLoading.push(...scanResult.textLoadingPatterns);
       result.conditionalLoading.push(...scanResult.loadingPatterns);
@@ -152,8 +149,8 @@ console.log(`🔶 Conditional loading (review needed): ${results.conditionalLoad
 
 if (results.textLoading.length > 0) {
   console.log('\n🚨 Components with "Loading..." text (should use SkeletonLoader):');
-  const uniqueFiles = [...new Set(results.textLoading.map(p => p.file))];
-  uniqueFiles.slice(0, 15).forEach(file => {
+  const uniqueFiles = [...new Set(results.textLoading.map((p) => p.file))];
+  uniqueFiles.slice(0, 15).forEach((file) => {
     console.log(`  - ${file}`);
   });
   if (uniqueFiles.length > 15) {
@@ -163,8 +160,8 @@ if (results.textLoading.length > 0) {
 
 if (results.spinners.length > 0) {
   console.log('\n⚠️  Components with spinners (consider SkeletonLoader for better CLS):');
-  const uniqueFiles = [...new Set(results.spinners.map(p => p.file))];
-  uniqueFiles.slice(0, 10).forEach(file => {
+  const uniqueFiles = [...new Set(results.spinners.map((p) => p.file))];
+  uniqueFiles.slice(0, 10).forEach((file) => {
     console.log(`  - ${file}`);
   });
   if (uniqueFiles.length > 10) {
@@ -174,7 +171,7 @@ if (results.spinners.length > 0) {
 
 if (results.skeletonLoaders.length > 0) {
   console.log('\n✅ Components properly using SkeletonLoader:');
-  results.skeletonLoaders.slice(0, 10).forEach(file => {
+  results.skeletonLoaders.slice(0, 10).forEach((file) => {
     console.log(`  - ${file}`);
   });
   if (results.skeletonLoaders.length > 10) {

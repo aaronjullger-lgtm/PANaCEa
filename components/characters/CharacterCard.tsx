@@ -1,6 +1,6 @@
 /**
  * Character Card Component
- * 
+ *
  * Displays a single organ character in the collection grid
  */
 
@@ -53,7 +53,9 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       {/* Progress Bar */}
       <div className="w-full">
         <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] mb-1">
-          <span>{unlockedCount}/{totalCount}</span>
+          <span>
+            {unlockedCount}/{totalCount}
+          </span>
           <span>{completion}%</span>
         </div>
         <div className="w-full h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
@@ -65,17 +67,15 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
               completion === 100
                 ? 'bg-green-500'
                 : completion >= 50
-                ? 'bg-blue-500'
-                : 'bg-slate-400'
+                  ? 'bg-blue-500'
+                  : 'bg-slate-400'
             }`}
           />
         </div>
       </div>
 
       {/* System Label */}
-      <div className="text-xs text-[var(--color-text-muted)] font-mono">
-        {character.system}
-      </div>
+      <div className="text-xs text-[var(--color-text-muted)] font-mono">{character.system}</div>
     </motion.button>
   );
 };

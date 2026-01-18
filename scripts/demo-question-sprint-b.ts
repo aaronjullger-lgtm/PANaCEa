@@ -1,6 +1,6 @@
 /**
  * Demo: Question Generation Sprint B Utilities
- * 
+ *
  * Demonstrates:
  * - Step 3: Question Deduplication
  * - Step 4: Adaptive Difficulty
@@ -52,14 +52,14 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('🎯 Question Generation Sprint B Demo\n');
   console.log('═'.repeat(70));
-  
+
   try {
     // ========================================================================
     // STEP 3: QUESTION DEDUPLICATION
     // ========================================================================
     console.log('\n📋 STEP 3: Question Deduplication');
     console.log('─'.repeat(70));
-    
+
     // Find a user with question history
     const userWithHistory = await prisma.userQuestionSeen.findFirst({
       select: { userId: true },
@@ -69,45 +69,45 @@ async function main() {
     if (userWithHistory) {
       console.log(`\nDemo 1: Get Seen Questions for User`);
       console.log(`   User ID: ${userWithHistory.userId.substring(0, 12)}...`);
-      
+
       const seenIds = await getUserSeenQuestionIds(prisma, userWithHistory.userId, {
         questionType: 'pre_generated',
       });
-      
+
       console.log(`   ✓ User has seen ${seenIds.size} pre-generated questions`);
 
       // Demo filtering
       console.log(`\nDemo 2: Filter Unseen Questions`);
-      
+
       // Get some sample question IDs
       const sampleQuestions = await prisma.preGeneratedQuestion.findMany({
         take: 20,
         select: { id: true },
       });
-      
-      const sampleIds = sampleQuestions.map(q => q.id);
+
+      const sampleIds = sampleQuestions.map((q) => q.id);
       console.log(`   Testing pool of ${sampleIds.length} questions...`);
-      
+
       const unseenIds = await filterUnseenQuestions(
         prisma,
         userWithHistory.userId,
         sampleIds,
         'pre_generated'
       );
-      
+
       console.log(`   ✓ ${unseenIds.length} unseen questions found`);
       console.log(`   ✓ ${sampleIds.length - unseenIds.length} already seen (filtered out)`);
 
       // Demo exploration stats
       console.log(`\nDemo 3: Pool Exploration Statistics`);
-      
+
       const stats = await getPoolExplorationStats(
         prisma,
         userWithHistory.userId,
         sampleIds,
         'pre_generated'
       );
-      
+
       console.log(`   Total: ${stats.total}`);
       console.log(`   Seen: ${stats.seen}`);
       console.log(`   Unseen: ${stats.unseen}`);
@@ -115,14 +115,14 @@ async function main() {
 
       // Demo seen status check
       console.log(`\nDemo 4: Check Specific Questions`);
-      
+
       const statusMap = await checkQuestionsSeenStatus(
         prisma,
         userWithHistory.userId,
         sampleIds.slice(0, 5),
         'pre_generated'
       );
-      
+
       for (const [id, seen] of statusMap.entries()) {
         console.log(`   ${id.substring(0, 20)}... → ${seen ? '✓ Seen' : '○ Unseen'}`);
       }
@@ -146,22 +146,24 @@ async function main() {
       console.log(`\nDemo 5: User Performance by System`);
       console.log(`   User ID: ${userWithAttempts.userId.substring(0, 12)}...`);
       console.log(`   System: ${userWithAttempts.system}`);
-      
+
       const performance = await getUserPerformanceBySystem(
         prisma,
         userWithAttempts.userId,
         userWithAttempts.system!,
         7 // Last 7 days
       );
-      
+
       console.log(`   Accuracy: ${performance.accuracy.toFixed(1)}%`);
       console.log(`   Total Attempts: ${performance.totalAttempts}`);
       console.log(`   Avg FSRS Stability: ${performance.avgStability.toFixed(2)}`);
-      console.log(`   ✓ Recommended Difficulty: ${performance.recommendedDifficulty.toUpperCase()}`);
+      console.log(
+        `   ✓ Recommended Difficulty: ${performance.recommendedDifficulty.toUpperCase()}`
+      );
 
       // Demo multiple systems
       console.log(`\nDemo 6: Recommended Difficulty Across Systems`);
-      
+
       const systems = ['CV', 'PULM', 'GI', 'NEURO', 'ENDO'];
       const difficulties = await getRecommendedDifficultiesBySystem(
         prisma,
@@ -169,7 +171,7 @@ async function main() {
         systems,
         7
       );
-      
+
       for (const [system, difficulty] of difficulties.entries()) {
         const emoji = difficulty === 'easy' ? '🟢' : difficulty === 'medium' ? '🟡' : '🔴';
         console.log(`   ${emoji} ${system.padEnd(8)} → ${difficulty}`);
@@ -177,21 +179,23 @@ async function main() {
 
       // Demo overall skill level
       console.log(`\nDemo 7: Overall Skill Assessment`);
-      
+
       const skillAssessment = await getUserOverallSkillLevel(
         prisma,
         userWithAttempts.userId,
         30 // Last 30 days
       );
-      
+
       console.log(`   Skill Level: ${skillAssessment.skillLevel.toUpperCase()}`);
       console.log(`   Overall Accuracy: ${skillAssessment.overallAccuracy.toFixed(1)}%`);
       console.log(`   Avg Stability: ${skillAssessment.avgStability.toFixed(2)}`);
       console.log(`   Total Attempts: ${skillAssessment.totalAttempts}`);
-      console.log(`   ✓ Recommended Difficulty: ${skillAssessment.recommendedDifficulty.toUpperCase()}`);
+      console.log(
+        `   ✓ Recommended Difficulty: ${skillAssessment.recommendedDifficulty.toUpperCase()}`
+      );
     } else {
       console.log('   ⚠️  No question attempts found - generating synthetic demo');
-      
+
       console.log(`\nDemo 5-7: Synthetic Performance Examples`);
       console.log(`   Beginner (45% accuracy, stability=2): Recommended = EASY`);
       console.log(`   Intermediate (72% accuracy, stability=6): Recommended = MEDIUM`);
@@ -205,7 +209,7 @@ async function main() {
     console.log('─'.repeat(70));
 
     console.log(`\nDemo 8: Detect Clustering (Bad Interleaving)`);
-    
+
     // Create a poorly interleaved session (clustered by system)
     const clusteredQuestions = [
       { id: 'q1', system: 'CV' },
@@ -220,7 +224,7 @@ async function main() {
       { id: 'q10', system: 'NEURO' },
     ];
 
-    console.log(`   Input: ${clusteredQuestions.map(q => q.system).join(', ')}`);
+    console.log(`   Input: ${clusteredQuestions.map((q) => q.system).join(', ')}`);
     const isValid = validateInterleaving(clusteredQuestions, 2, 5);
     console.log(`   Valid: ${isValid ? '✓ Yes' : '✗ No'}`);
 
@@ -229,10 +233,10 @@ async function main() {
     console.log(`   Violations: ${metrics.violations}`);
 
     console.log(`\nDemo 9: Fix Interleaving`);
-    
+
     const interleaved = ensureInterleaving(clusteredQuestions, 2, 5);
-    console.log(`   Output: ${interleaved.map(q => q.system).join(', ')}`);
-    
+    console.log(`   Output: ${interleaved.map((q) => q.system).join(', ')}`);
+
     const interleavedValid = validateInterleaving(interleaved, 2, 5);
     console.log(`   ✓ Valid: ${interleavedValid ? 'Yes' : 'No'}`);
 
@@ -245,7 +249,7 @@ async function main() {
     console.log(getInterleavingReport(interleaved));
 
     console.log(`\nDemo 11: Shuffle with Interleaving`);
-    
+
     // Create a session with enough variety
     const sessionQuestions = [
       { id: 'q1', system: 'CV' },
@@ -261,9 +265,9 @@ async function main() {
     ];
 
     const shuffled = shuffleWithInterleaving(sessionQuestions, 2, 5);
-    console.log(`   Before: ${sessionQuestions.map(q => q.system).join(', ')}`);
-    console.log(`   After:  ${shuffled.map(q => q.system).join(', ')}`);
-    
+    console.log(`   Before: ${sessionQuestions.map((q) => q.system).join(', ')}`);
+    console.log(`   After:  ${shuffled.map((q) => q.system).join(', ')}`);
+
     const shuffledValid = validateInterleaving(shuffled, 2, 5);
     console.log(`   ✓ Valid: ${shuffledValid ? 'Yes' : 'No'}`);
 
@@ -309,7 +313,6 @@ This is how Sprint B utilities would be integrated into question selection:
     console.log('  • Sprint C: Steps 6-8 (FSRS linking, distractor validation, versioning)');
     console.log('  • Sprint D: Steps 9-10 (Quality scoring, analytics dashboard)');
     console.log('  • Integration: Add Sprint B utilities to question service\n');
-
   } catch (error) {
     console.error('\n❌ Error:', error);
     throw error;

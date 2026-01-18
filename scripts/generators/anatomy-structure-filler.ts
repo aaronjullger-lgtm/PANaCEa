@@ -14,7 +14,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number, private refillRate: number) {
+  constructor(
+    private capacity: number,
+    private refillRate: number
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -25,7 +28,7 @@ class TokenBucket {
     this.lastRefill = now;
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(r => setTimeout(r, waitTime));
+      await new Promise((r) => setTimeout(r, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -138,23 +141,34 @@ async function main() {
   console.log('='.repeat(60));
 
   const args = process.argv.slice(2);
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : undefined;
 
   // Find structures with text gaps (not URL gaps)
   const allStructures = await prisma.anatomyStructure.findMany();
-  const structuresWithGaps = allStructures.filter(s => {
-    return (!s.contents || s.contents.length === 0) ||
-           (!s.anastomoses || s.anastomoses.length === 0) ||
-           (!s.tributaries || s.tributaries.length === 0) ||
-           (!s.branches || s.branches.length === 0) ||
-           (!s.attachments || s.attachments.length === 0) ||
-           (!s.layers || s.layers.length === 0) ||
-           (!s.aliases || s.aliases.length === 0);
+  const structuresWithGaps = allStructures.filter((s) => {
+    return (
+      !s.contents ||
+      s.contents.length === 0 ||
+      !s.anastomoses ||
+      s.anastomoses.length === 0 ||
+      !s.tributaries ||
+      s.tributaries.length === 0 ||
+      !s.branches ||
+      s.branches.length === 0 ||
+      !s.attachments ||
+      s.attachments.length === 0 ||
+      !s.layers ||
+      s.layers.length === 0 ||
+      !s.aliases ||
+      s.aliases.length === 0
+    );
   });
 
   const toProcess = batchSize ? structuresWithGaps.slice(0, batchSize) : structuresWithGaps;
-  console.log(`Found ${structuresWithGaps.length} structures with gaps, processing ${toProcess.length}\n`);
+  console.log(
+    `Found ${structuresWithGaps.length} structures with gaps, processing ${toProcess.length}\n`
+  );
 
   let filled = 0;
   let failed = 0;
@@ -171,9 +185,18 @@ async function main() {
 
     // Only update fields that are missing AND have new content
     const updateData: any = { updatedAt: new Date() };
-    
+
     // Array fields - only update if currently empty AND new content is not empty
-    const arrayFields = ['contents', 'anastomoses', 'tributaries', 'branches', 'attachments', 'layers', 'aliases', 'surfaceLandmarks'];
+    const arrayFields = [
+      'contents',
+      'anastomoses',
+      'tributaries',
+      'branches',
+      'attachments',
+      'layers',
+      'aliases',
+      'surfaceLandmarks',
+    ];
     for (const field of arrayFields) {
       const currentVal = (structure as any)[field];
       const newVal = ensureArray((content as any)[field]);
@@ -183,7 +206,24 @@ async function main() {
     }
 
     // String fields - only update if currently empty AND new content exists
-    const stringFields = ['abbreviation', 'autonomicFunction', 'borders', 'dermatome', 'injuryMechanism', 'insertion', 'latinName', 'motorFunction', 'myotome', 'nervePath', 'nerveRoots', 'origin', 'palpationTips', 'sensoryFunction', 'surgicalApproach', 'vesselPath'];
+    const stringFields = [
+      'abbreviation',
+      'autonomicFunction',
+      'borders',
+      'dermatome',
+      'injuryMechanism',
+      'insertion',
+      'latinName',
+      'motorFunction',
+      'myotome',
+      'nervePath',
+      'nerveRoots',
+      'origin',
+      'palpationTips',
+      'sensoryFunction',
+      'surgicalApproach',
+      'vesselPath',
+    ];
     for (const field of stringFields) {
       const currentVal = (structure as any)[field];
       const newVal = (content as any)[field];

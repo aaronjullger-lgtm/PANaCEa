@@ -1,17 +1,17 @@
 /**
  * PM2 Ecosystem Configuration for PANaCEa
- * 
+ *
  * This file configures PM2 to manage the application processes:
  * - Backend API server
  * - Background job worker
- * 
+ *
  * Usage:
  *   pm2 start ecosystem.config.js
  *   pm2 stop all
  *   pm2 restart all
  *   pm2 logs
  *   pm2 monit
- * 
+ *
  * For production:
  *   pm2 start ecosystem.config.js --env production
  *   pm2 save

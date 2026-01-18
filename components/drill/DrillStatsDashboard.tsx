@@ -1,6 +1,6 @@
 /**
  * DrillStatsDashboard - Comprehensive drill performance dashboard
- * 
+ *
  * Displays:
  * - Overall drill performance summary
  * - Individual drill cards with stats
@@ -218,7 +218,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
           )}
 
           {/* Clinical Simulations Section */}
-          {(simulationStats.codeBlue.hasActivity || simulationStats.fluids.hasActivity || simulationStats.antibiotics.hasActivity) && (
+          {(simulationStats.codeBlue.hasActivity ||
+            simulationStats.fluids.hasActivity ||
+            simulationStats.antibiotics.hasActivity) && (
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -262,7 +264,8 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     )}
                     {!simulationStats.codeBlue.bestTime && (
                       <div className="text-xs text-[var(--color-text-muted)] mt-3 pt-3 border-t border-[var(--color-border)]">
-                        {simulationStats.codeBlue.totalAttempts} {simulationStats.codeBlue.totalAttempts === 1 ? 'case' : 'cases'} attempted
+                        {simulationStats.codeBlue.totalAttempts}{' '}
+                        {simulationStats.codeBlue.totalAttempts === 1 ? 'case' : 'cases'} attempted
                       </div>
                     )}
                   </motion.div>
@@ -335,7 +338,11 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="text-xs text-[var(--color-text-secondary)] mt-3 pt-3 border-t border-[var(--color-border)]">
-                      {simulationStats.antibiotics.totalChallenges} {simulationStats.antibiotics.totalChallenges === 1 ? 'challenge' : 'challenges'} completed
+                      {simulationStats.antibiotics.totalChallenges}{' '}
+                      {simulationStats.antibiotics.totalChallenges === 1
+                        ? 'challenge'
+                        : 'challenges'}{' '}
+                      completed
                     </div>
                   </motion.div>
                 )}
@@ -369,13 +376,15 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden"
                   >
                     <button
-                      onClick={() =>
-                        setExpandedDrill(isExpanded ? null : (drillType as DrillType))
-                      }
+                      onClick={() => setExpandedDrill(isExpanded ? null : (drillType as DrillType))}
                       className="w-full p-5 flex items-center gap-4 hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     >
-                      <div className={`p-3 rounded-lg bg-${info?.color}-100 dark:bg-${info?.color}-900/20`}>
-                        <Icon className={`w-6 h-6 text-${info?.color}-600 dark:text-${info?.color}-400`} />
+                      <div
+                        className={`p-3 rounded-lg bg-${info?.color}-100 dark:bg-${info?.color}-900/20`}
+                      >
+                        <Icon
+                          className={`w-6 h-6 text-${info?.color}-600 dark:text-${info?.color}-400`}
+                        />
                       </div>
 
                       <div className="flex-1 text-left">
@@ -388,7 +397,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                         <div className="flex items-center gap-6 text-sm text-[var(--color-text-muted)]">
                           <span>{stats.totalSessions} sessions</span>
                           <span>{stats.totalAttempts} questions</span>
-                          <span className="font-semibold">{stats.averageAccuracy.toFixed(0)}% avg</span>
+                          <span className="font-semibold">
+                            {stats.averageAccuracy.toFixed(0)}% avg
+                          </span>
                         </div>
                       </div>
 
@@ -487,13 +498,16 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                             </div>
 
                             {/* Category Breakdown for System/Subcategory drills */}
-                            {(drillType === 'system_drill' || drillType === 'subcategory_drill') && (
+                            {(drillType === 'system_drill' ||
+                              drillType === 'subcategory_drill') && (
                               <div>
                                 <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                                   Category Breakdown
                                 </div>
                                 <div className="space-y-2">
-                                  {getCategoryBreakdown(drillType as 'system_drill' | 'subcategory_drill')
+                                  {getCategoryBreakdown(
+                                    drillType as 'system_drill' | 'subcategory_drill'
+                                  )
                                     .slice(0, 5)
                                     .map((cat) => (
                                       <div

@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
-import { IMAGING_REGISTRY } from '../imagingRegistry';
+import { IMAGING_REGISTRY } from '../src/registries/imagingRegistry';
 
 config();
 

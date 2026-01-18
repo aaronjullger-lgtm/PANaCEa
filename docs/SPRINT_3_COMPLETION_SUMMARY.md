@@ -69,14 +69,14 @@ Sprint 3 successfully integrated **CloudFlare KV cache** into the PANaCEa applic
 
 ### TTL (Time To Live) Settings
 
-| Resource Type | TTL | Reasoning |
-|---------------|-----|-----------|
-| Condition Detail | 1 hour (3600s) | Medical content changes infrequently |
-| Question Pool | 5 minutes (300s) | Questions rotate, need fresh pools |
-| User Stats | 10 minutes (600s) | Stats update with each attempt |
-| Drug Detail | 1 hour (3600s) | Drug info is stable |
-| Guideline Detail | 2 hours (7200s) | Guidelines very stable |
-| System Metadata | 30 minutes (1800s) | Lists/categories moderately stable |
+| Resource Type    | TTL                | Reasoning                            |
+| ---------------- | ------------------ | ------------------------------------ |
+| Condition Detail | 1 hour (3600s)     | Medical content changes infrequently |
+| Question Pool    | 5 minutes (300s)   | Questions rotate, need fresh pools   |
+| User Stats       | 10 minutes (600s)  | Stats update with each attempt       |
+| Drug Detail      | 1 hour (3600s)     | Drug info is stable                  |
+| Guideline Detail | 2 hours (7200s)    | Guidelines very stable               |
+| System Metadata  | 30 minutes (1800s) | Lists/categories moderately stable   |
 
 ### Cache Key Prefixes
 
@@ -152,9 +152,9 @@ Every cache operation (hit/miss/error) increments counters stored in KV:
 
 ```typescript
 interface CacheMetrics {
-  hits: number;      // Successful cache retrievals
-  misses: number;    // Cache not found, database query required
-  errors: number;    // Cache operation failures
+  hits: number; // Successful cache retrievals
+  misses: number; // Cache not found, database query required
+  errors: number; // Cache operation failures
   lastUpdated: string; // ISO timestamp
 }
 ```
@@ -166,6 +166,7 @@ Metrics stored with 24-hour TTL in key: `metrics:daily`
 **Endpoint**: `GET /api/admin/cache-metrics`  
 **Auth**: Admin role required  
 **Returns**:
+
 ```json
 {
   "success": true,
@@ -236,6 +237,7 @@ Visit: `https://studypanacea.com/api/admin/cache-metrics`
 ### Automatic Expiration
 
 All cached items have TTLs and expire automatically:
+
 - Condition content: 1 hour
 - Question pools: 5 minutes
 - User stats: 10 minutes
@@ -299,6 +301,7 @@ Should show increasing hits/misses over time.
 ### 1. KV Eventual Consistency
 
 CloudFlare KV is eventually consistent (not strongly consistent):
+
 - Cache updates may take up to 60 seconds to propagate globally
 - Not suitable for real-time data (e.g., live chat messages)
 - **Impact on PANaCEa**: Low - medical content rarely changes
@@ -313,6 +316,7 @@ CloudFlare KV is eventually consistent (not strongly consistent):
 ### 3. Cache Stampede Risk
 
 If cache expires during high traffic, all requests hit database simultaneously:
+
 - **Mitigation**: Cache warming worker pre-populates before expiration
 - **Mitigation**: Stagger cache warming times (randomize start)
 - **Future**: Implement cache locking pattern (swr - stale-while-revalidate)
@@ -324,6 +328,7 @@ If cache expires during high traffic, all requests hit database simultaneously:
 ### 1. Cache Preloading on User Login
 
 When user logs in, preload their likely next views:
+
 - Recent conditions studied
 - User stats
 - System-specific question pools
@@ -331,6 +336,7 @@ When user logs in, preload their likely next views:
 ### 2. Edge Cache (CloudFlare CDN)
 
 Add `Cache-Control` headers for static content:
+
 ```typescript
 headers: {
   'Cache-Control': 'public, max-age=3600, s-maxage=7200'
@@ -340,12 +346,14 @@ headers: {
 ### 3. Redis Cache for Real-Time Data
 
 For features requiring strong consistency (e.g., leaderboards):
+
 - Integrate Redis via Upstash
 - Use for real-time rankings, notifications
 
 ### 4. Cache Analytics Dashboard
 
 Build UI to visualize:
+
 - Cache hit rates over time
 - Most cached resources
 - Cache performance by endpoint
@@ -377,6 +385,7 @@ npm run build
 ```
 
 **Result**: ✅ **CLEAN BUILD** (14.13s)
+
 - All TypeScript compiles successfully
 - No KV type errors
 - All cache imports resolve
@@ -389,19 +398,17 @@ npm run build
 ### Type Safety
 
 All cache operations are fully typed:
+
 ```typescript
 import type { KVNamespace } from '@cloudflare/workers-types';
 
-async function getFromCache<T>(
-  kv: KVNamespace,
-  key: string,
-  prefix?: string
-): Promise<T | null>
+async function getFromCache<T>(kv: KVNamespace, key: string, prefix?: string): Promise<T | null>;
 ```
 
 ### Error Handling
 
 Cache failures never break the app:
+
 ```typescript
 try {
   const cached = await getFromCache(kv, key);
@@ -415,6 +422,7 @@ try {
 ### Performance Monitoring
 
 Built-in metrics tracking:
+
 - Every cache operation tracked
 - 24-hour rolling metrics
 - Admin dashboard for monitoring
@@ -423,30 +431,32 @@ Built-in metrics tracking:
 
 ## Sprint 3 Metrics
 
-| Metric | Value |
-|--------|-------|
-| Files Created | 5 |
-| Files Modified | 4 |
-| Lines Added | ~700 |
-| TypeScript Errors | 0 |
-| Build Time | 14.13s |
-| Endpoints Cached | 3 (condition, questions, user stats) |
-| Cache Warming Entries | ~130 |
-| Expected Hit Rate | 50-85% (varies by endpoint) |
-| Expected Response Time Improvement | 2-30x faster |
-| Expected Database Load Reduction | 50-70% |
+| Metric                             | Value                                |
+| ---------------------------------- | ------------------------------------ |
+| Files Created                      | 5                                    |
+| Files Modified                     | 4                                    |
+| Lines Added                        | ~700                                 |
+| TypeScript Errors                  | 0                                    |
+| Build Time                         | 14.13s                               |
+| Endpoints Cached                   | 3 (condition, questions, user stats) |
+| Cache Warming Entries              | ~130                                 |
+| Expected Hit Rate                  | 50-85% (varies by endpoint)          |
+| Expected Response Time Improvement | 2-30x faster                         |
+| Expected Database Load Reduction   | 50-70%                               |
 
 ---
 
 ## Next Steps
 
 ### Sprint 4: Query Optimization (Starting Next)
+
 - Eliminate N+1 queries in QuizView
 - Add eager loading with Prisma `include`
 - Implement connection pooling optimization
 - Add application-level result caching
 
 ### Sprint 5: Error Tracking & Monitoring (Final Sprint)
+
 - Integrate Sentry for error tracking
 - Add server-side error tracking in Functions
 - Implement performance monitoring

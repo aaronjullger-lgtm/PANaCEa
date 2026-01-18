@@ -33,7 +33,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
   vitals,
   diagnoses,
   correctOrder,
-  onComplete
+  onComplete,
 }) => {
   const [orderedDiagnoses, setOrderedDiagnoses] = useState(diagnoses);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -46,22 +46,22 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       const correctRank = correctOrder.indexOf(diagnosis.id);
       const userRank = index;
       const isCorrectPosition = correctRank === userRank;
-      
+
       return {
         ...diagnosis,
         userRank,
         correctRank,
-        isCorrectPosition
+        isCorrectPosition,
       };
     });
 
-    // Scoring: 
+    // Scoring:
     // - Perfect position: 20 points
     // - Off by 1: 15 points
     // - Off by 2: 10 points
     // - Off by 3+: 5 points
     let totalScore = 0;
-    results.forEach(result => {
+    results.forEach((result) => {
       const diff = Math.abs(result.userRank - result.correctRank);
       if (diff === 0) totalScore += 20;
       else if (diff === 1) totalScore += 15;
@@ -70,7 +70,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
     });
 
     const percentageScore = (totalScore / (diagnoses.length * 20)) * 100;
-    
+
     setScoredResults(results);
     setScore(Math.round(percentageScore));
     setIsSubmitted(true);
@@ -85,7 +85,13 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
   };
 
   const getRankLabel = (rank: number): string => {
-    const labels = ['Most Likely', '2nd Most Likely', '3rd Most Likely', '4th Most Likely', 'Least Likely'];
+    const labels = [
+      'Most Likely',
+      '2nd Most Likely',
+      '3rd Most Likely',
+      '4th Most Likely',
+      'Least Likely',
+    ];
     return labels[rank] || `Rank ${rank + 1}`;
   };
 
@@ -111,7 +117,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Patient Presentation
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
@@ -135,9 +141,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
 
           {/* Instructions */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-              Instructions
-            </h4>
+            <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Instructions</h4>
             <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
               <li>• Drag diagnoses to reorder them</li>
               <li>• Place most likely diagnosis at the top</li>
@@ -175,14 +179,16 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                         transition-colors"
                     >
                       <GripVertical className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-bold text-gray-900 dark:text-white">
                             {diagnosis.name}
                           </h4>
-                          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 
-                            bg-indigo-100 dark:bg-indigo-900/30 px-2 py-1 rounded">
+                          <span
+                            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 
+                            bg-indigo-100 dark:bg-indigo-900/30 px-2 py-1 rounded"
+                          >
                             {getRankLabel(index)}
                           </span>
                         </div>
@@ -214,18 +220,18 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                       ) : (
                         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-1 flex-shrink-0" />
                       )}
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-gray-900 dark:text-white">
-                            {result.name}
-                          </h4>
+                          <h4 className="font-bold text-gray-900 dark:text-white">{result.name}</h4>
                           <div className="flex gap-2">
-                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                              result.isCorrectPosition
-                                ? 'bg-green-600 text-white'
-                                : 'bg-yellow-600 text-white'
-                            }`}>
+                            <span
+                              className={`text-xs font-semibold px-2 py-1 rounded ${
+                                result.isCorrectPosition
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-yellow-600 text-white'
+                              }`}
+                            >
                               Your: #{result.userRank + 1}
                             </span>
                             <span className="text-xs font-semibold bg-gray-600 text-white px-2 py-1 rounded">
@@ -292,17 +298,21 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                   Clinical Prioritization Score
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {score >= 90 && "Excellent diagnostic reasoning! You correctly prioritized the differentials."}
-                  {score >= 75 && score < 90 && "Good work! Your ranking shows solid clinical thinking."}
-                  {score >= 60 && score < 75 && "Decent attempt. Review the key clinical features that distinguish these conditions."}
-                  {score < 60 && "Keep practicing! Consider vital signs and presentation patterns more carefully."}
+                  {score >= 90 &&
+                    'Excellent diagnostic reasoning! You correctly prioritized the differentials.'}
+                  {score >= 75 &&
+                    score < 90 &&
+                    'Good work! Your ranking shows solid clinical thinking.'}
+                  {score >= 60 &&
+                    score < 75 &&
+                    'Decent attempt. Review the key clinical features that distinguish these conditions.'}
+                  {score < 60 &&
+                    'Keep practicing! Consider vital signs and presentation patterns more carefully.'}
                 </p>
               </div>
               <div className="text-center">
                 <Award className={`w-12 h-12 mx-auto mb-2 ${getScoreColor(score)}`} />
-                <div className={`text-6xl font-bold ${getScoreColor(score)}`}>
-                  {score}%
-                </div>
+                <div className={`text-6xl font-bold ${getScoreColor(score)}`}>{score}%</div>
               </div>
             </div>
           </motion.div>
@@ -323,7 +333,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           </h3>
           <div className="space-y-3 text-gray-700 dark:text-gray-300">
             <p>
-              <strong>Clinical Prioritization:</strong> In real practice, you must quickly assess 
+              <strong>Clinical Prioritization:</strong> In real practice, you must quickly assess
               which diagnoses are most life-threatening and most likely. Consider:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
@@ -333,7 +343,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
               <li>Risk factors and patient demographics</li>
             </ul>
             <p className="mt-4 text-sm italic">
-              Remember: "Common things are common, but don't miss the zebra when it's galloping 
+              Remember: "Common things are common, but don't miss the zebra when it's galloping
               through your ER with unstable vitals."
             </p>
           </div>

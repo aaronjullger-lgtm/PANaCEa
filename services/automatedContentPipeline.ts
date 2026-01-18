@@ -1,6 +1,6 @@
 /**
  * Automated Content Pipeline Service
- * 
+ *
  * Autonomously builds and maintains a high-quality medical content database.
  * Processes existing content, sources new content, validates everything,
  * and continuously tops off the site's content needs.
@@ -36,34 +36,33 @@ interface ProcessingResult {
  */
 export async function runAutomatedPipeline(): Promise<void> {
   // Starting automated content pipeline
-  
+
   try {
     // Step 1: Process existing photos in repository
     // Step 1: Processing existing photos
     await processExistingPhotos();
-    
+
     // Step 2: Identify content gaps
     // Step 2: Identifying content gaps
     const needs = await identifyContentNeeds();
-    
+
     // Step 3: Source new content automatically
     // Step 3: Sourcing new content
     await sourceNewContent(needs);
-    
+
     // Step 4: Validate and quality check everything
     // Step 4: Running quality validation
     await validateExistingContent();
-    
+
     // Step 5: Auto-generate missing content
     // Step 5: Auto-generating missing content
     await generateMissingContent(needs);
-    
+
     // Step 6: Update and optimize
     // Step 6: Optimizing database
     await optimizeDatabase();
-    
+
     // Automated Content Pipeline Complete
-    
   } catch (error) {
     console.error('❌ Pipeline error:', error);
     throw error;
@@ -81,21 +80,21 @@ export async function processExistingPhotos(): Promise<ProcessingResult> {
     rejected: 0,
     errors: [],
   };
-  
+
   const publicDir = path.join(process.cwd(), 'public');
-  
+
   try {
     const files = fs.readdirSync(publicDir);
-    const imageFiles = files.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
-    
+    const imageFiles = files.filter((f) => /\.(jpg|jpeg|png|webp)$/i.test(f));
+
     for (const filename of imageFiles) {
       try {
         const filepath = path.join(publicDir, filename);
         const imageBuffer = fs.readFileSync(filepath);
-        
+
         // Analyze the image
         const analysis = await analyzeExistingImage(imageBuffer, filename);
-        
+
         if (analysis.isClinicallyRelevant) {
           // Process and upload to database
           await processAndUploadExistingImage(imageBuffer, filename, analysis);
@@ -104,20 +103,21 @@ export async function processExistingPhotos(): Promise<ProcessingResult> {
           result.rejected++;
           // Image rejected during analysis
         }
-        
+
         result.processed++;
       } catch (error) {
-        result.errors.push(`Error processing ${filename}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        result.errors.push(
+          `Error processing ${filename}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
-    
+
     // Image processing completed
-    
   } catch (error) {
     console.error('Error reading public directory:', error);
     throw error;
   }
-  
+
   return result;
 }
 
@@ -138,7 +138,7 @@ async function analyzeExistingImage(
   reason: string;
 }> {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  
+
   const base64Image = imageBuffer.toString('base64');
   const imagePart = {
     inlineData: {
@@ -146,7 +146,7 @@ async function analyzeExistingImage(
       mimeType: 'image/jpeg',
     },
   };
-  
+
   const prompt = `You are a medical education expert reviewing images for a clinical learning platform.
 
 Analyze this image with filename "${filename}" and provide a JSON response:
@@ -171,12 +171,12 @@ Format:
   "qualityScore": 0-100,
   "reason": "brief explanation"
 }`;
-  
+
   try {
     const result = await model.generateContent([prompt, imagePart]);
     const response = await result.response;
     const text = response.text();
-    
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return {
@@ -186,7 +186,7 @@ Format:
         reason: 'Unable to analyze image',
       };
     }
-    
+
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     console.error('AI analysis failed:', error);
@@ -218,7 +218,7 @@ async function processAndUploadExistingImage(
         },
       },
     });
-    
+
     if (!condition) {
       // Create the condition
       condition = await prisma.condition.create({
@@ -229,7 +229,7 @@ async function processAndUploadExistingImage(
       });
     }
   }
-  
+
   // Upload to Supabase (will be handled by existing upload flow)
   // For now, save metadata to database
   await prisma.mediaAsset.create({
@@ -247,7 +247,7 @@ async function processAndUploadExistingImage(
       originalUrl: `/public/${originalFilename}`, // Temporary - will be replaced by Supabase URL
     },
   });
-  
+
   // Image uploaded successfully
 }
 
@@ -256,18 +256,18 @@ async function processAndUploadExistingImage(
  */
 async function identifyContentNeeds(): Promise<ContentNeed[]> {
   const needs: ContentNeed[] = [];
-  
+
   // Get all conditions
   const conditions = await prisma.condition.findMany({
     include: {
-      media: true,
+      MediaAsset: true,
     },
   });
-  
+
   // Check which conditions lack images
   for (const condition of conditions) {
-    const approvedMedia = condition.media.filter(m => m.approvalStatus === 'approved');
-    
+    const approvedMedia = condition.MediaAsset.filter((m) => m.approvalStatus === 'approved');
+
     if (approvedMedia.length === 0) {
       needs.push({
         type: 'image',
@@ -277,19 +277,19 @@ async function identifyContentNeeds(): Promise<ContentNeed[]> {
       });
     }
   }
-  
+
   // Check for system-level gaps
   const systems = ['CV', 'PULM', 'GI', 'NEURO', 'RENAL', 'ENDO', 'HEME', 'MSK', 'DERM'];
   for (const system of systems) {
     const systemMedia = await prisma.mediaAsset.count({
       where: {
-        condition: {
+        Condition: {
           system: system,
         },
         approvalStatus: 'approved',
       },
     });
-    
+
     if (systemMedia < 10) {
       needs.push({
         type: 'image',
@@ -298,7 +298,7 @@ async function identifyContentNeeds(): Promise<ContentNeed[]> {
       });
     }
   }
-  
+
   // Content needs identified
   return needs;
 }
@@ -309,13 +309,13 @@ async function identifyContentNeeds(): Promise<ContentNeed[]> {
  */
 async function sourceNewContent(needs: ContentNeed[]): Promise<void> {
   // Would source content for identified needs
-  
+
   // TODO: In production, integrate with:
   // - Open medical image databases
   // - PubMed Central
   // - Medical textbook APIs
   // - Educational resource repositories
-  
+
   // For now, log what would be sourced
   for (const need of needs.slice(0, 5)) {
     // Content need logged
@@ -334,10 +334,10 @@ async function validateExistingContent(): Promise<void> {
       originalUrl: true,
     },
   });
-  
+
   const seen = new Map<string, string>();
   let duplicates = 0;
-  
+
   for (const media of allMedia) {
     if (seen.has(media.filename)) {
       duplicates++;
@@ -346,16 +346,16 @@ async function validateExistingContent(): Promise<void> {
       seen.set(media.filename, media.id);
     }
   }
-  
+
   // Validation completed
-  
+
   // Check for broken links
   const brokenLinks = await prisma.mediaAsset.count({
     where: {
       originalUrl: null,
     },
   });
-  
+
   if (brokenLinks > 0) {
     // Media assets with missing URLs found
   }
@@ -365,13 +365,13 @@ async function validateExistingContent(): Promise<void> {
  * Auto-generate missing content using AI
  */
 async function generateMissingContent(needs: ContentNeed[]): Promise<void> {
-  const highPriorityNeeds = needs.filter(n => n.priority === 'high');
-  
+  const highPriorityNeeds = needs.filter((n) => n.priority === 'high');
+
   // Generating content for high-priority needs
-  
+
   // This would use AI to generate educational content, summaries, etc.
   // Not images (those must be sourced), but text-based content
-  
+
   for (const need of highPriorityNeeds.slice(0, 3)) {
     if (need.type === 'resource' && need.condition) {
       console.log(`  📝 Generating educational resource for ${need.condition}`);
@@ -387,7 +387,7 @@ async function optimizeDatabase(): Promise<void> {
   // Clean up rejected media older than 30 days
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   const cleaned = await prisma.mediaAsset.deleteMany({
     where: {
       approvalStatus: 'rejected',
@@ -396,9 +396,9 @@ async function optimizeDatabase(): Promise<void> {
       },
     },
   });
-  
+
   console.log(`🧹 Cleaned up ${cleaned.count} old rejected media`);
-  
+
   // Update quality scores for old content
   const oldMedia = await prisma.mediaAsset.findMany({
     where: {
@@ -407,7 +407,7 @@ async function optimizeDatabase(): Promise<void> {
     },
     take: 10,
   });
-  
+
   console.log(`🔄 Re-assessing ${oldMedia.length} media without quality scores`);
 }
 
@@ -430,11 +430,14 @@ function getCategorySystem(category: string): string {
 export function scheduleAutomatedPipeline(): void {
   // Run immediately
   runAutomatedPipeline().catch(console.error);
-  
+
   // Run every 6 hours
-  setInterval(() => {
-    runAutomatedPipeline().catch(console.error);
-  }, 6 * 60 * 60 * 1000);
-  
+  setInterval(
+    () => {
+      runAutomatedPipeline().catch(console.error);
+    },
+    6 * 60 * 60 * 1000
+  );
+
   console.log('⏰ Automated pipeline scheduled to run every 6 hours');
 }

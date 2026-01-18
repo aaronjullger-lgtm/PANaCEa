@@ -1,9 +1,9 @@
 /**
  * Condition Type Definitions
- * 
+ *
  * Core type definitions for medical conditions in the PANaCEa platform.
  * These types are used throughout the application for type safety and consistency.
- * 
+ *
  * IMPORTANT: This file replaces type exports from conditionRegistry.ts.
  * Use these types instead of importing from the registry.
  */
@@ -12,7 +12,7 @@ import type { SystemCode } from '../../types';
 
 /**
  * ConditionMeta - Metadata for a medical condition
- * 
+ *
  * This interface defines the structure of condition metadata used throughout
  * the application. It includes system classification, subcategory, aliases,
  * and optional enrichment fields.
@@ -55,120 +55,120 @@ export interface ConditionMeta {
 
 /**
  * CategoryCode - Subcategory classification
- * 
+ *
  * Common subcategories used across different systems.
  * This is not exhaustive - conditions can have custom subcategories.
  */
 export type CategoryCode =
   // Cardiovascular
-  | "ECG"
-  | "Ischemic Heart Disease"
-  | "Blood Pressure"
-  | "Heart Failure"
-  | "Valvular Disease"
-  | "Cardiomyopathy"
-  | "Carditis"
-  | "Conduction Disorders"
-  | "Arrhythmia"
-  | "Vascular Disease"
-  | "Congenital Heart Disease"
+  | 'ECG'
+  | 'Ischemic Heart Disease'
+  | 'Blood Pressure'
+  | 'Heart Failure'
+  | 'Valvular Disease'
+  | 'Cardiomyopathy'
+  | 'Carditis'
+  | 'Conduction Disorders'
+  | 'Arrhythmia'
+  | 'Vascular Disease'
+  | 'Congenital Heart Disease'
 
   // Pulmonary
-  | "Obstructive"
-  | "Restrictive"
-  | "Infectious"
-  | "Neoplasm"
-  | "Pleural Disease"
-  | "Vascular"
+  | 'Obstructive'
+  | 'Restrictive'
+  | 'Infectious'
+  | 'Neoplasm'
+  | 'Pleural Disease'
+  | 'Vascular'
 
   // Gastrointestinal
-  | "Esophagus"
-  | "Stomach"
-  | "Small Bowel"
-  | "Colon"
-  | "Hepatobiliary"
-  | "Pancreas"
+  | 'Esophagus'
+  | 'Stomach'
+  | 'Small Bowel'
+  | 'Colon'
+  | 'Hepatobiliary'
+  | 'Pancreas'
 
   // Musculoskeletal
-  | "Fracture"
-  | "Dislocation"
-  | "Ligament Injury"
-  | "Arthritis"
-  | "Myopathy"
-  | "Bone Disorder"
+  | 'Fracture'
+  | 'Dislocation'
+  | 'Ligament Injury'
+  | 'Arthritis'
+  | 'Myopathy'
+  | 'Bone Disorder'
 
   // Endocrine
-  | "Thyroid"
-  | "Adrenal"
-  | "Pituitary"
-  | "Diabetes"
-  | "Parathyroid"
+  | 'Thyroid'
+  | 'Adrenal'
+  | 'Pituitary'
+  | 'Diabetes'
+  | 'Parathyroid'
 
   // Infectious Disease
-  | "Bacterial"
-  | "Viral"
-  | "Fungal"
-  | "Parasitic"
-  | "Tick-Borne"
+  | 'Bacterial'
+  | 'Viral'
+  | 'Fungal'
+  | 'Parasitic'
+  | 'Tick-Borne'
 
   // Hematology
-  | "Anemia"
-  | "Coagulation Disorder"
-  | "Leukemia"
-  | "Lymphoma"
+  | 'Anemia'
+  | 'Coagulation Disorder'
+  | 'Leukemia'
+  | 'Lymphoma'
 
   // Neurology
-  | "Stroke"
-  | "Seizure"
-  | "Dementia"
-  | "Movement Disorder"
-  | "Peripheral Neuropathy"
+  | 'Stroke'
+  | 'Seizure'
+  | 'Dementia'
+  | 'Movement Disorder'
+  | 'Peripheral Neuropathy'
 
   // Dermatology
-  | "Infection"
-  | "Inflammatory"
-  | "Neoplasm"
-  | "Autoimmune"
+  | 'Infection'
+  | 'Inflammatory'
+  | 'Neoplasm'
+  | 'Autoimmune'
 
   // Renal
-  | "Glomerular"
-  | "Tubular"
-  | "Vascular"
-  | "Electrolyte Disorder"
+  | 'Glomerular'
+  | 'Tubular'
+  | 'Vascular'
+  | 'Electrolyte Disorder'
 
   // Genitourinary
-  | "Infection"
-  | "Neoplasm"
-  | "Structural"
+  | 'Infection'
+  | 'Neoplasm'
+  | 'Structural'
 
   // Reproductive
-  | "Pregnancy"
-  | "Menstrual Disorder"
-  | "Neoplasm"
-  | "Infection"
+  | 'Pregnancy'
+  | 'Menstrual Disorder'
+  | 'Neoplasm'
+  | 'Infection'
 
   // HEENT
-  | "Eye"
-  | "Ear"
-  | "Nose"
-  | "Throat"
+  | 'Eye'
+  | 'Ear'
+  | 'Nose'
+  | 'Throat'
 
   // Psychiatry
-  | "Mood Disorder"
-  | "Anxiety Disorder"
-  | "Psychotic Disorder"
-  | "Substance Use"
+  | 'Mood Disorder'
+  | 'Anxiety Disorder'
+  | 'Psychotic Disorder'
+  | 'Substance Use'
 
   // Other
-  | "Environmental"
-  | "Toxicology"
-  | "Trauma"
-  | "Congenital"
-  | "Other";
+  | 'Environmental'
+  | 'Toxicology'
+  | 'Trauma'
+  | 'Congenital'
+  | 'Other';
 
 /**
  * Re-export SystemCode for convenience
- * 
+ *
  * This allows consumers to import both ConditionMeta and SystemCode
  * from the same module.
  */

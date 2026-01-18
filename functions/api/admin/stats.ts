@@ -4,40 +4,30 @@
  * Requires: admin or superadmin role
  */
 
-import {
-  type Env,
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-} from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface PagesContext {
-  request: Request;
-  env: Env;
-}
+const AdminStatsSchema = z.object({
+  query: z.object({}).optional(),
+});
 
-export async function onRequestOptions(): Promise<Response> {
-  return handleCorsOptions();
-}
+export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch platform statistics (admin only)
  */
-export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
-
-  try {
-    const authContext = await authenticateRequest(request, env);
-
-    if (!authContext) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    // If no DATABASE_URL, return placeholder data
-    if (!env.DATABASE_URL) {
-      return createSuccessResponse({
+export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (context) => {
+  const { env, auth } = context;
+  const logger = createEndpointLogger('/api/admin/stats');
+  
+  // If no DATABASE_URL, return placeholder data
+  if (!env.DATABASE_URL) {
+    logger.warn('Database not configured', { userId: auth.userId });
+    
+    return {
+      data: {
         success: true,
         data: {
           totalUsers: 0,
@@ -48,72 +38,99 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
           pendingFlags: 0,
         },
         note: 'Database not configured',
+      },
+    };
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    // Check if user is admin
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { role: true, id: true },
+    });
+
+    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+      logger.warn('Non-admin attempted to access admin stats', {
+        userId: auth.userId,
+        role: user?.role,
       });
+
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
     }
 
-    const prisma = createEdgePrismaClient(env);
+    // Calculate today's start for active users
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-    try {
-      // Calculate today's start for active users
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+    // Fetch real stats from database
+    const [
+      totalUsers,
+      activeUsersToday,
+      totalAttempts,
+      correctAttempts,
+      pendingFlags,
+      systemStats,
+    ] = await Promise.all([
+      // Total users
+      prisma.user.count(),
 
-      // Fetch real stats from database
-      const [
-        totalUsers,
-        activeUsersToday,
-        totalAttempts,
-        correctAttempts,
-        pendingFlags,
-        systemStats
-      ] = await Promise.all([
-        // Total users
-        prisma.user.count(),
-        
-        // Active users today (distinct users with attempts today)
-        prisma.questionAttempt.groupBy({
+      // Active users today (distinct users with attempts today)
+      prisma.questionAttempt
+        .groupBy({
           by: ['userId'],
           where: {
-            attemptedAt: { gte: todayStart }
-          }
-        }).then(results => results.length),
-        
-        // Total question attempts
-        prisma.questionAttempt.count(),
-        
-        // Correct attempts for accuracy calculation
-        prisma.questionAttempt.count({
-          where: { wasCorrect: true }
-        }),
-        
-        // Pending question flags
-        prisma.questionFlag.count({
-          where: { status: 'pending' }
-        }),
-        
-        // Popular systems
-        prisma.questionAttempt.groupBy({
-          by: ['system'],
-          _count: { id: true },
-          orderBy: { _count: { id: 'desc' } },
-          take: 5,
+            attemptedAt: { gte: todayStart },
+          },
         })
-      ]);
+        .then((results) => results.length),
 
-      // Calculate average accuracy
-      const averageAccuracy = totalAttempts > 0 
-        ? Math.round((correctAttempts / totalAttempts) * 100 * 10) / 10
-        : 0;
+      // Total question attempts
+      prisma.questionAttempt.count(),
 
-      // Format popular systems
-      const popularSystems = systemStats
-        .filter(s => s.system)
-        .map(s => ({
-          system: s.system,
-          count: s._count.id
-        }));
+      // Correct attempts for accuracy calculation
+      prisma.questionAttempt.count({
+        where: { wasCorrect: true },
+      }),
 
-      return createSuccessResponse({
+      // Pending question flags
+      prisma.questionFlag.count({
+        where: { status: 'pending' },
+      }),
+
+      // Popular systems
+      prisma.questionAttempt.groupBy({
+        by: ['system'],
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 5,
+      }),
+    ]);
+
+    // Calculate average accuracy
+    const averageAccuracy =
+      totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100 * 10) / 10 : 0;
+
+    // Format popular systems
+    const popularSystems = systemStats
+      .filter((s) => s.system)
+      .map((s) => ({
+        system: s.system,
+        count: s._count.id,
+      }));
+
+    logger.info('Admin stats retrieved', {
+      userId: user.id,
+      totalUsers,
+      activeUsersToday,
+    });
+
+    return {
+      data: {
         success: true,
         data: {
           totalUsers,
@@ -123,12 +140,15 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
           popularSystems,
           pendingFlags,
         },
-      });
-    } finally {
-      await prisma.$disconnect();
-    }
+      },
+    };
   } catch (error) {
-    console.error('Admin stats error:', error);
-    return createErrorResponse('Internal server error', 500);
+    logger.error('Admin stats error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    throw new Error('Failed to fetch admin stats');
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-}
+});

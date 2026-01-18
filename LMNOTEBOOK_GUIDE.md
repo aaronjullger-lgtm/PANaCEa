@@ -12,6 +12,7 @@
 PANaCEa is a production medical education platform serving Physician Assistant students preparing for PANCE/PANRE board exams. The application combines adaptive spaced-repetition learning (FSRS v5), AI-generated clinical scenarios (Google Gemini), and gamified training modes across 1,180+ medical conditions spanning all 14 PANCE organ systems.
 
 **Key Metrics:**
+
 - 1,180+ medical conditions in database
 - 2,195 condition registry entries with rich metadata
 - 14 PANCE organ systems covered
@@ -27,6 +28,7 @@ PANaCEa is a production medical education platform serving Physician Assistant s
 ### Tech Stack
 
 **Frontend:**
+
 - React 19 (latest stable)
 - TypeScript 5.0+
 - Vite 6.2 (build tooling)
@@ -35,18 +37,21 @@ PANaCEa is a production medical education platform serving Physician Assistant s
 - React Router DOM 7.11 (routing)
 
 **Backend:**
+
 - **Primary**: Cloudflare Pages Functions (serverless, edge computing)
 - **Legacy**: Express.js 4.21 (local development proxy only)
 - Prisma 5.22 ORM + Prisma Accelerate (global connection pooling)
 - PostgreSQL (Supabase hosted)
 
 **AI & Services:**
+
 - Google Gemini 2.5 Flash/Pro (clinical question generation)
 - Clerk (authentication & user management)
 - Sentry (error tracking, session replay, performance monitoring)
 - Turnstile (Cloudflare bot protection on webhooks)
 
 **Deployment:**
+
 - Cloudflare Pages (static hosting)
 - Cloudflare Functions (serverless API endpoints)
 - Supabase (PostgreSQL with transaction pooling)
@@ -107,6 +112,7 @@ interface FSRSCard {
 ```
 
 **Features:**
+
 - Per-user FSRS parameters (stored in `UserProgress.fsrsParams`)
 - Dynamic parameter tuning based on review history
 - 4-button rating system (Again/Hard/Good/Easy)
@@ -131,6 +137,7 @@ interface QuestionGenerationRequest {
 ```
 
 **Implementation Details:**
+
 - Streaming responses for better UX
 - Retry logic with exponential backoff
 - Rate limiting (per-user quotas)
@@ -138,6 +145,7 @@ interface QuestionGenerationRequest {
 - Validation via Zod schemas
 
 **Security:**
+
 - API key in server-side env only (`GEMINI_API_KEY`)
 - User authentication required (Clerk JWT)
 - Content filtering for medical accuracy
@@ -155,13 +163,14 @@ model MedicalContent {
   content        Json     // JSONB structure
   lastUpdated    DateTime @updatedAt
   version        Int      @default(1)
-  
+
   @@index([system])
   @@index([conditionId])
 }
 ```
 
 **Content Structure** (JSONB):
+
 ```typescript
 interface ConditionContent {
   definition: string;
@@ -173,8 +182,8 @@ interface ConditionContent {
     buzzwords: string[];
   };
   diagnostics: {
-    labs: Array<{ name: string; finding: string; }>;
-    imaging: Array<{ modality: string; finding: string; }>;
+    labs: Array<{ name: string; finding: string }>;
+    imaging: Array<{ modality: string; finding: string }>;
   };
   treatment: {
     acute: string[];
@@ -191,24 +200,28 @@ interface ConditionContent {
 ### 4. Training Modes
 
 #### Photo Drill (`components/PhotoDrillSession.tsx`)
+
 - Image-based diagnostic challenges
 - Timed responses with streak tracking
 - Immediate feedback with teaching points
 - Difficulty adapts based on performance
 
 #### Rapid Recall (`components/modes/RapidRecallMode.tsx`)
+
 - Fast-paced factoid review
 - 30-second time limit per question
 - Focuses on high-yield concepts
 - Momentum-based scoring
 
 #### DDx Comparison (`components/drill/ddx/DDxCompareDrill.tsx`)
+
 - Side-by-side differential diagnosis
 - Compare similar conditions
 - Clinical decision-making practice
 - Features tables and comparison matrices
 
 #### Virtual Encounters (`components/modes/VirtualEncounterMode.tsx`)
+
 - Interactive patient simulations
 - Multi-step clinical scenarios
 - Order labs/imaging, interpret results
@@ -219,6 +232,7 @@ interface ConditionContent {
 **Components**: `components/analytics/*`
 
 Tracks performance across:
+
 - 14 PANCE organ systems
 - Individual conditions (1,180+)
 - Question types (clinical, diagnostic, treatment, pharm)
@@ -226,12 +240,14 @@ Tracks performance across:
 - Confidence calibration metrics
 
 **Visualizations:**
+
 - Heatmaps (Recharts library)
 - Sparklines (inline SVG)
 - Progress rings (custom React components)
 - Trend charts (Line/Bar via Recharts)
 
-**Storage**: 
+**Storage**:
+
 - `UserProgress` table (Prisma)
 - `localStorage` caching for performance
 
@@ -240,17 +256,20 @@ Tracks performance across:
 **Provider**: Clerk
 
 **Flow:**
+
 1. User signs in via Clerk hosted UI
 2. JWT issued by Clerk
 3. Webhook (`/functions/api/webhooks/clerk.ts`) syncs to Prisma `User` table
 4. Role-based access control (RBAC) via Prisma `role` field
 
 **Roles:**
+
 - `user` (default)
 - `admin` (CMS access, content management)
 - `moderator` (content review)
 
 **Security:**
+
 - Svix webhook signature verification
 - Turnstile challenge on webhook endpoint
 - JWT validation on all protected routes
@@ -262,6 +281,7 @@ Tracks performance across:
 ### Core Tables
 
 **User**
+
 ```prisma
 model User {
   id            String   @id @default(uuid())
@@ -275,31 +295,33 @@ model User {
 ```
 
 **UserProgress**
+
 ```prisma
 model UserProgress {
   id            String   @id @default(uuid())
   userId        String
   conditionId   String
-  
+
   // FSRS data
   fsrsCard      Json     // FSRSCard structure
   fsrsParams    Json?    // User-specific FSRS parameters
-  
+
   // Performance metrics
   totalAttempts Int      @default(0)
   correctCount  Int      @default(0)
   accuracy      Float    @default(0)
-  
+
   // Review scheduling
   lastReviewAt  DateTime?
   nextReviewAt  DateTime?
-  
+
   @@unique([userId, conditionId])
   @@index([userId, nextReviewAt])
 }
 ```
 
 **MedicalContent**
+
 ```prisma
 model MedicalContent {
   id            String   @id @default(uuid())
@@ -309,13 +331,14 @@ model MedicalContent {
   content       Json     // JSONB content structure
   lastUpdated   DateTime @updatedAt
   version       Int      @default(1)
-  
+
   @@index([system])
   @@index([conditionId])
 }
 ```
 
 **StudySession**
+
 ```prisma
 model StudySession {
   id            String   @id @default(uuid())
@@ -323,12 +346,12 @@ model StudySession {
   mode          String   // 'photoDrill', 'rapidRecall', etc.
   startedAt     DateTime @default(now())
   completedAt   DateTime?
-  
+
   // Session metrics
   questionsAttempted Int   @default(0)
   questionsCorrect   Int   @default(0)
   averageTime        Float @default(0)
-  
+
   // Metadata
   conditions    Json     // Array of conditionIds
   performance   Json     // Detailed per-question data
@@ -342,6 +365,7 @@ model StudySession {
 ### Cloudflare Functions (`/functions/api/*`)
 
 #### Authentication Pattern
+
 ```typescript
 import { authenticateRequest } from './_shared/auth';
 import { createEdgePrismaClient } from './_shared/prisma-edge';
@@ -349,17 +373,17 @@ import { createEdgePrismaClient } from './_shared/prisma-edge';
 export async function onRequestGet(context) {
   const { user, error } = await authenticateRequest(context);
   if (error) return new Response(error, { status: 401 });
-  
+
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+
   try {
     // Your logic here
     const data = await prisma.user.findUnique({
-      where: { clerkId: user.id }
+      where: { clerkId: user.id },
     });
-    
+
     return new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } finally {
     await prisma.$disconnect();
@@ -370,26 +394,31 @@ export async function onRequestGet(context) {
 #### Key Endpoints
 
 **GET `/functions/api/content/[conditionId]`**
+
 - Fetch condition content from database
 - Returns JSONB content structure
 - Cached via Prisma Accelerate
 
 **POST `/functions/api/gemini/proxy`**
+
 - Generate AI questions
 - Requires: `conditionId`, `difficulty`, `questionType`
 - Streams response
 
 **POST `/functions/api/progress/update`**
+
 - Update FSRS card state
 - Requires: `conditionId`, `rating`, `reviewTime`
 - Calculates next review date
 
 **GET `/functions/api/analytics/user`**
+
 - Fetch user performance metrics
 - Grouped by system/condition
 - Includes FSRS scheduling data
 
 **POST `/functions/api/webhooks/clerk`**
+
 - Clerk user sync webhook
 - Verifies Svix signature
 - Uses Turnstile for bot protection
@@ -442,14 +471,14 @@ export async function loadConditionData(conditionId: string) {
   // 1. Check localStorage cache
   const cached = getCachedCondition(conditionId);
   if (cached && !isStale(cached)) return cached;
-  
+
   // 2. Fetch from API
   const response = await fetch(`/functions/api/content/${conditionId}`);
   const data = await response.json();
-  
+
   // 3. Update cache
   cacheCondition(conditionId, data);
-  
+
   return data;
 }
 ```
@@ -461,19 +490,21 @@ export async function loadConditionData(conditionId: string) {
 ### Vite Configuration (`vite.config.ts`)
 
 **Key Settings:**
+
 - **Chunking**: Automatic (Vite's smart splitting)
-- **Aliases**: 
+- **Aliases**:
   - `@` → repo root
   - `@src` → `/src`
   - `lucide-react` → ESM build (fixes CJS issues)
 - **Externals**: Prisma packages (never bundled to client)
 - **Interop**: `compat` mode for CJS/ESM safety
-- **Output**: 
+- **Output**:
   - Production sourcemaps: `hidden`
   - Minify: `esbuild`
   - Target: `esnext`
 
 **PWA Configuration:**
+
 ```typescript
 VitePWA({
   registerType: 'autoUpdate',
@@ -488,25 +519,25 @@ VitePWA({
         handler: 'NetworkFirst',
         options: {
           cacheName: 'vendor-cache',
-          expiration: { maxAgeSeconds: 7 * 24 * 60 * 60 }
-        }
-      }
-    ]
-  }
-})
+          expiration: { maxAgeSeconds: 7 * 24 * 60 * 60 },
+        },
+      },
+    ],
+  },
+});
 ```
 
 ### Content Security Policy (`public/_headers`)
 
 ```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.cloudflare.com; 
-  connect-src 'self' https://*.ingest.us.sentry.io https://*.clerk.com https://*.supabase.co https://*.studypanacea.com; 
-  img-src 'self' data: https: blob:; 
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
-  font-src 'self' https://fonts.gstatic.com data:; 
-  worker-src 'self' blob:; 
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.cloudflare.com;
+  connect-src 'self' https://*.ingest.us.sentry.io https://*.clerk.com https://*.supabase.co https://*.studypanacea.com;
+  img-src 'self' data: https: blob:;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com data:;
+  worker-src 'self' blob:;
   frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com;
 ```
 
@@ -564,19 +595,19 @@ npm run dev:all
 
 ### Available Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Frontend only (uses deployed Functions) |
-| `npm run dev:all` | Frontend + Express backend proxy |
-| `npm run dev:server` | Express backend only |
-| `npm run build` | Production build |
-| `npm test` | Run Vitest tests |
-| `npm run db:studio` | Open Prisma Studio (DB GUI) |
-| `npm run db:migrate:dev` | Create/apply dev migration |
-| `npm run migrate:production` | Apply production migration |
-| `npm run sync:all` | Sync registries to database |
-| `npm run orchestrate:full` | Run full content pipeline |
-| `npm run health-check` | Validate content integrity |
+| Command                      | Purpose                                 |
+| ---------------------------- | --------------------------------------- |
+| `npm run dev`                | Frontend only (uses deployed Functions) |
+| `npm run dev:all`            | Frontend + Express backend proxy        |
+| `npm run dev:server`         | Express backend only                    |
+| `npm run build`              | Production build                        |
+| `npm test`                   | Run Vitest tests                        |
+| `npm run db:studio`          | Open Prisma Studio (DB GUI)             |
+| `npm run db:migrate:dev`     | Create/apply dev migration              |
+| `npm run migrate:production` | Apply production migration              |
+| `npm run sync:all`           | Sync registries to database             |
+| `npm run orchestrate:full`   | Run full content pipeline               |
+| `npm run health-check`       | Validate content integrity              |
 
 ### Content Generation Pipeline
 
@@ -600,6 +631,7 @@ npm run orchestrate:full
 ```
 
 **Pipeline Flow:**
+
 1. Parse markdown/CSV source files
 2. Validate against schemas
 3. Generate embeddings (optional)
@@ -627,6 +659,7 @@ npm run test:coverage
 ```
 
 **Test Structure:**
+
 ```
 tests/
 ├── unit/
@@ -645,6 +678,7 @@ tests/
 **Location**: `scripts/health-check.ts`
 
 Validates:
+
 - Database connection
 - Content integrity (all conditions have content)
 - Registry consistency (IDs match database)
@@ -658,6 +692,7 @@ npm run health-check
 ### Monitoring (Sentry)
 
 **Features:**
+
 - Error tracking with stack traces
 - Session replay for bug reproduction
 - Performance monitoring (Web Vitals)
@@ -688,7 +723,7 @@ import { createEdgePrismaClient } from './_shared/prisma-edge';
 
 export async function onRequestGet(context) {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  
+
   try {
     const data = await prisma.medicalContent.findMany({
       where: { system: 'Cardiovascular' },
@@ -698,7 +733,7 @@ export async function onRequestGet(context) {
         content: true,
       },
     });
-    
+
     return Response.json(data);
   } finally {
     await prisma.$disconnect(); // CRITICAL
@@ -714,16 +749,13 @@ try {
   return Response.json(result);
 } catch (error) {
   console.error('[ERROR]', error);
-  
+
   // Report to Sentry (frontend only)
   if (typeof window !== 'undefined') {
     Sentry.captureException(error);
   }
-  
-  return Response.json(
-    { error: 'Operation failed', details: error.message },
-    { status: 500 }
-  );
+
+  return Response.json({ error: 'Operation failed', details: error.message }, { status: 500 });
 }
 ```
 
@@ -755,11 +787,11 @@ import { useUser } from '@clerk/clerk-react';
 
 function ProtectedComponent() {
   const { isSignedIn, user } = useUser();
-  
+
   if (!isSignedIn) {
     return <Navigate to="/sign-in" />;
   }
-  
+
   return <div>Welcome {user.firstName}</div>;
 }
 ```
@@ -771,7 +803,7 @@ import { authenticateRequest } from './_shared/auth';
 export async function onRequestPost(context) {
   const { user, error } = await authenticateRequest(context);
   if (error) return Response.json({ error }, { status: 401 });
-  
+
   // Proceed with authenticated user
 }
 ```
@@ -783,6 +815,7 @@ export async function onRequestPost(context) {
 ### Required Variables
 
 **Frontend (.env):**
+
 ```bash
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
 VITE_SUPABASE_URL=https://xxx.supabase.co
@@ -792,6 +825,7 @@ VITE_SENTRY_DSN=https://...@sentry.io/...
 ```
 
 **Backend (Server/.env or Cloudflare Secrets):**
+
 ```bash
 # Authentication
 CLERK_SECRET_KEY=sk_live_...
@@ -822,30 +856,37 @@ SENTRY_PROJECT=panacea
 ### Common Issues
 
 **1. "Cannot set properties of undefined (setting 'Activity')"**
+
 - **Cause**: Lucide React CJS/ESM mismatch
 - **Fix**: Use icon barrel file (`lib/icons.ts`), ensure `lucide-react` alias to ESM build in `vite.config.ts`
 
 **2. Empty Content in UI**
+
 - **Cause**: Database not populated
 - **Fix**: Run `npm run sync:all` to populate MedicalContent table
 
 **3. API 401 Unauthorized**
+
 - **Cause**: Missing/invalid Clerk JWT
 - **Fix**: Check user is signed in, verify `CLERK_SECRET_KEY` matches publishable key
 
 **4. Database Connection Timeout**
+
 - **Cause**: Connection pooling misconfigured
 - **Fix**: Ensure Supabase uses Transaction pooling, check `DATABASE_URL` includes `?pgbouncer=true`
 
 **5. Build Errors - Prisma Not Found**
+
 - **Cause**: Prisma client not generated
 - **Fix**: Run `npm run db:generate`
 
 **6. CSP Violations**
+
 - **Cause**: New service origin not in `public/_headers`
 - **Fix**: Add domain to appropriate CSP directive (e.g., `connect-src` for APIs)
 
 **7. Service Worker Not Updating**
+
 - **Cause**: Stale SW cache
 - **Fix**: Unregister SW in DevTools → Application → Service Workers, hard refresh
 
@@ -857,10 +898,10 @@ SENTRY_PROJECT=panacea
 
 1. **Code Splitting**: Vite's automatic chunking + lazy routes
 2. **Image Optimization**: WebP with fallback, lazy loading
-3. **Bundle Size**: 
+3. **Bundle Size**:
    - Vendor chunks: ~440KB gzipped
    - Total initial load: ~800KB gzipped
-4. **Caching**: 
+4. **Caching**:
    - Static assets: 1 year
    - API responses: Prisma Accelerate + `localStorage`
 
@@ -868,7 +909,7 @@ SENTRY_PROJECT=panacea
 
 1. **Prisma Accelerate**: Global connection pooling, query caching
 2. **Edge Functions**: Deploy close to users (Cloudflare global network)
-3. **Database Indexes**: 
+3. **Database Indexes**:
    - `(conditionId)`
    - `(system)`
    - `(userId, nextReviewAt)` for FSRS scheduling
@@ -879,7 +920,7 @@ SENTRY_PROJECT=panacea
 1. **JSONB Indexing**: GIN indexes on `content` JSONB columns
 2. **Connection Pooling**: PgBouncer via Supabase Transaction mode
 3. **Read Replicas**: Supabase read-only connections for analytics
-4. **Query Optimization**: 
+4. **Query Optimization**:
    - Select only needed fields
    - Use `include` vs `select` appropriately
    - Batch queries when possible

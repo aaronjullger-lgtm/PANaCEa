@@ -1,7 +1,7 @@
 /**
  * Study Group Service
  * Sprint 8: Social & Gamification - Study group management
- * 
+ *
  * Enables users to create/join study groups, track group progress,
  * and participate in collaborative learning challenges.
  */
@@ -37,7 +37,7 @@ export interface GroupMember {
   groupId: string;
   displayName: string;
   avatarUrl?: string;
-  role: "owner" | "admin" | "member";
+  role: 'owner' | 'admin' | 'member';
   joinedAt: Date;
   lastActiveAt: Date;
   weeklyQuestions: number;
@@ -55,7 +55,7 @@ export interface LeaderboardEntry {
   questionsAnswered: number;
   accuracy: number;
   streak: number;
-  trend: "up" | "down" | "stable";
+  trend: 'up' | 'down' | 'stable';
 }
 
 export interface GroupChallenge {
@@ -63,13 +63,13 @@ export interface GroupChallenge {
   groupId: string;
   title: string;
   description: string;
-  type: "daily" | "weekly" | "custom";
+  type: 'daily' | 'weekly' | 'custom';
   targetSystem?: string;
   targetQuestions: number;
   targetAccuracy?: number;
   startDate: Date;
   endDate: Date;
-  status: "upcoming" | "active" | "completed";
+  status: 'upcoming' | 'active' | 'completed';
   participants: ChallengeParticipant[];
   winner?: string;
 }
@@ -90,7 +90,7 @@ export interface GroupInvite {
   invitedByName: string;
   createdAt: Date;
   expiresAt: Date;
-  status: "pending" | "accepted" | "declined" | "expired";
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
 }
 
 // =============================================================================
@@ -101,8 +101,8 @@ export interface GroupInvite {
  * Generate a random 6-character join code
  */
 function generateJoinCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Avoid confusing characters
-  let code = "";
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid confusing characters
+  let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
@@ -113,11 +113,7 @@ function generateJoinCode(): string {
  * Calculate weekly score for leaderboard ranking
  * Weighted formula: (accuracy * 100) + (questions * 2) + (streak * 10)
  */
-function calculateWeeklyScore(
-  questionsAnswered: number,
-  accuracy: number,
-  streak: number
-): number {
+function calculateWeeklyScore(questionsAnswered: number, accuracy: number, streak: number): number {
   return Math.round(accuracy * 100 + questionsAnswered * 2 + streak * 10);
 }
 
@@ -176,7 +172,7 @@ export class StudyGroupService {
 
     // Placeholder validation
     if (code.length !== 6) {
-      return { success: false, error: "Invalid join code format" };
+      return { success: false, error: 'Invalid join code format' };
     }
 
     // Check if group exists
@@ -193,11 +189,11 @@ export class StudyGroupService {
     return {
       success: true,
       group: {
-        id: "placeholder",
-        name: "Study Group",
+        id: 'placeholder',
+        name: 'Study Group',
         code,
         createdAt: new Date(),
-        createdBy: "placeholder",
+        createdBy: 'placeholder',
         isPublic: false,
         maxMembers: 50,
         memberCount: 1,
@@ -249,7 +245,7 @@ export class StudyGroupService {
       questionsAnswered: member.weeklyQuestions,
       accuracy: member.weeklyAccuracy,
       streak: member.currentStreak,
-      trend: "stable" as const, // TODO: Compare to previous week
+      trend: 'stable' as const, // TODO: Compare to previous week
     }));
 
     // Sort by score descending
@@ -275,7 +271,7 @@ export class StudyGroupService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const activeToday = members.filter(member => {
+    const activeToday = members.filter((member) => {
       const lastActive = new Date(member.lastActiveAt);
       lastActive.setHours(0, 0, 0, 0);
       return lastActive.getTime() === today.getTime();
@@ -312,13 +308,13 @@ export class StudyGroupService {
       description: targetSystem
         ? `Complete ${targetQuestions} ${targetSystem} questions`
         : `Complete ${targetQuestions} questions`,
-      type: durationDays === 1 ? "daily" : durationDays === 7 ? "weekly" : "custom",
+      type: durationDays === 1 ? 'daily' : durationDays === 7 ? 'weekly' : 'custom',
       targetSystem,
       targetQuestions,
       targetAccuracy,
       startDate: now,
       endDate,
-      status: "active",
+      status: 'active',
       participants: [],
     };
 
@@ -336,17 +332,14 @@ export class StudyGroupService {
     questionsCompleted: number,
     accuracy: number
   ): GroupChallenge {
-    const existingIndex = challenge.participants.findIndex(
-      p => p.userId === userId
-    );
+    const existingIndex = challenge.participants.findIndex((p) => p.userId === userId);
 
     const participant: ChallengeParticipant = {
       userId,
       displayName,
       questionsCompleted,
       accuracy,
-      completedAt:
-        questionsCompleted >= challenge.targetQuestions ? new Date() : undefined,
+      completedAt: questionsCompleted >= challenge.targetQuestions ? new Date() : undefined,
     };
 
     if (existingIndex >= 0) {
@@ -376,24 +369,23 @@ export class StudyGroupService {
    */
   static generateDailyChallenge(groupId: string): GroupChallenge {
     const systems = [
-      "Cardiovascular",
-      "Pulmonary",
-      "GI/Nutrition",
-      "Musculoskeletal",
-      "Neurology",
-      "Psychiatry",
-      "Dermatology",
-      "HEENT",
-      "Endocrine",
-      "Reproductive",
+      'Cardiovascular',
+      'Pulmonary',
+      'GI/Nutrition',
+      'Musculoskeletal',
+      'Neurology',
+      'Psychiatry',
+      'Dermatology',
+      'HEENT',
+      'Endocrine',
+      'Reproductive',
     ];
 
     // Pick a random system for the daily challenge
     const randomSystem = systems[Math.floor(Math.random() * systems.length)];
     const today = new Date();
     const dayOfYear = Math.floor(
-      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) /
-        (1000 * 60 * 60 * 24)
+      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Seed the "random" with day of year for consistency
@@ -427,7 +419,7 @@ export class StudyGroupService {
       invitedByName,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      status: "pending",
+      status: 'pending',
     };
 
     // TODO: Save to database and send notification

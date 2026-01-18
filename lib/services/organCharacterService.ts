@@ -1,6 +1,6 @@
 /**
  * Organ Character Service
- * 
+ *
  * Manages organ character progression, unlocks, and customization
  * Tracks which variants and accessories users have unlocked
  */
@@ -23,11 +23,14 @@ const CUSTOMIZATION_KEY = 'panceai_character_customization_v1';
 export interface UserOrganProgress {
   unlockedVariants: Set<OrganVariantId>;
   unlockedAccessories: Set<OrganAccessoryId>;
-  systemProgress: Map<SystemCode, {
-    questionsAnswered: number;
-    correct: number;
-    accuracy: number;
-  }>;
+  systemProgress: Map<
+    SystemCode,
+    {
+      questionsAnswered: number;
+      correct: number;
+      accuracy: number;
+    }
+  >;
   specialModeProgress: Map<string, number>; // For easter egg tracking (e.g., ecg_drill: 50)
 }
 
@@ -64,9 +67,7 @@ export function loadOrganProgress(): UserOrganProgress {
  * Initialize organ character progress with base variants unlocked
  */
 function initializeOrganProgress(): UserOrganProgress {
-  const baseVariants = ORGAN_VARIANTS
-    .filter(v => v.isBase)
-    .map(v => v.id);
+  const baseVariants = ORGAN_VARIANTS.filter((v) => v.isBase).map((v) => v.id);
 
   return {
     unlockedVariants: new Set(baseVariants),
@@ -104,7 +105,7 @@ export function loadCharacterCustomization(): Map<SystemCode | 'SPECIAL', Charac
     }
 
     const data = JSON.parse(stored);
-    return new Map(Object.entries(data) as [SystemCode | "SPECIAL", CharacterCustomization][]);
+    return new Map(Object.entries(data) as [SystemCode | 'SPECIAL', CharacterCustomization][]);
   } catch (error) {
     console.error('Failed to load character customization:', error);
     return initializeCustomization();
@@ -116,8 +117,8 @@ export function loadCharacterCustomization(): Map<SystemCode | 'SPECIAL', Charac
  */
 function initializeCustomization(): Map<SystemCode | 'SPECIAL', CharacterCustomization> {
   const customization = new Map<SystemCode | 'SPECIAL', CharacterCustomization>();
-  
-  ORGAN_CHARACTERS.forEach(character => {
+
+  ORGAN_CHARACTERS.forEach((character) => {
     customization.set(character.system, {
       system: character.system,
       activeVariant: character.baseVariant,
@@ -153,14 +154,17 @@ export function updateSystemProgress(
   const systemProgress = new Map(progress.systemProgress);
 
   // Recalculate from performance data
-  const calculatedProgress = new Map<SystemCode, {
-    questionsAnswered: number;
-    correct: number;
-    accuracy: number;
-  }>();
+  const calculatedProgress = new Map<
+    SystemCode,
+    {
+      questionsAnswered: number;
+      correct: number;
+      accuracy: number;
+    }
+  >();
 
   // Group by system
-  performanceData.forEach(record => {
+  performanceData.forEach((record) => {
     if (!record.system) return;
 
     const existing = calculatedProgress.get(record.system) || {
@@ -178,9 +182,8 @@ export function updateSystemProgress(
 
   // Calculate accuracy and merge with existing
   calculatedProgress.forEach((data, system) => {
-    data.accuracy = data.questionsAnswered > 0
-      ? Math.round((data.correct / data.questionsAnswered) * 100)
-      : 0;
+    data.accuracy =
+      data.questionsAnswered > 0 ? Math.round((data.correct / data.questionsAnswered) * 100) : 0;
     systemProgress.set(system, data);
   });
 
@@ -200,7 +203,7 @@ export function checkVariantUnlocks(
 ): OrganVariantId[] {
   const newUnlocks: OrganVariantId[] = [];
 
-  ORGAN_VARIANTS.forEach(variant => {
+  ORGAN_VARIANTS.forEach((variant) => {
     // Skip if already unlocked
     if (progress.unlockedVariants.has(variant.id)) return;
 
@@ -214,7 +217,8 @@ export function checkVariantUnlocks(
       case 'questions_answered':
         if (variant.system !== 'SPECIAL' && variant.system) {
           const systemData = progress.systemProgress.get(variant.system);
-          shouldUnlock = (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
+          shouldUnlock =
+            (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
         }
         break;
 
@@ -230,12 +234,15 @@ export function checkVariantUnlocks(
         // For now, we'll use system progress as a proxy
         if (variant.system !== 'SPECIAL' && variant.system) {
           const systemData = progress.systemProgress.get(variant.system);
-          shouldUnlock = (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
+          shouldUnlock =
+            (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
         }
         break;
 
       case 'easter_egg':
-        const modeProgress = progress.specialModeProgress.get(variant.unlockCondition.condition || '');
+        const modeProgress = progress.specialModeProgress.get(
+          variant.unlockCondition.condition || ''
+        );
         shouldUnlock = (modeProgress || 0) >= (variant.unlockCondition.value || 0);
         break;
 
@@ -263,7 +270,7 @@ export function checkAccessoryUnlocks(
 ): OrganAccessoryId[] {
   const newUnlocks: OrganAccessoryId[] = [];
 
-  ORGAN_ACCESSORIES.forEach(accessory => {
+  ORGAN_ACCESSORIES.forEach((accessory) => {
     // Skip if already unlocked
     if (progress.unlockedAccessories.has(accessory.id)) return;
 
@@ -305,9 +312,9 @@ export function unlockItems(
   accessories: OrganAccessoryId[]
 ): UserOrganProgress {
   const updated = { ...progress };
-  
-  variants.forEach(id => updated.unlockedVariants.add(id));
-  accessories.forEach(id => updated.unlockedAccessories.add(id));
+
+  variants.forEach((id) => updated.unlockedVariants.add(id));
+  accessories.forEach((id) => updated.unlockedAccessories.add(id));
 
   return updated;
 }
@@ -323,7 +330,7 @@ export function incrementSpecialModeProgress(
   const current = progress.specialModeProgress.get(modeId) || 0;
   const newProgress = new Map(progress.specialModeProgress);
   newProgress.set(modeId, current + increment);
-  
+
   return {
     ...progress,
     specialModeProgress: newProgress,
@@ -333,18 +340,11 @@ export function incrementSpecialModeProgress(
 /**
  * Get completion percentage for a system
  */
-export function getSystemCompletion(
-  progress: UserOrganProgress,
-  system: SystemCode
-): number {
+export function getSystemCompletion(progress: UserOrganProgress, system: SystemCode): number {
   const systemVariants = getVariantsForSystem(system);
-  const unlockedCount = systemVariants.filter(v => 
-    progress.unlockedVariants.has(v.id)
-  ).length;
-  
-  return systemVariants.length > 0
-    ? Math.round((unlockedCount / systemVariants.length) * 100)
-    : 0;
+  const unlockedCount = systemVariants.filter((v) => progress.unlockedVariants.has(v.id)).length;
+
+  return systemVariants.length > 0 ? Math.round((unlockedCount / systemVariants.length) * 100) : 0;
 }
 
 /**
@@ -404,9 +404,8 @@ export function toggleAccessory(
 
   customization.set(system, {
     ...current,
-    equippedAccessories: index >= 0
-      ? equipped.filter(id => id !== accessoryId)
-      : [...equipped, accessoryId],
+    equippedAccessories:
+      index >= 0 ? equipped.filter((id) => id !== accessoryId) : [...equipped, accessoryId],
   });
 
   return customization;
@@ -424,11 +423,11 @@ export function getNewItems(
   newAccessories: OrganAccessoryId[];
 } {
   const newVariants = Array.from(progress.unlockedVariants).filter(
-    id => !lastSeenVariants.has(id)
+    (id) => !lastSeenVariants.has(id)
   );
-  
+
   const newAccessories = Array.from(progress.unlockedAccessories).filter(
-    id => !lastSeenAccessories.has(id)
+    (id) => !lastSeenAccessories.has(id)
   );
 
   return { newVariants, newAccessories };

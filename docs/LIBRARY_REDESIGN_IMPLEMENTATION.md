@@ -39,9 +39,11 @@ Complete overhaul of the Clinical Reference Library to implement a hierarchical 
 ## New Components
 
 ### 1. `LibrarySidebar.tsx`
+
 Persistent left-hand navigation with hierarchical system tree.
 
 **Features:**
+
 - Collapsible organ system sections with icons
 - Subcategory sub-navigation within each system
 - Condition counts at all levels
@@ -50,6 +52,7 @@ Persistent left-hand navigation with hierarchical system tree.
 - Auto-expand active system
 
 **Props:**
+
 ```typescript
 interface LibrarySidebarProps {
   systems: SystemData[];
@@ -65,9 +68,11 @@ interface LibrarySidebarProps {
 ```
 
 ### 2. `EnhancedConditionCard.tsx`
+
 Rich preview cards with pattern-recognition triggers.
 
 **Displays:**
+
 - Condition name (Teko display font)
 - PANCE yield badge (⭐ indicator)
 - **Classic patient** snippet (👤 "55yo M with chest pain...")
@@ -75,6 +80,7 @@ Rich preview cards with pattern-recognition triggers.
 - **Quick info tooltips** for Gold Standard Dx (🔬) and First-Line Rx (💊)
 
 ### 3. `LibraryBreadcrumb.tsx`
+
 Navigation trail showing current location in hierarchy.
 
 **Format:** `Library › Cardiovascular › Arrhythmias`
@@ -82,9 +88,11 @@ Navigation trail showing current location in hierarchy.
 Clickable segments for quick navigation back up the hierarchy.
 
 ### 4. `ClinicalReferenceLibrary.tsx` (Refactored)
+
 Main component with 2-column layout.
 
 **Features:**
+
 - Persistent sidebar + content grid layout
 - **Slide-over detail panel** (non-blocking, slides from right)
 - **Keyboard navigation**:
@@ -99,18 +107,22 @@ Main component with 2-column layout.
 ## Hooks
 
 ### `useLibraryPreferences`
+
 Persists user preferences to `localStorage`.
 
 **Stored:**
+
 - `activeSystem` - Last selected system
 - `activeSubcategory` - Last selected subcategory
 - `highYieldOnly` - Filter state
 - `lastVisited` - ISO timestamp
 
 ### `useDebouncedSearch`
+
 300ms debounced search input to prevent excessive API calls.
 
 **Returns:**
+
 ```typescript
 {
   inputValue: string;
@@ -129,9 +141,11 @@ Persists user preferences to `localStorage`.
 ### `GET /api/content/library`
 
 **New Parameters:**
+
 - `highYield=true` - Filter to `pance_yield >= 3`
 
 **New Response Fields:**
+
 - `gold_standard_dx` - For card tooltips
 - `first_line_rx` - For card tooltips
 
@@ -140,9 +154,11 @@ Persists user preferences to `localStorage`.
 ## CSS Styling
 
 ### `styles/library-markdown.css`
+
 Custom markdown rendering for medical content.
 
 **Highlights:**
+
 - Proper heading hierarchy
 - Bold text for medical emphasis
 - Bullet/numbered lists with accent markers
@@ -187,19 +203,19 @@ functions/api/content/
 import { ClinicalReferenceLibrary } from '@/components/library';
 
 // In your route/page
-<ClinicalReferenceLibrary onExit={() => navigate('/dashboard')} />
+<ClinicalReferenceLibrary onExit={() => navigate('/dashboard')} />;
 ```
 
 ---
 
 ## Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `/` | Focus search input |
-| `Esc` | Close detail panel |
+| Key        | Action                                |
+| ---------- | ------------------------------------- |
+| `/`        | Focus search input                    |
+| `Esc`      | Close detail panel                    |
 | `←` or `k` | Previous condition (when detail open) |
-| `→` or `j` | Next condition (when detail open) |
+| `→` or `j` | Next condition (when detail open)     |
 
 ---
 
@@ -221,34 +237,34 @@ import { ClinicalReferenceLibrary } from '@/components/library';
 
 All originally planned "future" features have been implemented:
 
-| Feature | Component | Status |
-|---------|-----------|--------|
-| Mobile responsive sidebar | `MobileMenuToggle.tsx` | ✅ |
-| Condition bookmarking | `BookmarksPanel.tsx`, `useConditionBookmarks.ts` | ✅ |
-| Recently viewed conditions | `RecentConditionsPanel.tsx`, `useRecentConditions.ts` | ✅ |
-| Virtual scrolling | `VirtualizedConditionList.tsx` | ✅ |
-| Study mode integration | `QuickQuizButton.tsx` | ✅ |
+| Feature                    | Component                                             | Status |
+| -------------------------- | ----------------------------------------------------- | ------ |
+| Mobile responsive sidebar  | `MobileMenuToggle.tsx`                                | ✅     |
+| Condition bookmarking      | `BookmarksPanel.tsx`, `useConditionBookmarks.ts`      | ✅     |
+| Recently viewed conditions | `RecentConditionsPanel.tsx`, `useRecentConditions.ts` | ✅     |
+| Virtual scrolling          | `VirtualizedConditionList.tsx`                        | ✅     |
+| Study mode integration     | `QuickQuizButton.tsx`                                 | ✅     |
 
 ### Additional Features Implemented
 
-| Feature | Component | Description |
-|---------|-----------|-------------|
-| DDx Compare | `DDxCompareModal.tsx`, `DDxMatrixView.tsx` | Side-by-side condition comparison |
-| Confusion Pair Alerts | `ConfusionPairAlert.tsx` | Warns about commonly confused conditions |
-| DDx Intelligence | `useDDxIntelligence.ts`, `services/ddxService.ts` | AI-powered differential suggestions |
-| Mastery Tracking | `MasteryBadge.tsx` | Shows user's mastery level per condition |
-| System Progress | `SystemProgressBar.tsx` | Progress bar per organ system |
-| Keyboard Help | `KeyboardShortcutsHelp.tsx` | Modal showing available shortcuts |
+| Feature               | Component                                         | Description                              |
+| --------------------- | ------------------------------------------------- | ---------------------------------------- |
+| DDx Compare           | `DDxCompareModal.tsx`, `DDxMatrixView.tsx`        | Side-by-side condition comparison        |
+| Confusion Pair Alerts | `ConfusionPairAlert.tsx`                          | Warns about commonly confused conditions |
+| DDx Intelligence      | `useDDxIntelligence.ts`, `services/ddxService.ts` | AI-powered differential suggestions      |
+| Mastery Tracking      | `MasteryBadge.tsx`                                | Shows user's mastery level per condition |
+| System Progress       | `SystemProgressBar.tsx`                           | Progress bar per organ system            |
+| Keyboard Help         | `KeyboardShortcutsHelp.tsx`                       | Modal showing available shortcuts        |
 
 ### API Endpoints
 
-| Endpoint | Purpose |
-|----------|---------|
-| `/api/ddx/related` | Get related conditions for DDx |
-| `/api/ddx/compare` | Compare two conditions side-by-side |
+| Endpoint                   | Purpose                               |
+| -------------------------- | ------------------------------------- |
+| `/api/ddx/related`         | Get related conditions for DDx        |
+| `/api/ddx/compare`         | Compare two conditions side-by-side   |
 | `/api/ddx/confusion-pairs` | Get commonly confused condition pairs |
-| `/api/ddx/workup` | Get diagnostic workup for condition |
-| `/api/ddx/smart-suggest` | AI-powered DDx suggestions |
+| `/api/ddx/workup`          | Get diagnostic workup for condition   |
+| `/api/ddx/smart-suggest`   | AI-powered DDx suggestions            |
 
 ---
 

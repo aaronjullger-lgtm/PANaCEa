@@ -1,9 +1,9 @@
 /**
  * Medical Image Fetcher - Streamlined Version
- * 
+ *
  * Fetches images from DermNet NZ and Wikimedia Commons
  * with AI verification before adding to database.
- * 
+ *
  * Usage: npx tsx scripts/images/fetch-medical-images.ts
  */
 
@@ -22,7 +22,7 @@ const MAX_RETRIES = 3;
 const RETRY_BACKOFF = 5000; // 5 seconds initial backoff
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // High-priority dermatology conditions with search terms
@@ -49,7 +49,7 @@ const DERM_PRIORITY = [
   { id: 'DERM__trauma__burns', terms: ['burn injury skin degrees'] },
 ];
 
-// Radiology/Pulm conditions  
+// Radiology/Pulm conditions
 const RAD_PRIORITY = [
   { id: 'PULM__infectious__pneumonia', terms: ['pneumonia chest xray'] },
   { id: 'PULM__pleural_disease__pneumothorax', terms: ['pneumothorax chest xray'] },
@@ -73,51 +73,58 @@ interface ImageResult {
  */
 async function searchWikimedia(term: string): Promise<ImageResult[]> {
   const results: ImageResult[] = [];
-  
+
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srnamespace=6&srlimit=5&format=json&origin=*`;
     const response = await fetch(url);
     const data = await response.json();
-    
+
     for (const result of data.query?.search || []) {
       const title = result.title;
       const infoUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
       const infoResp = await fetch(infoUrl);
       const infoData = await infoResp.json();
-      
+
       const pages = infoData.query?.pages || {};
       const pageId = Object.keys(pages)[0];
       const imageUrl = pages[pageId]?.imageinfo?.[0]?.url;
-      
-      if (imageUrl && (imageUrl.endsWith('.jpg') || imageUrl.endsWith('.png') || imageUrl.endsWith('.jpeg'))) {
+
+      if (
+        imageUrl &&
+        (imageUrl.endsWith('.jpg') || imageUrl.endsWith('.png') || imageUrl.endsWith('.jpeg'))
+      ) {
         results.push({
           url: imageUrl,
           title: title.replace('File:', ''),
           source: 'Wikimedia Commons',
-          license: 'CC'
+          license: 'CC',
         });
       }
-      
-      await new Promise(r => setTimeout(r, 300));
+
+      await new Promise((r) => setTimeout(r, 300));
     }
   } catch (e) {
     console.error(`Wikimedia error: ${e}`);
   }
-  
+
   return results;
 }
 
 /**
  * Verify image with Gemini AI (with retry logic)
  */
-async function verifyImage(imageUrl: string, conditionName: string, retryCount = 0): Promise<{ ok: boolean; reason: string }> {
+async function verifyImage(
+  imageUrl: string,
+  conditionName: string,
+  retryCount = 0
+): Promise<{ ok: boolean; reason: string }> {
   if (!GEMINI_API_KEY) return { ok: true, reason: 'No API' };
 
   try {
     // Fetch image
     const imgResp = await fetch(imageUrl);
     if (!imgResp.ok) return { ok: false, reason: `Fetch failed: ${imgResp.status}` };
-    
+
     const buffer = await imgResp.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
     const mime = imageUrl.includes('.png') ? 'image/png' : 'image/jpeg';
@@ -128,14 +135,18 @@ async function verifyImage(imageUrl: string, conditionName: string, retryCount =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: `Is this a suitable medical quiz image for "${conditionName}"? Reply JSON: {"ok":true/false,"reason":"brief"}. OK if: real medical image showing the condition. NOT OK if: diagram with text labels, stock photo, wrong condition, poor quality.` },
-              { inline_data: { mime_type: mime, data: base64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 100 }
-        })
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Is this a suitable medical quiz image for "${conditionName}"? Reply JSON: {"ok":true/false,"reason":"brief"}. OK if: real medical image showing the condition. NOT OK if: diagram with text labels, stock photo, wrong condition, poor quality.`,
+                },
+                { inline_data: { mime_type: mime, data: base64 } },
+              ],
+            },
+          ],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 100 },
+        }),
       }
     );
 
@@ -143,7 +154,7 @@ async function verifyImage(imageUrl: string, conditionName: string, retryCount =
     if (response.status === 429 || response.status === 503) {
       if (retryCount < MAX_RETRIES) {
         const backoff = RETRY_BACKOFF * Math.pow(2, retryCount);
-        console.log(`⏳ Rate limited, waiting ${backoff/1000}s...`);
+        console.log(`⏳ Rate limited, waiting ${backoff / 1000}s...`);
         await sleep(backoff);
         return verifyImage(imageUrl, conditionName, retryCount + 1);
       }
@@ -154,8 +165,11 @@ async function verifyImage(imageUrl: string, conditionName: string, retryCount =
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const clean = text.replace(/```json\n?/g, '').replace(/```/g, '').trim();
-    
+    const clean = text
+      .replace(/```json\n?/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     try {
       const match = clean.match(/\{[\s\S]*\}/);
       if (match) {
@@ -163,12 +177,12 @@ async function verifyImage(imageUrl: string, conditionName: string, retryCount =
         return { ok: parsed.ok ?? true, reason: parsed.reason || '' };
       }
     } catch {}
-    
+
     return { ok: true, reason: 'Parse error' };
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
       const backoff = RETRY_BACKOFF * Math.pow(2, retryCount);
-      console.log(`⚠️ Error, retrying in ${backoff/1000}s...`);
+      console.log(`⚠️ Error, retrying in ${backoff / 1000}s...`);
       await sleep(backoff);
       return verifyImage(imageUrl, conditionName, retryCount + 1);
     }
@@ -193,8 +207,8 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
         tags: [image.source.toLowerCase()],
         status: 'approved',
         approvalStatus: 'approved',
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
     return true;
   } catch (e) {
@@ -209,9 +223,9 @@ async function main() {
   // Get existing counts
   const existing = await prisma.mediaAsset.groupBy({
     by: ['conditionId'],
-    _count: true
+    _count: true,
   });
-  const counts = new Map(existing.map(e => [e.conditionId, e._count]));
+  const counts = new Map(existing.map((e) => [e.conditionId, e._count]));
 
   const allConditions = [...DERM_PRIORITY, ...RAD_PRIORITY];
   const stats = { searched: 0, verified: 0, added: 0, skipped: 0 };
@@ -238,18 +252,21 @@ async function main() {
         if (added >= needed) break;
 
         process.stdout.write(`    ${img.title.substring(0, 40)}... `);
-        
+
         // Check for duplicates
         const exists = await prisma.mediaAsset.findFirst({
-          where: { originalUrl: img.url }
+          where: { originalUrl: img.url },
         });
-        
+
         if (exists) {
           console.log('⏭️ duplicate');
           continue;
         }
 
-        const verify = await verifyImage(img.url, condition.id.split('__').pop()!.replace(/_/g, ' '));
+        const verify = await verifyImage(
+          img.url,
+          condition.id.split('__').pop()!.replace(/_/g, ' ')
+        );
         stats.verified++;
 
         if (!verify.ok) {

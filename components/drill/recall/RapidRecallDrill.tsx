@@ -22,19 +22,19 @@ interface PearlQuestion {
 
 /**
  * RapidRecallDrill - "Flashcard meets Type-ahead" drill mode.
- * 
+ *
  * Displays clinical pearls or buzzwords and users must type the diagnosis.
  * Uses Pearl Harvester pattern to prioritize cached pearls before falling
  * back to buzzword dictionary.
  */
 const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) => {
   const { getToken } = useAuth();
-  
+
   // Question state
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const [currentAnswer, setCurrentAnswer] = useState<string>('');
   const [questionSource, setQuestionSource] = useState<QuestionSource>('buzzword');
-  
+
   // Score state
   const [streak, setStreak] = useState<number>(0);
   const [highScore, setHighScore] = useState<number>(0);
@@ -46,16 +46,16 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
   const [usedQuestions, setUsedQuestions] = useState<Set<string>>(new Set());
   const [isValidating, setIsValidating] = useState<boolean>(false);
   const [acceptedSynonym, setAcceptedSynonym] = useState<boolean>(false);
-  
+
   // Data state (buzzwords fallback)
   const [buzzwordDictionary, setBuzzwordDictionary] = useState<Record<string, string>>({});
   const [buzzwordsList, setBuzzwordsList] = useState<string[]>([]);
   const [allDiagnoses, setAllDiagnoses] = useState<string[]>([]);
-  
+
   // Pearl state (primary source)
   const [pearlQuestions, setPearlQuestions] = useState<PearlQuestion[]>([]);
   const [usePearls, setUsePearls] = useState<boolean>(true); // Toggle for pearl vs buzzword mode
-  
+
   const [isLoading, setIsLoading] = useState(true);
 
   // Load data: prioritize pearls, fallback to buzzwords
@@ -66,22 +66,21 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         const token = await getToken();
         if (token && system) {
           try {
-            const response = await fetch(
-              `/api/conditions/pearls?system=${system}&random=true`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              }
-            );
-            
+            const response = await fetch(`/api/conditions/pearls?system=${system}&random=true`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
             if (response.ok) {
               const data = await response.json();
               if (data.pearls && data.pearls.length > 0) {
                 setPearlQuestions(data.pearls);
                 setUsePearls(true);
-                console.log(`[RapidRecallDrill] Loaded ${data.pearls.length} pearl questions for ${system}`);
+                console.log(
+                  `[RapidRecallDrill] Loaded ${data.pearls.length} pearl questions for ${system}`
+                );
               } else {
                 // No pearls available, fall back to buzzwords
                 setUsePearls(false);
@@ -92,16 +91,16 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
             setUsePearls(false);
           }
         }
-        
+
         // Load buzzwords as fallback
         const dict = await buzzwordService.getBuzzwordDictionary();
         const diagnoses = await buzzwordService.getAllBuzzwordConditions();
-        
+
         setBuzzwordDictionary(dict);
         setBuzzwordsList(Object.keys(dict));
         setAllDiagnoses(diagnoses);
       } catch (error) {
-        console.error("[RapidRecallDrill] Failed to load data", error);
+        console.error('[RapidRecallDrill] Failed to load data', error);
       } finally {
         setIsLoading(false);
       }
@@ -137,10 +136,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
   const getNextQuestion = useCallback(() => {
     // Try pearls first if available
     if (usePearls && pearlQuestions.length > 0) {
-      const available = pearlQuestions.filter((p) => 
-        !usedQuestions.has(p.conditionId + p.pearl)
-      );
-      
+      const available = pearlQuestions.filter((p) => !usedQuestions.has(p.conditionId + p.pearl));
+
       if (available.length === 0) {
         // Reset if all pearls used
         setUsedQuestions(new Set());
@@ -150,21 +147,21 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         setQuestionSource('pearl');
         return;
       }
-      
+
       const randomPearl = available[Math.floor(Math.random() * available.length)];
       setCurrentQuestion(randomPearl.pearl);
       setCurrentAnswer(randomPearl.conditionName);
       setQuestionSource('pearl');
-      setUsedQuestions(prev => new Set(prev).add(randomPearl.conditionId + randomPearl.pearl));
+      setUsedQuestions((prev) => new Set(prev).add(randomPearl.conditionId + randomPearl.pearl));
       return;
     }
-    
+
     // Fallback to buzzwords
     if (buzzwordsList.length === 0) return;
-    
+
     const available = buzzwordsList.filter((b) => !usedQuestions.has(b));
     let selectedBuzzword: string;
-    
+
     if (available.length === 0) {
       // Reset if all buzzwords have been used
       setUsedQuestions(new Set());
@@ -172,17 +169,16 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
     } else {
       selectedBuzzword = available[Math.floor(Math.random() * available.length)];
     }
-    
+
     setCurrentQuestion(selectedBuzzword);
     setCurrentAnswer(buzzwordDictionary[selectedBuzzword]);
     setQuestionSource('buzzword');
-    setUsedQuestions(prev => new Set(prev).add(selectedBuzzword));
+    setUsedQuestions((prev) => new Set(prev).add(selectedBuzzword));
   }, [usePearls, pearlQuestions, buzzwordsList, buzzwordDictionary, usedQuestions]);
 
   // Initialize with first question
   useEffect(() => {
-    if (!isLoading && !currentQuestion && 
-        (pearlQuestions.length > 0 || buzzwordsList.length > 0)) {
+    if (!isLoading && !currentQuestion && (pearlQuestions.length > 0 || buzzwordsList.length > 0)) {
       getNextQuestion();
     }
   }, [isLoading, currentQuestion, pearlQuestions, buzzwordsList, getNextQuestion]);
@@ -192,53 +188,58 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
    * Handles common variations in medical terminology.
    */
   const normalizeDiagnosis = (str: string): string => {
-    return str
-      .toLowerCase()
-      .trim()
-      // Remove possessive 's (e.g., "Crohn's" → "Crohn")
-      .replace(/['']s\b/g, '')
-      // Remove common articles and connectors
-      .replace(/\b(the|a|an|of|and)\b/g, ' ')
-      // Normalize whitespace
-      .replace(/\s+/g, ' ')
-      .trim();
+    return (
+      str
+        .toLowerCase()
+        .trim()
+        // Remove possessive 's (e.g., "Crohn's" → "Crohn")
+        .replace(/['']s\b/g, '')
+        // Remove common articles and connectors
+        .replace(/\b(the|a|an|of|and)\b/g, ' ')
+        // Normalize whitespace
+        .replace(/\s+/g, ' ')
+        .trim()
+    );
   };
 
-  const handleSubmit = useCallback(async (answer: string) => {
-    if (isValidating) return;
+  const handleSubmit = useCallback(
+    async (answer: string) => {
+      if (isValidating) return;
 
-    const normalizedAnswer = normalizeDiagnosis(answer);
-    const normalizedCorrect = normalizeDiagnosis(currentAnswer);
-    
-    let isAnswerCorrect = normalizedAnswer === normalizedCorrect;
-    let wasSemantic = false;
+      const normalizedAnswer = normalizeDiagnosis(answer);
+      const normalizedCorrect = normalizeDiagnosis(currentAnswer);
 
-    if (!isAnswerCorrect) {
-      setIsValidating(true);
-      try {
-        const result = await semanticValidationService.validate(answer, currentAnswer);
-        isAnswerCorrect = result.isEquivalent;
-        wasSemantic = result.viaModel && result.isEquivalent;
-      } catch (error) {
-        console.error("Semantic validation failed", error);
-      } finally {
-        setIsValidating(false);
+      let isAnswerCorrect = normalizedAnswer === normalizedCorrect;
+      let wasSemantic = false;
+
+      if (!isAnswerCorrect) {
+        setIsValidating(true);
+        try {
+          const result = await semanticValidationService.validate(answer, currentAnswer);
+          isAnswerCorrect = result.isEquivalent;
+          wasSemantic = result.viaModel && result.isEquivalent;
+        } catch (error) {
+          console.error('Semantic validation failed', error);
+        } finally {
+          setIsValidating(false);
+        }
       }
-    }
-    
-    setAcceptedSynonym(wasSemantic);
-    setUserAnswer(answer);
-    setIsCorrect(isAnswerCorrect);
-    setTotalAttempts((prev) => prev + 1);
-    setStatus('feedback');
 
-    if (isAnswerCorrect) {
-      setStreak((prev) => prev + 1);
-      setTotalCorrect((prev) => prev + 1);
-    } else {
-      setStreak(0);
-    }
-  }, [currentAnswer, isValidating]);
+      setAcceptedSynonym(wasSemantic);
+      setUserAnswer(answer);
+      setIsCorrect(isAnswerCorrect);
+      setTotalAttempts((prev) => prev + 1);
+      setStatus('feedback');
+
+      if (isAnswerCorrect) {
+        setStreak((prev) => prev + 1);
+        setTotalCorrect((prev) => prev + 1);
+      } else {
+        setStreak(0);
+      }
+    },
+    [currentAnswer, isValidating]
+  );
 
   const handleNext = useCallback(() => {
     getNextQuestion();
@@ -351,8 +352,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
             className="text-center max-w-4xl"
           >
             <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-4">
-              {questionSource === 'pearl' 
-                ? 'What condition is associated with this clinical pearl?' 
+              {questionSource === 'pearl'
+                ? 'What condition is associated with this clinical pearl?'
                 : 'What diagnosis is this buzzword associated with?'}
             </p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--color-text-primary)] leading-tight">

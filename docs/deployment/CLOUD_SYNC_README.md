@@ -1,6 +1,7 @@
 # Cloud Sync & User Authentication
 
 PANaCEa now supports user authentication and cloud synchronization, allowing you to:
+
 - 📱 Study on multiple devices
 - ☁️ Keep your progress safe in the cloud
 - 🔄 Automatically sync across devices
@@ -23,18 +24,21 @@ See the [Authentication Setup Guide](./AUTHENTICATION_SETUP.md) for detailed set
 ## Features
 
 ### 🔐 Authentication
+
 - Secure sign-in with Clerk
 - Email and social authentication (Google, GitHub, etc.)
 - Session management with automatic token refresh
 - User profile management
 
 ### ☁️ Cloud Synchronization
+
 - Automatic background sync
 - Real-time progress saving
 - Conflict resolution (latest data wins)
 - Offline support with queue-based sync
 
 ### 📊 Data Migration
+
 - Seamless migration from localStorage
 - No data loss during transition
 - Backwards compatible (works without account)
@@ -43,6 +47,7 @@ See the [Authentication Setup Guide](./AUTHENTICATION_SETUP.md) for detailed set
 ### 🎯 What Gets Synced
 
 All your study data syncs automatically:
+
 - ✅ Performance records (quiz history)
 - ✅ Spaced repetition schedules (SRS)
 - ✅ Missed questions queue
@@ -53,6 +58,7 @@ All your study data syncs automatically:
 ## Architecture
 
 ### Frontend
+
 ```
 App.tsx
   ├── AuthProvider (Clerk)
@@ -63,6 +69,7 @@ App.tsx
 ```
 
 ### Backend (Cloudflare Functions)
+
 ```
 /functions/api/
   ├── auth/verify.ts → Token verification
@@ -71,6 +78,7 @@ App.tsx
 ```
 
 ### Database (PostgreSQL + Prisma)
+
 ```
 prisma/schema.prisma
   ├── User → Clerk user reference
@@ -90,23 +98,33 @@ prisma/schema.prisma
 ## API Endpoints
 
 ### `POST /api/auth/verify`
+
 Verify Clerk authentication token
+
 ```typescript
 Request: { Authorization: "Bearer <token>" }
 Response: { valid: boolean, userId: string, email: string }
 ```
 
 ### `GET /api/sync`
+
 Fetch user's cloud data
+
 ```typescript
-Request: { Authorization: "Bearer <token>" }
-Response: { performanceRecords, srsItems, savedQuestions }
+Request: {
+  Authorization: 'Bearer <token>';
+}
+Response: {
+  (performanceRecords, srsItems, savedQuestions);
+}
 ```
 
 ### `POST /api/sync`
+
 Upload/merge local data to cloud
+
 ```typescript
-Request: { 
+Request: {
   userId: string,
   performanceRecords: [],
   srsItems: [],
@@ -120,23 +138,27 @@ Response: { success: boolean, message: string }
 ### Local Development
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your keys
 ```
 
 3. Set up database:
+
 ```bash
 npx prisma migrate dev
 npx prisma generate
 ```
 
 4. Start dev server:
+
 ```bash
 npm run dev
 ```
@@ -146,7 +168,7 @@ npm run dev
 To test cloud sync locally:
 
 1. **Without Auth**: Data stays in localStorage
-2. **With Auth**: 
+2. **With Auth**:
    - Sign in with test account
    - Create some performance data
    - Check browser DevTools > Network tab
@@ -156,16 +178,19 @@ To test cloud sync locally:
 ### Database Migrations
 
 Create new migration:
+
 ```bash
 npx prisma migrate dev --name descriptive_name
 ```
 
 Apply migrations in production:
+
 ```bash
 npx prisma migrate deploy
 ```
 
 Reset database (⚠️ deletes all data):
+
 ```bash
 npx prisma migrate reset
 ```
@@ -173,24 +198,29 @@ npx prisma migrate reset
 ## Security Considerations
 
 ### Authentication
+
 - JWT tokens expire after 1 hour
 - Refresh tokens handled automatically by Clerk
 - Session cookies are httpOnly and secure
 - CSRF protection enabled
 
 ### Data Protection
+
 - All API calls require authentication
 - User data isolated by userId
 - SQL injection protected by Prisma
 - CORS configured for frontend origin only
 
 ### Environment Variables
+
 Never commit:
+
 - ❌ `CLERK_SECRET_KEY`
 - ❌ `DATABASE_URL`
 - ❌ `.env` file
 
 Always use:
+
 - ✅ `.env.example` for templates
 - ✅ Cloudflare environment variables for production
 - ✅ Different keys for dev/staging/prod
@@ -204,7 +234,7 @@ Always use:
    - `CLERK_SECRET_KEY`
    - `DATABASE_URL`
 
-2. **Database**: 
+2. **Database**:
    - Use connection pooling (PgBouncer)
    - Consider Prisma Data Proxy for serverless
    - Set `connection_limit=1` in DATABASE_URL
@@ -217,6 +247,7 @@ Always use:
 ### Database Hosting
 
 Recommended providers:
+
 - **Neon**: Serverless PostgreSQL (free tier)
 - **Supabase**: PostgreSQL + additional features (free tier)
 - **Railway**: Simple deployment (free tier)
@@ -225,13 +256,17 @@ Recommended providers:
 ## Monitoring
 
 ### Sync Status
+
 Users can see sync status in the UI:
+
 - 🟢 "Synced" - Last sync successful
 - 🟡 "Syncing..." - Upload in progress
 - 🔴 "Sync error" - Failed to sync (data safe locally)
 
 ### Error Handling
+
 Errors are logged but don't block studying:
+
 - Failed sync → Data stays in localStorage
 - Network error → Retry on next action
 - Auth error → Prompt to sign in again
@@ -241,24 +276,28 @@ Errors are logged but don't block studying:
 ### Common Issues
 
 **Build fails with Prisma errors**
+
 ```bash
 npx prisma generate
 npm run build
 ```
 
 **Database connection fails**
+
 - Check DATABASE_URL format
 - Verify database is running
 - Check firewall rules
 - Try connection pooling
 
 **Clerk authentication fails**
+
 - Verify publishable key matches domain
 - Check secret key is correct
 - Ensure Clerk app is not paused
 - Clear cookies and try again
 
 **Sync not working**
+
 - Check browser console for errors
 - Verify JWT token is present
 - Check /api/sync endpoint is accessible
@@ -267,6 +306,7 @@ npm run build
 ## Future Enhancements
 
 Planned features:
+
 - [ ] Conflict resolution UI
 - [ ] Manual export/import
 - [ ] Data visualization dashboard

@@ -1,30 +1,31 @@
 /**
  * API: Get today's Grand Rounds leaderboard
- * GET /api/grandrounds/leaderboard?date={date}&limit={limit}
+ * GET /api/grand-rounds/leaderboard?date={date}&limit={limit}
  */
 
-import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { z } from 'zod';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const LeaderboardSchema = z.object({
+  query: z.object({
+    date: z.string().optional(),
+    limit: z.string().optional().default('100'),
+  }),
+});
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
+export const onRequestOptions = withCors();
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(LeaderboardSchema, async ({ env, validated, auth }) => {
+  const log = createEndpointLogger('/api/grand-rounds/leaderboard', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    const url = new URL(request.url);
-    const dateParam = url.searchParams.get('date');
-    const limitParam = url.searchParams.get('limit') || '100';
-    const limit = Math.min(parseInt(limitParam, 10), 500);
+    const { date: dateParam, limit: limitParam } = validated.query;
+    const limit = Math.min(parseInt(limitParam || '100', 10), 500);
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const today = dateParam ? new Date(dateParam) : new Date();
     today.setHours(0, 0, 0, 0);
@@ -32,37 +33,44 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     // Get leaderboard entries for today, ordered by score (desc) then time (asc)
     const entries = await prisma.grandRoundsHistory.findMany({
       where: { date: today },
-      orderBy: [
-        { score: 'desc' },
-        { completionTimeMs: 'asc' }
-      ],
+      orderBy: [{ score: 'desc' }, { completionTimeMs: 'asc' }],
       take: limit,
       include: {
         user: {
           select: {
             id: true,
             firstName: true,
-            lastName: true
-          }
-        }
-      }
+            lastName: true,
+          },
+        },
+      },
     });
 
     // Format leaderboard with rank
     const leaderboard = entries.map((entry, index) => ({
       rank: index + 1,
       userId: entry.userId,
-      userName: entry.user ? `${entry.user.firstName || ''} ${entry.user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous',
+      userName: entry.user
+        ? `${entry.user.firstName || ''} ${entry.user.lastName || ''}`.trim() || 'Anonymous'
+        : 'Anonymous',
       score: entry.score,
       completionTimeMs: entry.completionTimeMs,
-      correctAnswers: entry.correctAnswers
+      correctAnswers: entry.correctAnswers,
     }));
 
-    return createSuccessResponse({ leaderboard });
+    log.info('Fetched Grand Rounds leaderboard', { date: today.toISOString(), entryCount: leaderboard.length });
+
+    return new Response(JSON.stringify({ leaderboard }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error: any) {
-    console.error('Error fetching Grand Rounds leaderboard:', error);
-    return createErrorResponse('Failed to fetch leaderboard', 500);
+    log.error('Error fetching Grand Rounds leaderboard', { error: error.message });
+    return new Response(JSON.stringify({ error: 'Failed to fetch leaderboard' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
-}
+});

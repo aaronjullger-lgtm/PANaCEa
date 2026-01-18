@@ -13,36 +13,36 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // PANCE-relevant ECG patterns
 const PANCE_ECG_PATTERNS = [
-  { name: "Wandering Atrial Pacemaker", category: "Arrhythmia" },
-  { name: "Multifocal Atrial Tachycardia", category: "Arrhythmia" },
-  { name: "Junctional Escape Rhythm", category: "Arrhythmia" },
-  { name: "Accelerated Junctional Rhythm", category: "Arrhythmia" },
-  { name: "Idioventricular Rhythm", category: "Arrhythmia" },
-  { name: "Accelerated Idioventricular Rhythm", category: "Arrhythmia" },
-  { name: "Epsilon Wave", category: "Cardiomyopathy" },
-  { name: "Osborn Wave", category: "Metabolic" },
-  { name: "Delta Wave", category: "Accessory Pathway" },
-  { name: "Brugada Pattern Type 1", category: "Channelopathy" },
-  { name: "Brugada Pattern Type 2", category: "Channelopathy" },
-  { name: "Long QT Syndrome Pattern", category: "Channelopathy" },
-  { name: "Short QT Syndrome Pattern", category: "Channelopathy" },
-  { name: "Digitalis Effect", category: "Drug Effect" },
-  { name: "Digitalis Toxicity", category: "Drug Effect" },
-  { name: "Wellens Syndrome", category: "Ischemia" },
-  { name: "De Winter T Waves", category: "Ischemia" },
-  { name: "Left Posterior Fascicular Block", category: "Conduction" },
-  { name: "Left Anterior Fascicular Block", category: "Conduction" },
-  { name: "Bifascicular Block", category: "Conduction" },
-  { name: "Trifascicular Block", category: "Conduction" },
-  { name: "Sgarbossa Criteria Pattern", category: "Ischemia" },
-  { name: "Wenckebach Pattern", category: "Conduction" },
-  { name: "Mobitz Type II", category: "Conduction" },
-  { name: "Complete Heart Block", category: "Conduction" },
-  { name: "Pericarditis ECG Changes", category: "Pericardial" },
-  { name: "Electrical Alternans", category: "Pericardial" },
-  { name: "Low Voltage QRS", category: "Other" },
-  { name: "Right Ventricular Strain Pattern", category: "Hypertrophy" },
-  { name: "Left Ventricular Strain Pattern", category: "Hypertrophy" },
+  { name: 'Wandering Atrial Pacemaker', category: 'Arrhythmia' },
+  { name: 'Multifocal Atrial Tachycardia', category: 'Arrhythmia' },
+  { name: 'Junctional Escape Rhythm', category: 'Arrhythmia' },
+  { name: 'Accelerated Junctional Rhythm', category: 'Arrhythmia' },
+  { name: 'Idioventricular Rhythm', category: 'Arrhythmia' },
+  { name: 'Accelerated Idioventricular Rhythm', category: 'Arrhythmia' },
+  { name: 'Epsilon Wave', category: 'Cardiomyopathy' },
+  { name: 'Osborn Wave', category: 'Metabolic' },
+  { name: 'Delta Wave', category: 'Accessory Pathway' },
+  { name: 'Brugada Pattern Type 1', category: 'Channelopathy' },
+  { name: 'Brugada Pattern Type 2', category: 'Channelopathy' },
+  { name: 'Long QT Syndrome Pattern', category: 'Channelopathy' },
+  { name: 'Short QT Syndrome Pattern', category: 'Channelopathy' },
+  { name: 'Digitalis Effect', category: 'Drug Effect' },
+  { name: 'Digitalis Toxicity', category: 'Drug Effect' },
+  { name: 'Wellens Syndrome', category: 'Ischemia' },
+  { name: 'De Winter T Waves', category: 'Ischemia' },
+  { name: 'Left Posterior Fascicular Block', category: 'Conduction' },
+  { name: 'Left Anterior Fascicular Block', category: 'Conduction' },
+  { name: 'Bifascicular Block', category: 'Conduction' },
+  { name: 'Trifascicular Block', category: 'Conduction' },
+  { name: 'Sgarbossa Criteria Pattern', category: 'Ischemia' },
+  { name: 'Wenckebach Pattern', category: 'Conduction' },
+  { name: 'Mobitz Type II', category: 'Conduction' },
+  { name: 'Complete Heart Block', category: 'Conduction' },
+  { name: 'Pericarditis ECG Changes', category: 'Pericardial' },
+  { name: 'Electrical Alternans', category: 'Pericardial' },
+  { name: 'Low Voltage QRS', category: 'Other' },
+  { name: 'Right Ventricular Strain Pattern', category: 'Hypertrophy' },
+  { name: 'Left Ventricular Strain Pattern', category: 'Hypertrophy' },
 ];
 
 // Schema for Gemini response - matches Prisma ECGPattern model exactly
@@ -81,7 +81,7 @@ const ecgPatternSchema = {
     testQuestionTips: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     mnemonics: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
   },
-  required: ["diagnosticCriteria", "rate", "rhythm", "clinicalPearls", "boardYieldFacts"],
+  required: ['diagnosticCriteria', 'rate', 'rhythm', 'clinicalPearls', 'boardYieldFacts'],
 };
 
 interface ECGPatternData {
@@ -122,7 +122,10 @@ interface ECGPatternData {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
@@ -149,10 +152,10 @@ async function generateECGPatternData(name: string, category: string): Promise<E
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.3,
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
     },
   });
 
@@ -175,12 +178,12 @@ Return as JSON matching this structure exactly.`;
 
   const response = await model.generateContent(prompt);
   const text = response.response.text();
-  
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 

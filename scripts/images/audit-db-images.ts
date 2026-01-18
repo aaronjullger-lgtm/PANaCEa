@@ -1,6 +1,6 @@
 /**
  * Audit Database Images with AI
- * 
+ *
  * Reviews all images currently in the database using Gemini AI
  * and removes ones that are unsuitable for medical education quizzes.
  */
@@ -25,10 +25,14 @@ interface AuditResult {
 }
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function analyzeImageUrl(url: string, expectedCondition: string, retryCount = 0): Promise<AuditResult> {
+async function analyzeImageUrl(
+  url: string,
+  expectedCondition: string,
+  retryCount = 0
+): Promise<AuditResult> {
   if (!GEMINI_API_KEY) {
     return { keep: true, reason: 'No API key - keeping by default' };
   }
@@ -58,7 +62,7 @@ DELETE if:
     if (!imageResponse.ok) {
       return { keep: false, reason: `Cannot fetch image: ${imageResponse.status}` };
     }
-    
+
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64 = Buffer.from(imageBuffer).toString('base64');
     const mimeType = url.includes('.png') ? 'image/png' : 'image/jpeg';
@@ -69,14 +73,13 @@ DELETE if:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: base64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 256 }
-        })
+          contents: [
+            {
+              parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }],
+            },
+          ],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 256 },
+        }),
       }
     );
 
@@ -84,7 +87,7 @@ DELETE if:
     if (response.status === 429 || response.status === 503) {
       if (retryCount < MAX_RETRIES) {
         const backoff = RETRY_BACKOFF * Math.pow(2, retryCount);
-        console.log(`  ⏳ Rate limited, waiting ${backoff/1000}s...`);
+        console.log(`  ⏳ Rate limited, waiting ${backoff / 1000}s...`);
         await sleep(backoff);
         return analyzeImageUrl(url, expectedCondition, retryCount + 1);
       }
@@ -97,11 +100,10 @@ DELETE if:
 
     const data = await response.json();
     return parseResponse(data);
-
   } catch (error) {
     if (retryCount < MAX_RETRIES) {
       const backoff = RETRY_BACKOFF * Math.pow(2, retryCount);
-      console.log(`  ⚠️ Error, retrying in ${backoff/1000}s...`);
+      console.log(`  ⚠️ Error, retrying in ${backoff / 1000}s...`);
       await sleep(backoff);
       return analyzeImageUrl(url, expectedCondition, retryCount + 1);
     }
@@ -112,10 +114,13 @@ DELETE if:
 
 function parseResponse(data: any): AuditResult {
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  
+
   // Strip markdown code blocks
-  let clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  
+  let clean = text
+    .replace(/```json\n?/g, '')
+    .replace(/```\n?/g, '')
+    .trim();
+
   try {
     const match = clean.match(/\{[\s\S]*\}/);
     if (match) {
@@ -123,22 +128,25 @@ function parseResponse(data: any): AuditResult {
       return {
         keep: parsed.keep ?? true,
         reason: parsed.reason || 'Unknown',
-        suggestedCondition: parsed.suggestedCondition
+        suggestedCondition: parsed.suggestedCondition,
       };
     }
   } catch (e) {
     // Try to extract keep/delete from text
-    if (clean.toLowerCase().includes('"keep": false') || clean.toLowerCase().includes('"keep":false')) {
+    if (
+      clean.toLowerCase().includes('"keep": false') ||
+      clean.toLowerCase().includes('"keep":false')
+    ) {
       return { keep: false, reason: 'Parsed as delete from partial response' };
     }
   }
-  
+
   return { keep: true, reason: 'Could not parse response - keeping' };
 }
 
 async function main() {
   console.log('🔍 Auditing Database Images with AI\n');
-  
+
   // Get all images grouped by condition
   const images = await prisma.mediaAsset.findMany({
     select: {
@@ -148,9 +156,9 @@ async function main() {
       thumbnailUrl: true,
       conditionId: true,
       type: true,
-      filename: true
+      filename: true,
     },
-    orderBy: { conditionId: 'asc' }
+    orderBy: { conditionId: 'asc' },
   });
 
   console.log(`Found ${images.length} images to audit\n`);
@@ -160,34 +168,36 @@ async function main() {
     kept: 0,
     deleted: 0,
     errors: 0,
-    byCondition: new Map<string, { kept: number; deleted: number }>()
+    byCondition: new Map<string, { kept: number; deleted: number }>(),
   };
 
   let currentCondition = '';
-  
+
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
     const imageUrl = image.originalUrl || image.sourceUrl || image.thumbnailUrl;
-    
+
     if (!imageUrl) {
       console.log(`  [${i + 1}/${images.length}] ${image.filename} - ⚠️ NO URL, deleting`);
       await prisma.mediaAsset.delete({ where: { id: image.id } });
       stats.deleted++;
       continue;
     }
-    
+
     // Log condition header
     if (image.conditionId !== currentCondition) {
       currentCondition = image.conditionId || 'unknown';
-      const conditionImages = images.filter(img => img.conditionId === currentCondition);
+      const conditionImages = images.filter((img) => img.conditionId === currentCondition);
       console.log(`\n📁 ${currentCondition} (${conditionImages.length} images)`);
       stats.byCondition.set(currentCondition, { kept: 0, deleted: 0 });
     }
 
-    process.stdout.write(`  [${i + 1}/${images.length}] ${image.filename?.substring(0, 40) || image.id.substring(0, 8)}... `);
+    process.stdout.write(
+      `  [${i + 1}/${images.length}] ${image.filename?.substring(0, 40) || image.id.substring(0, 8)}... `
+    );
 
     const result = await analyzeImageUrl(imageUrl, currentCondition);
-    
+
     if (result.keep) {
       console.log('✅ KEEP');
       stats.kept++;
@@ -198,7 +208,7 @@ async function main() {
       stats.deleted++;
       const condStats = stats.byCondition.get(currentCondition)!;
       condStats.deleted++;
-      
+
       // Delete from database
       try {
         await prisma.mediaAsset.delete({ where: { id: image.id } });
@@ -220,7 +230,7 @@ async function main() {
   console.log(`Kept: ${stats.kept} (${((stats.kept / stats.total) * 100).toFixed(1)}%)`);
   console.log(`Deleted: ${stats.deleted} (${((stats.deleted / stats.total) * 100).toFixed(1)}%)`);
   console.log(`Errors: ${stats.errors}`);
-  
+
   console.log('\nBy Condition:');
   for (const [condition, data] of stats.byCondition) {
     const total = data.kept + data.deleted;

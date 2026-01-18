@@ -5,29 +5,37 @@ This directory contains cron job configurations for scheduled tasks in PANaCEa.
 ## Scheduled Jobs
 
 ### 1. Job Scheduler (Daily at Midnight)
+
 ```bash
 0 0 * * * cd /opt/PANaCEa && npx tsx scripts/scheduleJobs.ts
 ```
+
 Schedules background jobs for:
+
 - Question pre-generation (low-traffic hours 2-5 AM)
 - Health checks
 - System maintenance tasks
 
 ### 2. Health Check (Daily at 3 AM)
+
 ```bash
 0 3 * * * cd /opt/PANaCEa && npx tsx scripts/contentHealthChecker.ts
 ```
+
 Audits content quality and generates health reports.
 
 ### 3. Job Cleanup (Weekly on Sunday at 4 AM)
+
 ```bash
 0 4 * * 0 cd /opt/PANaCEa && npx tsx scripts/cleanupJobs.ts
 ```
+
 Removes completed/failed jobs older than 30 days.
 
 ## Installation
 
 ### Method 1: Direct Installation
+
 ```bash
 # Edit your crontab
 crontab -e
@@ -36,6 +44,7 @@ crontab -e
 ```
 
 ### Method 2: Install from File
+
 ```bash
 # View current crontab
 crontab -l > /tmp/current-crontab
@@ -48,6 +57,7 @@ crontab /tmp/current-crontab
 ```
 
 ### Method 3: System-wide (requires root)
+
 ```bash
 # Copy to /etc/cron.d/
 sudo cp deployment/cron/panacea.cron /etc/cron.d/panacea
@@ -61,6 +71,7 @@ sudo chmod 644 /etc/cron.d/panacea
 ### Adjust Schedule Times
 
 Edit the cron expressions to match your needs:
+
 - `0 0 * * *` = Daily at midnight
 - `0 3 * * *` = Daily at 3 AM
 - `0 4 * * 0` = Weekly on Sunday at 4 AM
@@ -69,6 +80,7 @@ Edit the cron expressions to match your needs:
 ### Change Installation Path
 
 If your application is not in `/opt/PANaCEa`, update the paths in the cron file:
+
 ```bash
 sed -i 's|/opt/PANaCEa|/your/path/here|g' deployment/cron/panacea.cron
 ```
@@ -76,6 +88,7 @@ sed -i 's|/opt/PANaCEa|/your/path/here|g' deployment/cron/panacea.cron
 ## Monitoring
 
 ### View Cron Logs
+
 ```bash
 # Application logs
 tail -f /opt/PANaCEa/logs/scheduler.log
@@ -91,6 +104,7 @@ sudo tail -f /var/log/cron
 ```
 
 ### Verify Cron Jobs are Running
+
 ```bash
 # List all cron jobs
 crontab -l
@@ -104,12 +118,14 @@ grep CRON /var/log/syslog
 Cron jobs run in a minimal environment. Ensure:
 
 1. **PATH includes Node.js:**
+
    ```bash
    # Add to crontab
    PATH=/usr/local/bin:/usr/bin:/bin
    ```
 
 2. **Environment variables are loaded:**
+
    ```bash
    # Option 1: Use .env file (if supported)
    0 0 * * * cd /opt/PANaCEa && source .env && npx tsx scripts/scheduleJobs.ts
@@ -124,17 +140,20 @@ Cron jobs run in a minimal environment. Ensure:
 ### Jobs Not Running?
 
 1. **Check cron daemon is running:**
+
    ```bash
    sudo systemctl status cron  # Debian/Ubuntu
    sudo systemctl status crond # RHEL/CentOS
    ```
 
 2. **Verify crontab syntax:**
+
    ```bash
    crontab -l
    ```
 
 3. **Check logs for errors:**
+
    ```bash
    tail -50 /opt/PANaCEa/logs/scheduler.log
    ```
@@ -147,6 +166,7 @@ Cron jobs run in a minimal environment. Ensure:
 ### Permission Issues?
 
 Ensure the cron user can access:
+
 - Application directory
 - Log directory
 - Database (via DATABASE_URL)

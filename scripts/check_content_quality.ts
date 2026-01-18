@@ -42,7 +42,13 @@ const REQUIRED_SECTIONS = {
   buzzwords: 3, // array: minimum items
 };
 
-function addQualityIssue(record: any, section: string, issue: string, currentLength?: number, expectedMinLength?: number) {
+function addQualityIssue(
+  record: any,
+  section: string,
+  issue: string,
+  currentLength?: number,
+  expectedMinLength?: number
+) {
   qualityIssues.push({
     id: record.id,
     conditionId: record.conditionId,
@@ -50,13 +56,13 @@ function addQualityIssue(record: any, section: string, issue: string, currentLen
     section,
     issue,
     currentLength,
-    expectedMinLength
+    expectedMinLength,
   });
 }
 
 function checkStringContent(record: any, fieldName: string, minLength: number): boolean {
   const value = record[fieldName];
-  
+
   if (!value) {
     addQualityIssue(record, fieldName, 'Missing content', 0, minLength);
     return false;
@@ -72,7 +78,7 @@ function checkStringContent(record: any, fieldName: string, minLength: number): 
 
   // Check for placeholder text
   const placeholders = ['TODO', 'TBD', 'Coming soon', 'N/A', 'Not available', '[placeholder]'];
-  if (placeholders.some(p => content.includes(p))) {
+  if (placeholders.some((p) => content.includes(p))) {
     addQualityIssue(record, fieldName, 'Contains placeholder text', length, minLength);
     return false;
   }
@@ -94,9 +100,15 @@ function checkArrayContent(record: any, fieldName: string, minItems: number): bo
   }
 
   // Check that array items are substantive (not empty or too short)
-  const emptyItems = value.filter(item => !item || item.trim().length < 10);
+  const emptyItems = value.filter((item) => !item || item.trim().length < 10);
   if (emptyItems.length > 0) {
-    addQualityIssue(record, fieldName, `Contains ${emptyItems.length} empty or very short items`, value.length, minItems);
+    addQualityIssue(
+      record,
+      fieldName,
+      `Contains ${emptyItems.length} empty or very short items`,
+      value.length,
+      minItems
+    );
     return false;
   }
 
@@ -109,9 +121,9 @@ async function checkContentCompleteness() {
   const records = await prisma.medicalContent.findMany({
     where: {
       status: {
-        in: ['published', 'approved']
-      }
-    }
+        in: ['published', 'approved'],
+      },
+    },
   });
 
   console.log(`   Found ${records.length} published/approved records to check`);
@@ -168,11 +180,12 @@ async function findMissingContent() {
   for (const record of allRecords) {
     for (const section of Object.keys(REQUIRED_SECTIONS)) {
       const value = record[section as keyof typeof record];
-      
-      if (!value || 
-          (typeof value === 'string' && value.trim().length === 0) ||
-          (Array.isArray(value) && value.length === 0)) {
-        
+
+      if (
+        !value ||
+        (typeof value === 'string' && value.trim().length === 0) ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         if (!missingBySection[section]) {
           missingBySection[section] = [];
         }
@@ -183,7 +196,7 @@ async function findMissingContent() {
 
   console.log('   Missing Content Summary:');
   console.log('   ' + '-'.repeat(60));
-  
+
   for (const [section, conditions] of Object.entries(missingBySection)) {
     console.log(`   ${section}: ${conditions.length} records`);
   }
@@ -194,11 +207,11 @@ async function findMissingContent() {
 async function generateQualityReport() {
   console.log('\n📊 Generating Quality Report...\n');
 
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log('CONTENT QUALITY REPORT');
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log(`Total Quality Issues: ${qualityIssues.length}`);
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
 
   if (qualityIssues.length === 0) {
     console.log('\n✅ All content meets quality standards!\n');
@@ -219,7 +232,7 @@ async function generateQualityReport() {
   console.log('-'.repeat(80));
   for (const [section, sectionIssues] of Object.entries(bySection)) {
     console.log(`\n${section} (${sectionIssues.length} issues):`);
-    
+
     // Group by issue type
     const byIssueType: { [key: string]: QualityIssue[] } = {};
     for (const issue of sectionIssues) {
@@ -233,9 +246,10 @@ async function generateQualityReport() {
       console.log(`  ${issueType}: ${issues.length} records`);
       // Show first 5 examples
       for (const example of issues.slice(0, 5)) {
-        const lengthInfo = example.currentLength !== undefined && example.expectedMinLength !== undefined
-          ? ` (${example.currentLength}/${example.expectedMinLength} chars)`
-          : '';
+        const lengthInfo =
+          example.currentLength !== undefined && example.expectedMinLength !== undefined
+            ? ` (${example.currentLength}/${example.expectedMinLength} chars)`
+            : '';
         console.log(`    - ${example.condition}${lengthInfo}`);
       }
       if (issues.length > 5) {
@@ -270,18 +284,23 @@ async function generateQualityReport() {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportPath = path.join(reportDir, `quality-report-${timestamp}.json`);
-  
-  fs.writeFileSync(reportPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    summary: {
-      totalIssues: qualityIssues.length,
-      bySection: Object.fromEntries(
-        Object.entries(bySection).map(([k, v]) => [k, v.length])
-      )
-    },
-    issues: qualityIssues,
-    topNeedingWork: topNeedingWork
-  }, null, 2));
+
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalIssues: qualityIssues.length,
+          bySection: Object.fromEntries(Object.entries(bySection).map(([k, v]) => [k, v.length])),
+        },
+        issues: qualityIssues,
+        topNeedingWork: topNeedingWork,
+      },
+      null,
+      2
+    )
+  );
 
   console.log(`\n📄 Detailed report saved to: ${reportPath}\n`);
 }

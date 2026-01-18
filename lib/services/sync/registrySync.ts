@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { CONDITION_REGISTRY, type ConditionMeta } from "../../../conditionRegistry";
-import { DRUG_REGISTRY, type DrugMeta } from "../../../drugRegistry";
+import { PrismaClient } from '@prisma/client';
+import { CONDITION_REGISTRY, type ConditionMeta } from '../../../config/conditionRegistry';
+import { DRUG_REGISTRY, type DrugMeta } from '../../../src/registries/drugRegistry';
 
 const prisma = new PrismaClient();
 

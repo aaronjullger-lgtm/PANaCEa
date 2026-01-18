@@ -3,6 +3,7 @@
 ## Problem: Cloudflare Functions + Prisma Compatibility
 
 Cloudflare Workers/Pages Functions use V8 Isolates which only support ES Modules, while Prisma Client v5.x generates CommonJS modules. This causes the build error:
+
 ```
 Uncaught ReferenceError: module is not defined
 ```
@@ -35,11 +36,13 @@ Uncaught ReferenceError: module is not defined
 #### 1. Deploy Frontend to Cloudflare Pages
 
 Cloudflare Pages hosts:
+
 - Static React frontend (from `dist/`)
 - `geminiProxy` function for AI question generation
 - NO database functions (they're in `functions-disabled/`)
 
 **Cloudflare Pages Settings:**
+
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Environment variables:
@@ -51,6 +54,7 @@ Cloudflare Pages hosts:
 The Express backend (`server.ts`) must be deployed to a Node.js environment:
 
 **Recommended Hosting Options:**
+
 - **Railway**: https://railway.app (easy, auto-deploy from GitHub)
 - **Render**: https://render.com (free tier available)
 - **Fly.io**: https://fly.io (global edge deployment)
@@ -59,15 +63,17 @@ The Express backend (`server.ts`) must be deployed to a Node.js environment:
 - **AWS Elastic Beanstalk / ECS**
 
 **Backend Environment Variables:**
+
 ```bash
 DATABASE_URL=postgresql://user:pass@host:port/db
 CLERK_SECRET_KEY=your_clerk_secret_key
-GEMINI_API_KEY=your_gemini_api_key  
+GEMINI_API_KEY=your_gemini_api_key
 PORT=3001
 NODE_ENV=production
 ```
 
 **Backend Start Command:**
+
 ```bash
 npm run dev:server
 # OR for production:
@@ -79,11 +85,13 @@ node server.ts
 Update your frontend environment to point API calls to the backend:
 
 **In Cloudflare Pages Environment Variables:**
+
 ```
 VITE_API_URL=https://your-backend.railway.app
 ```
 
 **Update API configuration** (if not already done):
+
 ```typescript
 // lib/utils/apiConfig.ts
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -129,15 +137,18 @@ git push
 ### Testing
 
 **Frontend (Cloudflare Pages):**
+
 - Visit your Cloudflare Pages URL
 - AI question generation should work via `/geminiProxy`
 
 **Backend (Node.js hosting):**
+
 - Visit `https://your-backend-url.com/health`
 - Should return server health status
 - Test API endpoints: `/api/content/all`, etc.
 
 **Database:**
+
 ```bash
 # Run migrations on your backend host
 npm run db:migrate:deploy
@@ -149,11 +160,13 @@ npm run db:studio
 ### Debugging
 
 **If AI questions don't generate:**
+
 - Check Cloudflare Functions logs
 - Verify `GEMINI_API_KEY` is set
 - Check browser console for errors
 
 **If database calls fail:**
+
 - Verify backend is running and accessible
 - Check `DATABASE_URL` is correct
 - Verify CORS is configured in server.ts
@@ -167,6 +180,7 @@ npm run db:studio
 - **Alternative**: Use Prisma Accelerate to keep everything on Cloudflare
 
 This hybrid approach gives you:
+
 - ✅ Fast global CDN for frontend (Cloudflare)
 - ✅ Full Node.js compatibility for database (server.ts)
 - ✅ No Prisma/CommonJS compatibility issues

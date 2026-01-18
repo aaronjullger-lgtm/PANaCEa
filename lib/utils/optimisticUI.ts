@@ -1,6 +1,6 @@
 /**
  * Optimistic UI Helpers
- * 
+ *
  * Provides immediate feedback before server confirmation.
  * Improves perceived performance for question submissions and stat updates.
  */
@@ -43,7 +43,7 @@ class OptimisticUIManager {
     if (update) {
       update.status = 'confirmed';
       this.notifyListeners();
-      
+
       // Clean up after a delay
       setTimeout(() => {
         this.updates.delete(id);
@@ -67,7 +67,7 @@ class OptimisticUIManager {
    * Get all pending updates
    */
   getPending(): OptimisticUpdate<any>[] {
-    return Array.from(this.updates.values()).filter(u => u.status === 'pending');
+    return Array.from(this.updates.values()).filter((u) => u.status === 'pending');
   }
 
   /**
@@ -87,20 +87,20 @@ class OptimisticUIManager {
 
   private notifyListeners(): void {
     const updates = this.getAll();
-    this.listeners.forEach(listener => listener(updates));
+    this.listeners.forEach((listener) => listener(updates));
   }
 
   /**
    * Retry all failed updates
    */
   async retryFailed(): Promise<void> {
-    const failed = Array.from(this.updates.values()).filter(u => u.status === 'failed');
-    
+    const failed = Array.from(this.updates.values()).filter((u) => u.status === 'failed');
+
     for (const update of failed) {
       if (update.retry) {
         update.status = 'pending';
         this.notifyListeners();
-        
+
         try {
           await update.retry();
           this.confirm(update.id);
@@ -151,7 +151,7 @@ export function optimisticUpdateSystemStats(
 ): Map<string, { attempts: number; correct: number; accuracy: number }> {
   const newStats = new Map(currentSystemStats);
   const current = newStats.get(system) || { attempts: 0, correct: 0, accuracy: 0 };
-  
+
   const newAttempts = current.attempts + 1;
   const newCorrect = current.correct + (isCorrect ? 1 : 0);
   const newAccuracy = Math.round((newCorrect / newAttempts) * 100);
@@ -175,12 +175,12 @@ export function useOptimisticQuestionSubmit(
   const [pending, setPending] = React.useState<OptimisticUpdate<any>[]>([]);
 
   React.useEffect(() => {
-    return optimisticUI.subscribe(updates => {
-      setPending(updates.filter(u => u.status === 'pending'));
+    return optimisticUI.subscribe((updates) => {
+      setPending(updates.filter((u) => u.status === 'pending'));
     });
   }, []);
 
-  const submit = async <T,>(
+  const submit = async <T>(
     id: string,
     optimisticData: T,
     apiCall: () => Promise<any>
@@ -191,7 +191,7 @@ export function useOptimisticQuestionSubmit(
     try {
       // Make actual API call
       const result = await apiCall();
-      
+
       // Confirm success
       optimisticUI.confirm(id);
       onConfirm?.(result);
@@ -248,9 +248,9 @@ export function showOptimisticFeedback(isCorrect: boolean): void {
   const toast = document.createElement('div');
   toast.className = `fixed top-4 right-4 ${color} text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-slide-in`;
   toast.innerHTML = `<span class="text-xl">${icon}</span><span class="font-semibold">${message}</span>`;
-  
+
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.classList.add('animate-slide-out');
     setTimeout(() => toast.remove(), 300);

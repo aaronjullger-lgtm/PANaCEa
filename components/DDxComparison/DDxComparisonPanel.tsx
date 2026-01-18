@@ -1,6 +1,6 @@
 /**
  * DDx Comparison Panel Component
- * 
+ *
  * Displays a side-by-side comparison of two commonly confused conditions.
  * Shows similarities, differences, buzzwords, diagnostics, and treatments.
  * Slides in from the bottom after an incorrect answer.

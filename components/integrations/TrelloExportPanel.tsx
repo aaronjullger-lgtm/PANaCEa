@@ -1,11 +1,24 @@
 /**
  * Trello Export Panel Component
- * 
+ *
  * Allows users to export their study plan to Trello as a Kanban board.
  */
 
 import React, { useState, useMemo } from 'react';
-import { Trello, Download, Info, ExternalLink, ClipboardList, Pin, Target, BookOpen, Zap, Circle, CheckCircle, Book } from 'lucide-react';
+import {
+  Trello,
+  Download,
+  Info,
+  ExternalLink,
+  ClipboardList,
+  Pin,
+  Target,
+  BookOpen,
+  Zap,
+  Circle,
+  CheckCircle,
+  Book,
+} from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import {
   generateStudyBoard,
@@ -20,14 +33,10 @@ interface TrelloExportPanelProps {
   userExamDate?: Date;
 }
 
-export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
-  userExamDate,
-}) => {
+export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDate }) => {
   const { showToast } = useToast();
   const [showInstructions, setShowInstructions] = useState(false);
-  const [examDate, setExamDate] = useState<string>(
-    userExamDate?.toISOString().split('T')[0] || ''
-  );
+  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString().split('T')[0] || '');
 
   // Generate board structure
   const board = useMemo<TrelloBoardExport | null>(() => {
@@ -40,7 +49,10 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
 
   const handleDownloadJSON = () => {
     if (!board) {
-      showToast({ type: 'warning', message: 'Please set an exam date to generate your study board.' });
+      showToast({
+        type: 'warning',
+        message: 'Please set an exam date to generate your study board.',
+      });
       return;
     }
 
@@ -66,14 +78,12 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-4">
         <Trello className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Trello Board Export
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Trello Board Export</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Transform your study plan into a visual Kanban board in Trello. Track your progress
-        as you move through each study phase.
+        Transform your study plan into a visual Kanban board in Trello. Track your progress as you
+        move through each study phase.
       </p>
 
       {/* Exam Date Input */}
@@ -170,9 +180,7 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
       {showInstructions && (
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-xs">
-              {TRELLO_IMPORT_INSTRUCTIONS}
-            </pre>
+            <pre className="whitespace-pre-wrap text-xs">{TRELLO_IMPORT_INSTRUCTIONS}</pre>
           </div>
         </div>
       )}
@@ -200,27 +208,39 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
         <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-2">
             <Target className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-            <span><span className="font-semibold">Exam Overview:</span> Key dates and study plan summary</span>
+            <span>
+              <span className="font-semibold">Exam Overview:</span> Key dates and study plan summary
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
-            <span><span className="font-semibold">To Do:</span> Upcoming study weeks</span>
+            <span>
+              <span className="font-semibold">To Do:</span> Upcoming study weeks
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-            <span><span className="font-semibold">In Progress:</span> Current week&apos;s focus</span>
+            <span>
+              <span className="font-semibold">In Progress:</span> Current week&apos;s focus
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Circle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-            <span><span className="font-semibold">Weak Areas:</span> Topics needing more attention</span>
+            <span>
+              <span className="font-semibold">Weak Areas:</span> Topics needing more attention
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-            <span><span className="font-semibold">Completed:</span> Finished modules</span>
+            <span>
+              <span className="font-semibold">Completed:</span> Finished modules
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Book className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
-            <span><span className="font-semibold">Resources:</span> Study materials</span>
+            <span>
+              <span className="font-semibold">Resources:</span> Study materials
+            </span>
           </div>
         </div>
       </div>

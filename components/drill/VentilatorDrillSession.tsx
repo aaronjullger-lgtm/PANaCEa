@@ -1,12 +1,23 @@
 /**
  * VentilatorDrillSession - Ventilator Management drill
- * 
+ *
  * Practice adjusting vent settings based on ABGs and clinical scenarios.
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wind, X, ArrowRight, RotateCcw, Activity, Droplets, Gauge, Wind as Breaths, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Wind,
+  X,
+  ArrowRight,
+  RotateCcw,
+  Activity,
+  Droplets,
+  Gauge,
+  Wind as Breaths,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
@@ -29,8 +40,6 @@ const ACTION_OPTIONS = [
 interface VentilatorDrillSessionProps {
   onExit?: () => void;
 }
-
-
 
 const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit }) => {
   const {
@@ -118,8 +127,12 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
         <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Failed to Load Questions</h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">{error || 'An unexpected error occurred'}</p>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
+            Failed to Load Questions
+          </h2>
+          <p className="text-[var(--color-text-secondary)] mb-6">
+            {error || 'An unexpected error occurred'}
+          </p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={handleReset}
@@ -324,8 +337,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.pH < 7.35
                           ? 'text-red-600 dark:text-red-400'
                           : currentCase.abg.pH > 7.45
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-orange-600 dark:text-orange-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                       }`}
                     >
                       {currentCase.abg.pH.toFixed(2)}
@@ -338,8 +351,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.paCO2 < 35
                           ? 'text-orange-600 dark:text-orange-400'
                           : currentCase.abg.paCO2 > 45
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                       }`}
                     >
                       {currentCase.abg.paCO2} mmHg
@@ -352,8 +365,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.paO2 < 60
                           ? 'text-red-600 dark:text-red-400'
                           : currentCase.abg.paO2 < 80
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-orange-600 dark:text-orange-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                       }`}
                     >
                       {currentCase.abg.paO2} mmHg
@@ -372,8 +385,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.sao2 < 90
                           ? 'text-red-600 dark:text-red-400'
                           : currentCase.abg.sao2 < 95
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-orange-600 dark:text-orange-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                       }`}
                     >
                       {currentCase.abg.sao2}%
@@ -389,9 +402,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                 <Gauge className="w-4 h-4" />
                 Physical Examination
               </h3>
-              <p className="text-sm text-[var(--color-text-primary)]">
-                {currentCase.physicalExam}
-              </p>
+              <p className="text-sm text-[var(--color-text-primary)]">{currentCase.physicalExam}</p>
             </div>
           </motion.div>
         )}

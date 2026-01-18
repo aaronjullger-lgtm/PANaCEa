@@ -1,6 +1,6 @@
 /**
  * Student Insights Service
- * 
+ *
  * Provides automated learning insights and recommendations:
  * - Performance tracking and trends
  * - Weak area identification
@@ -50,13 +50,10 @@ export async function getStudentInsights(
   period: '7d' | '30d' | '90d' | 'all' = '30d'
 ): Promise<StudentInsights> {
   try {
-    const response = await fetch(
-      `/api/student/insights?userId=${userId}&period=${period}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    const response = await fetch(`/api/student/insights?userId=${userId}&period=${period}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (!response.ok) {
       throw new Error('Failed to fetch insights');
@@ -68,7 +65,7 @@ export async function getStudentInsights(
     console.error('Error fetching student insights:', error);
     return {
       hasData: false,
-      message: 'Unable to load insights. Please try again later.'
+      message: 'Unable to load insights. Please try again later.',
     };
   }
 }
@@ -87,13 +84,13 @@ export function formatInsightMessage(insights: StudentInsights): string {
 
   const { accuracy, trend, trendChange } = insights.summary;
   const trendEmoji = trend === 'improving' ? '📈' : trend === 'declining' ? '📉' : '➡️';
-  
+
   let message = `${trendEmoji} Your accuracy is ${accuracy}% `;
-  
+
   if (trend !== 'stable') {
     message += `(${trendChange > 0 ? '+' : ''}${trendChange}% ${trend})`;
   }
-  
+
   return message;
 }
 
@@ -128,31 +125,31 @@ export function getAchievementLevel(accuracy: number): {
     return {
       level: 'Master',
       emoji: '🏆',
-      message: 'Outstanding performance! You\'re exam-ready!'
+      message: "Outstanding performance! You're exam-ready!",
     };
   } else if (accuracy >= 80) {
     return {
       level: 'Expert',
       emoji: '⭐',
-      message: 'Great work! Keep pushing to master level!'
+      message: 'Great work! Keep pushing to master level!',
     };
   } else if (accuracy >= 70) {
     return {
       level: 'Proficient',
       emoji: '💪',
-      message: 'Good progress! Focus on weak areas to improve.'
+      message: 'Good progress! Focus on weak areas to improve.',
     };
   } else if (accuracy >= 60) {
     return {
       level: 'Developing',
       emoji: '📚',
-      message: 'Keep studying! Review fundamentals and practice more.'
+      message: 'Keep studying! Review fundamentals and practice more.',
     };
   } else {
     return {
       level: 'Beginner',
       emoji: '🌱',
-      message: 'Everyone starts somewhere! Consistent practice is key.'
+      message: 'Everyone starts somewhere! Consistent practice is key.',
     };
   }
 }

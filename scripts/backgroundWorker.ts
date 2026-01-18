@@ -1,16 +1,16 @@
 #!/usr/bin/env tsx
 /**
  * Background Worker Process
- * 
+ *
  * Processes queued jobs for:
  * - Pre-generating AI questions
  * - Running health checks
  * - Processing media
  * - Other async operations
- * 
+ *
  * Usage:
  *   tsx scripts/backgroundWorker.ts
- * 
+ *
  * Production deployment:
  *   - Run as a daemon/service
  *   - Use PM2, systemd, or container orchestration
@@ -47,7 +47,7 @@ async function runWorker() {
       if (job) {
         activeJobs++;
         console.log(`[Worker] Processing job ${job.id} (${job.jobType})`);
-        
+
         try {
           await processJob(job);
           await completeJob(prisma, job.id, { success: true });
@@ -79,27 +79,27 @@ async function processJob(job: any): Promise<void> {
     case 'generate_questions':
       await processQuestionGeneration(job);
       break;
-    
+
     case 'health_check':
       await processHealthCheck(job);
       break;
-    
+
     case 'media_processing':
       await processMedia(job);
       break;
-    
+
     case 'sync_operation':
       await processSyncOperation(job);
       break;
-    
+
     case 'ai_quality_check':
       await processAIQualityCheck(job);
       break;
-    
+
     case 'duplicate_detection':
       await processDuplicateDetection(job);
       break;
-    
+
     default:
       throw new Error(`Unknown job type: ${job.jobType}`);
   }
@@ -110,11 +110,11 @@ async function processJob(job: any): Promise<void> {
  */
 async function processQuestionGeneration(job: any): Promise<void> {
   const { system, difficulty, count } = job.payload;
-  
+
   console.log(`[Worker] Generating ${count} questions for ${system || 'all systems'}`);
-  
+
   let generatedCount = 0;
-  
+
   // Note: Actual question generation would use the existing questionGenerator
   // This is a simplified version to demonstrate the pattern
   for (let i = 0; i < count; i++) {
@@ -126,7 +126,7 @@ async function processQuestionGeneration(job: any): Promise<void> {
         difficulty: difficulty,
         // ... question content
       };
-      
+
       // Store in PreGeneratedQuestion table
       await prisma.preGeneratedQuestion.create({
         data: {
@@ -136,13 +136,13 @@ async function processQuestionGeneration(job: any): Promise<void> {
           questionData: questionData,
         },
       });
-      
+
       generatedCount++;
     } catch (error: any) {
       console.error(`[Worker] Failed to generate question ${i + 1}:`, error.message);
     }
   }
-  
+
   console.log(`[Worker] Generated ${generatedCount} questions`);
 }
 
@@ -151,20 +151,20 @@ async function processQuestionGeneration(job: any): Promise<void> {
  */
 async function processHealthCheck(job: any): Promise<void> {
   console.log('[Worker] Running content health check');
-  
+
   // Import and run the health checker
   const contentPath = path.join(__dirname, '../conditionContent.generated.json');
-  
+
   if (!fs.existsSync(contentPath)) {
     throw new Error('Content file not found');
   }
-  
+
   const rawContent = fs.readFileSync(contentPath, 'utf-8');
   const content = JSON.parse(rawContent);
-  
+
   let issueCount = 0;
   const issues: any[] = [];
-  
+
   // Run basic checks
   for (const [conditionId, condition] of Object.entries(content as Record<string, any>)) {
     if (!condition.overview || condition.overview.includes('[NO CONTENT PROVIDED]')) {
@@ -176,7 +176,7 @@ async function processHealthCheck(job: any): Promise<void> {
       });
       issueCount++;
     }
-    
+
     if (!condition.treatment || condition.treatment.length === 0) {
       issues.push({
         contentId: conditionId,
@@ -187,14 +187,14 @@ async function processHealthCheck(job: any): Promise<void> {
       issueCount++;
     }
   }
-  
+
   // Store health report
   await prisma.contentHealthReport.create({
     data: {
       totalContent: Object.keys(content).length,
-      missingExplanations: issues.filter(i => i.issueType === 'missing_explanation').length,
+      missingExplanations: issues.filter((i) => i.issueType === 'missing_explanation').length,
       brokenMediaLinks: 0, // Would check media links in full implementation
-      invalidFields: issues.filter(i => i.issueType === 'invalid_field').length,
+      invalidFields: issues.filter((i) => i.issueType === 'invalid_field').length,
       outdatedContent: 0,
       reportData: {
         issues: issues.slice(0, 100), // Store first 100 issues
@@ -202,7 +202,7 @@ async function processHealthCheck(job: any): Promise<void> {
       },
     },
   });
-  
+
   console.log(`[Worker] Health check completed: ${issueCount} issues found`);
 }
 
@@ -242,7 +242,7 @@ async function processDuplicateDetection(job: any): Promise<void> {
  * Sleep utility
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -251,22 +251,22 @@ function sleep(ms: number): Promise<void> {
 function setupShutdownHandlers() {
   const shutdown = async () => {
     if (isShuttingDown) return;
-    
+
     console.log('[Worker] Shutdown signal received');
     isShuttingDown = true;
-    
+
     // Wait for active jobs to complete
     const startTime = Date.now();
     while (activeJobs > 0 && Date.now() - startTime < SHUTDOWN_TIMEOUT) {
       console.log(`[Worker] Waiting for ${activeJobs} active jobs...`);
       await sleep(1000);
     }
-    
+
     await disconnectPrisma();
     console.log('[Worker] Shutdown complete');
     process.exit(0);
   };
-  
+
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 }
@@ -276,7 +276,7 @@ function setupShutdownHandlers() {
  */
 async function main() {
   setupShutdownHandlers();
-  
+
   try {
     await runWorker();
   } catch (error: any) {

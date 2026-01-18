@@ -1,6 +1,6 @@
 /**
  * Widget Service
- * 
+ *
  * Creates embeddable widgets for Notion, Obsidian, and other note-taking apps.
  * Widgets include "Question of the Day" and "Current Streak" displays.
  */
@@ -37,14 +37,14 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
 
   // Get unique dates
   const uniqueDates = new Set<string>();
-  sorted.forEach(record => {
+  sorted.forEach((record) => {
     const date = new Date(Number(record.timestamp));
     const dateStr = date.toISOString().split('T')[0];
     uniqueDates.add(dateStr);
   });
 
   const dates = Array.from(uniqueDates).sort().reverse();
-  
+
   if (dates.length === 0) {
     return {
       currentStreak: 0,
@@ -58,7 +58,7 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split('T')[0];
-  
+
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -67,12 +67,12 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   if (dates[0] === todayStr || dates[0] === yesterdayStr) {
     currentStreak = 1;
     let checkDate = new Date(dates[0]);
-    
+
     for (let i = 1; i < dates.length; i++) {
       const prevDate = new Date(checkDate);
       prevDate.setDate(prevDate.getDate() - 1);
       const prevDateStr = prevDate.toISOString().split('T')[0];
-      
+
       if (dates[i] === prevDateStr) {
         currentStreak++;
         checkDate = prevDate;
@@ -85,12 +85,14 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   // Calculate longest streak
   let longestStreak = 0;
   let tempStreak = 1;
-  
+
   for (let i = 0; i < dates.length - 1; i++) {
     const currentDate = new Date(dates[i]);
     const nextDate = new Date(dates[i + 1]);
-    const daysDiff = Math.round((currentDate.getTime() - nextDate.getTime()) / (24 * 60 * 60 * 1000));
-    
+    const daysDiff = Math.round(
+      (currentDate.getTime() - nextDate.getTime()) / (24 * 60 * 60 * 1000)
+    );
+
     if (daysDiff === 1) {
       tempStreak++;
     } else {
@@ -110,7 +112,10 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
 /**
  * Generate HTML for streak widget
  */
-export function generateStreakWidgetHTML(streakData: StreakData, theme: 'light' | 'dark' = 'light'): string {
+export function generateStreakWidgetHTML(
+  streakData: StreakData,
+  theme: 'light' | 'dark' = 'light'
+): string {
   const isDark = theme === 'dark';
   const bgColor = isDark ? '#1f2937' : '#ffffff';
   const textColor = isDark ? '#f9fafb' : '#111827';
@@ -203,15 +208,19 @@ export function generateStreakWidgetHTML(streakData: StreakData, theme: 'light' 
       <div class="title">Study Streak</div>
     </div>
     
-    ${streakData.currentStreak > 0 ? `
+    ${
+      streakData.currentStreak > 0
+        ? `
       <div class="emoji">${streakData.currentStreak >= 7 ? '▲' : '★'}</div>
       <div class="streak-number">${streakData.currentStreak}</div>
       <div class="streak-label">${streakData.currentStreak === 1 ? 'Day' : 'Days'} in a row!</div>
-    ` : `
+    `
+        : `
       <div class="emoji">◆</div>
       <div class="streak-number">0</div>
       <div class="streak-label">Start your streak today!</div>
-    `}
+    `
+    }
     
     <div class="stats">
       <div class="stat">
@@ -232,7 +241,10 @@ export function generateStreakWidgetHTML(streakData: StreakData, theme: 'light' 
 /**
  * Generate HTML for Question of the Day widget
  */
-export function generateQuestionOfDayHTML(question: Question, theme: 'light' | 'dark' = 'light'): string {
+export function generateQuestionOfDayHTML(
+  question: Question,
+  theme: 'light' | 'dark' = 'light'
+): string {
   const isDark = theme === 'dark';
   const bgColor = isDark ? '#1f2937' : '#ffffff';
   const textColor = isDark ? '#f9fafb' : '#111827';
@@ -349,9 +361,13 @@ export function generateQuestionOfDayHTML(question: Question, theme: 'light' | '
     <div class="question-text">${question.question}</div>
     
     <ol class="options">
-      ${question.options.map((opt, idx) => `
+      ${question.options
+        .map(
+          (opt, idx) => `
         <li class="option">${String.fromCharCode(65 + idx)}) ${opt}</li>
-      `).join('')}
+      `
+        )
+        .join('')}
     </ol>
     
     <div class="footer">
@@ -385,11 +401,11 @@ export function generateObsidianEmbed(widgetUrl: string): string {
  */
 export function getQuestionOfDay(questions: Question[], date: Date = new Date()): Question | null {
   if (questions.length === 0) return null;
-  
+
   // Use date as seed for consistent daily question
   const dateStr = date.toISOString().split('T')[0];
   const seed = dateStr.split('-').reduce((acc, val) => acc + parseInt(val, 10), 0);
-  
+
   const index = seed % questions.length;
   return questions[index];
 }

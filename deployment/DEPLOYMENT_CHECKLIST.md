@@ -12,30 +12,34 @@
 **Navigate:** Cloudflare Dashboard → Pages → [Your Project] → Settings → Environment Variables
 
 #### Required Secrets (Production)
-| Variable | Type | Where to Get |
-|----------|------|--------------|
-| `DATABASE_URL` | Secret | Supabase → Project → Settings → Database → Connection String (with `?pgbouncer=true&connection_limit=1`) |
-| `CLERK_SECRET_KEY` | Secret | Clerk Dashboard → API Keys → Secret keys |
-| `CLERK_WEBHOOK_SECRET` | Secret | Clerk Dashboard → Webhooks → Signing secret |
-| `GEMINI_API_KEY` | Secret | Google AI Studio → API Keys |
+
+| Variable               | Type   | Where to Get                                                                                             |
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | Secret | Supabase → Project → Settings → Database → Connection String (with `?pgbouncer=true&connection_limit=1`) |
+| `CLERK_SECRET_KEY`     | Secret | Clerk Dashboard → API Keys → Secret keys                                                                 |
+| `CLERK_WEBHOOK_SECRET` | Secret | Clerk Dashboard → Webhooks → Signing secret                                                              |
+| `GEMINI_API_KEY`       | Secret | Google AI Studio → API Keys                                                                              |
 
 #### Required Variables (Non-Secret)
-| Variable | Type | Value |
-|----------|------|-------|
+
+| Variable                     | Type     | Value                                |
+| ---------------------------- | -------- | ------------------------------------ |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Variable | `pk_live_...` (from Clerk Dashboard) |
-| `APP_VERSION` | Variable | `1.0.0` (or current version) |
-| `NODE_ENV` | Variable | `production` |
+| `APP_VERSION`                | Variable | `1.0.0` (or current version)         |
+| `NODE_ENV`                   | Variable | `production`                         |
 
 #### Optional Variables
-| Variable | Purpose |
-|----------|---------|
-| `SENTRY_DSN` | Error monitoring |
-| `CACHE` | KV namespace binding (for caching) |
+
+| Variable        | Purpose                                              |
+| --------------- | ---------------------------------------------------- |
+| `SENTRY_DSN`    | Error monitoring                                     |
+| `CACHE`         | KV namespace binding (for caching)                   |
 | `RATE_LIMIT_KV` | KV namespace binding (for distributed rate limiting) |
 
 ### 2. KV Namespaces (Optional but Recommended)
 
 Create these KV namespaces in Cloudflare:
+
 ```bash
 # Via CLI
 wrangler kv:namespace create "CACHE"
@@ -43,6 +47,7 @@ wrangler kv:namespace create "RATE_LIMIT_KV"
 ```
 
 Add bindings to `wrangler.toml`:
+
 ```toml
 [[kv_namespaces]]
 binding = "CACHE"
@@ -79,6 +84,7 @@ id = "<namespace-id>"
    - Branch: `main`
 
 2. **Build Configuration**
+
    ```
    Build command: npm run build
    Build output directory: dist
@@ -105,6 +111,7 @@ npm run deploy
 ### Option C: GitHub Actions (Recommended)
 
 Create `.github/workflows/deploy.yml`:
+
 ```yaml
 name: Deploy to Production
 
@@ -117,21 +124,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
         env:
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-      
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
@@ -146,6 +153,7 @@ jobs:
 ## ✅ Post-Deployment Verification
 
 ### 1. Health Check
+
 ```bash
 curl https://your-domain.pages.dev/api/health
 
@@ -175,11 +183,13 @@ Run through the [SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md) after each 
 ## 🔄 Rollback Procedure
 
 ### Cloudflare Pages Rollback
+
 1. Go to Cloudflare Dashboard → Pages → [Your Project] → Deployments
 2. Find the previous working deployment
 3. Click the "..." menu → "Rollback to this deployment"
 
 ### Database Rollback (if needed)
+
 ```bash
 # List migrations
 npx prisma migrate status
@@ -213,18 +223,23 @@ npx prisma migrate resolve --rolled-back <migration_name>
 ## 🐛 Common Issues & Solutions
 
 ### Issue: Database connection fails
+
 **Solution:** Check `DATABASE_URL` includes `?pgbouncer=true&connection_limit=1`
 
 ### Issue: Clerk authentication fails
+
 **Solution:** Verify `VITE_CLERK_PUBLISHABLE_KEY` is the LIVE key (not test) and domain is whitelisted
 
 ### Issue: Gemini API returns 429
+
 **Solution:** Check rate limits, consider upgrading API quota in Google AI Studio
 
 ### Issue: Functions return 500
+
 **Solution:** Check Cloudflare Pages → Functions → Real-time logs for error details
 
 ---
 
-*Maintained by: PANaCEa Engineering Team*
+_Maintained by: PANaCEa Engineering Team_
+
 - [ ] Document the problem

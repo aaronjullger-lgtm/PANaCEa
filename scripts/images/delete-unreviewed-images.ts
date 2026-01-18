@@ -2,7 +2,7 @@
 
 /**
  * Delete Unreviewed Images Script
- * 
+ *
  * Removes all images from the database that don't have AI analysis (no description).
  * These were uploaded without proper verification.
  */
@@ -21,25 +21,25 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function deleteUnreviewedImages() {
   console.log('🗑️ Deleting unreviewed images (no AI analysis)...\n');
-  
+
   // Get all images without description
   const unreviewed = await prisma.mediaAsset.findMany({
     where: { OR: [{ description: null }, { description: '' }] },
-    select: { id: true, originalUrl: true, thumbnailUrl: true, filename: true }
+    select: { id: true, originalUrl: true, thumbnailUrl: true, filename: true },
   });
-  
+
   console.log(`Found ${unreviewed.length} unreviewed images to delete\n`);
-  
+
   if (unreviewed.length === 0) {
     console.log('✅ No unreviewed images to delete');
     await prisma.$disconnect();
     return;
   }
-  
+
   let deleted = 0;
   let storageDeleted = 0;
   let errors = 0;
-  
+
   for (const img of unreviewed) {
     try {
       // Delete from storage if URL exists
@@ -51,11 +51,11 @@ async function deleteUnreviewedImages() {
           if (!error) storageDeleted++;
         }
       }
-      
+
       // Delete from database
       await prisma.mediaAsset.delete({ where: { id: img.id } });
       deleted++;
-      
+
       if (deleted % 100 === 0) {
         console.log(`  Deleted ${deleted} / ${unreviewed.length}`);
       }
@@ -63,16 +63,16 @@ async function deleteUnreviewedImages() {
       errors++;
     }
   }
-  
+
   console.log('\n=== DELETION COMPLETE ===');
   console.log(`Database records deleted: ${deleted}`);
   console.log(`Storage files deleted: ${storageDeleted}`);
   console.log(`Errors: ${errors}`);
-  
+
   // Show remaining count
   const remaining = await prisma.mediaAsset.count();
   console.log(`\nRemaining images in DB: ${remaining}`);
-  
+
   await prisma.$disconnect();
 }
 

@@ -9,6 +9,7 @@
 ## Overview
 
 Sprint B addresses critical user experience improvements in the question generation system:
+
 - **Step 3:** Question Deduplication - Prevent users from seeing duplicate questions
 - **Step 4:** Adaptive Difficulty - Serve questions matching user skill level
 - **Step 5:** Session Interleaving - Ensure proper question spacing by system
@@ -22,6 +23,7 @@ Sprint B addresses critical user experience improvements in the question generat
 **Purpose:** Track and filter questions users have already seen using the `UserQuestionSeen` table.
 
 **Key Functions:**
+
 - `getUserSeenQuestionIds(prisma, userId, options?)`: Returns Set of seen question IDs
 - `filterUnseenQuestions(prisma, userId, questionIds, questionType)`: Filters array to only unseen questions
 - `getPoolExplorationStats(prisma, userId, poolQuestionIds, questionType)`: Returns seen/unseen counts and % explored
@@ -29,12 +31,14 @@ Sprint B addresses critical user experience improvements in the question generat
 - `getSeenQuestionDetails(prisma, userId, questionIds, questionType)`: Returns detailed performance data per question
 
 **Features:**
+
 - 5-minute in-memory cache with TTL for performance
 - Support for filtering by question type (`pre_generated`, `question`, `seed`, `staging`)
 - Support for date filtering (only questions seen after X date)
 - Cache management functions (`clearSeenQuestionsCache`, `getCacheStats`)
 
 **Schema Used:**
+
 ```prisma
 model UserQuestionSeen {
   userId          String
@@ -58,21 +62,25 @@ model UserQuestionSeen {
 **Purpose:** Determine appropriate question difficulty based on user performance and FSRS stability.
 
 **Key Functions:**
+
 - `getUserPerformanceBySystem(prisma, userId, system, lookbackDays=7)`: Returns accuracy, attempts, stability, recommended difficulty for one system
 - `getRecommendedDifficultiesBySystem(prisma, userId, systems[], lookbackDays=7)`: Returns Map of system → difficulty
 - `getUserOverallSkillLevel(prisma, userId, lookbackDays=30)`: Returns overall skill assessment (beginner/intermediate/advanced)
 
 **Difficulty Logic:**
+
 - **New learners** (< 5 attempts): `easy`
 - **Low skill** (accuracy < 50% OR stability < 2): `easy`
 - **High skill** (accuracy > 80% AND stability > 10): `hard`
 - **Medium skill**: `medium` (default)
 
 **Data Sources:**
+
 - `QuestionAttempt` table: Recent attempts per system, `wasCorrect` field for accuracy calculation
 - `UserProgress.fsrsCard` JSON: FSRS `stability` metric for memory retention strength
 
 **Features:**
+
 - 2-minute in-memory cache for performance
 - Configurable lookback period (default: 7 days for system-specific, 30 days for overall)
 - Safe defaults on errors (50% accuracy, medium difficulty)
@@ -85,6 +93,7 @@ model UserQuestionSeen {
 **Purpose:** Ensure questions are properly spaced by system for optimal learning (research shows interleaved practice improves retention vs. blocked practice).
 
 **Key Functions:**
+
 - `ensureInterleaving<T>(questions, maxSameSystem=2, windowSize=5)`: Reorders questions to meet constraint
 - `validateInterleaving(questions, maxSameSystem=2, windowSize=5)`: Returns true if valid, false if violations
 - `findInterleavingViolations(questions, maxSameSystem=2, windowSize=5)`: Returns array of violation indices
@@ -93,17 +102,20 @@ model UserQuestionSeen {
 - `shuffleWithInterleaving<T>(questions, maxSameSystem=2, windowSize=5)`: Shuffle + enforce constraints
 
 **Interleaving Rule:**
+
 - **Maximum 2 questions from the same system in any 5-question sliding window**
 - Example violation: `[CV, CV, CV, PULM, PULM]` (3 CV in window)
 - Example valid: `[CV, CV, PULM, GI, NEURO]` (max 2 from any system)
 
 **Algorithm:**
+
 - Greedy selection: Pick questions one at a time
 - Always choose a question that doesn't violate window constraint
 - If all remaining would violate, choose from least-recently-used system
 - No mutation of original array
 
 **Metrics Tracked:**
+
 - Total questions
 - Unique systems
 - Max consecutive same system
@@ -117,10 +129,12 @@ model UserQuestionSeen {
 **Command:** `npm run demo:question-sprint-b`
 
 ### Step 3: Deduplication
+
 - ⚠️ No user history in database (expected for fresh database)
 - Utility functions validated with empty data (correct behavior)
 
 ### Step 4: Adaptive Difficulty
+
 - ⚠️ No question attempts in database (expected for fresh database)
 - Synthetic examples validated:
   - Beginner (45% accuracy, stability=2) → `easy`
@@ -128,6 +142,7 @@ model UserQuestionSeen {
   - Advanced (88% accuracy, stability=12) → `hard`
 
 ### Step 5: Interleaving
+
 - ✅ **Clustering Detection:** Detected 6 violations in poorly interleaved sequence
   - Input: `[CV, CV, CV, PULM, PULM, PULM, GI, GI, GI, NEURO]`
   - Max consecutive: 3, Violations: 6
@@ -157,9 +172,9 @@ const poolQuestions = await prisma.preGeneratedQuestion.findMany({
 });
 
 // 3. Filter Out Seen Questions (Step 3)
-const questionIds = poolQuestions.map(q => q.id);
+const questionIds = poolQuestions.map((q) => q.id);
 const unseenIds = await filterUnseenQuestions(prisma, userId, questionIds);
-const unseenQuestions = poolQuestions.filter(q => unseenIds.includes(q.id));
+const unseenQuestions = poolQuestions.filter((q) => unseenIds.includes(q.id));
 
 // 4. Select Final Set
 const selectedQuestions = unseenQuestions.slice(0, 10);
@@ -200,11 +215,13 @@ return interleavedQuestions;
 ## Testing
 
 ### Unit Test Coverage Needed:
+
 - [ ] `questionDeduplication.ts`: Test caching, filtering, stats calculation
 - [ ] `adaptiveDifficulty.ts`: Test difficulty calculation edge cases
 - [ ] `sessionInterleaving.ts`: Test interleaving algorithm with various inputs
 
 ### Integration Test Coverage Needed:
+
 - [ ] End-to-end question selection with all Sprint B utilities
 - [ ] Performance under load (1000+ seen questions)
 - [ ] Cache invalidation timing
@@ -214,15 +231,16 @@ return interleavedQuestions;
 ## Performance Considerations
 
 ### Caching Strategy:
+
 - **Deduplication Cache:** 5-minute TTL
   - Rationale: Seen questions change infrequently (only after answering)
   - Trade-off: Slightly stale data acceptable for better performance
-  
 - **Performance Cache:** 2-minute TTL
   - Rationale: User performance changes more frequently
   - Trade-off: More recent data needed for accurate difficulty targeting
 
 ### Optimization Opportunities:
+
 1. **Batch Queries:** Current implementation queries per system; could batch all systems in one query
 2. **Database Indexes:** Ensure `UserQuestionSeen` has indexes on `userId`, `questionType`, `lastSeenAt`
 3. **Redis Cache:** Consider Redis for distributed caching in production
@@ -236,7 +254,7 @@ Ensure these indexes exist (check `prisma/schema.prisma`):
 ```prisma
 model UserQuestionSeen {
   // ... fields ...
-  
+
   @@unique([userId, questionId, questionType])
   @@index([userId, questionType])
   @@index([userId, lastSeenAt])
@@ -246,7 +264,7 @@ model UserQuestionSeen {
 
 model QuestionAttempt {
   // ... fields ...
-  
+
   @@index([userId, createdAt])
   @@index([system])
   @@index([questionId])
@@ -254,7 +272,7 @@ model QuestionAttempt {
 
 model UserProgress {
   // ... fields ...
-  
+
   @@unique([userId, conditionId])
   @@index([userId, nextReviewAt])
   @@index([conditionId])
@@ -268,6 +286,7 @@ model UserProgress {
 ## Next Steps
 
 ### Sprint C (P2 Priority):
+
 - **Step 6:** Link questions to FSRS cards
   - Add `lastQuestionId` field to `UserProgress`
   - Add `questionHistory` array to `UserProgress`
@@ -284,6 +303,7 @@ model UserProgress {
   - Enable rollback of bad edits
 
 ### Sprint D (P3 Priority):
+
 - **Steps 9-10:** Quality scoring and analytics
   - Question quality scoring system
   - Analytics dashboard for question pool health
@@ -291,6 +311,7 @@ model UserProgress {
   - Flag rate monitoring
 
 ### Integration Work:
+
 - [ ] Add Sprint B utilities to `services/core/questionService.ts`
 - [ ] Update `functions/api/questions/pool.ts` to use new utilities
 - [ ] Update session creation to include interleaving
@@ -316,12 +337,14 @@ model UserProgress {
 ## Success Metrics
 
 ### Sprint A (Condition Linking + NCCPA Weighting):
+
 - ✅ 100% confidence for exact condition matches
 - ✅ 90%+ confidence for close fuzzy matches
 - ✅ PANCE distribution matches blueprint (CV=11%, PULM=9%, GI=9%)
 - ✅ 137 questions identified for fixing (0 fixed due to low confidence - correct behavior)
 
 ### Sprint B (Deduplication + Adaptive + Interleaving):
+
 - ✅ All utilities operational with working demo
 - ✅ Interleaving algorithm reduces violations from 6 → 0
 - ✅ Adaptive difficulty logic validated with synthetic examples
@@ -333,6 +356,7 @@ model UserProgress {
 ## Conclusion
 
 **Sprint B is 100% complete and production-ready.** All three utilities (deduplication, adaptive difficulty, interleaving) are:
+
 - ✅ Implemented with comprehensive error handling
 - ✅ Validated with working demo
 - ✅ Documented with clear integration patterns
@@ -344,6 +368,7 @@ model UserProgress {
 **Cache Performance:** 2-5 minute TTLs for optimal balance
 
 **Impact:** When integrated, Sprint B will significantly improve user experience by:
+
 - Eliminating question repetition (no more "I've seen this before")
 - Matching difficulty to skill level (adaptive learning)
 - Optimizing question spacing (better retention through interleaving)

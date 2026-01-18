@@ -1,6 +1,6 @@
 /**
  * ScoringSystem Entry Generator
- * 
+ *
  * Generates missing PANCE-relevant scoring systems and clinical decision rules.
  * These are critical for exam preparation and clinical practice.
  */
@@ -16,21 +16,24 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
-  constructor(private capacity: number = 5, private refillRate: number = 0.5) {
+
+  constructor(
+    private capacity: number = 5,
+    private refillRate: number = 0.5
+  ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
       const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -43,73 +46,177 @@ const rateLimiter = new TokenBucket(5, 0.5);
 // Essential PANCE scoring systems
 const PANCE_SCORING_SYSTEMS = [
   // Cardiovascular
-  { name: 'CHA2DS2-VASc Score', category: 'Cardiovascular', condition: 'Atrial fibrillation stroke risk' },
-  { name: 'HAS-BLED Score', category: 'Cardiovascular', condition: 'Bleeding risk on anticoagulation' },
+  {
+    name: 'CHA2DS2-VASc Score',
+    category: 'Cardiovascular',
+    condition: 'Atrial fibrillation stroke risk',
+  },
+  {
+    name: 'HAS-BLED Score',
+    category: 'Cardiovascular',
+    condition: 'Bleeding risk on anticoagulation',
+  },
   { name: 'HEART Score', category: 'Cardiovascular', condition: 'Chest pain risk stratification' },
   { name: 'TIMI Risk Score', category: 'Cardiovascular', condition: 'ACS risk stratification' },
   { name: 'Wells Criteria for DVT', category: 'Cardiovascular', condition: 'DVT probability' },
   { name: 'Wells Criteria for PE', category: 'Cardiovascular', condition: 'PE probability' },
   { name: 'Geneva Score', category: 'Cardiovascular', condition: 'PE probability' },
-  { name: 'Framingham Risk Score', category: 'Cardiovascular', condition: '10-year cardiovascular risk' },
-  { name: 'Killip Classification', category: 'Cardiovascular', condition: 'Heart failure severity in MI' },
-  { name: 'NYHA Functional Classification', category: 'Cardiovascular', condition: 'Heart failure severity' },
-  
+  {
+    name: 'Framingham Risk Score',
+    category: 'Cardiovascular',
+    condition: '10-year cardiovascular risk',
+  },
+  {
+    name: 'Killip Classification',
+    category: 'Cardiovascular',
+    condition: 'Heart failure severity in MI',
+  },
+  {
+    name: 'NYHA Functional Classification',
+    category: 'Cardiovascular',
+    condition: 'Heart failure severity',
+  },
+
   // Neurologic
   { name: 'Glasgow Coma Scale', category: 'Neurologic', condition: 'Level of consciousness' },
   { name: 'NIH Stroke Scale', category: 'Neurologic', condition: 'Stroke severity' },
-  { name: 'Hunt and Hess Scale', category: 'Neurologic', condition: 'Subarachnoid hemorrhage severity' },
+  {
+    name: 'Hunt and Hess Scale',
+    category: 'Neurologic',
+    condition: 'Subarachnoid hemorrhage severity',
+  },
   { name: 'Fisher Grade', category: 'Neurologic', condition: 'SAH CT findings and vasospasm risk' },
   { name: 'ABCD2 Score', category: 'Neurologic', condition: 'TIA stroke risk' },
-  { name: 'Cincinnati Prehospital Stroke Scale', category: 'Neurologic', condition: 'Stroke screening' },
-  
+  {
+    name: 'Cincinnati Prehospital Stroke Scale',
+    category: 'Neurologic',
+    condition: 'Stroke screening',
+  },
+
   // Pulmonary
   { name: 'CURB-65', category: 'Pulmonary', condition: 'Pneumonia severity and disposition' },
-  { name: 'Pneumonia Severity Index (PSI)', category: 'Pulmonary', condition: 'CAP mortality risk' },
+  {
+    name: 'Pneumonia Severity Index (PSI)',
+    category: 'Pulmonary',
+    condition: 'CAP mortality risk',
+  },
   { name: 'Berlin Criteria', category: 'Pulmonary', condition: 'ARDS diagnosis and severity' },
   { name: 'Light Criteria', category: 'Pulmonary', condition: 'Pleural effusion classification' },
-  
+
   // Critical Care
   { name: 'APACHE II Score', category: 'Critical Care', condition: 'ICU mortality prediction' },
   { name: 'SOFA Score', category: 'Critical Care', condition: 'Organ dysfunction assessment' },
   { name: 'qSOFA Score', category: 'Critical Care', condition: 'Sepsis screening outside ICU' },
-  
+
   // GI/Hepatic
   { name: 'Child-Pugh Score', category: 'Gastrointestinal', condition: 'Cirrhosis severity' },
-  { name: 'MELD Score', category: 'Gastrointestinal', condition: 'Liver disease mortality and transplant priority' },
-  { name: 'Ranson Criteria', category: 'Gastrointestinal', condition: 'Acute pancreatitis severity' },
-  { name: 'Glasgow-Imrie Criteria', category: 'Gastrointestinal', condition: 'Acute pancreatitis severity' },
-  { name: 'Rockall Score', category: 'Gastrointestinal', condition: 'Upper GI bleed risk stratification' },
-  { name: 'Glasgow-Blatchford Score', category: 'Gastrointestinal', condition: 'Upper GI bleed intervention need' },
+  {
+    name: 'MELD Score',
+    category: 'Gastrointestinal',
+    condition: 'Liver disease mortality and transplant priority',
+  },
+  {
+    name: 'Ranson Criteria',
+    category: 'Gastrointestinal',
+    condition: 'Acute pancreatitis severity',
+  },
+  {
+    name: 'Glasgow-Imrie Criteria',
+    category: 'Gastrointestinal',
+    condition: 'Acute pancreatitis severity',
+  },
+  {
+    name: 'Rockall Score',
+    category: 'Gastrointestinal',
+    condition: 'Upper GI bleed risk stratification',
+  },
+  {
+    name: 'Glasgow-Blatchford Score',
+    category: 'Gastrointestinal',
+    condition: 'Upper GI bleed intervention need',
+  },
   { name: 'Alvarado Score', category: 'Gastrointestinal', condition: 'Appendicitis probability' },
-  
+
   // Orthopedic/Trauma
-  { name: 'Ottawa Ankle Rules', category: 'Orthopedic', condition: 'Ankle fracture imaging decision' },
-  { name: 'Ottawa Knee Rules', category: 'Orthopedic', condition: 'Knee fracture imaging decision' },
-  { name: 'Pittsburgh Knee Rules', category: 'Orthopedic', condition: 'Knee fracture imaging decision' },
+  {
+    name: 'Ottawa Ankle Rules',
+    category: 'Orthopedic',
+    condition: 'Ankle fracture imaging decision',
+  },
+  {
+    name: 'Ottawa Knee Rules',
+    category: 'Orthopedic',
+    condition: 'Knee fracture imaging decision',
+  },
+  {
+    name: 'Pittsburgh Knee Rules',
+    category: 'Orthopedic',
+    condition: 'Knee fracture imaging decision',
+  },
   { name: 'Canadian C-Spine Rule', category: 'Orthopedic', condition: 'C-spine imaging decision' },
   { name: 'NEXUS Criteria', category: 'Orthopedic', condition: 'C-spine injury clearance' },
-  { name: 'PECARN Pediatric Head Injury Rule', category: 'Pediatric', condition: 'CT decision in pediatric head trauma' },
-  
+  {
+    name: 'PECARN Pediatric Head Injury Rule',
+    category: 'Pediatric',
+    condition: 'CT decision in pediatric head trauma',
+  },
+
   // Psychiatric
   { name: 'PHQ-9', category: 'Psychiatry', condition: 'Depression severity' },
   { name: 'GAD-7', category: 'Psychiatry', condition: 'Anxiety severity' },
-  { name: 'CAGE Questionnaire', category: 'Psychiatry', condition: 'Alcohol use disorder screening' },
+  {
+    name: 'CAGE Questionnaire',
+    category: 'Psychiatry',
+    condition: 'Alcohol use disorder screening',
+  },
   { name: 'AUDIT-C', category: 'Psychiatry', condition: 'Alcohol use screening' },
-  { name: 'Columbia Suicide Severity Rating Scale', category: 'Psychiatry', condition: 'Suicide risk assessment' },
-  { name: 'Edinburgh Postnatal Depression Scale', category: 'Psychiatry', condition: 'Postpartum depression screening' },
-  { name: 'Mini-Mental State Examination', category: 'Psychiatry', condition: 'Cognitive impairment screening' },
-  { name: 'Montreal Cognitive Assessment', category: 'Psychiatry', condition: 'Mild cognitive impairment screening' },
-  
+  {
+    name: 'Columbia Suicide Severity Rating Scale',
+    category: 'Psychiatry',
+    condition: 'Suicide risk assessment',
+  },
+  {
+    name: 'Edinburgh Postnatal Depression Scale',
+    category: 'Psychiatry',
+    condition: 'Postpartum depression screening',
+  },
+  {
+    name: 'Mini-Mental State Examination',
+    category: 'Psychiatry',
+    condition: 'Cognitive impairment screening',
+  },
+  {
+    name: 'Montreal Cognitive Assessment',
+    category: 'Psychiatry',
+    condition: 'Mild cognitive impairment screening',
+  },
+
   // OB/Pediatric
   { name: 'APGAR Score', category: 'Pediatric', condition: 'Newborn assessment' },
-  { name: 'Bishop Score', category: 'Obstetrics', condition: 'Cervical readiness for labor induction' },
-  
+  {
+    name: 'Bishop Score',
+    category: 'Obstetrics',
+    condition: 'Cervical readiness for labor induction',
+  },
+
   // Infectious Disease
-  { name: 'Centor Criteria', category: 'Infectious Disease', condition: 'Strep pharyngitis probability' },
-  { name: 'McIsaac Score', category: 'Infectious Disease', condition: 'Strep pharyngitis probability (modified Centor)' },
-  
+  {
+    name: 'Centor Criteria',
+    category: 'Infectious Disease',
+    condition: 'Strep pharyngitis probability',
+  },
+  {
+    name: 'McIsaac Score',
+    category: 'Infectious Disease',
+    condition: 'Strep pharyngitis probability (modified Centor)',
+  },
+
   // VTE Risk
-  { name: 'Caprini Score', category: 'Hematology', condition: 'VTE prophylaxis risk stratification' },
+  {
+    name: 'Caprini Score',
+    category: 'Hematology',
+    condition: 'VTE prophylaxis risk stratification',
+  },
   { name: 'Padua Prediction Score', category: 'Hematology', condition: 'Medical patient VTE risk' },
 ];
 
@@ -140,11 +247,15 @@ interface ScoringSystemData {
   isHighYield: boolean;
 }
 
-async function generateScoringSystemData(name: string, category: string, condition: string): Promise<ScoringSystemData | null> {
+async function generateScoringSystemData(
+  name: string,
+  category: string,
+  condition: string
+): Promise<ScoringSystemData | null> {
   await rateLimiter.acquire();
-  
+
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-  
+
   const prompt = `You are a PA/NP educator creating PANCE exam prep content. Generate comprehensive data for the clinical scoring system "${name}" used for "${condition}".
 
 Return ONLY valid JSON (no markdown, no code blocks):
@@ -195,15 +306,15 @@ Important:
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
+
     // Clean response
     let cleanText = text.trim();
     if (cleanText.startsWith('```')) {
       cleanText = cleanText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
-    
+
     const data = JSON.parse(cleanText);
-    
+
     return {
       name,
       displayName: data.displayName || name,
@@ -240,36 +351,36 @@ async function main() {
   console.log('╔══════════════════════════════════════════════════════════════════╗');
   console.log('║          SCORING SYSTEM ENTRY GENERATOR                          ║');
   console.log('╚══════════════════════════════════════════════════════════════════╝');
-  
+
   // Get existing scoring systems
   const existing = await prisma.scoringSystem.findMany({
-    select: { name: true }
+    select: { name: true },
   });
-  const existingNames = new Set(existing.map(s => s.name.toLowerCase()));
-  
+  const existingNames = new Set(existing.map((s) => s.name.toLowerCase()));
+
   // Filter to only missing systems
   const missingSystemsToGenerate = PANCE_SCORING_SYSTEMS.filter(
-    s => !existingNames.has(s.name.toLowerCase())
+    (s) => !existingNames.has(s.name.toLowerCase())
   );
-  
+
   console.log(`\nExisting: ${existing.length}`);
   console.log(`Missing: ${missingSystemsToGenerate.length}`);
   console.log(`Will generate: ${missingSystemsToGenerate.length}\n`);
-  
+
   let created = 0;
   let failed = 0;
-  
+
   for (let i = 0; i < missingSystemsToGenerate.length; i++) {
     const system = missingSystemsToGenerate[i];
     console.log(`Processing [${i + 1}/${missingSystemsToGenerate.length}]: ${system.name}`);
-    
+
     const data = await generateScoringSystemData(system.name, system.category, system.condition);
-    
+
     if (!data) {
       failed++;
       continue;
     }
-    
+
     try {
       await prisma.scoringSystem.create({
         data: {
@@ -300,7 +411,7 @@ async function main() {
           isHighYield: data.isHighYield,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }
+        },
       });
       console.log(`  ✅ Created`);
       created++;
@@ -309,14 +420,14 @@ async function main() {
       failed++;
     }
   }
-  
+
   console.log('\n╔══════════════════════════════════════════════════════════════════╗');
   console.log('║                         SUMMARY                                  ║');
   console.log('╚══════════════════════════════════════════════════════════════════╝');
   console.log(`Created: ${created}`);
   console.log(`Failed: ${failed}`);
   console.log(`Total scoring systems now: ${existing.length + created}`);
-  
+
   await prisma.$disconnect();
 }
 

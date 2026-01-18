@@ -1,9 +1,9 @@
 /**
  * CURB-65 Calculator
- * 
+ *
  * Pneumonia severity assessment for community-acquired pneumonia (CAP).
  * Helps determine admission vs outpatient management.
- * 
+ *
  * Score interpretation:
  * - 0-1: Low risk (outpatient)
  * - 2: Moderate risk (short admission or close supervision)
@@ -30,23 +30,28 @@ export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
         interpretation: 'Low Risk',
         recommendation: 'Consider outpatient management with close follow-up. Mortality <3%.',
         riskLevel: 'low',
-        details: 'Patients may be safely treated as outpatients with oral antibiotics and arranged follow-up within 24-48 hours.',
+        details:
+          'Patients may be safely treated as outpatients with oral antibiotics and arranged follow-up within 24-48 hours.',
       };
     } else if (score === 2) {
       return {
         score,
         interpretation: 'Moderate Risk',
-        recommendation: 'Consider short hospital admission or closely supervised outpatient care. Mortality ~9%.',
+        recommendation:
+          'Consider short hospital admission or closely supervised outpatient care. Mortality ~9%.',
         riskLevel: 'moderate',
-        details: 'Hospital admission for observation may be warranted. Some patients with adequate home support may be managed as outpatients with daily follow-up.',
+        details:
+          'Hospital admission for observation may be warranted. Some patients with adequate home support may be managed as outpatients with daily follow-up.',
       };
     } else {
       return {
         score,
         interpretation: 'High Risk (Severe Pneumonia)',
-        recommendation: 'Hospital admission recommended. Consider ICU evaluation if score ≥4. Mortality 15-40%.',
+        recommendation:
+          'Hospital admission recommended. Consider ICU evaluation if score ≥4. Mortality 15-40%.',
         riskLevel: 'high',
-        details: 'These patients require inpatient treatment with IV antibiotics. Scores ≥4 have significant mortality risk and may require intensive care.',
+        details:
+          'These patients require inpatient treatment with IV antibiotics. Scores ≥4 have significant mortality risk and may require intensive care.',
       };
     }
   };

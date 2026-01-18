@@ -1,6 +1,6 @@
 /**
  * safeParseList - Robust parser for "dirty data" from the database
- * 
+ *
  * Handles the mix of:
  * - Raw strings: "chest pain, shortness of breath"
  * - JSON arrays: ["chest pain", "shortness of breath"]
@@ -10,7 +10,7 @@
  * - Single values: "chest pain"
  * - Numbered lists: "1. chest pain 2. shortness of breath"
  * - Bullet lists: "• chest pain • shortness of breath"
- * 
+ *
  * This prevents SyntaxError crashes when parsing database content.
  */
 
@@ -19,8 +19,10 @@
  */
 function looksLikeJson(value: string): boolean {
   const trimmed = value.trim();
-  return (trimmed.startsWith('[') && trimmed.includes(']')) ||
-         (trimmed.startsWith('{') && trimmed.includes('}'));
+  return (
+    (trimmed.startsWith('[') && trimmed.includes(']')) ||
+    (trimmed.startsWith('{') && trimmed.includes('}'))
+  );
 }
 
 /**
@@ -30,7 +32,10 @@ function tryParseJson(value: string): string[] | null {
   try {
     const parsed = JSON.parse(value);
     if (Array.isArray(parsed)) {
-      return parsed.filter(item => item != null).map(item => String(item).trim()).filter(Boolean);
+      return parsed
+        .filter((item) => item != null)
+        .map((item) => String(item).trim())
+        .filter(Boolean);
     }
     if (typeof parsed === 'string') {
       return [parsed.trim()].filter(Boolean);
@@ -53,12 +58,13 @@ function tryRecoverMalformedJson(value: string): string[] | null {
     // Try to extract quoted strings
     const quotedItems = inner.match(/["']([^"']+)["']/g);
     if (quotedItems && quotedItems.length > 0) {
-      return quotedItems
-        .map(item => item.replace(/["']/g, '').trim())
-        .filter(Boolean);
+      return quotedItems.map((item) => item.replace(/["']/g, '').trim()).filter(Boolean);
     }
     // Try comma-separated without quotes
-    const commaItems = inner.split(',').map(s => s.trim()).filter(Boolean);
+    const commaItems = inner
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (commaItems.length > 0) {
       return commaItems;
     }
@@ -75,7 +81,7 @@ function splitByCommonSeparators(text: string): string[] {
   if (numberedMatch && numberedMatch.length >= 2) {
     return text
       .split(/\d+[.)]\s+/)
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
   }
 
@@ -84,19 +90,25 @@ function splitByCommonSeparators(text: string): string[] {
   if (bulletMatch && bulletMatch.length >= 2) {
     return text
       .split(/[•\-\*]\s+/)
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
   }
 
   // Semicolon separated
   if (text.includes(';')) {
-    const items = text.split(';').map(s => s.trim()).filter(Boolean);
+    const items = text
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (items.length >= 2) return items;
   }
 
   // Comma separated (but be careful with commas in sentences)
   if (text.includes(',')) {
-    const items = text.split(',').map(s => s.trim()).filter(Boolean);
+    const items = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     // Only treat as list if items are reasonably short (likely keywords)
     const avgLength = items.reduce((sum, item) => sum + item.length, 0) / items.length;
     if (items.length >= 2 && avgLength < 50) {
@@ -106,7 +118,10 @@ function splitByCommonSeparators(text: string): string[] {
 
   // Newline separated
   if (text.includes('\n')) {
-    const items = text.split('\n').map(s => s.trim()).filter(Boolean);
+    const items = text
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (items.length >= 2) return items;
   }
 
@@ -119,19 +134,19 @@ function splitByCommonSeparators(text: string): string[] {
  */
 function cleanListItems(items: string[]): string[] {
   return items
-    .map(item => {
+    .map((item) => {
       // Remove leading numbers, bullets, dashes
       return item
         .replace(/^[\d]+[.)]\s*/, '')
         .replace(/^[•\-\*]\s*/, '')
         .trim();
     })
-    .filter(item => item.length > 0 && item.length < 500); // Filter out empty or overly long items
+    .filter((item) => item.length > 0 && item.length < 500); // Filter out empty or overly long items
 }
 
 /**
  * Safely parse a database field that might be a list
- * 
+ *
  * @param value - Raw value from database (string, array, null, etc.)
  * @param options - Parsing options
  * @returns Array of strings (empty array if nothing to parse)
@@ -167,24 +182,24 @@ export function safeParseList(
   // Handle array input
   if (Array.isArray(value)) {
     let items = value
-      .filter(item => item != null)
-      .map(item => String(item).trim())
+      .filter((item) => item != null)
+      .map((item) => String(item).trim())
       .filter(Boolean);
-    
+
     items = cleanListItems(items);
-    
-    if (lowercase) items = items.map(s => s.toLowerCase());
+
+    if (lowercase) items = items.map((s) => s.toLowerCase());
     if (dedupe) items = [...new Set(items)];
-    
+
     return items
-      .filter(item => item.length >= minLength && item.length <= maxLength)
+      .filter((item) => item.length >= minLength && item.length <= maxLength)
       .slice(0, maxItems);
   }
 
   // Handle string input
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    
+
     if (!trimmed) {
       return [];
     }
@@ -206,12 +221,12 @@ export function safeParseList(
     }
 
     items = cleanListItems(items);
-    
-    if (lowercase) items = items.map(s => s.toLowerCase());
+
+    if (lowercase) items = items.map((s) => s.toLowerCase());
     if (dedupe) items = [...new Set(items)];
-    
+
     return items
-      .filter(item => item.length >= minLength && item.length <= maxLength)
+      .filter((item) => item.length >= minLength && item.length <= maxLength)
       .slice(0, maxItems);
   }
 
@@ -237,7 +252,7 @@ export function safeParseList(
 
 /**
  * Safely parse a single text field
- * 
+ *
  * @param value - Raw value from database
  * @returns Cleaned string or empty string
  */
@@ -263,10 +278,7 @@ export function safeParseText(value: unknown): string {
 /**
  * Extract first N items for preview (e.g., "top 3 buzzwords")
  */
-export function safeParsePreview(
-  value: unknown,
-  count: number = 3
-): string[] {
+export function safeParsePreview(value: unknown, count: number = 3): string[] {
   return safeParseList(value, { maxItems: count, dedupe: true });
 }
 

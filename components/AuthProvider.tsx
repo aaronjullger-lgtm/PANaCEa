@@ -7,17 +7,20 @@ import React, { useEffect } from 'react';
 import { ClerkProvider, useUser } from '@clerk/clerk-react';
 
 // Lazy import Sentry functions to avoid initialization conflicts
-let setUserContext: ((user: { id: string; email?: string; username?: string }) => void) | null = null;
+let setUserContext: ((user: { id: string; email?: string; username?: string }) => void) | null =
+  null;
 let clearUserContext: (() => void) | null = null;
 
 // Load Sentry functions asynchronously (production only)
 if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry').then((sentry) => {
-    setUserContext = sentry.setUserContext;
-    clearUserContext = sentry.clearUserContext;
-  }).catch(() => {
-    // Sentry not available, ignore
-  });
+  import('../lib/monitoring/sentry')
+    .then((sentry) => {
+      setUserContext = sentry.setUserContext;
+      clearUserContext = sentry.clearUserContext;
+    })
+    .catch(() => {
+      // Sentry not available, ignore
+    });
 }
 
 interface AuthProviderProps {
@@ -53,10 +56,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // @ts-ignore
   const isDevelopment = import.meta.env?.DEV;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+  const isLocalhost =
+    hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
 
   const publishableKey =
-    isDevelopment && isLocalhost && BASE_CLERK_PUBLISHABLE_KEY.startsWith('pk_live_') && DEV_CLERK_PUBLISHABLE_KEY
+    isDevelopment &&
+    isLocalhost &&
+    BASE_CLERK_PUBLISHABLE_KEY.startsWith('pk_live_') &&
+    DEV_CLERK_PUBLISHABLE_KEY
       ? DEV_CLERK_PUBLISHABLE_KEY
       : BASE_CLERK_PUBLISHABLE_KEY;
 
@@ -67,11 +74,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   if (isDevelopment && isLocalhost && publishableKey.startsWith('pk_live_')) {
     throw new Error(
       `Clerk is configured with a production publishable key (pk_live_...) on localhost.\n\n` +
-      `Fix options:\n` +
-      `1) Use a test key locally: set VITE_CLERK_PUBLISHABLE_KEY=pk_test_... in .env\n` +
-      `2) Or set VITE_CLERK_PUBLISHABLE_KEY_DEV=pk_test_... (recommended)\n` +
-      `3) Or configure Clerk allowed origins for your local domain in the Clerk dashboard\n\n` +
-      `Then restart: npm run dev:all`
+        `Fix options:\n` +
+        `1) Use a test key locally: set VITE_CLERK_PUBLISHABLE_KEY=pk_test_... in .env\n` +
+        `2) Or set VITE_CLERK_PUBLISHABLE_KEY_DEV=pk_test_... (recommended)\n` +
+        `3) Or configure Clerk allowed origins for your local domain in the Clerk dashboard\n\n` +
+        `Then restart: npm run dev:all`
     );
   }
 
@@ -87,7 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <ClerkProvider 
+    <ClerkProvider
       publishableKey={publishableKey}
       telemetry={debugEnabled ? { disabled: false, debug: true } : undefined}
       appearance={{
@@ -117,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
  */
 function SentryUserSync() {
   const { user, isSignedIn } = useUser();
-  
+
   useEffect(() => {
     if (isSignedIn && user && setUserContext) {
       setUserContext({
@@ -129,6 +136,6 @@ function SentryUserSync() {
       clearUserContext();
     }
   }, [isSignedIn, user]);
-  
+
   return null;
 }

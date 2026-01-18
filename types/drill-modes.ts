@@ -40,7 +40,13 @@ export interface FluidElectrolyteCase {
   marginOfError: number; // Acceptable deviation (e.g., ±5 for FENa)
   explanation: string;
   calculationHint?: string;
-  category: 'fena' | 'maintenance_fluids' | 'osmolar_gap' | 'anion_gap' | 'free_water_deficit' | 'other';
+  category:
+    | 'fena'
+    | 'maintenance_fluids'
+    | 'osmolar_gap'
+    | 'anion_gap'
+    | 'free_water_deficit'
+    | 'other';
 }
 
 export interface UrineChemistryData {
@@ -68,27 +74,27 @@ export interface AntibioticDrug {
 export interface AntibioticDrillQuestion {
   id: string;
   type: AntibioticDrillType;
-  
+
   // For 'coverage' type
   organism?: OrganismInfection;
   correctDrugs?: string[]; // IDs of correct drug matches
-  
+
   // For 'mechanism' type
   drug?: AntibioticDrug;
   mechanismQuestion?: string;
   mechanismChoices?: string[];
   correctMechanismIndex?: number;
-  
+
   // For 'side_effects' type
   sideEffectQuestion?: string;
   sideEffectChoices?: string[];
   correctSideEffectIndex?: number;
-  
+
   // For 'empiric_choice' type
   clinicalScenario?: string;
   empiricChoices?: string[];
   correctEmpiricIndex?: number;
-  
+
   explanation: string;
   pearls?: string[];
 }
@@ -104,12 +110,7 @@ export type QuestionCategory = 'history' | 'physical' | 'labs' | 'other';
 export type QuestionRelevance = 'essential' | 'helpful' | 'unnecessary' | 'redundant';
 
 // Persona used by the Patient Encounter Simulation engine
-export type PatientPersonality =
-  | 'Anxious'
-  | 'Stoic'
-  | 'Confused'
-  | 'Hostile'
-  | 'Pleasant';
+export type PatientPersonality = 'Anxious' | 'Stoic' | 'Confused' | 'Hostile' | 'Pleasant';
 
 export interface PatientPersona {
   id: string;
@@ -150,7 +151,7 @@ export interface PatientEncounterCase {
   chiefComplaint: string;
   age: number;
   sex: 'M' | 'F' | 'Other';
-  
+
   // Pre-revealed information
   vitalSigns: {
     bp: string;
@@ -159,21 +160,21 @@ export interface PatientEncounterCase {
     temp: number;
     o2sat: number;
   };
-  
+
   // Hidden information that's revealed based on questions
   historyData: Record<string, string>;
   physicalExamData: Record<string, string>;
   labData: Record<string, string>;
-  
+
   // Question evaluation criteria
   essentialQuestions: string[]; // Keywords for must-ask questions
   helpfulQuestions: string[]; // Keywords for useful questions
   unnecessaryQuestions: string[]; // Keywords for wasteful questions
-  
+
   // Scoring
   correctDiagnosis: string;
   differentialDiagnoses: string[];
-  
+
   // Feedback
   idealWorkup: string[];
   teachingPoints: string[];
@@ -281,7 +282,7 @@ export interface PolypharmacyAttempt {
  * Question types for the Condition Drill mode.
  * Used to categorize questions by clinical focus.
  */
-export type ConditionQuestionType = 
+export type ConditionQuestionType =
   | 'presentation'
   | 'diagnosis'
   | 'treatment'
@@ -302,4 +303,3 @@ export interface ConditionQuestion {
   system: string;
   difficulty: 'medium'; // Always PANCE-level
 }
-

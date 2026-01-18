@@ -1,6 +1,6 @@
 /**
  * Goal Create Modal
- * 
+ *
  * Modal for creating new goals with form validation.
  */
 
@@ -17,7 +17,7 @@ interface GoalCreateModalProps {
 export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCreate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -31,26 +31,26 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
     motivationNotes: '',
     rewardMessage: '',
   });
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       // Validation
       if (!formData.title.trim()) {
         throw new Error('Title is required');
       }
-      
+
       if (formData.goalType === 'exam_date' && !formData.targetDate) {
         throw new Error('Target date is required for exam goals');
       }
-      
+
       if (formData.goalType === 'mastery' && !formData.targetSystem) {
         throw new Error('Target system is required for mastery goals');
       }
-      
+
       // Build goal payload
       const goalData: Partial<UserGoal> = {
         title: formData.title.trim(),
@@ -60,22 +60,22 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
         motivationNotes: formData.motivationNotes.trim() || undefined,
         rewardMessage: formData.rewardMessage.trim() || undefined,
       };
-      
+
       // Add type-specific fields
       if (formData.goalType !== 'exam_date') {
         goalData.targetValue = formData.targetValue;
         goalData.targetUnit = formData.targetUnit;
       }
-      
+
       if (formData.goalType === 'exam_date') {
         goalData.targetDate = formData.targetDate;
       }
-      
+
       if (formData.goalType === 'mastery') {
         goalData.targetSystem = formData.targetSystem;
         goalData.targetStability = formData.targetStability;
       }
-      
+
       await onCreate(goalData);
     } catch (err) {
       console.error('[GoalCreateModal] Submit error:', err);
@@ -83,7 +83,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -106,7 +106,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
@@ -114,7 +114,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 {error}
               </div>
             )}
-            
+
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -129,7 +129,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 required
               />
             </div>
-            
+
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -143,7 +143,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 placeholder="Optional details about this goal"
               />
             </div>
-            
+
             {/* Goal Type */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -160,7 +160,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 <option value="mastery">Mastery - Reach stability threshold</option>
               </select>
             </div>
-            
+
             {/* Target Value (not for exam_date) */}
             {formData.goalType !== 'exam_date' && (
               <div className="grid grid-cols-2 gap-4">
@@ -171,19 +171,23 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   <input
                     type="number"
                     value={formData.targetValue}
-                    onChange={(e) => setFormData({ ...formData, targetValue: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, targetValue: parseInt(e.target.value) })
+                    }
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                     min="1"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Unit
                   </label>
                   <select
                     value={formData.targetUnit}
-                    onChange={(e) => setFormData({ ...formData, targetUnit: e.target.value as any })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, targetUnit: e.target.value as any })
+                    }
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                   >
                     <option value="questions">Questions</option>
@@ -194,7 +198,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 </div>
               </div>
             )}
-            
+
             {/* Target Date (exam_date only) */}
             {formData.goalType === 'exam_date' && (
               <div>
@@ -210,7 +214,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 />
               </div>
             )}
-            
+
             {/* Target System (mastery only) */}
             {formData.goalType === 'mastery' && (
               <div className="grid grid-cols-2 gap-4">
@@ -227,7 +231,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     required={formData.goalType === 'mastery'}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Target Stability
@@ -235,7 +239,9 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   <input
                     type="number"
                     value={formData.targetStability}
-                    onChange={(e) => setFormData({ ...formData, targetStability: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, targetStability: parseFloat(e.target.value) })
+                    }
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                     min="0"
                     max="1"
@@ -244,7 +250,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 </div>
               </div>
             )}
-            
+
             {/* Recurring */}
             {(formData.goalType === 'daily' || formData.goalType === 'weekly') && (
               <div className="flex items-center gap-2">
@@ -260,7 +266,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 </label>
               </div>
             )}
-            
+
             {/* Motivation */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -274,7 +280,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 placeholder="Why is this goal important to you?"
               />
             </div>
-            
+
             {/* Reward Message */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -288,7 +294,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 placeholder="Message to show when goal is completed"
               />
             </div>
-            
+
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <button

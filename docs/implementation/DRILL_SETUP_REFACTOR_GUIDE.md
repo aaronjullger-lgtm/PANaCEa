@@ -7,6 +7,7 @@ The drill setup system has been refactored to use a **live database-driven regis
 ## What Changed
 
 ### Before (Static Registry)
+
 ```typescript
 import { conditionRegistry, getRandomConditionForSystem } from '../conditionRegistry';
 
@@ -18,6 +19,7 @@ const randomCondition = getRandomConditionForSystem('CV');
 ```
 
 ### After (Database-Driven)
+
 ```typescript
 import { fetchConditions, getRandomConditionForSystem } from '../services/conditionRegistryService';
 
@@ -31,9 +33,11 @@ const randomCondition = await getRandomConditionForSystem('CV');
 ## New Components & Services
 
 ### 1. DrillSetup Component
+
 **File**: `components/drill/DrillSetup.tsx`
 
 Universal drill configuration component with:
+
 - System filter dropdown (dynamically populated from database)
 - Difficulty selector (easier/same/harder)
 - Question count selector (5/10/15/20)
@@ -41,6 +45,7 @@ Universal drill configuration component with:
 - Loading and error states
 
 **Usage Example**:
+
 ```typescript
 import { DrillSetup, type DrillConfiguration } from './components/drill/DrillSetup';
 
@@ -50,9 +55,9 @@ function MyDrillMode() {
     // config.difficulty - 'easier' | 'same' | 'harder'
     // config.questionCount - Number of questions
     // config.availableConditions - Full list of conditions for selected system
-    
+
     console.log(`Starting drill with ${config.availableConditions.length} conditions`);
-    
+
     // Use config to generate questions...
   };
 
@@ -72,6 +77,7 @@ function MyDrillMode() {
 ```
 
 ### 2. Condition Registry Service
+
 **File**: `services/conditionRegistryService.ts`
 
 Database access layer with caching (5-minute TTL):
@@ -115,13 +121,15 @@ const stats = await getRegistryStats();
 ```
 
 ### 3. Backend API Endpoint
+
 **File**: `server.ts` (lines 310-332)
 
 ```typescript
-GET /api/conditions
+GET / api / conditions;
 ```
 
 **Response**:
+
 ```json
 [
   {
@@ -135,6 +143,7 @@ GET /api/conditions
 ```
 
 **Features**:
+
 - ✅ Clerk authentication required
 - ✅ Only returns `published` conditions
 - ✅ Sorted alphabetically by name
@@ -145,6 +154,7 @@ GET /api/conditions
 ### For Drill Components
 
 **Step 1**: Replace static imports
+
 ```typescript
 // ❌ Remove
 import { conditionRegistry } from '../conditionRegistry';
@@ -154,6 +164,7 @@ import { fetchConditions } from '../services/conditionRegistryService';
 ```
 
 **Step 2**: Update system dropdown logic
+
 ```typescript
 // ❌ Old (static)
 const systems = Object.keys(SYSTEM_NAMES);
@@ -164,7 +175,7 @@ const [systems, setSystems] = useState<SystemCode[]>([]);
 useEffect(() => {
   async function loadSystems() {
     const conditions = await fetchConditions();
-    const uniqueSystems = new Set(conditions.map(c => c.system));
+    const uniqueSystems = new Set(conditions.map((c) => c.system));
     setSystems(Array.from(uniqueSystems));
   }
   loadSystems();
@@ -172,6 +183,7 @@ useEffect(() => {
 ```
 
 **Step 3**: Update question generation
+
 ```typescript
 // ❌ Old (static)
 const randomCondition = getRandomConditionForSystem('CV');
@@ -183,20 +195,21 @@ const randomCondition = await getRandomConditionForSystem('CV');
 const question = await fetchNewQuestion({
   conditionName: randomCondition.name,
   difficulty: 'same',
-  focus: 'all'
+  focus: 'all',
 });
 ```
 
 ### For Services (geminiService.ts)
 
 **Updated** (already done in refactor):
+
 ```typescript
 // Before:
-import { getRandomConditionForSystem } from "../conditionRegistry";
+import { getRandomConditionForSystem } from '../conditionRegistry';
 const condition = getRandomConditionForSystem(system);
 
 // After:
-import { getRandomConditionForSystem as getRandomConditionForSystemDB } from "./conditionRegistryService";
+import { getRandomConditionForSystem as getRandomConditionForSystemDB } from './conditionRegistryService';
 const dbCondition = await getRandomConditionForSystemDB(system);
 const compatMeta = findConditionMeta(dbCondition.name);
 ```
@@ -269,6 +282,7 @@ await fetchConditions(true); // ⏱ ~200ms (bypass cache)
 ```
 
 **Cache invalidation**:
+
 ```typescript
 // Manual clear (e.g., after content update)
 clearConditionsCache();
@@ -280,6 +294,7 @@ await fetchConditions();
 ## Performance Considerations
 
 ### Initial Load
+
 - **Database query**: ~200ms (Supabase connection pooling)
 - **Cache hit**: ~0ms (in-memory)
 - **Frontend parse**: ~10ms (1000+ conditions)
@@ -287,6 +302,7 @@ await fetchConditions();
 ### Optimization Tips
 
 1. **Prefetch on app init** (in App.tsx):
+
 ```typescript
 useEffect(() => {
   prefetchConditions(); // Load cache early
@@ -294,11 +310,13 @@ useEffect(() => {
 ```
 
 2. **Lazy load drill modes**:
+
 ```typescript
 const DrillMode = lazy(() => import('./components/drill/MyDrill'));
 ```
 
 3. **Use system filter** to reduce condition pool:
+
 ```typescript
 // ❌ Slow: Loop through all 1094 conditions
 const allConditions = await fetchConditions();
@@ -310,6 +328,7 @@ const pulmConditions = await getConditionsBySystem('PULM');
 ## Testing
 
 ### Unit Tests
+
 ```typescript
 import { fetchConditions, getRandomConditionForSystem } from './conditionRegistryService';
 
@@ -331,6 +350,7 @@ describe('conditionRegistryService', () => {
 ```
 
 ### Integration Tests
+
 ```bash
 # Start server
 npm run dev:all
@@ -348,7 +368,7 @@ If issues arise, temporarily restore static imports:
 
 ```typescript
 // In geminiService.ts
-import { getRandomConditionForSystem } from "../conditionRegistry"; // Static fallback
+import { getRandomConditionForSystem } from '../conditionRegistry'; // Static fallback
 
 // Wrap database calls in try/catch with fallback
 try {
@@ -372,21 +392,25 @@ try {
 ## Troubleshooting
 
 ### "Failed to load conditions"
+
 - Check `DATABASE_URL` is set in environment
 - Verify Supabase connection string is valid
 - Run `npm run db:migrate:deploy` to apply migrations
 
 ### "No conditions available for system"
+
 - Ensure conditions are synced: `npm run sync:all`
 - Check Condition table has `status: 'published'` records
 - Verify system codes match: `CV`, `PULM`, etc. (not `Cardiovascular`)
 
 ### Stale data in UI
+
 - Clear cache: `clearConditionsCache()` in browser console
 - Refresh page to re-fetch from database
 - Check cache duration (5 minutes) hasn't been exceeded
 
 ### Performance issues
+
 - Enable query logging in Prisma
 - Check Supabase connection pooling mode (use "Transaction")
 - Verify database indexes on `system` and `status` columns
@@ -394,6 +418,7 @@ try {
 ## Summary
 
 The refactored drill setup system provides:
+
 - ✅ **Live data**: Always reflects current database state
 - ✅ **Type safety**: Full TypeScript support
 - ✅ **Performance**: 5-minute cache, minimal payloads

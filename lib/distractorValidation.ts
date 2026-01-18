@@ -1,14 +1,14 @@
 /**
  * Distractor Validation Utility
- * 
+ *
  * Sprint C - Step 7: Validate quality of incorrect answer options (distractors)
- * 
+ *
  * Purpose: Ensure distractors are:
  * - Not duplicates
  * - Similar length to correct answer (±50%)
  * - Medically plausible (not obviously wrong)
  * - Not revealing the correct answer through pattern
- * 
+ *
  * Poor distractors reduce question effectiveness and can harm learning.
  */
 
@@ -29,13 +29,11 @@ export interface QuestionForValidation {
 
 /**
  * Validate distractors for a single question
- * 
+ *
  * @param question - Question with options to validate
  * @returns Validation result with score and issues
  */
-export function validateDistractors(
-  question: QuestionForValidation
-): DistractorValidationResult {
+export function validateDistractors(question: QuestionForValidation): DistractorValidationResult {
   const issues: string[] = [];
   const warnings: string[] = [];
   const suggestions: string[] = [];
@@ -54,7 +52,7 @@ export function validateDistractors(
   const correctOption = options[correctIndex];
 
   // RULE 1: No duplicate options
-  const uniqueOptions = new Set(options.map(opt => opt.trim().toLowerCase()));
+  const uniqueOptions = new Set(options.map((opt) => opt.trim().toLowerCase()));
   if (uniqueOptions.size < options.length) {
     issues.push('Duplicate options detected');
     score -= 30;
@@ -76,7 +74,7 @@ export function validateDistractors(
   let lengthViolations = 0;
   for (let i = 0; i < options.length; i++) {
     if (i === correctIndex) continue;
-    
+
     const optLength = options[i].length;
     if (optLength < minLength || optLength > maxLength) {
       lengthViolations++;
@@ -111,9 +109,9 @@ export function validateDistractors(
 
   for (let i = 0; i < options.length; i++) {
     if (i === correctIndex) continue;
-    
+
     const option = options[i].toLowerCase();
-    
+
     for (const pattern of obviouslyWrongPatterns) {
       if (pattern.test(option)) {
         warnings.push(
@@ -127,18 +125,18 @@ export function validateDistractors(
 
   // RULE 6: Avoid numerical patterns that reveal answer
   // Example: If options are 10, 20, 30, 40 and answer is 30, it's in the middle
-  const numericOptions = options.map(opt => {
+  const numericOptions = options.map((opt) => {
     const match = opt.match(/^(\d+(?:\.\d+)?)/);
     return match ? parseFloat(match[1]) : null;
   });
 
-  const allNumeric = numericOptions.every(n => n !== null);
-  
+  const allNumeric = numericOptions.every((n) => n !== null);
+
   if (allNumeric) {
     const sorted = [...numericOptions].sort((a, b) => (a || 0) - (b || 0));
     const correctValue = numericOptions[correctIndex];
     const sortedIndex = sorted.indexOf(correctValue);
-    
+
     // If correct answer is always middle value, that's a pattern
     if (sortedIndex === 1 || sortedIndex === 2) {
       warnings.push('Correct numerical value is near middle of range - consider varying');
@@ -149,11 +147,11 @@ export function validateDistractors(
   // Example: Question ends with "a" but only one option starts with vowel
   const questionEndsWithA = /\ba$/i.test(question.question);
   const questionEndsWithAn = /\ban$/i.test(question.question);
-  
+
   if (questionEndsWithA || questionEndsWithAn) {
     const startsWithVowel = (opt: string) => /^[aeiou]/i.test(opt.trim());
     const vowelOptions = options.filter(startsWithVowel);
-    
+
     if (vowelOptions.length === 1 && startsWithVowel(correctOption)) {
       issues.push('Grammatical article ("a"/"an") reveals correct answer');
       score -= 20;
@@ -164,20 +162,21 @@ export function validateDistractors(
   // RULE 8: Avoid overly specific vs. overly general distractors
   // Correct answer should not be the only specific or only general option
   const hasNumbers = (opt: string) => /\d+/.test(opt);
-  const hasUnits = (opt: string) => /(mg|mcg|ml|units|days|hours|minutes|weeks|months|years)/i.test(opt);
-  
+  const hasUnits = (opt: string) =>
+    /(mg|mcg|ml|units|days|hours|minutes|weeks|months|years)/i.test(opt);
+
   const correctHasNumbers = hasNumbers(correctOption);
   const correctHasUnits = hasUnits(correctOption);
-  
+
   const otherOptions = options.filter((_, i) => i !== correctIndex);
   const othersHaveNumbers = otherOptions.some(hasNumbers);
   const othersHaveUnits = otherOptions.some(hasUnits);
-  
+
   if (correctHasNumbers && !othersHaveNumbers) {
     warnings.push('Correct answer has specific numbers but distractors do not');
     score -= 10;
   }
-  
+
   if (correctHasUnits && !othersHaveUnits) {
     warnings.push('Correct answer has units but distractors do not');
     score -= 10;
@@ -200,17 +199,15 @@ export function validateDistractors(
 
 /**
  * Batch validate multiple questions
- * 
+ *
  * @param questions - Array of questions to validate
  * @returns Array of validation results
  */
-export function validateDistractorsBatch(
-  questions: QuestionForValidation[]
-): Array<{
+export function validateDistractorsBatch(questions: QuestionForValidation[]): Array<{
   questionId: string;
   validation: DistractorValidationResult;
 }> {
-  return questions.map(q => ({
+  return questions.map((q) => ({
     questionId: q.id,
     validation: validateDistractors(q),
   }));
@@ -218,7 +215,7 @@ export function validateDistractorsBatch(
 
 /**
  * Get summary statistics for a batch of questions
- * 
+ *
  * @param results - Array of validation results
  * @returns Summary statistics
  */
@@ -233,9 +230,9 @@ export function getValidationSummary(
   commonWarnings: Array<{ warning: string; count: number }>;
 } {
   const totalQuestions = results.length;
-  const validQuestions = results.filter(r => r.validation.isValid).length;
+  const validQuestions = results.filter((r) => r.validation.isValid).length;
   const invalidQuestions = totalQuestions - validQuestions;
-  
+
   const totalScore = results.reduce((sum, r) => sum + r.validation.score, 0);
   const averageScore = totalQuestions > 0 ? Math.round(totalScore / totalQuestions) : 0;
 
@@ -273,7 +270,7 @@ export function getValidationSummary(
 
 /**
  * Generate a human-readable report
- * 
+ *
  * @param results - Array of validation results
  * @returns Formatted report string
  */
@@ -281,7 +278,7 @@ export function generateValidationReport(
   results: Array<{ questionId: string; validation: DistractorValidationResult }>
 ): string {
   const summary = getValidationSummary(results);
-  
+
   const lines = [
     '📊 Distractor Validation Report',
     '═'.repeat(70),
@@ -311,7 +308,7 @@ export function generateValidationReport(
 
   // Show worst questions
   const worstQuestions = results
-    .filter(r => !r.validation.isValid)
+    .filter((r) => !r.validation.isValid)
     .sort((a, b) => a.validation.score - b.validation.score)
     .slice(0, 5);
 
@@ -327,20 +324,18 @@ export function generateValidationReport(
   }
 
   lines.push('═'.repeat(70));
-  
+
   return lines.join('\n');
 }
 
 /**
  * Get questions that need attention (score < 70)
- * 
+ *
  * @param results - Array of validation results
  * @returns Array of question IDs that need review
  */
 export function getQuestionsNeedingAttention(
   results: Array<{ questionId: string; validation: DistractorValidationResult }>
 ): string[] {
-  return results
-    .filter(r => r.validation.score < 70)
-    .map(r => r.questionId);
+  return results.filter((r) => r.validation.score < 70).map((r) => r.questionId);
 }

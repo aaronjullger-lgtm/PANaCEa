@@ -38,7 +38,7 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
   };
 
   const handleRemoveItem = (itemId: string) => {
-    const updatedItems = failedItems.filter(item => item.id !== itemId);
+    const updatedItems = failedItems.filter((item) => item.id !== itemId);
     setFailedItems(updatedItems);
     localStorage.setItem(DEAD_LETTER_QUEUE_KEY, JSON.stringify(updatedItems));
   };
@@ -69,7 +69,8 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                   Failed Sync Items
                 </h2>
                 <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                  {failedItems.length} item{failedItems.length !== 1 ? 's' : ''} failed to sync after multiple attempts
+                  {failedItems.length} item{failedItems.length !== 1 ? 's' : ''} failed to sync
+                  after multiple attempts
                 </p>
               </div>
               <button

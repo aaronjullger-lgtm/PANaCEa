@@ -14,14 +14,16 @@ async function getConditionContent(): Promise<Record<string, unknown>> {
   if (conditionContentCache) {
     return conditionContentCache;
   }
-  
+
   const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
   const response = await fetch(apiUrl);
-  
+
   if (!response.ok) {
-    throw new Error(`Failed to load condition content from database: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to load condition content from database: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   conditionContentCache = await response.json();
   return conditionContentCache;
 }
@@ -42,9 +44,47 @@ interface ConditionData {
   etiologyPathophysiology?: string;
 }
 
-const FIRST_NAMES_MALE = ['John', 'James', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles'];
-const FIRST_NAMES_FEMALE = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen'];
-const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Jackson'];
+const FIRST_NAMES_MALE = [
+  'John',
+  'James',
+  'Robert',
+  'Michael',
+  'William',
+  'David',
+  'Richard',
+  'Joseph',
+  'Thomas',
+  'Charles',
+];
+const FIRST_NAMES_FEMALE = [
+  'Mary',
+  'Patricia',
+  'Jennifer',
+  'Linda',
+  'Elizabeth',
+  'Barbara',
+  'Susan',
+  'Jessica',
+  'Sarah',
+  'Karen',
+];
+const LAST_NAMES = [
+  'Smith',
+  'Johnson',
+  'Williams',
+  'Brown',
+  'Jones',
+  'Garcia',
+  'Miller',
+  'Davis',
+  'Rodriguez',
+  'Martinez',
+  'Wilson',
+  'Anderson',
+  'Taylor',
+  'Thomas',
+  'Jackson',
+];
 
 const PATIENT_PERSONALITIES: PatientPersonality[] = [
   'Anxious',
@@ -78,7 +118,7 @@ function generateVitalSigns(conditionKey: string): PatientEncounterCase['vitalSi
     hr: 75 + Math.floor(Math.random() * 20) - 10, // 65-85
     rr: 16 + Math.floor(Math.random() * 4) - 2, // 14-18
     temp: 98.6,
-    o2sat: 98 + Math.floor(Math.random() * 3) // 98-100
+    o2sat: 98 + Math.floor(Math.random() * 3), // 98-100
   };
 
   // Adjust for specific conditions
@@ -88,7 +128,11 @@ function generateVitalSigns(conditionKey: string): PatientEncounterCase['vitalSi
     vitals.bp = `${90 + Math.floor(Math.random() * 10)}/${60 + Math.floor(Math.random() * 10)}`;
   }
 
-  if (conditionKey.includes('fever') || conditionKey.includes('infection') || conditionKey.includes('pneumonia')) {
+  if (
+    conditionKey.includes('fever') ||
+    conditionKey.includes('infection') ||
+    conditionKey.includes('pneumonia')
+  ) {
     vitals.temp = 100.4 + Math.random() * 3; // 100.4-103.4
   }
 
@@ -98,7 +142,11 @@ function generateVitalSigns(conditionKey: string): PatientEncounterCase['vitalSi
     vitals.hr = 45 + Math.floor(Math.random() * 15); // 45-60
   }
 
-  if (conditionKey.includes('respiratory') || conditionKey.includes('copd') || conditionKey.includes('asthma')) {
+  if (
+    conditionKey.includes('respiratory') ||
+    conditionKey.includes('copd') ||
+    conditionKey.includes('asthma')
+  ) {
     vitals.rr = 20 + Math.floor(Math.random() * 10); // 20-30
     vitals.o2sat = 88 + Math.floor(Math.random() * 8); // 88-96
   }
@@ -111,12 +159,15 @@ function generateVitalSigns(conditionKey: string): PatientEncounterCase['vitalSi
  */
 function extractChiefComplaint(conditionKey: string, data: ConditionData): string {
   const conditionName = conditionKey.split('__').pop()?.replace(/_/g, ' ') || 'medical issue';
-  
+
   // Try to extract from symptoms
   if (data.symptoms && data.symptoms.length > 0) {
     const primarySymptom = data.symptoms[0];
     // Clean up the symptom text
-    const cleanSymptom = primarySymptom.replace(/^\*\*.*?\*\*:?\s*/g, '').replace(/\*\*/g, '').split('.')[0];
+    const cleanSymptom = primarySymptom
+      .replace(/^\*\*.*?\*\*:?\s*/g, '')
+      .replace(/\*\*/g, '')
+      .split('.')[0];
     if (cleanSymptom.length < 100) {
       return cleanSymptom;
     }
@@ -128,7 +179,7 @@ function extractChiefComplaint(conditionKey: string, data: ConditionData): strin
   if (conditionKey.includes('RESP__')) return 'Shortness of breath';
   if (conditionKey.includes('NEURO__')) return 'Headache';
   if (conditionKey.includes('MSK__')) return 'Joint pain';
-  
+
   return 'Not feeling well';
 }
 
@@ -146,7 +197,7 @@ function extractHistoryData(data: ConditionData): Record<string, string> {
   }
 
   if (data.riskFactors) {
-    const riskText = data.riskFactors.filter(rf => !rf.includes('**')).join('. ');
+    const riskText = data.riskFactors.filter((rf) => !rf.includes('**')).join('. ');
     if (riskText) {
       history['risk_factors'] = riskText;
     }
@@ -246,9 +297,16 @@ function extractHelpfulQuestions(conditionKey: string, data: ConditionData): str
  */
 function getUnnecessaryQuestions(): string[] {
   return [
-    'appetite', 'sleep', 'mood', 'stress',
-    'exercise routine', 'diet details', 'hobbies',
-    'pets', 'occupation details', 'relationship status'
+    'appetite',
+    'sleep',
+    'mood',
+    'stress',
+    'exercise routine',
+    'diet details',
+    'hobbies',
+    'pets',
+    'occupation details',
+    'relationship status',
   ];
 }
 
@@ -259,18 +317,24 @@ function extractIdealWorkup(data: ConditionData): string[] {
   const workup: string[] = [];
 
   if (data.diagnostics?.labs) {
-    workup.push(...data.diagnostics.labs.slice(0, 3).map(lab => lab.replace(/\*\*/g, '').split(':')[0]));
+    workup.push(
+      ...data.diagnostics.labs.slice(0, 3).map((lab) => lab.replace(/\*\*/g, '').split(':')[0])
+    );
   }
 
   if (data.diagnostics?.imaging) {
-    workup.push(...data.diagnostics.imaging.slice(0, 2).map(img => img.replace(/\*\*/g, '').split(':')[0]));
+    workup.push(
+      ...data.diagnostics.imaging.slice(0, 2).map((img) => img.replace(/\*\*/g, '').split(':')[0])
+    );
   }
 
   if (data.treatment) {
-    workup.push(...data.treatment.slice(0, 2).map(tx => tx.replace(/\*\*/g, '').split('.')[0]));
+    workup.push(...data.treatment.slice(0, 2).map((tx) => tx.replace(/\*\*/g, '').split('.')[0]));
   }
 
-  return workup.length > 0 ? workup : ['Complete history and physical', 'Basic labs', 'Imaging as indicated'];
+  return workup.length > 0
+    ? workup
+    : ['Complete history and physical', 'Basic labs', 'Imaging as indicated'];
 }
 
 /**
@@ -291,7 +355,9 @@ function extractTeachingPoints(conditionKey: string, data: ConditionData): strin
     }
   }
 
-  return points.length > 0 ? points : ['Key clinical presentation features are important for diagnosis'];
+  return points.length > 0
+    ? points
+    : ['Key clinical presentation features are important for diagnosis'];
 }
 
 // ============================================================================
@@ -301,9 +367,7 @@ function extractTeachingPoints(conditionKey: string, data: ConditionData): strin
 function sanitizePersonality(value: string | undefined): PatientPersonality {
   if (!value) return 'Pleasant';
   const normalized = value.trim().toLowerCase();
-  const match = PATIENT_PERSONALITIES.find(
-    (p) => p.toLowerCase() === normalized
-  );
+  const match = PATIENT_PERSONALITIES.find((p) => p.toLowerCase() === normalized);
   return match ?? 'Pleasant';
 }
 
@@ -332,23 +396,22 @@ function normalizePersona(raw: any): PatientPersona {
     throw new Error('Gemini returned an invalid persona payload');
   }
 
-  const id = typeof raw.id === 'string' && raw.id.trim()
-    ? raw.id.trim()
-    : generatePersonaId();
+  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : generatePersonaId();
 
-  const demographics = raw.demographics && typeof raw.demographics === 'object'
-    ? {
-        name:
-          typeof raw.demographics.name === 'string' && raw.demographics.name.trim()
-            ? raw.demographics.name.trim()
-            : 'Alex Smith',
-        age: Number(raw.demographics.age) || 40,
-        gender:
-          typeof raw.demographics.gender === 'string' && raw.demographics.gender.trim()
-            ? raw.demographics.gender.trim()
-            : 'Unknown',
-      }
-    : { name: 'Alex Smith', age: 40, gender: 'Unknown' };
+  const demographics =
+    raw.demographics && typeof raw.demographics === 'object'
+      ? {
+          name:
+            typeof raw.demographics.name === 'string' && raw.demographics.name.trim()
+              ? raw.demographics.name.trim()
+              : 'Alex Smith',
+          age: Number(raw.demographics.age) || 40,
+          gender:
+            typeof raw.demographics.gender === 'string' && raw.demographics.gender.trim()
+              ? raw.demographics.gender.trim()
+              : 'Unknown',
+        }
+      : { name: 'Alex Smith', age: 40, gender: 'Unknown' };
 
   const chiefComplaint =
     typeof raw.chiefComplaint === 'string' && raw.chiefComplaint.trim()
@@ -438,9 +501,7 @@ Important:
 
   try {
     const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
-    const cleaned = rawText
-      .replace(/```json|```/gi, '')
-      .trim();
+    const cleaned = rawText.replace(/```json|```/gi, '').trim();
 
     const parsed = JSON.parse(cleaned);
     return normalizePersona(parsed);
@@ -456,14 +517,14 @@ Important:
  */
 function getSuitableConditionsFromContent(conditionContent: Record<string, unknown>): string[] {
   const allKeys = Object.keys(conditionContent);
-  
-  return allKeys.filter(key => {
+
+  return allKeys.filter((key) => {
     // Exclude ECG patterns
     if (key.includes('__ecg__')) return false;
-    
+
     // Exclude imaging-only conditions
     if (key.includes('__imaging__')) return false;
-    
+
     // Prefer conditions with good clinical presentation
     return true;
   });
@@ -508,10 +569,12 @@ export async function generatePatientEncounterFromCondition(): Promise<PatientEn
 /**
  * Get a fresh patient encounter from the database.
  * Database-First: Always generates from database content.
- * 
+ *
  * @param useGenerated - Whether to force fresh AI generation (default: false)
  */
-export async function getFreshPatientEncounter(useGenerated: boolean = false): Promise<PatientEncounterCase> {
+export async function getFreshPatientEncounter(
+  useGenerated: boolean = false
+): Promise<PatientEncounterCase> {
   // Always generate from database content
   return await generatePatientEncounterFromCondition();
 }

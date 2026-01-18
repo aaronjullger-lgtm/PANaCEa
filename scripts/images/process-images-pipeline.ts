@@ -2,14 +2,14 @@
 
 /**
  * Comprehensive Image Processing Pipeline
- * 
+ *
  * Processes medical images for quiz/drill use with:
  * 1. Face detection and blurring for privacy
  * 2. Answer-revealing text/annotation detection
  * 3. Smart cropping to remove identifying info
  * 4. Quality assessment and filtering
  * 5. Batch upload to Supabase
- * 
+ *
  * Usage: npx tsx scripts/images/process-images-pipeline.ts [options]
  * Options:
  *   --dry-run      Preview processing without changes
@@ -23,17 +23,23 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { config } from 'dotenv';
 import { execSync, exec } from 'child_process';
-import { analyzeImage, DuplicateDetector, generatePerceptualHash, type ImageAnalysis } from './image-analyzer';
+import {
+  analyzeImage,
+  DuplicateDetector,
+  generatePerceptualHash,
+  type ImageAnalysis,
+} from './image-analyzer';
 import { cropImage, isSharpAvailable, type CropRegion } from './image-cropper';
 
 config();
 
 // Rate limiting
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const API_DELAY_MS = 300;
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!;
+const SUPABASE_SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!;
 const DATABASE_URL = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -72,10 +78,10 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
   'DERM__dermatitis__eczema__seborrheic_dermatitis',
   'DERM__inflammatory__hidradenitis_suppurativa',
   'DERM__infectious__abscess',
-  
+
   // ECG (critical for PANCE)
   'CV__ecg__atrial_fibrillation',
-  'CV__ecg__atrial_flutter', 
+  'CV__ecg__atrial_flutter',
   'CV__ecg__ventricular_tachycardia',
   'CV__ecg__ventricular_fibrillation',
   'CV__ecg__torsades_de_pointes',
@@ -99,7 +105,7 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
   'CV__ecg__left_ventricular_hypertrophy',
   'CV__ecg__right_ventricular_hypertrophy',
   'CV__ecg__pulmonary_embolism',
-  
+
   // RADIOLOGY
   'PULM__infectious__pneumonia',
   'PULM__pleural_disease__pneumothorax',
@@ -120,7 +126,7 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
   'NEURO__trauma__subdural_hematoma',
   'NEURO__trauma__basilar_skull_fracture',
   'CV__vascular_disease__aortic_dissection',
-  
+
   // EYE (HEENT)
   'HEENT__eye__glaucoma__acute_angleclosure_glaucoma',
   'HEENT__eye__retina__central_retinal_artery_occlusion_crao',
@@ -140,7 +146,7 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
   'HEENT__eye__lids__hordeolum',
   'HEENT__eye__lids__ectropion',
   'HEENT__eye__lids__entropion',
-  
+
   // INFECTIOUS DISEASE
   'ID__viral__varicella_chickenpox',
   'ID__viral__herpes_zoster_shingles',
@@ -149,7 +155,7 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
   'ID__pediatrics__scarlet_fever',
   'DERM__infectious_viral_childhood_exanthem__hand_foot_mouth_disease_hfmd',
   'DERM__infectious_bacterial_systemic_with_cutaneous_manifestations__erythema_migrans',
-  
+
   // HEMATOLOGY (blood smears)
   'HEME__anemia__iron_deficiency_anemia',
   'HEME__anemia__vitamin_b12_deficiency_anemia',
@@ -162,14 +168,34 @@ const HIGH_YIELD_VISUAL_CONDITIONS = [
 
 // Answer-revealing keywords to detect in images
 const ANSWER_KEYWORDS = [
-  // Disease names  
-  'melanoma', 'carcinoma', 'psoriasis', 'eczema', 'herpes', 'shingles',
-  'fibrillation', 'tachycardia', 'infarction', 'stemi', 'nstemi',
-  'pneumonia', 'tuberculosis', 'fracture', 'dislocation',
+  // Disease names
+  'melanoma',
+  'carcinoma',
+  'psoriasis',
+  'eczema',
+  'herpes',
+  'shingles',
+  'fibrillation',
+  'tachycardia',
+  'infarction',
+  'stemi',
+  'nstemi',
+  'pneumonia',
+  'tuberculosis',
+  'fracture',
+  'dislocation',
   // Diagnostic terms
-  'diagnosis', 'answer', 'correct', 'pathology', 'finding',
+  'diagnosis',
+  'answer',
+  'correct',
+  'pathology',
+  'finding',
   // Educational labels
-  'figure', 'case', 'example', 'note:', 'arrow shows',
+  'figure',
+  'case',
+  'example',
+  'note:',
+  'arrow shows',
 ];
 
 interface ProcessingResult {
@@ -197,7 +223,7 @@ interface ImageProcessingOptions {
  * Ensure required directories exist
  */
 function ensureDirectories(): void {
-  [TEMP_DIR, OUTPUT_DIR].forEach(dir => {
+  [TEMP_DIR, OUTPUT_DIR].forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -208,7 +234,9 @@ function ensureDirectories(): void {
  * Detect faces in an image using Python/OpenCV
  * Returns bounding boxes of detected faces
  */
-async function detectFaces(imagePath: string): Promise<Array<{ x: number; y: number; width: number; height: number }>> {
+async function detectFaces(
+  imagePath: string
+): Promise<Array<{ x: number; y: number; width: number; height: number }>> {
   try {
     // Use a simple Python script with OpenCV for face detection
     const pythonScript = `
@@ -239,10 +267,10 @@ for (x, y, w, h) in profiles:
 
 print(json.dumps(all_faces))
 `;
-    
+
     const scriptPath = path.join(TEMP_DIR, 'detect_faces.py');
     fs.writeFileSync(scriptPath, pythonScript);
-    
+
     const result = execSync(`python3 "${scriptPath}" "${imagePath}"`, { encoding: 'utf-8' });
     return JSON.parse(result.trim());
   } catch (error) {
@@ -292,12 +320,14 @@ for face in faces:
 cv2.imwrite(output_path, image)
 print("success")
 `;
-    
+
     const scriptPath = path.join(TEMP_DIR, 'blur_faces.py');
     fs.writeFileSync(scriptPath, pythonScript);
-    
+
     const facesJson = JSON.stringify(faces).replace(/"/g, '\\"');
-    execSync(`python3 "${scriptPath}" "${imagePath}" "${facesJson}" "${outputPath}"`, { encoding: 'utf-8' });
+    execSync(`python3 "${scriptPath}" "${imagePath}" "${facesJson}" "${outputPath}"`, {
+      encoding: 'utf-8',
+    });
     return true;
   } catch (error) {
     console.error('Face blur error:', error);
@@ -308,7 +338,12 @@ print("success")
 /**
  * Detect text in image using OCR (pytesseract)
  */
-async function detectText(imagePath: string): Promise<{ text: string; regions: Array<{ x: number; y: number; width: number; height: number; text: string }> }> {
+async function detectText(
+  imagePath: string
+): Promise<{
+  text: string;
+  regions: Array<{ x: number; y: number; width: number; height: number; text: string }>;
+}> {
   try {
     const pythonScript = `
 import cv2
@@ -342,11 +377,14 @@ for i in range(n_boxes):
 
 print(json.dumps({"text": text.strip(), "regions": regions}))
 `;
-    
+
     const scriptPath = path.join(TEMP_DIR, 'detect_text.py');
     fs.writeFileSync(scriptPath, pythonScript);
-    
-    const result = execSync(`python3 "${scriptPath}" "${imagePath}"`, { encoding: 'utf-8', timeout: 30000 });
+
+    const result = execSync(`python3 "${scriptPath}" "${imagePath}"`, {
+      encoding: 'utf-8',
+      timeout: 30000,
+    });
     return JSON.parse(result.trim());
   } catch (error) {
     return { text: '', regions: [] };
@@ -359,13 +397,13 @@ print(json.dumps({"text": text.strip(), "regions": regions}))
 function hasAnswerRevealingText(text: string): { revealing: boolean; matches: string[] } {
   const lowerText = text.toLowerCase();
   const matches: string[] = [];
-  
+
   for (const keyword of ANSWER_KEYWORDS) {
     if (lowerText.includes(keyword.toLowerCase())) {
       matches.push(keyword);
     }
   }
-  
+
   return { revealing: matches.length > 0, matches };
 }
 
@@ -411,12 +449,14 @@ for region in regions:
 cv2.imwrite(output_path, image)
 print("success")
 `;
-    
+
     const scriptPath = path.join(TEMP_DIR, 'remove_text.py');
     fs.writeFileSync(scriptPath, pythonScript);
-    
+
     const regionsJson = JSON.stringify(regions).replace(/"/g, '\\"');
-    execSync(`python3 "${scriptPath}" "${imagePath}" "${regionsJson}" "${outputPath}"`, { encoding: 'utf-8' });
+    execSync(`python3 "${scriptPath}" "${imagePath}" "${regionsJson}" "${outputPath}"`, {
+      encoding: 'utf-8',
+    });
     return true;
   } catch (error) {
     console.error('Text removal error:', error);
@@ -461,13 +501,13 @@ async function processImage(
     if (!options.skipOcr) {
       const textResult = await detectText(currentPath);
       const answerCheck = hasAnswerRevealingText(textResult.text);
-      
+
       if (answerCheck.revealing && !options.forceUpload) {
         // Try to remove the answer-revealing text
-        const regionsToRemove = textResult.regions.filter(r => 
-          answerCheck.matches.some(m => r.text.toLowerCase().includes(m.toLowerCase()))
+        const regionsToRemove = textResult.regions.filter((r) =>
+          answerCheck.matches.some((m) => r.text.toLowerCase().includes(m.toLowerCase()))
         );
-        
+
         if (regionsToRemove.length > 0) {
           const cleanedPath = path.join(TEMP_DIR, `cleaned_${filename}`);
           const cleaned = await removeTextRegions(currentPath, regionsToRemove, cleanedPath);
@@ -496,7 +536,6 @@ async function processImage(
     }
 
     return result;
-
   } catch (error) {
     result.skipped = true;
     result.skipReason = `Processing error: ${error}`;
@@ -510,25 +549,31 @@ async function processImage(
 function getLocalImagesForCondition(conditionId: string, basePath: string): string[] {
   const images: string[] = [];
   const conditionName = conditionId.split('__').pop()?.replace(/_/g, ' ') || '';
-  
-  const folders = ['ALL IMAGES', 'curated_images/DERM', 'curated_images/ECG', 'curated_images/RAD', 'MISC/good'];
-  
+
+  const folders = [
+    'ALL IMAGES',
+    'curated_images/DERM',
+    'curated_images/ECG',
+    'curated_images/RAD',
+    'MISC/good',
+  ];
+
   for (const folder of folders) {
     const folderPath = path.join(basePath, folder);
     if (!fs.existsSync(folderPath)) continue;
-    
+
     const files = fs.readdirSync(folderPath);
     for (const file of files) {
       const lowerFile = file.toLowerCase();
       const lowerCondition = conditionName.toLowerCase().replace(/[^a-z0-9]/g, '');
       const lowerFileNorm = lowerFile.replace(/[^a-z0-9]/g, '');
-      
+
       if (lowerFileNorm.includes(lowerCondition) && /\.(jpg|jpeg|png|gif|webp)$/i.test(file)) {
         images.push(path.join(folderPath, file));
       }
     }
   }
-  
+
   return [...new Set(images)]; // Remove duplicates
 }
 
@@ -538,9 +583,9 @@ function getLocalImagesForCondition(conditionId: string, basePath: string): stri
 async function runPipeline(options: ImageProcessingOptions = {}): Promise<void> {
   console.log('🏥 Medical Image Processing Pipeline');
   console.log('====================================\n');
-  
+
   ensureDirectories();
-  
+
   // Check Python dependencies
   try {
     execSync('python3 -c "import cv2"', { encoding: 'utf-8' });
@@ -548,15 +593,17 @@ async function runPipeline(options: ImageProcessingOptions = {}): Promise<void> 
     console.error('❌ OpenCV (cv2) not installed. Run: pip3 install opencv-python');
     process.exit(1);
   }
-  
+
   const basePath = '/Users/aaronullger/PANaCEa/DATA/DATA';
-  const conditionsToProcess = options.targetCondition 
+  const conditionsToProcess = options.targetCondition
     ? [options.targetCondition]
     : HIGH_YIELD_VISUAL_CONDITIONS;
-  
+
   console.log(`📊 Processing ${conditionsToProcess.length} high-yield conditions`);
-  console.log(`   Options: dryRun=${options.dryRun}, skipBlur=${options.skipBlur}, skipOcr=${options.skipOcr}\n`);
-  
+  console.log(
+    `   Options: dryRun=${options.dryRun}, skipBlur=${options.skipBlur}, skipOcr=${options.skipOcr}\n`
+  );
+
   const stats = {
     total: 0,
     processed: 0,
@@ -565,34 +612,37 @@ async function runPipeline(options: ImageProcessingOptions = {}): Promise<void> 
     textRemoved: 0,
     errors: 0,
   };
-  
+
   for (let i = 0; i < conditionsToProcess.length; i++) {
     const conditionId = conditionsToProcess[i];
     const conditionName = conditionId.split('__').pop()?.replace(/_/g, ' ') || conditionId;
-    
+
     console.log(`[${i + 1}/${conditionsToProcess.length}] ${conditionName}`);
-    
+
     // Get local images for this condition
     const images = getLocalImagesForCondition(conditionId, basePath);
-    
+
     if (images.length === 0) {
       console.log(`  ⚠️ No local images found\n`);
       continue;
     }
-    
+
     console.log(`  📷 Found ${images.length} images`);
-    
+
     // Process each image
-    for (const imagePath of images.slice(0, 10)) { // Limit to 10 per condition
+    for (const imagePath of images.slice(0, 10)) {
+      // Limit to 10 per condition
       stats.total++;
-      
+
       const result = await processImage(imagePath, conditionId, options);
-      
+
       if (result.success) {
         stats.processed++;
         if (result.facesBlurred) stats.facesBlurred += result.facesBlurred;
         if (result.textRemoved) stats.textRemoved++;
-        console.log(`    ✅ ${path.basename(imagePath)}${result.facesBlurred ? ` (${result.facesBlurred} faces blurred)` : ''}${result.textRemoved ? ' (text removed)' : ''}`);
+        console.log(
+          `    ✅ ${path.basename(imagePath)}${result.facesBlurred ? ` (${result.facesBlurred} faces blurred)` : ''}${result.textRemoved ? ' (text removed)' : ''}`
+        );
       } else if (result.skipped) {
         stats.skipped++;
         console.log(`    ⏭️ ${path.basename(imagePath)}: ${result.skipReason}`);
@@ -600,13 +650,13 @@ async function runPipeline(options: ImageProcessingOptions = {}): Promise<void> 
         stats.errors++;
         console.log(`    ❌ ${path.basename(imagePath)}`);
       }
-      
+
       await delay(100); // Small delay between images
     }
-    
+
     console.log('');
   }
-  
+
   console.log('\n📊 Pipeline Complete!');
   console.log('=====================');
   console.log(`  Total images: ${stats.total}`);
@@ -627,7 +677,7 @@ const options: ImageProcessingOptions = {
   forceUpload: args.includes('--force'),
 };
 
-const conditionArg = args.find(a => a.startsWith('--condition='));
+const conditionArg = args.find((a) => a.startsWith('--condition='));
 if (conditionArg) {
   options.targetCondition = conditionArg.split('=')[1];
 }

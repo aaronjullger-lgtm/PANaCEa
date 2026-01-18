@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
  * Imaging Study Splitter - Separates combined contrast studies
- * 
+ *
  * Splits "with and without contrast" entries into separate orderable tests.
  * This allows each test to be independently orderable in patient encounters.
- * 
+ *
  * Usage:
  *   npx tsx scripts/generators/imaging-study-splitter.ts --dry-run
  *   npx tsx scripts/generators/imaging-study-splitter.ts
@@ -41,7 +41,7 @@ interface ImagingStudy {
 const CONTRAST_CONTRAINDICATIONS = [
   'Contrast allergy (premedicate if necessary)',
   'Renal insufficiency (eGFR <30 - relative)',
-  'Pregnancy (relative)'
+  'Pregnancy (relative)',
 ];
 
 // MRI-specific contraindications
@@ -50,12 +50,12 @@ const MRI_CONTRAINDICATIONS = [
   'Cochlear implant',
   'Metallic foreign body in eye',
   'Severe claustrophobia',
-  'First trimester pregnancy (relative for contrast)'
+  'First trimester pregnancy (relative for contrast)',
 ];
 
 async function splitCombinedStudies(isDryRun: boolean) {
   console.log('\n🔧 Imaging Study Splitter\n');
-  
+
   if (isDryRun) {
     console.log('🔍 DRY RUN MODE - No database changes\n');
   }
@@ -63,11 +63,8 @@ async function splitCombinedStudies(isDryRun: boolean) {
   // Find all "with and without" studies
   const combinedStudies = await prisma.imagingStudy.findMany({
     where: {
-      OR: [
-        { name: { contains: 'with and without' } },
-        { name: { contains: 'without and with' } }
-      ]
-    }
+      OR: [{ name: { contains: 'with and without' } }, { name: { contains: 'without and with' } }],
+    },
   });
 
   console.log(`Found ${combinedStudies.length} combined studies to split:\n`);
@@ -77,7 +74,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
 
   for (const study of combinedStudies) {
     console.log(`  Processing: ${study.name}`);
-    
+
     // Parse the base name
     let baseName = study.name
       .replace(/\s*\(with and without contrast\)/i, '')
@@ -97,18 +94,26 @@ async function splitCombinedStudies(isDryRun: boolean) {
       bodyRegion: study.bodyRegion,
       usesContrast: false,
       usesRadiation: study.usesRadiation,
-      description: study.description ? study.description.replace(/with (and without )?contrast/gi, 'without contrast') : null,
-      indications: study.indications.filter(i => !i.toLowerCase().includes('contrast-enhanced')),
-      contraindications: study.modality === 'MRI' 
-        ? MRI_CONTRAINDICATIONS.filter(c => !c.includes('contrast'))
-        : study.contraindications.filter(c => !c.toLowerCase().includes('contrast') && !c.toLowerCase().includes('renal')),
+      description: study.description
+        ? study.description.replace(/with (and without )?contrast/gi, 'without contrast')
+        : null,
+      indications: study.indications.filter((i) => !i.toLowerCase().includes('contrast-enhanced')),
+      contraindications:
+        study.modality === 'MRI'
+          ? MRI_CONTRAINDICATIONS.filter((c) => !c.includes('contrast'))
+          : study.contraindications.filter(
+              (c) => !c.toLowerCase().includes('contrast') && !c.toLowerCase().includes('renal')
+            ),
       panceYield: study.panceYield,
       isHighYield: study.isHighYield,
       firstLineFor: study.firstLineFor,
       advantages: [...study.advantages, 'No contrast risk'],
-      limitations: [...study.limitations.filter(l => !l.toLowerCase().includes('contrast')), 'Limited soft tissue characterization without contrast'],
+      limitations: [
+        ...study.limitations.filter((l) => !l.toLowerCase().includes('contrast')),
+        'Limited soft tissue characterization without contrast',
+      ],
       classicSigns: study.classicSigns,
-      clinicalPearls: study.clinicalPearls
+      clinicalPearls: study.clinicalPearls,
     };
 
     // Prepare with contrast study
@@ -118,20 +123,43 @@ async function splitCombinedStudies(isDryRun: boolean) {
       bodyRegion: study.bodyRegion,
       usesContrast: true,
       usesRadiation: study.usesRadiation,
-      description: study.description ? study.description.replace(/without (and with )?contrast/gi, 'with contrast') : null,
+      description: study.description
+        ? study.description.replace(/without (and with )?contrast/gi, 'with contrast')
+        : null,
       indications: study.indications,
-      contraindications: study.modality === 'MRI'
-        ? [...MRI_CONTRAINDICATIONS, 'Gadolinium contrast allergy', 'Severe renal insufficiency (NSF risk)']
-        : [...CONTRAST_CONTRAINDICATIONS, ...(study.modality === 'CT' ? ['Metformin (hold 48h post-contrast)'] : [])],
+      contraindications:
+        study.modality === 'MRI'
+          ? [
+              ...MRI_CONTRAINDICATIONS,
+              'Gadolinium contrast allergy',
+              'Severe renal insufficiency (NSF risk)',
+            ]
+          : [
+              ...CONTRAST_CONTRAINDICATIONS,
+              ...(study.modality === 'CT' ? ['Metformin (hold 48h post-contrast)'] : []),
+            ],
       panceYield: study.panceYield,
       isHighYield: study.isHighYield,
       firstLineFor: study.firstLineFor,
-      advantages: [...study.advantages, 'Enhanced soft tissue contrast', 'Better lesion characterization'],
-      limitations: [...study.limitations, 'Contrast risks', study.modality === 'MRI' ? 'Gadolinium risk in renal failure' : 'Iodinated contrast allergy risk'],
+      advantages: [
+        ...study.advantages,
+        'Enhanced soft tissue contrast',
+        'Better lesion characterization',
+      ],
+      limitations: [
+        ...study.limitations,
+        'Contrast risks',
+        study.modality === 'MRI'
+          ? 'Gadolinium risk in renal failure'
+          : 'Iodinated contrast allergy risk',
+      ],
       classicSigns: study.classicSigns,
-      clinicalPearls: [...study.clinicalPearls, study.modality === 'MRI' 
-        ? 'Check renal function before gadolinium - NSF risk if eGFR <30'
-        : 'Check renal function and allergies before contrast']
+      clinicalPearls: [
+        ...study.clinicalPearls,
+        study.modality === 'MRI'
+          ? 'Check renal function before gadolinium - NSF risk if eGFR <30'
+          : 'Check renal function and allergies before contrast',
+      ],
     };
 
     if (isDryRun) {
@@ -146,7 +174,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
         await prisma.imagingStudy.upsert({
           where: { name: withoutContrastName },
           create: { id: crypto.randomUUID(), updatedAt: new Date(), ...withoutContrastData },
-          update: withoutContrastData
+          update: withoutContrastData,
         });
         console.log(`    ✅ Created: ${withoutContrastName}`);
         created++;
@@ -159,7 +187,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
         await prisma.imagingStudy.upsert({
           where: { name: withContrastName },
           create: { id: crypto.randomUUID(), updatedAt: new Date(), ...withContrastData },
-          update: withContrastData
+          update: withContrastData,
         });
         console.log(`    ✅ Created: ${withContrastName}`);
         created++;
@@ -170,7 +198,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
       // Delete the combined study
       try {
         await prisma.imagingStudy.delete({
-          where: { id: study.id }
+          where: { id: study.id },
         });
         console.log(`    🗑️ Deleted: ${study.name}`);
         deleted++;
@@ -178,7 +206,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
         console.log(`    ⚠️ Delete failed: ${study.name} - ${e.message}`);
       }
     }
-    
+
     console.log('');
   }
 
@@ -191,24 +219,64 @@ async function addMissingContrastVariants(isDryRun: boolean) {
   // Studies that should have both with and without contrast versions
   const studiesNeedingVariants = [
     // CT studies
-    { baseName: 'CT Abdomen/Pelvis', modality: 'CT', bodyRegion: 'Abdomen/Pelvis', usesRadiation: true },
+    {
+      baseName: 'CT Abdomen/Pelvis',
+      modality: 'CT',
+      bodyRegion: 'Abdomen/Pelvis',
+      usesRadiation: true,
+    },
     { baseName: 'CT Chest', modality: 'CT', bodyRegion: 'Chest', usesRadiation: true },
     { baseName: 'CT Head', modality: 'CT', bodyRegion: 'Head', usesRadiation: true },
     { baseName: 'CT Neck', modality: 'CT', bodyRegion: 'Neck', usesRadiation: true },
-    { baseName: 'CT Spine (Cervical)', modality: 'CT', bodyRegion: 'Cervical Spine', usesRadiation: true },
-    { baseName: 'CT Spine (Thoracic)', modality: 'CT', bodyRegion: 'Thoracic Spine', usesRadiation: true },
-    { baseName: 'CT Spine (Lumbar)', modality: 'CT', bodyRegion: 'Lumbar Spine', usesRadiation: true },
+    {
+      baseName: 'CT Spine (Cervical)',
+      modality: 'CT',
+      bodyRegion: 'Cervical Spine',
+      usesRadiation: true,
+    },
+    {
+      baseName: 'CT Spine (Thoracic)',
+      modality: 'CT',
+      bodyRegion: 'Thoracic Spine',
+      usesRadiation: true,
+    },
+    {
+      baseName: 'CT Spine (Lumbar)',
+      modality: 'CT',
+      bodyRegion: 'Lumbar Spine',
+      usesRadiation: true,
+    },
     { baseName: 'CT Extremity', modality: 'CT', bodyRegion: 'Extremity', usesRadiation: true },
     { baseName: 'CT Pelvis', modality: 'CT', bodyRegion: 'Pelvis', usesRadiation: true },
     { baseName: 'CT Sinus', modality: 'CT', bodyRegion: 'Sinus', usesRadiation: true },
     { baseName: 'CT Orbits', modality: 'CT', bodyRegion: 'Orbits', usesRadiation: true },
-    { baseName: 'CT Temporal Bones', modality: 'CT', bodyRegion: 'Temporal Bones', usesRadiation: true },
-    
+    {
+      baseName: 'CT Temporal Bones',
+      modality: 'CT',
+      bodyRegion: 'Temporal Bones',
+      usesRadiation: true,
+    },
+
     // MRI studies
     { baseName: 'MRI Brain', modality: 'MRI', bodyRegion: 'Head', usesRadiation: false },
-    { baseName: 'MRI Cervical Spine', modality: 'MRI', bodyRegion: 'Cervical Spine', usesRadiation: false },
-    { baseName: 'MRI Thoracic Spine', modality: 'MRI', bodyRegion: 'Thoracic Spine', usesRadiation: false },
-    { baseName: 'MRI Lumbar Spine', modality: 'MRI', bodyRegion: 'Lumbar Spine', usesRadiation: false },
+    {
+      baseName: 'MRI Cervical Spine',
+      modality: 'MRI',
+      bodyRegion: 'Cervical Spine',
+      usesRadiation: false,
+    },
+    {
+      baseName: 'MRI Thoracic Spine',
+      modality: 'MRI',
+      bodyRegion: 'Thoracic Spine',
+      usesRadiation: false,
+    },
+    {
+      baseName: 'MRI Lumbar Spine',
+      modality: 'MRI',
+      bodyRegion: 'Lumbar Spine',
+      usesRadiation: false,
+    },
     { baseName: 'MRI Pelvis', modality: 'MRI', bodyRegion: 'Pelvis', usesRadiation: false },
     { baseName: 'MRI Shoulder', modality: 'MRI', bodyRegion: 'Shoulder', usesRadiation: false },
     { baseName: 'MRI Knee', modality: 'MRI', bodyRegion: 'Knee', usesRadiation: false },
@@ -242,16 +310,20 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         usesRadiation: study.usesRadiation,
         description: `${study.baseName} imaging study without contrast`,
         indications: [],
-        contraindications: study.modality === 'MRI' 
-          ? MRI_CONTRAINDICATIONS.filter(c => !c.includes('contrast'))
-          : ['Pregnancy (relative)'],
+        contraindications:
+          study.modality === 'MRI'
+            ? MRI_CONTRAINDICATIONS.filter((c) => !c.includes('contrast'))
+            : ['Pregnancy (relative)'],
         panceYield: 2,
         isHighYield: false,
         firstLineFor: [],
-        advantages: ['No contrast risk', study.modality === 'MRI' ? 'No radiation' : 'Fast acquisition'],
+        advantages: [
+          'No contrast risk',
+          study.modality === 'MRI' ? 'No radiation' : 'Fast acquisition',
+        ],
         limitations: ['Limited soft tissue characterization'],
         classicSigns: [],
-        clinicalPearls: []
+        clinicalPearls: [],
       };
 
       if (isDryRun) {
@@ -259,7 +331,9 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         created++;
       } else {
         try {
-          await prisma.imagingStudy.create({ data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data } });
+          await prisma.imagingStudy.create({
+            data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data },
+          });
           console.log(`  ✅ Created: ${withoutName}`);
           created++;
         } catch (e: any) {
@@ -280,18 +354,25 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         usesRadiation: study.usesRadiation,
         description: `${study.baseName} imaging study with ${contrastAgent.toLowerCase()} contrast`,
         indications: [],
-        contraindications: study.modality === 'MRI'
-          ? [...MRI_CONTRAINDICATIONS, 'Gadolinium allergy', 'Severe renal insufficiency (eGFR <30)']
-          : [...CONTRAST_CONTRAINDICATIONS],
+        contraindications:
+          study.modality === 'MRI'
+            ? [
+                ...MRI_CONTRAINDICATIONS,
+                'Gadolinium allergy',
+                'Severe renal insufficiency (eGFR <30)',
+              ]
+            : [...CONTRAST_CONTRAINDICATIONS],
         panceYield: 2,
         isHighYield: false,
         firstLineFor: [],
         advantages: ['Enhanced soft tissue contrast', 'Better lesion characterization'],
         limitations: [`${contrastAgent} contrast risks`, 'Requires IV access'],
         classicSigns: [],
-        clinicalPearls: [study.modality === 'MRI'
-          ? 'Check renal function before gadolinium administration'
-          : 'Check renal function and contrast allergies before ordering']
+        clinicalPearls: [
+          study.modality === 'MRI'
+            ? 'Check renal function before gadolinium administration'
+            : 'Check renal function and contrast allergies before ordering',
+        ],
       };
 
       if (isDryRun) {
@@ -299,7 +380,9 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         created++;
       } else {
         try {
-          await prisma.imagingStudy.create({ data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data } });
+          await prisma.imagingStudy.create({
+            data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data },
+          });
           console.log(`  ✅ Created: ${withName}`);
           created++;
         } catch (e: any) {
@@ -328,7 +411,7 @@ async function analyzeState() {
   const byModality = await prisma.imagingStudy.groupBy({
     by: ['modality'],
     _count: { id: true },
-    orderBy: { _count: { id: 'desc' } }
+    orderBy: { _count: { id: 'desc' } },
   });
 
   console.log('\n  By Modality:');
@@ -339,11 +422,8 @@ async function analyzeState() {
   // Check for remaining combined studies
   const combined = await prisma.imagingStudy.count({
     where: {
-      OR: [
-        { name: { contains: 'with and without' } },
-        { name: { contains: 'without and with' } }
-      ]
-    }
+      OR: [{ name: { contains: 'with and without' } }, { name: { contains: 'without and with' } }],
+    },
   });
 
   if (combined > 0) {
@@ -376,7 +456,7 @@ async function main() {
 
   await analyzeState();
   await prisma.$disconnect();
-  
+
   console.log('\n✨ Imaging Study Splitter complete!\n');
 }
 

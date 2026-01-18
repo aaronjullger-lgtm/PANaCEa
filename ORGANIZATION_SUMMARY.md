@@ -9,6 +9,7 @@ Your PANaCEa repository has been systematically organized for better maintainabi
 ## 📁 New Folder Structure
 
 ### `/docs` - All Documentation
+
 Centralized documentation organized by category:
 
 ```
@@ -62,6 +63,7 @@ docs/
 ```
 
 ### `/src/registries` - All Registry Files
+
 Centralized medical content registries:
 
 ```
@@ -83,6 +85,7 @@ src/registries/
 ```
 
 ### `/src/archived` - Deprecated Code
+
 Old/unused code preserved for reference:
 
 ```
@@ -92,6 +95,7 @@ src/archived/
 ```
 
 ### `/backups` - Consolidated Backups
+
 All backup folders consolidated:
 
 ```
@@ -104,6 +108,7 @@ backups/
 ## 🗑️ Files Removed
 
 The following temporary/log files were cleaned up:
+
 - `build-output.log`
 - `phase2-output.log`
 - `scrub_report.json`
@@ -183,23 +188,29 @@ PANaCEa/
 Import paths have been automatically updated to reflect the new structure:
 
 ### Registry Imports
+
 **Before:**
+
 ```typescript
 import { DRUG_REGISTRY } from '../../drugRegistry';
 ```
 
 **After:**
+
 ```typescript
 import { DRUG_REGISTRY } from '../registries/drugRegistry';
 ```
 
 ### Constants/Types Imports
+
 **Before:**
+
 ```typescript
 import { SYSTEM_CODES } from '../constants';
 ```
 
 **After:**
+
 ```typescript
 import { SYSTEM_CODES } from '../src/constants';
 ```

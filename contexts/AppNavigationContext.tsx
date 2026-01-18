@@ -1,6 +1,6 @@
 /**
  * AppNavigationContext
- * 
+ *
  * Centralized navigation state management for the application.
  * Handles view routing, drill mode navigation, and URL-based navigation preparation.
  * Extracted from App.tsx to reduce component complexity.
@@ -10,42 +10,42 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import type { TrainingModeId } from '../config/training-modes';
 
 /** All possible views in the application */
-export type AppView = 
-  | "menu" 
-  | "command_center" 
-  | "quiz" 
-  | "integrations" 
-  | "photo_drill" 
-  | "ecg_drill" 
-  | "derm_drill" 
-  | "imaging_drill" 
-  | "rapid_recall" 
-  | "ddx_compare" 
-  | "mini_lab" 
-  | "pharmacology" 
-  | "first_line_treatment" 
-  | "condition_drill" 
-  | "system_drill" 
-  | "subcategory_drill" 
-  | "guideline_drill" 
-  | "fluid_electrolyte" 
-  | "antibiotic_mode" 
-  | "patient_encounter" 
-  | "panre_la" 
-  | "code_blue_speed" 
-  | "grand_rounds" 
-  | "ventilator_hero" 
-  | "physiology_drill" 
-  | "anatomy_review" 
-  | "admin_media" 
-  | "social_dashboard" 
-  | "toolkit" 
-  | "gap_analysis" 
-  | "clinical_profile" 
-  | "training_menu" 
-  | "simulation_page" 
-  | "command_center_page" 
-  | "reference_library";
+export type AppView =
+  | 'menu'
+  | 'command_center'
+  | 'quiz'
+  | 'integrations'
+  | 'photo_drill'
+  | 'ecg_drill'
+  | 'derm_drill'
+  | 'imaging_drill'
+  | 'rapid_recall'
+  | 'ddx_compare'
+  | 'mini_lab'
+  | 'pharmacology'
+  | 'first_line_treatment'
+  | 'condition_drill'
+  | 'system_drill'
+  | 'subcategory_drill'
+  | 'guideline_drill'
+  | 'fluid_electrolyte'
+  | 'antibiotic_mode'
+  | 'patient_encounter'
+  | 'panre_la'
+  | 'code_blue_speed'
+  | 'grand_rounds'
+  | 'ventilator_hero'
+  | 'physiology_drill'
+  | 'anatomy_review'
+  | 'admin_media'
+  | 'social_dashboard'
+  | 'toolkit'
+  | 'gap_analysis'
+  | 'clinical_profile'
+  | 'training_menu'
+  | 'simulation_page'
+  | 'command_center_page'
+  | 'reference_library';
 
 /** Drill mode IDs that have dedicated view implementations */
 const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
@@ -90,12 +90,12 @@ const MODE_VIEW_MAP: Record<string, AppView> = {
   [DRILL_MODE_PATIENT_ENCOUNTER]: 'patient_encounter',
   [DRILL_MODE_CODE_BLUE]: 'code_blue_speed',
   [DRILL_MODE_GRAND_ROUNDS]: 'grand_rounds',
-  'panre_la': 'panre_la',
+  panre_la: 'panre_la',
   [DRILL_MODE_VENTILATOR]: 'ventilator_hero',
   [DRILL_MODE_PHYSIOLOGY]: 'physiology_drill',
   [DRILL_MODE_ANATOMY]: 'anatomy_review',
-  'admin_media': 'admin_media',
-  'toolkit': 'toolkit',
+  admin_media: 'admin_media',
+  toolkit: 'toolkit',
 };
 
 interface AppNavigationContextValue {
@@ -132,9 +132,9 @@ interface AppNavigationProviderProps {
   initialView?: AppView;
 }
 
-export function AppNavigationProvider({ 
-  children, 
-  initialView = 'command_center' 
+export function AppNavigationProvider({
+  children,
+  initialView = 'command_center',
 }: AppNavigationProviderProps) {
   const [view, setView] = useState<AppView>(initialView);
 
@@ -196,11 +196,7 @@ export function AppNavigationProvider({
     navigateToMenu,
   };
 
-  return (
-    <AppNavigationContext.Provider value={value}>
-      {children}
-    </AppNavigationContext.Provider>
-  );
+  return <AppNavigationContext.Provider value={value}>{children}</AppNavigationContext.Provider>;
 }
 
 export function useAppNavigation(): AppNavigationContextValue {

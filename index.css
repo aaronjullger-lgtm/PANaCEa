@@ -13,14 +13,17 @@
 /* Smooth theme transitions */
 html,
 body {
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  transition:
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out;
 }
 
 /* Prevent flash during theme transition */
 html.theme-transitioning * {
-  transition: background-color 0.3s ease-in-out, 
-              color 0.3s ease-in-out, 
-              border-color 0.3s ease-in-out !important;
+  transition:
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out,
+    border-color 0.3s ease-in-out !important;
 }
 
 /* -----------------------------------------------------
@@ -163,147 +166,147 @@ body,
 :root {
   /* Premium noise texture for glass cards (2.5% opacity grain overlay) */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  
+
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE (DEFAULT) ===== */
-  
+
   /* Main backgrounds */
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  
+  --background: #ffffff;
+  --foreground: #0f172a;
+
   /* Card/Container system */
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
   /* Primary brand color */
-  --primary: #0284C7;
-  --primary-foreground: #FFFFFF;
-  
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+
   /* Muted/Secondary */
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
   /* Border */
-  --border: #E2E8F0;
-  
+  --border: #e2e8f0;
+
   /* Legacy theme-aware variables - LIGHT MODE DEFAULTS */
-  --color-bg-primary: #FFFFFF;      /* White background */
-  --color-bg-secondary: #F8FAFC;    /* slate-50 */
-  --color-bg-tertiary: #F1F5F9;     /* slate-100 */
-  --color-text-primary: #0F172A;    /* slate-900 - dark text */
-  --color-text-secondary: #475569;  /* slate-600 */
-  --color-text-muted: #64748B;      /* slate-500 */
-  --color-border: #E2E8F0;          /* slate-200 */
-  --color-border-light: #F1F5F9;    /* slate-100 */
-  --color-accent: #0284C7;          /* sky-600 */
-  --color-accent-hover: #0369A1;    /* sky-700 */
-  --color-accent-light: #E0F2FE;    /* sky-100 */
+  --color-bg-primary: #ffffff; /* White background */
+  --color-bg-secondary: #f8fafc; /* slate-50 */
+  --color-bg-tertiary: #f1f5f9; /* slate-100 */
+  --color-text-primary: #0f172a; /* slate-900 - dark text */
+  --color-text-secondary: #475569; /* slate-600 */
+  --color-text-muted: #64748b; /* slate-500 */
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-border-light: #f1f5f9; /* slate-100 */
+  --color-accent: #0284c7; /* sky-600 */
+  --color-accent-hover: #0369a1; /* sky-700 */
+  --color-accent-light: #e0f2fe; /* sky-100 */
   --color-overlay: rgba(0, 0, 0, 0.5);
-  
+
   /* Glass card variables - LIGHT MODE */
   --color-glass-bg: rgba(255, 255, 255, 0.85);
   --color-glass-border: rgba(226, 232, 240, 0.6);
   --color-glass-shadow: rgba(0, 0, 0, 0.08);
-  
+
   /* Card background for table content */
-  --color-card-bg: #FFFFFF;
-  
+  --color-card-bg: #ffffff;
+
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS ===== */
-  --color-category-visual: #A67F7F;       /* Dusty Rose */
-  --color-category-simulation: #9A7F9A;   /* Deep Plum */
-  --color-category-practice: #728BA6;     /* Steel Blue */
-  --color-category-specialty: #B39B6C;    /* Muted Amber */
-  --color-category-toolkit: #7A8F6E;      /* Sage */
-  --color-category-command: #5E8686;      /* Slate-Teal */
+  --color-category-visual: #a67f7f; /* Dusty Rose */
+  --color-category-simulation: #9a7f9a; /* Deep Plum */
+  --color-category-practice: #728ba6; /* Steel Blue */
+  --color-category-specialty: #b39b6c; /* Muted Amber */
+  --color-category-toolkit: #7a8f6e; /* Sage */
+  --color-category-command: #5e8686; /* Slate-Teal */
 
   /* ===== DARK SPORTSBOOK AESTHETIC VARIABLES ===== */
   /* Deep backgrounds with subtle opacity */
-  --sportsbook-bg-primary: rgba(15, 23, 42, 0.95);      /* slate-950/95 */
-  --sportsbook-bg-secondary: rgba(30, 41, 59, 0.90);    /* slate-900/90 */
-  --sportsbook-bg-card: rgba(30, 41, 59, 0.40);         /* slate-900/40 */
-  --sportsbook-bg-hover: rgba(51, 65, 85, 0.60);        /* slate-800/60 */
-  
+  --sportsbook-bg-primary: rgba(15, 23, 42, 0.95); /* slate-950/95 */
+  --sportsbook-bg-secondary: rgba(30, 41, 59, 0.9); /* slate-900/90 */
+  --sportsbook-bg-card: rgba(30, 41, 59, 0.4); /* slate-900/40 */
+  --sportsbook-bg-hover: rgba(51, 65, 85, 0.6); /* slate-800/60 */
+
   /* High contrast text colors */
-  --sportsbook-text-primary: rgb(241, 245, 249);        /* slate-100 */
-  --sportsbook-text-secondary: rgb(203, 213, 225);      /* slate-300 */
-  --sportsbook-text-muted: rgb(148, 163, 184);          /* slate-400 */
-  
+  --sportsbook-text-primary: rgb(241, 245, 249); /* slate-100 */
+  --sportsbook-text-secondary: rgb(203, 213, 225); /* slate-300 */
+  --sportsbook-text-muted: rgb(148, 163, 184); /* slate-400 */
+
   /* Subtle borders with glow potential */
-  --sportsbook-border-primary: rgba(71, 85, 105, 0.50); /* slate-600/50 */
-  --sportsbook-border-secondary: rgba(100, 116, 139, 0.30); /* slate-500/30 */
-  --sportsbook-border-accent: rgba(59, 130, 246, 0.50); /* blue-500/50 */
-  
+  --sportsbook-border-primary: rgba(71, 85, 105, 0.5); /* slate-600/50 */
+  --sportsbook-border-secondary: rgba(100, 116, 139, 0.3); /* slate-500/30 */
+  --sportsbook-border-accent: rgba(59, 130, 246, 0.5); /* blue-500/50 */
+
   /* System-specific accent backgrounds (for badges) */
-  --sportsbook-cv-bg: rgba(127, 29, 29, 0.40);          /* red-950/40 */
-  --sportsbook-pulm-bg: rgba(8, 51, 68, 0.40);          /* cyan-950/40 */
-  --sportsbook-gi-bg: rgba(69, 26, 3, 0.40);            /* amber-950/40 */
-  --sportsbook-neuro-bg: rgba(46, 16, 101, 0.40);       /* purple-950/40 */
-  --sportsbook-renal-bg: rgba(12, 10, 9, 0.40);         /* blue-950/40 */
-  --sportsbook-endo-bg: rgba(80, 7, 36, 0.40);          /* pink-950/40 */
-  --sportsbook-eent-bg: rgba(4, 47, 46, 0.40);          /* teal-950/40 */
-  --sportsbook-msk-bg: rgba(15, 23, 42, 0.40);          /* slate-800/40 */
-  
+  --sportsbook-cv-bg: rgba(127, 29, 29, 0.4); /* red-950/40 */
+  --sportsbook-pulm-bg: rgba(8, 51, 68, 0.4); /* cyan-950/40 */
+  --sportsbook-gi-bg: rgba(69, 26, 3, 0.4); /* amber-950/40 */
+  --sportsbook-neuro-bg: rgba(46, 16, 101, 0.4); /* purple-950/40 */
+  --sportsbook-renal-bg: rgba(12, 10, 9, 0.4); /* blue-950/40 */
+  --sportsbook-endo-bg: rgba(80, 7, 36, 0.4); /* pink-950/40 */
+  --sportsbook-eent-bg: rgba(4, 47, 46, 0.4); /* teal-950/40 */
+  --sportsbook-msk-bg: rgba(15, 23, 42, 0.4); /* slate-800/40 */
+
   /* Yield level colors */
-  --sportsbook-yield-high: rgba(127, 29, 29, 0.50);     /* red-950/50 */
-  --sportsbook-yield-medium: rgba(69, 26, 3, 0.50);     /* amber-950/50 */
-  --sportsbook-yield-low: rgba(30, 41, 59, 0.50);       /* slate-800/50 */
-  
+  --sportsbook-yield-high: rgba(127, 29, 29, 0.5); /* red-950/50 */
+  --sportsbook-yield-medium: rgba(69, 26, 3, 0.5); /* amber-950/50 */
+  --sportsbook-yield-low: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+
   /* Hover and interaction effects */
-  --sportsbook-glow-blue: rgba(59, 130, 246, 0.20);     /* blue-500/20 */
-  --sportsbook-glow-accent: rgba(59, 130, 246, 0.30);   /* blue-500/30 */
+  --sportsbook-glow-blue: rgba(59, 130, 246, 0.2); /* blue-500/20 */
+  --sportsbook-glow-accent: rgba(59, 130, 246, 0.3); /* blue-500/30 */
   --sportsbook-shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .dark {
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
-  
+
   /* Main backgrounds */
-  --background: #0F172A;
-  --foreground: #F1F5F9;
-  
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+
   /* Card/Container system */
-  --card: #1E293B;
-  --card-foreground: #F1F5F9;
-  
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+
   /* Primary brand color */
-  --primary: #0EA5E9;
-  --primary-foreground: #FFFFFF;
-  
+  --primary: #0ea5e9;
+  --primary-foreground: #ffffff;
+
   /* Muted/Secondary */
   --muted: #334155;
-  --muted-foreground: #94A3B8;
-  
+  --muted-foreground: #94a3b8;
+
   /* Border */
   --border: #475569;
-  
+
   /* Legacy theme-aware variables (for backward compatibility) */
-  --color-bg-primary: #0F172A;
-  --color-bg-secondary: #1E293B;
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
   --color-bg-tertiary: #334155;
-  --color-text-primary: #F0F0F0;
-  --color-text-secondary: #CBD5E1;
-  --color-text-muted: #94A3B8;
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-light: #334155;
-  --color-accent: #0EA5E9;
-  --color-accent-hover: #38BDF8;
-  --color-accent-light: #1E293B;
+  --color-accent: #0ea5e9;
+  --color-accent-hover: #38bdf8;
+  --color-accent-light: #1e293b;
   --color-overlay: rgba(0, 0, 0, 0.75);
-  
+
   /* Glass card variables */
   --color-glass-bg: rgba(30, 41, 59, 0.7);
   --color-glass-border: rgba(255, 255, 255, 0.08);
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
-  
+
   /* Card background for table content */
-  --color-card-bg: #1E293B;
-  
+  --color-card-bg: #1e293b;
+
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
-  --color-category-visual: #C09E9E;       /* Dusty Rose (lighter) */
-  --color-category-simulation: #B6A0B6;   /* Deep Plum (lighter) */
-  --color-category-practice: #91A6BD;     /* Steel Blue (lighter) */
-  --color-category-specialty: #C5B38A;    /* Muted Amber (lighter) */
-  --color-category-toolkit: #96A78A;      /* Sage (lighter) */
-  --color-category-command: #7DA3A3;      /* Slate-Teal (lighter) */
+  --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */
+  --color-category-simulation: #b6a0b6; /* Deep Plum (lighter) */
+  --color-category-practice: #91a6bd; /* Steel Blue (lighter) */
+  --color-category-specialty: #c5b38a; /* Muted Amber (lighter) */
+  --color-category-toolkit: #96a78a; /* Sage (lighter) */
+  --color-category-command: #7da3a3; /* Slate-Teal (lighter) */
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */
@@ -312,11 +315,11 @@ body,
   /* High contrast but not bright - easier on eyes */
   --color-bg-primary: #1a1a2e;
   --color-bg-secondary: #252540;
-  --color-text-primary: #E8E8E8;
-  --color-text-secondary: #B8B8C8;
-  --color-accent: #6B8F71;
-  --color-accent-hover: #7FA385;
-  
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #b8b8c8;
+  --color-accent: #6b8f71;
+  --color-accent-hover: #7fa385;
+
   /* Larger touch targets via scaling */
   --commuter-scale: 1.15;
   --commuter-button-min-height: 56px;
@@ -339,8 +342,15 @@ body,
 
 /* Voice indicator animation */
 @keyframes voice-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.7; }
-  50% { transform: scale(1.1); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .voice-listening {
@@ -351,11 +361,11 @@ body,
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #6B8F71;
+  background-color: #6b8f71;
 }
 
 .voice-indicator.active {
-  background-color: #7FA385;
+  background-color: #7fa385;
   animation: voice-pulse 1s ease-in-out infinite;
 }
 
@@ -660,13 +670,15 @@ body,
   border: 1px solid var(--color-glass-border);
   box-shadow: 0 8px 32px var(--color-glass-shadow);
   scroll-margin-top: 96px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   position: relative;
 }
 
 /* Noise texture overlay for premium, non-plastic look */
 .condition-card::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: 16px;
@@ -882,7 +894,9 @@ body,
 /* Inline code + code blocks */
 .condition-content code,
 .condition-markdown code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.95em;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
@@ -1067,7 +1081,8 @@ body,
 
 /* Subtle pulse animation for streak challenge card */
 @keyframes pulse-subtle {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.4);
   }
   50% {
@@ -1090,13 +1105,13 @@ body,
     max-height: 100vh;
     border-radius: 0;
   }
-  
+
   .condition-layout {
     flex-direction: column;
     padding: 0;
     gap: 0;
   }
-  
+
   /* Convert sidebar to sticky top horizontal nav on mobile */
   .condition-sidebar {
     position: sticky;
@@ -1118,7 +1133,7 @@ body,
   .section-nav-header {
     display: none;
   }
-  
+
   .section-nav-list {
     display: flex;
     flex-wrap: nowrap;
@@ -1126,14 +1141,14 @@ body,
     overflow-x: auto;
     padding-bottom: 4px;
   }
-  
+
   .section-nav-button {
     padding: 8px 14px;
     font-size: 0.75rem;
     flex: 0 0 auto;
     white-space: nowrap;
   }
-  
+
   .condition-content-panel {
     flex: 1;
     min-height: 0;
@@ -1141,22 +1156,22 @@ body,
     border-radius: 0;
     border: none;
   }
-  
+
   .condition-scrollable {
     padding: 16px;
     padding-right: 16px;
   }
-  
+
   .condition-card {
     padding: 16px;
     margin-bottom: 20px;
     overflow-x: auto;
   }
-  
+
   .condition-section-title {
     font-size: 1.2rem;
   }
-  
+
   .condition-content {
     font-size: 0.95rem;
     line-height: 1.65;
@@ -1164,29 +1179,29 @@ body,
     word-wrap: break-word;
     word-break: break-word;
   }
-  
+
   .condition-content table {
     display: block;
     overflow-x: auto;
     max-width: 100%;
   }
-  
+
   .condition-modal-header {
     padding: 16px;
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .condition-title {
     font-size: 1.2rem;
   }
-  
+
   .condition-footer {
     padding: 12px 16px;
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .condition-close,
   .condition-drill {
     flex: 1 1 auto;
@@ -1210,7 +1225,7 @@ body,
 }
 
 .card-glass::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -1272,83 +1287,82 @@ body,
    =============================================== */
 
 /* Safety: If a card has white/light background, force dark text */
-[class*="bg-white"],
-[class*="bg-slate-50"],
-[class*="bg-gray-50"],
-[class*="bg-blue-50"],
-[class*="bg-indigo-50"],
-[class*="from-blue-50"],
-[class*="from-indigo-50"] {
-  color: #0F172A !important; /* Force dark text on light backgrounds */
+[class*='bg-white'],
+[class*='bg-slate-50'],
+[class*='bg-gray-50'],
+[class*='bg-blue-50'],
+[class*='bg-indigo-50'],
+[class*='from-blue-50'],
+[class*='from-indigo-50'] {
+  color: #0f172a !important; /* Force dark text on light backgrounds */
 }
 
 /* Safety: Override nested elements within light backgrounds */
-[class*="bg-white"] [class*="text-"],
-[class*="bg-slate-50"] [class*="text-"],
-[class*="bg-blue-50"] [class*="text-"],
-[class*="from-blue-50"] [class*="text-"],
-[class*="from-indigo-50"] [class*="text-"] {
+[class*='bg-white'] [class*='text-'],
+[class*='bg-slate-50'] [class*='text-'],
+[class*='bg-blue-50'] [class*='text-'],
+[class*='from-blue-50'] [class*='text-'],
+[class*='from-indigo-50'] [class*='text-'] {
   color: inherit;
 }
 
 /* Safety: Ensure headings in light cards are always dark */
-[class*="bg-white"] h1,
-[class*="bg-white"] h2,
-[class*="bg-white"] h3,
-[class*="bg-white"] h4,
-[class*="bg-slate-50"] h1,
-[class*="bg-slate-50"] h2,
-[class*="bg-slate-50"] h3,
-[class*="bg-slate-50"] h4,
-[class*="bg-blue-50"] h1,
-[class*="bg-blue-50"] h2,
-[class*="bg-blue-50"] h3,
-[class*="bg-blue-50"] h4,
-[class*="from-blue-50"] h1,
-[class*="from-blue-50"] h2,
-[class*="from-blue-50"] h3,
-[class*="from-blue-50"] h4 {
-  color: #0F172A !important;
+[class*='bg-white'] h1,
+[class*='bg-white'] h2,
+[class*='bg-white'] h3,
+[class*='bg-white'] h4,
+[class*='bg-slate-50'] h1,
+[class*='bg-slate-50'] h2,
+[class*='bg-slate-50'] h3,
+[class*='bg-slate-50'] h4,
+[class*='bg-blue-50'] h1,
+[class*='bg-blue-50'] h2,
+[class*='bg-blue-50'] h3,
+[class*='bg-blue-50'] h4,
+[class*='from-blue-50'] h1,
+[class*='from-blue-50'] h2,
+[class*='from-blue-50'] h3,
+[class*='from-blue-50'] h4 {
+  color: #0f172a !important;
 }
 
 /* Safety: Ensure paragraphs in light cards have proper contrast */
-[class*="bg-white"] p,
-[class*="bg-slate-50"] p,
-[class*="bg-blue-50"] p,
-[class*="from-blue-50"] p,
-[class*="from-indigo-50"] p {
+[class*='bg-white'] p,
+[class*='bg-slate-50'] p,
+[class*='bg-blue-50'] p,
+[class*='from-blue-50'] p,
+[class*='from-indigo-50'] p {
   color: #475569 !important; /* slate-600 */
 }
 
 /* Dark mode: Remove safety overrides when dark class is present */
-.dark [class*="bg-white"],
-.dark [class*="bg-slate-50"],
-.dark [class*="bg-blue-50"],
-.dark [class*="from-blue-50"],
-.dark [class*="from-indigo-50"] {
+.dark [class*='bg-white'],
+.dark [class*='bg-slate-50'],
+.dark [class*='bg-blue-50'],
+.dark [class*='from-blue-50'],
+.dark [class*='from-indigo-50'] {
   color: inherit !important;
 }
 
-.dark [class*="bg-white"] h1,
-.dark [class*="bg-white"] h2,
-.dark [class*="bg-white"] h3,
-.dark [class*="bg-white"] h4,
-.dark [class*="bg-slate-50"] h1,
-.dark [class*="bg-slate-50"] h2,
-.dark [class*="bg-slate-50"] h3,
-.dark [class*="bg-slate-50"] h4,
-.dark [class*="bg-blue-50"] h1,
-.dark [class*="bg-blue-50"] h2,
-.dark [class*="bg-blue-50"] h3,
-.dark [class*="bg-blue-50"] h4 {
+.dark [class*='bg-white'] h1,
+.dark [class*='bg-white'] h2,
+.dark [class*='bg-white'] h3,
+.dark [class*='bg-white'] h4,
+.dark [class*='bg-slate-50'] h1,
+.dark [class*='bg-slate-50'] h2,
+.dark [class*='bg-slate-50'] h3,
+.dark [class*='bg-slate-50'] h4,
+.dark [class*='bg-blue-50'] h1,
+.dark [class*='bg-blue-50'] h2,
+.dark [class*='bg-blue-50'] h3,
+.dark [class*='bg-blue-50'] h4 {
   color: inherit !important;
 }
 
-.dark [class*="bg-white"] p,
-.dark [class*="bg-slate-50"] p,
-.dark [class*="bg-blue-50"] p,
-.dark [class*="from-blue-50"] p,
-.dark [class*="from-indigo-50"] p {
+.dark [class*='bg-white'] p,
+.dark [class*='bg-slate-50'] p,
+.dark [class*='bg-blue-50'] p,
+.dark [class*='from-blue-50'] p,
+.dark [class*='from-indigo-50'] p {
   color: inherit !important;
 }
-

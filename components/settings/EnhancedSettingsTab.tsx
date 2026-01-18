@@ -1,6 +1,6 @@
 /**
  * EnhancedSettingsTab - Improved Settings Tab Component
- * 
+ *
  * Reorganized settings with:
  * 1. Career Stage selection prominently displayed
  * 2. Better grouped sections
@@ -55,7 +55,12 @@ interface EnhancedSettingsTabProps {
 }
 
 // Career stage options with descriptions
-const CAREER_STAGE_OPTIONS: { value: CareerStage; label: string; description: string; icon: React.ElementType }[] = [
+const CAREER_STAGE_OPTIONS: {
+  value: CareerStage;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+}[] = [
   {
     value: 'student',
     label: 'PA Student',
@@ -82,17 +87,17 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   // Clerk user & auth
   const { isSignedIn, user, isLoaded } = useUser();
   const { signOut } = useClerk();
-  
+
   // User profile state
   const [userProfile, setUserProfileState] = useState<UserProfile>(() => {
     return loadUserProfile() || { hasCompletedOnboarding: false };
   });
-  
+
   // Career stage state
   const [careerStage, setCareerStageState] = useState<CareerStage>(() => {
     return getUserContext().careerStage;
   });
-  
+
   // Expanded sections
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['career-stage', 'profile'])
@@ -107,7 +112,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   }, [userProfile.yearInProgram]);
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
       if (next.has(section)) {
         next.delete(section);
@@ -121,15 +126,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   const handleCareerStageChange = (stage: CareerStage) => {
     setCareerStageState(stage);
     setUserContext({ careerStage: stage });
-    
+
     // Notify all listeners to update their context immediately
     refreshUserContext();
-    
+
     // Also update profile if changing to practicing and not already graduated
     if (stage === 'practicing' && userProfile.yearInProgram !== 'Graduated') {
-      const updated = updateUserProfile({ 
+      const updated = updateUserProfile({
         yearInProgram: 'Graduated',
-        isCertifiedPA: true 
+        isCertifiedPA: true,
       });
       setUserProfileState(updated);
     }
@@ -153,13 +158,13 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
               <Target className="w-5 h-5 text-white" />
             </div>
             <div className="text-left">
-              <h3 className="font-bold text-[var(--color-text-primary)]">
-                Your Exam Focus
-              </h3>
+              <h3 className="font-bold text-[var(--color-text-primary)]">Your Exam Focus</h3>
               <p className="text-sm text-[var(--color-text-muted)]">
-                {careerStage === 'student' ? 'PANCE Preparation' : 
-                 careerStage === 'practicing' ? 'PANRE-LA Maintenance' : 
-                 'Select your exam path'}
+                {careerStage === 'student'
+                  ? 'PANCE Preparation'
+                  : careerStage === 'practicing'
+                    ? 'PANRE-LA Maintenance'
+                    : 'Select your exam path'}
               </p>
             </div>
           </div>
@@ -169,7 +174,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
           )}
         </button>
-        
+
         <AnimatePresence>
           {expandedSections.has('career-stage') && (
             <motion.div
@@ -183,12 +188,12 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                 <p className="text-sm text-[var(--color-text-muted)]">
                   This determines which content and features are shown to you:
                 </p>
-                
+
                 <div className="space-y-2">
                   {CAREER_STAGE_OPTIONS.map((option) => {
                     const Icon = option.icon;
                     const isSelected = careerStage === option.value;
-                    
+
                     return (
                       <button
                         key={option.value}
@@ -200,9 +205,13 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            isSelected ? 'bg-blue-500 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-                          }`}>
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              isSelected
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                            }`}
+                          >
                             <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
@@ -210,9 +219,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                               <span className="font-semibold text-[var(--color-text-primary)]">
                                 {option.label}
                               </span>
-                              {isSelected && (
-                                <Check className="w-4 h-4 text-blue-500" />
-                              )}
+                              {isSelected && <Check className="w-4 h-4 text-blue-500" />}
                             </div>
                             <p className="text-sm text-[var(--color-text-muted)]">
                               {option.description}
@@ -223,7 +230,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     );
                   })}
                 </div>
-                
+
                 {careerStage === 'unknown' && (
                   <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
@@ -247,11 +254,10 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           <div className="flex items-center gap-3">
             <User className="w-5 h-5 text-[var(--color-accent)]" />
             <div className="text-left">
-              <h3 className="font-medium text-[var(--color-text-primary)]">
-                Profile Details
-              </h3>
+              <h3 className="font-medium text-[var(--color-text-primary)]">Profile Details</h3>
               <p className="text-sm text-[var(--color-text-muted)]">
-                {userProfile.school || 'School not set'} • {userProfile.yearInProgram || 'Year not set'}
+                {userProfile.school || 'School not set'} •{' '}
+                {userProfile.yearInProgram || 'Year not set'}
               </p>
             </div>
           </div>
@@ -261,7 +267,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
           )}
         </button>
-        
+
         <AnimatePresence>
           {expandedSections.has('profile') && (
             <motion.div
@@ -311,8 +317,10 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                         transition-all text-sm"
                     >
                       <option value="">Select year...</option>
-                      {YEAR_IN_PROGRAM_OPTIONS.filter(y => y !== 'Graduated').map((year) => (
-                        <option key={year} value={year}>{year}</option>
+                      {YEAR_IN_PROGRAM_OPTIONS.filter((y) => y !== 'Graduated').map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -340,7 +348,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   <div>
                     <RotationSelector
                       value={userProfile.currentRotation}
-                      onChange={(rotation: ClinicalRotation) => handleUpdateProfile({ currentRotation: rotation })}
+                      onChange={(rotation: ClinicalRotation) =>
+                        handleUpdateProfile({ currentRotation: rotation })
+                      }
                       label="Current Clinical Rotation"
                     />
                   </div>
@@ -397,11 +407,11 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           <div className="flex items-center gap-3">
             <Palette className="w-5 h-5 text-[var(--color-accent)]" />
             <div className="text-left">
-              <h3 className="font-medium text-[var(--color-text-primary)]">
-                Appearance
-              </h3>
+              <h3 className="font-medium text-[var(--color-text-primary)]">Appearance</h3>
               <p className="text-sm text-[var(--color-text-muted)]">
-                {theme === 'dark' ? 'Dark' : 'Light'} theme • {ANALYTICS_PALETTES.find(p => p.id === analyticsPalette)?.label || 'Default'} palette
+                {theme === 'dark' ? 'Dark' : 'Light'} theme •{' '}
+                {ANALYTICS_PALETTES.find((p) => p.id === analyticsPalette)?.label || 'Default'}{' '}
+                palette
               </p>
             </div>
           </div>
@@ -411,7 +421,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
           )}
         </button>
-        
+
         <AnimatePresence>
           {expandedSections.has('appearance') && (
             <motion.div
@@ -457,9 +467,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   <p className="text-xs text-[var(--color-text-muted)] mb-3">
                     Color scheme for charts and visualizations
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
-                    {ANALYTICS_PALETTES.map(palette => (
+                    {ANALYTICS_PALETTES.map((palette) => (
                       <button
                         key={palette.id}
                         onClick={() => onSetAnalyticsPalette(palette.id)}
@@ -478,13 +488,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                           )}
                         </div>
                         <div className="flex gap-1">
-                          {Object.values(palette.colors).slice(0, 5).map((color, i) => (
-                            <div
-                              key={i}
-                              className="w-4 h-4 rounded border border-[var(--color-border)]"
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
+                          {Object.values(palette.colors)
+                            .slice(0, 5)
+                            .map((color, i) => (
+                              <div
+                                key={i}
+                                className="w-4 h-4 rounded border border-[var(--color-border)]"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
                         </div>
                       </button>
                     ))}
@@ -505,15 +517,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
-                {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
+                {user?.firstName?.charAt(0) ||
+                  user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() ||
+                  'S'}
               </div>
               <div className="text-left">
                 <h3 className="font-medium text-[var(--color-text-primary)]">
                   {user?.fullName || user?.firstName || 'Account'}
                 </h3>
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Account & Cloud Sync
-                </p>
+                <p className="text-sm text-[var(--color-text-muted)]">Account & Cloud Sync</p>
               </div>
             </div>
             {expandedSections.has('account') ? (
@@ -522,7 +534,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
               <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
             )}
           </button>
-          
+
           <AnimatePresence>
             {expandedSections.has('account') && (
               <motion.div
@@ -557,16 +569,24 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     )}
                     <div className="flex-1">
                       <div className="text-xs text-[var(--color-text-muted)]">Cloud Sync</div>
-                      <div className={`text-sm ${
-                        isSyncing ? 'text-blue-600 dark:text-blue-400' :
-                        syncError ? 'text-red-600 dark:text-red-400' :
-                        lastSyncTime ? 'text-green-600 dark:text-green-400' :
-                        'text-[var(--color-text-primary)]'
-                      }`}>
-                        {isSyncing ? 'Syncing...' :
-                         syncError ? 'Sync Error' :
-                         lastSyncTime ? 'Synced' :
-                         'Local Only'}
+                      <div
+                        className={`text-sm ${
+                          isSyncing
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : syncError
+                              ? 'text-red-600 dark:text-red-400'
+                              : lastSyncTime
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        {isSyncing
+                          ? 'Syncing...'
+                          : syncError
+                            ? 'Sync Error'
+                            : lastSyncTime
+                              ? 'Synced'
+                              : 'Local Only'}
                       </div>
                     </div>
                   </div>
@@ -590,7 +610,10 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
         <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
           <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <span><strong>Tip:</strong> Your settings are saved automatically and sync across devices when logged in.</span>
+          <span>
+            <strong>Tip:</strong> Your settings are saved automatically and sync across devices when
+            logged in.
+          </span>
         </p>
       </div>
     </div>

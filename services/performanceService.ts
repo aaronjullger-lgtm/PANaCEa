@@ -1,13 +1,8 @@
 // services/performanceService.ts
 
-import type {
-  Question,
-  PerformanceRecord,
-  SessionSettings,
-  SystemCode,
-} from "../types";
+import type { Question, PerformanceRecord, SessionSettings, SystemCode } from '../types';
 
-const STORAGE_KEY = "panceai_performance_v2";
+const STORAGE_KEY = 'panceai_performance_v2';
 
 // ---- In-memory cache to reduce localStorage reads ----
 let cachedRecords: PerformanceRecord[] | null = null;
@@ -18,18 +13,16 @@ const CACHE_TTL = 5000; // 5 seconds cache TTL
 // ---- Low-level helpers ----
 
 function loadAllRecords(): PerformanceRecord[] {
-  if (typeof window === "undefined") return [];
-  
+  if (typeof window === 'undefined') return [];
+
   const raw = localStorage.getItem(STORAGE_KEY);
   const now = Date.now();
-  
+
   // Check if cache is valid: not expired AND localStorage hasn't changed (cross-tab support)
-  if (cachedRecords && 
-      (now - cacheTimestamp) < CACHE_TTL && 
-      raw === cachedStorageValue) {
+  if (cachedRecords && now - cacheTimestamp < CACHE_TTL && raw === cachedStorageValue) {
     return cachedRecords;
   }
-  
+
   // Cache miss or invalidated - reload from localStorage
   try {
     if (!raw) {
@@ -58,7 +51,7 @@ function loadAllRecords(): PerformanceRecord[] {
 }
 
 function saveAllRecords(records: PerformanceRecord[]) {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     const serialized = JSON.stringify(records);
     localStorage.setItem(STORAGE_KEY, serialized);
@@ -66,11 +59,11 @@ function saveAllRecords(records: PerformanceRecord[]) {
     cachedRecords = records;
     cacheTimestamp = Date.now();
     cachedStorageValue = serialized;
-    
+
     // Dispatch event for hooks
     window.dispatchEvent(new Event('performance-updated'));
   } catch (err) {
-    console.error("Failed to save performance records", err);
+    console.error('Failed to save performance records', err);
   }
 }
 
@@ -144,7 +137,7 @@ export function getHierarchicalStats(): SystemStats[] {
   //  - focus === "all"
   //  - difficulty === "same" (your “PANCE-level” choice)
   const filtered = all.filter(
-    (r) => r.focus === "all" && r.difficulty === "same" && r.system && r.system !== "OTHER"
+    (r) => r.focus === 'all' && r.difficulty === 'same' && r.system && r.system !== 'OTHER'
   );
 
   // system → subcategory → condition → aggregate
@@ -152,7 +145,7 @@ export function getHierarchicalStats(): SystemStats[] {
 
   for (const rec of filtered) {
     const system = rec.system as SystemCode;
-    const subcategory = rec.subcategory ?? "Uncategorized";
+    const subcategory = rec.subcategory ?? 'Uncategorized';
     const conditionKey = rec.conditionId || rec.condition;
 
     if (!systemMap.has(system)) {

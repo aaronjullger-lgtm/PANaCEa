@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
  * DDx Doctor - AI-powered generator for DifferentialDiagnosis table
- * 
+ *
  * Generates comprehensive differential diagnosis frameworks by presenting symptom.
  * Updates existing records with clinically useful fields:
  *   - mostDangerous: must-not-miss diagnoses
@@ -13,7 +13,7 @@
  *   - byAge: age-specific DDx patterns (JSON)
  *   - reassuringFeatures: what makes dangerous diagnoses less likely
  *   - commonMistakes: diagnostic pitfalls
- * 
+ *
  * Usage:
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ddx-doctor.ts --dry-run
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/ddx-doctor.ts --update-existing
@@ -32,7 +32,7 @@ const prisma = new PrismaClient();
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
-  
+
   constructor(
     private capacity: number,
     private refillRate: number
@@ -40,16 +40,16 @@ class TokenBucket {
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
-  
+
   async acquire(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
     this.lastRefill = now;
-    
+
     if (this.tokens < 1) {
-      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.tokens = 0;
     } else {
       this.tokens -= 1;
@@ -72,7 +72,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Claudication', category: 'CV', isEmergency: false },
   { symptom: 'Cyanosis', category: 'CV', isEmergency: true },
   { symptom: 'Heart Murmur', category: 'CV', isEmergency: false },
-  
+
   // Pulmonary (10)
   { symptom: 'Acute Dyspnea', category: 'PULM', isEmergency: true },
   { symptom: 'Chronic Cough', category: 'PULM', isEmergency: false },
@@ -84,7 +84,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Chronic Dyspnea', category: 'PULM', isEmergency: false },
   { symptom: 'Productive Cough', category: 'PULM', isEmergency: false },
   { symptom: 'Hypoxia', category: 'PULM', isEmergency: true },
-  
+
   // GI (15)
   { symptom: 'Acute Abdominal Pain', category: 'GI', isEmergency: true },
   { symptom: 'Right Upper Quadrant Pain', category: 'GI', isEmergency: false },
@@ -103,7 +103,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Heartburn and Reflux', category: 'GI', isEmergency: false },
   { symptom: 'Acute Diarrhea', category: 'GI', isEmergency: false },
   { symptom: 'Odynophagia', category: 'GI', isEmergency: false },
-  
+
   // Neurological (12)
   { symptom: 'Headache', category: 'NEURO', isEmergency: false },
   { symptom: 'Acute Focal Weakness', category: 'NEURO', isEmergency: true },
@@ -117,7 +117,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Facial Weakness', category: 'NEURO', isEmergency: true },
   { symptom: 'Speech Difficulty', category: 'NEURO', isEmergency: true },
   { symptom: 'Neck Stiffness', category: 'NEURO', isEmergency: true },
-  
+
   // MSK (12)
   { symptom: 'Low Back Pain', category: 'MSK', isEmergency: false },
   { symptom: 'Shoulder Pain', category: 'MSK', isEmergency: false },
@@ -131,7 +131,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Elbow Pain', category: 'MSK', isEmergency: false },
   { symptom: 'Muscle Weakness', category: 'MSK', isEmergency: false },
   { symptom: 'Joint Swelling', category: 'MSK', isEmergency: false },
-  
+
   // GU/Renal (10)
   { symptom: 'Hematuria', category: 'GU', isEmergency: false },
   { symptom: 'Dysuria', category: 'GU', isEmergency: false },
@@ -143,7 +143,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Scrotal Swelling', category: 'GU', isEmergency: false },
   { symptom: 'Pelvic Pain Female', category: 'GYN', isEmergency: false },
   { symptom: 'Vaginal Bleeding', category: 'GYN', isEmergency: true },
-  
+
   // OB/GYN (8)
   { symptom: 'Amenorrhea', category: 'GYN', isEmergency: false },
   { symptom: 'Abnormal Uterine Bleeding', category: 'GYN', isEmergency: false },
@@ -153,7 +153,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Nipple Discharge', category: 'GYN', isEmergency: false },
   { symptom: 'First Trimester Bleeding', category: 'OB', isEmergency: true },
   { symptom: 'Third Trimester Bleeding', category: 'OB', isEmergency: true },
-  
+
   // Endocrine (8)
   { symptom: 'Fatigue', category: 'ENDO', isEmergency: false },
   { symptom: 'Unintentional Weight Loss', category: 'ENDO', isEmergency: false },
@@ -163,7 +163,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Cold Intolerance', category: 'ENDO', isEmergency: false },
   { symptom: 'Thyroid Nodule', category: 'ENDO', isEmergency: false },
   { symptom: 'Hypoglycemia Symptoms', category: 'ENDO', isEmergency: true },
-  
+
   // HEENT (10)
   { symptom: 'Sore Throat', category: 'HEENT', isEmergency: false },
   { symptom: 'Red Eye', category: 'HEENT', isEmergency: false },
@@ -176,7 +176,7 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Facial Pain', category: 'HEENT', isEmergency: false },
   { symptom: 'Hoarseness', category: 'HEENT', isEmergency: false },
   { symptom: 'Neck Mass', category: 'HEENT', isEmergency: false },
-  
+
   // Skin (8)
   { symptom: 'Diffuse Rash', category: 'DERM', isEmergency: false },
   { symptom: 'Concerning Skin Lesion', category: 'DERM', isEmergency: false },
@@ -186,21 +186,21 @@ const PRESENTING_SYMPTOMS = [
   { symptom: 'Urticaria', category: 'DERM', isEmergency: false },
   { symptom: 'Petechiae and Purpura', category: 'DERM', isEmergency: true },
   { symptom: 'Cellulitis', category: 'DERM', isEmergency: false },
-  
+
   // Hematology/Oncology (5)
   { symptom: 'Lymphadenopathy', category: 'HEME', isEmergency: false },
   { symptom: 'Splenomegaly', category: 'HEME', isEmergency: false },
   { symptom: 'Anemia Symptoms', category: 'HEME', isEmergency: false },
   { symptom: 'Easy Bruising', category: 'HEME', isEmergency: false },
   { symptom: 'Night Sweats', category: 'HEME', isEmergency: false },
-  
+
   // Infectious Disease (5)
   { symptom: 'Fever', category: 'ID', isEmergency: false },
   { symptom: 'Fever of Unknown Origin', category: 'ID', isEmergency: false },
   { symptom: 'Sepsis Presentation', category: 'ID', isEmergency: true },
   { symptom: 'Immunocompromised with Fever', category: 'ID', isEmergency: true },
   { symptom: 'Travel-Related Illness', category: 'ID', isEmergency: false },
-  
+
   // Psych (6)
   { symptom: 'Anxiety', category: 'PSYCH', isEmergency: false },
   { symptom: 'Depression', category: 'PSYCH', isEmergency: false },
@@ -234,23 +234,26 @@ interface DDxAIResponse {
   commonMistakes: string[];
 }
 
-async function generateDDxContent(symptom: { symptom: string; category: string; isEmergency: boolean }, isUpdate: boolean = false): Promise<DDxAIResponse> {
+async function generateDDxContent(
+  symptom: { symptom: string; category: string; isEmergency: boolean },
+  isUpdate: boolean = false
+): Promise<DDxAIResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not set');
   }
-  
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
+  const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: 'application/json'
-    }
+      responseMimeType: 'application/json',
+    },
   });
-  
+
   await rateLimiter.acquire();
-  
+
   const prompt = `Generate a comprehensive differential diagnosis framework for "${symptom.symptom}" for PA/medical student education.
 
 Return a JSON object with EXACTLY these fields:
@@ -295,13 +298,13 @@ Return ONLY valid JSON.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
-  
+
   // Parse JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error(`Failed to parse JSON for ${symptom.symptom}`);
   }
-  
+
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -312,7 +315,10 @@ function ensureArray(value: any, fallback: string): string[] {
   return [fallback];
 }
 
-async function createDDx(symptom: typeof PRESENTING_SYMPTOMS[0], content: DDxAIResponse): Promise<void> {
+async function createDDx(
+  symptom: (typeof PRESENTING_SYMPTOMS)[0],
+  content: DDxAIResponse
+): Promise<void> {
   const crypto = await import('crypto');
   await prisma.differentialDiagnosis.create({
     data: {
@@ -324,7 +330,10 @@ async function createDDx(symptom: typeof PRESENTING_SYMPTOMS[0], content: DDxAIR
       typicalPresentation: content.typicalPresentation,
       mustNotMiss: ensureArray(content.mustNotMiss, 'See mustNotMiss for critical diagnoses'),
       mostCommon: ensureArray(content.mostCommon, 'Common causes vary by patient population'),
-      differentialList: ensureArray(content.differentialList, 'Differential varies by clinical context'),
+      differentialList: ensureArray(
+        content.differentialList,
+        'Differential varies by clinical context'
+      ),
       redFlags: ensureArray(content.redFlags, 'Assess for signs of serious pathology'),
       keyQuestions: ensureArray(content.keyQuestions, 'Obtain thorough history'),
       keyExamFindings: ensureArray(content.keyExamFindings, 'Perform focused physical exam'),
@@ -336,15 +345,20 @@ async function createDDx(symptom: typeof PRESENTING_SYMPTOMS[0], content: DDxAIR
       mostDangerous: ensureArray(content.mostDangerous, 'Assess for life-threatening causes'),
       oftenMissed: ensureArray(content.oftenMissed, 'Consider atypical presentations'),
       distinguishingFeatures: content.distinguishingFeatures || {},
-      diagnosticAlgorithm: content.diagnosticAlgorithm || 'Apply systematic clinical reasoning based on presentation.',
-      dispositionGuidance: content.dispositionGuidance || 'Disposition depends on clinical stability and diagnosis.',
+      diagnosticAlgorithm:
+        content.diagnosticAlgorithm || 'Apply systematic clinical reasoning based on presentation.',
+      dispositionGuidance:
+        content.dispositionGuidance || 'Disposition depends on clinical stability and diagnosis.',
       byAcuity: content.byAcuity || { emergent: [], urgent: [], routine: [] },
       byAge: content.byAge || { pediatric: [], adult: [], geriatric: [] },
-      reassuringFeatures: ensureArray(content.reassuringFeatures, 'Evaluate for features suggesting benign etiology'),
+      reassuringFeatures: ensureArray(
+        content.reassuringFeatures,
+        'Evaluate for features suggesting benign etiology'
+      ),
       commonMistakes: ensureArray(content.commonMistakes, 'Avoid premature diagnostic closure'),
       isHighYield: true,
       panceYield: 3,
-    }
+    },
   });
 }
 
@@ -356,7 +370,10 @@ async function updateDDx(id: string, content: DDxAIResponse): Promise<void> {
       typicalPresentation: content.typicalPresentation,
       mustNotMiss: ensureArray(content.mustNotMiss, 'See mustNotMiss for critical diagnoses'),
       mostCommon: ensureArray(content.mostCommon, 'Common causes vary by patient population'),
-      differentialList: ensureArray(content.differentialList, 'Differential varies by clinical context'),
+      differentialList: ensureArray(
+        content.differentialList,
+        'Differential varies by clinical context'
+      ),
       redFlags: ensureArray(content.redFlags, 'Assess for signs of serious pathology'),
       keyQuestions: ensureArray(content.keyQuestions, 'Obtain thorough history'),
       keyExamFindings: ensureArray(content.keyExamFindings, 'Perform focused physical exam'),
@@ -368,13 +385,18 @@ async function updateDDx(id: string, content: DDxAIResponse): Promise<void> {
       mostDangerous: ensureArray(content.mostDangerous, 'Assess for life-threatening causes'),
       oftenMissed: ensureArray(content.oftenMissed, 'Consider atypical presentations'),
       distinguishingFeatures: content.distinguishingFeatures || {},
-      diagnosticAlgorithm: content.diagnosticAlgorithm || 'Apply systematic clinical reasoning based on presentation.',
-      dispositionGuidance: content.dispositionGuidance || 'Disposition depends on clinical stability and diagnosis.',
+      diagnosticAlgorithm:
+        content.diagnosticAlgorithm || 'Apply systematic clinical reasoning based on presentation.',
+      dispositionGuidance:
+        content.dispositionGuidance || 'Disposition depends on clinical stability and diagnosis.',
       byAcuity: content.byAcuity || { emergent: [], urgent: [], routine: [] },
       byAge: content.byAge || { pediatric: [], adult: [], geriatric: [] },
-      reassuringFeatures: ensureArray(content.reassuringFeatures, 'Evaluate for features suggesting benign etiology'),
+      reassuringFeatures: ensureArray(
+        content.reassuringFeatures,
+        'Evaluate for features suggesting benign etiology'
+      ),
       commonMistakes: ensureArray(content.commonMistakes, 'Avoid premature diagnostic closure'),
-    }
+    },
   });
 }
 
@@ -389,46 +411,54 @@ async function needsUpdate(record: any): Promise<boolean> {
   const emptyByAge = !record.byAge;
   const emptyReassuring = !record.reassuringFeatures || record.reassuringFeatures.length === 0;
   const emptyMistakes = !record.commonMistakes || record.commonMistakes.length === 0;
-  
-  return emptyMostDangerous || emptyOftenMissed || emptyDistinguishing || 
-         emptyAlgorithm || emptyDisposition || emptyByAcuity || 
-         emptyByAge || emptyReassuring || emptyMistakes;
+
+  return (
+    emptyMostDangerous ||
+    emptyOftenMissed ||
+    emptyDistinguishing ||
+    emptyAlgorithm ||
+    emptyDisposition ||
+    emptyByAcuity ||
+    emptyByAge ||
+    emptyReassuring ||
+    emptyMistakes
+  );
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const updateExisting = args.includes('--update-existing');
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1]) : undefined;
-  
+
   console.log('🔍 DDx Doctor - Differential Diagnosis Generator');
   console.log(`   Mode: ${dryRun ? 'DRY RUN' : updateExisting ? 'UPDATE EXISTING' : 'CREATE NEW'}`);
   if (batchSize) console.log(`   Batch size: ${batchSize}`);
   console.log('');
-  
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
   let failed = 0;
   let processed = 0;
-  
+
   // Phase 1: Process known symptoms list
   console.log('📋 Phase 1: Processing presenting symptoms list...\n');
-  
+
   for (const symptom of PRESENTING_SYMPTOMS) {
     if (batchSize && processed >= batchSize) {
       console.log(`\n⏸️  Batch limit reached (${batchSize})`);
       break;
     }
-    
+
     try {
       const existing = await prisma.differentialDiagnosis.findFirst({
-        where: { presentingComplaint: symptom.symptom }
+        where: { presentingComplaint: symptom.symptom },
       });
-      
+
       if (existing) {
-        if (updateExisting && await needsUpdate(existing)) {
+        if (updateExisting && (await needsUpdate(existing))) {
           if (dryRun) {
             console.log(`  📝 Would update: ${symptom.symptom}`);
             updated++;
@@ -457,37 +487,36 @@ async function main() {
         }
         processed++;
       }
-      
     } catch (error: any) {
       console.error(`  ❌ Failed: ${symptom.symptom} - ${error.message}`);
       failed++;
       // Continue to next symptom
     }
   }
-  
+
   // Phase 2: Update any existing records not in the symptoms list
   if (updateExisting && (!batchSize || processed < batchSize)) {
     console.log('\n📋 Phase 2: Checking existing records for updates...\n');
-    
+
     const allRecords = await prisma.differentialDiagnosis.findMany();
-    const knownSymptoms = new Set(PRESENTING_SYMPTOMS.map(s => s.symptom));
-    
+    const knownSymptoms = new Set(PRESENTING_SYMPTOMS.map((s) => s.symptom));
+
     for (const record of allRecords) {
       if (batchSize && processed >= batchSize) {
         console.log(`\n⏸️  Batch limit reached (${batchSize})`);
         break;
       }
-      
+
       if (knownSymptoms.has(record.presentingComplaint)) continue; // Already processed
-      
+
       if (await needsUpdate(record)) {
         try {
           const symptomInfo = {
             symptom: record.presentingComplaint,
             category: record.category,
-            isEmergency: record.isEmergency
+            isEmergency: record.isEmergency,
           };
-          
+
           if (dryRun) {
             console.log(`  📝 Would update: ${record.presentingComplaint}`);
             updated++;
@@ -506,7 +535,7 @@ async function main() {
       }
     }
   }
-  
+
   // Summary
   console.log('\n' + '='.repeat(50));
   console.log('📊 DDx Doctor Summary:');
@@ -515,10 +544,10 @@ async function main() {
   console.log(`   Skipped: ${skipped}`);
   console.log(`   Failed:  ${failed}`);
   console.log(`   Total processed: ${processed}`);
-  
+
   const totalRecords = await prisma.differentialDiagnosis.count();
   console.log(`\n   Total DDx records in database: ${totalRecords}`);
-  
+
   await prisma.$disconnect();
 }
 

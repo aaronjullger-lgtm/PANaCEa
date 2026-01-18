@@ -34,17 +34,17 @@ export async function saveQuestionVersion(
       console.log('[QuestionHistory] Database not configured');
       return 1;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Get latest version number
     const latestVersion = await prisma.questionHistory.findFirst({
       where: { questionId },
       orderBy: { version: 'desc' },
     });
-    
+
     const newVersion = latestVersion ? latestVersion.version + 1 : 1;
-    
+
     // Close the previous version if it exists
     if (latestVersion && !latestVersion.validTo) {
       await prisma.questionHistory.update({
@@ -52,7 +52,7 @@ export async function saveQuestionVersion(
         data: { validTo: new Date() },
       });
     }
-    
+
     // Create new version
     await prisma.questionHistory.create({
       data: {
@@ -64,7 +64,7 @@ export async function saveQuestionVersion(
         validFrom: new Date(),
       },
     });
-    
+
     console.log(`[QuestionHistory] Saved version ${newVersion} of question ${questionId}`);
     return newVersion;
   } catch (error) {
@@ -85,9 +85,9 @@ export async function getQuestionAtTime(
       console.log('[QuestionHistory] Database not configured');
       return null;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Find the version that was valid at the given time
     const version = await prisma.questionHistory.findFirst({
       where: {
@@ -100,12 +100,14 @@ export async function getQuestionAtTime(
       },
       orderBy: { validFrom: 'desc' },
     });
-    
+
     if (!version) {
-      console.log(`[QuestionHistory] No version found for question ${questionId} at ${timestamp.toISOString()}`);
+      console.log(
+        `[QuestionHistory] No version found for question ${questionId} at ${timestamp.toISOString()}`
+      );
       return null;
     }
-    
+
     return {
       questionId: version.questionId,
       version: version.version,
@@ -124,27 +126,25 @@ export async function getQuestionAtTime(
 /**
  * Get all versions of a question
  */
-export async function getQuestionHistory(
-  questionId: string
-): Promise<VersionHistory | null> {
+export async function getQuestionHistory(questionId: string): Promise<VersionHistory | null> {
   try {
     if (!process.env.DATABASE_URL) {
       console.log('[QuestionHistory] Database not configured');
       return null;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const versions = await prisma.questionHistory.findMany({
       where: { questionId },
       orderBy: { version: 'asc' },
     });
-    
+
     if (versions.length === 0) {
       return null;
     }
-    
-    const snapshots: QuestionSnapshot[] = versions.map(v => ({
+
+    const snapshots: QuestionSnapshot[] = versions.map((v) => ({
       questionId: v.questionId,
       version: v.version,
       questionData: v.questionData,
@@ -153,9 +153,9 @@ export async function getQuestionHistory(
       validFrom: v.validFrom,
       validTo: v.validTo || undefined,
     }));
-    
+
     const current = snapshots[snapshots.length - 1];
-    
+
     return {
       questionId,
       versions: snapshots,
@@ -188,9 +188,9 @@ export async function compareQuestionVersions(
       console.log('[QuestionHistory] Database not configured');
       return null;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const [v1, v2] = await Promise.all([
       prisma.questionHistory.findFirst({
         where: { questionId, version: version1 },
@@ -199,13 +199,13 @@ export async function compareQuestionVersions(
         where: { questionId, version: version2 },
       }),
     ]);
-    
+
     if (!v1 || !v2) {
       return null;
     }
-    
+
     const differences = findDifferences(v1.questionData, v2.questionData);
-    
+
     return {
       version1Data: v1.questionData,
       version2Data: v2.questionData,
@@ -226,14 +226,14 @@ function findDifferences(
   path: string = ''
 ): Array<{ field: string; oldValue: any; newValue: any }> {
   const differences: Array<{ field: string; oldValue: any; newValue: any }> = [];
-  
+
   const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
-  
+
   for (const key of allKeys) {
     const fullPath = path ? `${path}.${key}` : key;
     const val1 = obj1[key];
     const val2 = obj2[key];
-    
+
     if (typeof val1 === 'object' && typeof val2 === 'object' && val1 !== null && val2 !== null) {
       // Recursively compare nested objects
       differences.push(...findDifferences(val1, val2, fullPath));
@@ -245,7 +245,7 @@ function findDifferences(
       });
     }
   }
-  
+
   return differences;
 }
 
@@ -263,18 +263,18 @@ export async function revertQuestionToVersion(
       console.log('[QuestionHistory] Database not configured');
       return false;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     // Get the target version
     const targetVersionData = await prisma.questionHistory.findFirst({
       where: { questionId, version: targetVersion },
     });
-    
+
     if (!targetVersionData) {
       throw new Error(`Version ${targetVersion} not found for question ${questionId}`);
     }
-    
+
     // Save the reverted data as a new version
     await saveQuestionVersion(
       questionId,
@@ -282,7 +282,7 @@ export async function revertQuestionToVersion(
       revertedBy,
       `Reverted to version ${targetVersion}: ${reason}`
     );
-    
+
     console.log(`[QuestionHistory] Reverted question ${questionId} to version ${targetVersion}`);
     return true;
   } catch (error) {
@@ -303,9 +303,9 @@ export async function getQuestionsModifiedInRange(
       console.log('[QuestionHistory] Database not configured');
       return [];
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const versions = await prisma.questionHistory.findMany({
       where: {
         validFrom: {
@@ -317,13 +317,16 @@ export async function getQuestionsModifiedInRange(
         questionId: true,
       },
     });
-    
+
     // Group by questionId and count versions
-    const grouped = versions.reduce((acc, v) => {
-      acc[v.questionId] = (acc[v.questionId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
+    const grouped = versions.reduce(
+      (acc, v) => {
+        acc[v.questionId] = (acc[v.questionId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
     return Object.entries(grouped).map(([questionId, versions]) => ({
       questionId,
       versions: versions as number,
@@ -337,28 +340,28 @@ export async function getQuestionsModifiedInRange(
 /**
  * Get audit trail for a question (who changed what and when)
  */
-export async function getQuestionAuditTrail(
-  questionId: string
-): Promise<Array<{
-  version: number;
-  changedBy?: string;
-  changeReason?: string;
-  validFrom: Date;
-  validTo?: Date;
-  changeCount: number;
-}>> {
+export async function getQuestionAuditTrail(questionId: string): Promise<
+  Array<{
+    version: number;
+    changedBy?: string;
+    changeReason?: string;
+    validFrom: Date;
+    validTo?: Date;
+    changeCount: number;
+  }>
+> {
   try {
     if (!process.env.DATABASE_URL) {
       console.log('[QuestionHistory] Database not configured');
       return [];
     }
-    
+
     const history = await getQuestionHistory(questionId);
-    
+
     if (!history) {
       return [];
     }
-    
+
     const trail: Array<{
       version: number;
       changedBy?: string;
@@ -367,18 +370,18 @@ export async function getQuestionAuditTrail(
       validTo?: Date;
       changeCount: number;
     }> = [];
-    
+
     for (let i = 0; i < history.versions.length; i++) {
       const current = history.versions[i];
       let changeCount = 0;
-      
+
       // Compare with previous version to count changes
       if (i > 0) {
         const previous = history.versions[i - 1];
         const differences = findDifferences(previous.questionData, current.questionData);
         changeCount = differences.length;
       }
-      
+
       trail.push({
         version: current.version,
         changedBy: current.changedBy,
@@ -388,7 +391,7 @@ export async function getQuestionAuditTrail(
         changeCount,
       });
     }
-    
+
     return trail;
   } catch (error) {
     console.error('[QuestionHistory] Error getting audit trail:', error);
@@ -408,27 +411,27 @@ export async function pruneQuestionHistory(
       console.log('[QuestionHistory] Database not configured');
       return 0;
     }
-    
+
     const { prisma } = await import('../prisma');
-    
+
     const versions = await prisma.questionHistory.findMany({
       where: { questionId },
       orderBy: { version: 'desc' },
       skip: keepVersions,
     });
-    
+
     if (versions.length === 0) {
       return 0;
     }
-    
-    const idsToDelete = versions.map(v => v.id);
-    
+
+    const idsToDelete = versions.map((v) => v.id);
+
     const result = await prisma.questionHistory.deleteMany({
       where: {
         id: { in: idsToDelete },
       },
     });
-    
+
     console.log(`[QuestionHistory] Pruned ${result.count} old versions of question ${questionId}`);
     return result.count;
   } catch (error) {

@@ -1,15 +1,15 @@
 /**
  * Fluency Scoring System
- * 
+ *
  * Determines whether a learner is in a "Flow State" (effortless retrieval)
  * or "Labored State" (struggling with cognitive load).
- * 
+ *
  * Combines multiple behavioral signals into a composite fluency score:
  * - Response stability (consistent timing)
  * - Deletion ratio (backspacing/changes)
  * - Pause penalties (hesitations)
  * - Trajectory smoothness
- * 
+ *
  * Research basis:
  * - Csikszentmihalyi (1990): Flow theory
  * - Kelley & Jacoby (1998): Subjective fluency as a cue
@@ -19,11 +19,11 @@
 /**
  * Fluency state classification
  */
-export type FluencyState = 
-  | 'flow'        // Effortless, automatic retrieval
-  | 'engaged'     // Effortful but productive
-  | 'labored'     // Struggling, high cognitive load
-  | 'frustrated'  // Overwhelmed, likely to disengage
+export type FluencyState =
+  | 'flow' // Effortless, automatic retrieval
+  | 'engaged' // Effortful but productive
+  | 'labored' // Struggling, high cognitive load
+  | 'frustrated' // Overwhelmed, likely to disengage
   | 'disengaged'; // Minimal effort, possible guessing
 
 /**
@@ -119,11 +119,11 @@ const THRESHOLDS = {
  * Weights for composite score
  */
 const WEIGHTS = {
-  stability: 0.20,
+  stability: 0.2,
   deletion: 0.15,
   pause: 0.25,
-  trajectory: 0.20,
-  engagement: 0.20,
+  trajectory: 0.2,
+  engagement: 0.2,
 };
 
 /**
@@ -131,9 +131,9 @@ const WEIGHTS = {
  */
 export function calculateFluency(input: FluencyInput): ResponseFluency {
   const components = calculateComponents(input);
-  
+
   // Weighted composite score
-  const score = 
+  const score =
     WEIGHTS.stability * components.stabilityScore +
     WEIGHTS.deletion * components.deletionScore +
     WEIGHTS.pause * components.pauseScore +
@@ -142,7 +142,7 @@ export function calculateFluency(input: FluencyInput): ResponseFluency {
 
   // Determine state from score and components
   const state = classifyState(score, components, input);
-  
+
   // Confidence based on data availability
   let confidence = 0.7;
   if (input.previousLatencies && input.previousLatencies.length >= 5) {
@@ -170,8 +170,11 @@ function calculateComponents(input: FluencyInput): FluencyComponents {
   // Stability score (from variance in recent latencies)
   let stabilityScore = 0.5; // Default if no history
   if (input.previousLatencies && input.previousLatencies.length >= 3) {
-    const mean = input.previousLatencies.reduce((a, b) => a + b, 0) / input.previousLatencies.length;
-    const variance = input.previousLatencies.reduce((sum, l) => sum + Math.pow(l - mean, 2), 0) / input.previousLatencies.length;
+    const mean =
+      input.previousLatencies.reduce((a, b) => a + b, 0) / input.previousLatencies.length;
+    const variance =
+      input.previousLatencies.reduce((sum, l) => sum + Math.pow(l - mean, 2), 0) /
+      input.previousLatencies.length;
     const cv = Math.sqrt(variance) / mean; // Coefficient of variation
     stabilityScore = Math.max(0, 1 - cv / THRESHOLDS.CV_STABLE_THRESHOLD);
   }
@@ -206,11 +209,7 @@ function calculateComponents(input: FluencyInput): FluencyComponents {
   let trajectoryScore = 0.5; // Default
   if (input.trajectory) {
     const { efficiency, hesitationIndex, jitterScore } = input.trajectory;
-    trajectoryScore = (
-      0.5 * efficiency +
-      0.3 * (1 - hesitationIndex) +
-      0.2 * (1 - jitterScore)
-    );
+    trajectoryScore = 0.5 * efficiency + 0.3 * (1 - hesitationIndex) + 0.2 * (1 - jitterScore);
   }
 
   // Engagement score (not too fast, not too slow)
@@ -254,8 +253,10 @@ function classifyState(
   }
 
   // Labored: Slow with many switches
-  if (latencyRatio > THRESHOLDS.MAX_FLUENT_RATIO || 
-      (input.answerSwitches > THRESHOLDS.MAX_SWITCHES_FLUENT && score < 0.5)) {
+  if (
+    latencyRatio > THRESHOLDS.MAX_FLUENT_RATIO ||
+    (input.answerSwitches > THRESHOLDS.MAX_SWITCHES_FLUENT && score < 0.5)
+  ) {
     return 'labored';
   }
 
@@ -297,10 +298,10 @@ export function updateFluencyTracker(
   timestamp: number = Date.now()
 ): SessionFluencyTracker {
   const elapsed = timestamp - tracker.lastTimestamp;
-  
+
   // Track state transitions
   const stateChanged = fluency.state !== tracker.currentState;
-  
+
   // Update state time
   const newStateTime = { ...tracker.stateTime };
   newStateTime[tracker.currentState] += elapsed;
@@ -325,25 +326,26 @@ export function analyzeSessionFluency(tracker: SessionFluencyTracker): {
   stabilityTrend: 'improving' | 'declining' | 'stable';
   recommendation: string;
 } {
-  const avgFluency = tracker.scores.length > 0
-    ? tracker.scores.reduce((a, b) => a + b, 0) / tracker.scores.length
-    : 0.5;
+  const avgFluency =
+    tracker.scores.length > 0
+      ? tracker.scores.reduce((a, b) => a + b, 0) / tracker.scores.length
+      : 0.5;
 
   // Find dominant state by time spent
   const totalTime = Object.values(tracker.stateTime).reduce((a, b) => a + b, 0);
-  const dominantState = (Object.entries(tracker.stateTime) as [FluencyState, number][])
-    .sort((a, b) => b[1] - a[1])[0][0];
+  const dominantState = (Object.entries(tracker.stateTime) as [FluencyState, number][]).sort(
+    (a, b) => b[1] - a[1]
+  )[0][0];
 
-  const flowPercentage = totalTime > 0
-    ? Math.round((tracker.stateTime.flow / totalTime) * 100)
-    : 0;
+  const flowPercentage = totalTime > 0 ? Math.round((tracker.stateTime.flow / totalTime) * 100) : 0;
 
   // Trend analysis (compare first half to second half)
   let stabilityTrend: 'improving' | 'declining' | 'stable' = 'stable';
   if (tracker.scores.length >= 10) {
     const mid = Math.floor(tracker.scores.length / 2);
     const firstHalf = tracker.scores.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
-    const secondHalf = tracker.scores.slice(mid).reduce((a, b) => a + b, 0) / (tracker.scores.length - mid);
+    const secondHalf =
+      tracker.scores.slice(mid).reduce((a, b) => a + b, 0) / (tracker.scores.length - mid);
     if (secondHalf - firstHalf > 0.1) {
       stabilityTrend = 'improving';
     } else if (firstHalf - secondHalf > 0.1) {

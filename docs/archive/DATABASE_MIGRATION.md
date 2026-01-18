@@ -5,6 +5,7 @@ This guide helps you migrate your PANaCEa database to production and set up all 
 ## Problem Statement
 
 If you're seeing this error in your Cloudflare Pages Functions logs:
+
 ```
 The table `public.User` does not exist in the current database.
 ```
@@ -27,7 +28,7 @@ This is the safest and most reliable method for production deployments.
 1. **Set up your local environment variables**
 
    Create a `.env` file with your production database credentials:
-   
+
    ```bash
    # Use the DIRECT connection string (not pooled)
    DATABASE_URL="postgresql://user:password@host:5432/database"
@@ -60,7 +61,7 @@ This is the safest and most reliable method for production deployments.
    ```bash
    npx prisma studio
    ```
-   
+
    This opens a GUI where you can verify all tables were created correctly.
 
 ### Option 2: Using db push (Quick but less safe)
@@ -80,6 +81,7 @@ If you prefer manual control or can't run Prisma locally:
 1. **Get the migration SQL**
 
    The complete migration SQL is located at:
+
    ```
    prisma/migrations/20241209000000_init_production_schema/migration.sql
    ```
@@ -93,6 +95,7 @@ If you prefer manual control or can't run Prisma locally:
    - Paste and run the SQL
 
    **Using psql:**
+
    ```bash
    psql "postgresql://user:password@host:5432/database" < prisma/migrations/20241209000000_init_production_schema/migration.sql
    ```
@@ -152,18 +155,21 @@ After migrating your database, ensure your Cloudflare Pages environment has the 
 This migration creates the complete database schema including:
 
 ### Core Tables
+
 - **User** - User accounts linked to Clerk authentication
 - **PerformanceRecord** - Quiz performance tracking
 - **SRSItem** - Spaced repetition system data
 - **SavedQuestion** - Flagged and missed questions for review
 
 ### Medical Content Tables
+
 - **Condition** - Medical conditions
 - **MediaAsset** - Medical images (EKGs, X-rays, etc.)
 - **MedicalContent** - CMS content with version control
 - **EducationalResource** - Textbooks, lectures, PDFs
 
 ### Learning & Analytics Tables
+
 - **UserAchievement** - Gamification achievements
 - **DailyStreak** - Study streak tracking
 - **MasteryProgress** - Topic mastery levels
@@ -171,6 +177,7 @@ This migration creates the complete database schema including:
 - **BaselineAssessment** - Initial assessment results
 
 ### Question Management Tables
+
 - **PreGeneratedQuestion** - AI-generated question pool
 - **StagingQuestion** - Quality control staging area
 - **QuestionSeed** - Question templates
@@ -179,6 +186,7 @@ This migration creates the complete database schema including:
 - **SemanticCache** - AI response caching
 
 ### Quality & Compliance Tables
+
 - **QuestionFlag** - User-reported question issues
 - **QuestionVerification** - Automated fact-checking
 - **StalenessReport** - Outdated content tracking
@@ -187,6 +195,7 @@ This migration creates the complete database schema including:
 - **NCCPABlueprint** - PANCE/PANRE blueprint compliance
 
 ### Advanced Features Tables
+
 - **ContentVersion** - Content version history
 - **ContentAuditLog** - Complete audit trail
 - **BackgroundJob** - Async job queue
@@ -205,9 +214,9 @@ After migration, verify your setup:
 1. **Check tables exist**
 
    ```sql
-   SELECT table_name 
-   FROM information_schema.tables 
-   WHERE table_schema = 'public' 
+   SELECT table_name
+   FROM information_schema.tables
+   WHERE table_schema = 'public'
    ORDER BY table_name;
    ```
 
@@ -216,6 +225,7 @@ After migration, verify your setup:
 2. **Test the sync endpoint**
 
    Make a test request to your deployed application:
+
    ```bash
    curl -X GET https://your-domain.com/api/sync \
      -H "Authorization: Bearer YOUR_CLERK_TOKEN"
@@ -226,6 +236,7 @@ After migration, verify your setup:
 3. **Check Prisma connection**
 
    If using Prisma Studio:
+
    ```bash
    npx prisma studio
    ```
@@ -239,6 +250,7 @@ After migration, verify your setup:
 ### Error: "Connection timeout" or "Cannot connect to database"
 
 **Solutions:**
+
 - Verify your DATABASE_URL is correct
 - Check that your database allows connections from your IP
 - For Supabase: Ensure you're using the correct connection string (Session mode for migrations)
@@ -249,6 +261,7 @@ After migration, verify your setup:
 **Solution:** Tables partially exist. You have two options:
 
 1. **Drop and recreate (CAUTION: Data loss)**
+
    ```sql
    DROP SCHEMA public CASCADE;
    CREATE SCHEMA public;
@@ -262,6 +275,7 @@ After migration, verify your setup:
 ### Error: "permission denied for schema public"
 
 **Solution:** Your database user needs proper permissions:
+
 ```sql
 GRANT ALL PRIVILEGES ON SCHEMA public TO your_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_user;
@@ -270,6 +284,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_user;
 ### Migration applied but Cloudflare still shows errors
 
 **Solutions:**
+
 1. Verify environment variables in Cloudflare Pages settings
 2. Redeploy your Cloudflare Pages site
 3. Clear Cloudflare cache
@@ -280,6 +295,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_user;
 If you need to rollback the migration:
 
 1. **Using Prisma**
+
    ```bash
    # This will show you how to rollback
    npx prisma migrate resolve --rolled-back 20241209000000_init_production_schema
@@ -295,6 +311,7 @@ If you need to rollback the migration:
 ## Best Practices
 
 1. **Always backup before migrating**
+
    ```bash
    pg_dump "your-connection-string" > backup.sql
    ```
