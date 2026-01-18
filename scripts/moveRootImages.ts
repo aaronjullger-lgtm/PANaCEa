@@ -117,13 +117,11 @@ async function upsertMediaAssets(mappings: FileMapping[], dryRun: boolean) {
     } else {
       await prisma.mediaAsset.create({
         data: {
-
-          updatedAt: new Date(),
-
-          id: randomUUID(),
+          id: uuidv4(),
           ...data,
           createdAt: new Date(),
           uploadedAt: new Date(),
+          updatedAt: new Date(),
         },
       });
       console.log(`✨ Created MediaAsset for ${mapping.filename}`);

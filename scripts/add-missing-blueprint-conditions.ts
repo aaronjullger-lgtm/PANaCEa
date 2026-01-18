@@ -367,9 +367,6 @@ async function addMissingConditions() {
         await prisma.$transaction([
           prisma.condition.create({
             data: {
-
-              id: uuidv4(),
-
               id,
               name: condition.name,
               system: condition.system,

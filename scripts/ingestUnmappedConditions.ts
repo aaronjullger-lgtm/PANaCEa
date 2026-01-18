@@ -111,9 +111,6 @@ async function main() {
 
     await prisma.condition.create({
       data: {
-
-        id: uuidv4(),
-
         id,
         name,
         displayName: name,

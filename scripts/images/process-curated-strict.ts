@@ -341,17 +341,13 @@ async function saveImage(
 
     await prisma.mediaAsset.create({
       data: {
-
-        id: uuidv4(),
-
-        updatedAt: new Date(),
-
         id,
         conditionId,
         type: analysis.imageType,
         filename,
         originalUrl: publicUrl,
         sourceUrl: publicUrl,
+        updatedAt: new Date(),
         tags: analysis.visualKeys,
         description: analysis.explanation,
         altText: `${analysis.detectedCondition} - ${analysis.imageType}`,

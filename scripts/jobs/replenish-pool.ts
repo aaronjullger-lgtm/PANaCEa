@@ -64,19 +64,15 @@ async function replenishPool() {
 
           if (generated) {
             // Save to pool
-            const id = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
             await prisma.preGeneratedQuestion.create({
               data: {
-
-                id: uuidv4(),
-
-                updatedAt: new Date(),
-
-                id,
+                id: generatedId,
                 conditionId: conditionMeta.id,
                 system: conditionMeta.system,
                 difficulty: generated.difficulty || 'medium',
+                updatedAt: new Date(),
                 questionData: {
                   vignette: generated.vignette,
                   question: generated.question,

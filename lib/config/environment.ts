@@ -20,10 +20,10 @@ const envSchema = z.object({
 
   // Server config with defaults
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().default('3001').transform(Number),
+  PORT: z.string().transform(Number).default('3001'),
 
   // Optional - Gracefully degraded if missing
-  FRONTEND_URL: z.string().url().default('http://localhost:3000').optional(),
+  FRONTEND_URL: z.string().url().optional().default('http://localhost:3000'),
   ADMIN_USER_IDS: z.string().optional(),
   SUPERADMIN_USER_IDS: z.string().optional(),
 
