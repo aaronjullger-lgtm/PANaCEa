@@ -155,9 +155,6 @@ async function fixNameMismatches(
       await prisma.medicalContent.update({
         where: { conditionId: mismatch.conditionId },
         data: {
-
-          id: uuidv4(),
-
           condition: mismatch.conditionName,
           updatedAt: new Date(),
           updatedBy: 'system',

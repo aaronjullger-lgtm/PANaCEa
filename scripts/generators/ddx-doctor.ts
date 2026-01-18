@@ -324,7 +324,6 @@ async function createDDx(
   await prisma.differentialDiagnosis.create({
     data: {
       id: uuidv4(),
-      updatedAt: new Date(),
       presentingComplaint: symptom.symptom,
       category: symptom.category,
       isEmergency: symptom.isEmergency,
@@ -367,11 +366,6 @@ async function updateDDx(id: string, content: DDxAIResponse): Promise<void> {
   await prisma.differentialDiagnosis.update({
     where: { id },
     data: {
-
-      id: uuidv4(),
-
-      updatedAt: new Date(),
-
       // Update all fields including new ones
       typicalPresentation: content.typicalPresentation,
       mustNotMiss: ensureArray(content.mustNotMiss, 'See mustNotMiss for critical diagnoses'),

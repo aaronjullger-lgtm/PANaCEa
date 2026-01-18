@@ -100,13 +100,9 @@ async function main() {
       await prisma.buzzword.update({
         where: { id: existing.id },
         data: {
-
-          id: uuidv4(),
-
-          updatedAt: new Date(),
-
           buzzword: entry.buzzword,
           system: entry.category,
+          updatedAt: new Date(),
         },
       });
       updatedCount++;

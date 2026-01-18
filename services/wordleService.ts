@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { v4 as uuidv4 } from 'uuid';
 
 type WordleStatus = 'playing' | 'won' | 'lost';
 
@@ -88,8 +89,10 @@ const getOrCreateDailyWord = async (
 
   const created = await prisma.dailyWordle.create({
     data: {
+      id: uuidv4(),
       date: normalized.dateOnly,
       wordId: selected.id,
+      updatedAt: new Date(),
     },
     include: { Buzzword: true },
   });
@@ -114,8 +117,10 @@ const getOrCreateUserState = async (
 
   return prisma.userWordleState.create({
     data: {
+      id: uuidv4(),
       userId,
       date: normalized.dateOnly,
+      updatedAt: new Date(),
     },
   });
 };

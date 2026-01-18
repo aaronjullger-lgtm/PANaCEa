@@ -63,22 +63,13 @@ async function migrateLabCases() {
         await prisma.labCase.update({
           where: { id: existing.id },
           data: {
-
-            id: uuidv4(),
-
-            updatedAt: new Date(),
-
             labs: caseItem.labs,
           },
         });
       } else {
         await prisma.labCase.create({
           data: {
-
             id: uuidv4(),
-
-            updatedAt: new Date(),
-
             correctDiagnosis: caseItem.correctDiagnosis,
             clinicalVignette: caseItem.clinicalVignette,
             labs: caseItem.labs,

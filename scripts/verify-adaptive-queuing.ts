@@ -28,11 +28,7 @@ async function verifyAdaptiveQueuing() {
   console.log('💥 Simulating weakness pattern...');
   await prisma.weaknessPattern.create({
     data: {
-
       id: uuidv4(),
-
-      updatedAt: new Date(),
-
       userId: user.id,
       conditionId: question.Condition.id,
       wasCorrect: false,

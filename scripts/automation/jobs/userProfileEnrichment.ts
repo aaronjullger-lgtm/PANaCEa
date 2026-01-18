@@ -227,9 +227,6 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
   await prisma.userLearningProfile.update({
     where: { userId },
     data: {
-
-      id: uuidv4(),
-
       // Session patterns
       avgSessionLength: avgSessionDuration,
       optimalSessionLength,

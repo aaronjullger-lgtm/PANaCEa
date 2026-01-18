@@ -326,11 +326,6 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
           await prisma.mediaAsset.update({
             where: { id: existing.id },
             data: {
-
-              id: uuidv4(),
-
-              updatedAt: new Date(),
-
               conditionId: condition.id,
               tags: link.tags,
               confidence: link.confidence,
@@ -343,11 +338,7 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
           // Create new record
           await prisma.mediaAsset.create({
             data: {
-
               id: uuidv4(),
-
-              updatedAt: new Date(),
-
               filename: link.filename,
               type: link.type,
               conditionId: condition.id,

@@ -967,11 +967,6 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
         await prisma.medicalContent.update({
           where: { id: records[0].id },
           data: {
-
-            id: uuidv4(),
-
-            updatedAt: new Date(),
-
             relatedSystems: [...new Set([...records[0].relatedSystems, ...group.relatedSystems])],
           },
         });
@@ -1013,11 +1008,6 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
         await prisma.medicalContent.update({
           where: { id: existingCanonical.id },
           data: {
-
-            id: uuidv4(),
-
-            updatedAt: new Date(),
-
             relatedSystems: allRelatedSystems,
             buzzwords: existingMerged.buzzwords,
             clinical_pearls: existingMerged.clinical_pearls,
@@ -1042,11 +1032,6 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
           await prisma.medicalContent.update({
             where: { id: primary.id },
             data: {
-
-              id: uuidv4(),
-
-              updatedAt: new Date(),
-
               conditionId: canonicalConditionId,
               condition: group.canonicalName,
               system: group.canonicalSystem,
@@ -1099,11 +1084,6 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
         await prisma.condition.update({
           where: { id: primaryCond.id },
           data: {
-
-            id: uuidv4(),
-
-            updatedAt: new Date(),
-
             name: group.canonicalName,
             system: group.canonicalSystem,
             subcategory: group.canonicalSubcategory,
@@ -1187,9 +1167,6 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
       await prisma.medicalContent.update({
         where: { id: primary.id },
         data: {
-
-          id: uuidv4(),
-
           ...mergedContent,
           relatedSystems: otherSystems,
           updatedBy: 'condition-doctor-auto-merge',
@@ -1206,9 +1183,6 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
         await prisma.condition.update({
           where: { id: primary.conditionId },
           data: {
-
-            id: uuidv4(),
-
             relatedSystems: otherSystems,
             updatedAt: new Date(),
           },
@@ -1310,11 +1284,6 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
       await prisma.medicalContent.update({
         where: { id: primary.id },
         data: {
-
-          id: uuidv4(),
-
-          updatedAt: new Date(),
-
           relatedSystems: otherSystems,
           buzzwords: [...new Set(records.flatMap((r) => r.buzzwords))],
           updatedBy: 'condition-doctor',
@@ -1396,9 +1365,6 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
       await prisma.condition.update({
         where: { id: primary.id },
         data: {
-
-          id: uuidv4(),
-
           relatedSystems: otherSystems,
           aliases: allAliases,
           updatedAt: new Date(),
@@ -1495,11 +1461,6 @@ async function fixFormattingDuplicates(dryRun: boolean): Promise<number> {
             await prisma.medicalContent.update({
               where: { id: correctExists.id },
               data: {
-
-                id: uuidv4(),
-
-                updatedAt: new Date(),
-
                 buzzwords: [...new Set([...correctExists.buzzwords, ...record.buzzwords])],
                 relatedSystems: [
                   ...new Set([...correctExists.relatedSystems, ...record.relatedSystems]),

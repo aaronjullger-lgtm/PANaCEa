@@ -716,11 +716,6 @@ async function cleanupNonPharmEntries(
           await prisma.drug.update({
             where: { id: entry.id },
             data: {
-
-              id: uuidv4(),
-
-              updatedAt: new Date(),
-
               genericName: validation.correctedName.toLowerCase(),
               displayName: formatDisplayName(validation.correctedName),
             },

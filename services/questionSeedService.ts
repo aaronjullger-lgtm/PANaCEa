@@ -29,6 +29,7 @@ interface QuestionSeedData {
 export async function createQuestionSeed(seedData: QuestionSeedData) {
   const seed = await prisma.questionSeed.create({
     data: {
+      id: uuidv4(),
       conditionId: seedData.conditionId,
       questionType: seedData.questionType,
       system: seedData.system,
@@ -39,6 +40,7 @@ export async function createQuestionSeed(seedData: QuestionSeedData) {
       explanation: seedData.explanation,
       distractors: seedData.distractors,
       difficulty: seedData.difficulty,
+      updatedAt: new Date(),
     },
   });
 

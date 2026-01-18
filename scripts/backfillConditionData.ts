@@ -254,11 +254,6 @@ async function backfillConditionData() {
       await prisma.condition.update({
         where: { id: existing.id },
         data: {
-
-          id: uuidv4(),
-
-          updatedAt: new Date(),
-
           displayName: cleanName,
           aliases: meta.aliases || [],
           parentId,
@@ -278,11 +273,6 @@ async function backfillConditionData() {
       await prisma.condition.update({
         where: { id: existing.id },
         data: {
-
-          id: uuidv4(),
-
-          updatedAt: new Date(),
-
           displayName: cleanName,
           aliases: meta.aliases || [],
           parentId,
