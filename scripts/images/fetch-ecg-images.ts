@@ -950,11 +950,6 @@ async function saveMediaAsset(
 
   await prisma.mediaAsset.create({
     data: {
-
-      id: uuidv4(),
-
-      updatedAt: new Date(),
-
       id,
       conditionId,
       type: 'ECG',

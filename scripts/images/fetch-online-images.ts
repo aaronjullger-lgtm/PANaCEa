@@ -325,11 +325,6 @@ async function main() {
         try {
           await prisma.mediaAsset.create({
             data: {
-
-              id: uuidv4(),
-
-              updatedAt: new Date(),
-
               id,
               conditionId: condition.id,
               type: 'clinical_photo',

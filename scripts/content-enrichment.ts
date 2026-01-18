@@ -403,9 +403,6 @@ async function enrichCondition(
       await prisma.medicalContent.update({
         where: { conditionId },
         data: {
-
-          id: uuidv4(),
-
           ...updateData,
           updatedAt: new Date(),
         },
