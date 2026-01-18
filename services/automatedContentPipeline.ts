@@ -7,6 +7,7 @@
  */
 
 import { prisma } from '../lib/prisma';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { processUploadedMedia } from './mediaApprovalService';
 import { uploadEducationalResource } from './educationalResourceService';
@@ -223,8 +224,10 @@ async function processAndUploadExistingImage(
       // Create the condition
       condition = await prisma.condition.create({
         data: {
+          id: uuidv4(),
           name: analysis.condition,
           system: getCategorySystem(analysis.category),
+          updatedAt: new Date(),
         },
       });
     }
@@ -234,6 +237,7 @@ async function processAndUploadExistingImage(
   // For now, save metadata to database
   await prisma.mediaAsset.create({
     data: {
+      id: uuidv4(),
       filename: analysis.suggestedName || originalFilename,
       type: analysis.category || 'other',
       conditionId: condition?.id || null,
@@ -245,6 +249,7 @@ async function processAndUploadExistingImage(
       approvedBy: analysis.qualityScore >= 70 ? 'automated-system' : null,
       approvedAt: analysis.qualityScore >= 70 ? new Date() : null,
       originalUrl: `/public/${originalFilename}`, // Temporary - will be replaced by Supabase URL
+      updatedAt: new Date(),
     },
   });
 

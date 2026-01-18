@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { v4 as uuidv4 } from 'uuid';
 import { FINDING_REGISTRY } from '../src/registries/findingRegistry';
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
@@ -23,10 +24,12 @@ export async function syncAllFindings(): Promise<string> {
           system: finding.system,
         },
         create: {
+          id: uuidv4(),
           name: finding.name,
           system: finding.system,
           description: null,
           clinicalSignificance: null,
+          updatedAt: new Date(),
         },
       });
 

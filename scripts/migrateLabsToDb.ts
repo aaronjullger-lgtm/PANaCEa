@@ -73,6 +73,7 @@ async function migrateLabCases() {
             correctDiagnosis: caseItem.correctDiagnosis,
             clinicalVignette: caseItem.clinicalVignette,
             labs: caseItem.labs,
+            updatedAt: new Date(),
           },
         });
       }

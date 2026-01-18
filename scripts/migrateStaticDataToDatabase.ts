@@ -211,6 +211,7 @@ async function migrateConditionContent() {
           updatedAt: new Date(),
         },
         create: {
+          id: uuidv4(),
           conditionId,
           system,
           subcategory,
@@ -234,6 +235,7 @@ async function migrateConditionContent() {
           publishedAt: new Date(),
           approvedBy: 'migration-script',
           approvedAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 
@@ -329,6 +331,7 @@ async function migrateConditions() {
           id: uuidv4(),
           name: item.condition,
           system: item.system,
+          updatedAt: new Date(),
         },
       });
 

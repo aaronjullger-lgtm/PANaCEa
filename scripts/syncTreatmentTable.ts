@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { TREATMENT_REGISTRY } from '../src/registries/treatmentRegistry';
 
@@ -25,6 +26,7 @@ export async function syncAllTreatments(): Promise<string> {
           category: treatment.category,
         },
         create: {
+          id: uuidv4(),
           name: treatment.name,
           displayName: treatment.displayName ?? treatment.name,
           category: treatment.category,

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
@@ -67,10 +68,12 @@ async function generateAnatomyContent() {
           },
         },
         create: {
+          id: uuidv4(),
           name: data.name,
           system: data.system,
           region: data.region,
           description: data.description,
+          updatedAt: new Date(),
           // We store the prompt in description or a separate field?
           // For now, let's append it to description or just log it.
           // The schema has imageUrl, but we don't have an image yet.

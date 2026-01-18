@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { ANATOMY_REGISTRY } from '../src/registries/anatomyRegistry';
 import { SPECIAL_TEST_REGISTRY } from '../src/registries/specialTestRegistry';
 import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../src/registries/physiologyRegistry';
@@ -40,6 +41,7 @@ async function main() {
         },
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         system: item.system,
         region: item.region,
@@ -49,6 +51,7 @@ async function main() {
         innervation: item.innervation,
         bloodSupply: item.bloodSupply,
         clinicalSignificance: item.clinicalSignificance,
+        updatedAt: new Date(),
         Condition: {
           connect: validConditions.map((id) => ({ id })),
         },
@@ -79,6 +82,7 @@ async function main() {
         },
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         displayName: item.displayName,
         aliases: item.aliases || [],
@@ -90,6 +94,7 @@ async function main() {
         technique: item.technique,
         positiveTest: item.positiveTest,
         interpretation: item.interpretation,
+        updatedAt: new Date(),
         Condition: {
           connect: validConditions.map((id) => ({ id })),
         },
@@ -111,6 +116,7 @@ async function main() {
         relatedDrugs: item.relatedDrugs || [],
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         displayName: item.displayName,
         aliases: item.aliases || [],
@@ -118,6 +124,7 @@ async function main() {
         description: item.description,
         relatedConditions: item.relatedConditions || [],
         relatedDrugs: item.relatedDrugs || [],
+        updatedAt: new Date(),
       },
     });
   }
@@ -132,6 +139,7 @@ async function main() {
         category: item.category,
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         displayName: item.displayName,
         category: item.category,
@@ -149,6 +157,7 @@ async function main() {
         isEmergency: item.isEmergency || false,
       },
       create: {
+        id: uuidv4(),
         presentingComplaint: item.presentingComplaint,
         category: item.category,
         isEmergency: item.isEmergency || false,
@@ -168,11 +177,13 @@ async function main() {
         usesRadiation: item.usesRadiation || false,
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         modality: item.modality,
         bodyRegion: item.bodyRegion,
         usesContrast: item.usesContrast || false,
         usesRadiation: item.usesRadiation || false,
+        updatedAt: new Date(),
       },
     });
   }
@@ -186,8 +197,10 @@ async function main() {
         system: item.system,
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         system: item.system,
+        updatedAt: new Date(),
       },
     });
   }
@@ -203,6 +216,7 @@ async function main() {
         year: item.year,
       },
       create: {
+        id: uuidv4(),
         name: item.name,
         organization: item.organization,
         category: item.category,

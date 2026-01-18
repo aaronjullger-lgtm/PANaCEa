@@ -149,6 +149,7 @@ async function seedFromRegistry() {
             version: 1,
             createdBy: 'system:registry-seed',
             updatedBy: 'system:registry-seed',
+            updatedAt: new Date(),
           },
         });
         report.created++;
