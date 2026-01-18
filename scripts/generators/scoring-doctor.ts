@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
@@ -73,6 +74,11 @@ async function seedScoringSystems(dryRun = false) {
       if (!dryRun) {
         await prisma.scoringSystem.create({
           data: {
+
+            id: uuidv4(),
+
+            updatedAt: new Date(),
+
             name: system.name,
             condition: system.condition,
             category: system.category,

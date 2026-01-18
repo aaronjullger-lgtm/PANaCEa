@@ -8,6 +8,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -116,7 +117,10 @@ async function main() {
     try {
       await prisma.grandRoundsChallenge.create({
         data: {
-          id: crypto.randomUUID(),
+
+          updatedAt: new Date(),
+
+          id: uuidv4(),
           date: challengeDate,
           questionIds: selectedIds,
         },

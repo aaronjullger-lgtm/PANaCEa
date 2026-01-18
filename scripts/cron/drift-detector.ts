@@ -16,6 +16,7 @@
  */
 
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -346,6 +347,11 @@ class DriftDetector {
     // Create audit log entry - simulated as AuditLog model is missing
     /* await prisma.auditLog.create({
       data: {
+
+        id: uuidv4(),
+
+        updatedAt: new Date(),
+
         action: "DRIFT_DETECTION",
         entityType: "SYSTEM",
         details: {

@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -305,6 +306,11 @@ async function seedFluidCases() {
     for (const fluidCase of FLUID_CASES) {
       await prisma.fluidCase.create({
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           title: fluidCase.title,
           scenario: fluidCase.scenario,
           labs: fluidCase.labs,

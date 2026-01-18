@@ -27,6 +27,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import crypto from 'crypto';
 
@@ -715,6 +716,11 @@ async function cleanupNonPharmEntries(
           await prisma.drug.update({
             where: { id: entry.id },
             data: {
+
+              id: uuidv4(),
+
+              updatedAt: new Date(),
+
               genericName: validation.correctedName.toLowerCase(),
               displayName: formatDisplayName(validation.correctedName),
             },
@@ -1922,7 +1928,7 @@ CRITICAL RULES:
 
                 await prisma.drug.create({
                   data: {
-                    id: crypto.randomUUID(),
+                    id: uuidv4(),
                     updatedAt: new Date(),
                     genericName: sanitized.genericName,
                     brandName: sanitized.brandName || suggestion.brandName || null,

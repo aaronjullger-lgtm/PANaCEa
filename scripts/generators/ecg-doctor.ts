@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
@@ -77,6 +78,11 @@ async function seedECGPatterns(dryRun = false) {
       if (!dryRun) {
         await prisma.eCGPattern.create({
           data: {
+
+            id: uuidv4(),
+
+            updatedAt: new Date(),
+
             name: pattern.name,
             category: pattern.category,
             isEmergency: pattern.isEmergency,

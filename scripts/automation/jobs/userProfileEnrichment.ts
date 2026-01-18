@@ -20,7 +20,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
 
 /**
@@ -227,6 +227,9 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
   await prisma.userLearningProfile.update({
     where: { userId },
     data: {
+
+      id: uuidv4(),
+
       // Session patterns
       avgSessionLength: avgSessionDuration,
       optimalSessionLength,

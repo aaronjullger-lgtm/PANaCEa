@@ -12,6 +12,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   CONDITION_REGISTRY,
@@ -211,6 +212,9 @@ async function backfillConditionData() {
       // Create new condition
       await prisma.condition.create({
         data: {
+
+          updatedAt: new Date(),
+
           id: conditionDef.id,
           name: meta.condition,
           displayName: cleanName,
@@ -250,6 +254,11 @@ async function backfillConditionData() {
       await prisma.condition.update({
         where: { id: existing.id },
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           displayName: cleanName,
           aliases: meta.aliases || [],
           parentId,
@@ -269,6 +278,11 @@ async function backfillConditionData() {
       await prisma.condition.update({
         where: { id: existing.id },
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           displayName: cleanName,
           aliases: meta.aliases || [],
           parentId,

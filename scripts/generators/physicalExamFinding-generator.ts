@@ -6,6 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -552,7 +553,7 @@ async function main() {
 
       await prisma.physicalExamFinding.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           ...cleanedData,
           updatedAt: new Date(),
         },

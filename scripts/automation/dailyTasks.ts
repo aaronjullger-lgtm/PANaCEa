@@ -14,6 +14,7 @@
  */
 
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { prisma, disconnectPrisma } from '../helpers/prisma-client';
@@ -306,6 +307,9 @@ async function createGrandRoundsChallenge(): Promise<void> {
 
     // await prisma.grandRoundsChallenge.create({
     //   data: {
+     id: uuidv4(),
+     updatedAt: new Date(),
+
     //     date: today,
     //     questionIds,
     //   },

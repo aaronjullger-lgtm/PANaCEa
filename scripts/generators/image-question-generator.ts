@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import path from 'path';
@@ -87,7 +88,10 @@ async function main() {
 
         await prisma.preGeneratedQuestion.create({
           data: {
-            id: crypto.randomUUID(),
+
+            updatedAt: new Date(),
+
+            id: uuidv4(),
             questionType: 'image',
             system: questionData.system,
             conditionId: questionData.condition,

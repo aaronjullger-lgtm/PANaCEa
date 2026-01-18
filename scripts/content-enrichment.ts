@@ -13,6 +13,7 @@
  */
 
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Config
@@ -402,6 +403,9 @@ async function enrichCondition(
       await prisma.medicalContent.update({
         where: { conditionId },
         data: {
+
+          id: uuidv4(),
+
           ...updateData,
           updatedAt: new Date(),
         },

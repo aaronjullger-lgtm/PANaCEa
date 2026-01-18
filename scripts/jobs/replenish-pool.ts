@@ -1,4 +1,5 @@
 import { createEdgePrismaClient } from '../../functions/api/_shared/prisma-edge';
+import { v4 as uuidv4 } from 'uuid';
 import { QuestionGenerationService } from '../../lib/services/question/generationService';
 import { ContentService } from '../../lib/services/content/contentService';
 import { type MedicalContentData } from '../../lib/services/content/types';
@@ -67,6 +68,11 @@ async function replenishPool() {
 
             await prisma.preGeneratedQuestion.create({
               data: {
+
+                id: uuidv4(),
+
+                updatedAt: new Date(),
+
                 id,
                 conditionId: conditionMeta.id,
                 system: conditionMeta.system,

@@ -19,6 +19,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
@@ -944,11 +945,16 @@ async function saveMediaAsset(
   condition: ECGCondition,
   analysis: ECGAnalysis
 ): Promise<void> {
-  const id = crypto.randomUUID();
+  const id = uuidv4();
   const filename = `${condition.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}.jpg`;
 
   await prisma.mediaAsset.create({
     data: {
+
+      id: uuidv4(),
+
+      updatedAt: new Date(),
+
       id,
       conditionId,
       type: 'ECG',

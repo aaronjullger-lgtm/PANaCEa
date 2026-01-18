@@ -11,6 +11,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -166,7 +167,13 @@ async function seedVentilatorQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ data: q });
+    await prisma.question.create({ 
+      data: { 
+        id: uuidv4(),
+        ...q,
+        updatedAt: new Date(),
+      } 
+    });
     count++;
   }
   return count;
@@ -255,7 +262,13 @@ async function seedPhysiologyQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ data: q });
+    await prisma.question.create({ 
+      data: { 
+        id: uuidv4(),
+        ...q,
+        updatedAt: new Date(),
+      } 
+    });
     count++;
   }
   return count;
@@ -358,7 +371,13 @@ async function seedAnatomyQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ data: q });
+    await prisma.question.create({ 
+      data: { 
+        id: uuidv4(),
+        ...q,
+        updatedAt: new Date(),
+      } 
+    });
     count++;
   }
   return count;

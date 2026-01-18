@@ -9,6 +9,7 @@
  */
 
 import { prisma, disconnectPrisma } from '../helpers/prisma-client.js';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AuditReport {
   conditionsWithoutContent: string[];
@@ -154,6 +155,9 @@ async function fixNameMismatches(
       await prisma.medicalContent.update({
         where: { conditionId: mismatch.conditionId },
         data: {
+
+          id: uuidv4(),
+
           condition: mismatch.conditionName,
           updatedAt: new Date(),
           updatedBy: 'system',

@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -287,6 +288,11 @@ async function seedAntibioticGuidelines() {
     for (const guideline of ORGANISM_GUIDELINES) {
       await prisma.antibioticGuideline.create({
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           organism: guideline.organism,
           class: guideline.class,
           effective: guideline.effectiveDrugs,

@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 
@@ -147,6 +148,11 @@ async function seedPhysiologyConcepts() {
       // Create record - matching Prisma schema field names
       await prisma.physiologyConcept.create({
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           name: concept.name,
           system: concept.system,
           category: concept.category,

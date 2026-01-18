@@ -18,6 +18,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 import crypto from 'crypto';
@@ -970,7 +971,7 @@ async function insertKnownTests(dryRun: boolean) {
     } else {
       await prisma.specialTest.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           updatedAt: new Date(),
           name: test.name,
           displayName: test.displayName || test.name,
@@ -1054,7 +1055,7 @@ async function generateAITests(dryRun: boolean, batchSize: number) {
         } else {
           await prisma.specialTest.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               updatedAt: new Date(),
               name: candidate.name,
               displayName: candidate.name,

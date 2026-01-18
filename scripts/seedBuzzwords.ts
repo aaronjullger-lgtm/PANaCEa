@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -99,6 +100,11 @@ async function main() {
       await prisma.buzzword.update({
         where: { id: existing.id },
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           buzzword: entry.buzzword,
           system: entry.category,
         },
@@ -108,6 +114,11 @@ async function main() {
       // Create new
       await prisma.buzzword.create({
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           condition: condition,
           buzzword: entry.buzzword,
           system: entry.category,

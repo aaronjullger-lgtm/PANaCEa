@@ -14,6 +14,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 // @ts-ignore
@@ -418,7 +419,7 @@ class AnkiImporter {
   private async saveQuestion(card: ParsedCard): Promise<void> {
     // Convert to our question format
     const questionData = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       vignette: card.front, // Mapping front to vignette as well since it's required
       question: card.front,
       options: this.generateOptionsFromCard(card),

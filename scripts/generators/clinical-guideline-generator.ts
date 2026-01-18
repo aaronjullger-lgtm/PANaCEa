@@ -7,6 +7,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -793,7 +794,7 @@ async function gapAnalysis() {
       try {
         await prisma.clinicalGuideline.create({
           data: {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             name: data.name,
             description: data.description,
             clinicalContext: data.clinicalContext,
@@ -878,7 +879,7 @@ async function main() {
     try {
       await prisma.clinicalGuideline.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           name: data.name,
           description: data.description,
           clinicalContext: data.clinicalContext,
@@ -891,7 +892,7 @@ async function main() {
       });
 
       // Add to existing list to prevent duplicates within this run
-      existing.push({ id: crypto.randomUUID(), name: data.name });
+      existing.push({ id: uuidv4(), name: data.name });
 
       created++;
       console.log(`  ✅ Created: ${guideline.name}`);

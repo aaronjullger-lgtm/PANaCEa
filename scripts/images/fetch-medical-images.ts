@@ -8,6 +8,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import * as crypto from 'crypto';
 
@@ -197,7 +198,10 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
   try {
     await prisma.mediaAsset.create({
       data: {
-        id: crypto.randomUUID(),
+
+        updatedAt: new Date(),
+
+        id: uuidv4(),
         conditionId,
         type: 'clinical_photo',
         filename: image.title.substring(0, 100),

@@ -15,6 +15,7 @@
  */
 
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { CONDITION_REGISTRY, buildConditionDefinition } from '../config/conditionRegistry';
@@ -310,6 +311,11 @@ async function migrateConditions() {
           await prisma.condition.update({
             where: { id: existing.id },
             data: {
+
+              id: uuidv4(),
+
+              updatedAt: new Date(),
+
               name: item.condition,
               system: item.system,
             },
@@ -325,6 +331,11 @@ async function migrateConditions() {
       // Create condition record
       await prisma.condition.create({
         data: {
+
+          id: uuidv4(),
+
+          updatedAt: new Date(),
+
           name: item.condition,
           system: item.system,
         },

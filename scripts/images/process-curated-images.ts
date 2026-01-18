@@ -11,6 +11,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -172,7 +173,7 @@ async function uploadToSupabase(imagePath: string, conditionId: string): Promise
   try {
     const imageBuffer = fs.readFileSync(imagePath);
     const ext = path.extname(imagePath).toLowerCase();
-    const filename = `${conditionId}/${crypto.randomUUID()}${ext}`;
+    const filename = `${conditionId}/${uuidv4()}${ext}`;
 
     const response = await fetch(`${SUPABASE_URL}/storage/v1/object/medical-images/${filename}`, {
       method: 'POST',
@@ -314,7 +315,10 @@ async function main() {
     try {
       await prisma.mediaAsset.create({
         data: {
-          id: crypto.randomUUID(),
+
+          updatedAt: new Date(),
+
+          id: uuidv4(),
           conditionId,
           type: analysis.imageType,
           filename: img.filename,

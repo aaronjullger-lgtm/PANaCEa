@@ -8,6 +8,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 // Legacy import - photoManifest moved to database
 // import { ECG_MANIFEST, DERM_MANIFEST, RADIOLOGY_MANIFEST } from '../data/photoManifest';
 
@@ -73,6 +74,11 @@ async function migrateMediaManifest() {
 
         await prisma.mediaAsset.create({
           data: {
+
+            id: uuidv4(),
+
+            updatedAt: new Date(),
+
             conditionId: conditionId || null,
             type: entry.category,
             filename: filename,
