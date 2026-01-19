@@ -41,19 +41,22 @@ export const onRequestGet = publicEndpoint(ContentSchema, async ({ env, validate
 
     if (!record) {
       return {
-        found: false,
-        message: `No published content found for: ${conditionName}`,
+        data: {
+          found: false,
+          message: `No published content found for: ${conditionName}`,
+        },
       };
     }
 
     // Return structured content
     return {
-      found: true,
-      conditionId: record.conditionId,
-      condition: record.condition,
-      system: record.system,
-      subcategory: record.subcategory,
-      content: {
+      data: {
+        found: true,
+        conditionId: record.conditionId,
+        condition: record.condition,
+        system: record.system,
+        subcategory: record.subcategory,
+        content: {
         overview: record.overview,
         pathophysiology: record.pathophysiology,
         symptoms: record.symptoms,
@@ -75,6 +78,7 @@ export const onRequestGet = publicEndpoint(ContentSchema, async ({ env, validate
         monitoring: record.monitoring,
         patientEducation: record.patientEducation,
         aiConfidence: record.aiConfidence,
+      },
       },
     };
   } finally {

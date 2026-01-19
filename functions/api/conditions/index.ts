@@ -40,10 +40,12 @@ export const onRequestGet = publicEndpoint(ConditionsListSchema, async ({ env, v
     }
 
     return {
-      conditions,
-      bySystem,
-      total: conditions.length,
-      systems: Object.keys(bySystem),
+      data: {
+        conditions,
+        bySystem,
+        total: conditions.length,
+        systems: Object.keys(bySystem),
+      },
     };
   } finally {
     await contentService.disconnect();

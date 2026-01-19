@@ -29,7 +29,7 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       if (!medicalContent) {
-        return { pearls: [] };
+        return { data: { pearls: [] } };
       }
 
       // Extract pearls from content JSONB field
@@ -38,7 +38,7 @@ export const onRequestGet = authenticatedEndpoint(
         ? (content.clinicalPearls as string[])
         : [];
 
-      return { pearls };
+      return { data: { pearls } };
     } finally {
       await safePrismaDisconnect(prisma);
     }

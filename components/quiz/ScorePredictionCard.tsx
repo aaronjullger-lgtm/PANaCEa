@@ -18,7 +18,7 @@ import {
 import {
   predictScore as predictPANCEScore,
   calculateTrend,
-  type PerformanceSnapshot,
+  type SystemPerformance,
 } from '@/services/analytics';
 import type { PerformanceRecord } from '../../types';
 
@@ -52,7 +52,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
       systemMap.get(system)!.push(p);
     });
 
-    const systemPerformance: PerformanceSnapshot[] = [];
+    const systemPerformance: SystemPerformance[] = [];
     systemMap.forEach((records, system) => {
       if (records.length >= 2) {
         const sysCorrect = records.filter((r) => r.isCorrect).length;

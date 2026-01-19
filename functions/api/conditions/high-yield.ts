@@ -117,9 +117,11 @@ export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, valida
     }
 
     return {
-      conditions: results,
-      total: results.length,
-      source: 'database',
+      data: {
+        conditions: results,
+        total: results.length,
+        source: 'database',
+      },
     };
   } finally {
     await safePrismaDisconnect(prisma);
