@@ -28,8 +28,8 @@ export const onRequestOptions = (context: { request: Request }) => {
 
 export const onRequestPost = adminEndpoint(
   CheckRequestSchema,
-  async (data, context) => {
-    const { env, params } = context;
+  async (context) => {
+    const { env, params, validated } = context;
     const { id } = params as { id: string };
     const logger = createEndpointLogger('questions/staging/[id]/check');
 
@@ -54,7 +54,7 @@ export const onRequestPost = adminEndpoint(
     try {
       logger.info('Running adequacy check on staging question', {
         stagingId: id,
-        force: data.body?.force,
+        force: validated?.body?.force,
       });
 
       const result = await runAdequacyCheck(prisma, env, id);

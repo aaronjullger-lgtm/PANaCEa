@@ -41,10 +41,10 @@ const VALID_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 // Schema for GET query parameters
 const ListMediaQuerySchema = z.object({
-  status: z.enum(['pending', 'approved', 'rejected']).optional().default('pending'),
+  status: z.enum(['pending', 'approved', 'rejected']).default('pending'),
   category: z.enum(['ecg', 'derm', 'radiology', 'labs', 'diagrams']).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).optional().default('50'),
-  offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(0)).optional().default('0'),
+  limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).default(50),
+  offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(0)).default(0),
 });
 
 type ListMediaQuery = z.infer<typeof ListMediaQuerySchema>;

@@ -23,7 +23,7 @@ export const onRequestOptions = (context: { request: Request }) => {
 
 export const onRequestGet = adminEndpoint(
   AssembleSeedSchema,
-  async (data, context) => {
+  async (context) => {
     const { env, params } = context;
     const { id } = params as { id: string };
     const logger = createEndpointLogger('questions/seeds/[id]/assemble');
