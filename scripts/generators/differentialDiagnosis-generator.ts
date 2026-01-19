@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -372,7 +373,7 @@ async function main() {
     try {
       await prisma.differentialDiagnosis.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           presentingComplaint: data.presentingComplaint,
           category: data.category,
           isEmergency: data.isEmergency,
@@ -398,7 +399,6 @@ async function main() {
           reassuringFeatures: data.reassuringFeatures || [],
           redFlags: data.redFlags || [],
           typicalPresentation: data.typicalPresentation,
-          updatedAt: new Date(),
         },
       });
 

@@ -9,6 +9,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../lib/prisma';
 
 // Lazy initialization of AI model to improve testability and error handling
@@ -47,6 +48,7 @@ export async function saveToStaging(questionData: any) {
 
   const question = await prisma.stagingQuestion.create({
     data: {
+      id: uuidv4(),
       vignette: questionData.vignette || '',
       question: questionData.question,
       options: questionData.options,
@@ -183,6 +185,7 @@ export async function promoteToLive(stagingQuestionId: string) {
   // Save to PreGeneratedQuestion (live questions pool)
   const liveQuestion = await prisma.preGeneratedQuestion.create({
     data: {
+      id: uuidv4(),
       questionType: 'mcq',
       system: question.system,
       conditionId: null,
@@ -196,6 +199,7 @@ export async function promoteToLive(stagingQuestionId: string) {
         tags: question.tags,
       },
       quality: 10,
+      updatedAt: new Date(),
     },
   });
 

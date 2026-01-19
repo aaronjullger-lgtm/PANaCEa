@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { LAB_TEST_REGISTRY } from '../src/registries/labTestRegistry';
 
@@ -26,10 +27,12 @@ export async function syncAllLabs(): Promise<string> {
           category: test.category,
         },
         create: {
+          id: uuidv4(),
           name: test.name,
           category: test.category,
           commonAbnormalities: [],
           typicalUse: null,
+          updatedAt: new Date(),
         },
       });
 

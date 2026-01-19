@@ -18,6 +18,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -466,9 +467,8 @@ async function generateECGConditionLinks() {
       try {
         await prisma.eCGConditionLink.create({
           data: {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             ...link,
-            updatedAt: new Date(),
           },
         });
         existingSet.add(key);
@@ -571,7 +571,7 @@ async function generateImagingConditionLinks() {
       try {
         await prisma.imagingConditionLink.create({
           data: {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             imagingId: link.imagingId,
             conditionId: link.conditionId,
             relationshipType: link.relationshipType,
@@ -582,7 +582,6 @@ async function generateImagingConditionLinks() {
             specificity: link.specificity,
             isFirstLine: link.isFirstLine,
             panceYield: link.panceYield,
-            updatedAt: new Date(),
           },
         });
         existingSet.add(key);

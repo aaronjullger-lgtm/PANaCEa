@@ -4,9 +4,10 @@
  * Fixed to match Prisma schema exactly (uses presentingComplaint as unique key)
  */
 
-import { PrismaClient, Prisma } from '@prisma/client';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { randomUUID } from 'crypto';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -282,7 +283,6 @@ async function main() {
             reassuringFeatures: ensureArray(data.reassuringFeatures),
             redFlags: ensureArray(data.redFlags),
             typicalPresentation: ensureString(data.typicalPresentation),
-            updatedAt: new Date(),
           },
         });
 

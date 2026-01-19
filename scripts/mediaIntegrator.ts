@@ -11,6 +11,7 @@
  */
 
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import {
   normalize,
@@ -337,6 +338,7 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
           // Create new record
           await prisma.mediaAsset.create({
             data: {
+              id: uuidv4(),
               filename: link.filename,
               type: link.type,
               conditionId: condition.id,

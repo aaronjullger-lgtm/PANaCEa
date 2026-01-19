@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { CONDITION_REGISTRY, buildConditionDefinition } from '../config/conditionRegistry';
 
@@ -127,6 +128,7 @@ async function seedFromRegistry() {
         // Create new record
         await prisma.medicalContent.create({
           data: {
+            id: uuidv4(),
             conditionId,
             system: meta.system,
             subcategory: meta.subcategory,

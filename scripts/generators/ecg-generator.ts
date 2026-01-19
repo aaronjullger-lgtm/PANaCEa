@@ -8,6 +8,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -273,7 +274,9 @@ async function main(): Promise<void> {
       if (!dryRun) {
         await prisma.eCGPattern.create({
           data: {
-            id: crypto.randomUUID(),
+
+
+            id: uuidv4(),
             name: pattern.name,
             displayName: content.displayName || pattern.name,
             aliases: content.aliases || [],
@@ -308,7 +311,6 @@ async function main(): Promise<void> {
             commonMistakes: content.commonMistakes || [],
             testQuestionTips: content.testQuestionTips || [],
             mnemonics: content.mnemonics || [],
-            updatedAt: new Date(),
           },
         });
         console.log(`  ✅ Created: ${pattern.name}`);

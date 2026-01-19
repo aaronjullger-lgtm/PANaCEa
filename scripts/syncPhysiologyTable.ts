@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../src/registries/physiologyRegistry';
 
@@ -33,6 +34,7 @@ export async function syncAllPhysiology(): Promise<string> {
           clinicalSignificance: null,
         },
         create: {
+          id: uuidv4(),
           name: concept.name,
           displayName: concept.displayName ?? concept.name,
           aliases: concept.aliases ?? [],
@@ -43,6 +45,7 @@ export async function syncAllPhysiology(): Promise<string> {
           clinicalSignificance: null,
           relatedConditions: concept.relatedConditions ?? [],
           relatedDrugs: concept.relatedDrugs ?? [],
+          updatedAt: new Date(),
         },
       });
 

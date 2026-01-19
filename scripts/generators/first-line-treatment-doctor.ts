@@ -17,6 +17,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 import crypto from 'crypto';
@@ -845,8 +846,7 @@ async function insertKnownTreatments(dryRun: boolean) {
     } else {
       await prisma.firstLineTreatment.create({
         data: {
-          id: crypto.randomUUID(),
-          updatedAt: new Date(),
+          id: uuidv4(),
           condition: candidate.condition,
           treatment: candidate.treatment,
           category: candidate.category,
@@ -931,8 +931,7 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
         } else {
           await prisma.firstLineTreatment.create({
             data: {
-              id: crypto.randomUUID(),
-              updatedAt: new Date(),
+              id: uuidv4(),
               condition: candidate.condition,
               treatment: candidate.treatment,
               category: candidate.category,

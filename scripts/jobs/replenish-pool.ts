@@ -1,4 +1,5 @@
 import { createEdgePrismaClient } from '../../functions/api/_shared/prisma-edge';
+import { v4 as uuidv4 } from 'uuid';
 import { QuestionGenerationService } from '../../lib/services/question/generationService';
 import { ContentService } from '../../lib/services/content/contentService';
 import { type MedicalContentData } from '../../lib/services/content/types';
@@ -63,11 +64,11 @@ async function replenishPool() {
 
           if (generated) {
             // Save to pool
-            const id = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
             await prisma.preGeneratedQuestion.create({
               data: {
-                id,
+                id: generatedId,
                 conditionId: conditionMeta.id,
                 system: conditionMeta.system,
                 difficulty: generated.difficulty || 'medium',

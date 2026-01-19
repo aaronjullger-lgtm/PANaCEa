@@ -4,6 +4,8 @@
  * Reduces LLM API costs by avoiding duplicate generations
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 interface CacheQuery {
   queryText: string;
   questionType: string;
@@ -186,6 +188,7 @@ export async function cacheGeneratedQuestion(
 
     await prisma.semanticCache.create({
       data: {
+        id: uuidv4(),
         queryText: normalizedQuery,
         questionType: query.questionType,
         system: query.system || null,

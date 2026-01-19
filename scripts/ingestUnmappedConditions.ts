@@ -11,6 +11,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import fs from 'fs/promises';
 import path from 'path';
@@ -117,7 +118,6 @@ async function main() {
         aliases: raw !== name ? [raw] : [],
         relatedSystems: [],
         status: 'draft',
-        updatedAt: new Date(),
       },
     });
 

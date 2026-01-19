@@ -9,6 +9,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -106,6 +107,7 @@ async function migratePharmData() {
           updatedAt: new Date(),
         },
         create: {
+          id: uuidv4(),
           genericName,
           drugClass,
           mechanismOfAction,

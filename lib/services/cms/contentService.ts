@@ -5,6 +5,7 @@
  * DRAFT -> PENDING_REVIEW -> APPROVED -> PUBLISHED -> ARCHIVED
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import type { UserRole } from '../../../functions/api/_shared/rbac';
 import { createAuditLog, detectChangedFields, type AuditLogData } from './auditLogger';
 
@@ -46,6 +47,7 @@ export async function createDraft(
 ): Promise<any> {
   const content = await prisma.medicalContent.create({
     data: {
+      id: uuidv4(),
       conditionId: data.conditionId,
       system: data.system,
       subcategory: data.subcategory,
@@ -112,6 +114,7 @@ export async function updateContent(
   // Create version snapshot
   await prisma.contentVersion.create({
     data: {
+      id: uuidv4(),
       contentId: updated.id,
       version: updated.version,
       content: newContent,
@@ -183,6 +186,7 @@ export async function transitionStatus(
   // Create version snapshot
   await prisma.contentVersion.create({
     data: {
+      id: uuidv4(),
       contentId: updated.id,
       version: updated.version,
       content: content.content,

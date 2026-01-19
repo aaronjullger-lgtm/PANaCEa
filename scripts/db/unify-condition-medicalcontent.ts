@@ -9,6 +9,7 @@
  */
 
 import { prisma, disconnectPrisma } from '../helpers/prisma-client.js';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AuditReport {
   conditionsWithoutContent: string[];
@@ -127,7 +128,6 @@ async function createMissingMedicalContent(conditionIds: string[]): Promise<numb
           createdBy: 'system',
           updatedBy: 'system',
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       });
 

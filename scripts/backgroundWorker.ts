@@ -18,6 +18,7 @@
  */
 
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import { getNextJob, completeJob, failJob, type JobType } from '../lib/services/queue/jobQueue';
 import { generateSingleQuestion } from '../lib/questionGenerator';
 import * as fs from 'fs';
@@ -130,6 +131,10 @@ async function processQuestionGeneration(job: any): Promise<void> {
       // Store in PreGeneratedQuestion table
       await prisma.preGeneratedQuestion.create({
         data: {
+
+          id: uuidv4(),
+
+
           questionType: 'vignette',
           system: system,
           difficulty: difficulty,
@@ -191,6 +196,10 @@ async function processHealthCheck(job: any): Promise<void> {
   // Store health report
   await prisma.contentHealthReport.create({
     data: {
+
+      id: uuidv4(),
+
+
       totalContent: Object.keys(content).length,
       missingExplanations: issues.filter((i) => i.issueType === 'missing_explanation').length,
       brokenMediaLinks: 0, // Would check media links in full implementation

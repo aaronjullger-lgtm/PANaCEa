@@ -25,6 +25,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -980,9 +981,8 @@ async function processLabLinks() {
         try {
           await prisma.labConditionLink.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1041,9 +1041,8 @@ async function processFindingLinks() {
         try {
           await prisma.findingConditionLink.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1102,9 +1101,8 @@ async function processProcedureLinks() {
         try {
           await prisma.procedureConditionLink.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1163,9 +1161,8 @@ async function processPhysiologyLinks() {
         try {
           await prisma.physiologyConditionLink.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1224,9 +1221,8 @@ async function processAnatomyLinks() {
         try {
           await prisma.anatomyConditionLink.create({
             data: {
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1304,14 +1300,13 @@ async function processDrugLinks() {
           try {
             await prisma.drugConditionLink.create({
               data: {
-                id: crypto.randomUUID(),
+                id: uuidv4(),
                 drugId: link.drugId,
                 conditionId: link.conditionId,
                 relationshipType: link.relationshipType,
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
-                updatedAt: new Date(),
               },
             });
             existingSet.add(key);
@@ -1387,14 +1382,13 @@ async function processTreatmentLinks() {
           try {
             await prisma.treatmentConditionLink.create({
               data: {
-                id: crypto.randomUUID(),
+                id: uuidv4(),
                 treatmentId: link.treatmentId,
                 conditionId: link.conditionId,
                 relationshipType: link.relationshipType,
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
-                updatedAt: new Date(),
               },
             });
             existingSet.add(key);

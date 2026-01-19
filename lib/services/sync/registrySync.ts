@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { CONDITION_REGISTRY, type ConditionMeta } from '../../../config/conditionRegistry';
 import { DRUG_REGISTRY, type DrugMeta } from '../../../src/registries/drugRegistry';
 
@@ -58,6 +59,7 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
       } else {
         await client.condition.create({
           data: {
+            id: uuidv4(),
             name: meta.condition,
             system: meta.system,
             displayName: meta.condition,
@@ -107,10 +109,12 @@ export async function syncDrugs(client: PrismaClient = prisma): Promise<SyncStat
         where: { genericName: meta.genericName },
         update: baseData,
         create: {
+          id: uuidv4(),
           ...baseData,
           interactions: [],
           dosing: undefined,
           tags: [],
+          updatedAt: new Date(),
         },
       });
 

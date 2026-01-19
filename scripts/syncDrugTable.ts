@@ -17,6 +17,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { DRUG_REGISTRY, buildDrugId } from '../src/registries/drugRegistry';
 import { fileURLToPath } from 'url';
@@ -68,6 +69,8 @@ async function syncDrug(meta: any): Promise<void> {
     // Create new drug (ADD ONLY)
     await prisma.drug.create({
       data: {
+
+
         id: drugId,
         genericName: meta.genericName,
         brandName: meta.brandName || null,

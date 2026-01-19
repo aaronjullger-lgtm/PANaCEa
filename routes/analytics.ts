@@ -6,6 +6,7 @@
  * Extracted from server.ts for modularity.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
@@ -26,6 +27,7 @@ router.post(
       if (process.env.DATABASE_URL) {
         await prisma.explanationReaction.create({
           data: {
+            id: uuidv4(),
             questionId,
             reaction,
             userId: userId || null,
@@ -52,7 +54,7 @@ router.post(
       if (process.env.DATABASE_URL && userId) {
         await prisma.weaknessPattern.create({
           data: {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             userId,
             conditionId,
             wasCorrect,
@@ -99,6 +101,7 @@ router.post(
         } else {
           await prisma.confusionPair.create({
             data: {
+              id: uuidv4(),
               userId: userId || null,
               realCondition: correctCondition,
               mistakenFor: selectedCondition,
@@ -133,6 +136,7 @@ router.post('/soap-note', async (req: Request, res: Response) => {
           // @ts-ignore
           await prisma.soapNoteGradingEvent.create({
             data: {
+              id: uuidv4(),
               userId: userId || null,
               caseId,
               totalScore,

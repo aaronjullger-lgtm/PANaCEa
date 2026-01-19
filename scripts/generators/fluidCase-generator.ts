@@ -6,6 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -292,9 +293,8 @@ async function main() {
     try {
       await prisma.fluidCase.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           ...data,
-          updatedAt: new Date(),
         },
       });
 

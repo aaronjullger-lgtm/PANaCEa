@@ -12,6 +12,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import * as fs from 'fs';
@@ -296,7 +297,7 @@ async function saveImage(
   try {
     const filename = path.basename(imagePath);
     const ext = path.extname(imagePath).toLowerCase();
-    const id = crypto.randomUUID();
+    const id = uuidv4();
 
     // Generate unique storage path
     const timestamp = Date.now();
@@ -370,7 +371,6 @@ async function saveImage(
                 : null,
         explanation: analysis.explanation,
         difficulty: 'medium', // All questions are PANCE-level
-        updatedAt: new Date(),
       },
     });
 

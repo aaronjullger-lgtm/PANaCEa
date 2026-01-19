@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../prisma';
 
 /**
@@ -52,6 +53,7 @@ export async function getOrCreateDailyChallenge() {
 
   const challenge = await prisma.grandRoundsChallenge.create({
     data: {
+      id: uuidv4(),
       date: today,
       questionIds,
     },

@@ -68,6 +68,7 @@ const UserPreferencesSchema = z.object({
 
     // Custom settings (flexible JSON)
     customSettings: z.record(z.string(), z.unknown()).optional(),
+  }),
 });
 
 const PartialPreferencesSchema = z.object({
@@ -102,6 +103,10 @@ const PartialPreferencesSchema = z.object({
     shareAnonymousData: z.boolean().optional(),
     showOnLeaderboard: z.boolean().optional(),
     customSettings: z.record(z.string(), z.unknown()).optional(),
+<<<<<<< HEAD
+  }),
+=======
+>>>>>>> origin/main
 });
 
 // Empty schema for GET and DELETE

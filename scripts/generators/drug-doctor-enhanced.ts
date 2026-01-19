@@ -27,6 +27,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import crypto from 'crypto';
 
@@ -1922,8 +1923,7 @@ CRITICAL RULES:
 
                 await prisma.drug.create({
                   data: {
-                    id: crypto.randomUUID(),
-                    updatedAt: new Date(),
+                    id: uuidv4(),
                     genericName: sanitized.genericName,
                     brandName: sanitized.brandName || suggestion.brandName || null,
                     displayName: sanitized.displayName,

@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
 import type { Env } from '../../../functions/api/_shared/auth';

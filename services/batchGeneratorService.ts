@@ -6,6 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 const prisma = new PrismaClient();
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -65,6 +66,7 @@ export async function generateBatchForSystem(
         // Save directly to PreGeneratedQuestion pool
         const saved = await prisma.preGeneratedQuestion.create({
           data: {
+            id: uuidv4(),
             questionData: {
               question: question.question,
               options: question.options,
@@ -101,12 +103,12 @@ export async function generateBatchForSystem(
  * Generate a single question for a condition
  */
 async function generateQuestionForCondition(
-  condition: { name: string; content: any },
+  condition: { condition: string; content: any },
   system: string
 ): Promise<GeneratedQuestion | null> {
   const content = condition.content as any;
 
-  const prompt = `You are a PANCE exam question writer. Create a high-quality MCQ for "${condition.name}".
+  const prompt = `You are a PANCE exam question writer. Create a high-quality MCQ for "${condition.condition}".
 
 Context:
 - Overview: ${content?.overview?.slice(0, 500) || 'N/A'}

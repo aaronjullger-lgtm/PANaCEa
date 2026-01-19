@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -207,6 +208,10 @@ async function seedCodeBlueQuestions() {
     for (const q of CODE_BLUE_QUESTIONS) {
       await prisma.question.create({
         data: {
+
+          id: uuidv4(),
+
+
           question: q.question,
           vignette: '',
           options: q.options as any,

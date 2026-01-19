@@ -23,7 +23,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
 
   // Optional - Gracefully degraded if missing
-  FRONTEND_URL: z.string().url().optional().default('http://localhost:3000'),
+  FRONTEND_URL: z.string().default('http://localhost:3000').url().optional(),
   ADMIN_USER_IDS: z.string().optional(),
   SUPERADMIN_USER_IDS: z.string().optional(),
 

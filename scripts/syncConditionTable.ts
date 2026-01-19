@@ -15,6 +15,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { CONDITION_REGISTRY, buildConditionDefinition } from '../config/conditionRegistry';
 import { fileURLToPath } from 'url';
@@ -67,6 +68,8 @@ async function syncCondition(meta: any): Promise<void> {
       // Create new condition (ADD ONLY)
       await prisma.condition.create({
         data: {
+
+
           id: conditionId,
           name: meta.condition,
           system: meta.system,

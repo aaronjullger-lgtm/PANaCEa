@@ -12,6 +12,7 @@
  */
 
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -461,7 +462,6 @@ async function syncConditionTables(dryRun: boolean) {
           await prisma.condition.create({
             data: {
               id: mc.conditionId,
-              updatedAt: new Date(),
               name: mc.condition,
               system: mc.system,
               subcategory: mc.subcategory || 'General',

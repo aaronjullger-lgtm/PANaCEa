@@ -16,6 +16,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from 'dotenv';
 
@@ -532,6 +533,8 @@ Valid system codes: ${SYSTEM_CODES.join(', ')}`;
           // Create the condition record
           await prisma.condition.create({
             data: {
+
+
               id: conditionId,
               name: gap.name,
               system,

@@ -11,10 +11,10 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import fs from 'fs/promises';
 import path from 'path';
-import { randomUUID } from 'crypto';
 
 config();
 
@@ -117,10 +117,10 @@ async function upsertMediaAssets(mappings: FileMapping[], dryRun: boolean) {
     } else {
       await prisma.mediaAsset.create({
         data: {
-          id: randomUUID(),
-          ...data,
+          id: uuidv4(),
           createdAt: new Date(),
           uploadedAt: new Date(),
+          ...data,
         },
       });
       console.log(`✨ Created MediaAsset for ${mapping.filename}`);

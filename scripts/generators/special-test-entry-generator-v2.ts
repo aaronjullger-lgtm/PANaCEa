@@ -4,9 +4,10 @@
  * Fixed to match Prisma schema exactly
  */
 
-import { PrismaClient } from '@prisma/client';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { randomUUID } from 'crypto';
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -254,7 +255,6 @@ async function main() {
             technique: ensureString(data.technique),
             positiveTest: ensureString(data.positiveTest),
             interpretation: ensureString(data.interpretation),
-            updatedAt: new Date(),
           },
         });
 

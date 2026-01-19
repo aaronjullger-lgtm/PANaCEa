@@ -16,6 +16,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 
 // ============================================================================
@@ -1023,6 +1024,8 @@ async function uploadSingleImage(
     console.log(`💾 Creating MediaAsset record...`);
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
+
+
         id: generateId(),
         conditionId: dbContent?.conditionId || null,
         type: category,
@@ -1054,7 +1057,6 @@ async function uploadSingleImage(
         isClinical: true,
         sourceUrl: imageUrl,
         citation: options.sourceAttribution,
-        updatedAt: new Date(),
       },
     });
 

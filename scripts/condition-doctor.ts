@@ -18,6 +18,7 @@
  */
 
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -862,8 +863,7 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
       try {
         await prisma.medicalContent.create({
           data: {
-            id: crypto.randomUUID(),
-            updatedAt: new Date(),
+            id: uuidv4(),
             conditionId,
             system: condition.system,
             subcategory: condition.subcategory,
@@ -903,8 +903,7 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
       try {
         await prisma.condition.create({
           data: {
-            id: crypto.randomUUID(),
-            updatedAt: new Date(),
+            id: uuidv4(),
             name: condition.condition,
             system: condition.system,
             subcategory: condition.subcategory,
@@ -1617,7 +1616,6 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
           await prisma.condition.create({
             data: {
               id: mc.conditionId,
-              updatedAt: new Date(),
               name: mc.condition,
               system: mc.system,
               subcategory: mc.subcategory || 'General',

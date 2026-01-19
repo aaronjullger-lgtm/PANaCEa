@@ -16,6 +16,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import { ANATOMY_REGISTRY, buildAnatomyId } from '../src/registries/anatomyRegistry';
 import { fileURLToPath } from 'url';
@@ -67,6 +68,8 @@ async function syncAnatomy(meta: any): Promise<void> {
     // Create new anatomy structure (ADD ONLY)
     await prisma.anatomyStructure.create({
       data: {
+
+
         id: anatomyId,
         name: meta.name,
         system: meta.system,

@@ -3,6 +3,7 @@
  * Handles achievement checking, unlocking, and tracking
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { ACHIEVEMENTS, getAchievementById } from '../../config/achievements';
 import { getPrismaClient } from '../db';
 
@@ -48,6 +49,7 @@ export async function unlockAchievement(
     // Create achievement record
     await prisma.userAchievement.create({
       data: {
+        id: uuidv4(),
         userId,
         achievementId,
         progress,

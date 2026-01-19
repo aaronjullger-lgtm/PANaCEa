@@ -3,9 +3,10 @@
  * Creates missing differential diagnosis entries for PANCE coverage
  */
 
-import { PrismaClient } from '@prisma/client';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { randomUUID } from 'crypto';
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -327,7 +328,6 @@ async function main() {
             clinicalPearls: ensureArray(data.clinicalPearls),
             mnemonics: ensureArray(data.mnemonics),
             differentialList: ensureArray(data.commonCauses),
-            updatedAt: new Date(),
           },
         });
 

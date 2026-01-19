@@ -7,6 +7,7 @@
 
 import { prisma } from '../lib/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -67,6 +68,7 @@ export async function uploadEducationalResource(
   // Create database record with pending status
   const resource = await prisma.educationalResource.create({
     data: {
+      id: uuidv4(),
       title,
       resourceType,
       fileUrl,
@@ -78,6 +80,7 @@ export async function uploadEducationalResource(
       mimeType: getMimeType(originalFilename),
       fileSize: file.length,
       approvalStatus: 'pending',
+      updatedAt: new Date(),
     },
   });
 

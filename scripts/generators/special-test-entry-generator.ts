@@ -3,9 +3,10 @@
  * Creates missing special tests for PANCE coverage
  */
 
-import { PrismaClient } from '@prisma/client';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { randomUUID } from 'crypto';
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -340,7 +341,6 @@ async function main() {
             interpretation: ensureString(data.interpretation),
             sensitivity: typeof data.sensitivity === 'number' ? data.sensitivity : null,
             specificity: typeof data.specificity === 'number' ? data.specificity : null,
-            updatedAt: new Date(),
           },
         });
 

@@ -10,6 +10,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from 'dotenv';
 import * as crypto from 'crypto';
 
@@ -320,7 +321,7 @@ async function main() {
         }
 
         // Add to database
-        const id = crypto.randomUUID();
+        const id = uuidv4();
         try {
           await prisma.mediaAsset.create({
             data: {
@@ -334,7 +335,6 @@ async function main() {
               tags: [image.source, image.license],
               status: 'pending_review',
               approvalStatus: 'pending',
-              updatedAt: new Date(),
             },
           });
 

@@ -23,6 +23,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
@@ -227,6 +228,8 @@ async function syncSpecialTest(meta: any): Promise<void> {
     // Create new special test (ADD ONLY) with AI-generated content
     await prisma.specialTest.create({
       data: {
+
+
         id: testId,
         name: meta.name,
         system: meta.system || null,

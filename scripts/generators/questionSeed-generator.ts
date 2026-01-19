@@ -5,6 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
@@ -244,7 +245,7 @@ async function main() {
       try {
         await prisma.questionSeed.create({
           data: {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             conditionId: data.conditionId,
             medicalContentId: data.medicalContentId,
             questionType: data.questionType,
@@ -257,7 +258,6 @@ async function main() {
             explanation: data.explanation,
             difficulty: 'medium', // All seeds are PANCE-level
             tags: data.tags,
-            updatedAt: new Date(),
           },
         });
 

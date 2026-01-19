@@ -21,6 +21,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 
@@ -322,8 +323,7 @@ async function createDDx(
   const crypto = await import('crypto');
   await prisma.differentialDiagnosis.create({
     data: {
-      id: crypto.randomUUID(),
-      updatedAt: new Date(),
+      id: uuidv4(),
       presentingComplaint: symptom.symptom,
       category: symptom.category,
       isEmergency: symptom.isEmergency,

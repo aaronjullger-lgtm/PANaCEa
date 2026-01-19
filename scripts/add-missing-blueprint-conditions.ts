@@ -7,6 +7,7 @@
  */
 
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
+import { v4 as uuidv4 } from 'uuid';
 
 interface NewCondition {
   // Optional because IDs are derived when not provided
@@ -376,6 +377,8 @@ async function addMissingConditions() {
           }),
           prisma.medicalContent.create({
             data: {
+
+
               id: `content_${id}`,
               conditionId: id,
               condition: condition.name,

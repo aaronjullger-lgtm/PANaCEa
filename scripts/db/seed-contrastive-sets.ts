@@ -1,4 +1,5 @@
 import { prisma, runScript } from '../_shared/db.js';
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -68,6 +69,10 @@ async function main() {
 
     await prisma.contrastiveSet.create({
       data: {
+
+        id: uuidv4(),
+
+
         symptom: set.symptom,
         conditionIds: resolvedIds, // Using resolved IDs or names as fallback
         distinguishers: set.distinguishers,

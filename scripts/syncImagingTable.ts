@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
@@ -39,6 +40,7 @@ export async function syncAllImaging(): Promise<string> {
           usesRadiation: Boolean(study.usesRadiation),
         },
         create: {
+          id: uuidv4(),
           name: study.name,
           modality: study.modality,
           bodyRegion: study.bodyRegion ?? null,
@@ -47,6 +49,7 @@ export async function syncAllImaging(): Promise<string> {
           description: null,
           indications: [],
           contraindications: [],
+          updatedAt: new Date(),
         },
       });
 

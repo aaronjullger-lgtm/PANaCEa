@@ -19,6 +19,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
@@ -877,7 +878,7 @@ async function saveMediaAsset(
   condition: CTCondition,
   analysis: CTAnalysis
 ): Promise<void> {
-  const id = crypto.randomUUID();
+  const id = uuidv4();
 
   await prisma.mediaAsset.create({
     data: {
@@ -906,7 +907,6 @@ async function saveMediaAsset(
       distractors: condition.distractors,
       difficulty: 'medium',
       isClinical: true,
-      updatedAt: new Date(),
     },
   });
 }

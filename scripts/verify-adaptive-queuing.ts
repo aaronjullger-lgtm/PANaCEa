@@ -1,4 +1,5 @@
 import { VariantQueueService } from '../services/variantQueueService';
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../lib/prisma';
 
 async function verifyAdaptiveQueuing() {
@@ -27,6 +28,7 @@ async function verifyAdaptiveQueuing() {
   console.log('💥 Simulating weakness pattern...');
   await prisma.weaknessPattern.create({
     data: {
+      id: uuidv4(),
       userId: user.id,
       conditionId: question.Condition.id,
       wasCorrect: false,

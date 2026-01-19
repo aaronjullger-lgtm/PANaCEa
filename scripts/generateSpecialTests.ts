@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
@@ -72,11 +73,13 @@ async function generateSpecialTests() {
           },
         },
         create: {
+          id: uuidv4(),
           name: data.name,
           description: data.description,
           technique: data.technique,
           sensitivity: data.sensitivity,
           specificity: data.specificity,
+          updatedAt: new Date(),
           Condition: {
             connect: { id: condition.id },
           },

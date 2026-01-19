@@ -13,6 +13,7 @@
  */
 
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Config
@@ -740,7 +741,6 @@ Return ONLY valid JSON, no markdown code blocks.`;
             createdBy: 'system_ai_enrichment',
             updatedBy: 'system_ai_enrichment',
             createdAt: new Date(),
-            updatedAt: new Date(),
             ...contentData,
           },
         });

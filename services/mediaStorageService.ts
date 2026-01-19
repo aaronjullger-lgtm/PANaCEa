@@ -7,6 +7,7 @@
 
 import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
 import { prisma } from '../lib/prisma';
+import { v4 as uuidv4 } from 'uuid';
 import { processUploadedMedia } from './mediaApprovalService';
 import { optimizeImage } from './imageQualityService';
 
@@ -96,6 +97,7 @@ export async function uploadMedia(
     // Save metadata to database (with pending approval status)
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
+        id: uuidv4(),
         type: getCategoryType(category),
         filename: sanitizedFilename,
         originalUrl: publicUrl,
@@ -107,6 +109,7 @@ export async function uploadMedia(
         fileSize: optimizedBuffer.length,
         uploadedBy: uploadedBy || null,
         approvalStatus: 'pending', // Start as pending
+        updatedAt: new Date(),
       },
     });
 

@@ -5,6 +5,7 @@
  * Complements sync.ts and analytics.ts.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
@@ -73,7 +74,7 @@ router.post('/performance', requireAuth, async (req: AuthenticatedRequest, res: 
 
     await prisma.performanceRecord.create({
       data: {
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         userId: user.id,
         topic: record.topic,
         system: record.system,

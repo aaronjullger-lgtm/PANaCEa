@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { LAB_TEST_DATABASE } from '../src/data/labTests';
 import fs from 'fs';
 import path from 'path';
@@ -68,6 +69,7 @@ async function migrateLabCases() {
       } else {
         await prisma.labCase.create({
           data: {
+            id: uuidv4(),
             correctDiagnosis: caseItem.correctDiagnosis,
             clinicalVignette: caseItem.clinicalVignette,
             labs: caseItem.labs,

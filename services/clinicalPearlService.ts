@@ -8,6 +8,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../lib/prisma';
 
 const API_KEY = process.env.GEMINI_API_KEY;
@@ -113,6 +114,7 @@ export async function createClinicalPearl(
   // Save to database
   const pearl = await prisma.clinicalPearl.create({
     data: {
+      id: uuidv4(),
       questionId,
       // conditionId: metadata?.conditionId || null,
       system: metadata?.system || 'GENERAL',
@@ -120,6 +122,7 @@ export async function createClinicalPearl(
       fullExplanation,
       category: extracted.category || null,
       tags: extracted.tags,
+      updatedAt: new Date(),
       // difficulty: metadata?.difficulty || null,
       // extractedBy: metadata?.extractedBy || "ai",
     },
@@ -270,6 +273,7 @@ export async function recordUserPearlView(userId: string, pearlId: string) {
       viewedAt: new Date(),
     },
     create: {
+      id: uuidv4(),
       userId,
       pearlId,
     },
@@ -292,6 +296,7 @@ export async function markPearlUseful(userId: string, pearlId: string, notes?: s
       notes,
     },
     create: {
+      id: uuidv4(),
       userId,
       pearlId,
       markedUseful: true,

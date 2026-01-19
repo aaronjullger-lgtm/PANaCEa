@@ -21,6 +21,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1007,6 +1008,8 @@ async function acquireImagesForCondition(
         // Create MediaAsset record
         await prisma.mediaAsset.create({
           data: {
+
+
             id: generateId(),
             type: mapCategoryToDbType(condition.category),
             filename,
@@ -1028,7 +1031,6 @@ async function acquireImagesForCondition(
               license: result.license,
               qualityScore: result.quality_score,
             },
-            updatedAt: new Date(),
           },
         });
 
