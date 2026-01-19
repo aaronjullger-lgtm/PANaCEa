@@ -10,10 +10,9 @@
 import path from 'node:path';
 import { defineConfig } from 'prisma/config';
 
-// Load environment variables - load .env.local first (for local overrides), then .env
+// Load environment variables
 import { config } from 'dotenv';
-config({ path: path.resolve(process.cwd(), '.env.local') }); // Local overrides (optional)
-config({ path: path.resolve(process.cwd(), '.env') }); // Base config
+config({ path: path.resolve(process.cwd(), '.env') });
 
 export default defineConfig({
   // Prisma schema location

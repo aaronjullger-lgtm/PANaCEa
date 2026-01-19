@@ -24,7 +24,7 @@ import { config } from 'dotenv';
 import { sanitizeBody } from './lib/middleware/validation';
 import { prisma } from './lib/prisma';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { createRequestLogger } from './lib/logging/structuredLogger';
 import { validateEnvironment } from './lib/config/environment';
 import { performHealthCheck, getHealthStatusCode } from './lib/services/healthCheck';
@@ -112,8 +112,8 @@ const API_LIMITER = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' },
   keyGenerator: (req) => {
-    // Use user ID if authenticated, otherwise use IP
-    return req.user?.id || req.ip;
+    // Use user ID if authenticated, otherwise use ipKeyGenerator for proper IP handling
+    return req.user?.id || ipKeyGenerator(req);
   },
   skip: (req) => {
     // Skip rate limiting for health checks and options

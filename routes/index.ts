@@ -22,6 +22,7 @@ import conditionsRouter from './conditions';
 import contentRouter from './content';
 import referenceRouter from './reference';
 import labsRouter from './labs';
+import drugsRouter from './drugs';
 import buzzwordsRouter from './buzzwords';
 import gamesRouter from './games';
 import analyticsRouter from './analytics';
@@ -49,6 +50,7 @@ export function registerRoutes(app: Express): void {
 
   // Lab and study material routes
   app.use('/api/labs', labsRouter);
+  app.use('/api/drugs', drugsRouter);
   app.use('/api/buzzwords', buzzwordsRouter);
 
   // [DORMANT] Game routes - MedicalWordle not used in App.tsx
@@ -72,7 +74,7 @@ export function registerRoutes(app: Express): void {
 
   console.log('✓ Route modules registered:');
   console.log('  - /api/conditions, /api/content, /api/reference');
-  console.log('  - /api/labs, /api/buzzwords');
+  console.log('  - /api/labs, /api/drugs, /api/buzzwords');
   console.log('  - /api/analytics, /api/sync');
   console.log('  - /api/questions, /api/osce');
   console.log('  - /api/performance, /api/achievements');
