@@ -83,7 +83,7 @@ async function seedFromRegistry() {
   console.log(`📊 Total conditions in registry: ${report.totalRecords}\n`);
 
   for (const meta of CONDITION_REGISTRY) {
-    const definition = buildConditionDefinition(meta);
+    const definition = buildConditionDefinition(meta.id);
     const conditionId = definition.id;
 
     try {

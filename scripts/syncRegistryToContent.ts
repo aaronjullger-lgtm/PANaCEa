@@ -18,7 +18,7 @@ function run() {
   let addedCount = 0;
 
   for (const meta of CONDITION_REGISTRY) {
-    const def = buildConditionDefinition(meta);
+    const def = buildConditionDefinition(meta.id);
     if (!existingIds.has(def.id)) {
       console.log(`Adding missing condition: ${def.condition} (${def.id})`);
 

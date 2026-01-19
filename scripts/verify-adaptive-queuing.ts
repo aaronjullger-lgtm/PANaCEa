@@ -1,6 +1,7 @@
 import { VariantQueueService } from '../services/variantQueueService';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../lib/prisma';
+import type { PrismaClient } from '@prisma/client';
 
 async function verifyAdaptiveQueuing() {
   console.log('🧪 Starting Adaptive Queuing Verification...');
@@ -39,7 +40,7 @@ async function verifyAdaptiveQueuing() {
 
   // 3. Trigger Queue
   console.log('🚀 Triggering queueVariantForReview...');
-  const service = new VariantQueueService(prisma);
+  const service = new VariantQueueService(prisma as unknown as PrismaClient);
   const variantId = await service.queueVariantForReview(user.id, question.id, 'spaced_repetition');
 
   if (variantId) {

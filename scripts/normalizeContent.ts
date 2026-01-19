@@ -157,7 +157,7 @@ async function main() {
       continue;
     }
 
-    const def = buildConditionDefinition(meta);
+    const def = buildConditionDefinition(meta.id);
     const entry = getEntry(def.id, meta.condition);
 
     mergeContent(entry, contentToMerge);
