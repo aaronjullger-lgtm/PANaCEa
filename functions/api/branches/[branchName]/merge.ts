@@ -1,89 +1,96 @@
+/**
+ * Content Branch Merge API Endpoint
+ *
+ * Purpose: Merge a content branch into target branch (admin only)
+ * Sprint: Security Hardening Sprint 1.3
+ *
+ * Security: adminEndpoint() with rate limiting and validation
+ */
+
+import { z } from 'zod';
+import { adminEndpoint } from '../../_shared/middleware';
+import { handleCorsOptions } from '../../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-import { validateRequired } from '../../_shared/validation';
 import { mergeBranch } from '../../_shared/content-branching';
+import { logger } from '../../_shared/secureLogger';
+
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
+
+const BranchMergeSchema = z.object({
+  mergedBy: z.string().min(1, 'mergedBy is required').max(100),
+  targetBranch: z.string().min(1).max(100).optional(),
+});
+
+type BranchMergeInput = z.infer<typeof BranchMergeSchema>;
+
+// ============================================================================
+// CORS HANDLER
+// ============================================================================
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context) => {
-  const { request, env, params } = context;
+// ============================================================================
+// POST HANDLER - Merge Branch (Admin Only)
+// ============================================================================
+
+export const onRequestPost = adminEndpoint(BranchMergeSchema, async (context) => {
+  const { env, params, validated, auth } = context;
   const { branchName } = params;
 
   // Early return if no database configured
   if (!env.DATABASE_URL) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Database not configured',
-      }),
-      {
-        status: 503,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    return {
+      status: 503,
+      error: 'Database not configured',
+    };
   }
 
   const prisma = createEdgePrismaClient(env);
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
+    const { mergedBy, targetBranch } = validated as BranchMergeInput;
 
-    const body = await request.json();
-    const missing = validateRequired(body, ['mergedBy']);
-    if (missing.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          missing,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    const { mergedBy, targetBranch } = body;
+    // Audit log: Admin action
+    logger.info('Admin branch merge initiated', {
+      adminUserId: auth.userId,
+      branchName,
+      mergedBy,
+      targetBranch: targetBranch || 'main',
+    });
 
     const result = await mergeBranch(prisma, branchName as string, mergedBy, targetBranch);
 
-    return new Response(JSON.stringify({ success: result.success, ...result }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+    // Audit log: Success
+    if (result.success) {
+      logger.info('Branch merge completed successfully', {
+        adminUserId: auth.userId,
+        branchName,
+        targetBranch: targetBranch || 'main',
+        mergedRecords: result.mergedCount || 0,
+      });
+    }
+
+    return {
+      status: result.success ? 200 : 400,
+      data: {
+        success: result.success,
+        ...result,
       },
-    });
+    };
   } catch (error) {
-    console.error('Failed to merge branch:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Failed to merge branch',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    logger.error('Failed to merge branch', {
+      error: error instanceof Error ? error.message : String(error),
+      adminUserId: auth.userId,
+      branchName,
+    });
+
+    return {
+      status: 500,
+      error: error instanceof Error ? error.message : 'Failed to merge branch',
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }
-};
+});

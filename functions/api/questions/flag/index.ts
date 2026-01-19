@@ -1,119 +1,48 @@
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-import { validateRequired, validateEnum } from '../../_shared/validation';
-import { sendAdminFlagNotification } from '../../_shared/notifications';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { z } from 'zod';
 
-export const onRequestOptions = handleCorsOptions;
+// Schema for flagging a question (any authenticated user can flag)
+const FlagQuestionSchema = z.object({
+  userEmail: z.string().email().optional(),
+  userFirstName: z.string().max(100).optional(),
+  questionId: z.string().min(1).max(100),
+  questionText: z.string().optional(),
+  correctAnswer: z.string().max(500).optional(),
+  topic: z.string().max(100).optional(),
+  system: z.string().max(100).optional(),
+  flagType: z.enum(['typo', 'incorrect_answer', 'unclear', 'outdated', 'other']),
+  description: z.string().min(1).max(1000),
+  priority: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+});
 
-export const onRequestPost = async (context) => {
-  const { request, env } = context;
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestPost = authenticatedEndpoint(FlagQuestionSchema, async ({ env, auth, validated }) => {
+  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { sendAdminFlagNotification } = await import('../../_shared/notifications');
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Verify auth
-    const clerkId = await verifyAuthToken(request, env);
-    if (!clerkId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const body = await request.json();
-
-    // Validation - no longer require userId since we get it from auth
-    const requiredFields = ['questionId', 'flagType', 'description'];
-    const missing = validateRequired(body, requiredFields);
-    if (missing.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          missing,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    const allowedTypes = ['typo', 'incorrect_answer', 'unclear', 'outdated', 'other'];
-    if (!validateEnum(body.flagType, allowedTypes)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          message: 'Invalid flagType',
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    // Use clerkId as userId (QuestionFlag doesn't have FK to User)
-    const {
-      userEmail,
-      userFirstName,
-      questionId,
-      questionText,
-      correctAnswer,
-      topic,
-      system,
-      flagType,
-      description,
-      priority,
-    } = body;
-    const userId = clerkId;
-
-    if (!env.DATABASE_URL) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Database not configured',
-        }),
-        {
-          status: 503,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    const prisma = createEdgePrismaClient(env);
-
     // Create flag in database
     const flag = await prisma.questionFlag.create({
       data: {
-        userId,
-        userEmail: userEmail || null,
-        userFirstName: userFirstName || null,
-        questionId,
-        questionText: questionText || '',
-        correctAnswer: correctAnswer || null,
-        topic: topic || null,
-        system: system || null,
-        flagType,
-        description,
-        priority: priority || 'medium',
+        userId: auth.userId,
+        userEmail: validated.userEmail || null,
+        userFirstName: validated.userFirstName || null,
+        questionId: validated.questionId,
+        questionText: validated.questionText || '',
+        correctAnswer: validated.correctAnswer || null,
+        topic: validated.topic || null,
+        system: validated.system || null,
+        flagType: validated.flagType,
+        description: validated.description,
+        priority: validated.priority || 'medium',
       },
     });
 
     // Check for auto-demotion: if question has >= 3 pending flags, demote it
     const pendingFlagCount = await prisma.questionFlag.count({
       where: {
-        questionId,
+        questionId: validated.questionId,
         status: 'pending',
       },
     });
@@ -123,14 +52,14 @@ export const onRequestPost = async (context) => {
       // Try to demote from PreGeneratedQuestion to StagingQuestion
       try {
         const preGenQuestion = await prisma.preGeneratedQuestion.findFirst({
-          where: { id: questionId },
+          where: { id: validated.questionId },
         });
 
         if (preGenQuestion) {
           // Create staging question for review
           await prisma.stagingQuestion.create({
             data: {
-              id: `staging-${questionId}`,
+              id: `staging-${validated.questionId}`,
               questionText: preGenQuestion.questionText,
               answers: preGenQuestion.answers as string[],
               correctIndex: preGenQuestion.correctIndex,
@@ -141,23 +70,20 @@ export const onRequestPost = async (context) => {
               tags: preGenQuestion.tags as string[],
               status: 'flagged_for_review',
               rejectionReason: `Auto-demoted: ${pendingFlagCount} user flags received`,
-              createdAt: new Date(),
-              updatedAt: new Date(),
             },
           });
 
           // Mark the pre-generated question as demoted (set usedAt to prevent serving)
           await prisma.preGeneratedQuestion.update({
-            where: { id: questionId },
+            where: { id: validated.questionId },
             data: {
               usedAt: new Date(),
-              // Add a note in metadata or use a flag field if available
             },
           });
 
           demoted = true;
           console.log(
-            `[AutoDemotion] Question ${questionId} demoted after ${pendingFlagCount} flags`
+            `[AutoDemotion] Question ${validated.questionId} demoted after ${pendingFlagCount} flags`
           );
         }
       } catch (demotionError) {
@@ -167,22 +93,22 @@ export const onRequestPost = async (context) => {
     }
 
     // Send notification to admin (if configured)
-    // Note: env vars in Pages Functions are accessed via env object
     const adminEmail = env.ADMIN_EMAIL;
     if (adminEmail) {
       await sendAdminFlagNotification(adminEmail, {
         id: flag.id,
-        questionId,
-        questionText: questionText || '',
-        flagType,
-        description,
-        userEmail,
-        userFirstName,
+        questionId: validated.questionId,
+        questionText: validated.questionText || '',
+        flagType: validated.flagType,
+        description: validated.description,
+        userEmail: validated.userEmail,
+        userFirstName: validated.userFirstName,
       });
     }
 
-    return new Response(
-      JSON.stringify({
+    return {
+      status: 200,
+      data: {
         success: true,
         flagId: flag.id,
         demoted,
@@ -190,32 +116,9 @@ export const onRequestPost = async (context) => {
         message: demoted
           ? 'Question flagged and automatically removed from pool for review. Thank you for your feedback!'
           : 'Question flagged successfully. We will review it soon!',
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } catch (error) {
-    console.error('Failed to flag question:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Failed to flag question',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+      },
+    };
   } finally {
-    if (prisma) {
-      await safePrismaDisconnect(prisma);
-    }
+    await safePrismaDisconnect(prisma);
   }
-};
+});

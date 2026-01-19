@@ -1,89 +1,21 @@
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-import { validateRequired } from '../../_shared/validation';
-import { saveToStaging } from '../../_shared/staging-questions';
+import { adminEndpoint } from '../../_shared/middleware';
+import { z } from 'zod';
 
-export const onRequestOptions = handleCorsOptions;
+// Schema for staging question data
+const StagingQuestionSchema = z.object({
+  questionData: z.record(z.string(), z.any()),
+});
 
-export const onRequestPost = async (context) => {
-  const { request, env } = context;
+export const onRequestPost = adminEndpoint(StagingQuestionSchema, async ({ env, validated }) => {
+  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { saveToStaging } = await import('../../_shared/staging-questions');
 
-  let prisma;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const body = await request.json();
-    const missing = validateRequired(body, ['questionData']);
-    if (missing.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          missing,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    const { questionData } = body;
-
-    if (!env.DATABASE_URL) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Database not configured',
-        }),
-        {
-          status: 503,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    prisma = createEdgePrismaClient(env);
-
-    const question = await saveToStaging(prisma, questionData);
-
-    return new Response(JSON.stringify({ success: true, stagingQuestion: question }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (error) {
-    console.error('Failed to save to staging:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Failed to save to staging',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    const question = await saveToStaging(prisma, validated.questionData);
+    return { status: 200, data: { success: true, stagingQuestion: question } };
   } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
+    await safePrismaDisconnect(prisma);
   }
-};
+});

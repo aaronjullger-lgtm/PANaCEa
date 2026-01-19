@@ -21,6 +21,7 @@ import { authenticateRequest } from './auth';
 import { getCorsHeaders, handleCorsPreflightSecure, getCorsHeadersPermissive } from './cors';
 import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
+import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -206,6 +207,49 @@ export function withAuth(options: { optional?: boolean } = {}): Middleware<Authe
     // Add auth to context
     const authContext = { ...context, auth } as AuthenticatedContext;
     return next.call(null, authContext);
+  };
+}
+
+/**
+ * Admin role check middleware - requires authenticated user to have admin role
+ * Must be used after withAuth() middleware
+ */
+export function withAdminRole(): Middleware<AuthenticatedContext> {
+  return async (context, next) => {
+    // Ensure we have auth context from withAuth()
+    if (!context.auth || !context.auth.userId) {
+      logger.error('withAdminRole called without auth context');
+      return { status: 401, error: 'Authentication required' };
+    }
+
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+    try {
+      // Fetch user from database to check role
+      const user = await prisma.user.findUnique({
+        where: { clerkId: context.auth.userId },
+        select: { role: true },
+      });
+
+      if (!user || user.role !== 'admin') {
+        logger.warn('Non-admin user attempted to access admin endpoint', {
+          userId: context.auth.userId,
+          path: new URL(context.request.url).pathname,
+        });
+        return { status: 403, error: 'Admin access required' };
+      }
+
+      // User is admin, continue to next middleware
+      return next();
+    } catch (error) {
+      logger.error('Error checking admin role', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: context.auth.userId,
+      });
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   };
 }
 
@@ -418,8 +462,8 @@ export function adminEndpoint<T>(
     withCors(),
     withErrorHandling(),
     withAuth(),
+    withAdminRole(), // Admin role check added
     withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
-    // TODO: Add admin role check middleware
     withValidation(schema),
     withLogging(),
     handler

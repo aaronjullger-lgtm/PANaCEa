@@ -1,96 +1,30 @@
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
-import { validateRequired } from '../../_shared/validation';
-import { createQuestionSeed } from '../../_shared/question-seeds';
+import { adminEndpoint } from '../../_shared/middleware';
+import { z } from 'zod';
 
-export const onRequestOptions = handleCorsOptions;
+// Schema for creating a question seed
+const QuestionSeedSchema = z.object({
+  conditionId: z.string().min(1).max(100),
+  questionType: z.string().min(1).max(50),
+  corePathology: z.string().min(1).max(500),
+  variables: z.record(z.string(), z.any()),
+  template: z.string().min(1).max(2000),
+  correctAnswer: z.string().min(1).max(500),
+  explanation: z.string().min(1).max(2000),
+  distractors: z.array(z.string().min(1).max(500)),
+  difficulty: z.string().min(1).max(50),
+  system: z.string().max(100).optional(),
+});
 
-export const onRequestPost = async (context) => {
-  const { request, env } = context;
+export const onRequestPost = adminEndpoint(QuestionSeedSchema, async ({ env, validated }) => {
+  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createQuestionSeed } = await import('../../_shared/question-seeds');
 
-  let prisma;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const body = await request.json();
-    const missing = validateRequired(body, [
-      'conditionId',
-      'questionType',
-      'corePathology',
-      'variables',
-      'template',
-      'correctAnswer',
-      'explanation',
-      'distractors',
-    ]);
-    if (missing.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          missing,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    if (!env.DATABASE_URL) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Database not configured',
-        }),
-        {
-          status: 503,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    prisma = createEdgePrismaClient(env);
-
-    const seed = await createQuestionSeed(prisma, body);
-
-    return new Response(JSON.stringify({ success: true, seed }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (error) {
-    console.error('Failed to create question seed:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Failed to create question seed',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    const seed = await createQuestionSeed(prisma, validated);
+    return { status: 200, data: { success: true, seed } };
   } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
+    await safePrismaDisconnect(prisma);
   }
-};
+});
