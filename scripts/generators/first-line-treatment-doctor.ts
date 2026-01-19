@@ -850,7 +850,7 @@ async function insertKnownTreatments(dryRun: boolean) {
           condition: candidate.condition,
           treatment: candidate.treatment,
           category: candidate.category,
-        },
+        } as any,
       });
       console.log(`  ✅ ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`);
       inserted++;
@@ -935,7 +935,7 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
               condition: candidate.condition,
               treatment: candidate.treatment,
               category: candidate.category,
-            },
+            } as any,
           });
           console.log(`    ✅ ${candidate.condition}: ${candidate.treatment.substring(0, 40)}...`);
           totalInserted++;

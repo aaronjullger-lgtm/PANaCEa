@@ -1057,7 +1057,7 @@ async function uploadSingleImage(
         isClinical: true,
         sourceUrl: imageUrl,
         citation: options.sourceAttribution,
-      },
+      } as any,
     });
 
     console.log(`✅ Created MediaAsset: ${mediaAsset.id}`);

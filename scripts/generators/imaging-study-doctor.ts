@@ -1166,7 +1166,7 @@ async function insertStudy(study: KnownStudy): Promise<boolean> {
         limitations,
         classicSigns,
         clinicalPearls,
-      },
+      } as any,
       update: {
         modality: study.modality,
         bodyRegion: study.bodyRegion || null,

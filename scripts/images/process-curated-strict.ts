@@ -371,7 +371,7 @@ async function saveImage(
                 : null,
         explanation: analysis.explanation,
         difficulty: 'medium', // All questions are PANCE-level
-      },
+      } as any,
     });
 
     return true;

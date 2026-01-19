@@ -467,7 +467,7 @@ async function syncConditionTables(dryRun: boolean) {
               subcategory: mc.subcategory || 'General',
               aliases: [],
               relatedSystems: [],
-            },
+            } as any,
           });
           console.log(`      ✓ Created: ${mc.condition}`);
           stats.missingConditions++;

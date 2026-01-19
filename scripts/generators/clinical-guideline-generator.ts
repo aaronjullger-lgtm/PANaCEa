@@ -802,7 +802,7 @@ async function gapAnalysis() {
             components: data.components as any,
             scoringMap: data.scoringMap as any,
             vignettes: data.vignettes as any,
-          },
+          } as any,
         });
 
         allGuidelines.push({ name: data.name, maxScore: data.maxScore });
@@ -886,7 +886,7 @@ async function main() {
           components: data.components as any,
           scoringMap: data.scoringMap as any,
           vignettes: data.vignettes as any,
-        },
+        } as any,
       });
 
       // Add to existing list to prevent duplicates within this run

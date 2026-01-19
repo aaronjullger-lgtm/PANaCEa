@@ -385,7 +385,7 @@ async function insertKnownBuzzwords(dryRun: boolean) {
           buzzword: candidate.buzzword,
           condition: candidate.conditionName,
           system: candidate.system,
-        },
+        } as any,
       });
       console.log(`  ✅ Inserted: "${candidate.buzzword}" → ${candidate.conditionName}`);
       inserted++;
@@ -477,7 +477,7 @@ async function generateAIBuzzwords(dryRun: boolean, batchSize: number) {
               condition: candidate.conditionName,
               system: candidate.system,
               explanation: candidate.explanation,
-            },
+            } as any,
           });
           console.log(`    ✅ "${candidate.buzzword}" → ${candidate.conditionName}`);
           totalInserted++;

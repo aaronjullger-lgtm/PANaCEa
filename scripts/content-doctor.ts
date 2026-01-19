@@ -545,7 +545,7 @@ Valid system codes: ${SYSTEM_CODES.join(', ')}`;
                 source: 'content-doctor-phase1',
                 generatedAt: new Date().toISOString(),
               },
-            },
+            } as any,
           });
 
           console.log(`    ✅ Registered: ${gap.name} (${gap.subcategory})`);

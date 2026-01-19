@@ -1031,7 +1031,7 @@ async function acquireImagesForCondition(
               license: result.license,
               qualityScore: result.quality_score,
             },
-          },
+          } as any,
         });
 
         console.log(`   ✅ Stored: ${filename}`);

@@ -1218,7 +1218,7 @@ async function insertKnownPearls(dryRun: boolean) {
           system: candidate.system,
           category: candidate.category,
           tags: candidate.tags,
-        },
+        } as any,
       });
       console.log(`  ✅ [${candidate.system}] ${candidate.pearlText.substring(0, 60)}...`);
       inserted++;
@@ -1294,7 +1294,7 @@ async function generateAIPearlsForConditions(dryRun: boolean, batchSize: number)
               system: candidate.system,
               category: candidate.category,
               tags: candidate.tags,
-            },
+            } as any,
           });
           console.log(`    ✅ [${candidate.system}] ${candidate.pearlText.substring(0, 50)}...`);
           totalInserted++;

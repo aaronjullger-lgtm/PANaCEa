@@ -258,7 +258,7 @@ async function main() {
             explanation: data.explanation,
             difficulty: 'medium', // All seeds are PANCE-level
             tags: data.tags,
-          },
+          } as any,
         });
 
         existingKeys.add(key);

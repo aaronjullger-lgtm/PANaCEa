@@ -582,7 +582,7 @@ async function generateImagingConditionLinks() {
             specificity: link.specificity,
             isFirstLine: link.isFirstLine,
             panceYield: link.panceYield,
-          },
+          } as any,
         });
         existingSet.add(key);
         created++;

@@ -1023,7 +1023,7 @@ async function insertTreatmentProtocol(protocol: TreatmentProtocol): Promise<boo
         alternativeTo,
         advantages,
         disadvantages,
-      },
+      } as any,
       update: {
         displayName: protocol.displayName || protocol.name,
         category: protocol.category,

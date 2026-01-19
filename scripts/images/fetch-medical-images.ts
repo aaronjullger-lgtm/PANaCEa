@@ -210,7 +210,7 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
         tags: [image.source.toLowerCase()],
         status: 'approved',
         approvalStatus: 'approved',
-      },
+      } as any,
     });
     return true;
   } catch (e) {

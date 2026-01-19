@@ -410,7 +410,7 @@ async function main() {
           panceYield: data.panceYield,
           isHighYield: data.isHighYield,
           createdAt: new Date(),
-        },
+        } as any,
       });
       console.log(`  ✅ Created`);
       created++;

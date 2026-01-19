@@ -335,7 +335,7 @@ async function main() {
               tags: [image.source, image.license],
               status: 'pending_review',
               approvalStatus: 'pending',
-            },
+            } as any,
           });
 
           console.log('✅ Added');

@@ -985,7 +985,7 @@ async function insertKnownTests(dryRun: boolean) {
           interpretation: test.interpretation,
           Condition:
             conditions.length > 0 ? { connect: conditions.map((c) => ({ id: c.id })) } : undefined,
-        },
+        } as any,
       });
       console.log(`  ✅ ${test.name} (→ ${conditions.length} conditions linked)`);
       inserted++;
@@ -1067,7 +1067,7 @@ async function generateAITests(dryRun: boolean, batchSize: number) {
               positiveTest: candidate.positiveTest,
               interpretation: candidate.interpretation,
               Condition: condition ? { connect: [{ id: condition.id }] } : undefined,
-            },
+            } as any,
           });
           console.log(`    ✅ ${candidate.name}`);
           totalInserted++;

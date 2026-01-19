@@ -1984,7 +1984,7 @@ CRITICAL RULES:
                     toxicity: sanitized.toxicity,
                     maxDailyDose: sanitized.maxDailyDose,
                     typicalCost: sanitized.typicalCost,
-                  },
+                  } as any,
                 });
 
                 totalAdded++;

@@ -170,7 +170,7 @@ async function seedAnatomyStructures() {
           mnemonics: content.mnemonics,
           isHighYield: true,
           panceYield: 3,
-        },
+        } as any,
       });
 
       console.log(`✓ Created ${structure.name}`);

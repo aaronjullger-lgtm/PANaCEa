@@ -345,7 +345,7 @@ async function main() {
                 : img.folder.toLowerCase() === 'derm'
                   ? 'derm'
                   : null,
-        },
+        } as any,
       });
 
       console.log(`✅ ${analysis.detectedCondition} (${analysis.quizSuitability})`);

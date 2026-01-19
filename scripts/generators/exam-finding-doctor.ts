@@ -171,7 +171,7 @@ async function seedExamFindings() {
           mnemonics: content.mnemonics,
           isHighYield: true,
           panceYield: 3,
-        },
+        } as any,
       });
 
       console.log(`✓ Created ${finding.name}`);

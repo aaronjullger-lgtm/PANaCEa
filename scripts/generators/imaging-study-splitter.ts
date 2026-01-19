@@ -174,7 +174,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
       try {
         await prisma.imagingStudy.upsert({
           where: { name: withoutContrastName },
-          create: { id: uuidv4(), ...withoutContrastData },
+          create: { id: uuidv4(), ...withoutContrastData } as any,
           update: withoutContrastData,
         });
         console.log(`    ✅ Created: ${withoutContrastName}`);
@@ -187,7 +187,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
       try {
         await prisma.imagingStudy.upsert({
           where: { name: withContrastName },
-          create: { id: uuidv4(), ...withContrastData },
+          create: { id: uuidv4(), ...withContrastData } as any,
           update: withContrastData,
         });
         console.log(`    ✅ Created: ${withContrastName}`);
@@ -333,7 +333,7 @@ async function addMissingContrastVariants(isDryRun: boolean) {
       } else {
         try {
           await prisma.imagingStudy.create({
-            data: { id: uuidv4(), ...data },
+            data: { id: uuidv4(), ...data } as any,
           });
           console.log(`  ✅ Created: ${withoutName}`);
           created++;
@@ -382,7 +382,7 @@ async function addMissingContrastVariants(isDryRun: boolean) {
       } else {
         try {
           await prisma.imagingStudy.create({
-            data: { id: uuidv4(), ...data },
+            data: { id: uuidv4(), ...data } as any,
           });
           console.log(`  ✅ Created: ${withName}`);
           created++;

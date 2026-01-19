@@ -311,7 +311,7 @@ async function main(): Promise<void> {
             commonMistakes: content.commonMistakes || [],
             testQuestionTips: content.testQuestionTips || [],
             mnemonics: content.mnemonics || [],
-          },
+          } as any,
         });
         console.log(`  ✅ Created: ${pattern.name}`);
       } else {

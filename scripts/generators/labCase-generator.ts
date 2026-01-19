@@ -294,7 +294,7 @@ async function main() {
         data: {
           id: uuidv4(),
           ...data,
-        },
+        } as any,
       });
 
       existingNames.add(item.name.toLowerCase());
