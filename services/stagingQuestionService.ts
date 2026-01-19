@@ -199,7 +199,6 @@ export async function promoteToLive(stagingQuestionId: string) {
         tags: question.tags,
       },
       quality: 10,
-      updatedAt: new Date(),
     },
   });
 
