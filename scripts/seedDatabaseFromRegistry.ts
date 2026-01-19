@@ -149,7 +149,7 @@ async function seedFromRegistry() {
             version: 1,
             createdBy: 'system:registry-seed',
             updatedBy: 'system:registry-seed',
-          },
+          } as any,
         });
         report.created++;
         console.log(`  ✓ Created: ${meta.condition} (${conditionId})`);

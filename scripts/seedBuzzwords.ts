@@ -117,7 +117,7 @@ async function main() {
           condition: condition,
           buzzword: entry.buzzword,
           system: entry.category,
-        },
+        } as any,
       });
       createdCount++;
     }

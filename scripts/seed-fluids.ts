@@ -320,7 +320,7 @@ async function seedFluidCases() {
           calculationHint: fluidCase.calculationHint,
           category: fluidCase.category,
           difficulty: fluidCase.difficulty || 'medium',
-        },
+        } as any,
       });
 
       insertedCount++;

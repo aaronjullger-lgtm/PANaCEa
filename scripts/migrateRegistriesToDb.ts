@@ -143,7 +143,7 @@ async function main() {
         name: item.name,
         displayName: item.displayName,
         category: item.category,
-      },
+      } as any,
     });
   }
 
@@ -161,7 +161,7 @@ async function main() {
         presentingComplaint: item.presentingComplaint,
         category: item.category,
         isEmergency: item.isEmergency || false,
-      },
+      } as any,
     });
   }
 

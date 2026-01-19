@@ -21,9 +21,10 @@ const emptyStats = (): SyncStats => ({
   errors: 0,
 });
 
-const normalizeAliases = (aliases?: string[]): string[] => {
-  if (!aliases || aliases.length === 0) return [];
-  const deduped = Array.from(new Set(aliases.map((a) => a.trim()).filter(Boolean)));
+const normalizeAliases = (aliases?: string | string[]): string[] => {
+  if (!aliases || (Array.isArray(aliases) && aliases.length === 0)) return [];
+  const arr = Array.isArray(aliases) ? aliases : [aliases];
+  const deduped = Array.from(new Set(arr.map((a) => a.trim()).filter(Boolean)));
   return deduped;
 };
 
