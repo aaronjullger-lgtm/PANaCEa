@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SpecialTest Entry Generator v2
  * Creates missing special tests for PANCE coverage

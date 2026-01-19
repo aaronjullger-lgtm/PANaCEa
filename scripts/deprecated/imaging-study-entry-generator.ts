@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ImagingStudy Entry Generator
  * Creates missing imaging studies for PANCE coverage

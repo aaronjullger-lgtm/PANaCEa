@@ -37,6 +37,7 @@
     "node_modules",
     "dist",
     ".wrangler",
-    "routes/**/*"
+    "routes/**/*",
+    "scripts/deprecated/**/*"
   ]
 }

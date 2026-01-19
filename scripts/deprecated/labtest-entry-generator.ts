@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LabTest Entry Generator
  * Creates new LabTest records for common labs that are missing from the database

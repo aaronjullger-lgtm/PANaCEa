@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Procedure Entry Generator v2
  * Creates missing procedures for PANCE coverage

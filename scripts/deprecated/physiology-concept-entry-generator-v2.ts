@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PhysiologyConcept Entry Generator v2
  * Creates missing physiology concepts for PANCE coverage

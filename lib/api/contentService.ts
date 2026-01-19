@@ -50,11 +50,11 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
           : typeof record.riskFactors === 'string'
             ? [record.riskFactors]
             : undefined,
-        symptoms: record.symptoms,
-        examFindings: record.physicalExam,
+        symptoms: Array.isArray(record.symptoms) ? record.symptoms : undefined,
+        examFindings: Array.isArray(record.physicalExam) ? record.physicalExam : undefined,
         diagnostics: record.diagnostics as any,
         treatment: Array.isArray(record.treatment) ? (record.treatment as string[]) : undefined,
-        complications: record.complications,
+        complications: Array.isArray(record.complications) ? record.complications : undefined,
         prognosis: record.prognosis || undefined,
       }));
     }

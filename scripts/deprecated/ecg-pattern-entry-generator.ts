@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ECGPattern Entry Generator
  * Creates missing ECG patterns for PANCE coverage

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PhysicalExamFinding Entry Generator
  * Creates missing physical exam findings for PANCE coverage

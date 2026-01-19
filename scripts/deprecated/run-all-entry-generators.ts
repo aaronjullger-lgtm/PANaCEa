@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @ts-nocheck
 /**
  * PANCE Entry Generation Orchestrator
  * Runs all entry generators in sequence to fill database gaps

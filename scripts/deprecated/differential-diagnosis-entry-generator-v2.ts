@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DifferentialDiagnosis Entry Generator v2
  * Creates missing differential diagnoses for PANCE coverage
