@@ -1270,6 +1270,15 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       let cases: LabCase[] = [];
       try {
         const token = await getToken();
+        
+        // Prevent request if token is not available
+        if (!token) {
+          console.warn('[MiniLab] No auth token available, skipping API call');
+          setLoadError('Authentication required');
+          setDbCases(LAB_CASES);
+          setIsLoading(false);
+          return;
+        }
 
         // Fetch cases from the database API
         cases = await fetchLabCases('random', 50, token);

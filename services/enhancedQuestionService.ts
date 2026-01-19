@@ -100,7 +100,13 @@ async function fetchLinkedEntities(
     }
 
     // Fetch drugs linked to this condition
-    const drugResponse = await fetch(`/api/drugs?conditionId=${conditionId}&limit=5`);
+    // Ensure valid query params are always sent (default to empty object to avoid 400)
+    const drugParams = new URLSearchParams();
+    if (conditionId) {
+      drugParams.set('conditionId', conditionId);
+    }
+    drugParams.set('limit', '5');
+    const drugResponse = await fetch(`/api/drugs?${drugParams.toString()}`);
     if (drugResponse.ok) {
       const drugData = await drugResponse.json();
       entities.drugs = drugData.drugs?.slice(0, 5);

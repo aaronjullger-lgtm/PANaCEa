@@ -227,7 +227,7 @@ function getSessionData(): SessionPredictionData {
       return JSON.parse(stored);
     }
   } catch (error) {
-    console.error(error);
+    console.error('[PerformancePrediction] Critical Service Crash - loadSessionData:', error);
   }
   return { results: [], lastUpdated: Date.now() };
 }
@@ -236,7 +236,7 @@ function saveSessionData(data: SessionPredictionData): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error(error);
+    console.error('[PerformancePrediction] Critical Service Crash - saveSessionData:', error);
   }
 }
 
@@ -345,6 +345,6 @@ export function resetPrediction(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.error(error);
+    console.error('[PerformancePrediction] Critical Service Crash - resetPrediction:', error);
   }
 }
