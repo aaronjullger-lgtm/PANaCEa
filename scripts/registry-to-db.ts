@@ -121,7 +121,7 @@ async function upsertRegistryEntries() {
       updatedAt: new Date(),
       updatedBy: 'script:registry-to-db',
       status: 'published' as const,
-    };
+    } as any;
 
     try {
       await prisma.medicalContent.upsert({
@@ -144,7 +144,7 @@ async function upsertRegistryEntries() {
           updatedBy: 'script:registry-to-db',
           createdAt: new Date(),
           updatedAt: new Date(),
-        },
+        } as any,
       });
       stats.updated++;
       console.log(`✓ Upserted ${conditionName} (${conditionId})`);
