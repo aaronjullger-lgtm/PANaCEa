@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../prisma';
 
 export interface RecommendationContext {
@@ -122,7 +123,11 @@ export const recommendationService = {
    */
   async suggestNewTopics(userId: string) {
     // Determine systems user has interacted with
-    const userSystems = await prisma.userProgress.findMany({
+    type UserProgressWithContent = Prisma.UserProgressGetPayload<{
+      include: { MedicalContent: { select: { system: true } } };
+    }>;
+
+    const userSystems: UserProgressWithContent[] = await prisma.userProgress.findMany({
       where: { userId },
       include: {
         MedicalContent: { select: { system: true } },
@@ -131,7 +136,11 @@ export const recommendationService = {
     });
 
     const studiedSystemNames = new Set(
-      userSystems.map((u) => u.MedicalContent?.system).filter((s): s is string => Boolean(s))
+      userSystems
+        .filter((u): u is UserProgressWithContent & { MedicalContent: { system: string } } => 
+          u.MedicalContent !== null && typeof u.MedicalContent.system === 'string'
+        )
+        .map((u) => u.MedicalContent.system)
     );
 
     // Find a high yield condition (pance_yield is simulated here as logic, assuming we pick from published content)

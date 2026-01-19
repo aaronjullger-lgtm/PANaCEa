@@ -4,6 +4,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import type { Prisma } from '@prisma/client';
 
 interface BranchCreateOptions {
   name: string;
@@ -153,7 +154,11 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
 
     const { prisma } = await import('../prisma');
 
-    const branch = await prisma.contentBranch.findUnique({
+    type BranchWithChanges = Prisma.ContentBranchGetPayload<{
+      include: { BranchChange: true };
+    }>;
+
+    const branch: BranchWithChanges | null = await prisma.contentBranch.findUnique({
       where: { name: branchName },
       include: {
         BranchChange: {
