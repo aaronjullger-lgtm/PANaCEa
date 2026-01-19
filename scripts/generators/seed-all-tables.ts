@@ -234,7 +234,6 @@ async function seedAllTables() {
         create: {
           ...proc,
           id: crypto.randomUUID(),
-          updatedAt: new Date(),
         },
       });
       console.log(`  ✓ ${proc.name}`);
@@ -253,7 +252,6 @@ async function seedAllTables() {
         create: {
           ...vital,
           id: crypto.randomUUID(),
-          updatedAt: new Date(),
         },
       });
       console.log(`  ✓ ${vital.vitalSign}`);
@@ -272,7 +270,6 @@ async function seedAllTables() {
         create: {
           ...hist,
           id: crypto.randomUUID(),
-          updatedAt: new Date(),
         },
       });
       console.log(`  ✓ ${hist.name}`);

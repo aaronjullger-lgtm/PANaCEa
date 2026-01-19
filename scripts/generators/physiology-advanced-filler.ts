@@ -142,7 +142,7 @@ async function main() {
     }
 
     // Only update fields that are missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
     const updatedFields: string[] = [];
 
     if (!concept.molecularBasis && content.molecularBasis) {

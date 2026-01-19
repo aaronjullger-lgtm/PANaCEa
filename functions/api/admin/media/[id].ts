@@ -6,16 +6,25 @@
  * DELETE /api/admin/media/[id] - Delete a media asset
  */
 
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import {
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-} from '../../_shared/auth';
-import { validateRequest } from '../../_shared/schemas';
 import { z } from 'zod';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { createSuccessResponse } from '../../_shared/auth';
+import {
+  withMiddleware,
+  withCors,
+  withErrorHandling,
+  withAuth,
+  withAdminRole,
+  withRateLimit,
+  withLogging,
+  withValidation,
+  adminEndpoint,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../../_shared/middleware';
+import { logger } from '../../_shared/secureLogger';
 
-// Schema for media asset update
+// Schema for media asset update (PUT body)
 const MediaAssetUpdateSchema = z.object({
   conditionId: z.string().max(100).nullable().optional(),
   correctDiagnosis: z.string().max(500).optional(),
@@ -23,244 +32,240 @@ const MediaAssetUpdateSchema = z.object({
   description: z.string().max(1000).optional(),
   altText: z.string().max(500).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
-  type: z.string().max(50).optional(),
+  type: z.enum(['ecg', 'derm', 'radiology', 'labs', 'diagrams']).optional(),
   clinicalContext: z.string().max(2000).optional(),
   qualityScore: z.number().min(0).max(100).optional(),
 });
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-  SUPABASE_URL: string;
-  SUPABASE_SERVICE_ROLE_KEY: string;
-}
+type MediaAssetUpdate = z.infer<typeof MediaAssetUpdateSchema>;
 
 const MEDIA_BUCKET = 'medical-images';
 
-export const onRequestGet = async (context: {
-  request: Request;
-  env: Env;
-  params: { id: string };
-}) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+/**
+ * GET /api/admin/media/[id] - Get a single media asset
+ */
+export const onRequestGet = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withAdminRole(),
+  withRateLimit({ requestsPerMinute: 60, endpointType: 'admin' }),
+  withLogging(),
+  async (context: AuthenticatedContext & { params: { id: string } }) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-  try {
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
+    try {
+      const { id } = context.params;
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { role: true },
-    });
+      if (!id || id.length > 100) {
+        return { status: 400, error: 'Invalid media ID' };
+      }
 
-    if (!user || user.role !== 'admin') {
-      return createErrorResponse('Admin access required', 403);
-    }
-
-    const { id } = context.params;
-
-    const media = await prisma.mediaAsset.findUnique({
-      where: { id },
-      include: {
-        Condition: {
-          select: { id: true, name: true },
+      const media = await prisma.mediaAsset.findUnique({
+        where: { id },
+        include: {
+          Condition: {
+            select: { id: true, name: true },
+          },
         },
-      },
-    });
+      });
 
-    if (!media) {
-      return createErrorResponse('Media not found', 404);
-    }
-
-    return createSuccessResponse(media);
-  } catch (error) {
-    console.error('Media fetch error:', error);
-    return createErrorResponse('Failed to fetch media', 500);
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-};
-
-export const onRequestPut = async (context: {
-  request: Request;
-  env: Env;
-  params: { id: string };
-}) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-  try {
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || user.role !== 'admin') {
-      return createErrorResponse('Admin access required', 403);
-    }
-
-    const { id } = context.params;
-
-    // Validate input with Zod schema
-    const validation = await validateRequest(context.request.clone(), MediaAssetUpdateSchema);
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const {
-      conditionId,
-      correctDiagnosis,
-      distractors,
-      description,
-      altText,
-      tags,
-      type,
-      clinicalContext,
-      qualityScore,
-    } = (validation as { success: true; data: any }).data;
-
-    // Verify media exists
-    const existingMedia = await prisma.mediaAsset.findUnique({
-      where: { id },
-    });
-
-    if (!existingMedia) {
-      return createErrorResponse('Media not found', 404);
-    }
-
-    // Build update data
-    const updateData: any = {
-      updatedAt: new Date(),
-    };
-
-    if (conditionId !== undefined) updateData.conditionId = conditionId;
-    if (correctDiagnosis !== undefined) updateData.correctDiagnosis = correctDiagnosis;
-    if (distractors !== undefined) updateData.distractors = distractors;
-    if (description !== undefined) updateData.description = description;
-    if (altText !== undefined) updateData.altText = altText;
-    if (tags !== undefined) updateData.tags = tags;
-    if (type !== undefined) updateData.type = type;
-    if (clinicalContext !== undefined) updateData.clinicalContext = clinicalContext;
-    if (qualityScore !== undefined) updateData.qualityScore = qualityScore;
-
-    const updatedMedia = await prisma.mediaAsset.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return createSuccessResponse({
-      id: updatedMedia.id,
-      message: 'Media updated successfully',
-    });
-  } catch (error) {
-    console.error('Media update error:', error);
-    return createErrorResponse(error instanceof Error ? error.message : 'Update failed', 500);
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-};
-
-export const onRequestDelete = async (context: {
-  request: Request;
-  env: Env;
-  params: { id: string };
-}) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-  try {
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || user.role !== 'admin') {
-      return createErrorResponse('Admin access required', 403);
-    }
-
-    const { id } = context.params;
-
-    // Get media to find the storage path
-    const media = await prisma.mediaAsset.findUnique({
-      where: { id },
-    });
-
-    if (!media) {
-      return createErrorResponse('Media not found', 404);
-    }
-
-    // Extract storage path from URL
-    const urlParts = media.originalUrl?.split(`/${MEDIA_BUCKET}/`);
-    const storagePath = urlParts && urlParts.length > 1 ? urlParts[1] : null;
-
-    // Delete from Supabase Storage if path exists
-    if (storagePath) {
-      try {
-        const deleteResponse = await fetch(
-          `${context.env.SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${storagePath}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-          }
-        );
-
-        if (!deleteResponse.ok) {
-          console.warn('Storage delete failed:', await deleteResponse.text());
-          // Continue with DB deletion even if storage fails
-        }
-      } catch (storageError) {
-        console.warn('Storage delete error:', storageError);
+      if (!media) {
+        return { status: 404, error: 'Media not found' };
       }
 
-      // Also try to delete thumbnail if it exists
-      if (media.thumbnailUrl) {
-        const thumbParts = media.thumbnailUrl.split(`/${MEDIA_BUCKET}/`);
-        const thumbPath = thumbParts && thumbParts.length > 1 ? thumbParts[1] : null;
+      logger.info('Media asset retrieved', {
+        mediaId: id,
+        userId: context.auth.userId,
+      });
 
-        if (thumbPath) {
-          try {
-            await fetch(
-              `${context.env.SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${thumbPath}`,
-              {
-                method: 'DELETE',
-                headers: {
-                  Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
-                },
-              }
-            );
-          } catch {
-            // Ignore thumbnail deletion errors
+      return createSuccessResponse(media);
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  }
+);
+
+/**
+ * PUT /api/admin/media/[id] - Update media asset metadata
+ */
+export const onRequestPut = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withAdminRole(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
+  withValidation(MediaAssetUpdateSchema),
+  withLogging(),
+  async (
+    context: AuthenticatedContext & ValidatedContext<MediaAssetUpdate> & { params: { id: string } }
+  ) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+    try {
+      const { id } = context.params;
+
+      if (!id || id.length > 100) {
+        return { status: 400, error: 'Invalid media ID' };
+      }
+
+      const {
+        conditionId,
+        correctDiagnosis,
+        distractors,
+        description,
+        altText,
+        tags,
+        type,
+        clinicalContext,
+        qualityScore,
+      } = context.validated;
+
+      // Verify media exists
+      const existingMedia = await prisma.mediaAsset.findUnique({
+        where: { id },
+      });
+
+      if (!existingMedia) {
+        return { status: 404, error: 'Media not found' };
+      }
+
+      // Build update data - only include fields that were provided
+      const updateData: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+
+      if (conditionId !== undefined) updateData.conditionId = conditionId;
+      if (correctDiagnosis !== undefined) updateData.correctDiagnosis = correctDiagnosis;
+      if (distractors !== undefined) updateData.distractors = distractors;
+      if (description !== undefined) updateData.description = description;
+      if (altText !== undefined) updateData.altText = altText;
+      if (tags !== undefined) updateData.tags = tags;
+      if (type !== undefined) updateData.type = type;
+      if (clinicalContext !== undefined) updateData.clinicalContext = clinicalContext;
+      if (qualityScore !== undefined) updateData.qualityScore = qualityScore;
+
+      const updatedMedia = await prisma.mediaAsset.update({
+        where: { id },
+        data: updateData,
+      });
+
+      logger.info('Media asset updated', {
+        mediaId: id,
+        updatedFields: Object.keys(updateData).filter((k) => k !== 'updatedAt'),
+        userId: context.auth.userId,
+      });
+
+      return createSuccessResponse({
+        id: updatedMedia.id,
+        message: 'Media updated successfully',
+      });
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  }
+);
+
+/**
+ * DELETE /api/admin/media/[id] - Delete a media asset
+ */
+export const onRequestDelete = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withAuth(),
+  withAdminRole(),
+  withRateLimit({ requestsPerMinute: 20, endpointType: 'admin' }),
+  withLogging(),
+  async (context: AuthenticatedContext & { params: { id: string } }) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+    try {
+      const { id } = context.params;
+
+      if (!id || id.length > 100) {
+        return { status: 400, error: 'Invalid media ID' };
+      }
+
+      // Get media to find the storage path
+      const media = await prisma.mediaAsset.findUnique({
+        where: { id },
+      });
+
+      if (!media) {
+        return { status: 404, error: 'Media not found' };
+      }
+
+      // Extract storage path from URL
+      const urlParts = media.originalUrl?.split(`/${MEDIA_BUCKET}/`);
+      const storagePath = urlParts && urlParts.length > 1 ? urlParts[1] : null;
+
+      // Delete from Supabase Storage if path exists
+      if (storagePath) {
+        try {
+          const deleteResponse = await fetch(
+            `${context.env.SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${storagePath}`,
+            {
+              method: 'DELETE',
+              headers: {
+                Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              },
+            }
+          );
+
+          if (!deleteResponse.ok) {
+            logger.warn('Storage delete failed', {
+              mediaId: id,
+              storagePath,
+              error: await deleteResponse.text(),
+            });
+            // Continue with DB deletion even if storage fails
+          }
+        } catch (storageError) {
+          logger.warn('Storage delete error', {
+            mediaId: id,
+            error: storageError instanceof Error ? storageError.message : String(storageError),
+          });
+        }
+
+        // Also try to delete thumbnail if it exists
+        if (media.thumbnailUrl) {
+          const thumbParts = media.thumbnailUrl.split(`/${MEDIA_BUCKET}/`);
+          const thumbPath = thumbParts && thumbParts.length > 1 ? thumbParts[1] : null;
+
+          if (thumbPath) {
+            try {
+              await fetch(
+                `${context.env.SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${thumbPath}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`,
+                  },
+                }
+              );
+            } catch {
+              // Ignore thumbnail deletion errors
+            }
           }
         }
       }
+
+      // Delete from database
+      await prisma.mediaAsset.delete({
+        where: { id },
+      });
+
+      logger.info('Media asset deleted', {
+        mediaId: id,
+        userId: context.auth.userId,
+      });
+
+      return createSuccessResponse({
+        id,
+        message: 'Media deleted successfully',
+      });
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    // Delete from database
-    await prisma.mediaAsset.delete({
-      where: { id },
-    });
-
-    console.log(`Media deleted: ${id} by user ${user.id}`);
-
-    return createSuccessResponse({
-      id,
-      message: 'Media deleted successfully',
-    });
-  } catch (error) {
-    console.error('Media delete error:', error);
-    return createErrorResponse(error instanceof Error ? error.message : 'Delete failed', 500);
-  } finally {
-    await safePrismaDisconnect(prisma);
   }
-};
+);

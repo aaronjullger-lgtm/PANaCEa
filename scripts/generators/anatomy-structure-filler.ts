@@ -184,7 +184,7 @@ async function main() {
     }
 
     // Only update fields that are missing AND have new content
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
 
     // Array fields - only update if currently empty AND new content is not empty
     const arrayFields = [

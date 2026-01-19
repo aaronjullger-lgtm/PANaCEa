@@ -118,7 +118,7 @@ async function main() {
     }
 
     // Only update fields that are missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
 
     if (!procedure.displayName && content.displayName) {
       updateData.displayName = content.displayName;

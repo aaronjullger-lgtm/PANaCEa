@@ -1,45 +1,81 @@
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { handleCorsOptions } from '../_shared/auth';
+/**
+ * Lab Cases Reference API
+ * GET /api/labs/cases - Fetch all lab cases
+ *
+ * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
+ */
 
-export const onRequestOptions = handleCorsOptions;
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-export async function onRequestGet(context: any) {
-  const { env } = context;
+// ============================================================================
+// VALIDATION SCHEMA
+// ============================================================================
 
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+const LabCasesQuerySchema = z.object({
+  query: z
+    .object({
+      difficulty: z.string().max(50).optional(),
+      category: z.string().max(100).optional(),
+    })
+    .optional(),
+});
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+// ============================================================================
+// ENDPOINT HANDLERS
+// ============================================================================
 
-  try {
-    const cases = await prisma.labCase.findMany();
+export const onRequestOptions = withCors();
 
-    return new Response(JSON.stringify(cases), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (error: any) {
-    console.error('Error fetching lab cases:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch lab cases', details: error.message }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+export const onRequestGet = authenticatedEndpoint(
+  LabCasesQuerySchema,
+  async ({ env, auth, validated, request }) => {
+    const log = createEndpointLogger('/api/labs/cases', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const url = new URL(request.url);
+      const difficulty = url.searchParams.get('difficulty');
+      const category = url.searchParams.get('category');
+
+      log.info('Fetching lab cases', {
+        difficulty: difficulty || 'all',
+        category: category || 'all',
+      });
+
+      const where: Record<string, string> = {};
+      if (difficulty) where.difficulty = difficulty;
+      if (category) where.category = category;
+
+      const cases = await prisma.labCase.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      log.info('Lab cases fetched successfully', { count: cases.length });
+
+      return {
+        data: {
+          success: true,
+          data: cases,
         },
-      }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
+      };
+    } catch (error) {
+      log.error('Error fetching lab cases', error);
+      return {
+        status: 500,
+        error: 'Failed to fetch lab cases',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);

@@ -152,7 +152,7 @@ async function main() {
     }
 
     // Only update fields that are missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
     if (!finding.normalVariants || finding.normalVariants.length === 0) {
       updateData.normalVariants = ensureArray(content.normalVariants);
     }

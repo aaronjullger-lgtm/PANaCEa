@@ -75,6 +75,7 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
         description: options.description || null,
         baseBranch: options.baseBranch || 'main',
         createdBy: options.createdBy,
+        updatedAt: new Date(),
       },
     });
 

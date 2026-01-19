@@ -118,7 +118,6 @@ async function main() {
       await prisma.specialTest.update({
         where: { id: test.id },
         data: {
-          updatedAt: new Date(),
           aliases: ensureArray(aliases),
         },
       });

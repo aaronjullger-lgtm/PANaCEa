@@ -119,7 +119,7 @@ async function main() {
     }
 
     // Only update fields that are missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
     if (!procedure.anatomicLandmarks || procedure.anatomicLandmarks.length === 0) {
       updateData.anatomicLandmarks = ensureArray(content.anatomicLandmarks);
     }

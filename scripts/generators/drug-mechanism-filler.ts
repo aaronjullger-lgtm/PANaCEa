@@ -103,7 +103,6 @@ async function main() {
       await prisma.drug.update({
         where: { id: drug.id },
         data: {
-          updatedAt: new Date(),
           mechanismDetailed,
         },
       });

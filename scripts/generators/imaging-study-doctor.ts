@@ -1151,7 +1151,6 @@ async function insertStudy(study: KnownStudy): Promise<boolean> {
       where: { name: study.name },
       create: {
         id: crypto.randomUUID(),
-        updatedAt: new Date(),
         name: study.name,
         modality: study.modality,
         bodyRegion: study.bodyRegion || null,

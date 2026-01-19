@@ -3,45 +3,46 @@
  *
  * GET /api/admin/media/pending
  * Returns media assets awaiting approval with optional filtering and stats.
+ *
+ * SECURITY: Admin-only endpoint with rate limiting
  */
 
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import {
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-} from '../../_shared/auth';
+import { z } from 'zod';
+import { adminEndpoint, withCors } from '../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../../_shared/prisma-edge';
+import { logger } from '../../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
+// Schema for GET query parameters
+const PendingMediaQuerySchema = z.object({
+  category: z.string().max(50).optional(),
+  limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+  offset: z.string().regex(/^\d+$/).transform(Number).optional(),
+  includeStats: z.enum(['true', 'false']).optional(),
+});
 
-export const onRequestGet = async (context: { request: Request; env: Env }) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestOptions = withCors();
+
+export const onRequestGet = adminEndpoint(PendingMediaQuerySchema, async ({ env, validated, auth }) => {
+  logger.info('Admin fetching pending media', {
+    userId: auth.userId,
+    filters: validated,
+  });
+
+  if (!env.DATABASE_URL) {
+    logger.warn('Database not configured');
+    return { status: 503, error: 'Database not configured' };
+  }
+
+  let prisma: EdgePrismaClient | null = null;
 
   try {
-    // Authenticate - require admin role
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth) {
-      return createErrorResponse('Unauthorized', 401);
-    }
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.clerkId },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== 'admin') {
-      return createErrorResponse('Admin access required', 403);
-    }
-
-    // Parse query params
-    const url = new URL(context.request.url);
-    const category = url.searchParams.get('category');
-    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
-    const offset = parseInt(url.searchParams.get('offset') || '0', 10);
-    const includeStats = url.searchParams.get('includeStats') === 'true';
+    // Apply defaults and caps
+    const category = validated.category;
+    const limit = Math.min(validated.limit || 50, 100); // Cap at 100
+    const offset = validated.offset || 0;
+    const includeStats = validated.includeStats === 'true';
 
     // Build where clause
     const whereClause: any = {
@@ -56,7 +57,7 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     const media = await prisma.mediaAsset.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 100), // Cap at 100
+      take: limit,
       skip: offset,
       include: {
         Condition: {
@@ -117,16 +118,24 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
       citation: m.citation,
     }));
 
-    return createSuccessResponse({
+    logger.info('Pending media fetched successfully', {
+      userId: auth.userId,
+      count: transformedMedia.length,
+      total,
+    });
+
+    return {
       success: true,
       media: transformedMedia,
       total,
       stats,
-    });
+    };
   } catch (error) {
-    console.error('Pending media fetch error:', error);
-    return createErrorResponse('Failed to fetch pending media', 500);
+    logger.error('Failed to fetch pending media', error, {
+      userId: auth.userId,
+    });
+    return { status: 500, error: 'Failed to fetch pending media' };
   } finally {
     await safePrismaDisconnect(prisma);
   }
-};
+});

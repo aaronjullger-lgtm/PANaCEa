@@ -64,6 +64,7 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
             system: meta.system,
             displayName: meta.condition,
             aliases,
+            updatedAt: new Date(),
           },
         });
         stats.created += 1;

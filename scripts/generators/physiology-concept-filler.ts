@@ -147,7 +147,7 @@ async function main() {
     }
 
     // Only update fields that are missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
     if (!concept.displayName && content.displayName) {
       updateData.displayName = content.displayName;
     }

@@ -243,7 +243,6 @@ async function fillECGPatterns(): Promise<void> {
           boardYieldFacts: content.boardYieldFacts?.length
             ? content.boardYieldFacts
             : record.boardYieldFacts,
-          updatedAt: new Date(),
         },
       });
 

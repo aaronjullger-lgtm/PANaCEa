@@ -130,7 +130,6 @@ async function fillDDxFields(): Promise<void> {
           differentialList:
             differentialStrings.length > 0 ? differentialStrings : record.differentialList,
           keyExamFindings: examFindings.length > 0 ? examFindings : record.keyExamFindings,
-          updatedAt: new Date(),
         },
       });
 

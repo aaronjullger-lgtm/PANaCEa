@@ -72,6 +72,7 @@ router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Resp
         caseId,
         messages: [],
         status: 'active',
+        updatedAt: new Date(),
       },
     });
 

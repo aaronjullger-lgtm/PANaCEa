@@ -994,7 +994,6 @@ async function insertTreatmentProtocol(protocol: TreatmentProtocol): Promise<boo
       where: { name: protocol.name },
       create: {
         id: crypto.randomUUID(),
-        updatedAt: new Date(),
         name: protocol.name,
         displayName: protocol.displayName || protocol.name,
         category: protocol.category,

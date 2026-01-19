@@ -492,8 +492,6 @@ async function enhanceLabTest(labTest: any, dryRun: boolean): Promise<boolean> {
         panceYield: content.panceYield || 3,
 
         clinicalScenarios: content.clinicalScenarios || null,
-
-        updatedAt: new Date(),
       },
     });
 

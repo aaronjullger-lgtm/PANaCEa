@@ -138,7 +138,6 @@ async function main() {
       await prisma.scoringSystem.update({
         where: { id: scoring.id },
         data: {
-          updatedAt: new Date(),
           displayName: content.displayName || scoring.name,
           clinicalContext: content.clinicalContext || '',
           calculatorUrl: content.calculatorUrl || '',

@@ -140,7 +140,7 @@ async function main() {
     }
 
     // Build update data - only update fields that are actually missing
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = {};
 
     const scenarios = lab.clinicalScenarios;
     if (!scenarios || (typeof scenarios === 'string' && scenarios.trim() === '')) {

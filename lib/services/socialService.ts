@@ -16,6 +16,7 @@ export async function createStudyGroup(userId: string, name: string, description
       description,
       code,
       ownerId: userId,
+      updatedAt: new Date(),
       StudyGroupMember: {
         create: {
           id: uuidv4(),
