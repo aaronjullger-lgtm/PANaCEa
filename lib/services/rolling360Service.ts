@@ -476,7 +476,7 @@ export class Rolling360Service {
     if (!stats) return null;
 
     const totalInWindow = stats.totalInWindow;
-    const systemStats = (stats.systemStats as Record<string, SystemStats>) || {};
+    const systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
     const weakestSystems = stats.weakestSystems || [];
 
     // Calculate calibration metrics for cold start users
@@ -734,7 +734,7 @@ export class Rolling360Service {
     });
 
     // Calculate delta
-    let systemStats = (stats.systemStats as Record<string, SystemStats>) || {};
+    let systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
     let totalDelta = 1;
     let correctDelta = isCorrect ? 1 : 0;
 

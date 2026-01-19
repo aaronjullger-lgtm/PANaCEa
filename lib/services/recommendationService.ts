@@ -128,7 +128,7 @@ export const recommendationService = {
         MedicalContent: { select: { system: true } },
       },
       distinct: ['conditionId'],
-    }) as Array<{ MedicalContent: { system: string } | null } & { id: string; userId: string; conditionId: string }>;
+    });
 
     const studiedSystemNames = new Set(
       userSystems.map((u) => u.MedicalContent?.system).filter((s): s is string => Boolean(s))

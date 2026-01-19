@@ -160,7 +160,7 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
           orderBy: { createdAt: 'desc' },
         },
       },
-    }) as { BranchChange: any[] } | null;
+    });
 
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);

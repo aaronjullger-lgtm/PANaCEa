@@ -1350,7 +1350,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       {/* Sprint 4: Session Stats Overlay */}
       <SessionStatsOverlay
-        isOpen={showStatsOverlay}
+        isVisible={showStatsOverlay}
         onToggle={() => setShowStatsOverlay((prev) => !prev)}
         performanceData={performanceData.map((p) => ({
           topic: p.system || 'Unknown',
