@@ -1005,7 +1005,7 @@ function extractConditionName(filename: string): string {
   ];
 
   // Find where the condition name ends and lecture topic begins
-  let conditionParts: string[] = [];
+  const conditionParts: string[] = [];
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
 
@@ -1503,7 +1503,7 @@ async function main() {
   console.log('\n🤖 Processing images with AI analysis...\n');
 
   let processedConditions = 0;
-  let totalConditions = conditionImages.size;
+  const totalConditions = conditionImages.size;
   for (const [condId, files] of conditionImages) {
     processedConditions++;
     // Check existing image count
@@ -1688,7 +1688,9 @@ async function main() {
       if (uploadPath !== file.path) {
         try {
           fs.unlinkSync(uploadPath);
-        } catch {}
+        } catch (e) {
+          console.error(e);
+        }
       }
 
       // Rate limiting delay

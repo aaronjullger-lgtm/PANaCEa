@@ -43,7 +43,7 @@ export function predictPANCEScore(
   // Base score calculation (accuracy is primary factor)
   // PANCE passing is typically ~60-65% accuracy
   // Scale: 200-800, passing ~450
-  let baseScore = 200 + (overallAccuracy / 100) * 600;
+  const baseScore = 200 + (overallAccuracy / 100) * 600;
 
   // Confidence based on sample size
   let confidence: 'low' | 'medium' | 'high' = 'low';
@@ -226,14 +226,18 @@ function getSessionData(): SessionPredictionData {
     if (stored) {
       return JSON.parse(stored);
     }
-  } catch {}
+  } catch (error) {
+    console.error(error);
+  }
   return { results: [], lastUpdated: Date.now() };
 }
 
 function saveSessionData(data: SessionPredictionData): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 /**
@@ -340,5 +344,7 @@ export function getConfidenceInterval(): { lower: number; upper: number } | null
 export function resetPrediction(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch (error) {
+    console.error(error);
+  }
 }

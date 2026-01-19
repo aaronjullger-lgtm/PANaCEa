@@ -77,7 +77,7 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
 async function main() {
   const BATCH_SIZE = 100;
   let cursor: string | undefined = undefined;
-  let updatedDbCount = 0;
+  const updatedDbCount = 0;
   const allDbContent = new Map<string, any>();
 
   console.log('Starting DB cleanup and sync...');

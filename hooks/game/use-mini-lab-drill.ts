@@ -1241,15 +1241,11 @@ const INITIAL_QUEUE_SIZE = 3;
 const MAX_RECENT_DIAGNOSES = 10; // Track last 10 diagnoses to avoid repetition
 
 export function useMiniLabDrill(): UseMiniLabDrillReturn {
-  let getToken: () => Promise<string | null> = async () => null;
-  try {
-    ({ getToken } = useAuth());
-  } catch (err) {
-    console.warn(
-      '[MiniLab] Clerk context missing; using stub auth in tests.',
-      err instanceof Error ? err.message : err
-    );
-  }
+  // MUST call all hooks at top level - Rules of Hooks requirement
+  const auth = useAuth();
+  const getToken: () => Promise<string | null> = auth?.getToken || (async () => null);
+
+  // All state hooks come after useAuth
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
   const [queue, setQueue] = useState<LabCase[]>([]);
   const [dbCases, setDbCases] = useState<LabCase[]>([]);

@@ -1,10 +1,10 @@
 import type { ConditionMeta } from '@/src/types/conditions';
 
 /**
- * API response shape from /api/conditions
- * The API returns conditions wrapped in an object with additional metadata
+ * API response shape from /api/conditions (inner data object)
+ * The API returns conditions wrapped in { data: { conditions: [...] } }
  */
-interface ConditionsApiResponse {
+interface ConditionsApiResponseData {
   conditions: ConditionMeta[];
   bySystem: Record<string, ConditionMeta[]>;
   total: number;
@@ -12,22 +12,50 @@ interface ConditionsApiResponse {
 }
 
 /**
- * Extract the conditions array from an API response
- * Handles both wrapped responses { conditions: [...] } and direct arrays [...]
+ * Full API response with data wrapper
  */
-function extractConditionsArray(data: ConditionsApiResponse | ConditionMeta[]): ConditionMeta[] {
+interface ConditionsApiResponse {
+  data: ConditionsApiResponseData;
+}
+
+/**
+ * Extract the conditions array from an API response
+ * Handles multiple response formats:
+ * - Direct arrays: [...]
+ * - Wrapped with data: { data: { conditions: [...] } }
+ * - Wrapped without data: { conditions: [...] }
+ */
+function extractConditionsArray(
+  data: ConditionsApiResponse | ConditionsApiResponseData | ConditionMeta[] | unknown
+): ConditionMeta[] {
   // If data is already an array, return it directly
   if (Array.isArray(data)) {
     return data;
   }
 
-  // If data is wrapped in { conditions: [...] }, extract the array
-  if (data && typeof data === 'object' && 'conditions' in data && Array.isArray(data.conditions)) {
-    return data.conditions;
+  // Handle null/undefined
+  if (!data || typeof data !== 'object') {
+    console.error('[conditionService] Invalid API response:', typeof data);
+    return [];
+  }
+
+  const dataObj = data as Record<string, unknown>;
+
+  // Handle nested wrapper: { data: { conditions: [...] } }
+  if ('data' in dataObj && dataObj.data && typeof dataObj.data === 'object') {
+    const innerData = dataObj.data as Record<string, unknown>;
+    if ('conditions' in innerData && Array.isArray(innerData.conditions)) {
+      return innerData.conditions as ConditionMeta[];
+    }
+  }
+
+  // Handle direct wrapper: { conditions: [...] }
+  if ('conditions' in dataObj && Array.isArray(dataObj.conditions)) {
+    return dataObj.conditions as ConditionMeta[];
   }
 
   // Fallback: log warning and return empty array
-  console.error('[conditionService] Unexpected API response format:', typeof data, data);
+  console.error('[conditionService] Unexpected API response format:', typeof data, Object.keys(dataObj));
   return [];
 }
 

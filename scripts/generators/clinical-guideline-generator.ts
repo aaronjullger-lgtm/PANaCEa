@@ -296,7 +296,7 @@ CRITICAL JSON RULES - THIS IS EXTREMELY IMPORTANT:
   Examples:
   ✓ CORRECT: "description": "The patient's condition improves"
   ✗ WRONG: "description": "The patient"s condition improves"
-  ✗ WRONG: "description": "The patient\'s condition improves"
+  ✗ WRONG: "description": "The patient's condition improves"
 - For comparisons: spell out the words completely
   ✓ CORRECT: "Age greater than 65 years"
   ✗ WRONG: "Age > 65 years"
@@ -583,7 +583,7 @@ function namesMatch(name1: string, name2: string): boolean {
   const normalize = (s: string) =>
     s
       .toLowerCase()
-      .replace(/[\(\)\-\/]/g, ' ')
+      .replace(/[()"-/]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 

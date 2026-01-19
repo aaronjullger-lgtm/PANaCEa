@@ -172,7 +172,7 @@ const FORMATTING_RULES: FormattingRules = {
     // Trim trailing whitespace
     { pattern: /[ \t]+$/gm, replacement: '' },
     // Normalize list spacing
-    { pattern: /\n([•\-])/g, replacement: '\n$1' },
+    { pattern: /\n([•-])/g, replacement: '\n$1' },
   ],
 };
 

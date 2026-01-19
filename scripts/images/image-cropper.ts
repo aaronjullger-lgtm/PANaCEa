@@ -11,6 +11,7 @@ import * as path from 'path';
 // We'll use sharp if available, otherwise skip cropping
 let sharp: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   sharp = require('sharp');
 } catch {
   console.warn('⚠️ Sharp not installed - cropping disabled. Run: npm install sharp');

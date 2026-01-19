@@ -662,6 +662,117 @@ function computeDisplayPriority(content: Record<string, unknown>): DisplayPriori
   return { primary: 'gold_standard_dx', secondary: 'classic_patient', tertiary: 'buzzwords' };
 }
 
+// Extracted helper components - moved outside to prevent recreation on every render
+const TextField: React.FC<{ label: string; value: unknown; highlight?: boolean }> = ({
+  label,
+  value,
+  highlight,
+}) => {
+  const text = parseTextField(value);
+  if (!text) return null;
+  // Clean HTML entities and render through ReactMarkdown for proper formatting
+  const cleanText = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?p>/gi, '\n')
+    .replace(/<\/?strong>/gi, '**')
+    .replace(/<\/?b>/gi, '**')
+    .replace(/<\/?em>/gi, '*')
+    .replace(/<\/?i>/gi, '*');
+  return (
+    <div
+      className={
+        highlight
+          ? 'p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30'
+          : ''
+      }
+    >
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+        {label}
+      </h4>
+      <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-primary)] leading-relaxed">
+        <ReactMarkdown>{cleanText}</ReactMarkdown>
+      </div>
+    </div>
+  );
+};
+
+const MarkdownField: React.FC<{ label: string; value: unknown }> = ({ label, value }) => {
+  const text = parseTextField(value);
+  if (!text) return null;
+  // Clean HTML entities for proper markdown rendering
+  const cleanText = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?p>/gi, '\n')
+    .replace(/<\/?strong>/gi, '**')
+    .replace(/<\/?b>/gi, '**')
+    .replace(/<\/?em>/gi, '*')
+    .replace(/<\/?i>/gi, '*');
+  return (
+    <div>
+      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+        {label}
+      </h4>
+      <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)]">
+        <ReactMarkdown>{cleanText}</ReactMarkdown>
+      </div>
+    </div>
+  );
+};
+
+const Section: React.FC<{
+  id: string;
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  accentColor?: string;
+  expandedSections: Set<string>;
+  toggleSection: (id: string) => void;
+}> = ({ id, title, icon: Icon, children, accentColor, expandedSections, toggleSection }) => {
+  const isExpanded = expandedSections.has(id);
+
+  return (
+    <div className="border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)]/30 overflow-hidden">
+      <button
+        onClick={() => toggleSection(id)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Icon className={`w-4 h-4 ${accentColor || 'text-[var(--color-accent)]'}`} />
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+            {title}
+          </h3>
+        </div>
+        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] rotate-90" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 pt-0 space-y-4 border-t border-[var(--color-border)]">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay> }> = ({
   content,
 }) => {
@@ -719,114 +830,6 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
   const riskFactors =
     parseListField((normalized as Record<string, unknown>).riskFactors) ||
     parseTextField(getValue(normalized, ['riskFactors', 'risk_factors']));
-
-  const Section: React.FC<{
-    id: string;
-    title: string;
-    icon: React.ElementType;
-    children: React.ReactNode;
-    accentColor?: string;
-  }> = ({ id, title, icon: Icon, children, accentColor }) => {
-    const isExpanded = expandedSections.has(id);
-
-    return (
-      <div className="border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)]/30 overflow-hidden">
-        <button
-          onClick={() => toggleSection(id)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Icon className={`w-4 h-4 ${accentColor || 'text-[var(--color-accent)]'}`} />
-            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-              {title}
-            </h3>
-          </div>
-          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] rotate-90" />
-          </motion.div>
-        </button>
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 pt-0 space-y-4 border-t border-[var(--color-border)]">
-                {children}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
-
-  const TextField: React.FC<{ label: string; value: unknown; highlight?: boolean }> = ({
-    label,
-    value,
-    highlight,
-  }) => {
-    const text = parseTextField(value);
-    if (!text) return null;
-    // Clean HTML entities and render through ReactMarkdown for proper formatting
-    const cleanText = text
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/?p>/gi, '\n')
-      .replace(/<\/?strong>/gi, '**')
-      .replace(/<\/?b>/gi, '**')
-      .replace(/<\/?em>/gi, '*')
-      .replace(/<\/?i>/gi, '*');
-    return (
-      <div
-        className={
-          highlight
-            ? 'p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30'
-            : ''
-        }
-      >
-        <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-          {label}
-        </h4>
-        <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-primary)] leading-relaxed">
-          <ReactMarkdown>{cleanText}</ReactMarkdown>
-        </div>
-      </div>
-    );
-  };
-
-  const MarkdownField = ({ label, value }: { label: string; value: unknown }) => {
-    const text = parseTextField(value);
-    if (!text) return null;
-    // Clean HTML entities for proper markdown rendering
-    const cleanText = text
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/?p>/gi, '\n')
-      .replace(/<\/?strong>/gi, '**')
-      .replace(/<\/?b>/gi, '**')
-      .replace(/<\/?em>/gi, '*')
-      .replace(/<\/?i>/gi, '*');
-    return (
-      <div>
-        <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-          {label}
-        </h4>
-        <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)]">
-          <ReactMarkdown>{cleanText}</ReactMarkdown>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -1033,6 +1036,8 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           title="Clinical Presentation"
           icon={Stethoscope}
           accentColor="text-blue-400"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
         >
           <TextField label="Symptoms" value={normalized.symptoms} />
           <TextField
@@ -1047,12 +1052,21 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           title="Workup & Diagnostics"
           icon={FlaskConical}
           accentColor="text-amber-400"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
         >
           <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
         </Section>
 
         {/* Section 3: Treatment - Separate from workup */}
-        <Section id="treatment" title="Treatment" icon={Pill} accentColor="text-emerald-400">
+        <Section
+          id="treatment"
+          title="Treatment"
+          icon={Pill}
+          accentColor="text-emerald-400"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
+        >
           <MarkdownField label="Treatment Approach" value={normalized.treatment} />
           <TextField label="Mechanism of Action" value={getValue(normalized, ['rx_mechanism'])} />
           <TextField label="Side Effects" value={getValue(normalized, ['rx_side_effects'])} />
@@ -1068,6 +1082,8 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           title="Outcomes & Prognosis"
           icon={AlertTriangle}
           accentColor="text-rose-400"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
         >
           <TextField label="Complications" value={normalized.complications} />
           <TextField label="Prognosis" value={normalized.prognosis} />
@@ -1081,6 +1097,8 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           title="Background & Etiology"
           icon={Info}
           accentColor="text-purple-400"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
         >
           <TextField label="Epidemiology" value={normalized.epidemiology} />
           <TextField label="Etiology" value={normalized.etiology} />

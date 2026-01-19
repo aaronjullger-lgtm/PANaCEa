@@ -394,15 +394,11 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
  * @returns Game state and actions
  */
 export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoDrillReturn {
-  let getToken: () => Promise<string | null> = async () => null;
-  try {
-    ({ getToken } = useAuth());
-  } catch (err) {
-    console.warn(
-      '[Photo Drill] Clerk context missing; using stub auth in tests.',
-      err instanceof Error ? err.message : err
-    );
-  }
+  // MUST call all hooks at top level - Rules of Hooks requirement
+  const auth = useAuth();
+  const getToken: () => Promise<string | null> = auth?.getToken || (async () => null);
+
+  // All state hooks come after useAuth
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>(null);
   const [queue, setQueue] = useState<PhotoCase[]>(initialCases);
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);

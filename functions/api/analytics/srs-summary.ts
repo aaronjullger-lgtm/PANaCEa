@@ -45,7 +45,7 @@ interface SRSAnalyticsSummary {
 
 export const onRequestGet = authenticatedEndpoint(
   srsSummaryQuerySchema,
-  async (context: AuthenticatedContext & ValidatedContext<{}>) => {
+  async (context: AuthenticatedContext & ValidatedContext<Record<string, unknown>>) => {
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {

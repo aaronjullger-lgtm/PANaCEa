@@ -1135,6 +1135,7 @@ Return JSON: { "protocols": [...] }`;
 
     // Clean up common JSON issues
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    // eslint-disable-next-line no-control-regex
     text = text.replace(/[\x00-\x1F\x7F]/g, ' '); // Remove control characters
     text = text.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
 

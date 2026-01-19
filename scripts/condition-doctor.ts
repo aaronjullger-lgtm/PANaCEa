@@ -1569,7 +1569,7 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
   console.log('─'.repeat(70));
 
   let created = 0;
-  let linked = 0;
+  const linked = 0;
 
   // Get all MedicalContent records
   const allMedicalContent = await prisma.medicalContent.findMany({

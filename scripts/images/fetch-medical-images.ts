@@ -177,7 +177,9 @@ async function verifyImage(
         const parsed = JSON.parse(match[0]);
         return { ok: parsed.ok ?? true, reason: parsed.reason || '' };
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
 
     return { ok: true, reason: 'Parse error' };
   } catch (e) {

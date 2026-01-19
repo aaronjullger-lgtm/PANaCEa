@@ -799,7 +799,7 @@ async function regenerateField(fieldName: string, targetSystem?: string) {
   console.log(`🔑 Starting ${fieldName} regeneration...\n`);
 
   // Build query based on field type
-  let whereClause: any = {
+  const whereClause: any = {
     AND: [targetSystem ? { system: targetSystem } : {}],
   };
 

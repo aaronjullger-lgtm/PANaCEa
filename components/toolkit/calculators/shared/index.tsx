@@ -14,6 +14,7 @@ import type { CalculatorResult, CriteriaItem, InputFieldConfig } from '../types'
  *
  * Supports both number and select inputs with consistent styling
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ClinicalInputProps extends InputFieldConfig {}
 
 export const ClinicalInput: React.FC<ClinicalInputProps> = ({

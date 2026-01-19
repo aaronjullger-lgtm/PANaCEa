@@ -411,7 +411,7 @@ export function optimizeContentPresentation(
   currentLoad: CognitiveLoadProfile
 ): OptimizedPresentation {
   const loadReductions: LoadReduction[] = [];
-  let optimizedContent = content;
+  const optimizedContent = content;
 
   // Chunking strategy based on working memory capacity
   const optimalChunkSize = Math.floor(currentLoad.workingMemoryCapacity);

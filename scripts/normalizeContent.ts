@@ -93,7 +93,7 @@ async function main() {
   const mergeContent = (entry: any, newContent: any) => {
     for (const [key, value] of Object.entries(newContent)) {
       // Normalize key
-      let cleanKey = KEY_MAP[key] || key;
+      const cleanKey = KEY_MAP[key] || key;
 
       // If key is not in target keys, keep it but maybe warn?
       // For now, we keep everything but prioritize target keys structure.

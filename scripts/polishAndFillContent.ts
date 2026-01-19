@@ -118,7 +118,7 @@ async function generateOrPolishContent(
         console.warn(`Failed to parse JSON for ${section}, falling back to text split`, e);
         return text
           .split('\n')
-          .map((line) => line.replace(/^[\*\-•]\s*/, '').trim())
+          .map((line) => line.replace(/^[*\-•]\s*/, '').trim())
           .filter((line) => line.length > 0);
       }
     }

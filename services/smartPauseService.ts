@@ -45,7 +45,9 @@ function getState(): PauseState {
     if (stored) {
       return JSON.parse(stored);
     }
-  } catch {}
+  } catch (error) {
+    console.error('[SmartPause] Failed to retrieve pause state:', error);
+  }
   return {
     recentResults: [],
     lastPauseSuggestion: null,
@@ -57,7 +59,9 @@ function getState(): PauseState {
 function saveState(state: PauseState): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {}
+  } catch (error) {
+    console.error('[SmartPause] Failed to save pause state:', error);
+  }
 }
 
 /**
@@ -267,5 +271,7 @@ export function getQuickEncouragement(): string | null {
 export function resetPauseTracking(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch (error) {
+    console.error('[SmartPause] Failed to reset pause tracking:', error);
+  }
 }

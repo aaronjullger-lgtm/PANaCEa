@@ -90,7 +90,7 @@ function extractPearlsFromRationale(rationale: string): string[] {
   }
 
   // Pattern 2: Bullet points that look like pearls (start with • or - and are concise)
-  const bulletPattern = /^[•\-]\s*(.{10,300})$/gm;
+  const bulletPattern = /^[•-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
     const pearl = match[1].trim();
     // Filter for high-quality pearls (avoid generic statements)

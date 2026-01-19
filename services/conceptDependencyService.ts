@@ -950,7 +950,7 @@ class ConceptDependencyService {
   ): LearningPath {
     const stages: LearningStage[] = [];
     const processedConcepts: Set<string> = new Set();
-    let stageNumber = 0;
+    const stageNumber = 0;
 
     switch (strategy) {
       case 'gap_priority':

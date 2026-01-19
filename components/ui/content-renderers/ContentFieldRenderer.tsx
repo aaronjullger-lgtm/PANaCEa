@@ -50,12 +50,13 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
         <BulletListRenderer items={value as string[]} variant={variant} className={className} />
       );
 
-    case 'steps':
+    case 'steps': {
       // Treatment steps or ordered procedures
       const steps = extractSteps(value);
       return (
         <BulletListRenderer items={steps} variant="clinical" showNumbers className={className} />
       );
+    }
 
     case 'key-value':
       return <KeyValueRenderer data={value as Record<string, unknown>} className={className} />;

@@ -139,7 +139,7 @@ export function deriveImplicitConfidence(params: {
 
   // Base confidence from latency (fast = high confidence)
   // Uses logistic transform
-  let latencyConfidence = 1 / (1 + Math.exp(2 * (latencyRatio - 0.8)));
+  const latencyConfidence = 1 / (1 + Math.exp(2 * (latencyRatio - 0.8)));
 
   // Penalty for answer switches (uncertainty signal)
   const switchPenalty = Math.max(0, 1 - answerSwitches * 0.2);

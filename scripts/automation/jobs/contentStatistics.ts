@@ -274,7 +274,7 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
     console.log('\n📊 Processing condition statistics...');
     let successCount = 0;
     let skipCount = 0;
-    let errorCount = 0;
+    const errorCount = 0;
 
     // Process conditions in batches of 10 to avoid overwhelming the database
     const batchSize = 10;

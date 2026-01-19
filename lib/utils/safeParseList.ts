@@ -86,10 +86,10 @@ function splitByCommonSeparators(text: string): string[] {
   }
 
   // Bullet patterns: "• item • item" or "- item - item" or "* item * item"
-  const bulletMatch = text.match(/[•\-\*]\s+/g);
+  const bulletMatch = text.match(/[•\-*]\s+/g);
   if (bulletMatch && bulletMatch.length >= 2) {
     return text
-      .split(/[•\-\*]\s+/)
+      .split(/[•\-*]\s+/)
       .map((s) => s.trim())
       .filter(Boolean);
   }
@@ -138,7 +138,7 @@ function cleanListItems(items: string[]): string[] {
       // Remove leading numbers, bullets, dashes
       return item
         .replace(/^[\d]+[.)]\s*/, '')
-        .replace(/^[•\-\*]\s*/, '')
+        .replace(/^[•\-*]\s*/, '')
         .trim();
     })
     .filter((item) => item.length > 0 && item.length < 500); // Filter out empty or overly long items

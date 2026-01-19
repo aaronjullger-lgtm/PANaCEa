@@ -118,7 +118,7 @@ export function calculateSessionDistribution(sessionSize: number): Map<string, n
   }
 
   // Adjust for rounding errors to ensure total equals sessionSize
-  let total = Array.from(distribution.values()).reduce((sum, count) => sum + count, 0);
+  const total = Array.from(distribution.values()).reduce((sum, count) => sum + count, 0);
 
   if (total !== sessionSize) {
     const diff = sessionSize - total;

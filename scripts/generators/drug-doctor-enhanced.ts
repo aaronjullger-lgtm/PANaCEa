@@ -330,7 +330,7 @@ function normalizeName(name: string): string {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9\s\-]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s*\(.*?\)\s*/g, '')
     .trim();
 }
@@ -444,7 +444,7 @@ function formatGenericName(name: string): string {
 function formatBrandName(name: string): string {
   if (!name || PLACEHOLDER_VALUES.has(name.toLowerCase().trim())) return 'No brand name available.';
   return name
-    .split(/[-\/\s]+/)
+    .split(/[-/\s]+/)
     .map(capitalizeWord)
     .join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
 }
@@ -452,7 +452,7 @@ function formatBrandName(name: string): string {
 function formatDisplayName(name: string): string {
   if (!name) return name;
   return name
-    .split(/[-\/\s]+/)
+    .split(/[-/\s]+/)
     .map(capitalizeWord)
     .join(name.includes('-') ? '-' : name.includes('/') ? '/' : ' ');
 }

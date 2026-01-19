@@ -264,7 +264,7 @@ export async function getQuestionAttempts(options?: {
     const tx = db.transaction('questionAttempts', 'readonly');
     const store = tx.objectStore('questionAttempts');
 
-    let results: QuestionAttemptRecord[] = [];
+    const results: QuestionAttemptRecord[] = [];
 
     await new Promise<void>((resolve, reject) => {
       const request = store.index('timestamp').openCursor(null, 'prev');

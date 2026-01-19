@@ -270,7 +270,8 @@ function getPendingSync(): SessionAnalyticsPayload[] {
   try {
     const raw = sessionStorage.getItem(PENDING_SYNC_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (error) {
+    console.error('[SessionAnalyticsSync] Failed to retrieve pending sync:', error);
     return [];
   }
 }
@@ -306,7 +307,9 @@ export async function processPendingSync(token?: string | null): Promise<{
   // Update pending queue
   try {
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(remaining));
-  } catch {}
+  } catch (error) {
+    console.error('[SessionAnalyticsSync] Failed to update pending queue:', error);
+  }
 
   return { synced, failed };
 }

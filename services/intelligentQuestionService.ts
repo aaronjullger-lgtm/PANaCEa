@@ -420,7 +420,7 @@ async function fetchQuestionsFromPool(
  */
 function convertPoolQuestion(poolQ: any): Question {
   const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
+  const correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
 
   const condition = poolQ.tags?.[0] || poolQ.system;
   const conditionId =

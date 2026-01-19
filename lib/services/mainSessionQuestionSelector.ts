@@ -127,7 +127,7 @@ export class MainSessionQuestionSelector {
     // Step 3: GATHERING PHASE - Build pools per system
     const systemPools = new Map<string, SelectedQuestion[]>();
     const deficitsAddressed: SystemDeficit[] = [];
-    let priorityBreakdown = { A: 0, B: 0, C: 0 };
+    const priorityBreakdown = { A: 0, B: 0, C: 0 };
 
     // Track all selected question IDs to avoid duplicates
     const selectedIds = new Set<string>();

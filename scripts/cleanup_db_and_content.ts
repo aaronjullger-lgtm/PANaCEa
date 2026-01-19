@@ -80,7 +80,7 @@ async function main() {
 
   // 2. Clean Content Formatting
   console.log('Scanning for formatting issues (---)...');
-  let updatedCount = 0;
+  const updatedCount = 0;
 
   // Process in batches to avoid memory/size limits
   const BATCH_SIZE = 50;

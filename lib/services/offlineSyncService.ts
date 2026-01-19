@@ -324,18 +324,20 @@ async function resolveConflict(
     case 'server-wins':
       return null; // Discard client changes
 
-    case 'newest-wins':
+    case 'newest-wins': {
       // Compare timestamps
       const clientTime = clientOp.timestamp;
       const serverTime = serverData.updatedAt ? new Date(serverData.updatedAt).getTime() : 0;
       return clientTime > serverTime ? clientOp.data : null;
+    }
 
-    case 'merge':
+    case 'merge': {
       // Merge non-conflicting fields
       return {
         ...serverData,
         ...clientOp.data,
       };
+    }
 
     default:
       return clientOp.data;

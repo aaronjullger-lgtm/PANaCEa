@@ -49,7 +49,7 @@ describe('validateSupabaseConfig', () => {
     };
     delete (globalThis as any).__TEST_VITE_ENV__.VITE_SUPABASE_URL;
 
-    let result = validateSupabaseConfig();
+    const result = validateSupabaseConfig();
     expect(result.valid).toBe(false);
     expect(result.message).toContain('VITE_SUPABASE_URL');
 

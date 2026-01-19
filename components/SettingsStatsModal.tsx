@@ -176,12 +176,17 @@ const getDefaultWidgets = (): WidgetId[] =>
  * AccessibilitySettings - Commuter Mode / Voice-First Configuration
  */
 const AccessibilitySettings: React.FC = () => {
-  // Try to use commuter context, but handle case where provider might not be available
-  let commuterContext;
-  try {
-    commuterContext = useCommuter();
-  } catch {
-    // Provider not available - render fallback
+  // MUST call hooks at top level - Rules of Hooks requirement
+  let commuterContext = useCommuter();
+  let hasCommuterContext = true;
+
+  // Check if context is valid after hook call
+  if (!commuterContext) {
+    hasCommuterContext = false;
+  }
+
+  // Early return AFTER all hooks have been called
+  if (!hasCommuterContext) {
     return (
       <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">

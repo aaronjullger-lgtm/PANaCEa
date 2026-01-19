@@ -192,7 +192,7 @@ export function classifyPause(durationMs: number): PauseType {
  * Check if character is a word boundary
  */
 function isWordBoundary(char: string): boolean {
-  return /[\s.,!?;:\-]/.test(char);
+  return /[\s.,!?;:-]/.test(char);
 }
 
 /**

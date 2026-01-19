@@ -127,7 +127,7 @@ export function predictPANCEScore(
   );
 
   // Confidence interval
-  let uncertainty = 80 * Math.max(0.5, 1 - Math.log10(totalQuestions + 1) / 4);
+  const uncertainty = 80 * Math.max(0.5, 1 - Math.log10(totalQuestions + 1) / 4);
   const confidence = {
     low: Math.max(MIN_SCORE, Math.round(predictedScore - uncertainty)),
     high: Math.min(MAX_SCORE, Math.round(predictedScore + uncertainty)),

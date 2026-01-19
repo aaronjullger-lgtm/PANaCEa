@@ -37,7 +37,7 @@ export const onRequestGet = authenticatedEndpoint(ContextWidgetsSchema, async (c
       return { data: { error: 'Condition not found' }, status: 404 };
     }
 
-    let contextData: any = {};
+    const contextData: any = {};
 
     if (widgetType === 'pharm') {
       contextData.treatment = condition.treatment;

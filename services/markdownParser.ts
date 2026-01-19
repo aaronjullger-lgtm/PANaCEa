@@ -67,7 +67,7 @@ function applyClinicalBolding(text: string): string {
   });
 
   return result.replace(
-    /^(\s*)([A-Z][A-Za-z0-9 /+()'\-]{2,40}?)(:\s+|\s+—\s+)?/,
+    /^(\s*)([A-Z][A-Za-z0-9 /+()'"-]{2,40}?)(:\s+|\s+—\s+)?/,
     (_match, prefix: string, label: string, delimiter: string | undefined) => {
       return `${prefix}**${label.trim()}**${delimiter ?? ' '}`;
     }
@@ -76,7 +76,7 @@ function applyClinicalBolding(text: string): string {
 
 function emphasizeLeadingKeyword(text: string, keyword: string): string {
   const escaped = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-  const pattern = new RegExp(`^${escaped}\b:?\s*(.*)$`, 'i');
+  const pattern = new RegExp(`^${escaped}\\b:?\\s*(.*)$`, 'i');
   const match = text.match(pattern);
   if (!match) return applyClinicalBolding(text);
 

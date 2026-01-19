@@ -358,7 +358,7 @@ export class ContextAwareAnalyzer {
       case 'clinical_images':
       case 'ecg':
       case 'radiology':
-      case 'dermatology':
+      case 'dermatology': {
         const mediaStats = await prisma.mediaAsset.aggregate({
           where: {
             type: contentType === 'clinical_images' ? undefined : contentType,
@@ -371,6 +371,7 @@ export class ContextAwareAnalyzer {
         stats.averageQuality = mediaStats._avg.qualityScore || 0;
         stats.expectedCount = 500; // Expect 500 clinical images
         break;
+      }
 
       case 'drug_information':
         // Check pharmacy drill data
@@ -419,20 +420,23 @@ export class ContextAwareAnalyzer {
   async checkDependency(dependency: string): Promise<DependencyStatus> {
     // Check if required data exists
     switch (dependency) {
-      case 'conditions':
+      case 'conditions': {
         const conditionCount = await prisma.condition.count();
         return {
           satisfied: conditionCount > 50,
           details: `${conditionCount} conditions in database`,
         };
+      }
 
       case 'treatments':
-      case 'medications':
+      case 'medications': {
         // Would check treatment database
         return { satisfied: true, details: 'Treatments available' };
+      }
 
-      default:
+      default: {
         return { satisfied: true, details: 'Dependency assumed met' };
+      }
     }
   }
 

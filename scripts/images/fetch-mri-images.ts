@@ -709,6 +709,7 @@ function fetchImageAsBuffer(url: string): Promise<Buffer> {
       },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const protocol = url.startsWith('https') ? https : require('http');
     protocol
       .get(url, options, (res: any) => {

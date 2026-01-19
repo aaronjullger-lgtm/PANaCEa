@@ -152,7 +152,7 @@ async function sendToSentry(error: Error, context: ErrorContext, env: any): Prom
   };
 
   // Extract DSN components
-  const dsnMatch = env.SENTRY_DSN.match(/https:\/\/([^@]+)@([^\/]+)\/(.+)/);
+  const dsnMatch = env.SENTRY_DSN.match(/https:\/\/([^@]+)@([^/]+)\/(.+)/);
   if (!dsnMatch) {
     console.error('[Sentry] Invalid DSN format');
     return;

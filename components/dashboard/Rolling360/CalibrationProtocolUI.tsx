@@ -197,17 +197,20 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
   let metricDisplay: React.ReactNode = null;
   if (isUnlocked && step.unlockedMetric) {
     switch (step.unlockedMetric) {
-      case 'avgResponseTime':
+      case 'avgResponseTime': {
         const avgTime = metrics.avgResponseTimeMs;
         metricDisplay = avgTime ? `${Math.round(avgTime / 1000)}s avg` : '---';
         break;
-      case 'confidenceAlignment':
+      }
+      case 'confidenceAlignment': {
         const alignment = metrics.confidenceAlignment;
         metricDisplay = alignment ? `${Math.round(alignment * 100)}%` : '---';
         break;
-      case 'primaryErrorSystem':
+      }
+      case 'primaryErrorSystem': {
         metricDisplay = metrics.primaryErrorSystem || '---';
         break;
+      }
     }
   }
 

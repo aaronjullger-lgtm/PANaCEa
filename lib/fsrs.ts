@@ -91,7 +91,7 @@ export class FSRS {
   }
 
   next(card: FSRSCard, now: Date, rating: Rating): { card: FSRSCard; due: Date } {
-    let newCard = { ...card };
+    const newCard = { ...card };
 
     if (card.state === FSRSState.New) {
       newCard.elapsed_days = 0;

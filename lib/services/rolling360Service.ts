@@ -302,7 +302,7 @@ export class Rolling360Service {
         });
 
         // Step 3: Calculate delta - what we're removing from aggregates
-        let systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
+        const systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
         let totalDelta = 1;
         let correctDelta = isCorrect ? 1 : 0;
 
@@ -711,7 +711,7 @@ export class Rolling360Service {
     const normalizedSystem = normalizeSystemName(system);
 
     // Get current stats
-    let stats = await tx.userRolling360Stats.findUnique({
+    const stats = await tx.userRolling360Stats.findUnique({
       where: { userId },
     });
 
@@ -724,7 +724,7 @@ export class Rolling360Service {
     const nextSlotIndex = (currentSlotIndex + 1) % ROLLING_WINDOW_SIZE;
 
     // Get existing buffer slot
-    let bufferSlot = await tx.rolling360Buffer.findUnique({
+    const bufferSlot = await tx.rolling360Buffer.findUnique({
       where: {
         userId_slotIndex: {
           userId,
@@ -734,7 +734,7 @@ export class Rolling360Service {
     });
 
     // Calculate delta
-    let systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
+    const systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
     let totalDelta = 1;
     let correctDelta = isCorrect ? 1 : 0;
 

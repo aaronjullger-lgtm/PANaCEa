@@ -325,7 +325,7 @@ export async function validateQuestionQuality(
   semanticHash: string;
 }> {
   // Start with rule-based assessment
-  let assessment = quickQualityCheck(question);
+  const assessment = quickQualityCheck(question);
 
   // Generate semantic hash for duplicate detection
   const semanticHash = generateSemanticHash(question);

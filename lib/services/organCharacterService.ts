@@ -214,22 +214,24 @@ export function checkVariantUnlocks(
         shouldUnlock = true;
         break;
 
-      case 'questions_answered':
+      case 'questions_answered': {
         if (variant.system !== 'SPECIAL' && variant.system) {
           const systemData = progress.systemProgress.get(variant.system);
           shouldUnlock =
             (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
         }
         break;
+      }
 
-      case 'accuracy_threshold':
+      case 'accuracy_threshold': {
         if (variant.system !== 'SPECIAL' && variant.system) {
           const systemData = progress.systemProgress.get(variant.system);
           shouldUnlock = (systemData?.accuracy || 0) >= (variant.unlockCondition.value || 0);
         }
         break;
+      }
 
-      case 'specific_condition':
+      case 'specific_condition': {
         // This would require tracking specific condition performance
         // For now, we'll use system progress as a proxy
         if (variant.system !== 'SPECIAL' && variant.system) {
@@ -238,13 +240,15 @@ export function checkVariantUnlocks(
             (systemData?.questionsAnswered || 0) >= (variant.unlockCondition.value || 0);
         }
         break;
+      }
 
-      case 'easter_egg':
+      case 'easter_egg': {
         const modeProgress = progress.specialModeProgress.get(
           variant.unlockCondition.condition || ''
         );
         shouldUnlock = (modeProgress || 0) >= (variant.unlockCondition.value || 0);
         break;
+      }
 
       case 'achievement':
         // Check if achievement is unlocked (would integrate with achievement system)

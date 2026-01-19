@@ -185,7 +185,8 @@ async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
 
     // Remove common PDF artifacts
     text = text.replace(/\f/g, '\n'); // Form feed characters
-    text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control characters
+    // eslint-disable-next-line no-control-regex
+    text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ''); // Control characters
 
     if (text.length < 50) {
       console.warn('PDF text extraction yielded minimal content, falling back to AI vision');

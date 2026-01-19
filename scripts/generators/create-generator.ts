@@ -383,7 +383,7 @@ async function generateScript() {
 
   const tableLower = TABLE_NAME.charAt(0).toLowerCase() + TABLE_NAME.slice(1);
 
-  let script = GENERATOR_TEMPLATE.replace(/{{TABLE_NAME}}/g, TABLE_NAME)
+  const script = GENERATOR_TEMPLATE.replace(/{{TABLE_NAME}}/g, TABLE_NAME)
     .replace(/{{TABLE_NAME_LOWER}}/g, tableLower)
     .replace('{{INTERFACE_FIELDS}}', generateInterfaceFields(fields))
     .replace('{{JSON_STRUCTURE}}', generateJSONStructure(fields))

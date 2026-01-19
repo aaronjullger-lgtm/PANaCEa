@@ -497,6 +497,29 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Guard against submitting without selection
     if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
 
+    // Runtime validation: Log undefined functions to debug "S is not a function" error
+    const functionChecks = {
+      recordBehavioralConfidence: typeof recordBehavioralConfidence,
+      recordMomentumResult: typeof recordMomentumResult,
+      recordAnswerPattern: typeof recordAnswerPattern,
+      updatePerformancePrediction: typeof updatePerformancePrediction,
+      recordPauseResult: typeof recordPauseResult,
+      recordCircadianPerformance: typeof recordCircadianPerformance,
+      inferConfidence: typeof inferConfidence,
+      recordQuestionResult: typeof recordQuestionResult,
+      recordQuestion: typeof recordQuestion,
+      recordSessionAnswer: typeof recordSessionAnswer,
+      recordQuestionAttempt: typeof recordQuestionAttempt,
+    };
+    
+    const undefinedFunctions = Object.entries(functionChecks)
+      .filter(([_, type]) => type !== 'function')
+      .map(([name, type]) => `${name}: ${type}`);
+    
+    if (undefinedFunctions.length > 0) {
+      console.error('[QuizView] CRITICAL: Undefined functions detected in handleSubmitAnswer:', undefinedFunctions);
+    }
+
     setIsAnswered(true);
 
     // Sprint 4: Calculate correctness IMMEDIATELY
@@ -539,52 +562,94 @@ const QuizView: React.FC<QuizViewProps> = ({
       quickInitialSelection:
         firstSelectedAnswer !== null && Date.now() - questionStartTime < parTime * 0.5,
     };
-    recordBehavioralConfidence(behaviorSignals, isCorrect);
+    
+    // Defensive calls - wrap analytics functions to prevent crashes
+    try {
+      if (typeof recordBehavioralConfidence === 'function') {
+        recordBehavioralConfidence(behaviorSignals, isCorrect);
+      }
+    } catch (e) {
+      console.warn('[QuizView] recordBehavioralConfidence failed:', e);
+    }
 
     // Sprint 4: Record momentum data
-    recordMomentumResult(isCorrect, timeToAnswer, parTime);
+    try {
+      if (typeof recordMomentumResult === 'function') {
+        recordMomentumResult(isCorrect, timeToAnswer, parTime);
+      }
+    } catch (e) {
+      console.warn('[QuizView] recordMomentumResult failed:', e);
+    }
 
     // Sprint 4: Record answer pattern for post-session analysis
-    recordAnswerPattern({
-      questionId: currentQuestion.id || `temp-${questionNumber}`,
-      firstAnswer: firstSelectedAnswer ?? selectedAnswerIndex,
-      finalAnswer: selectedAnswerIndex,
-      correctAnswer: currentQuestion.correctAnswerIndex,
-      timeSpentMs: timeToAnswer,
-      parTimeMs: parTime,
-      eliminatedCount: eliminatedAnswers.size,
-      answerChangeCount,
-      wasCorrect: isCorrect,
-    });
+    try {
+      if (typeof recordAnswerPattern === 'function') {
+        recordAnswerPattern({
+          questionId: currentQuestion.id || `temp-${questionNumber}`,
+          firstAnswer: firstSelectedAnswer ?? selectedAnswerIndex,
+          finalAnswer: selectedAnswerIndex,
+          correctAnswer: currentQuestion.correctAnswerIndex,
+          timeSpentMs: timeToAnswer,
+          parTimeMs: parTime,
+          eliminatedCount: eliminatedAnswers.size,
+          answerChangeCount,
+          wasCorrect: isCorrect,
+        });
+      }
+    } catch (e) {
+      console.warn('[QuizView] recordAnswerPattern failed:', e);
+    }
 
     // Sprint 4: Update performance prediction
-    const confidenceResult = inferConfidence(behaviorSignals);
-    updatePerformancePrediction({
-      correct: isCorrect,
-      timeSpentMs: timeToAnswer,
-      parTimeMs: parTime,
-      system: currentQuestion.system,
-      questionNumber,
-      inferredConfidence: typeof confidenceResult === 'number' ? confidenceResult : confidenceResult.score,
-    });
+    try {
+      let inferredConfidenceValue = 0.5; // Default
+      if (typeof inferConfidence === 'function') {
+        const confidenceResult = inferConfidence(behaviorSignals);
+        inferredConfidenceValue = typeof confidenceResult === 'number' ? confidenceResult : confidenceResult?.score ?? 0.5;
+      }
+      if (typeof updatePerformancePrediction === 'function') {
+        updatePerformancePrediction({
+          correct: isCorrect,
+          timeSpentMs: timeToAnswer,
+          parTimeMs: parTime,
+          system: currentQuestion.system,
+          questionNumber,
+          inferredConfidence: inferredConfidenceValue,
+        });
+      }
+    } catch (e) {
+      console.warn('[QuizView] updatePerformancePrediction failed:', e);
+    }
 
     // Sprint 4: Record for smart pause detection
-    recordPauseResult({
-      correct: isCorrect,
-      timeSpentMs: timeToAnswer,
-      parTimeMs: parTime,
-    });
+    try {
+      if (typeof recordPauseResult === 'function') {
+        recordPauseResult({
+          correct: isCorrect,
+          timeSpentMs: timeToAnswer,
+          parTimeMs: parTime,
+        });
+      }
+    } catch (e) {
+      console.warn('[QuizView] recordPauseResult failed:', e);
+    }
 
     // Advanced analytics: Record comprehensive question result
-    recordQuestionResult?.({
-      questionId: currentQuestion.id || `temp-${questionNumber}`,
-      responseTimeMs: timeToAnswer,
-      wasCorrect: isCorrect,
-      difficulty: (currentQuestion.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
-      answerChanges: behaviorSignals.answerChangeCount,
-      eliminationsUsed: behaviorSignals.eliminatedCount,
-      system: currentQuestion.system || 'Unknown',
-    });
+    try {
+      if (typeof recordQuestionResult === 'function') {
+        recordQuestionResult({
+          questionId: currentQuestion.id || `temp-${questionNumber}`,
+          responseTimeMs: timeToAnswer,
+          wasCorrect: isCorrect,
+          difficulty: (currentQuestion.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+          answerChanges: behaviorSignals.answerChangeCount,
+          eliminationsUsed: behaviorSignals.eliminatedCount,
+          system: currentQuestion.system || 'Unknown',
+        });
+      }
+    } catch (e) {
+      console.warn('[QuizView] recordQuestionResult failed:', e);
+    }
 
     setBehavioralRefreshKey((k) => k + 1);
 

@@ -29,7 +29,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
     let totalQuestions = currentStats?.totalQuestions ?? 0;
     let correctAnswers = currentStats?.correctAnswers ?? 0;
     let avgTimePerQuestion = currentStats?.avgTimePerQuestion ?? null;
-    let diagnosisBias = (currentStats?.diagnosisBias as Record<string, number> | undefined) || {};
+    const diagnosisBias = (currentStats?.diagnosisBias as Record<string, number> | undefined) || {};
 
     // If stats are missing, derive from question attempts
     if (!currentStats) {

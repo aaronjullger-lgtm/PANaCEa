@@ -107,6 +107,11 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     isLoading,
   } = useFirstLineDrill();
 
+  const handleDeepDive = useCallback((topic: string) => {
+    console.log('Deep dive into:', topic);
+    // Could open a modal, navigate to reference library, etc.
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 p-6">
@@ -123,11 +128,6 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
       onExit();
     }
   };
-
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
-  }, []);
 
   // =========================================================================
   // MENU VIEW

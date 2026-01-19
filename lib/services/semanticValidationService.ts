@@ -14,7 +14,7 @@ class SemanticValidationService {
   private normalize(text: string): string {
     if (!text) return '';
     const lower = text.toLowerCase();
-    const withoutPunct = lower.replace(/[.,/#!$%^&*;:{}=_`~()\-]/g, ' ');
+    const withoutPunct = lower.replace(/[.,/#!$%^&*;:{}=_`~()-]/g, ' ');
     const removedFillers = this.fillerWords.reduce((acc, word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       return acc.replace(regex, ' ');

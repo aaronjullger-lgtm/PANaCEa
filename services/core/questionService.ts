@@ -199,7 +199,7 @@ export function convertPoolQuestion(poolQ: {
     question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
     options: poolQ.options.map((opt) =>
       // Remove letter prefix if present (e.g., "A. Option" -> "Option")
-      opt.replace(/^[A-D]\.\s*/, '')
+      opt.replace(/^[A-D].\s*/, '')
     ),
     correctAnswerIndex: correctIndex,
     rationale: poolQ.explanation || '',
@@ -244,7 +244,7 @@ export function extractPearlsFromRationale(rationale: string): string[] {
   }
 
   // Pattern 2: Bullet points that look like pearls
-  const bulletPattern = /^[•\-]\s*(.{10,300})$/gm;
+  const bulletPattern = /^[•-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
     const pearl = match[1].trim();
     if (pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {

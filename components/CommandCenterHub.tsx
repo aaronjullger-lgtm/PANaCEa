@@ -442,7 +442,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let checkDate = new Date(today);
+    const checkDate = new Date(today);
     const dateSet = new Set<string>();
 
     for (const record of sortedData) {

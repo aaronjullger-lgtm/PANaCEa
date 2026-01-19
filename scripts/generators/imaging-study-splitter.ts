@@ -77,7 +77,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
     console.log(`  Processing: ${study.name}`);
 
     // Parse the base name
-    let baseName = study.name
+    const baseName = study.name
       .replace(/\s*\(with and without contrast\)/i, '')
       .replace(/\s*with and without contrast/i, '')
       .replace(/\s*without and with contrast/i, '')

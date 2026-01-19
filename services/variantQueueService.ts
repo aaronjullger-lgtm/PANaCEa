@@ -42,7 +42,7 @@ export class VariantQueueService {
       | 'different_scenario'
       | 'remediation'
       | 'decomposition' = 'rephrased';
-    let conditionName = originalQuestion.Condition?.name;
+    const conditionName = originalQuestion.Condition?.name;
 
     if (conditionName) {
       // Check for known confusions

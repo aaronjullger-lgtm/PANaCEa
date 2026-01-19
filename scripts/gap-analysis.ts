@@ -136,7 +136,7 @@ function normalizeConditionName(name: string): string {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '');
 }
 
 /**

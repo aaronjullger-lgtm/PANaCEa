@@ -62,7 +62,7 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
     }
 
     const suggestions: SmartSuggestion[] = [];
-    let userMastery: Map<string, { stability: number; difficulty: number; state: number }> = new Map();
+    const userMastery: Map<string, { stability: number; difficulty: number; state: number }> = new Map();
 
     // 1. Get user-specific data if authenticated
     if (userId) {

@@ -33,7 +33,7 @@ async function main() {
 
     for (const conditionName of set.conditions) {
       // Try to find a Condition by name
-      let condition = await prisma.condition.findFirst({
+      const condition = await prisma.condition.findFirst({
         where: {
           name: { equals: conditionName, mode: 'insensitive' },
         },

@@ -469,7 +469,7 @@ export class AdaptiveFSRS {
     // Split between new and review cards
     // Reviews are generally faster, prioritize them
     const reviewWeight = 0.7;
-    let reviewCardsLimit = Math.min(reviewCardsDue, Math.floor(adjustedQuestions * reviewWeight));
+    const reviewCardsLimit = Math.min(reviewCardsDue, Math.floor(adjustedQuestions * reviewWeight));
     let newCardsLimit = Math.min(
       newCardsAvailable,
       adjustedQuestions - reviewCardsLimit,

@@ -207,7 +207,9 @@ async function main() {
           if (c.title) map.set(toLooseId(c.title), c.content);
         });
         legacyMaps.push(map);
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
@@ -239,7 +241,7 @@ async function main() {
       // Rescue
       let wasRescued = false;
       for (const map of legacyMaps) {
-        let legacyContent = map.get(looseId) || map.get(looseName);
+        const legacyContent = map.get(looseId) || map.get(looseName);
         if (legacyContent && smartMerge(entry.content, legacyContent)) {
           wasRescued = true;
         }

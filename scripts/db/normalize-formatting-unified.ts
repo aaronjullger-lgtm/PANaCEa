@@ -284,7 +284,7 @@ async function processMedicalContent(dryRun: boolean) {
   let textFix = 0;
   let errors = 0;
 
-  let hasMore = true;
+  const hasMore = true;
   let cursor: string | undefined;
   let batchNumber = 1;
 
@@ -349,7 +349,7 @@ async function processDrugs(dryRun: boolean) {
   let textFix = 0;
   let errors = 0;
 
-  let hasMore = true;
+  const hasMore = true;
   let cursor: string | undefined;
   let batchNumber = 1;
 

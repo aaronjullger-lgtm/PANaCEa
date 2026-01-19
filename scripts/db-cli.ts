@@ -278,10 +278,10 @@ async function runGapAnalysis() {
   // Summary
   log.header('GAP ANALYSIS SUMMARY');
 
-  let criticalGaps: GapResult[] = [];
-  let emptyFields: GapResult[] = [];
-  let partialFields: GapResult[] = [];
-  let completeFields: GapResult[] = [];
+  const criticalGaps: GapResult[] = [];
+  const emptyFields: GapResult[] = [];
+  const partialFields: GapResult[] = [];
+  const completeFields: GapResult[] = [];
 
   for (const [table, gaps] of Object.entries(allGaps)) {
     for (const g of gaps) {

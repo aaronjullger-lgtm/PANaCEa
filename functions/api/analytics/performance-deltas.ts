@@ -91,7 +91,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
     }
 
     // Try to get platform-wide stats for cohort benchmarks
-    let cohortBenchmarks = { ...DEFAULT_BENCHMARKS };
+    const cohortBenchmarks = { ...DEFAULT_BENCHMARKS };
 
     try {
       const platformStats = await prisma.platformStatistics.findFirst({

@@ -10,9 +10,10 @@ export function asciiClean(str: string = ''): string {
   return str
     .normalize('NFKC')
     .replace(/[“”„‟]/g, '"')
-    .replace(/[‘’‚‛]/g, "'")
+    .replace(/[''‚‛]/g, "'")
     .replace(/[–—]/g, '-')
     .replace(/\u00A0/g, ' ')
+    // eslint-disable-next-line no-control-regex
     .replace(/[^\x00-\x7F]/g, '');
 }
 

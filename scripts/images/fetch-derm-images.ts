@@ -736,6 +736,7 @@ Respond ONLY with valid JSON.`;
 
 function fetchImageAsBuffer(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const protocol = url.startsWith('https') ? https : require('http');
     const parsedUrl = new URL(url);
     const options = {

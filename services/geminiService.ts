@@ -482,7 +482,7 @@ function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
 
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
-let recentQuestionHistory: string[] = [];
+const recentQuestionHistory: string[] = [];
 const RECENT_HISTORY_COUNT = 10;
 
 // Shuffle helpers
