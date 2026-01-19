@@ -43,7 +43,7 @@ router.get(
             SpecialTest: true,
             MediaAsset: true,
           },
-        });
+        }) as any;
 
         if (conditions.length > 0) {
           condition = conditions[0];
@@ -64,7 +64,7 @@ router.get(
             SpecialTest: true,
             MediaAsset: true,
           },
-        });
+        }) as any;
         if (conditions.length > 0) {
           condition = conditions[0];
         }

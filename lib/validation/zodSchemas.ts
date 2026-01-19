@@ -59,7 +59,7 @@ export function validateParams<T extends ZodSchema>(schema: T) {
     const result = schema.safeParse(req.params);
 
     if (result.success) {
-      req.params = result.data;
+      req.params = result.data as any;
       return next();
     }
 

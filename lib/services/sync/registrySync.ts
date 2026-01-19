@@ -38,7 +38,7 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
 
   for (const meta of CONDITION_REGISTRY) {
     try {
-      const aliases = normalizeAliases(meta.aliases);
+      const aliases: string[] = normalizeAliases(meta.aliases);
 
       const existing = await client.condition.findFirst({
         where: { name: meta.condition, system: meta.system },

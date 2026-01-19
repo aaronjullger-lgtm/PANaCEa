@@ -45,7 +45,11 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
         etiologyPathophysiology:
           [record.etiology, record.pathophysiology].filter(Boolean).join('\n\n') || undefined,
         epidemiology: record.epidemiology || undefined,
-        riskFactors: record.riskFactors,
+        riskFactors: Array.isArray(record.riskFactors)
+          ? record.riskFactors
+          : typeof record.riskFactors === 'string'
+            ? [record.riskFactors]
+            : undefined,
         symptoms: record.symptoms,
         examFindings: record.physicalExam,
         diagnostics: record.diagnostics as any,
