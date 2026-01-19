@@ -68,7 +68,6 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           accuracy,
           totalQuestions: records.length,
           questionsAttempted: records.length,
-          avgTimeMs: avgTime,
           trend,
         });
       }
