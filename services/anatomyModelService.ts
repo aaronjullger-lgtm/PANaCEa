@@ -245,7 +245,7 @@ class AnatomyModelService {
       format: dbModel.format as 'glb' | 'gltf' | 'obj',
       thumbnailUrl: dbModel.thumbnailUrl,
       citation: {
-        source: dbModel.sourceName || 'NIH 3D Print Exchange',
+        source: (dbModel.sourceName || 'NIH 3D Print Exchange') as 'NIH 3D Print Exchange' | 'NLM Visible Human' | 'Custom',
         modelId: dbModel.sourceId,
         title: dbModel.displayName || dbModel.name,
         author: dbModel.author,

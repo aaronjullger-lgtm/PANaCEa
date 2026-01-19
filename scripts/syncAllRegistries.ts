@@ -100,11 +100,11 @@ async function main() {
       return formatSummary('Drugs', stats);
     });
 
-    const { syncAllTests } = await import('./syncSpecialTestTable');
-    await runSync('Special Tests', syncAllTests);
+    // const { syncAllTests } = await import('./syncSpecialTestTable');
+    // await runSync('Special Tests', syncAllTests);
 
-    const { syncAllAnatomy } = await import('./syncAnatomyTable');
-    await runSync('Anatomy', syncAllAnatomy);
+    // const { syncAllAnatomy } = await import('./syncAnatomyTable');
+    // await runSync('Anatomy', syncAllAnatomy);
 
     const { syncAllLabs } = await import('./syncLabTable');
     await runSync('Lab Tests', syncAllLabs);
@@ -118,8 +118,8 @@ async function main() {
     const { syncAllPhysiology } = await import('./syncPhysiologyTable');
     await runSync('Physiology Concepts', syncAllPhysiology);
 
-    const { syncAllTreatments } = await import('./syncTreatmentTable');
-    await runSync('Treatments', syncAllTreatments);
+    // const { syncAllTreatments } = await import('./syncTreatmentTable');
+    // await runSync('Treatments', syncAllTreatments);
 
     // Note: Additional sync scripts need to be created for:
     // - Lab Tests
