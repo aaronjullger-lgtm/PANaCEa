@@ -311,31 +311,119 @@ export function withErrorHandling(options: { includeStack?: boolean } = {}): Mid
 
 /**
  * Rate limiting middleware - enforces request rate limits
- * Note: Requires Cloudflare KV for distributed rate limiting
+ * Uses Cloudflare KV for distributed rate limiting in production
  */
 export function withRateLimit(options: {
   requestsPerMinute: number;
   keyPrefix?: string;
+  endpointType?: 'api' | 'auth' | 'admin';
 }): Middleware<AuthenticatedContext> {
   return async (context, next) => {
+    // Determine identifier (user ID if authenticated, otherwise IP)
     const identifier =
       context.auth?.userId || context.request.headers.get('cf-connecting-ip') || 'unknown';
     const key = `${options.keyPrefix || 'rate_limit'}:${identifier}`;
 
-    // Check rate limit (implementation depends on KV)
-    // For now, this is a placeholder
-    const isRateLimited = false; // TODO: Implement KV-based rate limiting
+    // Determine rate limit based on endpoint type
+    const limitConfig = {
+      api: { requests: options.requestsPerMinute, window: 60 },
+      auth: { requests: 20, window: 60 }, // More restrictive for auth
+      admin: { requests: 30, window: 60 }, // Slightly higher for admin
+    };
+
+    const config = limitConfig[options.endpointType || 'api'];
+
+    // Check rate limit using Cloudflare KV
+    const isRateLimited = await checkRateLimit(context.env, key, config.requests, config.window);
 
     if (isRateLimited) {
-      logger.warn('Rate limit exceeded', { identifier, key });
+      logger.warn('Rate limit exceeded', {
+        identifier,
+        key,
+        endpointType: options.endpointType,
+      });
+
       return {
         status: 429,
-        error: 'Too many requests. Please try again later.',
+        error: getRateLimitErrorMessage(options.endpointType),
       };
     }
 
     return next();
   };
+}
+
+/**
+ * Check rate limit using Cloudflare KV
+ */
+async function checkRateLimit(
+  env: any,
+  key: string,
+  maxRequests: number,
+  windowSeconds: number
+): Promise<boolean> {
+  try {
+    // Cloudflare KV namespace (should be bound in wrangler.toml)
+    const kv = env.RATE_LIMIT_KV;
+
+    if (!kv) {
+      // Fallback: Allow requests if KV not available (development)
+      return false;
+    }
+
+    // Get current count from KV
+    const currentCount = (await kv.get(key, { type: 'json' })) || 0;
+
+    if (currentCount >= maxRequests) {
+      return true; // Rate limit exceeded
+    }
+
+    // Increment count with expiration
+    await kv.put(
+      key,
+      currentCount + 1,
+      { expirationTtl: windowSeconds }
+    );
+
+    return false;
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    // Fail open - allow request if rate limiting fails
+    return false;
+  }
+}
+
+/**
+ * Get appropriate error message based on endpoint type
+ */
+function getRateLimitErrorMessage(endpointType?: string): string {
+  switch (endpointType) {
+    case 'auth':
+      return 'Too many authentication attempts. Please wait before trying again.';
+    case 'admin':
+      return 'Admin endpoint rate limit exceeded. Please try again later.';
+    default:
+      return 'Too many requests. Please try again later.';
+  }
+}
+
+/**
+ * Admin endpoint stack with rate limiting
+ */
+export function adminEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>
+) {
+  return withMiddleware(
+    withCors(),
+    withErrorHandling(),
+    withAuth(),
+    withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
+    // TODO: Add admin role check middleware
+    withValidation(schema),
+    withLogging(),
+    handler
+  );
 }
 
 // ============================================================================
@@ -400,24 +488,6 @@ export function publicEndpoint<T>(schema: z.ZodSchema<T>, handler: Handler<Valid
   return withMiddleware(
     withCors(),
     withErrorHandling(),
-    withValidation(schema),
-    withLogging(),
-    handler
-  );
-}
-
-/**
- * Admin endpoint stack (auth + admin check)
- */
-export function adminEndpoint<T>(
-  schema: z.ZodSchema<T>,
-  handler: Handler<AuthenticatedContext & ValidatedContext<T>>
-) {
-  return withMiddleware(
-    withCors(),
-    withErrorHandling(),
-    withAuth(),
-    // TODO: Add admin role check middleware
     withValidation(schema),
     withLogging(),
     handler

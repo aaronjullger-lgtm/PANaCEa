@@ -436,7 +436,7 @@ router.post(
 
         if (conditionData) {
           const transformedCondition = {
-            condition: conditionData.name,
+            condition: conditionData.condition,
             sections: {
               overview: conditionData.content.overview || '',
               etiology: conditionData.content.etiologyPathophysiology || '',

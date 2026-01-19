@@ -21,7 +21,6 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 // Validation schemas
 const UserPreferencesSchema = z.object({
-  body: z.object({
     // Study preferences
     dailyGoal: z.number().int().min(1).max(1000).optional(),
     preferredSystems: z.array(z.string()).optional(),
@@ -73,7 +72,6 @@ const UserPreferencesSchema = z.object({
 });
 
 const PartialPreferencesSchema = z.object({
-  body: z.object({
     // All fields optional for partial update
     dailyGoal: z.number().int().min(1).max(1000).optional(),
     preferredSystems: z.array(z.string()).optional(),
@@ -105,7 +103,10 @@ const PartialPreferencesSchema = z.object({
     shareAnonymousData: z.boolean().optional(),
     showOnLeaderboard: z.boolean().optional(),
     customSettings: z.record(z.string(), z.unknown()).optional(),
+<<<<<<< HEAD
   }),
+=======
+>>>>>>> origin/main
 });
 
 // Empty schema for GET and DELETE
@@ -116,7 +117,9 @@ export const onRequestOptions = withCors();
 /**
  * GET - Fetch user preferences
  */
-export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) => {
+export const onRequestGet = authenticatedEndpoint<Record<string, never>>(
+  EmptySchema,
+  async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/user/preferences');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -159,7 +162,9 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
 /**
  * POST - Create or fully update user preferences
  */
-export const onRequestPost = authenticatedEndpoint(UserPreferencesSchema, async (context) => {
+export const onRequestPost = authenticatedEndpoint<z.infer<typeof UserPreferencesSchema>>(
+  UserPreferencesSchema,
+  async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/user/preferences');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -167,7 +172,7 @@ export const onRequestPost = authenticatedEndpoint(UserPreferencesSchema, async 
   try {
     logger.addContext({ userId: auth.userId });
 
-    const payload = validated.body;
+    const payload = validated;
 
     // Upsert preferences
     const preferences = await prisma.userPreferences.upsert({
@@ -206,7 +211,9 @@ export const onRequestPost = authenticatedEndpoint(UserPreferencesSchema, async 
 /**
  * PATCH - Partially update user preferences
  */
-export const onRequestPatch = authenticatedEndpoint(PartialPreferencesSchema, async (context) => {
+export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPreferencesSchema>>(
+  PartialPreferencesSchema,
+  async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/user/preferences');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -214,7 +221,7 @@ export const onRequestPatch = authenticatedEndpoint(PartialPreferencesSchema, as
   try {
     logger.addContext({ userId: auth.userId });
 
-    const payload = validated.body;
+    const payload = validated;
 
     // Check if preferences exist
     const existing = await prisma.userPreferences.findUnique({

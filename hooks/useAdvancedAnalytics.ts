@@ -70,7 +70,7 @@ export interface UseAdvancedAnalyticsReturn {
   /** Alias for recordQuestionAttempt (backwards compatibility) */
   recordQuestionResult?: (data: QuestionAnalyticsData) => void;
   /** Current cognitive state */
-  cognitiveState?: 'fresh' | 'flow' | 'fatigued' | 'optimal';
+  cognitiveState?: CognitiveState;
   /** Get intelligent questions based on current state */
   getSmartQuestions: (count: number) => Promise<Question[]>;
   /** Enhance session settings with analytics intelligence */
@@ -417,6 +417,8 @@ export function useAdvancedAnalytics(
   return {
     state,
     recordQuestionAttempt,
+    recordQuestionResult: recordQuestionAttempt, // Alias
+    cognitiveState: state.cognitiveState,
     getSmartQuestions,
     getEnhancedSettings,
     generateStudyPlan,

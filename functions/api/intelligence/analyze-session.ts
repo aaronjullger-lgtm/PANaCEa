@@ -52,8 +52,8 @@ export const onRequestOptions = withCors();
 
 interface SessionAttempt {
   questionId: string;
-  conditionId: string | null;
-  system: string | null;
+  conditionId?: string | null;
+  system?: string | null;
   wasCorrect: boolean;
   responseTimeMs: number;
   answerChanged: boolean;

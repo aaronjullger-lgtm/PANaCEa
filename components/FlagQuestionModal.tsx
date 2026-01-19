@@ -20,7 +20,7 @@ interface FlagQuestionModalProps {
   userFirstName?: string;
 }
 
-type FlagType = 'typo' | 'incorrect_answer' | 'incorrect_fact' | 'unclear' | 'outdated' | 'other';
+type FlagType = 'typo' | 'incorrect_answer' | 'unclear' | 'outdated' | 'other';
 
 export function FlagQuestionModal({
   isOpen,
@@ -93,7 +93,7 @@ export function FlagQuestionModal({
       setTimeout(() => {
         onClose();
         // Reset form
-        setFlagType('incorrect_fact');
+        setFlagType('incorrect_answer');
         setDescription('');
         setSubmitted(false);
       }, 2000);

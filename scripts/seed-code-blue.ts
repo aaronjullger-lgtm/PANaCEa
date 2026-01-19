@@ -176,9 +176,9 @@ async function seedCodeBlueQuestions() {
   console.log('🚨 Starting Code Blue question seeding...\n');
 
   try {
-    // Check if questions already exist
+    // Check if questions already exist (use tags to filter ACLS)
     const existingCount = await prisma.question.count({
-      where: { category: 'ACLS' },
+      where: { source: 'ACLS' },
     });
 
     if (existingCount > 0) {
@@ -194,7 +194,7 @@ async function seedCodeBlueQuestions() {
 
       console.log('🗑️  Deleting existing questions...');
       await prisma.question.deleteMany({
-        where: { category: 'ACLS' },
+        where: { source: 'ACLS' },
       });
       console.log('✅ Deleted.\n');
     }
@@ -213,10 +213,14 @@ async function seedCodeBlueQuestions() {
 
 
           question: q.question,
-          options: q.options,
-          correctIndex: q.correctIndex,
-          category: q.category,
+          vignette: '',
+          options: q.options as any,
+          correctAnswer: String(q.correctIndex),
           explanation: q.explanation,
+          system: 'Emergency',
+          source: 'ACLS',
+          difficulty: 'medium',
+          tags: { category: q.category } as any,
         },
       });
 

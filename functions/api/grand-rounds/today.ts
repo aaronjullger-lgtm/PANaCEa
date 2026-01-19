@@ -32,10 +32,7 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
     if (!user) {
       log.warn('User not found', { clerkId: auth.userId });
-      return new Response(JSON.stringify({ error: 'User not found. Please refresh and try again.' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 404, error: 'User not found. Please refresh and try again.' };
     }
 
     // Get today's date (UTC)
@@ -61,10 +58,7 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
       if (questionPool.length < 5) {
         log.error('Insufficient questions in database', { poolSize: questionPool.length });
-        return new Response(JSON.stringify({ error: 'Insufficient questions in database' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return { status: 500, error: 'Insufficient questions in database' };
       }
 
       // Shuffle using today's date as seed
@@ -129,20 +123,19 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
       log.info('Returning completed challenge stats', { userId: user.id, score: existingAttempt.score });
 
-      return new Response(JSON.stringify({
-        status: 'completed',
-        stats: {
-          score: existingAttempt.score,
-          correctCount: existingAttempt.correctCount,
-          totalQuestions: (challenge.questionIds as string[]).length,
-          timeSpentMs: existingAttempt.timeSpentMs,
-          percentile,
-          ranking,
+      return {
+        data: {
+          status: 'completed',
+          stats: {
+            score: existingAttempt.score,
+            correctCount: existingAttempt.correctCount,
+            totalQuestions: (challenge.questionIds as string[]).length,
+            timeSpentMs: existingAttempt.timeSpentMs,
+            percentile,
+            ranking,
+          },
         },
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      };
     }
 
     // Fetch questions WITHOUT correct answers (SECURITY: Never send correct answers to client)
@@ -170,22 +163,16 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
     log.info('Returning active challenge', { challengeId: challenge.id, questionCount: orderedQuestions.length });
 
-    return new Response(JSON.stringify({
-      status: 'active',
-      challengeId: challenge.id,
-      questions: orderedQuestions,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return {
+      data: {
+        status: 'active',
+        challengeId: challenge.id,
+        questions: orderedQuestions,
+      },
+    };
   } catch (error: any) {
     log.error('Grand Rounds today error', { error: error.message });
-    return new Response(JSON.stringify({
-      error: 'Failed to fetch challenge: ' + (error.message || 'Unknown error'),
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { status: 500, error: 'Failed to fetch challenge' };
   } finally {
     await safePrismaDisconnect(prisma);
   }

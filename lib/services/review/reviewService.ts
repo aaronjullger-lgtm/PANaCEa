@@ -1,6 +1,8 @@
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
-import type { JsonValue } from '@prisma/client';
+
+// JsonValue type for Prisma JSON fields
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 // Interfaces moved from review.ts to be used in the service
 interface DBQuestion {

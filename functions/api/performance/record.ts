@@ -37,9 +37,9 @@ type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = authenticatedEndpoint<PerformanceRecordInput>(
   PerformanceRecordSchema,
-  async (context: AuthenticatedContext & ValidatedContext<PerformanceRecordInput>) => {
+  async (context) => {
     const { env, auth, validated } = context;
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 

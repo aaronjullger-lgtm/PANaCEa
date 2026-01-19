@@ -23,7 +23,8 @@ const portWineStain = CONDITION_REGISTRY.find((c) => c.condition.includes('Port-
 if (portWineStain) {
   console.log(`✅ Port-Wine Stain test:`);
   console.log(`   Name: ${portWineStain.condition}`);
-  console.log(`   Aliases: ${portWineStain.aliases?.join(', ') || 'none'}`);
+  const pwsAliases = Array.isArray(portWineStain.aliases) ? portWineStain.aliases : portWineStain.aliases ? [portWineStain.aliases] : [];
+  console.log(`   Aliases: ${pwsAliases.join(', ') || 'none'}`);
   console.log(`   Clean? ${!portWineStain.condition.includes('(')}`);
 } else {
   console.log('❌ Port-Wine Stain not found');
@@ -37,7 +38,8 @@ const akiConditions = CONDITION_REGISTRY.filter(
 );
 console.log(`\n✅ AKI test: Found ${akiConditions.length} AKI-related conditions`);
 akiConditions.forEach((c) => {
-  console.log(`   - ${c.condition} (aliases: ${c.aliases?.join(', ') || 'none'})`);
+  const aliases = Array.isArray(c.aliases) ? c.aliases : c.aliases ? [c.aliases] : [];
+  console.log(`   - ${c.condition} (aliases: ${aliases.join(', ') || 'none'})`);
 });
 
 // Test 3: mRNA should have proper capitalization
@@ -46,7 +48,8 @@ if (mrna) {
   console.log(`\n✅ mRNA test:`);
   console.log(`   Name: ${mrna.name}`);
   console.log(`   Display: ${mrna.displayName || mrna.name}`);
-  console.log(`   Aliases: ${mrna.aliases?.join(', ') || 'none'}`);
+  const mrnaAliases = Array.isArray(mrna.aliases) ? mrna.aliases : mrna.aliases ? [mrna.aliases] : [];
+  console.log(`   Aliases: ${mrnaAliases.join(', ') || 'none'}`);
 } else {
   console.log('\n❌ mRNA not found in physiology concepts');
 }
@@ -57,8 +60,9 @@ const pkdConditions = CONDITION_REGISTRY.filter((c) =>
 );
 console.log(`\n✅ PKD test: Found ${pkdConditions.length} PKD-related conditions`);
 pkdConditions.forEach((c) => {
+  const aliases = Array.isArray(c.aliases) ? c.aliases : c.aliases ? [c.aliases] : [];
   console.log(`   - ${c.condition}`);
-  console.log(`     Aliases: ${c.aliases?.join(', ') || 'none'}`);
+  console.log(`     Aliases: ${aliases.join(', ') || 'none'}`);
   console.log(`     Overview: ${c.overview || 'none'}`);
 });
 

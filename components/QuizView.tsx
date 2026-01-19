@@ -558,13 +558,14 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
 
     // Sprint 4: Update performance prediction
+    const confidenceResult = inferConfidence(behaviorSignals);
     updatePerformancePrediction({
       correct: isCorrect,
       timeSpentMs: timeToAnswer,
       parTimeMs: parTime,
       system: currentQuestion.system,
       questionNumber,
-      inferredConfidence: inferConfidence(behaviorSignals),
+      inferredConfidence: typeof confidenceResult === 'number' ? confidenceResult : confidenceResult.score,
     });
 
     // Sprint 4: Record for smart pause detection
@@ -575,15 +576,15 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
 
     // Advanced analytics: Record comprehensive question result
-    recordQuestionResult(
-      currentQuestion.id || `temp-${questionNumber}`,
-      isCorrect,
-      timeToAnswer,
-      parTime,
-      currentQuestion.system || 'Unknown',
-      currentQuestion.difficulty || 'medium',
-      inferConfidence(behaviorSignals)
-    );
+    recordQuestionResult?.({
+      questionId: currentQuestion.id || `temp-${questionNumber}`,
+      responseTimeMs: timeToAnswer,
+      wasCorrect: isCorrect,
+      difficulty: (currentQuestion.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+      answerChanges: behaviorSignals.answerChangeCount,
+      eliminationsUsed: behaviorSignals.eliminatedCount,
+      system: currentQuestion.system || 'Unknown',
+    });
 
     setBehavioralRefreshKey((k) => k + 1);
 
@@ -602,7 +603,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Sprint 4: Record question for PANCE distribution tracking
     if (currentQuestion.system) {
-      recordQuestion(currentQuestion.system, isCorrect);
+      recordQuestion(currentQuestion.system, undefined);
     }
 
     if (sessionSettings.focus === 'review') {
@@ -1351,7 +1352,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       <SessionStatsOverlay
         isOpen={showStatsOverlay}
         onToggle={() => setShowStatsOverlay((prev) => !prev)}
-        performanceData={performanceData}
+        performanceData={performanceData.map((p) => ({
+          topic: p.system || 'Unknown',
+          correct: p.isCorrect,
+        }))}
         currentQuestionNumber={questionNumber}
       />
 

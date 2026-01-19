@@ -40,16 +40,10 @@ export const onRequestGet = authenticatedEndpoint(CompletedSchema, async ({ env,
 
     log.info('Checked Grand Rounds completion', { userId, completed: !!history });
 
-    return new Response(JSON.stringify({ completed: !!history }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { data: { completed: !!history } };
   } catch (error: any) {
     log.error('Error checking Grand Rounds completion', { error: error.message });
-    return new Response(JSON.stringify({ error: 'Failed to check completion status' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { status: 500, error: 'Failed to check completion status' };
   } finally {
     await safePrismaDisconnect(prisma);
   }

@@ -105,10 +105,16 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
       // For Accelerate URLs, use accelerateUrl
       // For direct PostgreSQL URLs, use datasourceUrl (development only)
       ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
+      log: ['warn', 'error'], // Add logging for debugging
     });
 
     // Apply Accelerate extension for edge runtime HTTP-based queries
     const extendedClient = client.$extends(withAccelerate());
+
+    // Add connection monitoring
+    extendedClient.$on('beforeExit', async () => {
+      await extendedClient.$disconnect();
+    });
 
     return extendedClient;
   } catch (error) {

@@ -94,9 +94,9 @@ export const chartTheme = {
  * Helper to create a linear gradient definition for Recharts
  * Usage: <defs>{createGradient('myGradient', chartTheme.gradients.primary)}</defs>
  *
- * Returns JSX.Element that should be placed inside a <defs> tag in your chart
+ * Returns React.ReactElement that should be placed inside a <defs> tag in your chart
  */
-export const createGradient = (id: string, colors: string[]): JSX.Element => {
+export const createGradient = (id: string, colors: string[]): React.ReactElement => {
   return (
     <linearGradient id={id} x1="0" y1="0" x2="0" y2="1" key={id}>
       <stop offset="0%" stopColor={colors[0]} stopOpacity={0.8} />

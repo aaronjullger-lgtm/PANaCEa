@@ -39,7 +39,7 @@ async function verifyAdaptiveQueuing() {
 
   // 3. Trigger Queue
   console.log('🚀 Triggering queueVariantForReview...');
-  const service = new VariantQueueService();
+  const service = new VariantQueueService(prisma);
   const variantId = await service.queueVariantForReview(user.id, question.id, 'spaced_repetition');
 
   if (variantId) {

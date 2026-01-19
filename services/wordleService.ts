@@ -17,6 +17,25 @@ type NormalizedWordleDate = {
   dateOnly: Date;
 };
 
+// Type with included Buzzword relation
+type DailyWordleWithWord = {
+  id: string;
+  date: Date;
+  wordId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  Buzzword: {
+    id: string;
+    buzzword: string;
+    condition: string;
+    explanation: string;
+    system: string;
+    subcategory: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+};
+
 const normalizeWordleDate = (date?: string | Date): NormalizedWordleDate => {
   const base = date ? new Date(date) : new Date();
   if (isNaN(base.getTime())) {
@@ -31,20 +50,6 @@ const normalizeWordleDate = (date?: string | Date): NormalizedWordleDate => {
 const getSeedFromDate = (isoDate: string): number => {
   const digits = isoDate.replace(/-/g, '');
   return Number(digits) || Date.now();
-};
-
-type DailyWordleWithWord = {
-  id: string;
-  date: Date;
-  wordId: string;
-  word: {
-    id: string;
-    buzzword: string;
-    condition: string;
-    system: string;
-    subcategory: string | null;
-    explanation: string | null;
-  };
 };
 
 type UserWordleStateRecord = {
@@ -97,7 +102,7 @@ const getOrCreateDailyWord = async (
     include: { Buzzword: true },
   });
 
-  return created;
+  return created as DailyWordleWithWord;
 };
 
 const getOrCreateUserState = async (
@@ -155,12 +160,12 @@ const buildPayload = (
     id: daily.id,
     date: normalizedDate,
     word: {
-      id: daily.word.id,
-      buzzword: daily.word.buzzword,
-      condition: daily.word.condition,
-      system: daily.word.system,
-      subcategory: daily.word.subcategory,
-      explanation: daily.word.explanation,
+      id: daily.Buzzword.id,
+      buzzword: daily.Buzzword.buzzword,
+      condition: daily.Buzzword.condition,
+      system: daily.Buzzword.system,
+      subcategory: daily.Buzzword.subcategory,
+      explanation: daily.Buzzword.explanation,
     },
     userState: {
       guesses: state.guesses,
@@ -205,7 +210,7 @@ export async function submitWordleGuess(
 ): Promise<WordleDailyPayload> {
   const normalized = normalizeWordleDate(date);
   const daily = await getOrCreateDailyWord(normalized);
-  const target = daily.word.buzzword.toUpperCase();
+  const target = daily.Buzzword.buzzword.toUpperCase();
 
   const state = await getOrCreateUserState(userId, normalized);
 

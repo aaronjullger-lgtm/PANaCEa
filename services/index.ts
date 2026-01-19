@@ -40,11 +40,9 @@ import * as domain from './domain';
 
 export { core, analytics, ai, domain };
 
-// Also re-export individual services from categories for convenience
-export * from './core';
-export * from './analytics';
-export * from './ai';
-export * from './domain';
+// Re-export commonly used items explicitly to avoid conflicts
+// For full access, use the namespaced exports: services.analytics.predictScore()
+export { predictScore, NCCPA_BLUEPRINT_WEIGHTS } from './analytics';
 
 /**
  * SERVICE CONSOLIDATION SUMMARY

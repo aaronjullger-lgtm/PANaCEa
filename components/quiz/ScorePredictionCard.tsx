@@ -67,19 +67,18 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           system,
           accuracy,
           totalQuestions: records.length,
+          questionsAttempted: records.length,
           avgTimeMs: avgTime,
           trend,
         });
       }
     });
 
-    return predictPANCEScore(
-      overallAccuracy,
-      performanceData.length,
-      systemPerformance,
+    return predictPANCEScore(systemPerformance, {
+      totalQuestions: performanceData.length,
       avgTimePerQuestionMs,
-      { maxStreak, avgStreak }
-    );
+      streakData: { maxStreak, avgStreak },
+    });
   }, [performanceData, avgTimePerQuestionMs, maxStreak, avgStreak]);
 
   if (!prediction) {

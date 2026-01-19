@@ -41,24 +41,15 @@ export const onRequestGet = authenticatedEndpoint(RankSchema, async ({ env, vali
 
     if (!userHistory) {
       log.info('No rank found for user', { userId, date: today.toISOString() });
-      return new Response(JSON.stringify({ rank: null }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { data: { rank: null } };
     }
 
     log.info('Fetched Grand Rounds rank', { userId, rank: userHistory.rank });
 
-    return new Response(JSON.stringify({ rank: userHistory.rank }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { data: { rank: userHistory.rank } };
   } catch (error: any) {
     log.error('Error fetching Grand Rounds rank', { error: error.message });
-    return new Response(JSON.stringify({ error: 'Failed to fetch rank' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { status: 500, error: 'Failed to fetch rank' };
   } finally {
     await safePrismaDisconnect(prisma);
   }
