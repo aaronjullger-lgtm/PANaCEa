@@ -32,10 +32,15 @@ class LabService {
    * Get all lab tests from database
    * @throws Error if database is unavailable
    */
-  async getAllTests(): Promise<LabTest[]> {
+  async getAllTests(token?: string): Promise<LabTest[]> {
     if (isTestEnv) return [];
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_TESTS));
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_TESTS), { headers });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -47,12 +52,21 @@ class LabService {
 
   /**
    * Get all lab cases from database
-   * @throws Error if database is unavailable
+   * @throws Error if database is unavailable or auth required
    */
-  async getAllCases(): Promise<LabCase[]> {
+  async getAllCases(token?: string): Promise<LabCase[]> {
     if (isTestEnv) return [];
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES));
+    // Prevent unauthorized requests
+    if (!token) {
+      throw new Error('Authentication required to fetch lab cases');
+    }
+
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -64,12 +78,21 @@ class LabService {
 
   /**
    * Get random lab cases from database
-   * @throws Error if database is unavailable
+   * @throws Error if database is unavailable or auth required
    */
-  async getRandomCases(count: number = 1): Promise<LabCase[]> {
+  async getRandomCases(count: number = 1, token?: string): Promise<LabCase[]> {
     if (isTestEnv) return [];
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES_RANDOM(count)));
+    // Prevent unauthorized requests
+    if (!token) {
+      throw new Error('Authentication required to fetch lab cases');
+    }
+
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES_RANDOM(count)), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

@@ -59,6 +59,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       environment: finalConfig.environment,
       // Use our tunnel to bypass ad-blockers and CORS restrictions
       // The tunnel proxies Sentry envelopes through our own API
+      // Wrapped in transport to suppress errors if tunnel fails
       tunnel: '/api/sentry-tunnel',
       integrations: [
         Sentry.browserTracingIntegration(),
@@ -71,6 +72,18 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
       replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
       sendDefaultPii: true, // Required for agent monitoring
+
+      // Custom transport to suppress tunnel errors
+      transport: (options) => {
+        const defaultTransport = Sentry.makeFetchTransport(options);
+        return (envelope) => {
+          return defaultTransport(envelope).catch((error) => {
+            // Suppress sentry-tunnel errors to avoid console spam
+            console.debug('[Sentry] Tunnel error suppressed:', error);
+            return Promise.resolve();
+          });
+        };
+      },
 
       // Filter sensitive data
       beforeSend: (event) => {

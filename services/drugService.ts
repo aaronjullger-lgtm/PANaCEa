@@ -15,7 +15,12 @@ export const drugService = {
    * @throws Error if database is unavailable
    */
   getAll: async (limit?: number): Promise<Drug[]> => {
-    const query = limit ? `?limit=${limit}` : '';
+    // Ensure valid query params are always sent (fixes 400 validation error)
+    const params = new URLSearchParams();
+    if (limit) {
+      params.set('limit', limit.toString());
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
     const response = await fetch(`/api/drugs${query}`);
 
     if (!response.ok) {
