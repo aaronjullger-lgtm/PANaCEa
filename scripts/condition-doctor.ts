@@ -892,7 +892,7 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
             status: 'published',
             createdBy: 'condition-doctor',
             updatedBy: 'condition-doctor',
-          },
+          } as any,
         });
         console.log(`      ✅ Created in MedicalContent`);
       } catch (e: any) {
@@ -911,7 +911,7 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
             displayName: condition.condition,
             aliases: condition.aliases,
             status: 'published',
-          },
+          } as any,
         });
         console.log(`      ✅ Created in Condition table`);
       } catch (e: any) {
@@ -1621,7 +1621,7 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
               subcategory: mc.subcategory || 'General',
               aliases: [],
               relatedSystems: [],
-            },
+            } as any,
           });
           console.log(`      ✓ Created Condition: ${mc.condition} (${mc.system})`);
           created++;

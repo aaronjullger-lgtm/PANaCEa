@@ -742,7 +742,7 @@ Return ONLY valid JSON, no markdown code blocks.`;
             updatedBy: 'system_ai_enrichment',
             createdAt: new Date(),
             ...contentData,
-          },
+          } as any,
         });
       } catch (createErr: any) {
         // More detailed error message

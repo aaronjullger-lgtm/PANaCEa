@@ -533,8 +533,6 @@ Valid system codes: ${SYSTEM_CODES.join(', ')}`;
           // Create the condition record
           await prisma.condition.create({
             data: {
-
-
               id: conditionId,
               name: gap.name,
               system,
