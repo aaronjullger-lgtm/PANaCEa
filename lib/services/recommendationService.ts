@@ -127,13 +127,13 @@ export const recommendationService = {
       include: { MedicalContent: { select: { system: true } } };
     }>;
 
-    const userSystems: UserProgressWithContent[] = await prisma.userProgress.findMany({
+    const userSystems = await prisma.userProgress.findMany({
       where: { userId },
       include: {
         MedicalContent: { select: { system: true } },
       },
       distinct: ['conditionId'],
-    });
+    }) as UserProgressWithContent[];
 
     const studiedSystemNames = new Set(
       userSystems
