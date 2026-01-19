@@ -103,7 +103,7 @@ async function main() {
   const processedIds = new Set<string>();
 
   for (const meta of CONDITION_REGISTRY) {
-    const definition = buildConditionDefinition(meta);
+    const definition = buildConditionDefinition(meta.id);
     const conditionId = definition.id;
 
     if (processedIds.has(conditionId)) {
@@ -114,19 +114,23 @@ async function main() {
 
     // Create Condition
     try {
+      const aliases = meta.aliases 
+        ? Array.isArray(meta.aliases) ? meta.aliases : [meta.aliases]
+        : [];
+      
       await prisma.condition.upsert({
         where: { id: conditionId },
         update: {
           name: meta.condition,
           system: meta.system,
-          aliases: meta.aliases || [],
+          aliases,
         },
         create: {
           id: conditionId,
           name: meta.condition,
           system: meta.system,
-          aliases: meta.aliases || [],
-        },
+          aliases,
+        } as any,
       });
       createdConditions++;
     } catch (e) {
@@ -154,14 +158,14 @@ async function main() {
             etiology: flattenToText(normalizedContent.etiology),
             pathophysiology: flattenToText(normalizedContent.pathophysiology),
             epidemiology: flattenToText(normalizedContent.epidemiology),
-            symptoms: flattenToStringArray(normalizedContent.symptoms),
-            physicalExam: flattenToStringArray(normalizedContent.physical_exam),
+            symptoms: flattenToStringArray(normalizedContent.symptoms).join('\n'),
+            physicalExam: flattenToStringArray(normalizedContent.physical_exam).join('\n'),
             diagnostics: normalizedContent.diagnostics || null,
             treatment: normalizedContent.treatment || null,
             prognosis: flattenToText(normalizedContent.prognosis),
-            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis),
-            riskFactors: flattenToStringArray(normalizedContent.risk_factors),
-            complications: flattenToStringArray(normalizedContent.complications),
+            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis).join('\n'),
+            riskFactors: flattenToStringArray(normalizedContent.risk_factors).join('\n'),
+            complications: flattenToStringArray(normalizedContent.complications).join('\n'),
             buzzwords: flattenToStringArray(normalizedContent.buzzwords),
 
             status: 'published',
@@ -179,21 +183,21 @@ async function main() {
             etiology: flattenToText(normalizedContent.etiology),
             pathophysiology: flattenToText(normalizedContent.pathophysiology),
             epidemiology: flattenToText(normalizedContent.epidemiology),
-            symptoms: flattenToStringArray(normalizedContent.symptoms),
-            physicalExam: flattenToStringArray(normalizedContent.physical_exam),
+            symptoms: flattenToStringArray(normalizedContent.symptoms).join('\n'),
+            physicalExam: flattenToStringArray(normalizedContent.physical_exam).join('\n'),
             diagnostics: normalizedContent.diagnostics || null,
             treatment: normalizedContent.treatment || null,
             prognosis: flattenToText(normalizedContent.prognosis),
-            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis),
-            riskFactors: flattenToStringArray(normalizedContent.risk_factors),
-            complications: flattenToStringArray(normalizedContent.complications),
+            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis).join('\n'),
+            riskFactors: flattenToStringArray(normalizedContent.risk_factors).join('\n'),
+            complications: flattenToStringArray(normalizedContent.complications).join('\n'),
             buzzwords: flattenToStringArray(normalizedContent.buzzwords),
 
             status: 'published', // Default to published for this revamp
             version: 1,
             createdBy: 'system_revamp',
             updatedBy: 'system_revamp',
-          },
+          } as any,
         });
         createdContent++;
       } catch (e) {
