@@ -90,7 +90,7 @@ async function migrateMediaManifest() {
             isClinical: true,
             folder: 'clinical_verified',
             uploadedBy: 'system_migration',
-          },
+          } as any,
         });
       }
 

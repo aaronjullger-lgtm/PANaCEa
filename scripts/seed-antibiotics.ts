@@ -298,7 +298,7 @@ async function seedAntibioticGuidelines() {
           resistant: guideline.resistantDrugs || [],
           notes: guideline.notes,
           description: guideline.description,
-        },
+        } as any,
       });
 
       insertedCount++;

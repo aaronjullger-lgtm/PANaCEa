@@ -171,7 +171,7 @@ async function seedVentilatorQuestions() {
       data: { 
         id: uuidv4(),
         ...q,
-      } 
+      } as any,
     });
     count++;
   }
@@ -265,7 +265,7 @@ async function seedPhysiologyQuestions() {
       data: { 
         id: uuidv4(),
         ...q,
-      } 
+      } as any,
     });
     count++;
   }
@@ -373,7 +373,7 @@ async function seedAnatomyQuestions() {
       data: { 
         id: uuidv4(),
         ...q,
-      } 
+      } as any,
     });
     count++;
   }

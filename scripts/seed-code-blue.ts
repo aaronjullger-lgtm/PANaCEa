@@ -221,7 +221,7 @@ async function seedCodeBlueQuestions() {
           source: 'ACLS',
           difficulty: 'medium',
           tags: { category: q.category } as any,
-        },
+        } as any,
       });
 
       insertedCount++;

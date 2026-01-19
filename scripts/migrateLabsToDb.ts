@@ -24,7 +24,7 @@ async function migrateLabTests() {
           category: test.category,
           commonAbnormalities: test.commonAbnormalities || [],
           typicalUse: test.typicalUse,
-        },
+        } as any,
       });
       count++;
     } catch (error) {
@@ -73,7 +73,7 @@ async function migrateLabCases() {
             correctDiagnosis: caseItem.correctDiagnosis,
             clinicalVignette: caseItem.clinicalVignette,
             labs: caseItem.labs,
-          },
+          } as any,
         });
       }
       count++;

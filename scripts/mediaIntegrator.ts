@@ -348,7 +348,7 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
               folder: link.confidence > 0.9 ? 'clinical_verified' : 'inbox',
               mediaType: 'image', // Default to image
               approvalStatus: 'pending',
-            },
+            } as any,
           });
           console.log(`    ✓ Created: ${link.filename}`);
         }

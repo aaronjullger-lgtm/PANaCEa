@@ -118,7 +118,7 @@ async function main() {
         aliases: raw !== name ? [raw] : [],
         relatedSystems: [],
         status: 'draft',
-      },
+      } as any,
     });
 
     summary.created++;
