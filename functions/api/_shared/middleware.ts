@@ -98,7 +98,7 @@ export function withMiddleware<TContext extends CloudflareContext>(
       const currentMiddleware = middleware[index];
       index++;
 
-      return currentMiddleware(ctx, () => dispatch(ctx));
+      return currentMiddleware(ctx, (newCtx?: any) => dispatch(newCtx ?? ctx));
     };
 
     try {
