@@ -80,8 +80,8 @@ router.get('/search', async (req, res) => {
       where: {
         OR: [
           { genericName: { contains: query, mode: 'insensitive' } },
-          { brandNames: { has: query } },
-          { class: { contains: query, mode: 'insensitive' } },
+          { brandName: { contains: query, mode: 'insensitive' } },
+          { drugClass: { hasSome: [query] } },
         ],
       },
       take: 50,

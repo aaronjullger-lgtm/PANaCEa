@@ -74,14 +74,18 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       sendDefaultPii: true, // Required for agent monitoring
 
       // Custom transport to suppress tunnel errors
-      transport: (options) => {
+      transport: (options: Parameters<typeof Sentry.makeFetchTransport>[0]) => {
         const defaultTransport = Sentry.makeFetchTransport(options);
-        return (envelope) => {
-          return defaultTransport(envelope).catch((error) => {
-            // Suppress sentry-tunnel errors to avoid console spam
-            console.debug('[Sentry] Tunnel error suppressed:', error);
-            return Promise.resolve();
-          });
+        return {
+          send: (envelope: Parameters<ReturnType<typeof Sentry.makeFetchTransport>['send']>[0]) => {
+            // Wrap PromiseLike in Promise.resolve() to get .catch() support
+            return Promise.resolve(defaultTransport.send(envelope)).catch((error: unknown) => {
+              // Suppress sentry-tunnel errors to avoid console spam
+              console.debug('[Sentry] Tunnel error suppressed:', error);
+              return Promise.resolve({});
+            });
+          },
+          flush: (timeout?: number) => defaultTransport.flush(timeout),
         };
       },
 

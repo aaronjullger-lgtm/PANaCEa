@@ -46,7 +46,8 @@ export interface PeerComparison {
  */
 export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
-  const groupedData = await prisma.questionAttempt.groupBy({
+  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
+  const groupedData: Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
     by: ['system', 'wasCorrect'],
     where: {
       userId,
@@ -55,7 +56,7 @@ export async function getUserAccuracyProfile(userId: string): Promise<UserAccura
     _count: {
       id: true,
     },
-  }) as Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }>;
+  });
 
   // Organize data by system
   const systemMap = new Map<string, { correct: number; total: number }>();
@@ -114,7 +115,8 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
   }
 
   // Group by userId and system to get individual user stats
-  const userSystemData = await prisma.questionAttempt.groupBy({
+  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
+  const userSystemData: Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
@@ -123,7 +125,7 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
     _count: {
       id: true,
     },
-  }) as Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }>;
+  });
 
   // Calculate per-user, per-system accuracy
   interface UserSystemStat {
@@ -255,7 +257,8 @@ export async function generatePeerComparison(
   }
 
   // Get cohort distribution data for percentile calculation
-  const cohortData = await prisma.questionAttempt.groupBy({
+  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
+  const cohortData: Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
@@ -264,7 +267,7 @@ export async function generatePeerComparison(
     _count: {
       id: true,
     },
-  }) as Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }>;
+  });
 
   // Build cohort accuracy distribution by system
   const cohortSystemMap = new Map<string, Map<string, { correct: number; total: number }>>();

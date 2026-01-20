@@ -22,8 +22,17 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
+/**
+ * Extended PrismaClient type that works with both development (PG Adapter)
+ * and production (Accelerate) configurations.
+ * 
+ * We use PrismaClient as the base type since both configurations expose
+ * the same API - the only difference is internal implementation.
+ */
+type ExtendedPrismaClient = PrismaClient;
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | ReturnType<typeof createPrismaClient> | undefined;
+  prisma: ExtendedPrismaClient | undefined;
 };
 
 function createPrismaClient() {
@@ -80,7 +89,7 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
   return basePrisma.$extends(withAccelerate());
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma = (globalForPrisma.prisma ?? createPrismaClient()) as ExtendedPrismaClient;
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;

@@ -29,7 +29,7 @@ config();
 import { sanitizeBody } from './lib/middleware/validation';
 import { prisma } from './lib/prisma';
 import helmet from 'helmet';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import { createRequestLogger } from './lib/logging/structuredLogger';
 import { validateEnvironment } from './lib/config/environment';
 import { performHealthCheck, getHealthStatusCode } from './lib/services/healthCheck';
@@ -113,9 +113,9 @@ const API_LIMITER = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' },
-  keyGenerator: (req) => {
-    // Use user ID if authenticated, otherwise use ipKeyGenerator for proper IP handling
-    return req.user?.id || ipKeyGenerator(req);
+  keyGenerator: (req: Request & { user?: { id: string } }) => {
+    // Use user ID if authenticated, otherwise fall back to IP address
+    return req.user?.id || req.ip || 'unknown';
   },
   skip: (req) => {
     // Skip rate limiting for health checks and options
