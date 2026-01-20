@@ -155,7 +155,8 @@ export const onRequestGet = authenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query' }
 );
 
 /**
