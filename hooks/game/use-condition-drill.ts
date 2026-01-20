@@ -10,6 +10,8 @@ import {
   type MetacognitionPrompt,
 } from '@/lib/metacognition';
 import { getBrowserTimezone } from '@/lib/circadian';
+import { useSession } from '@/contexts/SessionContext';
+import type { SubmitReviewResponse } from '@/services/calibrationService';
 
 export type ConditionDrillStatus =
   | 'landing'
@@ -122,6 +124,17 @@ function createInitialImplicitMetrics(): ImplicitMetrics {
 
 export function useConditionDrill(): UseConditionDrillReturn {
   const { getToken, isSignedIn } = useAuth();
+  
+  // Get calibration tracking from session context
+  // Safe to call even if SessionProvider is not present (will throw if used)
+  let recordCalibrationObservation: ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void) | null = null;
+  try {
+    const session = useSession();
+    recordCalibrationObservation = session.recordCalibrationObservation;
+  } catch {
+    // SessionProvider not available - calibration tracking disabled
+    // This is fine for standalone drill usage
+  }
 
   const [selectedCategory, setSelectedCategory] = useState<ConditionCategory>('random');
   const [queue, setQueue] = useState<ConditionQuestion[]>([]);
@@ -412,6 +425,15 @@ export function useConditionDrill(): UseConditionDrillReturn {
             result.implicitMetrics.rating,
             'confidence:',
             result.implicitMetrics.confidence
+          );
+        }
+
+        // Record JOL calibration observation for metacognitive tracking
+        if (recordCalibrationObservation && result.implicitMetrics) {
+          recordCalibrationObservation(
+            currentQuestion.id,
+            result as SubmitReviewResponse,
+            currentQuestion.system
           );
         }
       } catch (err) {

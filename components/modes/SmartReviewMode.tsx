@@ -15,6 +15,8 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
+import { useSession } from '@/contexts/SessionContext';
+import type { SubmitReviewResponse } from '@/services/calibrationService';
 
 interface ReviewItem {
   id: string;
@@ -42,6 +44,16 @@ type ViewState = 'loading' | 'active' | 'complete';
 
 const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
+  
+  // Safely get calibration tracking from SessionContext (may not be available if used standalone)
+  let recordCalibrationObservation: ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void) | null = null;
+  try {
+    const session = useSession();
+    recordCalibrationObservation = session.recordCalibrationObservation;
+  } catch {
+    // SessionProvider not available - calibration tracking disabled for standalone usage
+  }
+  
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -97,7 +109,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
     // Submit to backend for FSRS update
     try {
       const token = await getToken();
-      await fetch('/api/drills/submit-review', {
+      const response = await fetch('/api/drills/submit-review', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,6 +122,17 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           timeSpentMs,
         }),
       });
+      
+      const result = await response.json();
+      
+      // Record JOL calibration observation for metacognitive tracking
+      if (recordCalibrationObservation && result.implicitMetrics) {
+        recordCalibrationObservation(
+          currentItem.questionId,
+          result as SubmitReviewResponse,
+          currentItem.question.system
+        );
+      }
     } catch (error) {
       console.warn('Failed to submit review:', error);
     }

@@ -1,10 +1,12 @@
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "library" // Force Node.js binary engine (not WASM/edge)
+  provider = "prisma-client-js"
+  // Note: engineType removed for Edge/Accelerate compatibility
 }
 
 datasource db {
   provider = "postgresql"
+  // Note: Connection URLs are configured in prisma.config.ts for Prisma 7+
+  // Runtime connections use PrismaClient constructor with accelerateUrl or adapter
 }
 
 model ACLSAlgorithm {
@@ -642,6 +644,7 @@ model Drug {
   @@index([genericName])
   @@index([isFirstLine])
   @@index([panceYield])
+  @@index([drugClass])
 }
 
 model DrugConditionLink {
@@ -1309,6 +1312,7 @@ model MedicalContent {
   @@index([parent_category])
   @@index([system, parent_category])
   @@index([system, subcategory, parent_category])
+  @@index([status, conditionId])
 }
 
 model UserProgress {

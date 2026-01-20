@@ -40,14 +40,14 @@ body,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - high contrast blue with white text */
+  /* Primary button - Action Blue (#2563EB) with AAA contrast white text */
   .btn-primary {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-blue-600 text-white shadow-sm
-           hover:bg-blue-700 hover:shadow-md
+           bg-action-blue-600 text-white shadow-sm
+           hover:bg-action-blue-700 hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400;
+           dark:bg-action-blue-600 dark:text-white dark:hover:bg-action-blue-500;
   }
 
   /* Secondary button - high contrast with borders */
@@ -167,6 +167,15 @@ body,
   /* Premium noise texture for glass cards (2.5% opacity grain overlay) */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
+  /* ===== ACTION BLUE DESIGN SYSTEM ===== */
+  /* Primary action color for buttons, CTAs, and interactive elements */
+  --color-action: #2563EB;           /* action-blue-600 - PRIMARY */
+  --color-action-hover: #1D4ED8;     /* action-blue-700 - hover state */
+  --color-action-light: #EFF6FF;     /* action-blue-50 - subtle backgrounds */
+  --color-action-text: #FFFFFF;      /* Pure white for AAA contrast */
+  --color-label-primary: #0F172A;    /* Deep navy for light mode labels */
+  --color-label-secondary: #475569;  /* Slate-600 for secondary text */
+
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE (DEFAULT) ===== */
 
   /* Main backgrounds */
@@ -257,6 +266,15 @@ body,
 }
 
 .dark {
+  /* ===== ACTION BLUE DESIGN SYSTEM - DARK MODE ===== */
+  /* Action Blue stays consistent for brand recognition */
+  --color-action: #2563EB;           /* action-blue-600 - stays same */
+  --color-action-hover: #3B82F6;     /* action-blue-500 - lighter for dark bg hover */
+  --color-action-light: #1E3A8A;     /* action-blue-900 - dark backgrounds */
+  --color-action-text: #FFFFFF;      /* Pure white for AAA contrast */
+  --color-label-primary: #FFFFFF;    /* White for dark mode labels */
+  --color-label-secondary: #94A3B8;  /* Slate-400 for muted text */
+
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
   /* Main backgrounds */

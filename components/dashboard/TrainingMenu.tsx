@@ -689,7 +689,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 <button
                   type="button"
                   onClick={handleCoreStart}
-                  className="w-full md:w-auto px-8 py-3.5 bg-slate-100 text-slate-900 font-semibold rounded-xl hover:bg-white hover:shadow-xl transition-all shadow-lg border border-slate-300"
+                  className="w-full md:w-auto px-8 py-3.5 bg-action-blue-600 text-white font-semibold rounded-xl hover:bg-action-blue-700 hover:shadow-xl transition-all shadow-lg"
                 >
                   Start Session
                 </button>

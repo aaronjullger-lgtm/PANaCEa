@@ -8,10 +8,13 @@
  * - Decay prevented
  * - System triage changes
  * - Trajectory improvement
+ * - JOL Calibration insights (metacognitive feedback)
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
+import { CalibrationPanel } from './CalibrationPanel';
+import type { CalibrationSummary } from '../../services/calibrationService';
 import type { SessionImpact } from '../../lib/driftCalculator';
 
 // =============================================================================
@@ -61,6 +64,10 @@ interface SessionPostMortemProps {
   onContinue: () => void;
   onViewDashboard: () => void;
   className?: string;
+  // JOL Calibration props
+  calibrationSummary?: CalibrationSummary | null;
+  isCalibrationReliable?: boolean;
+  calibrationProgress?: { current: number; required: number; percentage: number };
 }
 
 // =============================================================================
@@ -324,6 +331,9 @@ export function SessionPostMortem({
   onContinue,
   onViewDashboard,
   className,
+  calibrationSummary,
+  isCalibrationReliable,
+  calibrationProgress,
 }: SessionPostMortemProps) {
   const headline = getHeadline(data);
 
@@ -402,6 +412,14 @@ export function SessionPostMortem({
           before={data.previousProjectedDay7}
           after={data.newProjectedDay7}
           bufferDays={data.projectionImprovement}
+        />
+
+        {/* Metacognitive Calibration */}
+        <CalibrationPanel
+          summary={calibrationSummary ?? null}
+          isReliable={isCalibrationReliable ?? false}
+          progress={calibrationProgress}
+          compact
         />
 
         {/* Streak */}

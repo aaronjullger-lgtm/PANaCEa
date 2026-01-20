@@ -160,7 +160,7 @@ export const MiniModeCard: React.FC<MiniModeCardProps> = ({ children, className 
   const cardBorder = 'border-[var(--color-border)]';
 
   return (
-    <div className={`${cardBg} backdrop-blur rounded-xl p-6 border ${cardBorder} ${className}`}>
+    <div className={`${cardBg} backdrop-blur rounded-xl p-4 border ${cardBorder} ${className}`}>
       {children}
     </div>
   );

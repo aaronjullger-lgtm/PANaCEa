@@ -19,6 +19,7 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
+  Layers,
 } from 'lucide-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import ConditionDrillSession from './ConditionDrillSession';
@@ -243,7 +244,8 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">
+                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-action-blue-600" />
                       {subcategory.name}
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)]">

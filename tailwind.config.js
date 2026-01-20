@@ -13,6 +13,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ============================================
+        // ACTION BLUE - Primary Action Color System
+        // ============================================
+        'action-blue': {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',  // PRIMARY ACTION COLOR
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
+          950: '#172554',
+        },
+
         // Medical "Clinical" Palette
         'clinical-navy': '#0F172A', // Deep Royal Navy for dark mode backgrounds
         'clinical-white': '#F8FAFC', // Sanitarium White for light mode

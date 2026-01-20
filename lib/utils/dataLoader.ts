@@ -95,9 +95,10 @@ export async function loadConditionContent(): Promise<any> {
  * Lazily load lab cases data when needed.
  * Uses database API endpoint with graceful fallback.
  *
+ * @param getToken - Optional function to get auth token (from Clerk's useAuth hook)
  * @returns Promise resolving to the lab cases data
  */
-export async function loadLabCases(): Promise<any> {
+export async function loadLabCases(getToken?: () => Promise<string | null>): Promise<any> {
   const cacheKey = 'labCases';
 
   // Return from cache if already loaded
@@ -107,7 +108,20 @@ export async function loadLabCases(): Promise<any> {
 
   try {
     const apiUrl = getApiEndpoint(API_ENDPOINTS.LABS_CASES);
-    const response = await fetch(apiUrl);
+    
+    // Build headers with auth token if available
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (getToken) {
+      const token = await getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await fetch(apiUrl, { headers });
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {

@@ -2,7 +2,8 @@
  * GET /api/drugs/library
  *
  * Fetch filtered drug library content for Pharmacopeia browser
- * Supports filtering by drug class and search
+ * Supports filtering by drug class and search with keyset pagination
+ * Optimized for Prisma Accelerate with cacheStrategy
  */
 
 import { z } from 'zod';
@@ -16,6 +17,8 @@ const DrugLibrarySchema = z.object({
     search: z.string().optional(),
     highYield: z.string().optional(),
     firstLine: z.string().optional(),
+    limit: z.string().optional(),
+    cursor: z.string().optional(), // Keyset pagination cursor
   }),
 });
 
@@ -27,7 +30,8 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { drugClass, search, highYield, firstLine } = validated.query || {};
+    const { drugClass, search, highYield, firstLine, limit: limitStr, cursor } = validated.query || {};
+    const limit = limitStr ? Math.min(Number(limitStr), 100) : 50;
 
     // REQUIRE drug class selection unless searching
     if ((!drugClass || drugClass === 'all') && !search) {
@@ -47,6 +51,7 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
       ];
     }
 
+    // Keyset pagination with Accelerate cacheStrategy
     const drugs = await prisma.drug.findMany({
       where,
       select: {
@@ -68,10 +73,48 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
         aliases: true, tags: true, createdAt: true, updatedAt: true,
       },
       orderBy: [{ isFirstLine: 'desc' }, { panceYield: 'desc' }, { genericName: 'asc' }],
+      take: limit + 1, // Fetch one extra to determine hasMore
+      ...(cursor && {
+        cursor: { id: cursor },
+        skip: 1, // Skip the cursor item itself
+      }),
+      cacheStrategy: { ttl: 60 }, // Cache for 60 seconds via Accelerate
     });
 
-    logger.info('Drug library fetched', { count: drugs.length, drugClass, search });
-    return { data: { drugs, count: drugs.length }, headers: { 'Cache-Control': 'public, max-age=3600' } };
+    // Determine pagination state
+    const hasMore = drugs.length > limit;
+    const resultDrugs = hasMore ? drugs.slice(0, limit) : drugs;
+    const nextCursor = hasMore ? resultDrugs[resultDrugs.length - 1]?.id : null;
+
+    // Get total count with longer cache
+    const total = await prisma.drug.count({
+      where,
+      cacheStrategy: { ttl: 300 }, // Cache count for 5 minutes
+    });
+
+    logger.info('Drug library fetched', { 
+      count: resultDrugs.length, 
+      total,
+      drugClass, 
+      search,
+      cursor: cursor?.substring(0, 10),
+    });
+
+    return { 
+      data: { 
+        drugs: resultDrugs, 
+        count: resultDrugs.length,
+        pagination: {
+          total,
+          limit,
+          cursor: nextCursor,
+          hasMore,
+        },
+      }, 
+      headers: { 
+        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300',
+      },
+    };
   } catch (error) {
     logger.error('Failed to fetch drugs', { error: error instanceof Error ? error.message : String(error) });
     throw new Error('Failed to fetch drugs');

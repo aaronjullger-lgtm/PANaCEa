@@ -1,8 +1,9 @@
 /**
  * Drug Library API  
- * GET /api/drugs?limit=50&offset=0&search=beta
+ * GET /api/drugs?limit=50&cursor=abc123&search=beta
  * 
- * Public endpoint for browsing drug library with pagination
+ * Public endpoint for browsing drug library with keyset pagination
+ * Optimized for Prisma Accelerate with cacheStrategy
  */
 
 import { z } from 'zod';
@@ -10,10 +11,10 @@ import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
-// Flattened schema for query params (no nested 'query' wrapper)
+// Schema with keyset pagination (cursor instead of offset)
 const DrugLibrarySchema = z.object({
   limit: z.string().optional().transform(val => val ? Math.min(Number(val), 100) : 50),
-  offset: z.string().optional().transform(val => val ? Number(val) : 0),
+  cursor: z.string().optional(), // Last drug ID for keyset pagination
   search: z.string().max(200).optional(),
 });
 
@@ -25,8 +26,7 @@ export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) =>
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Direct access to validated fields (no longer nested under .query)
-    const { limit, offset, search } = validated;
+    const { limit, cursor, search } = validated;
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -41,49 +41,60 @@ export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) =>
         }
       : {};
 
-    // Fetch paginated results with limited fields to reduce response size
-    const [drugs, total] = await Promise.all([
-      prisma.drug.findMany({
-        where,
-        select: {
-          id: true,
-          genericName: true,
-          brandName: true,
-          drugClass: true,
-          mechanismOfAction: true,
-          indications: true,
-          sideEffects: true,
-          contraindications: true,
-          isHighYield: true,
-          // Exclude large text fields from list view
-        },
-        orderBy: { genericName: 'asc' },
-        take: limit,
-        skip: offset,
+    // Keyset pagination query with Accelerate cacheStrategy
+    const drugs = await prisma.drug.findMany({
+      where,
+      select: {
+        id: true,
+        genericName: true,
+        brandName: true,
+        drugClass: true,
+        mechanismOfAction: true,
+        indications: true,
+        sideEffects: true,
+        contraindications: true,
+        isHighYield: true,
+      },
+      orderBy: { genericName: 'asc' },
+      take: limit + 1, // Fetch one extra to determine hasMore
+      ...(cursor && {
+        cursor: { id: cursor },
+        skip: 1, // Skip the cursor item itself
       }),
-      prisma.drug.count({ where }),
-    ]);
+      cacheStrategy: { ttl: 60 }, // Cache for 60 seconds via Accelerate
+    });
+
+    // Determine if there are more results
+    const hasMore = drugs.length > limit;
+    const resultDrugs = hasMore ? drugs.slice(0, limit) : drugs;
+    const nextCursor = hasMore ? resultDrugs[resultDrugs.length - 1]?.id : null;
+
+    // Get total count with caching (separate query for count)
+    const total = await prisma.drug.count({
+      where,
+      cacheStrategy: { ttl: 300 }, // Cache count for 5 minutes
+    });
 
     logger.info('Drug library fetched', {
       search: search?.substring(0, 50),
       limit,
-      offset,
+      cursor: cursor?.substring(0, 10),
       total,
-      returned: drugs.length,
+      returned: resultDrugs.length,
     });
 
     return {
       data: {
-        drugs,
+        drugs: resultDrugs,
         pagination: {
           total,
           limit,
-          offset,
-          hasMore: offset + drugs.length < total,
+          cursor: nextCursor,
+          hasMore,
         },
       },
       headers: {
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300',
       },
     };
   } catch (error) {
@@ -91,7 +102,7 @@ export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) =>
       error: error instanceof Error ? error.message : String(error),
       search: validated.search?.substring(0, 50),
       limit: validated.limit,
-      offset: validated.offset,
+      cursor: validated.cursor?.substring(0, 10),
     });
     throw new Error('Failed to fetch drugs');
   } finally {

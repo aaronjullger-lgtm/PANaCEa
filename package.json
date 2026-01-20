@@ -20,7 +20,7 @@
     "migrate:related-systems": "tsx ./scripts/migrateRelatedSystems.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:generate": "prisma generate --accelerate",
+    "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

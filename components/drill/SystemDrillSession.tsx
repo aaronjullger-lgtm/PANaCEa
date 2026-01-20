@@ -463,7 +463,10 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                     <Icon className="w-7 h-7 text-slate-300 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2">{system.name}</h3>
+                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-action-blue-600" />
+                      {system.name}
+                    </h3>
                     <p className="text-sm text-slate-300 leading-relaxed">{system.description}</p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all" />
