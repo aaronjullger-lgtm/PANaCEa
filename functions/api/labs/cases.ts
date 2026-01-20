@@ -15,16 +15,12 @@ import {
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 // ============================================================================
-// VALIDATION SCHEMA
+// VALIDATION SCHEMA (flattened for query params)
 // ============================================================================
 
 const LabCasesQuerySchema = z.object({
-  query: z
-    .object({
-      difficulty: z.string().max(50).optional(),
-      category: z.string().max(100).optional(),
-    })
-    .optional(),
+  difficulty: z.string().max(50).optional(),
+  category: z.string().max(100).optional(),
 });
 
 // ============================================================================
@@ -42,9 +38,8 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      const url = new URL(request.url);
-      const difficulty = url.searchParams.get('difficulty');
-      const category = url.searchParams.get('category');
+      // Direct access to validated fields (no longer nested under .query)
+      const { difficulty, category } = validated;
 
       log.info('Fetching lab cases', {
         difficulty: difficulty || 'all',
@@ -77,5 +72,6 @@ export const onRequestGet = authenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query' }
 );

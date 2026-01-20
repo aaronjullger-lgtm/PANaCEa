@@ -513,13 +513,14 @@ export function withLogging(options: { logBody?: boolean } = {}): Middleware {
  */
 export function authenticatedEndpoint<T>(
   schema: z.ZodSchema<T>,
-  handler: Handler<AuthenticatedContext & ValidatedContext<T>>
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params' }
 ) {
   return withMiddleware(
     withCors(),
     withErrorHandling(),
     withAuth(),
-    withValidation(schema),
+    withValidation(schema, options),
     withLogging(),
     handler
   );
@@ -528,11 +529,15 @@ export function authenticatedEndpoint<T>(
 /**
  * Public endpoint stack (no auth required)
  */
-export function publicEndpoint<T>(schema: z.ZodSchema<T>, handler: Handler<ValidatedContext<T>>) {
+export function publicEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params' }
+) {
   return withMiddleware(
     withCors(),
     withErrorHandling(),
-    withValidation(schema),
+    withValidation(schema, options),
     withLogging(),
     handler
   );

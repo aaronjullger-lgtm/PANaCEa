@@ -10,6 +10,7 @@ import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+// Empty schema but still needs source: 'query' for GET requests
 const AllContentSchema = z.object({});
 
 export const onRequestOptions = withCors();
@@ -54,4 +55,4 @@ export const onRequestGet = publicEndpoint(AllContentSchema, async (context) => 
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

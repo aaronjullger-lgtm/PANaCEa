@@ -1,7 +1,6 @@
 import {
   authenticatedEndpoint,
   withCors,
-  withValidation,
 } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -12,11 +11,9 @@ interface Env {
   CLERK_SECRET_KEY: string;
 }
 
-// Define Zod schema for query parameter validation
+// Flattened schema for query params (no nested 'query' wrapper)
 const RecommendationListSchema = z.object({
-  query: z.object({
-    status: z.enum(['pending', 'completed', 'dismissed']).optional(),
-  }).optional(),
+  status: z.enum(['pending', 'completed', 'dismissed']).optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -39,7 +36,8 @@ export const onRequestGet = authenticatedEndpoint(RecommendationListSchema, asyn
       };
     }
 
-    const status = validated.query?.status || 'pending';
+    // Direct access to validated fields (no longer nested under .query)
+    const status = validated.status || 'pending';
 
     const recommendations = await prisma.studyRecommendation.findMany({
       where: {
@@ -65,4 +63,4 @@ export const onRequestGet = authenticatedEndpoint(RecommendationListSchema, asyn
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

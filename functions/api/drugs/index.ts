@@ -10,12 +10,11 @@ import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+// Flattened schema for query params (no nested 'query' wrapper)
 const DrugLibrarySchema = z.object({
-  query: z.object({
-    limit: z.string().optional().transform(val => val ? Math.min(Number(val), 100) : 50),
-    offset: z.string().optional().transform(val => val ? Number(val) : 0),
-    search: z.string().max(200).optional(),
-  }),
+  limit: z.string().optional().transform(val => val ? Math.min(Number(val), 100) : 50),
+  offset: z.string().optional().transform(val => val ? Number(val) : 0),
+  search: z.string().max(200).optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -26,7 +25,8 @@ export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) =>
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const { limit, offset, search } = validated.query;
+    // Direct access to validated fields (no longer nested under .query)
+    const { limit, offset, search } = validated;
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -89,12 +89,12 @@ export const onRequestGet = publicEndpoint(DrugLibrarySchema, async (context) =>
   } catch (error) {
     logger.error('Drug library error', {
       error: error instanceof Error ? error.message : String(error),
-      search: validated.query.search?.substring(0, 50),
-      limit: validated.query.limit,
-      offset: validated.query.offset,
+      search: validated.search?.substring(0, 50),
+      limit: validated.limit,
+      offset: validated.offset,
     });
     throw new Error('Failed to fetch drugs');
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });
