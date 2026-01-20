@@ -111,10 +111,8 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
     // Apply Accelerate extension for edge runtime HTTP-based queries
     const extendedClient = client.$extends(withAccelerate());
 
-    // Add connection monitoring
-    extendedClient.$on('beforeExit', async () => {
-      await extendedClient.$disconnect();
-    });
+    // Note: $on() is not available on extended clients, so we skip beforeExit hook
+    // Connection cleanup is handled by safePrismaDisconnect() in finally blocks
 
     return extendedClient;
   } catch (error) {
