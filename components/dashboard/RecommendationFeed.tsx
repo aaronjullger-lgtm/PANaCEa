@@ -1,8 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../../hooks/useAuth';
+
+// Cache configuration: Only fetch fresh data if user returns after 6+ hours
+const CACHE_KEY = 'panceai_recommendations';
+const TIMESTAMP_KEY = 'panceai_recommendations_ts';
+const SIX_HOURS_MS = 1000 * 60 * 60 * 6;
+
+// Simple relative time formatter (no date-fns dependency)
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'just now';
+  if (diffMin < 60) return `${diffMin} minute${diffMin !== 1 ? 's' : ''} ago`;
+  if (diffHour < 24) return `${diffHour} hour${diffHour !== 1 ? 's' : ''} ago`;
+  return `${diffDay} day${diffDay !== 1 ? 's' : ''} ago`;
+}
 
 interface StudyRecommendation {
   id: string;
@@ -22,13 +42,36 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
   onNavigateToDrill,
   className,
 }) => {
-  const { getToken } = useAuth();
+  const { getToken, isLoading, isSignedIn, user } = useAuth();
   const [recommendations, setRecommendations] = useState<StudyRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (forceRefresh = false) => {
     try {
+      // Check localStorage cache first (unless forcing refresh)
+      if (!forceRefresh) {
+        const cached = localStorage.getItem(CACHE_KEY);
+        const cachedTs = localStorage.getItem(TIMESTAMP_KEY);
+        const cachedTimestamp = cachedTs ? parseInt(cachedTs, 10) : null;
+        const isFresh = cachedTimestamp && Date.now() - cachedTimestamp < SIX_HOURS_MS;
+
+        if (cached && isFresh) {
+          try {
+            const cachedData = JSON.parse(cached);
+            if (Array.isArray(cachedData)) {
+              setRecommendations(cachedData);
+              setLastUpdated(cachedTimestamp);
+              setLoading(false);
+              return; // Skip API call - cache is fresh
+            }
+          } catch {
+            // Invalid cache, continue to fetch
+          }
+        }
+      }
+
       const token = await getToken();
       if (!token) {
         setLoading(false);
@@ -58,7 +101,12 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
       // Backend returns array of recommendations directly
       if (Array.isArray(data)) {
+        const now = Date.now();
         setRecommendations(data);
+        setLastUpdated(now);
+        // Store to cache for future visits
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(TIMESTAMP_KEY, now.toString());
       } else {
         throw new Error('Invalid response format from server');
       }
@@ -109,7 +157,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         toast.success(
           `Found ${newRecs.length} new recommendation${newRecs.length > 1 ? 's' : ''}!`
         );
-        await fetchRecommendations(); // Refresh list
+        await fetchRecommendations(true); // Refresh list - bypass cache
       } else {
         // Only show "all caught up" if generation succeeded but found nothing
         toast.info("You're all caught up! No new recommendations.");
@@ -124,10 +172,13 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
   };
 
   useEffect(() => {
-    fetchRecommendations();
+    // Guard: Only fetch when Clerk has loaded AND user is authenticated
+    if (!isLoading && isSignedIn && user) {
+      fetchRecommendations();
+    }
     // Note: Auto-generation removed to reduce API load.
     // User can manually trigger via Refresh button.
-  }, [getToken]);
+  }, [isLoading, isSignedIn, user?.id]);
 
   const handleAction = async (id: string, action: 'complete' | 'dismiss') => {
     // Optimistic update
@@ -195,16 +246,23 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
           <Sparkles className="w-5 h-5 text-amber-500" />
           Smart Recommendations
         </h3>
-        <button
-          onClick={generateRecommendations}
-          disabled={generating}
-          className="p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors"
-          title="Refresh Analysis"
-        >
-          <RefreshCw
-            className={`w-4 h-4 text-[var(--color-text-muted)] ${generating ? 'animate-spin' : ''}`}
-          />
-        </button>
+        <div className="flex items-center gap-2">
+          {lastUpdated && (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              Updated {formatRelativeTime(lastUpdated)}
+            </span>
+          )}
+          <button
+            onClick={generateRecommendations}
+            disabled={generating}
+            className="p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors"
+            title="Refresh Analysis"
+          >
+            <RefreshCw
+              className={`w-4 h-4 text-[var(--color-text-muted)] ${generating ? 'animate-spin' : ''}`}
+            />
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

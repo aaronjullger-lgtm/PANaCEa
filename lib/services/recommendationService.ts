@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Prisma } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { prisma } from '../prisma';
 
 export interface RecommendationContext {
@@ -15,19 +16,31 @@ export const recommendationService = {
    * Orchestrates various checks (fading memory, weak areas, etc.) and persists them.
    */
   async generateRecommendations(userId: string) {
+    // Ensure user exists in database (create if not exists)
+    const dbUser = await prisma.user.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        email: '', // Will be updated by Clerk webhook later
+        role: UserRole.USER,
+        updatedAt: new Date(),
+      },
+      update: {}, // No-op if user already exists
+    });
+
     const recommendations = [];
 
     // 1. Check for FSRS due cards (Fading Memory)
-    const fadingMemory = await this.checkFadingMemories(userId);
+    const fadingMemory = await this.checkFadingMemories(dbUser.id);
     if (fadingMemory) recommendations.push(fadingMemory);
 
     // 2. Identify weak areas (accuracy < 70%)
-    const weakAreas = await this.identifyWeakAreas(userId);
+    const weakAreas = await this.identifyWeakAreas(dbUser.id);
     recommendations.push(...weakAreas);
 
     // 3. Suggest new topics if user has bandwidth
     if (recommendations.length < 3) {
-      const newTopics = await this.suggestNewTopics(userId);
+      const newTopics = await this.suggestNewTopics(dbUser.id);
       recommendations.push(...newTopics);
     }
 
@@ -36,7 +49,7 @@ export const recommendationService = {
       // Check if a similar pending recommendation exists to avoid noise
       const existing = await prisma.studyRecommendation.findFirst({
         where: {
-          userId,
+          userId: dbUser.id,
           type: rec.type,
           topic: rec.topic,
           status: 'pending',
@@ -47,7 +60,7 @@ export const recommendationService = {
         await prisma.studyRecommendation.create({
           data: {
             id: uuidv4(),
-            userId,
+            userId: dbUser.id,
             type: rec.type,
             topic: rec.topic,
             reason: rec.reason,
@@ -59,7 +72,7 @@ export const recommendationService = {
       }
     }
 
-    return this.getPendingRecommendations(userId);
+    return this.getPendingRecommendations(dbUser.id);
   },
 
   /**

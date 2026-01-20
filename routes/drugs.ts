@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 
     const drugs = await prisma.drug.findMany({
       take: limit,
-      orderBy: { name: 'asc' },
+      orderBy: { genericName: 'asc' },
     });
 
     res.json(drugs);
@@ -79,13 +79,13 @@ router.get('/search', async (req, res) => {
     const drugs = await prisma.drug.findMany({
       where: {
         OR: [
-          { name: { contains: query, mode: 'insensitive' } },
           { genericName: { contains: query, mode: 'insensitive' } },
+          { brandNames: { has: query } },
           { class: { contains: query, mode: 'insensitive' } },
         ],
       },
       take: 50,
-      orderBy: { name: 'asc' },
+      orderBy: { genericName: 'asc' },
     });
 
     res.json(drugs);

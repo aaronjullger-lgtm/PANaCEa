@@ -25,13 +25,17 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       });
     }
 
-    const user = await prisma.user.findUnique({
+    // Ensure user exists (create if needed) - handles case where Clerk webhook hasn't fired yet
+    const user = await prisma.user.upsert({
       where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        email: '', // Will be updated by Clerk webhook
+        role: 'USER',
+        updatedAt: new Date(),
+      },
+      update: {}, // No-op if user exists
     });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User profile not found' });
-    }
 
     const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
       prisma.performanceRecord.findMany({ where: { userId: user.id } }),

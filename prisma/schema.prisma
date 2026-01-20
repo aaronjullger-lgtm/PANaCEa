@@ -2168,7 +2168,7 @@ model TreatmentConditionLink {
 }
 
 model User {
-  id                      String                    @id
+  id                      String                    @id @default(uuid())
   clerkId                 String                    @unique
   email                   String                    @unique
   firstName               String?

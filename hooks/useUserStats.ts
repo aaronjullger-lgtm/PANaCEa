@@ -147,10 +147,12 @@ export function useUserStats(): UseUserStatsResult {
         }),
       });
 
+      // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
-        throw new Error(
-          'Authentication failed: Your session may have expired. Please sign in again.'
-        );
+        console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
+        setSyncError('Authentication failed. Please sign in again.');
+        setIsSyncing(false);
+        return; // Exit early, do not throw or retry
       }
 
       if (!response.ok) {
@@ -212,6 +214,14 @@ export function useUserStats(): UseUserStatsResult {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      // Handle 401 Unauthorized - abort sync immediately without retry
+      if (response.status === 401) {
+        console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
+        setSyncError('Authentication failed. Please sign in again.');
+        setIsSyncing(false);
+        return; // Exit early, do not throw or retry
+      }
 
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status}`);

@@ -82,9 +82,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
   }
 
-  // Enable debug mode in development or when explicitly enabled
+  // Enable debug mode only when explicitly enabled (not auto-enabled in dev to reduce console noise)
   // @ts-ignore - import.meta.env is available in Vite but may not be typed
-  const debugEnabled = isDevelopment || import.meta.env?.VITE_CLERK_DEBUG === 'true';
+  const debugEnabled = import.meta.env?.VITE_CLERK_DEBUG === 'true';
 
   if (debugEnabled) {
     console.log('[Clerk] Debug mode enabled');

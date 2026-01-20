@@ -32,8 +32,20 @@ export function OfflineSyncIndicator() {
   // Update status periodically
   useEffect(() => {
     const updateStatus = () => {
-      setStatus(getSyncStatus());
-      setIsOnline(checkOnline());
+      const newStatus = getSyncStatus();
+      const newIsOnline = checkOnline();
+      
+      // Only update state if values actually changed to prevent infinite loops
+      setStatus(prev => {
+        if (prev.pendingCount !== newStatus.pendingCount ||
+            prev.lastSyncTime !== newStatus.lastSyncTime ||
+            prev.isOffline !== newStatus.isOffline) {
+          return newStatus;
+        }
+        return prev;
+      });
+      
+      setIsOnline(prev => prev !== newIsOnline ? newIsOnline : prev);
     };
 
     updateStatus();

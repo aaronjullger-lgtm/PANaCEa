@@ -21,6 +21,11 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
+
+// ⚠️ CRITICAL: Load environment variables FIRST before any imports that use process.env
+// This must happen before importing prisma, routes, or any other modules that read env vars
+config();
+
 import { sanitizeBody } from './lib/middleware/validation';
 import { prisma } from './lib/prisma';
 import helmet from 'helmet';
@@ -31,9 +36,6 @@ import { performHealthCheck, getHealthStatusCode } from './lib/services/healthCh
 
 // Import modular route system
 import { registerRoutes } from './routes';
-
-// Load environment variables
-config();
 
 // Validate environment configuration before proceeding
 validateEnvironment();
