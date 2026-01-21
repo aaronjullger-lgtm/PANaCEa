@@ -82,7 +82,7 @@ function generateDateRange(weeks: number): Date[] {
  * Format date to YYYY-MM-DD
  */
 function formatDateKey(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 /**
@@ -109,14 +109,18 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
     'Dec',
   ];
 
+  // Guard: Ensure dateGrid has at least one row
+  const firstRow = dateGrid[0];
+  if (!firstRow) return labels;
+
   // Traverse columns (weeks) to build month labels
-  for (let colIdx = 0; colIdx < dateGrid[0].length; colIdx++) {
+  for (let colIdx = 0; colIdx < firstRow.length; colIdx++) {
     // Get the most common month in this column (week)
     const monthCounts = new Map<number, number>();
     let hasValidDate = false;
 
     for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
-      const date = dateGrid[rowIdx][colIdx];
+      const date = dateGrid[rowIdx]?.[colIdx];
       if (date) {
         hasValidDate = true;
         // Use UTC month to ensure consistency
@@ -138,7 +142,8 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
 
       if (dominantMonth !== currentMonth) {
         if (currentMonth !== -1 && colCount > 0) {
-          labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
+          const monthName = MONTHS[currentMonth] ?? '';
+          labels.push({ month: monthName, colSpan: colCount });
         }
         currentMonth = dominantMonth;
         colCount = 1;
@@ -150,7 +155,8 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
 
   // Push final month
   if (currentMonth !== -1 && colCount > 0) {
-    labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
+    const monthName = MONTHS[currentMonth] ?? '';
+    labels.push({ month: monthName, colSpan: colCount });
   }
 
   return labels;
@@ -181,7 +187,8 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
         });
       }
 
-      const stats = statsMap.get(dateKey)!;
+      const stats = statsMap.get(dateKey);
+      if (!stats) return; // Guard: skip this iteration (return in forEach = continue)
       stats.questionsAnswered++;
 
       if (record.isCorrect) {
@@ -226,11 +233,11 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
       .fill(null)
       .map(() => []);
 
-    for (const date of dates) {
-      // Use UTC day of week to ensure consistency
-      const dayOfWeek = date.getUTCDay();
-      grid[dayOfWeek].push(date);
-    }
+  for (const date of dates) {
+    // Use UTC day of week to ensure consistency
+    const dayOfWeek = date.getUTCDay();
+    grid[dayOfWeek]?.push(date);
+  }
 
     // Pad each row to the same length
     const maxLen = Math.max(...grid.map((row) => row.length));
@@ -424,7 +431,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
                 </div>
 
                 {/* Date cells */}
-                {dateGrid[0].map((_, colIdx) => (
+                {(dateGrid[0] ?? []).map((_, colIdx) => (
                   <div key={colIdx} className="flex flex-col gap-0.5 sm:gap-1">
                     {dateGrid.map((row, rowIdx) => {
                       const date = row[colIdx];
@@ -443,7 +450,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
                           }}
                           whileHover={{ scale: 1.2, zIndex: 10 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={(e) => handleDayClick(date, e)}
+                          onClick={(e) => handleDayClick(date ?? null, e)}
                           disabled={!date}
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                             date

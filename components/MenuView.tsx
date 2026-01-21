@@ -273,7 +273,7 @@ const MenuView: React.FC<MenuViewProps> = ({
     const heatmapData: ProgressDayRecord[] = [];
     const dailyMap = new Map<string, { attempts: number; correct: number; system: string }>();
     for (const record of performanceData) {
-      const date = new Date(record.timestamp).toISOString().split('T')[0];
+      const date = new Date(record.timestamp).toISOString().split('T')[0] ?? '';
       const existing = dailyMap.get(date) || { attempts: 0, correct: 0, system: '' };
       dailyMap.set(date, {
         attempts: existing.attempts + 1,
@@ -385,7 +385,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
   const dueQuestionsCount = useMemo(() => {
     if (!missedQuestions) return 0;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     return missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today).length;
   }, [missedQuestions]);
 
@@ -632,12 +632,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                 <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
                   {getTimeBasedGreeting()}.
                 </h2>
-                {stats.systemComparisonData.length > 0 ? (
+                {stats.systemComparisonData.length > 0 && stats.systemComparisonData[0] ? (
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Your recommended focus is{' '}
                     <span className="font-semibold text-[var(--color-accent)]">
-                      {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] ||
-                        stats.systemComparisonData[0]?.system}
+                      {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0].system] ||
+                        stats.systemComparisonData[0].system}
                     </span>
                     .
                   </p>
@@ -848,13 +848,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                 <StreakTracker
                   currentStreak={stats.widgetData.currentStreak}
                   bestStreak={stats.widgetData.bestStreak}
-                  lastStudyDate={
-                    performanceData.length > 0
-                      ? new Date(performanceData[performanceData.length - 1].timestamp)
-                          .toISOString()
-                          .split('T')[0]
-                      : undefined
-                  }
+                  lastStudyDate={(() => {
+                    const lastRecord = performanceData[performanceData.length - 1];
+                    return lastRecord
+                      ? new Date(lastRecord.timestamp).toISOString().split('T')[0] ?? ''
+                      : undefined;
+                  })()}
                 />
               </motion.section>
 

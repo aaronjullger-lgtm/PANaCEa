@@ -92,7 +92,7 @@ function getColorLevel(value: number, metric: HeatmapMetric): number {
 }
 
 function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 function generateDateRange(weeks: number): Date[] {
@@ -168,13 +168,19 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     let currentMonth = -1;
     let monthStartCol = 0;
 
+    // Guard: ensure grid has rows
+    const firstRow = dateGrid[0];
+    if (!firstRow) return labels;
+
     // Iterate through columns to find month boundaries
-    const numCols = dateGrid[0].length;
+    const numCols = firstRow.length;
     for (let colIdx = 0; colIdx < numCols; colIdx++) {
       // Check the first non-null date in this column to determine the month
       let colMonth = -1;
       for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
-        const date = dateGrid[rowIdx][colIdx];
+        const row = dateGrid[rowIdx];
+        if (!row) continue;
+        const date = row[colIdx];
         if (date) {
           // Use UTC month to ensure consistency
           colMonth = date.getUTCMonth();
@@ -185,9 +191,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       if (colMonth !== -1) {
         if (colMonth !== currentMonth) {
           // Month changed, save previous month label
-          if (currentMonth !== -1) {
+          if (currentMonth !== -1 && currentMonth < MONTHS.length) {
             labels.push({
-              month: MONTHS[currentMonth],
+              month: MONTHS[currentMonth] ?? '',
               startCol: monthStartCol,
               endCol: colIdx - 1,
             });
@@ -199,9 +205,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     }
 
     // Add final month label
-    if (currentMonth !== -1) {
+    if (currentMonth !== -1 && currentMonth < MONTHS.length) {
       labels.push({
-        month: MONTHS[currentMonth],
+        month: MONTHS[currentMonth] ?? '',
         startCol: monthStartCol,
         endCol: numCols - 1,
       });
@@ -263,7 +269,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       {/* Month labels - positioned above their corresponding columns */}
       <div className="flex mb-1 ml-8 relative w-[calc(100%-2rem)]">
         {monthLabels.map((label, idx) => {
-          const totalCols = dateGrid[0].length;
+          const firstRow = dateGrid[0];
+          const totalCols = firstRow ? firstRow.length : 0;
           const width = ((label.endCol - label.startCol + 1) / totalCols) * 100;
           const left = (label.startCol / totalCols) * 100;
 
@@ -300,14 +307,14 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
 
         {/* Cells - Full width with justify-between */}
         <div className="flex flex-1 justify-between">
-          {dateGrid[0].map((_, colIdx) => (
+          {(dateGrid[0] ?? []).map((_, colIdx) => (
             <div key={colIdx} className="flex flex-col gap-0.5">
               {dateGrid.map((row, rowIdx) => {
-                const date = row[colIdx];
+                const date = row[colIdx] ?? null;
                 const value = getValue(date);
                 const level = getColorLevel(value, metric);
                 const colorClass = COLOR_SCALES[metric][level];
-                const tooltip = getTooltip(date);
+                const tooltip = getTooltip(date ?? null);
                 const isFuture = date && date > new Date();
 
                 return (
@@ -374,7 +381,7 @@ export function generateMockHeatmapData(days: number = 90): ProgressDayRecord[] 
         attempts,
         correct,
         accuracy: (correct / attempts) * 100,
-        system: systems[Math.floor(Math.random() * systems.length)],
+        system: systems[Math.floor(Math.random() * systems.length)] ?? 'CV',
       });
     }
   }

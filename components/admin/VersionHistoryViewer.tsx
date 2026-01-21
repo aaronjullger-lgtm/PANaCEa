@@ -54,7 +54,8 @@ export function VersionHistoryViewer({
       } else {
         // Only allow 2 versions to be selected for comparison
         if (prev.length >= 2) {
-          return [prev[1], version];
+          const secondVersion = prev[1];
+          return secondVersion !== undefined ? [secondVersion, version] : [version];
         }
         return [...prev, version].sort((a, b) => a - b);
       }
@@ -62,8 +63,10 @@ export function VersionHistoryViewer({
   };
 
   const handleCompare = () => {
-    if (selectedVersions.length === 2 && onCompare) {
-      onCompare(selectedVersions[0], selectedVersions[1]);
+    const firstVersion = selectedVersions[0];
+    const secondVersion = selectedVersions[1];
+    if (selectedVersions.length === 2 && onCompare && firstVersion !== undefined && secondVersion !== undefined) {
+      onCompare(firstVersion, secondVersion);
     }
   };
 

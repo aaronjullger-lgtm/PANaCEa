@@ -87,6 +87,8 @@ export function Sparkline({
       const p2 = points[i + 1];
       const p3 = points[i + 2] || p2;
 
+      if (!p1 || !p2 || !p0 || !p3) continue;
+
       const cp1x = p1.x + (p2.x - p0.x) / 6;
       const cp1y = p1.y + (p2.y - p0.y) / 6;
       const cp2x = p2.x - (p3.x - p1.x) / 6;

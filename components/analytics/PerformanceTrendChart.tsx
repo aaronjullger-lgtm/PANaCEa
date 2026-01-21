@@ -38,11 +38,12 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const isoDate = date.toISOString().split('T');
+      const dateStr = isoDate[0] ?? date.toDateString();
 
       const existing = dailyData.find((d) => d.date === dateStr);
       filled.push(
-        existing || {
+        existing ?? {
           date: dateStr,
           attempts: 0,
           correct: 0,
@@ -195,12 +196,19 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
 
         {/* X-axis labels */}
         <div className="flex justify-between mt-2 text-[10px] text-slate-400">
-          <span>
-            {new Date(chartData[0].date).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
+          {(() => {
+            const firstDay = chartData[0];
+            return firstDay ? (
+              <span>
+                {new Date(firstDay.date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </span>
+            ) : (
+              <span />
+            );
+          })()}
           <span>Today</span>
         </div>
 

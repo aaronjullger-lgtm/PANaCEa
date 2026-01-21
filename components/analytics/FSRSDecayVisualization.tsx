@@ -402,18 +402,22 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       </div>
 
       {/* Predictive Alert */}
-      <PredictiveAlert
-        criticalCount={criticalCards.length}
-        warningCount={warningCards.length}
-        nextCriticalIn={
-          safeCards.length > 0
-            ? formatTimeUntilForgotten(
-                safeCards[0].stability * (Math.pow(0.7, -1) - 1) -
-                  (Date.now() - new Date(safeCards[0].lastReview).getTime()) / (1000 * 60 * 60 * 24)
-              )
-            : undefined
-        }
-      />
+      {(() => {
+        const firstSafeCard = safeCards[0];
+        const nextCriticalIn = firstSafeCard
+          ? formatTimeUntilForgotten(
+              firstSafeCard.stability * (Math.pow(0.7, -1) - 1) -
+                (Date.now() - new Date(firstSafeCard.lastReview).getTime()) / (1000 * 60 * 60 * 24)
+            )
+          : undefined;
+        return (
+          <PredictiveAlert
+            criticalCount={criticalCards.length}
+            warningCount={warningCards.length}
+            nextCriticalIn={nextCriticalIn}
+          />
+        );
+      })()}
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

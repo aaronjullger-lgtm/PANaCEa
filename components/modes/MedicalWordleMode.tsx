@@ -49,7 +49,10 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
       const upper = guess.toUpperCase();
       for (let i = 0; i < upper.length; i++) {
         const letter = upper[i];
-        if (target[i] === letter) {
+        const targetLetter = target[i];
+        if (!letter) continue;
+        
+        if (targetLetter && letter === targetLetter) {
           status[letter] = 'correct';
         } else if (target.includes(letter) && status[letter] !== 'correct') {
           status[letter] = 'present';
@@ -75,8 +78,10 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
       // First pass: mark correct positions
       for (let i = 0; i < guessUpper.length; i++) {
-        if (guessUpper[i] === targetLetters[i]) {
-          result[i] = { letter: guessUpper[i], status: 'correct' };
+        const guessLetter = guessUpper[i];
+        const targetLetter = targetLetters[i];
+        if (guessLetter && targetLetter && guessLetter === targetLetter) {
+          result[i] = { letter: guessLetter, status: 'correct' };
           usedIndices.push(i);
         }
       }
@@ -86,6 +91,8 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         if (result[i]) continue;
 
         const letter = guessUpper[i];
+        if (!letter) continue;
+        
         const targetIndex = targetLetters.findIndex(
           (t, idx) => t === letter && !usedIndices.includes(idx)
         );
@@ -118,8 +125,9 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         }
 
         const upperGuess = currentGuess.toUpperCase();
+        const currentGuessesLength = guesses.length;
         setCurrentGuess('');
-        setRevealRow(guesses.length);
+        setRevealRow(currentGuessesLength);
 
         submitGuess(upperGuess)
           .then(() => {
@@ -200,7 +208,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
     const targetLength = game.targetWord.length;
     const isCurrentRow = rowIndex === guesses.length && status === 'playing';
     const isGuessedRow = rowIndex < guesses.length;
-    const guess = isGuessedRow ? guesses[rowIndex] : isCurrentRow ? currentGuess : '';
+    const guess = isGuessedRow ? (guesses[rowIndex] ?? '') : isCurrentRow ? currentGuess : '';
     const results = isGuessedRow ? evaluateGuess(guess) : [];
 
     return (

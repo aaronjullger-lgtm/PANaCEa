@@ -89,9 +89,11 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     // Initialize all systems
     Object.keys(ABBREVIATION_TO_TOPIC_MAP).forEach((sys) => {
       const system = sys as SystemCode;
+      // Guard: map lookup returns string | undefined, fallback to system code
+      const resolvedSystemName: string = ABBREVIATION_TO_TOPIC_MAP[system] ?? system;
       statsMap.set(system, {
         system,
-        systemName: ABBREVIATION_TO_TOPIC_MAP[system],
+        systemName: resolvedSystemName,
         totalQuestions: 0,
         correctAnswers: 0,
         accuracy: 0,
@@ -333,7 +335,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Intelligence Hub</h2>
             <p className="text-sm text-[var(--color-text-muted)]">
               {viewLevel === 'dashboard' && 'System Overview'}
-              {viewLevel === 'system' && `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem!]} Deep Dive`}
+              {viewLevel === 'system' && selectedSystem && `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem] ?? selectedSystem} Deep Dive`}
               {viewLevel === 'subcategory' && selectedSubcategory}
             </p>
           </div>
@@ -479,6 +481,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   {/* Data points and labels */}
                   {radarChartData.points.map((point, i) => {
                     const axis = radarChartData.axes[i];
+                    if (!axis) return null;
                     return (
                       <g key={i}>
                         <circle
@@ -789,7 +792,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                             <ConditionPreviewCard
                               key={condition.name}
                               condition={conditionMeta}
-                              content={null} // Content will be fetched inside the card if needed
+                              content={undefined} // Content will be fetched inside the card if needed
                               onClick={() => setSelectedCondition(condition)}
                               index={index}
                             />

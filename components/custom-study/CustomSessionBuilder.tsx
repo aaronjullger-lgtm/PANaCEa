@@ -89,12 +89,18 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
 
   const goNext = useCallback(() => {
     const nextIndex = Math.min(stepIndex + 1, STEPS.length - 1);
-    setCurrentStep(STEPS[nextIndex].id);
+    const nextStep = STEPS[nextIndex];
+    if (nextStep) {
+      setCurrentStep(nextStep.id);
+    }
   }, [stepIndex]);
 
   const goBack = useCallback(() => {
     const prevIndex = Math.max(stepIndex - 1, 0);
-    setCurrentStep(STEPS[prevIndex].id);
+    const prevStep = STEPS[prevIndex];
+    if (prevStep) {
+      setCurrentStep(prevStep.id);
+    }
   }, [stepIndex]);
 
   // Validation

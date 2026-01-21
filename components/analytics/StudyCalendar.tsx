@@ -200,7 +200,9 @@ const VIEW_MODES: Record<
 // ============================================================
 
 function formatDateKey(date: Date): string {
-  return date.toISOString().split('T')[0];
+  // toISOString() always returns "YYYY-MM-DDTHH:mm:ss.sssZ" format
+  // Using nullish coalescing to satisfy TypeScript's array access safety
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 function getMonthDays(year: number, month: number): (Date | null)[][] {
@@ -237,11 +239,13 @@ function getMonthDays(year: number, month: number): (Date | null)[][] {
 }
 
 function getIntensityClass(intensity: number, colorScale: string[]): string {
-  if (intensity === 0) return colorScale[0];
-  if (intensity < 0.25) return colorScale[1];
-  if (intensity < 0.5) return colorScale[2];
-  if (intensity < 0.75) return colorScale[3];
-  return colorScale[4];
+  // Use nullish coalescing for type-safe array access
+  // colorScale[i] returns string | undefined in strict mode
+  if (intensity === 0) return colorScale[0] ?? '';
+  if (intensity < 0.25) return colorScale[1] ?? '';
+  if (intensity < 0.5) return colorScale[2] ?? '';
+  if (intensity < 0.75) return colorScale[3] ?? '';
+  return colorScale[4] ?? '';
 }
 
 // ============================================================
@@ -345,22 +349,28 @@ const MonthGrid: React.FC<MonthGridProps> = ({
   ];
   const DAY_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+  // Type-safe month name lookup
+  const monthName = MONTH_NAMES[month];
+  
   return (
     <div className="flex-shrink-0">
       <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 text-center">
-        {MONTH_NAMES[month]} {year}
+        {monthName ?? 'Unknown'} {year}
       </h4>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
-        {DAY_HEADERS.map((day, idx) => (
-          <div
-            key={idx}
-            className="w-8 sm:w-10 text-center text-[10px] text-[var(--color-text-muted)]"
-          >
-            {day}
-          </div>
-        ))}
+        {DAY_HEADERS.map((day, idx) => {
+          const dayLabel = day;
+          return (
+            <div
+              key={idx}
+              className="w-8 sm:w-10 text-center text-[10px] text-[var(--color-text-muted)]"
+            >
+              {dayLabel}
+            </div>
+          );
+        })}
       </div>
 
       {/* Calendar grid */}

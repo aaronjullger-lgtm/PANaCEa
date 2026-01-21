@@ -245,16 +245,22 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const handleNextCondition = () => {
     if (selectedIndex < filteredContent.length - 1) {
       const nextIndex = selectedIndex + 1;
-      setSelected(filteredContent[nextIndex]);
-      setSelectedIndex(nextIndex);
+      const nextItem = filteredContent[nextIndex];
+      if (nextItem) {
+        setSelected(nextItem);
+        setSelectedIndex(nextIndex);
+      }
     }
   };
 
   const handlePrevCondition = () => {
     if (selectedIndex > 0) {
       const prevIndex = selectedIndex - 1;
-      setSelected(filteredContent[prevIndex]);
-      setSelectedIndex(prevIndex);
+      const prevItem = filteredContent[prevIndex];
+      if (prevItem) {
+        setSelected(prevItem);
+        setSelectedIndex(prevIndex);
+      }
     }
   };
 

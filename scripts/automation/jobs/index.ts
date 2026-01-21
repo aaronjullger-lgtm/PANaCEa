@@ -4,7 +4,7 @@
  * Central export for all automation jobs
  *
  * Usage:
- *   import { userStatistics, healthChecks } from './jobs';
+ *   import { userStatistics, healthChecks, fsrsOptimization } from './jobs';
  *
  *   // Run hourly checks
  *   await healthChecks.runHourlyHealthChecks();
@@ -15,10 +15,12 @@
  *
  *   // Run weekly checks
  *   await userStatistics.generateWeeklyProgressReports();
+ *   await fsrsOptimization.optimizeAllUsersFSRS();
  */
 
 export * as userStatistics from './userStatistics';
 export * as healthChecks from './healthChecks';
+export * as fsrsOptimization from './fsrsOptimization';
 
 // Re-export specific functions for convenience
 export {

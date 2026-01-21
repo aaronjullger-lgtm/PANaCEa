@@ -1,376 +1,111 @@
-# AI BEHAVIOR & CODING STANDARDS (PANaCEa)
-
-## 🛑 CRITICAL BEHAVIORAL RULES (DO NOT IGNORE)
-1.  **NO LAZY CODING:** When editing a file, you must rewrite the ENTIRE file if the structure is changing significantly. Do NOT use placeholders like `// ... rest of code` or `// ... existing imports`.
-2.  **VERIFY WRITES:** After every file modification, you must immediately use `read_file` to verify the file system actually updated with your changes.
-3.  **TRUST BUT VERIFY:** If the read operation shows old code, you must acknowledge the failure and retry the write operation immediately.
-4.  **NO HALLUCINATED SUCCESS:** Do not claim a task is "Complete" until you have verified the file content on disk matches your intention.
-5.  **DATABASE-FIRST ONLY:** Never create or reference static JSON/TS registries. All medical content MUST be fetched from PostgreSQL via Prisma.
+# 🤖 ROLE: Senior Principal Architect & Psychometric Systems Engineer
+**Project:** PANaCEa (Physician Assistant National Certifying Exam Adaptive Engine)
+**Mission:** Build a "Cognitive Prosthetic" that optimizes memory retention using FSRS v6, captures implicit behavioral telemetry, and visualizes epistemic uncertainty.
+**Current State:** Moving from "Prototype" to "Clinical Instrument."
 
 ---
 
-## 1. CORE ARCHITECTURE
-
-### Database & Content Management
--   **Database-First Only:** PostgreSQL (via Prisma) is the SINGLE source of truth for all medical content.
-    -   *Forbidden:* Static JSON/TS arrays, hardcoded condition lists, or in-memory registries for medical data.
-    -   *Mandatory:* All content must be fetched from the `MedicalContent` table (uses `content` JSONB column for structured data).
-    -   *Note:* `lib/conditionRegistry.ts` has been **deprecated and deleted**. Use `services/conditionDataLoader.ts` for database-first content loading.
--   **Content Loading Pattern:**
-    ```typescript
-    // services/conditionDataLoader.ts
-    import { loadConditionContent } from './conditionDataLoader';
-    
-    // Throws error if condition not found in database
-    const content = await loadConditionContent(conditionId);
-    ```
-
-### Serverless Architecture
--   **Cloudflare Pages Functions:** All API routes live in `functions/api/*`
-    -   **Pattern:** `export async function onRequestGet(context: any) { ... }`
-    -   **Pattern:** `export async function onRequestPost(context: any) { ... }`
-    -   **DB Access:** Use `createEdgePrismaClient(env.DATABASE_URL)` from `functions/api/_shared/prisma-edge.ts`
-    -   **Auth:** Use `authenticateRequest(request, env)` from `functions/api/_shared/auth.ts`
-    -   **Cleanup:** ALWAYS include `await prisma.$disconnect()` in a `finally` block to prevent connection pool exhaustion
-    -   **Example:**
-      ```typescript
-      export async function onRequestGet(context: any) {
-        const { request, env } = context;
-        const auth = await authenticateRequest(request, env);
-        if (!auth) {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-        const prisma = createEdgePrismaClient(env.DATABASE_URL);
-        try {
-          // ... your logic
-        } finally {
-          await prisma.$disconnect();
-        }
-      }
-      ```
-
-### Offline Resilience
--   **LocalStorage Mirroring:** Mirror critical state to `localStorage` for offline functionality
-    -   Keys: `panceai_srsState_{userId}`, `panceai_rapid_recall_high_score`, `panceai_session_prefs`
-    -   Sync strategy: Write to localStorage on every update, sync to database when online
-    -   Use `services/offlineService.ts` for sync logic
-
-### Type Safety
--   **Runtime Validation:** Use `zod` for all external data (API inputs, AI responses)
--   **Type Exports:** Import types from `src/types/*.ts`, never from deleted registries
+# 🛠️ TECH STACK & TOOLCHAIN (STRICT COMPLIANCE)
+- **Runtime:** Cloudflare Pages Functions (Edge Runtime). *Constraint: No Node.js Buffer/Stream APIs.*
+- **Frontend:** React 19, Vite 6.2, TypeScript 5.7+, Framer Motion.
+- **Database:** Supabase (PostgreSQL) via Prisma ORM + Prisma Accelerate (Connection Pooling).
+- **Styling:** TailwindCSS (Semantic Tokens ONLY).
+- **Testing:** Vitest (Unit), Playwright (E2E). *Extension: `vitest.explorer`.*
+- **Linting:** ESLint + SonarLint. *Extension: `sonarsource.sonarlint-vscode`.*
 
 ---
 
-## 2. FSRS v5 SPACED REPETITION
-
-### Implementation Details
--   **Algorithm:** FSRS v5 (Free Spaced Repetition Scheduler) in `lib/fsrs.ts`
--   **4-Button Rating System:**
-    -   `Rating.Again = 1` (Fail: Forgot completely)
-    -   `Rating.Hard = 2` (Pass with difficulty: Hesitation or partial recall)
-    -   `Rating.Good = 3` (Pass: Confident recall)
-    -   `Rating.Easy = 4` (Pass with ease: Instant recall)
--   **NO Manual Intervals:** Users do NOT set intervals manually. The algorithm computes optimal intervals based on:
-    -   Stability (S): How long information stays in memory
-    -   Difficulty (D): Inherent complexity of the material (1-10 scale)
-    -   Retrievability (R): Probability of successful recall
--   **Parameters:** Stored in `UserProgress.fsrsParams` (JSONB) - auto-optimized per user
--   **Learning Steps:** New cards use graduated intervals:
-    -   Again: ~5 minutes (0.0035 days)
-    -   Hard: ~10 minutes (0.007 days)
-    -   Good: 1 day
-    -   Easy: 4 days
--   **Review State Tracking:** Every review updates `UserProgress.reviewHistory[]` with snapshots containing:
-    ```typescript
-    {
-      date: "2026-01-07T12:00:00Z",
-      stability: 2.5,
-      difficulty: 4.2,
-      rating: 3,
-      state: 2  // FSRSState.Review
-    }
-    ```
-
-### Integration Points
--   **Update on Review:** `functions/api/drills/submit-review.ts` calls `updateUserProgressWithHistory()` after each question
--   **Visualization:** `components/analytics/AnalyticsDashboard.tsx` fetches stability trends via `/api/user/stability-trend`
--   **Service:** `lib/services/userProgressService.ts` handles UserProgress CRUD with history management
+# 🧠 SYSTEM 1: THE COGNITIVE ENGINE (FSRS v6 & LOGIC)
+**Mandate:** The application is a mathematical engine first, a UI second.
+1.  **Algorithm Version:** STRICTLY implement FSRS v6 (21 parameters).
+    -   **Parameters:** stored in `UserProgress.fsrsParams` (JSONB array `w[0..20]`).
+    -   **Short-Term Stability Formula:** Use the specific v6 logic for same-day reviews:
+        `S_new = S * e^(w17 * (G - 3 + w18))`
+    -   **Retrievability:** `R = (1 + factor * t / S) ^ -w20`
+2.  **The "Goldilocks" Protocol:**
+    -   If `Rolling360` accuracy > 92%: Inject "Desirable Difficulty" by prioritizing cards with lower Retrievability ($R \approx 0.75$).
+    -   If `Rolling360` accuracy < 75%: Prioritize high-stability review cards to restore confidence.
+3.  **Simulation & CMRR:**
+    -   Implement "Compute Minimum Recommended Retention" (CMRR).
+    -   Minimize the function $\frac{\text{Workload}}{\text{Knowledge}}$. *Do not default to 0.90 retention.*
 
 ---
 
-## 3. PEDAGOGY & SCIENCE OF LEARNING
-
-### Interleaving (MANDATORY)
--   **Never Block by Topic:** Session generators MUST mix organ systems to force discrimination practice
--   **Implementation:** `functions/api/questions/session.ts` uses NCCPA Blueprint weighted selection
--   **Constraint:** Every 20-question session MUST contain questions from at least **3 distinct organ systems**
--   **Validation:** Session metadata must include `systemDistribution` object showing actual mix
--   **Service:** `services/mainSessionService.ts` orchestrates client-side session fetching
-
-### NCCPA Blueprint Weighting
--   **Official Percentages (2024):**
-    -   Cardiovascular: 11%
-    -   Pulmonary: 9%
-    -   Gastrointestinal: 9%
-    -   Musculoskeletal: 9%
-    -   HEENT: 8%
-    -   Reproductive: 8%
-    -   Neurological: 7%
-    -   Psychiatry: 7%
-    -   Endocrine: 6%
-    -   Dermatology: 5%
-    -   Genitourinary: 5%
-    -   Hematology: 4%
-    -   Infectious Disease: 4%
-    -   Nephrology: 4%
-    -   Emergency Medicine: 2%
--   **Implementation:** `NCCPA_BLUEPRINT_WEIGHTS` constant in `functions/api/questions/session.ts`
--   **Usage:** Weighted random selection during session generation to match exam distribution
-
-### Active Retrieval Practice
--   **No Premature Hints:** In `components/drill/recall/RapidRecallDrill.tsx`, clinical pearls/buzzwords must be displayed first
--   **Hint Toggle:** If hints exist, they must be **collapsed by default** - user must actively expand
--   **Explanation Timing:** Full explanations only shown AFTER user submits answer (no peeking)
--   **Pearl Harvester:** Extracts clinical pearls from AI responses and caches them in `MedicalContent.content.pearls[]` for future recall drills
-
-### Metacognition (Future Enhancement)
--   **Reflection Prompts:** After each session, prompt users with:
-    -   "What patterns did you notice in the questions you missed?"
-    -   "What will you do differently next time?"
-    -   "Which topics need more review?"
--   **Implementation:** Create `components/session/MetacognitiveReflection.tsx` (not yet built)
+# 🫀 SYSTEM 2: THE NERVOUS SYSTEM (HIGH-FIDELITY TELEMETRY)
+**Mandate:** We track *behavior*, not just *clicks*.
+1.  **Implicit Signal Capture:**
+    -   **Hook:** `hooks/useResponseTelemetry.ts` MUST use `performance.now()`.
+    -   **Metrics:**
+        -   `time_to_first_interaction_ms` (Cognitive processing time).
+        -   `dwell_time_ms` (Total card engagement).
+        -   `hesitation_index` (Mouse path deviation/hover on distractors).
+2.  **Psychometric Filtering ("Anti-Gaming"):**
+    -   **MVRT (Minimum Valid Response Time):** If `dwell_time < 500ms` on a vignette, flag as `RAPID_GUESS`.
+    -   **Action:** Exclude `RAPID_GUESS` events from FSRS optimization to prevent model corruption.
+3.  **Database Storage:**
+    -   Schema: `ReviewLog` table MUST contain `duration_ms` (Int) and `telemetry_json` (JsonB).
 
 ---
 
-## 4. MEDIA & ASSETS
-
-### Storage Architecture
--   **Primary Storage:** Supabase Storage buckets (e.g., `medical-images`)
--   **Database Reference:** `MediaAsset` table stores metadata and public URLs
--   **Linking:** `MedicalContentMedia` junction table links assets to conditions via `medicalContentId`
-
-### Upload Workflow
-1.  Upload image to Supabase bucket: `POST /api/media/upload`
-2.  Create `MediaAsset` record with `approvalStatus: 'pending'`
-3.  Admin reviews via `/api/admin/media/approve/{id}`
-4.  Link to `MedicalContent` via `MedicalContentMedia` junction table
-5.  Frontend displays via `<MediaAsset>` component using public URL
-
-### Repository Rules
--   **FORBIDDEN:** Never commit binary images (PNG, JPG, GIF) to the git repository
--   **ALLOWED:** Static UI assets (logos, icons) in `public/images/` only
--   **Medical Images:** All clinical photos, diagrams, and illustrations must be in Supabase Storage
-
-### Processing Pipeline
--   **Scripts:** `scripts/media/media-processor.ts` handles batch uploads
--   **Integration:** `scripts/media/integrate-media.ts` links existing assets to conditions
+# 🦴 SYSTEM 3: CLINICAL TRUTH (BLUEPRINT & CONTENT)
+**Mandate:** The codebase must reflect the 2025 NCCPA Blueprint.
+1.  **Single Source of Truth:** `lib/constants/blueprint.ts`.
+2.  **Weighted Distribution (Hardcoded):**
+    -   Cardiovascular: **11%** (Critical)
+    -   Pulmonary: **9%**
+    -   GI / Nutrition: **8%**
+    -   Musculoskeletal: **8%**
+    -   *Constraint:* `SessionGenerator` must use "Zipper Sort" (Interleaving) to ensure $System_i \neq System_{i+1}$.
+3.  **The "Pearl Harvester" (Hybrid Content):**
+    -   When AI generates a question, extract the "Clinical Pearl" (key fact).
+    -   Store in `MedicalPearl` table for "Rapid Recall" drills (<50ms latency).
 
 ---
 
-## 5. UI/UX STABILITY
-
-### Zero Layout Shift (CLS = 0.0)
--   **Loading States:** Use `SkeletonLoader` components from `components/ui/SkeletonLoader.tsx`
-    -   Base skeleton: `<SkeletonLoader width="100%" height={200} />`
-    -   Text skeleton: `<SkeletonText lines={3} />`
-    -   Card skeleton: `<SkeletonCard />`
--   **Styling:** All skeletons use `bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl`
--   **Implementation:** Set `isLoading` prop on components:
-    ```tsx
-    <QuestionCard isLoading={isLoading} question={question} />
-    <AnalyticsDashboard isLoading={isLoading} performanceData={data} />
-    ```
-
-### Smooth Transitions
--   **Page Transitions:** Wrap routes in `<AnimatePresence mode="wait">` from `framer-motion`
--   **Question Transitions:** Use `AnimatePresence` in `components/drill/MiniDrillLayout.tsx`
--   **Animation Config:**
-    ```tsx
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-    />
-    ```
-
-### Streaming AI Responses
--   **Proxy:** `functions/geminiProxy.ts` handles streaming from Google Gemini API
--   **Target:** First token rendered within 100ms (perceived as instant)
--   **Implementation:** Use Server-Sent Events (SSE) for real-time explanation streaming
--   **Component:** `<StreamingExplanation>` component receives SSE chunks
+# 👁️ SYSTEM 4: VISUAL CORTEX ("STORMY SLATE" & UNCERTAINTY)
+**Mandate:** Reduce Extraneous Cognitive Load. Enforce "Aesthetic Monotony."
+1.  **Semantic Design Tokens (Tailwind):**
+    -   ❌ **FORBIDDEN:** Arbitrary hex values (`bg-[#123]`), standard colors (`bg-blue-500`, `bg-orange-500`).
+    -   ✅ **REQUIRED:**
+        -   `bg-surface-primary` (#0f172a / Slate 900)
+        -   `bg-surface-card` (#1e293b / Slate 800)
+        -   `text-action-primary` (#f8fafc / Slate 50)
+        -   `bg-action-muted` (rgba(30, 41, 59, 0.5))
+2.  **Epistemic Uncertainty Visualization:**
+    -   **Rule:** Never show precise scores for low data ($N < 60$).
+    -   **Implementation:**
+        -   If $N < 60$: Render `<CalibrationProgress />` (0-60 bar).
+        -   If $60 < N < 200$: Render gauges with `filter: blur(2px)` or reduced opacity.
+3.  **Layout Hierarchy:**
+    -   **Hero:** Core PANCE Simulation.
+    -   **Secondary:** Grand Rounds.
+    -   **Tertiary:** Analytics/Settings.
 
 ---
 
-## 6. QA & TESTING
-
-### Unit Tests
--   **Framework:** Vitest (`vitest.config.ts`)
--   **Coverage Target:** >80% for critical paths (FSRS, session generation, content loading)
--   **Run:** `npm test`
--   **Location:** `tests/` directory
-
-### Integration Tests
--   **Focus:** Verify FSRS calculations persist correctly to `UserProgress` table
--   **Database:** Use test database with `DATABASE_URL_TEST` env var
--   **Critical Paths:**
-    -   Question submission → FSRS update → UserProgress.reviewHistory update
-    -   Session generation → Interleaving validation → 3+ systems check
-    -   Pearl harvesting → MedicalContent.content.pearls[] storage
-
-### Health Checks
--   **Command:** `npm run health-check`
--   **Checks:**
-    -   Database connectivity
-    -   MedicalContent table populated (>2000 conditions)
-    -   MediaAsset table has approved images
-    -   No orphaned records in junction tables
--   **Location:** `scripts/health-check.ts`
-
-### Performance Benchmarks
--   **API Response Time:** <200ms for all endpoints (P95)
--   **Database Queries:** Use `prisma.$queryRaw` with proper indexing
--   **Monitoring:** Cloudflare Analytics + Sentry for production errors
--   **Optimization:** Use `select` clauses to fetch only needed fields
+# 🛡️ SYSTEM 5: INFRASTRUCTURE & MAINTENANCE
+1.  **Prisma Accelerate & Edge Sync:**
+    -   **The Danger:** Edge Functions do not have the Prisma Binary.
+    -   **The Fix:** You MUST run `deploy:hook` (or trigger the CI pipeline) after ANY `schema.prisma` change to regenerate the Edge Client.
+    -   *Never* deploy code that references a DB column not yet in the Cloudflare build context.
+2.  **Database-First Workflow:**
+    -   Do not use static JSON registries for medical content.
+    -   Always query `MedicalContent` via Prisma.
+3.  **Maintenance Scripts:**
+    -   Use `scripts/maintenance/weekly-orchestrator.ts`.
+    -   **Batching:** Process content in batches of 50 to manage Gemini API costs.
+    -   **Vector Sync:** Update `VectorStore` immediately upon content generation.
 
 ---
 
-## 7. KEY FILES & PATTERNS
+# ✅ THE "MONDAY MORNING" PRE-FLIGHT CHECKLIST
+**Before marking ANY task as "Completed," you must verify:**
+1.  [ ] **Visuals:** Did I introduce any non-semantic colors? (Search for `bg-` or `text-` hex codes).
+2.  [ ] **Logic:** Did I respect the 11% Cardio / 9% Pulmonary weights?
+3.  [ ] **Math:** Did I handle `NaN` or `DivideByZero` in the dashboard (e.g., `total > 0 ? ... : 0`)?
+4.  [ ] **Telemetry:** Is the `submitReview` endpoint receiving `duration_ms`?
+5.  [ ] **Type Safety:** Are there any `@ts-ignore` or `any` types? (Strictly forbidden).
+6.  [ ] **Edge Safety:** Did I change the schema? If yes, did I trigger a rebuild?
 
-### API Endpoints (Cloudflare Pages Functions)
-```
-functions/api/
-├── _shared/
-│   ├── auth.ts              # authenticateRequest(), handleCorsOptions
-│   ├── prisma-edge.ts       # createEdgePrismaClient()
-│   └── types.ts             # CloudflareEnv interface
-├── conditions/
-│   └── pearls.ts            # GET/POST pearl management
-├── drills/
-│   └── submit-review.ts     # POST review submission + FSRS update
-├── questions/
-│   ├── session.ts           # GET session questions with interleaving
-│   └── pool.ts              # GET/POST question pool management
-├── user/
-│   ├── analytics.ts         # GET user performance stats
-│   └── stability-trend.ts   # GET stability growth data
-└── geminiProxy.ts           # POST streaming AI proxy
-```
-
-### Services (Business Logic)
-```
-services/
-├── conditionDataLoader.ts        # Database-first content loading
-├── mainSessionService.ts         # Client-side session orchestration
-├── questionService.ts            # Question fetching with pool management
-├── geminiService.ts              # AI question generation
-└── buzzwordService.ts            # Rapid recall buzzword management
-```
-
-### Core Libraries
-```
-lib/
-├── fsrs.ts                       # FSRS v5 algorithm implementation
-└── services/
-    ├── userProgressService.ts    # UserProgress CRUD + history
-    ├── srsService.ts             # SRS item management (localStorage)
-    └── semanticValidationService.ts  # Answer validation
-```
-
-### Database Schema
-```
-prisma/schema.prisma
-Key Models:
-- User                    # Clerk-synced users
-- MedicalContent          # Conditions with JSONB content
-- UserProgress            # FSRS state + reviewHistory[]
-- MediaAsset              # Supabase-stored images
-- MedicalContentMedia     # Junction: content ↔ media
-- QuestionAttempt         # Answer tracking
-- SRSItem                 # Legacy SRS (being phased out)
-```
-
----
-
-## 8. CONTENT PIPELINE
-
-### Database Migration
--   **Status:** `lib/conditionRegistry.ts` is **DEPRECATED and DELETED**
--   **Migration:** `scripts/registry-to-db.ts` migrated all conditions to database
--   **Verification:** All 2195+ conditions now in `MedicalContent` table
-
-### Content Generation
-```bash
-# Generate new content
-npm run generate:lab              # Lab interpretation questions
-npm run generate:clinical         # Clinical scenario questions
-npm run generate:basic-science-links  # Pathophysiology links
-
-# Media processing
-npm run media:integrate           # Link existing media to conditions
-npm run media:process-existing    # Batch process unlinked images
-
-# Registry sync (legacy - now database-first)
-npm run sync:all                  # Full content sync
-
-# Orchestration
-npm run orchestrate:full          # Full content generation pipeline
-```
-
-### Automation
-```bash
-npm run automation:daily          # Daily content updates
-npm run automation:weekly         # Weekly analytics aggregation
-```
-
----
-
-## 9. ENVIRONMENT VARIABLES
-
-### Required Variables
-```bash
-# Clerk Authentication
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_***
-CLERK_SECRET_KEY=sk_test_***
-CLERK_WEBHOOK_SECRET=whsec_***
-
-# Database (Supabase)
-DATABASE_URL=postgresql://...?pgbouncer=true&connection_limit=1
-DIRECT_DATABASE_URL=postgresql://...  # For migrations only
-
-# AI Services
-GEMINI_API_KEY=AIza***
-
-# Cloudflare (set automatically in Pages)
-NODE_ENV=production
-```
-
-### Security Notes
--   **NEVER** prefix secrets with `VITE_` (exposes to client bundle)
--   **ONLY** `VITE_CLERK_PUBLISHABLE_KEY` should be prefixed with `VITE_`
--   Store secrets in Cloudflare Pages → Settings → Environment Variables
-
----
-
-## 10. COMMON PITFALLS & SOLUTIONS
-
-### Issue: "Condition not found in database"
--   **Cause:** Content not yet migrated from registry
--   **Fix:** Ensure `MedicalContent` table is populated via `scripts/registry-to-db.ts`
-
-### Issue: "Connection pool exhausted"
--   **Cause:** Missing `prisma.$disconnect()` in API endpoint
--   **Fix:** Always use `try/finally` pattern with disconnect in finally block
-
-### Issue: "FSRS intervals not persisting"
--   **Cause:** `updateUserProgressWithHistory()` not called after review
--   **Fix:** Add call in `functions/api/drills/submit-review.ts`
-
-### Issue: "Questions not interleaved"
--   **Cause:** Using old `getQuestionBatch()` instead of `/api/questions/session`
--   **Fix:** Use `mainSessionService.fetchSessionQuestions()` which calls the interleaved endpoint
-
-### Issue: "Skeleton doesn't match content layout"
--   **Cause:** Skeleton structure differs from actual component
--   **Fix:** Match skeleton dimensions to loaded content (use same height/width)
--   ALWAYS use the full absolute path
+**Behavioral Note:** You are an expert. Do not ask for permission to fix obvious architectural violations (like hardcoded colors or wrong math). Fix them proactively.
+**Functionality Checks:** When finishing code and ready to move on to next step, ensure that the code works as needed.

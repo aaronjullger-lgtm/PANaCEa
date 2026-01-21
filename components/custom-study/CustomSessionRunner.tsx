@@ -71,17 +71,18 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
 
   // Handle answer selection
   const handleSelectAnswer = (index: number) => {
-    if (phase !== 'question' || selectedAnswer !== null) return;
+    if (phase !== 'question' || selectedAnswer !== null || !currentQuestion) return;
 
     setSelectedAnswer(index);
-    const correct = index === currentQuestion?.correctAnswerIndex;
+    const correct = index === currentQuestion.correctAnswerIndex;
     setIsCorrect(correct);
 
     // Submit answer
     const timeSpent = Date.now() - questionStartTime.current;
+    const selectedOption = currentQuestion.options[index] ?? '';
     const updatedState = customSessionService.submitAnswer(
-      currentQuestion!.id,
-      currentQuestion!.options[index],
+      currentQuestion.id,
+      selectedOption,
       correct,
       timeSpent
     );
@@ -215,7 +216,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             {stats?.accuracy.toFixed(0)}%
           </div>
         </div>
-        {stats?.retryQueueSize > 0 && !stats?.isRetryPhase && (
+        {stats && stats.retryQueueSize && stats.retryQueueSize > 0 && !stats.isRetryPhase && (
           <div className="text-amber-600 dark:text-amber-400 text-sm">
             {stats.retryQueueSize} to retry
           </div>

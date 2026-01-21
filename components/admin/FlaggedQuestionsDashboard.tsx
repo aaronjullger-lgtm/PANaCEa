@@ -60,19 +60,25 @@ const FLAG_TYPE_LABELS: Record<string, string> = {
   other: 'Other Issue',
 };
 
-const PRIORITY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
+const PRIORITY_CONFIG = {
   critical: { label: 'Critical', color: 'text-red-600', bgColor: 'bg-red-100' },
   high: { label: 'High', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   medium: { label: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
   low: { label: 'Low', color: 'text-green-600', bgColor: 'bg-green-100' },
-};
+} as const;
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+type PriorityKey = keyof typeof PRIORITY_CONFIG;
+const isPriorityKey = (key: string): key is PriorityKey => key in PRIORITY_CONFIG;
+
+const STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'text-yellow-600', icon: Clock },
   in_review: { label: 'In Review', color: 'text-blue-600', icon: RefreshCw },
   fixed: { label: 'Fixed', color: 'text-green-600', icon: CheckCircle2 },
   dismissed: { label: 'Dismissed', color: 'text-slate-500', icon: XCircle },
-};
+} as const;
+
+type StatusKey = keyof typeof STATUS_CONFIG;
+const isStatusKey = (key: string): key is StatusKey => key in STATUS_CONFIG;
 
 export const FlaggedQuestionsDashboard: React.FC = () => {
   const { getToken } = useAuth();
@@ -353,8 +359,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
             <AnimatePresence>
               {flags.map((flag) => {
                 const isExpanded = expandedFlags.has(flag.id);
-                const statusConfig = STATUS_CONFIG[flag.status] || STATUS_CONFIG.pending;
-                const priorityConfig = PRIORITY_CONFIG[flag.priority] || PRIORITY_CONFIG.medium;
+                // Use type guards for safe lookups with proper TypeScript narrowing
+                const statusConfig = isStatusKey(flag.status) ? STATUS_CONFIG[flag.status] : STATUS_CONFIG.pending;
+                const priorityConfig = isPriorityKey(flag.priority) ? PRIORITY_CONFIG[flag.priority] : PRIORITY_CONFIG.medium;
                 const StatusIcon = statusConfig.icon;
 
                 return (

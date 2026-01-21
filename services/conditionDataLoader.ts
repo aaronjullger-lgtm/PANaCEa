@@ -24,21 +24,19 @@ export async function loadConditionData(conditionId: string): Promise<ConditionD
     where: { conditionId, status: 'published' },
   });
 
-  const found =
-    exact ||
-    (await prisma.medicalContent.findFirst({
-      where: {
-        status: 'published',
-        OR: [
-          { condition: { equals: conditionId, mode: 'insensitive' } },
-          { conditionId: { equals: conditionId, mode: 'insensitive' } },
-        ],
-      },
-    }));
+  const found = exact || await prisma.medicalContent.findFirst({
+    where: {
+      status: 'published',
+      OR: [
+        { condition: { equals: conditionId, mode: 'insensitive' } },
+        { conditionId: { equals: conditionId, mode: 'insensitive' } },
+      ],
+    },
+  });
 
   if (!found) return null;
 
-  const registryMeta = conditionRegistry?.find((c) => c.id === found.conditionId);
+  const registryMeta = conditionRegistry?.find(c => c.id === found.conditionId);
   return {
     ...(found as any),
     meta: {
@@ -53,7 +51,7 @@ export async function getAllConditionIds(): Promise<string[]> {
     where: { status: 'published' },
     select: { conditionId: true },
   });
-  return rows.map((r) => r.conditionId);
+  return rows.map(r => r.conditionId);
 }
 
 export async function getConditionsBySystem(system: string): Promise<string[]> {
@@ -61,9 +59,12 @@ export async function getConditionsBySystem(system: string): Promise<string[]> {
   const rows = await prisma.medicalContent.findMany({
     where: {
       status: 'published',
-      OR: [{ system }, { relatedSystems: { has: system } }],
+      OR: [
+        { system },
+        { relatedSystems: { has: system } },
+      ],
     },
     select: { conditionId: true },
   });
-  return rows.map((r) => r.conditionId);
+  return rows.map(r => r.conditionId);
 }

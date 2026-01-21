@@ -1722,6 +1722,10 @@ model QuestionAttempt {
   isMainSession    Boolean @default(false) // True for Main Session mode only
   systemNormalized String? // Pre-computed normalized system name for fast aggregation
 
+  // Phase 3: Telemetry Injection (Cognitive Fidelity)
+  telemetryJson Json? // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
+  durationMs    Int?  // Total duration from question display to submission (ms)
+
   @@index([isRankedAttempt])
   @@index([mode])
   @@index([questionId])

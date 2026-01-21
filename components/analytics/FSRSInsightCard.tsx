@@ -70,12 +70,15 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
   const stateBadge = getStateBadge();
 
-  // Calculate stability trend
-  const stabilityTrend =
-    data.stabilityHistory.length >= 2
-      ? data.stabilityHistory[data.stabilityHistory.length - 1].stability -
-        data.stabilityHistory[data.stabilityHistory.length - 2].stability
-      : 0;
+  // Calculate stability trend - IIFE with explicit guards for array access
+  // TypeScript doesn't narrow from length checks, so we must guard explicitly
+  const stabilityTrend = (() => {
+    if (data.stabilityHistory.length < 2) return 0;
+    const last = data.stabilityHistory[data.stabilityHistory.length - 1];
+    const secondLast = data.stabilityHistory[data.stabilityHistory.length - 2];
+    if (!last || !secondLast) return 0;
+    return last.stability - secondLast.stability;
+  })();
 
   if (compact) {
     return (
@@ -293,9 +296,11 @@ export function userProgressToFSRSCard(progress: {
     state: stateMap[progress.state] || 'new',
     dueDate: new Date(progress.dueDate),
     reviewCount: progress.reviewHistory?.length || 0,
-    lastReview: progress.reviewHistory?.length
-      ? new Date(progress.reviewHistory[progress.reviewHistory.length - 1].date)
-      : undefined,
+    lastReview: (() => {
+      if (!progress.reviewHistory?.length) return undefined;
+      const lastEntry = progress.reviewHistory[progress.reviewHistory.length - 1];
+      return lastEntry ? new Date(lastEntry.date) : undefined;
+    })(),
     stabilityHistory:
       progress.reviewHistory?.map((r) => ({
         date: new Date(r.date).toLocaleDateString(),

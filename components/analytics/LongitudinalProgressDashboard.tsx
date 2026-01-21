@@ -35,8 +35,13 @@ function calculateTimelinePhases(performanceData: PerformanceRecord[]): Timeline
   // Sort by timestamp
   const sorted = [...performanceData].sort((a, b) => a.timestamp - b.timestamp);
 
-  const firstDate = new Date(sorted[0].timestamp);
-  const lastDate = new Date(sorted[sorted.length - 1].timestamp);
+  // Extract first and last elements with guards
+  const firstRecord = sorted[0];
+  const lastRecord = sorted[sorted.length - 1];
+  if (!firstRecord || !lastRecord) return [];
+
+  const firstDate = new Date(firstRecord.timestamp);
+  const lastDate = new Date(lastRecord.timestamp);
 
   // Calculate the time span in months
   const monthsDiff =
@@ -73,11 +78,14 @@ function calculateWeeklyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
     weekStart.setDate(date.getDate() - date.getDay()); // Start of week
     weekStart.setHours(0, 0, 0, 0);
 
-    const weekKey = weekStart.toISOString().split('T')[0];
+    const weekKey = weekStart.toISOString().split('T')[0] ?? '';
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, []);
     }
-    weekMap.get(weekKey)!.push(record);
+    const weekRecords = weekMap.get(weekKey);
+    if (weekRecords) {
+      weekRecords.push(record);
+    }
   });
 
   weekMap.forEach((records, weekKey) => {
@@ -117,11 +125,16 @@ function calculateMonthlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] {
     if (!monthMap.has(monthKey)) {
       monthMap.set(monthKey, []);
     }
-    monthMap.get(monthKey)!.push(record);
+    const monthRecords = monthMap.get(monthKey);
+    if (monthRecords) {
+      monthRecords.push(record);
+    }
   });
 
   monthMap.forEach((records, monthKey) => {
-    const [year, month] = monthKey.split('-').map(Number);
+    const parts = monthKey.split('-');
+    const year = Number(parts[0] ?? 0);
+    const month = Number(parts[1] ?? 1);
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0); // Last day of month
 
@@ -158,14 +171,19 @@ function calculateQuarterlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] 
     if (!quarterMap.has(quarterKey)) {
       quarterMap.set(quarterKey, []);
     }
-    quarterMap.get(quarterKey)!.push(record);
+    const quarterRecords = quarterMap.get(quarterKey);
+    if (quarterRecords) {
+      quarterRecords.push(record);
+    }
   });
 
   quarterMap.forEach((records, quarterKey) => {
-    const [year, q] = quarterKey.split('-');
-    const quarter = parseInt(q.substring(1));
-    const quarterStart = new Date(parseInt(year), (quarter - 1) * 3, 1);
-    const quarterEnd = new Date(parseInt(year), quarter * 3, 0); // Last day of quarter
+    const parts = quarterKey.split('-');
+    const yearStr = parts[0] ?? '0';
+    const qStr = parts[1] ?? 'Q1';
+    const quarter = parseInt(qStr.substring(1), 10) || 1;
+    const quarterStart = new Date(parseInt(yearStr, 10), (quarter - 1) * 3, 1);
+    const quarterEnd = new Date(parseInt(yearStr, 10), quarter * 3, 0); // Last day of quarter
 
     const correct = records.filter((r) => r.isCorrect).length;
     const total = records.length;
@@ -234,8 +252,11 @@ export default function LongitudinalProgressDashboard({
 
   const maxScore = useMemo(() => getMaxMasteryScore(phases), [phases]);
 
-  const currentMastery = phases.length > 0 ? phases[phases.length - 1].masteryScore : 0;
-  const startingMastery = phases.length > 0 ? phases[0].masteryScore : 0;
+  // Extract phase elements with guards for TypeScript
+  const lastPhase = phases[phases.length - 1];
+  const firstPhase = phases[0];
+  const currentMastery = lastPhase?.masteryScore ?? 0;
+  const startingMastery = firstPhase?.masteryScore ?? 0;
   const improvement = currentMastery - startingMastery;
 
   const totalQuestions = phases.reduce((sum, p) => sum + p.questions, 0);

@@ -49,13 +49,18 @@ describe('ActivityHeatmap', () => {
 
     // Verify data structure
     expect(mockData).toHaveLength(3);
-    expect(mockData[0].isCorrect).toBe(true);
-    expect(mockData[1].isCorrect).toBe(false);
+    const firstRecord = mockData[0];
+    const secondRecord = mockData[1];
+    if (!firstRecord || !secondRecord) {
+      throw new Error('Test data missing expected records');
+    }
+    expect(firstRecord.isCorrect).toBe(true);
+    expect(secondRecord.isCorrect).toBe(false);
 
     // Group by date
     const dateMap = new Map<string, number>();
     mockData.forEach((record) => {
-      const date = new Date(record.timestamp).toISOString().split('T')[0];
+      const date = new Date(record.timestamp).toISOString().split('T')[0] ?? '';
       dateMap.set(date, (dateMap.get(date) || 0) + 1);
     });
 
@@ -115,7 +120,7 @@ describe('ActivityHeatmap', () => {
     // Should not throw when processing empty data
     const dateMap = new Map<string, number>();
     mockData.forEach((record) => {
-      const date = new Date(record.timestamp).toISOString().split('T')[0];
+      const date = new Date(record.timestamp).toISOString().split('T')[0] ?? '';
       dateMap.set(date, (dateMap.get(date) || 0) + 1);
     });
 

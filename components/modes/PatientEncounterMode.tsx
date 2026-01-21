@@ -1114,9 +1114,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 Blood Pressure
                               </span>
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp, [90, 140])}`}
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp ?? 0, [90, 140])}`}
                               >
-                                {Math.round(currentVitals.sbp)}/{Math.round(currentVitals.dbp)} mmHg
+                                {Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)} mmHg
                               </span>
                             </div>
                             <Sparkline
@@ -1135,9 +1135,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 Heart Rate
                               </span>
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr, [60, 100])}`}
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr ?? 0, [60, 100])}`}
                               >
-                                {Math.round(currentVitals.hr)} bpm
+                                {Math.round(currentVitals.hr ?? 0)} bpm
                               </span>
                             </div>
                             <Sparkline
@@ -1156,9 +1156,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 Respiratory Rate
                               </span>
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr, [12, 20])}`}
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr ?? 0, [12, 20])}`}
                               >
-                                {Math.round(currentVitals.rr)} /min
+                                {Math.round(currentVitals.rr ?? 0)} /min
                               </span>
                             </div>
                             <Sparkline
@@ -1177,9 +1177,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 O₂ Saturation
                               </span>
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2, [94, 100])}`}
+                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2 ?? 0, [94, 100])}`}
                               >
-                                {Math.round(currentVitals.o2)}%
+                                {Math.round(currentVitals.o2 ?? 0)}%
                               </span>
                             </div>
                             <Sparkline
@@ -1474,8 +1474,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                   <RapportMeter
                     meter={enhancedOSCE.state.rapportMeter}
-                    emotionalState={enhancedOSCE.state.emotionalState}
-                    personality={enhancedOSCE.state.personality}
+                    emotionalState={enhancedOSCE.state.emotionalState ?? undefined}
+                    personality={enhancedOSCE.state.personality ?? undefined}
                     compact
                   />
                 </motion.div>
@@ -1768,26 +1768,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {[
                 {
                   label: 'History-Taking',
-                  score: preceptorFeedback?.clinicalReasoning?.historyTaking || 0,
+                  score: preceptorFeedback?.clinicalReasoning?.historyTaking ?? 0,
                   icon: MessageSquare,
                 },
                 {
                   label: 'Physical Exam',
-                  score: preceptorFeedback?.clinicalReasoning?.physicalExam || 0,
+                  score: preceptorFeedback?.clinicalReasoning?.physicalExam ?? 0,
                   icon: Stethoscope,
                 },
                 {
                   label: 'Diagnosis',
-                  score: preceptorFeedback?.clinicalReasoning?.diagnosis || 0,
+                  score: preceptorFeedback?.clinicalReasoning?.diagnosis ?? 0,
                   icon: FileText,
                 },
                 {
                   label: 'Management',
-                  score: preceptorFeedback?.clinicalReasoning?.management || 0,
+                  score: preceptorFeedback?.clinicalReasoning?.management ?? 0,
                   icon: Pill,
                 },
               ].map((item, idx) => {
-                const percentage = (item.score / 10) * 100;
+                const percentage = ((item.score ?? 0) / 10) * 100;
                 const Icon = item.icon;
                 return (
                   <div

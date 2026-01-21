@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, RotateCcw, ArrowRight, Loader2, BadgeCheck } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { X, Flame, RotateCcw, ArrowRight, Loader2, BadgeCheck, Zap, AlertTriangle } from 'lucide-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import { buzzwordService } from '@/services/buzzwordService';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
+import { useTelemetryCollector } from '@/hooks/useTelemetryCollector';
+import type { TelemetryData } from '@/types/telemetry';
 
 interface RapidRecallDrillProps {
   onExit?: () => void;
@@ -29,6 +31,12 @@ interface PearlQuestion {
  */
 const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) => {
   const { getToken } = useAuth();
+
+  // Telemetry collector for behavioral tracking (Phase 3 Milestone 3)
+  const telemetry = useTelemetryCollector({ 
+    defaultQuestionType: 'rapid_recall',
+    updateInterval: 100, // Update elapsed time every 100ms
+  });
 
   // Question state
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
@@ -141,14 +149,20 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
       if (available.length === 0) {
         // Reset if all pearls used
         setUsedQuestions(new Set());
-        const randomPearl = pearlQuestions[Math.floor(Math.random() * pearlQuestions.length)];
+        const pearlIndex = Math.floor(Math.random() * pearlQuestions.length);
+        const randomPearl = pearlQuestions[pearlIndex];
+        // Guard for array access returning undefined
+        if (!randomPearl) return;
         setCurrentQuestion(randomPearl.pearl);
         setCurrentAnswer(randomPearl.conditionName);
         setQuestionSource('pearl');
         return;
       }
 
-      const randomPearl = available[Math.floor(Math.random() * available.length)];
+      const availableIndex = Math.floor(Math.random() * available.length);
+      const randomPearl = available[availableIndex];
+      // Guard for array access returning undefined
+      if (!randomPearl) return;
       setCurrentQuestion(randomPearl.pearl);
       setCurrentAnswer(randomPearl.conditionName);
       setQuestionSource('pearl');
@@ -160,18 +174,27 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
     if (buzzwordsList.length === 0) return;
 
     const available = buzzwordsList.filter((b) => !usedQuestions.has(b));
-    let selectedBuzzword: string;
+    let selectedBuzzword: string | undefined;
 
     if (available.length === 0) {
       // Reset if all buzzwords have been used
       setUsedQuestions(new Set());
-      selectedBuzzword = buzzwordsList[Math.floor(Math.random() * buzzwordsList.length)];
+      const buzzwordIndex = Math.floor(Math.random() * buzzwordsList.length);
+      selectedBuzzword = buzzwordsList[buzzwordIndex];
     } else {
-      selectedBuzzword = available[Math.floor(Math.random() * available.length)];
+      const availableIndex = Math.floor(Math.random() * available.length);
+      selectedBuzzword = available[availableIndex];
     }
 
+    // Guard for array access returning undefined
+    if (!selectedBuzzword) return;
+    
+    const answer = buzzwordDictionary[selectedBuzzword];
+    // Guard for Record lookup returning undefined
+    if (!answer) return;
+
     setCurrentQuestion(selectedBuzzword);
-    setCurrentAnswer(buzzwordDictionary[selectedBuzzword]);
+    setCurrentAnswer(answer);
     setQuestionSource('buzzword');
     setUsedQuestions((prev) => new Set(prev).add(selectedBuzzword));
   }, [usePearls, pearlQuestions, buzzwordsList, buzzwordDictionary, usedQuestions]);
@@ -182,6 +205,13 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
       getNextQuestion();
     }
   }, [isLoading, currentQuestion, pearlQuestions, buzzwordsList, getNextQuestion]);
+
+  // Start telemetry when a new question is displayed (Phase 3 Milestone 3)
+  useEffect(() => {
+    if (currentQuestion && status === 'playing') {
+      telemetry.startQuestion('rapid_recall');
+    }
+  }, [currentQuestion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Normalize a diagnosis string for comparison.
@@ -206,6 +236,9 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
     async (answer: string) => {
       if (isValidating) return;
 
+      // Finalize telemetry data before validation (Phase 3 Milestone 3)
+      const telemetryData = telemetry.finalizeTelemetry();
+      
       const normalizedAnswer = normalizeDiagnosis(answer);
       const normalizedCorrect = normalizeDiagnosis(currentAnswer);
 
@@ -225,6 +258,15 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         }
       }
 
+      // Log telemetry for debugging (remove in production)
+      if (telemetryData) {
+        console.log('[RapidRecallDrill] Telemetry:', {
+          duration_ms: telemetryData.duration_ms,
+          rapid_guess: telemetryData.rapid_guess,
+          threshold_ms: telemetryData.mvrt_threshold_ms,
+        });
+      }
+
       setAcceptedSynonym(wasSemantic);
       setUserAnswer(answer);
       setIsCorrect(isAnswerCorrect);
@@ -238,7 +280,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         setStreak(0);
       }
     },
-    [currentAnswer, isValidating]
+    [currentAnswer, isValidating, telemetry]
   );
 
   const handleNext = useCallback(() => {

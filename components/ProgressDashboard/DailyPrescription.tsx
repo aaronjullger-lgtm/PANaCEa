@@ -68,11 +68,13 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
 
     // Find lowest accuracy system
     const lowestAccuracy = [...systems].sort((a, b) => a.accuracy - b.accuracy)[0];
-
     // Find oldest studied system (hasn't been studied in a while)
     const oldestStudied = [...systems].sort(
       (a, b) => (a.lastStudied || 0) - (b.lastStudied || 0)
     )[0];
+
+    // Guard: systems.length > 0 guarantees these exist, but TypeScript needs explicit check
+    if (!lowestAccuracy || !oldestStudied) return null;
 
     // Combine: prioritize lowest accuracy, but mention oldest if different
     const focusSystem = lowestAccuracy;

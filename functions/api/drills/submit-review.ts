@@ -23,6 +23,7 @@ import {
   updateTimingAggregates,
 } from '../../../lib/services/userStatisticsService';
 import { z } from 'zod';
+import { type TelemetryData, isTelemetryData, detectRapidGuess, type QuestionType } from '../../../types/telemetry';
 
 /**
  * Question data structure from PreGeneratedQuestion.questionData field
@@ -94,6 +95,33 @@ function findSelectedOption(
   return null;
 }
 
+// Zod schema for TelemetryData (Phase 3: Telemetry Injection)
+const TelemetrySchema = z.object({
+  duration_ms: z.number().int().min(0),
+  time_to_first_interaction_ms: z.number().int().min(0).nullable(),
+  rapid_guess: z.boolean(),
+  question_type: z.enum(['vignette', 'recall', 'image', 'rapid_recall', 'unknown']),
+  mvrt_threshold_ms: z.number().int().min(0),
+  question_displayed_at: z.string(),
+  answer_submitted_at: z.string(),
+  answer_changes: z.number().int().min(0),
+  hint_viewed: z.boolean(),
+  hint_view_duration_ms: z.number().int().min(0).nullable(),
+  interactions: z.array(z.object({
+    type: z.enum(['click', 'hover', 'scroll', 'keypress', 'option_select', 'hint_view', 'explanation_expand']),
+    timestamp_ms: z.number().int().min(0),
+    target: z.string().optional(),
+  })).optional(),
+  session_id: z.string().optional(),
+  device_info: z.object({
+    viewport_width: z.number().int().min(0),
+    viewport_height: z.number().int().min(0),
+    device_pixel_ratio: z.number().min(0),
+    is_touch_device: z.boolean(),
+    user_agent_short: z.string().optional(),
+  }).optional(),
+}).strict();
+
 // Define Zod schema for request validation
 const DrillSubmitReviewSchema = z.object({
   questionId: z.string().uuid(),
@@ -104,6 +132,8 @@ const DrillSubmitReviewSchema = z.object({
   totalDwellTime: z.number().int().min(0).optional(),
   timezone: z.string().optional(),
   wakeTimeHHMM: z.string().optional(),
+  // Phase 3: Behavioral Telemetry (optional - clients can send full telemetry or just basics)
+  telemetry: TelemetrySchema.optional(),
 });
 
 export const onRequestOptions = async (context: any) => {
@@ -131,6 +161,8 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       totalDwellTime,
       timezone,
       wakeTimeHHMM,
+      // Phase 3: Behavioral Telemetry
+      telemetry,
     } = validated;
 
     const normalizedSelectedAnswer =
@@ -268,6 +300,68 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
     } catch (statsError) {
       logger.warn('Failed to update user statistics after review', statsError);
+    }
+
+    // Phase 3: Create QuestionAttempt record with behavioral telemetry
+    let questionAttemptId: string | null = null;
+    try {
+      // Determine effective duration - prefer telemetry if provided, fallback to timeSpentMs
+      const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
+      
+      // Check for rapid guess using telemetry data or fallback detection
+      const isRapidGuess = telemetry?.rapid_guess ?? (numericTime < 1500);
+      
+      const attemptRecord = await prisma.questionAttempt.create({
+        data: {
+          userId,
+          questionId,
+          selectedAnswer: normalizedSelectedAnswer,
+          isCorrect,
+          // Phase 3: Behavioral telemetry fields
+          durationMs: effectiveDurationMs,
+          telemetryJson: telemetry ? {
+            ...telemetry,
+            // Add server-side computed fields
+            server_computed: {
+              par_time_ms: parTimeMs,
+              latency_ratio: effectiveDurationMs / parTimeMs,
+              implicit_rating: rating,
+              implicit_confidence: implicitResult.confidence,
+              circadian_phase: circadianContext.circadianPhase,
+              is_rapid_guess: isRapidGuess,
+            },
+          } : {
+            // Minimal telemetry when client doesn't send full data
+            duration_ms: numericTime,
+            rapid_guess: isRapidGuess,
+            question_type: 'unknown' as const,
+            mvrt_threshold_ms: 2000,
+            question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
+            answer_submitted_at: new Date().toISOString(),
+            answer_changes: answerSwitches ?? 0,
+            hint_viewed: false,
+            time_to_first_interaction_ms: timeToFirstClick ?? null,
+            hint_view_duration_ms: null,
+            server_computed: {
+              par_time_ms: parTimeMs,
+              latency_ratio: numericTime / parTimeMs,
+              implicit_rating: rating,
+              implicit_confidence: implicitResult.confidence,
+              circadian_phase: circadianContext.circadianPhase,
+              is_rapid_guess: isRapidGuess,
+            },
+          },
+        },
+      });
+      questionAttemptId = attemptRecord.id;
+      
+      // Log rapid guess detection for analytics
+      if (isRapidGuess) {
+        logger.info(`Rapid guess detected: questionId=${questionId}, duration=${effectiveDurationMs}ms, threshold=${telemetry?.mvrt_threshold_ms ?? 2000}ms`);
+      }
+    } catch (attemptError) {
+      // Don't fail the request if QuestionAttempt creation fails
+      logger.warn('Failed to create QuestionAttempt record:', attemptError);
     }
 
     // If question has conditionId, also update UserProgress with review history

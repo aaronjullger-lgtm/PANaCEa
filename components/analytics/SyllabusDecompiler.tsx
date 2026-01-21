@@ -91,8 +91,9 @@ export default function SyllabusDecompiler({
       setIsDragging(false);
 
       const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        handleFileSelect(files[0]);
+      const file = files[0];
+      if (file) {
+        handleFileSelect(file);
       }
     },
     [handleFileSelect]
@@ -110,8 +111,9 @@ export default function SyllabusDecompiler({
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
-      if (files && files.length > 0) {
-        handleFileSelect(files[0]);
+      const file = files?.[0];
+      if (file) {
+        handleFileSelect(file);
       }
     },
     [handleFileSelect]
@@ -395,6 +397,9 @@ async function parseSyllabusContent(text: string): Promise<SyllabusTag[]> {
   for (const match of matches) {
     const sectionNum = match[1];
     const topicText = match[2];
+
+    // Guard against undefined capture groups
+    if (!sectionNum || !topicText) continue;
 
     // Extract keywords from topic
     const keywords = extractKeywords(topicText);

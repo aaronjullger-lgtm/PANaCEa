@@ -194,6 +194,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
     // Low-performing systems
     const systemStats = performanceData.reduce(
       (acc, r) => {
+        // Guard against null system - cannot use as index
+        if (!r.system) return acc;
         if (!acc[r.system]) {
           acc[r.system] = { correct: 0, total: 0 };
         }
@@ -210,9 +212,11 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
       .slice(0, 2);
 
     weakSystems.forEach(([system, stats]) => {
+      // Guard against undefined topic name from map lookup
+      const topicName = ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] ?? system;
       recs.push({
         id: `weak-${system}`,
-        title: `Strengthen ${ABBREVIATION_TO_TOPIC_MAP[system as SystemCode]}`,
+        title: `Strengthen ${topicName}`,
         description: `${Math.round((stats.correct / stats.total) * 100)}% accuracy - below target`,
         priority: 'high',
         action: 'Practice',
@@ -309,35 +313,41 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
         </motion.div>
 
         {/* What to Study Now - Primary CTA */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative"
-        >
-          {recommendations.length > 0 && (
-            <div
-              className="p-6 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xl cursor-pointer hover:shadow-2xl transition-all group"
-              onClick={() => onNavigate(recommendations[0].actionDestination)}
+        {recommendations.length > 0 && (() => {
+          const topRecommendation = recommendations[0];
+          if (!topRecommendation) return null;
+          const IconComponent = topRecommendation.icon;
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {React.createElement(recommendations[0].icon, { className: 'w-6 h-6' })}
-                    <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
-                      Recommended Now
-                    </span>
+              <div
+                className="p-6 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xl cursor-pointer hover:shadow-2xl transition-all group"
+                onClick={() => onNavigate(topRecommendation.actionDestination)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <IconComponent className="w-6 h-6" />
+                      <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
+                        Recommended Now
+                      </span>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">{topRecommendation.title}</h2>
+                    <p className="text-white/90 mb-4">{topRecommendation.description}</p>
+                    <button className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
+                      {topRecommendation.action}
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">{recommendations[0].title}</h2>
-                  <p className="text-white/90 mb-4">{recommendations[0].description}</p>
-                  <button className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
-                    {recommendations[0].action}
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </motion.div>
+            </motion.div>
+          );
+        })()}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

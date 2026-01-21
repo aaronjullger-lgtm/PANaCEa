@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
+  Cell,
 } from 'recharts';
 import {
   Sparkles,
@@ -25,12 +26,18 @@ import {
   BarChart3,
   Brain,
   Play,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import chartTheme from '@/lib/chartTheme';
+
+// Minimum reviews needed for confident predictions (FSRS calibration threshold)
+const CALIBRATION_THRESHOLD = 60;
+const MIN_SYSTEM_REVIEWS = 5; // Minimum reviews per system for confident display
 
 interface AnalyticsDashboardProps {
   performanceData: PerformanceRecord[];
@@ -39,7 +46,7 @@ interface AnalyticsDashboardProps {
 
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
 type TrendDatum = { label: string; accuracy: number; pace: number };
-type TimeDatum = { system: string; seconds: number; accuracy: number };
+type TimeDatum = { system: string; seconds: number; accuracy: number; count: number };
 type StabilityTrendDatum = { date: string; avgStability: number; totalReviews: number };
 
 function calculateReadinessScore(records: PerformanceRecord[]): number {
@@ -138,8 +145,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       if (!slice.length) continue;
       const correct = slice.filter((r) => r.isCorrect).length;
       const avgTime = slice.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / slice.length;
+      const lastItem = slice[slice.length - 1];
       buckets.push({
-        label: new Date(slice[slice.length - 1].timestamp).toLocaleDateString(),
+        label: lastItem ? new Date(lastItem.timestamp).toLocaleDateString() : '',
         accuracy: Math.round((correct / slice.length) * 100),
         pace: Math.round(avgTime / 1000),
       });
@@ -163,6 +171,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
         seconds: Math.round(stats.time / stats.count / 1000),
         accuracy: Math.round((stats.correct / stats.count) * 100),
+        count: stats.count,
       }))
       .sort((a, b) => b.accuracy - a.accuracy) // Sort by accuracy
       .slice(0, 8); // Top 8 systems
@@ -298,6 +307,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <p className="text-xs text-[var(--color-text-muted)]">Average per question</p>
             </div>
           </div>
+
+          {/* FSRS Calibration Progress - Epistemic Uncertainty UI */}
+          <CalibrationProgress 
+            current={performanceData.length} 
+            target={CALIBRATION_THRESHOLD}
+            showDetails={true}
+          />
 
           {/* Weakest Subject Areas - Student Priority */}
           {weakestAreas.length > 0 && (
@@ -464,9 +480,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <Tooltip
                       contentStyle={chartTheme.tooltip.contentStyle}
                       labelStyle={chartTheme.tooltip.labelStyle}
-                      formatter={(value: any, name: string) => {
-                        if (name === 'avgStability') return [value.toFixed(2), 'Stability'];
-                        return [value, name];
+                      formatter={(value: number | string | undefined, name?: string) => {
+                        if (value === undefined) return ['—', name ?? ''];
+                        if (name === 'avgStability') return [typeof value === 'number' ? value.toFixed(2) : value, 'Stability'];
+                        return [value, name ?? ''];
                       }}
                     />
                     <Line
@@ -487,10 +504,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <span className="block mt-1">
                         Your stability has{' '}
                         <strong>
-                          {stabilityTrendData[stabilityTrendData.length - 1].avgStability >
-                          stabilityTrendData[0].avgStability
-                            ? 'increased'
-                            : 'remained stable'}
+                          {(() => {
+                            const lastItem = stabilityTrendData[stabilityTrendData.length - 1];
+                            const firstItem = stabilityTrendData[0];
+                            return lastItem && firstItem && lastItem.avgStability > firstItem.avgStability
+                              ? 'increased'
+                              : 'remained stable';
+                          })()}
                         </strong>{' '}
                         over the past 30 days.
                       </span>
@@ -502,8 +522,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-            <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
-              <Clock className="w-4 h-4" /> Decision Time by System
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
+                <Clock className="w-4 h-4" /> Decision Time by System
+              </div>
+              {timeData.some((d) => d.count < MIN_SYSTEM_REVIEWS) && (
+                <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                  <Info className="w-3 h-3" />
+                  <span>Faded bars = &lt;{MIN_SYSTEM_REVIEWS} reviews</span>
+                </div>
+              )}
             </div>
             {timeData.length === 0 ? (
               <p className="text-sm text-[var(--color-text-muted)]">
@@ -521,8 +549,25 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     height={60}
                   />
                   <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds" />
+                  <Tooltip 
+                    formatter={(value: number | string | undefined, name?: string, props?: { payload?: TimeDatum }) => {
+                      if (value === undefined) return ['—', 'Avg time'];
+                      const entry = props?.payload;
+                      return [
+                        `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
+                        'Avg time'
+                      ];
+                    }}
+                  />
+                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds">
+                    {timeData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill="#f59e0b"
+                        fillOpacity={entry.count >= MIN_SYSTEM_REVIEWS ? 1 : 0.3}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}

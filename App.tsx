@@ -172,7 +172,7 @@ function scheduleNextReview(level: number): string {
 
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+  return d.toISOString().split('T')[0] ?? '';
 }
 
 const App: React.FC = () => {
@@ -223,7 +223,7 @@ const App: React.FC = () => {
   }, [isModalOpen]);
 
   const dueQuestionsCount = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     return missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today).length;
   }, [missedQuestions]);
 
@@ -413,7 +413,7 @@ const App: React.FC = () => {
       setIsLoading(true);
 
       if (settings.focus === 'review') {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0] ?? '';
         const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
         setQuestionQueue(due);
         setView('quiz');
@@ -708,7 +708,7 @@ const App: React.FC = () => {
                         onNavigateToSimulation={handleNavigateToSimulation}
                         onNavigateToReference={() => setView('reference_library')}
                         growthAreas={growthAreas}
-                        examLabel={examLabel}
+                        examLabel={examLabel ?? 'PANCE'}
                       />
                     </Suspense>
                   </motion.div>
@@ -1214,7 +1214,7 @@ const App: React.FC = () => {
                           performanceData={heatmapPerformance}
                           flaggedQuestions={flaggedQuestions}
                           growthAreas={growthAreas}
-                          examLabel={examLabel}
+                          examLabel={examLabel ?? 'PANCE'}
                         />
                       </Suspense>
                     </WithGeminiErrorBoundary>
@@ -1241,7 +1241,7 @@ const App: React.FC = () => {
                           flaggedQuestions={flaggedQuestions}
                           growthAreas={growthAreas}
                           dueCount={dueQuestionsCount}
-                          examLabel={examLabel}
+                          examLabel={examLabel ?? 'PANCE'}
                           onStartSession={handleConfirmSession}
                           onNavigateToDrillMode={handleNavigateToDrillMode}
                           onNavigateToToolkit={() => setView('toolkit')}

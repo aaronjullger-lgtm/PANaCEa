@@ -326,7 +326,19 @@ function calculateProficiency(topic: string, records: PerformanceRecord[]): Topi
     }
   }
 
+  // Guard: array access returns T | undefined even after length check
   const lastRecord = topicRecords[topicRecords.length - 1];
+  if (!lastRecord) {
+    return {
+      topic,
+      currentProficiency: 0,
+      peakProficiency: 0,
+      lastReviewDate: 'Never',
+      daysSinceReview: 999,
+      decayRate: 0,
+      status: 'critical',
+    };
+  }
   const lastReviewDate = new Date(lastRecord.timestamp).toLocaleDateString();
   const daysSinceReview = Math.floor((Date.now() - lastRecord.timestamp) / (1000 * 60 * 60 * 24));
 
@@ -384,9 +396,16 @@ function generateCurveData(
 function generateCurvePath(data: Array<{ x: number; y: number }>): string {
   if (data.length === 0) return '';
 
-  let path = `M ${data[0].x} ${data[0].y}`;
+  // Guard: array access returns T | undefined
+  const firstPoint = data[0];
+  if (!firstPoint) return '';
+
+  let path = `M ${firstPoint.x} ${firstPoint.y}`;
   for (let i = 1; i < data.length; i++) {
-    path += ` L ${data[i].x} ${data[i].y}`;
+    const point = data[i];
+    if (point) {
+      path += ` L ${point.x} ${point.y}`;
+    }
   }
   return path;
 }
@@ -397,12 +416,20 @@ function generateCurvePath(data: Array<{ x: number; y: number }>): string {
 function generateAreaPath(data: Array<{ x: number; y: number }>): string {
   if (data.length === 0) return '';
 
-  let path = `M ${data[0].x} 200`;
-  path += ` L ${data[0].x} ${data[0].y}`;
+  // Guard: array access returns T | undefined
+  const firstPoint = data[0];
+  const lastPoint = data[data.length - 1];
+  if (!firstPoint || !lastPoint) return '';
+
+  let path = `M ${firstPoint.x} 200`;
+  path += ` L ${firstPoint.x} ${firstPoint.y}`;
   for (let i = 1; i < data.length; i++) {
-    path += ` L ${data[i].x} ${data[i].y}`;
+    const point = data[i];
+    if (point) {
+      path += ` L ${point.x} ${point.y}`;
+    }
   }
-  path += ` L ${data[data.length - 1].x} 200 Z`;
+  path += ` L ${lastPoint.x} 200 Z`;
   return path;
 }
 

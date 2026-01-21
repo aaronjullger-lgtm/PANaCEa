@@ -3,6 +3,11 @@ import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-ed
 import { ContentService } from '../content/contentService';
 import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
+import {
+  NCCPA_2025_BLUEPRINT_PERCENT,
+  SYSTEM_ALIASES,
+  normalizeSystemName,
+} from '../../constants/blueprint';
 
 // Interfaces moved from session.ts to be used in the service
 export interface SessionQuestionRequest {
@@ -44,40 +49,8 @@ export interface SessionAnalytics {
   systemDistribution: Record<string, number>;
 }
 
-const NCCPA_BLUEPRINT_WEIGHTS: Record<string, number> = {
-  Cardiovascular: 11,
-  Pulmonary: 9,
-  Gastrointestinal: 9,
-  Musculoskeletal: 9,
-  HEENT: 8,
-  Reproductive: 8,
-  Neurological: 7,
-  Psychiatry: 7,
-  Endocrine: 6,
-  Dermatology: 5,
-  Genitourinary: 5,
-  Hematology: 4,
-  'Infectious Disease': 4,
-  Nephrology: 4,
-  'Emergency Medicine': 2,
-  General: 2, // Fallback for uncategorized
-};
-
-const SYSTEM_ALIASES: Record<string, string> = {
-  CV: 'Cardiovascular',
-  PULM: 'Pulmonary',
-  GI: 'Gastrointestinal',
-  MSK: 'Musculoskeletal',
-  NEURO: 'Neurological',
-  PSYCH: 'Psychiatry',
-  ENDO: 'Endocrine',
-  DERM: 'Dermatology',
-  GU: 'Genitourinary',
-  HEME: 'Hematology',
-  ID: 'Infectious Disease',
-  RENAL: 'Nephrology',
-  EM: 'Emergency Medicine',
-};
+// Blueprint weights imported from lib/constants/blueprint.ts (single source of truth)
+// Using NCCPA_2025_BLUEPRINT_PERCENT for integer percentages
 
 export class SessionService {
   private prisma: ReturnType<typeof createEdgePrismaClient>;
@@ -229,10 +202,11 @@ export class SessionService {
   /**
    * Calculate NCCPA-weighted system quotas for a session
    * Ensures minimum system diversity while following blueprint percentages
+   * Uses NCCPA_2025_BLUEPRINT_PERCENT from lib/constants/blueprint.ts (single source of truth)
    */
   private calculateNCCPAQuotas(totalCount: number, minSystems: number = 3): Record<string, number> {
-    const systems = Object.keys(NCCPA_BLUEPRINT_WEIGHTS);
-    const totalWeight = Object.values(NCCPA_BLUEPRINT_WEIGHTS).reduce((a, b) => a + b, 0);
+    const systems = Object.keys(NCCPA_2025_BLUEPRINT_PERCENT);
+    const totalWeight = Object.values(NCCPA_2025_BLUEPRINT_PERCENT).reduce((a, b) => a + b, 0);
 
     // Calculate proportional quotas
     const quotas: Record<string, number> = {};
@@ -248,7 +222,7 @@ export class SessionService {
     );
 
     for (const system of selectedSystems) {
-      const weight = NCCPA_BLUEPRINT_WEIGHTS[system] || 2;
+      const weight = NCCPA_2025_BLUEPRINT_PERCENT[system] || 2;
       // Calculate weighted portion, but ensure at least 1 question per selected system
       const portion = Math.max(1, Math.round((weight / totalWeight) * totalCount));
       quotas[system] = Math.min(portion, remaining);
@@ -259,7 +233,7 @@ export class SessionService {
 
     // Distribute any remaining to highest-weight systems
     if (remaining > 0) {
-      const sortedByWeight = Object.entries(NCCPA_BLUEPRINT_WEIGHTS)
+      const sortedByWeight = Object.entries(NCCPA_2025_BLUEPRINT_PERCENT)
         .sort(([, a], [, b]) => b - a)
         .map(([s]) => s);
 

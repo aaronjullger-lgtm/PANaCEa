@@ -188,28 +188,34 @@ export function CohortLeaderboard({
       {showPodium && podium.length === 3 && !compact && (
         <div className="flex justify-center items-end gap-4 py-4">
           {/* 2nd Place */}
-          <PodiumSpot
-            entry={podium[1]}
-            position={2}
-            currentUserId={currentUserId}
-            onClick={() => onUserClick?.(podium[1].userId)}
-          />
+          {podium[1] && podium[1].userId && (
+            <PodiumSpot
+              entry={podium[1]}
+              position={2}
+              currentUserId={currentUserId}
+              onClick={() => onUserClick?.(podium[1].userId)}
+            />
+          )}
 
           {/* 1st Place */}
-          <PodiumSpot
-            entry={podium[0]}
-            position={1}
-            currentUserId={currentUserId}
-            onClick={() => onUserClick?.(podium[0].userId)}
-          />
+          {podium[0] && podium[0].userId && (
+            <PodiumSpot
+              entry={podium[0]}
+              position={1}
+              currentUserId={currentUserId}
+              onClick={() => onUserClick?.(podium[0].userId)}
+            />
+          )}
 
           {/* 3rd Place */}
-          <PodiumSpot
-            entry={podium[2]}
-            position={3}
-            currentUserId={currentUserId}
-            onClick={() => onUserClick?.(podium[2].userId)}
-          />
+          {podium[2] && podium[2].userId && (
+            <PodiumSpot
+              entry={podium[2]}
+              position={3}
+              currentUserId={currentUserId}
+              onClick={() => onUserClick?.(podium[2].userId)}
+            />
+          )}
         </div>
       )}
 

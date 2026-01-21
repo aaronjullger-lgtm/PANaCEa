@@ -237,18 +237,20 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     const handleScroll = () => {
       if (container.scrollTop <= 5) {
-        setActiveSection(sections[0].key);
+        const firstSection = sections[0];
+        if (firstSection) setActiveSection(firstSection.key);
         return;
       }
 
       const bottomGap = container.scrollHeight - (container.scrollTop + container.clientHeight);
       if (bottomGap <= 2) {
-        setActiveSection(sections[sections.length - 1].key);
+        const lastSection = sections[sections.length - 1];
+        if (lastSection) setActiveSection(lastSection.key);
         return;
       }
 
       const containerTop = container.getBoundingClientRect().top;
-      let closestKey = sections[0].key;
+      let closestKey = sections[0]?.key ?? '';
       let smallestDistance = Number.POSITIVE_INFINITY;
 
       sections.forEach((section) => {
@@ -285,7 +287,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   useEffect(() => {
     if (sections.length > 0) {
-      setActiveSection(sections[0].key);
+      const firstSection = sections[0];
+      if (firstSection) setActiveSection(firstSection.key);
     }
   }, [sections]);
 

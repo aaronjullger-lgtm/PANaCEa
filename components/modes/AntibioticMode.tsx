@@ -142,7 +142,11 @@ const generateCoverageDrill = (
 ): AntibioticDrillQuestion | null => {
   if (guidelines.length === 0) return null;
 
-  const guideline = guidelines[Math.floor(Math.random() * guidelines.length)];
+  const guidelineIndex = Math.floor(Math.random() * guidelines.length);
+  const guideline = guidelines[guidelineIndex];
+  
+  // Guard for array access returning undefined
+  if (!guideline) return null;
 
   const organism: OrganismInfection = {
     id: guideline.id,
@@ -171,10 +175,17 @@ const generateCoverageDrill = (
  * Generate mechanism, side effects, and empiric drill questions
  * (keeping existing static question data for these types)
  */
-const generateMechanismDrill = (): AntibioticDrillQuestion => {
+const generateMechanismDrill = (): AntibioticDrillQuestion | null => {
+  // Get antibiotics safely with guards
+  const penicillin = ANTIBIOTICS[0];
+  const vancomycin = ANTIBIOTICS[7];
+  const azithromycin = ANTIBIOTICS[8];
+  
+  if (!penicillin || !vancomycin || !azithromycin) return null;
+  
   const mechanisms = [
     {
-      drug: ANTIBIOTICS[0], // Penicillin
+      drug: penicillin, // Penicillin
       question: 'What is the mechanism of action of Penicillin?',
       choices: [
         'Inhibits cell wall synthesis by binding PBPs',
@@ -187,7 +198,7 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
         'Beta-lactams like Penicillin inhibit cell wall synthesis by binding to penicillin-binding proteins (PBPs), preventing peptidoglycan cross-linking.',
     },
     {
-      drug: ANTIBIOTICS[7], // Vancomycin
+      drug: vancomycin, // Vancomycin
       question: 'What is the mechanism of action of Vancomycin?',
       choices: [
         'Inhibits protein synthesis at 50S ribosome',
@@ -200,7 +211,7 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
         'Vancomycin inhibits cell wall synthesis by binding to D-Ala-D-Ala terminal of peptidoglycan precursors, preventing cross-linking.',
     },
     {
-      drug: ANTIBIOTICS[8], // Azithromycin
+      drug: azithromycin, // Azithromycin
       question: 'What is the mechanism of action of Azithromycin?',
       choices: [
         'Inhibits cell wall synthesis',
@@ -214,7 +225,11 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
     },
   ];
 
-  const selected = mechanisms[Math.floor(Math.random() * mechanisms.length)];
+  const selectedIndex = Math.floor(Math.random() * mechanisms.length);
+  const selected = mechanisms[selectedIndex];
+  
+  // Guard for array access returning undefined
+  if (!selected) return null;
 
   return {
     id: `drill-mech-${Date.now()}`,
@@ -227,10 +242,17 @@ const generateMechanismDrill = (): AntibioticDrillQuestion => {
   };
 };
 
-const generateSideEffectDrill = (): AntibioticDrillQuestion => {
+const generateSideEffectDrill = (): AntibioticDrillQuestion | null => {
+  // Get antibiotics safely with guards
+  const azithromycin = ANTIBIOTICS[8];
+  const vancomycin = ANTIBIOTICS[7];
+  const ciprofloxacin = ANTIBIOTICS[9];
+  
+  if (!azithromycin || !vancomycin || !ciprofloxacin) return null;
+  
   const sideEffects = [
     {
-      drug: ANTIBIOTICS[8], // Azithromycin
+      drug: azithromycin, // Azithromycin
       question: 'What is a major adverse effect of Azithromycin?',
       choices: ['Nephrotoxicity', 'QT prolongation', 'Gray baby syndrome', 'Disulfiram reaction'],
       correctIndex: 1,
@@ -238,7 +260,7 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
         'Azithromycin can cause QT prolongation, increasing risk of torsades de pointes, especially in patients with cardiac risk factors.',
     },
     {
-      drug: ANTIBIOTICS[7], // Vancomycin
+      drug: vancomycin, // Vancomycin
       question: 'What are the major toxicities of Vancomycin?',
       choices: [
         'Hepatotoxicity and pancreatitis',
@@ -251,7 +273,7 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
         'Vancomycin\'s major toxicities include nephrotoxicity and ototoxicity. "Red man syndrome" from rapid infusion is also notable.',
     },
     {
-      drug: ANTIBIOTICS[9], // Ciprofloxacin
+      drug: ciprofloxacin, // Ciprofloxacin
       question: 'What is a serious adverse effect of Fluoroquinolones like Ciprofloxacin?',
       choices: [
         'Tendon rupture',
@@ -265,7 +287,11 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
     },
   ];
 
-  const selected = sideEffects[Math.floor(Math.random() * sideEffects.length)];
+  const selectedIndex = Math.floor(Math.random() * sideEffects.length);
+  const selected = sideEffects[selectedIndex];
+  
+  // Guard for array access returning undefined
+  if (!selected) return null;
 
   return {
     id: `drill-side-${Date.now()}`,
@@ -278,7 +304,7 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion => {
   };
 };
 
-const generateEmpiricChoiceDrill = (): AntibioticDrillQuestion => {
+const generateEmpiricChoiceDrill = (): AntibioticDrillQuestion | null => {
   const scenarios = [
     {
       scenario:
@@ -316,7 +342,11 @@ const generateEmpiricChoiceDrill = (): AntibioticDrillQuestion => {
     },
   ];
 
-  const selected = scenarios[Math.floor(Math.random() * scenarios.length)];
+  const selectedIndex = Math.floor(Math.random() * scenarios.length);
+  const selected = scenarios[selectedIndex];
+  
+  // Guard for array access returning undefined
+  if (!selected) return null;
 
   return {
     id: `drill-emp-${Date.now()}`,
@@ -340,7 +370,13 @@ const generateAntibioticDrill = (
     'side_effects',
     'empiric_choice',
   ];
-  const randomType = types[Math.floor(Math.random() * types.length)];
+  const typeIndex = Math.floor(Math.random() * types.length);
+  const randomType = types[typeIndex];
+  
+  // Guard for array access returning undefined - default to coverage
+  if (!randomType) {
+    return generateCoverageDrill(guidelines);
+  }
 
   switch (randomType) {
     case 'coverage':
@@ -470,7 +506,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     );
   };
 
-  const getDrillTypeLabel = () => {
+  const getDrillTypeLabel = (): string => {
+    if (!currentDrill) return 'Antibiotic Drill';
     switch (currentDrill.type) {
       case 'coverage':
         return 'Bug-Drug Coverage';
@@ -485,7 +522,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     }
   };
 
-  const getDrillTypeColor = () => {
+  const getDrillTypeColor = (): string => {
+    if (!currentDrill) return 'from-slate-600 to-gray-700';
     switch (currentDrill.type) {
       case 'coverage':
         return 'from-blue-600 to-indigo-700';
@@ -501,6 +539,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   };
 
   const renderDrillContent = () => {
+    if (!currentDrill) return null;
     if (currentDrill.type === 'coverage' && currentDrill.organism) {
       return (
         <div className="space-y-6">

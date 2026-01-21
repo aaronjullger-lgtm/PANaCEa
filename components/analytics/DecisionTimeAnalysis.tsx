@@ -134,9 +134,11 @@ export default function DecisionTimeAnalysis({
     // Correct median calculation for even-length arrays
     const mid = Math.floor(sortedTimes.length / 2);
     if (sortedTimes.length % 2 === 0) {
-      return (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+      const left = sortedTimes[mid - 1] ?? 0;
+      const right = sortedTimes[mid] ?? 0;
+      return (left + right) / 2;
     }
-    return sortedTimes[mid];
+    return sortedTimes[mid] ?? 0;
   }, [stats]);
 
   if (stats.length === 0) {
@@ -197,13 +199,13 @@ export default function DecisionTimeAnalysis({
                     <Clock
                       className="w-4 h-4"
                       style={{
-                        color: getTimeColor(stat.avgTimeSeconds, medianTime, theme),
+                        color: getTimeColor(stat.avgTimeSeconds, medianTime ?? 0, theme),
                       }}
                     />
                     <span
                       className="font-mono text-lg font-bold"
                       style={{
-                        color: getTimeColor(stat.avgTimeSeconds, medianTime, theme),
+                        color: getTimeColor(stat.avgTimeSeconds, medianTime ?? 0, theme),
                       }}
                     >
                       {formatTime(stat.avgTimeSeconds)}
@@ -266,7 +268,7 @@ export default function DecisionTimeAnalysis({
           </h4>
         </div>
         <p className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-          Median decision time: <span className="font-bold">{formatTime(medianTime)}</span>.
+          Median decision time: <span className="font-bold">{formatTime(medianTime ?? 0)}</span>.
           Categories where you spend significantly more time may indicate knowledge gaps requiring
           focused review, even if your accuracy appears acceptable.
         </p>

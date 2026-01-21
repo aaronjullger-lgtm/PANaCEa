@@ -110,8 +110,15 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
   }
 
   const topPair = confusionData[0];
+  // Guard against undefined - TypeScript doesn't narrow from length checks
+  if (!topPair) return null;
+  
   const severityColor = getSeverityColor(topPair.severity);
   const severityBg = getSeverityBgColor(topPair.severity);
+
+  // Extract IDs safely for use in callbacks
+  const realConditionId = topPair.realConditionData?.id;
+  const mistakenConditionId = topPair.mistakenConditionData?.id;
 
   if (compact) {
     return (
@@ -125,11 +132,9 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
         <span className="text-xs text-[var(--color-text-secondary)]">
           You've confused this with <strong>{topPair.mistakenFor}</strong> {topPair.count}x
         </span>
-        {onCompare && topPair.mistakenConditionData && (
+        {onCompare && realConditionId && mistakenConditionId && (
           <button
-            onClick={() =>
-              onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)
-            }
+            onClick={() => onCompare(realConditionId, mistakenConditionId)}
             className="ml-auto text-xs text-[var(--color-accent)] hover:underline"
           >
             Compare
@@ -267,12 +272,10 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
         </AnimatePresence>
 
         {/* Footer Actions */}
-        {onCompare && topPair.realConditionData && topPair.mistakenConditionData && (
+        {onCompare && realConditionId && mistakenConditionId && (
           <div className="px-4 py-3 border-t border-[var(--color-border)]/50 flex gap-2">
             <button
-              onClick={() =>
-                onCompare(topPair.realConditionData!.id, topPair.mistakenConditionData!.id)
-              }
+              onClick={() => onCompare(realConditionId, mistakenConditionId)}
               className="flex-1 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Compare Side-by-Side

@@ -170,7 +170,8 @@ type ErrorTypeValue =
   | 'overthinking'
   | 'guessing';
 
-const ERROR_TYPES: Record<string, ErrorTypeValue> = {
+// Use 'as const' to ensure TypeScript knows these are literal string values
+const ERROR_TYPES = {
   KNOWLEDGE_GAP: 'knowledge_gap',
   INCOMPLETE_LEARNING: 'incomplete_learning',
   INTERFERENCE: 'interference',
@@ -181,7 +182,7 @@ const ERROR_TYPES: Record<string, ErrorTypeValue> = {
   MISREAD: 'misread',
   OVERTHINKING: 'overthinking',
   GUESSING: 'guessing',
-};
+} as const satisfies Record<string, ErrorTypeValue>;
 
 // ============================================================================
 // Analysis Functions
@@ -258,7 +259,7 @@ function classifyError(
     errorType,
     confidence,
     indicators,
-    remediation: remediations[errorType],
+    remediation: remediations[errorType] ?? 'Review this concept and practice active recall',
   };
 }
 
@@ -307,7 +308,11 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
   const workingMemoryLoad = Math.min(100, 30 + answerChangeRate * 50);
 
   // Fatigue from session length and error clustering
-  const sessionMinutes = (attempts[attempts.length - 1].timestamp - attempts[0].timestamp) / 60000;
+  const lastAttempt = attempts[attempts.length - 1];
+  const firstAttempt = attempts[0];
+  const sessionMinutes = lastAttempt && firstAttempt 
+    ? (lastAttempt.timestamp - firstAttempt.timestamp) / 60000 
+    : 0;
   let fatigueLevel = Math.min(100, sessionMinutes * 0.8);
 
   // Check for declining performance
@@ -506,8 +511,10 @@ function generateRecommendations(
         'Practice untimed first to build confidence, then add time limits',
     };
 
-    if (remediations[dominantError[0]]) {
-      recommendations.push(remediations[dominantError[0]]);
+    const errorTypeKey = dominantError[0];
+    const remediation = remediations[errorTypeKey];
+    if (remediation) {
+      recommendations.push(remediation);
     }
   }
 
@@ -534,8 +541,9 @@ function determineNextSessionFocus(
     .filter(([, data]) => data.total >= 2)
     .sort(([, a], [, b]) => a.accuracy - b.accuracy);
 
-  if (sortedSystems.length > 0 && sortedSystems[0][1].accuracy < 0.7) {
-    focus.push(`${sortedSystems[0][0]} system review`);
+  const weakestSystem = sortedSystems[0];
+  if (weakestSystem && weakestSystem[1].accuracy < 0.7) {
+    focus.push(`${weakestSystem[0]} system review`);
   }
 
   // Prioritize concepts with knowledge gaps

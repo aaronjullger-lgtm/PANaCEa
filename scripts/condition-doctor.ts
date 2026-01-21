@@ -42,7 +42,10 @@ const prisma = new PrismaClient({ adapter });
 const MODEL_NAME = 'gemini-2.5-pro';
 const apiKey = process.env.GEMINI_API_KEY || '';
 
-let model: any = null;
+// Type for Gemini generative model
+type GenerativeModel = ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
+
+let model: GenerativeModel | null = null;
 if (apiKey) {
   const client = new GoogleGenerativeAI(apiKey);
   model = client.getGenerativeModel({
@@ -1676,10 +1679,12 @@ async function analyzeConditions(): Promise<void> {
   const nameGroups = new Map<string, typeof allRecords>();
   for (const record of allRecords) {
     const normalized = normalizeConditionName(record.condition);
-    if (!nameGroups.has(normalized)) {
-      nameGroups.set(normalized, []);
+    const existingGroup = nameGroups.get(normalized);
+    if (existingGroup) {
+      existingGroup.push(record);
+    } else {
+      nameGroups.set(normalized, [record]);
     }
-    nameGroups.get(normalized)!.push(record);
   }
 
   const duplicateGroups = [...nameGroups.entries()].filter(([_, records]) => records.length > 1);

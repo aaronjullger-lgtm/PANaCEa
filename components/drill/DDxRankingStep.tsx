@@ -82,7 +82,12 @@ export function DDxRankingStep({
     (index: number) => {
       if (index === 0 || disabled || isSubmitted) return;
       const newItems = [...items];
-      [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+      const prevItem = newItems[index - 1];
+      const currentItem = newItems[index];
+      // Guard for array access returning undefined
+      if (!prevItem || !currentItem) return;
+      newItems[index - 1] = currentItem;
+      newItems[index] = prevItem;
       setItems(newItems);
     },
     [items, disabled, isSubmitted]
@@ -93,7 +98,12 @@ export function DDxRankingStep({
     (index: number) => {
       if (index === items.length - 1 || disabled || isSubmitted) return;
       const newItems = [...items];
-      [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+      const currentItem = newItems[index];
+      const nextItem = newItems[index + 1];
+      // Guard for array access returning undefined
+      if (!currentItem || !nextItem) return;
+      newItems[index] = nextItem;
+      newItems[index + 1] = currentItem;
       setItems(newItems);
     },
     [items, disabled, isSubmitted]

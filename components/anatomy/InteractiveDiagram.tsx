@@ -176,6 +176,8 @@ export function InteractiveDiagram({
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
 
     const currentLabel = quizState.shuffledLabels[quizState.currentLabelIndex];
+    if (!currentLabel) return; // Guard against undefined label
+
     const distance = Math.sqrt(
       Math.pow(clickX - currentLabel.position.x, 2) + Math.pow(clickY - currentLabel.position.y, 2)
     );
@@ -279,7 +281,7 @@ export function InteractiveDiagram({
       </div>
 
       {/* Quiz prompt */}
-      {quizState && (
+      {quizState && quizState.shuffledLabels[quizState.currentLabelIndex] && (
         <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
@@ -289,7 +291,7 @@ export function InteractiveDiagram({
               <p className="text-lg font-semibold text-slate-900 dark:text-white">
                 Click on the:{' '}
                 <span className="text-indigo-600">
-                  {quizState.shuffledLabels[quizState.currentLabelIndex].name}
+                  {quizState.shuffledLabels[quizState.currentLabelIndex]?.name}
                 </span>
               </p>
             </div>
@@ -383,45 +385,47 @@ export function InteractiveDiagram({
               ))}
 
             {/* Quiz feedback markers */}
-            {quizState?.showFeedback && quizState.lastClickPosition && (
-              <>
-                {/* User's click */}
-                <div
-                  className={`
-                    absolute w-6 h-6 rounded-full transform -translate-x-1/2 -translate-y-1/2
-                    flex items-center justify-center
-                    ${
-                      quizState.results[quizState.results.length - 1].isCorrect
-                        ? 'bg-emerald-500'
-                        : 'bg-red-500'
-                    }
-                  `}
-                  style={{
-                    left: `${quizState.lastClickPosition.x}%`,
-                    top: `${quizState.lastClickPosition.y}%`,
-                  }}
-                >
-                  {quizState.results[quizState.results.length - 1].isCorrect ? (
-                    <CheckCircle className="h-4 w-4 text-white" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-white" />
-                  )}
-                </div>
-
-                {/* Correct position if wrong */}
-                {!quizState.results[quizState.results.length - 1].isCorrect && (
+            {quizState?.showFeedback && quizState.lastClickPosition && quizState.results.length > 0 && (() => {
+              const lastResult = quizState.results[quizState.results.length - 1];
+              const currentLabel = quizState.shuffledLabels[quizState.currentLabelIndex];
+              if (!lastResult) return null;
+              
+              return (
+                <>
+                  {/* User's click */}
                   <div
-                    className="absolute w-6 h-6 rounded-full bg-emerald-500 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center animate-pulse"
+                    className={`
+                      absolute w-6 h-6 rounded-full transform -translate-x-1/2 -translate-y-1/2
+                      flex items-center justify-center
+                      ${lastResult.isCorrect ? 'bg-emerald-500' : 'bg-red-500'}
+                    `}
                     style={{
-                      left: `${quizState.shuffledLabels[quizState.currentLabelIndex].position.x}%`,
-                      top: `${quizState.shuffledLabels[quizState.currentLabelIndex].position.y}%`,
+                      left: `${quizState.lastClickPosition.x}%`,
+                      top: `${quizState.lastClickPosition.y}%`,
                     }}
                   >
-                    <CheckCircle className="h-4 w-4 text-white" />
+                    {lastResult.isCorrect ? (
+                      <CheckCircle className="h-4 w-4 text-white" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-white" />
+                    )}
                   </div>
-                )}
-              </>
-            )}
+
+                  {/* Correct position if wrong */}
+                  {!lastResult.isCorrect && currentLabel && (
+                    <div
+                      className="absolute w-6 h-6 rounded-full bg-emerald-500 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center animate-pulse"
+                      style={{
+                        left: `${currentLabel.position.x}%`,
+                        top: `${currentLabel.position.y}%`,
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Zoom controls */}
@@ -451,41 +455,47 @@ export function InteractiveDiagram({
           </div>
 
           {/* Quiz feedback */}
-          {quizState?.showFeedback && (
-            <div className="absolute inset-x-4 bottom-16 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {quizState.results[quizState.results.length - 1].isCorrect ? (
-                    <CheckCircle className="h-8 w-8 text-emerald-500" />
-                  ) : (
-                    <XCircle className="h-8 w-8 text-red-500" />
-                  )}
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      {quizState.results[quizState.results.length - 1].isCorrect
-                        ? 'Correct!'
-                        : 'Not quite...'}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {quizState.shuffledLabels[quizState.currentLabelIndex].name}
-                    </p>
+          {quizState?.showFeedback && quizState.results.length > 0 && (() => {
+            const lastResult = quizState.results[quizState.results.length - 1];
+            const currentLabel = quizState.shuffledLabels[quizState.currentLabelIndex];
+            if (!lastResult || !currentLabel) return null;
+            
+            return (
+              <div className="absolute inset-x-4 bottom-16 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {lastResult.isCorrect ? (
+                      <CheckCircle className="h-8 w-8 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-8 w-8 text-red-500" />
+                    )}
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">
+                        {lastResult.isCorrect
+                          ? 'Correct!'
+                          : 'Not quite...'}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {currentLabel.name}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={nextQuizQuestion}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+                  >
+                    {quizState.currentLabelIndex + 1 < quizState.shuffledLabels.length ? (
+                      <>
+                        Next <ChevronRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      'View Results'
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={nextQuizQuestion}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
-                >
-                  {quizState.currentLabelIndex + 1 < quizState.shuffledLabels.length ? (
-                    <>
-                      Next <ChevronRight className="h-4 w-4" />
-                    </>
-                  ) : (
-                    'View Results'
-                  )}
-                </button>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Sidebar - Label Details */}

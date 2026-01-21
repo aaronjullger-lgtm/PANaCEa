@@ -223,6 +223,19 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   }, []);
 
   const currentQuestion = questions[currentIndex];
+
+  // Guard: If currentQuestion is undefined during active play, show loading
+  if (!isLoading && !loadError && !isComplete && !currentQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-orange-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading question...</p>
+        </div>
+      </div>
+    );
+  }
+
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
 
   // Update elapsed time
@@ -242,7 +255,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   };
 
   const handleAnswerSelect = (index: number) => {
-    if (selectedAnswer !== null) return; // Already answered
+    if (selectedAnswer !== null || !currentQuestion) return; // Already answered or no question
 
     setSelectedAnswer(index);
     setShowExplanation(true);
@@ -397,6 +410,9 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
       </motion.div>
     );
   }
+
+  // Guard for TypeScript - currentQuestion must exist at this point
+  if (!currentQuestion) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">

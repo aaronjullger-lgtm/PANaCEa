@@ -197,11 +197,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     if (!challengeData || selectedAnswer === null) return;
 
     const currentQuestion = challengeData.questions[currentQuestionIndex];
+    if (!currentQuestion) return;
 
-    // Save answer
+    // Save answer - guard against undefined id for computed property type safety
+    const questionId = currentQuestion.id;
+    if (!questionId) return;
     const updatedAnswers = {
       ...userAnswers,
-      [currentQuestion.id]: selectedAnswer,
+      [questionId]: selectedAnswer,
     };
     setUserAnswers(updatedAnswers);
 
@@ -496,6 +499,19 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Active quiz state
   if (viewState === 'active' && challengeData) {
     const currentQuestion = challengeData.questions[currentQuestionIndex];
+
+    // Guard: If currentQuestion is undefined, show loading
+    if (!currentQuestion) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-12 h-12 animate-spin text-amber-500 mx-auto" />
+            <p className="text-xl text-[var(--color-text-muted)]">Loading question...</p>
+          </div>
+        </div>
+      );
+    }
+
     const progress = ((currentQuestionIndex + 1) / challengeData.questions.length) * 100;
     const timeRemaining = getTimeRemaining();
     const timeRemainingPercent = (timeRemaining / TOTAL_TIME_MS) * 100;
