@@ -19,8 +19,9 @@ import {
   predictScore as predictPANCEScore,
   calculateTrend,
   type SystemPerformance,
-} from '@/services/analytics';
-import type { PerformanceRecord } from '../../types';
+  type ScorePrediction,
+} from '../../services/analytics';
+import type { PerformanceRecord } from '../../types/performance';
 
 interface ScorePredictionCardProps {
   performanceData: PerformanceRecord[];
@@ -201,7 +202,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
 
         {/* Strengths & Risk Factors */}
         <div className="space-y-3">
-          {prediction.strengths.length > 0 && (
+          {prediction.strengths && prediction.strengths.length > 0 && (
             <div className="space-y-1">
               <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="w-3.5 h-3.5" />
@@ -217,7 +218,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
             </div>
           )}
 
-          {prediction.riskFactors.length > 0 && (
+          {prediction.riskFactors && prediction.riskFactors.length > 0 && (
             <div className="space-y-1">
               <div className="flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                 <TrendingDown className="w-3.5 h-3.5" />
@@ -233,7 +234,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
             </div>
           )}
 
-          {prediction.recommendations.length > 0 && (
+          {prediction.recommendations && prediction.recommendations.length > 0 && (
             <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                 <Lightbulb className="w-3.5 h-3.5" />

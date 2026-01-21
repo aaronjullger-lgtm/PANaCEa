@@ -323,14 +323,20 @@ If contradicted, provide the correct information in "correction".`;
       explanation: string;
     }>;
 
-    return verifications.map((v) => ({
-      claim: claims[v.claimIndex],
-      verified: v.verified,
-      confidence: v.confidence,
-      verificationSource: v.verificationSource as ClaimVerification['verificationSource'],
-      correction: v.correction || undefined,
-      explanation: v.explanation,
-    }));
+    return verifications.map((v) => {
+      const claim = claims[v.claimIndex];
+      if (!claim) {
+        throw new Error(`Invalid claim index: ${v.claimIndex}`);
+      }
+      return {
+        claim,
+        verified: v.verified,
+        confidence: v.confidence,
+        verificationSource: v.verificationSource as ClaimVerification['verificationSource'],
+        correction: v.correction || undefined,
+        explanation: v.explanation,
+      };
+    });
   } catch (error) {
     console.error('[CoVe] Failed to verify claims:', error);
     // Return unverified status for all claims on error
