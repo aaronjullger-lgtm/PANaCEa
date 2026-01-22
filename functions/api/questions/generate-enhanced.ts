@@ -70,7 +70,7 @@ function parseConditionContext(contextString: string): ParsedConditionContent {
            'complications', 'riskFactors', 'buzzwords', 'clinicalPearls'].includes(key)) {
         // Split by newlines, bullets, semicolons, or numbered lists
         const items = content
-          .split(/\n|[•\-]\s*|;\s*|\d+\.\s*/)
+          .split(/\n|[•-]\s*|;\s*|\d+\.\s*/)
           .map((s) => s.trim())
           .filter((s) => s.length > 2);
         if (items.length > 0) {
