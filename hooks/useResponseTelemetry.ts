@@ -27,17 +27,25 @@ export interface CRPLTelemetry {
   long_pauses: number; // >15s gaps
   hover_map: Record<string, number>; // answerId → total_hover_ms
   hesitation_flag: boolean; // >2000ms hover on wrong answer
+  mouse_efficiency_index: number; // optimal_distance / actual_distance
+  hover_entropy: number; // Shannon entropy of hover time distribution
+  total_mouse_distance: number; // pixels traveled
+  answer_changes: number; // number of times user changed selection
 }
 
 interface InteractionEvent {
   timestamp: number;
-  type: 'click' | 'hover' | 'focus';
+  type: 'click' | 'hover' | 'focus' | 'mousemove';
   targetId: string;
+  x?: number; // mouse coordinates
+  y?: number;
 }
 
 export interface CRPLTelemetryHook {
-  recordInteraction: (type: 'click' | 'hover' | 'focus', targetId: string) => void;
+  recordInteraction: (type: 'click' | 'hover' | 'focus', targetId: string, x?: number, y?: number) => void;
   recordHover: (answerId: string, durationMs: number) => void;
+  recordMouseMove: (x: number, y: number) => void;
+  recordAnswerChange: () => void;
   finalize: () => CRPLTelemetry;
   reset: () => void;
 }
@@ -71,22 +79,32 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
   const interactions = useRef<InteractionEvent[]>([]);
   const hoverMap = useRef<Record<string, number>>({});
   const firstInteractionTime = useRef<number | null>(null);
+  const mousePositions = useRef<Array<{ x: number; y: number; timestamp: number }>>([]);
+  const answerChanges = useRef<number>(0);
+  const firstClickPosition = useRef<{ x: number; y: number } | null>(null);
 
   /**
    * Record a generic interaction event (click, hover, focus)
    */
-  const recordInteraction = useCallback((type: 'click' | 'hover' | 'focus', targetId: string) => {
+  const recordInteraction = useCallback((type: 'click' | 'hover' | 'focus', targetId: string, x?: number, y?: number) => {
     const timestamp = performance.now();
 
     interactions.current.push({
       timestamp,
       type,
       targetId,
+      x,
+      y,
     });
 
     // Track first interaction time
     if (firstInteractionTime.current === null) {
       firstInteractionTime.current = timestamp;
+    }
+
+    // Track first click position for efficiency calculation
+    if (type === 'click' && x !== undefined && y !== undefined && firstClickPosition.current === null) {
+      firstClickPosition.current = { x, y };
     }
   }, []);
 
@@ -95,6 +113,26 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
    */
   const recordHover = useCallback((answerId: string, durationMs: number) => {
     hoverMap.current[answerId] = (hoverMap.current[answerId] || 0) + durationMs;
+  }, []);
+
+  /**
+   * Record mouse movement for efficiency calculation
+   */
+  const recordMouseMove = useCallback((x: number, y: number) => {
+    const timestamp = performance.now();
+    mousePositions.current.push({ x, y, timestamp });
+
+    // Trim to last 100 positions to prevent memory issues
+    if (mousePositions.current.length > 100) {
+      mousePositions.current.shift();
+    }
+  }, []);
+
+  /**
+   * Record when user changes their answer selection
+   */
+  const recordAnswerChange = useCallback(() => {
+    answerChanges.current++;
   }, []);
 
   /**
@@ -126,6 +164,61 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
   }, []);
 
   /**
+   * Calculate mouse movement efficiency
+   * Returns ratio of optimal distance to actual distance traveled
+   */
+  const calculateMouseEfficiency = useCallback((): { efficiency: number; totalDistance: number } => {
+    if (mousePositions.current.length < 2 || !firstClickPosition.current) {
+      return { efficiency: 1.0, totalDistance: 0 };
+    }
+
+    // Calculate total distance traveled
+    let totalDistance = 0;
+    for (let i = 1; i < mousePositions.current.length; i++) {
+      const prev = mousePositions.current[i - 1];
+      const curr = mousePositions.current[i];
+      const dx = curr.x - prev.x;
+      const dy = curr.y - prev.y;
+      totalDistance += Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Calculate optimal distance (straight line from start to first click)
+    const start = mousePositions.current[0];
+    const end = firstClickPosition.current;
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const optimalDistance = Math.sqrt(dx * dx + dy * dy);
+
+    // Efficiency = optimal / actual (capped at 1.0)
+    const efficiency = optimalDistance > 0 ? Math.min(1.0, optimalDistance / totalDistance) : 1.0;
+
+    return { efficiency, totalDistance };
+  }, []);
+
+  /**
+   * Calculate hover entropy (measure of focus vs. indecision)
+   * High entropy = distributed attention, low entropy = focused on one option
+   */
+  const calculateHoverEntropy = useCallback((): number => {
+    const hoverTimes = Object.values(hoverMap.current);
+    if (hoverTimes.length === 0) return 0;
+
+    const totalTime = hoverTimes.reduce((sum, time) => sum + time, 0);
+    if (totalTime === 0) return 0;
+
+    // Shannon entropy: -Σ(p * log2(p))
+    let entropy = 0;
+    for (const time of hoverTimes) {
+      const p = time / totalTime;
+      if (p > 0) {
+        entropy -= p * Math.log2(p);
+      }
+    }
+
+    return entropy;
+  }, []);
+
+  /**
    * Detect hesitation: >2000ms hover on a wrong answer
    */
   const detectHesitation = useCallback((): boolean => {
@@ -151,6 +244,8 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
 
     const pauses = analyzePauses();
     const hesitationFlag = detectHesitation();
+    const mouseMetrics = calculateMouseEfficiency();
+    const hoverEntropy = calculateHoverEntropy();
 
     return {
       duration_ms: Math.round(duration),
@@ -163,8 +258,12 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
       long_pauses: pauses.long,
       hover_map: { ...hoverMap.current },
       hesitation_flag: hesitationFlag,
+      mouse_efficiency_index: mouseMetrics.efficiency,
+      hover_entropy: hoverEntropy,
+      total_mouse_distance: Math.round(mouseMetrics.totalDistance),
+      answer_changes: answerChanges.current,
     };
-  }, [questionDisplayTime, mvrtThresholdMs, analyzePauses, detectHesitation]);
+  }, [questionDisplayTime, mvrtThresholdMs, analyzePauses, detectHesitation, calculateMouseEfficiency, calculateHoverEntropy]);
 
   /**
    * Reset telemetry state for new question
@@ -173,11 +272,16 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
     interactions.current = [];
     hoverMap.current = {};
     firstInteractionTime.current = null;
+    mousePositions.current = [];
+    answerChanges.current = 0;
+    firstClickPosition.current = null;
   }, []);
 
   return {
     recordInteraction,
     recordHover,
+    recordMouseMove,
+    recordAnswerChange,
     finalize,
     reset,
   };
