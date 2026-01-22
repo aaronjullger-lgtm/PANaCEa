@@ -85,34 +85,9 @@ export const defaultParameters: FSRSParameters = {
   request_retention: 0.9,
   maximum_interval: 36500,
   w: [
-    // w[0]-w[3]: Initial stability for each rating
-    0.40255, // Again
-    1.18385, // Hard
-    3.173, // Good
-    15.69105, // Easy
-    // w[4]-w[7]: Difficulty parameters
-    7.19605, // Initial difficulty base
-    0.5345, // Difficulty change per grade
-    1.4604, // Difficulty adjustment rate
-    0.0046, // Mean reversion strength
-    // w[8]-w[10]: Recall stability growth
-    1.54575, // Base growth factor
-    0.1192, // Stability decay exponent
-    1.01925, // Retrievability growth factor
-    // w[11]-w[14]: Forget stability (lapse recovery)
-    1.9395, // Forget base
-    0.41, // Forget difficulty factor
-    0.75825, // Forget stability factor
-    0.143, // Forget retrievability factor
-    // w[15]-w[16]: Hard/Easy modifiers
-    0.96455, // Hard penalty (< 1 reduces stability growth)
-    0.2764, // Easy bonus multiplier
-    // w[17]-w[18]: Short-term stability (NEW in v6)
-    0.5982, // Short-term decay rate
-    0.39155, // Grade offset for short-term
-    // w[19]-w[20]: Retrievability curve (NEW in v6)
-    9.0, // Retrievability factor (was hardcoded as 9 in v5)
-    1.0, // Retrievability decay exponent (power curve)
+    0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
+    0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
+    0.0912, 0.0658, 0.1542,
   ],
 };
 
@@ -145,7 +120,7 @@ export class FSRS {
   private normalizeParameters(params: FSRSParameters): FSRSParameters {
     const w = [...params.w];
 
-    // Add v6 parameters if missing (v5 ’ v6 migration)
+    // Add v6 parameters if missing (v5 ï¿½ v6 migration)
     if (w.length === 19) {
       w.push(9.0); // w[19]: retrievability factor
       w.push(1.0); // w[20]: retrievability decay exponent
@@ -263,7 +238,7 @@ export class FSRS {
 
   /**
    * FSRS v6: Calculate retrievability using power-law decay
-   * R = (1 + factor * t / S) ^ -w[20]
+   * R = (1 + t/(9*S))^(-w20)
    *
    * @param elapsed_days - Days since last review
    * @param stability - Current stability value
@@ -272,10 +247,9 @@ export class FSRS {
   calculateRetrievability(elapsed_days: number, stability: number): number {
     if (stability <= 0) return 0;
 
-    const factor = this.p.w[19] ?? 9; // Default to 9 for v5 compatibility
-    const decay = this.p.w[20] ?? 1; // Default to 1 for v5 compatibility
+    const w20 = this.p.w[20] ?? 0.1542; // Default to FSRS v6 calibrated value
 
-    return Math.pow(1 + (factor * elapsed_days) / stability, -decay);
+    return Math.pow(1 + elapsed_days / (9 * stability), -w20);
   }
 
   /**
@@ -292,11 +266,13 @@ export class FSRS {
   private next_short_term_stability(stability: number, rating: Rating): number {
     const w17 = this.p.w[17];
     const w18 = this.p.w[18];
+    const w19 = this.p.w[19];
 
     // G is the grade (1-4), subtract 3 to center around Good (3)
     const gradeOffset = rating - 3 + w18;
 
-    return stability * Math.exp(w17 * gradeOffset);
+    // FSRS v6 formula: S' = S * e^(w17 * (G - 3 + w18)) * S^(-w19)
+    return stability * Math.exp(w17 * gradeOffset) * Math.pow(stability, -w19);
   }
 
   /**
