@@ -199,8 +199,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
         if (!acc[r.system]) {
           acc[r.system] = { correct: 0, total: 0 };
         }
-        acc[r.system].total++;
-        if (r.isCorrect) acc[r.system].correct++;
+        acc[r.system]!.total++;
+        if (r.isCorrect) acc[r.system]!.correct++;
         return acc;
       },
       {} as Record<string, { correct: number; total: number }>
@@ -325,7 +325,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
               className="relative"
             >
               <div
-                className="p-6 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xl cursor-pointer hover:shadow-2xl transition-all group"
+                className="p-6 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-xl cursor-pointer hover:shadow-2xl hover:brightness-110 transition-all group"
                 onClick={() => onNavigate(topRecommendation.actionDestination)}
               >
                 <div className="flex items-start justify-between">
@@ -338,7 +338,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                     </div>
                     <h2 className="text-2xl font-bold mb-2">{topRecommendation.title}</h2>
                     <p className="text-white/90 mb-4">{topRecommendation.description}</p>
-                    <button className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
+                    <button className="px-6 py-2 bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
                       {topRecommendation.action}
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -429,9 +429,9 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 p-6 text-white shadow-xl"
+                className="relative overflow-hidden rounded-xl bg-[var(--color-accent-secondary)] p-6 text-[var(--color-text-inverse)] shadow-xl"
               >
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-[var(--color-bg-primary)]/10 rounded-full blur-2xl" />
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-3">
                     <Brain className="w-6 h-6" />
@@ -446,7 +446,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                   </p>
                   <button
                     onClick={() => onNavigate('grand_rounds')}
-                    className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2 group"
+                    className="px-6 py-2 bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2 group"
                   >
                     Start Challenge
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

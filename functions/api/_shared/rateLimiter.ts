@@ -347,8 +347,108 @@ export async function withRateLimit(
 }
 
 /**
+ * Normalize an IPv6 address to a canonical /64 prefix for rate limiting.
+ * This prevents bypass attacks using different representations of the same address.
+ *
+ * Why /64?
+ * - ISPs typically assign /64 or larger prefixes to end users
+ * - Privacy extensions rotate the interface identifier (last 64 bits)
+ * - Rate limiting by /64 catches all addresses from the same network
+ *
+ * @param ip - The IP address to normalize
+ * @returns Normalized IP identifier (IPv4 as-is, IPv6 as /64 prefix)
+ */
+function normalizeIPForRateLimit(ip: string): string {
+  // Handle empty or invalid
+  if (!ip || ip === 'anonymous') {
+    return 'anonymous';
+  }
+
+  // Trim whitespace
+  ip = ip.trim().toLowerCase();
+
+  // Check for IPv4-mapped IPv6 (::ffff:192.168.1.1)
+  const ipv4MappedMatch = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
+  if (ipv4MappedMatch) {
+    return ipv4MappedMatch[1]; // Extract and return the IPv4 part
+  }
+
+  // Check if it's IPv4 (simple check for dotted decimal)
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+    return ip; // Return IPv4 as-is
+  }
+
+  // Check if it's IPv6 (contains colons)
+  if (ip.includes(':')) {
+    return normalizeIPv6ToPrefix64(ip);
+  }
+
+  // Unknown format, return as-is
+  return ip;
+}
+
+/**
+ * Normalize an IPv6 address and extract the /64 prefix.
+ * Handles all valid IPv6 representations including:
+ * - Full form: 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+ * - Compressed: 2001:db8:85a3::8a2e:370:7334
+ * - Mixed: 2001:db8::192.168.1.1
+ *
+ * @param ipv6 - The IPv6 address to normalize
+ * @returns The normalized /64 prefix in lowercase
+ */
+function normalizeIPv6ToPrefix64(ipv6: string): string {
+  try {
+    // Remove zone ID if present (e.g., %eth0)
+    const zoneIndex = ipv6.indexOf('%');
+    if (zoneIndex !== -1) {
+      ipv6 = ipv6.substring(0, zoneIndex);
+    }
+
+    // Handle IPv6 with embedded IPv4 (e.g., ::ffff:192.168.1.1 or 2001:db8::192.168.1.1)
+    const ipv4Embedded = ipv6.match(/:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+    if (ipv4Embedded) {
+      // Convert embedded IPv4 to two 16-bit groups
+      const ipv4Parts = ipv4Embedded[1].split('.').map(Number);
+      const high = ((ipv4Parts[0] << 8) | ipv4Parts[1]).toString(16);
+      const low = ((ipv4Parts[2] << 8) | ipv4Parts[3]).toString(16);
+      ipv6 = ipv6.replace(ipv4Embedded[0], `:${high}:${low}`);
+    }
+
+    // Expand :: to full zeros
+    let parts: string[];
+    if (ipv6.includes('::')) {
+      const [left, right] = ipv6.split('::');
+      const leftParts = left ? left.split(':') : [];
+      const rightParts = right ? right.split(':') : [];
+      const missing = 8 - leftParts.length - rightParts.length;
+      const zeros = Array(missing).fill('0');
+      parts = [...leftParts, ...zeros, ...rightParts];
+    } else {
+      parts = ipv6.split(':');
+    }
+
+    // Normalize each part to 4 hex digits (lowercase)
+    const normalizedParts = parts.map((part) => part.padStart(4, '0').toLowerCase());
+
+    // Return only the first 4 groups (64 bits) as the /64 prefix
+    // This groups all addresses in the same /64 network together
+    const prefix64 = normalizedParts.slice(0, 4).join(':');
+    return `${prefix64}::/64`;
+  } catch {
+    // If parsing fails, return original (lowercase)
+    return ipv6.toLowerCase();
+  }
+}
+
+/**
  * Get identifier from request for rate limiting
- * Prefers userId, falls back to IP
+ * Prefers userId, falls back to IP with IPv6 normalization
+ *
+ * IPv6 Security Considerations:
+ * - IPv6 addresses can be represented in many equivalent forms
+ * - Without normalization, attackers could bypass rate limits
+ * - We normalize to /64 prefix to catch all addresses from same network
  */
 export function getRateLimitIdentifier(request: Request, userId?: string): string {
   if (userId) {
@@ -356,10 +456,13 @@ export function getRateLimitIdentifier(request: Request, userId?: string): strin
   }
 
   // Cloudflare provides CF-Connecting-IP header
-  const ip =
+  const rawIp =
     request.headers.get('CF-Connecting-IP') ||
     request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
     'anonymous';
 
-  return `ip:${ip}`;
+  // Normalize IP for consistent rate limiting
+  const normalizedIp = normalizeIPForRateLimit(rawIp);
+
+  return `ip:${normalizedIp}`;
 }

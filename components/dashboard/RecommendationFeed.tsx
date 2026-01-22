@@ -265,7 +265,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="w-full grid gap-4 md:grid-cols-2">
         <AnimatePresence mode="popLayout">
           {recommendations.map((rec) => (
             <motion.div

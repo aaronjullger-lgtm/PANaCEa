@@ -126,7 +126,7 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <SparklesIcon className="w-5 h-5 text-amber-400" />
           Building Your Profile
         </h3>
@@ -164,7 +164,7 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-white">{stats.totalInWindow}</span>
+            <span className="text-3xl font-bold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
             <span className="text-xs text-slate-400">of 50</span>
           </div>
         </div>
@@ -208,7 +208,7 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <ChartBarIcon className="w-5 h-5 text-amber-400" />
           Exam Readiness
         </h3>
@@ -225,7 +225,7 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           animate={{ scale: 1, opacity: 1 }}
           className="inline-block"
         >
-          <span className="text-6xl font-bold text-white">{stats.predictedScore || '---'}</span>
+          <span className="text-6xl font-bold text-[var(--color-text-primary)]">{stats.predictedScore || '---'}</span>
           <span className="text-xl text-slate-400 ml-2">/800</span>
         </motion.div>
         <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
@@ -234,14 +234,14 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
       {/* Accuracy */}
       <div className="flex items-center justify-center gap-8 py-2">
         <div className="text-center">
-          <span className="text-2xl font-semibold text-white">
+          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
             {stats.accuracyPercent?.toFixed(1) || '0'}%
           </span>
           <p className="text-xs text-slate-400">Accuracy</p>
         </div>
         <div className="w-px h-10 bg-slate-700" />
         <div className="text-center">
-          <span className="text-2xl font-semibold text-white">{stats.totalInWindow}</span>
+          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>
@@ -296,7 +296,7 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <ChartBarIcon className="w-5 h-5 text-teal-400" />
           Exam Readiness
         </h3>
@@ -331,7 +331,7 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4 py-2">
         <div className="text-center">
-          <span className="text-xl font-semibold text-white">
+          <span className="text-xl font-semibold text-[var(--color-text-primary)]">
             {stats.accuracyPercent?.toFixed(1) || '0'}%
           </span>
           <p className="text-xs text-slate-400">Accuracy</p>
@@ -345,7 +345,7 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <p className="text-xs text-slate-400">Pass Chance</p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-semibold text-white">{stats.totalInWindow}</span>
+          <span className="text-xl font-semibold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>

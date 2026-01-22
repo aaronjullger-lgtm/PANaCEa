@@ -23,4 +23,7 @@ export default defineConfig({
   datasource: {
     url: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '',
   },
+
+  // Seed command for database population
+  seed: 'npx tsx ./prisma/seed.ts',
 });

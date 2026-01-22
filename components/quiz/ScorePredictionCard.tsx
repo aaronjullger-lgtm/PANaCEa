@@ -209,7 +209,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
                 Strengths
               </div>
               <ul className="space-y-0.5">
-                {prediction.strengths.map((s, i) => (
+                {prediction.strengths?.map((s, i) => (
                   <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
                     • {s}
                   </li>
@@ -225,7 +225,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
                 Areas to Watch
               </div>
               <ul className="space-y-0.5">
-                {prediction.riskFactors.map((r, i) => (
+                {prediction.riskFactors?.map((r, i) => (
                   <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
                     • {r}
                   </li>
@@ -241,7 +241,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
                 Recommendations
               </div>
               <ul className="space-y-0.5">
-                {prediction.recommendations.map((r, i) => (
+                {prediction.recommendations?.map((r, i) => (
                   <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
                     • {r}
                   </li>
