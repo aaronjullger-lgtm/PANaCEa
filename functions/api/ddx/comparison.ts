@@ -82,7 +82,7 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
 
     // Cache comparison on all involved MedicalContent rows
     await Promise.all(
-      medicalContent.map(async (mc) => {
+      medicalContent.map(async (mc: { id: string; condition: string; system: string; content: unknown }) => {
         const contentJson = (mc.content as Record<string, unknown> | null) || {};
         const comparisons = (contentJson.comparisons as Record<string, ComparisonResult> | undefined) || {};
         comparisons[cacheKey] = comparison;

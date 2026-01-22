@@ -50,10 +50,41 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
       take: limit,
     });
 
-    const enrichedPairs = confusionPairs.map((pair) => {
+    // Define type for Prisma query result
+    type ConfusionPairResult = {
+      id: string;
+      realCondition: string;
+      mistakenFor: string;
+      count: number;
+      lastOccurrence: Date;
+      realConditionId: string | null;
+      mistakenForId: string | null;
+      correctConditionId: string | null;
+      selectedConditionId: string | null;
+      RealCondition: { id: string; name: string; displayName: string | null; system: string } | null;
+      MistakenCondition: { id: string; name: string; displayName: string | null; system: string } | null;
+      CorrectCondition: { id: string; condition: string; system: string } | null;
+      SelectedCondition: { id: string; condition: string; system: string } | null;
+    };
+
+    // Define type for enriched pair
+    type EnrichedPair = {
+      id: string;
+      realCondition: string;
+      mistakenFor: string;
+      correctConditionId: string | null | undefined;
+      selectedConditionId: string | null | undefined;
+      count: number;
+      lastOccurrence: Date;
+      realConditionData: { id: string; condition?: string; name?: string; displayName?: string | null; system: string } | null;
+      mistakenConditionData: { id: string; condition?: string; name?: string; displayName?: string | null; system: string } | null;
+      severity: 'high' | 'medium' | 'low';
+    };
+
+    const enrichedPairs: EnrichedPair[] = confusionPairs.map((pair: ConfusionPairResult) => {
       const realConditionName = pair.CorrectCondition?.condition || pair.realCondition;
       const mistakenConditionName = pair.SelectedCondition?.condition || pair.mistakenFor;
-      const severity = pair.count >= 5 ? 'high' : pair.count >= 3 ? 'medium' : 'low';
+      const severity: 'high' | 'medium' | 'low' = pair.count >= 5 ? 'high' : pair.count >= 3 ? 'medium' : 'low';
 
       return {
         id: pair.id,
@@ -70,16 +101,21 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
     });
 
     // Group by system for summary
-    const systemSummary = enrichedPairs.reduce((acc, pair) => {
-      const system = pair.realConditionData?.system || 'Unknown';
-      if (!acc[system]) acc[system] = { count: 0, pairs: [] };
-      acc[system].count += pair.count;
-      acc[system].pairs.push({ real: pair.realCondition, mistaken: pair.mistakenFor, count: pair.count });
-      return acc;
-    }, {} as Record<string, { count: number; pairs: Array<{ real: string; mistaken: string; count: number }> }>);
+    type SystemSummaryValue = { count: number; pairs: Array<{ real: string; mistaken: string; count: number }> };
+    const systemSummary = enrichedPairs.reduce(
+      (acc: Record<string, SystemSummaryValue>, pair: EnrichedPair) => {
+        const system = pair.realConditionData?.system || 'Unknown';
+        if (!acc[system]) acc[system] = { count: 0, pairs: [] };
+        acc[system].count += pair.count;
+        acc[system].pairs.push({ real: pair.realCondition, mistaken: pair.mistakenFor, count: pair.count });
+        return acc;
+      },
+      {} as Record<string, SystemSummaryValue>
+    );
 
     const confusionScore = enrichedPairs.reduce(
-      (sum, p) => sum + p.count * (p.severity === 'high' ? 3 : p.severity === 'medium' ? 2 : 1), 0
+      (sum: number, p: EnrichedPair) => sum + p.count * (p.severity === 'high' ? 3 : p.severity === 'medium' ? 2 : 1),
+      0
     );
 
     logger.info('Fetched confusion pairs', { userId: auth.userId, count: enrichedPairs.length });
@@ -113,7 +149,8 @@ function generateRecommendations(
   const mediumSeverity = pairs.filter((p) => p.severity === 'medium');
 
   if (highSeverity.length > 0) {
-    recommendations.push(`Focus on distinguishing ${highSeverity[0].realCondition} from ${highSeverity[0].mistakenFor} - you've confused these ${highSeverity[0].count} times.`);
+    const topPair = highSeverity[0];
+    recommendations.push(`Focus on distinguishing ${topPair.realCondition} from ${topPair.mistakenFor} - you've confused these ${topPair.count} times.`);
   }
   if (pairs.length > 3) recommendations.push('Consider creating a comparison table for your most confused conditions.');
   if (mediumSeverity.length > 2) recommendations.push('Use the DDx Compare feature to study the key differences between similar conditions.');

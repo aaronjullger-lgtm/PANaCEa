@@ -87,7 +87,7 @@ export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (conte
             attemptedAt: { gte: todayStart },
           },
         })
-        .then((results) => results.length),
+        .then((results: { userId: string }[]) => results.length),
 
       // Total question attempts
       prisma.questionAttempt.count(),
@@ -117,8 +117,8 @@ export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (conte
 
     // Format popular systems
     const popularSystems = systemStats
-      .filter((s) => s.system)
-      .map((s) => ({
+      .filter((s: typeof systemStats[0]) => s.system)
+      .map((s: typeof systemStats[0]) => ({
         system: s.system,
         count: s._count.id,
       }));

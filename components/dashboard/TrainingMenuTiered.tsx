@@ -376,11 +376,13 @@ const TrainingMenuTiered: React.FC<TrainingMenuTieredProps> = ({
 
     const modesWithProgress = activeModes.filter((m) => modeProgress[m.id]?.questionsAnswered);
     if (modesWithProgress.length > 0) {
-      return modesWithProgress.sort((a, b) => {
+      const sorted = modesWithProgress.sort((a, b) => {
         const aLast = modeProgress[a.id]?.lastPracticed?.getTime() || 0;
         const bLast = modeProgress[b.id]?.lastPracticed?.getTime() || 0;
         return aLast - bLast;
-      })[0].id;
+      });
+      const firstMode = sorted[0];
+      return firstMode?.id ?? null;
     }
 
     return activeModes.find((m) => !modeProgress[m.id]?.questionsAnswered)?.id || null;

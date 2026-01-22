@@ -81,7 +81,7 @@ export const onRequestGet = withMiddleware(
             rejected,
             total,
             approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
-            byCategory: byCategory.map((c) => ({
+            byCategory: byCategory.map((c: typeof byCategory[0]) => ({
               category: c.type,
               count: c._count.id,
             })),

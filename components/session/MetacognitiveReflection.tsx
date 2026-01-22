@@ -177,6 +177,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
               >
                 {(() => {
                   const prompt = REFLECTION_PROMPTS[currentStep];
+                  if (!prompt) return null;
                   const Icon = prompt.icon;
 
                   return (

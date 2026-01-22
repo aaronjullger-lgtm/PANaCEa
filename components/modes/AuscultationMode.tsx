@@ -218,7 +218,10 @@ export function AuscultationMode({
   const startQuiz = () => {
     if (quizSounds.length === 0) return;
 
-    const options = generateOptions(quizSounds[0]);
+    const firstSound = quizSounds[0];
+    if (!firstSound) return;
+
+    const options = generateOptions(firstSound);
     setQuizState({
       currentIndex: 0,
       answers: [],
@@ -226,7 +229,7 @@ export function AuscultationMode({
       questionStartTime: Date.now(),
       shuffledOptions: options,
     });
-    setSelectedSound(quizSounds[0]);
+    setSelectedSound(firstSound);
     setShowAnswer(false);
   };
 
@@ -279,7 +282,7 @@ export function AuscultationMode({
       onComplete?.({
         totalQuestions: quizSounds.length,
         correct,
-        accuracy: (correct / quizSounds.length) * 100,
+        accuracy: quizSounds.length > 0 ? (correct / quizSounds.length) * 100 : 0,
         timeSpent: totalTime,
         results: quizState.answers,
       });
@@ -289,6 +292,8 @@ export function AuscultationMode({
     } else {
       // Next question
       const nextSound = quizSounds[nextIndex];
+      if (!nextSound) return;
+
       const options = generateOptions(nextSound);
 
       setQuizState({

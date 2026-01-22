@@ -187,6 +187,9 @@ function CalibrationCurve({
           const expectedHeight = bin.count > 0 ? Math.max(10, (bin.avgConfidence * 100)) : 0;
           const hasData = bin.count > 0;
 
+          // Calculate calibration error as difference between actual and expected
+          const calibrationError = bin.actualAccuracy - bin.avgConfidence;
+          
           return (
             <div key={bin.label} className="flex-1 flex flex-col items-center gap-0.5">
               <div className="relative w-full h-16 flex items-end justify-center gap-0.5">
@@ -201,9 +204,9 @@ function CalibrationCurve({
                     {/* Actual accuracy bar */}
                     <div
                       className={`w-2 rounded-t transition-all ${
-                        bin.calibrationError > 0.1
+                        calibrationError > 0.1
                           ? 'bg-amber-500'
-                          : bin.calibrationError < -0.1
+                          : calibrationError < -0.1
                             ? 'bg-blue-500'
                             : 'bg-green-500'
                       }`}

@@ -188,9 +188,9 @@ function parseStackTrace(
       const match = line.match(/at (.+?) \((.+?):(\d+):(\d+)\)/);
       if (match) {
         return {
-          function: match[1],
-          filename: match[2],
-          lineno: parseInt(match[3], 10),
+          function: match[1] || 'unknown',
+          filename: match[2] || 'unknown',
+          lineno: parseInt(match[3] || '0', 10),
         };
       }
       return { filename: 'unknown', function: line.trim() };
@@ -201,14 +201,14 @@ function parseStackTrace(
 /**
  * Higher-order function to wrap CloudFlare Functions with error handling
  */
-export function withErrorHandler<T extends PagesFunction>(
-  handler: T,
+export function withErrorHandler(
+  handler: PagesFunction,
   options?: {
     endpoint?: string;
     logErrors?: boolean;
   }
-): T {
-  return (async (context: EventContext<any, any, any>) => {
+): PagesFunction {
+  return async (context: EventContext<any, any, any>): Promise<Response> => {
     const { request, env } = context;
     const endpoint = options?.endpoint || new URL(request.url).pathname;
     const requestId = crypto.randomUUID();
@@ -269,7 +269,7 @@ export function withErrorHandler<T extends PagesFunction>(
         headers,
       });
     }
-  }) as T;
+  };
 }
 
 /**

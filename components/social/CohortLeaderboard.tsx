@@ -185,39 +185,45 @@ export function CohortLeaderboard({
       </div>
 
       {/* Podium Display */}
-      {showPodium && podium.length === 3 && !compact && (
-        <div className="flex justify-center items-end gap-4 py-4">
-          {/* 2nd Place */}
-          {podium[1] && podium[1].userId && (
-            <PodiumSpot
-              entry={podium[1]}
-              position={2}
-              currentUserId={currentUserId}
-              onClick={() => onUserClick?.(podium[1].userId)}
-            />
-          )}
+      {showPodium && podium.length === 3 && !compact && (() => {
+        const first = podium[0];
+        const second = podium[1];
+        const third = podium[2];
+        if (!first || !second || !third) return null;
+        return (
+          <div className="flex justify-center items-end gap-4 py-4">
+            {/* 2nd Place */}
+            {second.userId && (
+              <PodiumSpot
+                entry={second}
+                position={2}
+                currentUserId={currentUserId}
+                onClick={() => onUserClick?.(second.userId)}
+              />
+            )}
 
-          {/* 1st Place */}
-          {podium[0] && podium[0].userId && (
-            <PodiumSpot
-              entry={podium[0]}
-              position={1}
-              currentUserId={currentUserId}
-              onClick={() => onUserClick?.(podium[0].userId)}
-            />
-          )}
+            {/* 1st Place */}
+            {first.userId && (
+              <PodiumSpot
+                entry={first}
+                position={1}
+                currentUserId={currentUserId}
+                onClick={() => onUserClick?.(first.userId)}
+              />
+            )}
 
-          {/* 3rd Place */}
-          {podium[2] && podium[2].userId && (
-            <PodiumSpot
-              entry={podium[2]}
-              position={3}
-              currentUserId={currentUserId}
-              onClick={() => onUserClick?.(podium[2].userId)}
-            />
-          )}
-        </div>
-      )}
+            {/* 3rd Place */}
+            {third.userId && (
+              <PodiumSpot
+                entry={third}
+                position={3}
+                currentUserId={currentUserId}
+                onClick={() => onUserClick?.(third.userId)}
+              />
+            )}
+          </div>
+        );
+      })()}
 
       {/* Remaining rankings */}
       <div className="space-y-2">
@@ -286,7 +292,7 @@ export function CohortLeaderboard({
                         ${compact ? 'h-6 w-6 text-xs' : 'h-8 w-8 text-sm'}
                       `}
                       >
-                        {entry.displayName[0].toUpperCase()}
+                        {(entry.displayName[0] ?? '?').toUpperCase()}
                       </div>
                     )}
                     <div className="truncate">
@@ -440,7 +446,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
             ${isCurrentUser ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
           `}
           >
-            {entry.displayName[0].toUpperCase()}
+            {(entry.displayName[0] ?? '?').toUpperCase()}
           </div>
         )}
       </div>

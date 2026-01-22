@@ -180,11 +180,14 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
         const row = dateGrid[rowIdx];
         if (!row) continue;
-        const date = row[colIdx];
-        if (date) {
-          // Use UTC month to ensure consistency
-          colMonth = date.getUTCMonth();
-          break;
+        // Guard: array access may return undefined, so check before using
+        if (colIdx < row.length) {
+          const dateCell = row[colIdx];
+          if (dateCell !== undefined && dateCell !== null) {
+            // Use UTC month to ensure consistency
+            colMonth = dateCell.getUTCMonth();
+            break;
+          }
         }
       }
 
@@ -310,7 +313,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           {(dateGrid[0] ?? []).map((_, colIdx) => (
             <div key={colIdx} className="flex flex-col gap-0.5">
               {dateGrid.map((row, rowIdx) => {
-                const date = row[colIdx] ?? null;
+                // Guard: row array access may be undefined
+                const rowData = row ?? [];
+                const date = rowData[colIdx] ?? null;
                 const value = getValue(date);
                 const level = getColorLevel(value, metric);
                 const colorClass = COLOR_SCALES[metric][level];

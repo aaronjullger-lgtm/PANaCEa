@@ -22,7 +22,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
   onExamDateSaved,
 }) => {
   const [examDate, setExamDate] = useState<string>(
-    userExamDate ? userExamDate.toISOString().split('T')[0] : ''
+    userExamDate ? (userExamDate.toISOString().split('T')[0] ?? '') : ''
   );
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationResult, setGenerationResult] = useState<{

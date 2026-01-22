@@ -57,7 +57,10 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
               labelStyle={chartTheme.tooltip.labelStyle}
-              formatter={(value: number) => [`${value.toFixed(1)}%`, 'Performance']}
+              formatter={(value) => {
+                const numValue = typeof value === 'number' ? value : 0;
+                return [`${numValue.toFixed(1)}%`, 'Performance'];
+              }}
             />
             <Legend />
             <Line

@@ -179,7 +179,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Calculate projected retention using FSRS formula
       // R = (1 + t/S)^-1 where t is days since review, S is stability
-      const retentionSum = progressData.reduce((sum, card) => {
+      const retentionSum = progressData.reduce((sum: number, card: typeof progressData[0]) => {
         const stability = card.stability || 1;
         const lastReview = card.lastReviewDate ? new Date(card.lastReviewDate) : now;
         const daysSinceReview = (now.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
@@ -190,7 +190,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Recent reviews count (cards reviewed in last 7 days)
       const recentReviews = progressData.filter(
-        (card) => card.lastReviewDate && new Date(card.lastReviewDate) >= sevenDaysAgo
+        (card: typeof progressData[0]) => card.lastReviewDate && new Date(card.lastReviewDate) >= sevenDaysAgo
       ).length;
 
       // Learning velocity (cards reaching review state per day)
@@ -216,13 +216,13 @@ export const onRequestGet = authenticatedEndpoint(
 
       for (let i = 0; i < 7; i++) {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toISOString().split('T')[0]!; // ISO strings always contain 'T'
         dayMap.set(dateStr, { total: 0, count: 0 });
       }
 
       // Use session data to estimate stability growth
       for (const session of recentSessions) {
-        const dateStr = new Date(session.startedAt).toISOString().split('T')[0];
+        const dateStr = new Date(session.startedAt).toISOString().split('T')[0]!; // ISO strings always contain 'T'
         if (dayMap.has(dateStr) && session.totalQuestions > 0) {
           const entry = dayMap.get(dateStr)!;
           // Estimate stability increase based on correct answers

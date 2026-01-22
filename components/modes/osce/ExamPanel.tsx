@@ -84,7 +84,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
             key.toLowerCase().includes(maneuver.name.toLowerCase())
         );
         if (regionKey) {
-          finding = examData[regionKey];
+          // Guard: Record value access may return undefined, use default
+          finding = examData[regionKey] ?? 'Within normal limits';
           isAbnormal = !/normal|unremarkable|negative|clear|soft|non.?tender/i.test(finding);
         }
       }

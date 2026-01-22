@@ -82,10 +82,11 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
       // Clear notification after 5 seconds with cleanup
       const timeoutId = setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
       return () => clearTimeout(timeoutId);
-    } else {
-      setProgress(updatedProgress);
-      saveOrganProgress(updatedProgress);
     }
+    
+    setProgress(updatedProgress);
+    saveOrganProgress(updatedProgress);
+    return undefined;
   }, [performanceData, currentStreak]);
 
   // Calculate stats

@@ -79,9 +79,13 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
 
     // Submit answer
     const timeSpent = Date.now() - questionStartTime.current;
-    const selectedOption = currentQuestion.options[index] ?? '';
+    const optionAtIndex = currentQuestion.options[index];
+    // Guard: array access may return undefined, provide empty string fallback
+    const selectedOption: string = typeof optionAtIndex === 'string' ? optionAtIndex : '';
+    // Guard: question id is required, use empty string fallback if undefined
+    const questionId: string = currentQuestion.id ?? '';
     const updatedState = customSessionService.submitAnswer(
-      currentQuestion.id,
+      questionId,
       selectedOption,
       correct,
       timeSpent

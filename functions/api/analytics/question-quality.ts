@@ -22,8 +22,11 @@ export const onRequestGet = adminEndpoint(
     try {
       const params = context.validated;
 
-      // Build where clause
-      const where: any = {};
+      // Build where clause - properly typed for Prisma PreGeneratedQuestion queries
+      const where: {
+        system?: string;
+        validationStatus?: string;
+      } = {};
       if (params.system) where.system = params.system;
       if (params.validationStatus) where.validationStatus = params.validationStatus;
 
@@ -80,7 +83,7 @@ export const onRequestGet = adminEndpoint(
         poor: 0, // 0-39
       };
 
-      questions.forEach((q) => {
+      questions.forEach((q: typeof questions[0]) => {
         const score = q.qualityScore ?? 0;
         if (score >= 80) qualityDistribution.excellent++;
         else if (score >= 60) qualityDistribution.good++;
@@ -121,14 +124,14 @@ export const onRequestGet = adminEndpoint(
 
       // Calculate overall stats
       const avgQualityScore =
-        questions.reduce((sum, q) => sum + (q.qualityScore ?? 0), 0) / questions.length || 0;
+        questions.reduce((sum: number, q: typeof questions[0]) => sum + (q.qualityScore ?? 0), 0) / questions.length || 0;
       const avgFlagRate =
-        questions.reduce((sum, q) => sum + (q.flagRate ?? 0), 0) / questions.length || 0;
-      const totalServed = questions.reduce((sum, q) => sum + q.timesServed, 0);
-      const totalCorrect = questions.reduce((sum, q) => sum + q.timesCorrect, 0);
+        questions.reduce((sum: number, q: typeof questions[0]) => sum + (q.flagRate ?? 0), 0) / questions.length || 0;
+      const totalServed = questions.reduce((sum: number, q: typeof questions[0]) => sum + q.timesServed, 0);
+      const totalCorrect = questions.reduce((sum: number, q: typeof questions[0]) => sum + q.timesCorrect, 0);
       const overallAccuracy =
         totalServed > 0
-          ? totalCorrect / (totalCorrect + questions.reduce((sum, q) => sum + q.timesIncorrect, 0))
+          ? totalCorrect / (totalCorrect + questions.reduce((sum: number, q: typeof questions[0]) => sum + q.timesIncorrect, 0))
           : 0;
 
       return {
@@ -141,12 +144,12 @@ export const onRequestGet = adminEndpoint(
             totalServed,
             overallAccuracy: Math.round(overallAccuracy * 1000) / 10,
           },
-          statusBreakdown: statusBreakdown.map((s) => ({
+          statusBreakdown: statusBreakdown.map((s: typeof statusBreakdown[0]) => ({
             status: s.validationStatus,
             count: s._count,
           })),
           qualityDistribution,
-          systemCoverage: systemCoverage.map((s) => ({
+          systemCoverage: systemCoverage.map((s: typeof systemCoverage[0]) => ({
             system: s.system || 'Unknown',
             count: s._count,
             avgQualityScore: s._avg.qualityScore ? Math.round(s._avg.qualityScore * 10) / 10 : null,

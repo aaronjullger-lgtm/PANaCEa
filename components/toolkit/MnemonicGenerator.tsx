@@ -74,7 +74,7 @@ const generateMnemonic = async (
   } catch (error) {
     // Fallback: generate a simple acronym-based mnemonic
     const words = concept.split(' ').filter((w) => w.length > 0);
-    const acronym = words.map((w) => w[0].toUpperCase()).join('');
+    const acronym = words.map((w) => w.charAt(0).toUpperCase()).join('');
 
     return {
       mnemonic: `${acronym} - ${words
@@ -91,7 +91,7 @@ const generateMnemonic = async (
             'In',
             'Just',
           ][i % 10];
-          return `${w[0].toUpperCase()}${w.slice(1)} (${acroWord})`;
+          return `${w.charAt(0).toUpperCase()}${w.slice(1)} (${acroWord})`;
         })
         .join(', ')}`,
       explanation: 'Auto-generated acronym mnemonic',

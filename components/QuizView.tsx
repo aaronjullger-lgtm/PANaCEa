@@ -464,7 +464,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Initialize from incoming queue once
   useEffect(() => {
     if (!currentQuestion && initialQueue.length > 0) {
-      setCurrentQuestion(initialQueue[0]);
+      setCurrentQuestion(initialQueue[0] ?? null);
     }
     setLocalNote(initialQueue[0]?.userNote || '');
     setEliminatedAnswers(new Set()); // Reset when new question loaded
@@ -943,8 +943,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     setAlternateRationale(null);
 
     try {
-      const userAnswer = currentQuestion.options[selectedAnswerIndex];
-      const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex];
+      const userAnswer = currentQuestion.options[selectedAnswerIndex] ?? '';
+      const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
       const explanation = await generateAlternateRationale(
         currentQuestion,
         userAnswer,
@@ -1397,7 +1397,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           onClose={() => setShowReportModal(false)}
           questionId={currentQuestion.id || `temp-${Date.now()}`}
           questionText={currentQuestion.question}
-          correctAnswer={currentQuestion.answers?.[currentQuestion.correctIndex]}
+          correctAnswer={typeof currentQuestion.correctIndex === 'number' ? currentQuestion.answers?.[currentQuestion.correctIndex] : undefined}
           topic={currentQuestion.topic}
           system={currentQuestion.system || undefined}
           userId={user?.id || 'anonymous'}

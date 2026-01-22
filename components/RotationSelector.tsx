@@ -94,8 +94,9 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ROTATION_OPTIONS is a const array with guaranteed elements, so fallback is always defined
   const currentOption =
-    ROTATION_OPTIONS.find((opt) => opt.id === currentRotation) || ROTATION_OPTIONS[0];
+    ROTATION_OPTIONS.find((opt) => opt.id === currentRotation) ?? ROTATION_OPTIONS[0]!;
 
   // Close dropdown when clicking outside
   useEffect(() => {

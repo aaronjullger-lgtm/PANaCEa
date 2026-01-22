@@ -347,14 +347,20 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                   {mediaIds.length > 0 && (
                     <section className="condition-media">
                       <div className="condition-media-frame">
-                        <img
-                          src={`/media/${
-                            mediaIds[mediaIndex].includes('.')
-                              ? mediaIds[mediaIndex]
-                              : `${mediaIds[mediaIndex]}.png`
-                          }`}
-                          alt={`${condition.condition} media ${mediaIndex + 1}`}
-                        />
+                        {(() => {
+                          const currentMedia = mediaIds[mediaIndex];
+                          if (!currentMedia) return null;
+                          return (
+                            <img
+                              src={`/media/${
+                                currentMedia.includes('.')
+                                  ? currentMedia
+                                  : `${currentMedia}.png`
+                              }`}
+                              alt={`${condition.condition} media ${mediaIndex + 1}`}
+                            />
+                          );
+                        })()}
                         {mediaIds.length > 1 && (
                           <div className="condition-media-controls">
                             <button

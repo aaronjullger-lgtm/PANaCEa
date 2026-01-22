@@ -117,11 +117,11 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
 
         return {
           ...medicalContent,
-          linkedLabs: labs.map((l) => ({ name: l.LabTest.name, expectedResult: l.expectedResult, significance: l.significance, isHighYield: l.LabTest.isHighYield })),
-          linkedImaging: imaging.map((i) => ({ name: i.ImagingStudy.name, modality: i.ImagingStudy.modality, expectedFindings: i.expectedFindings, classicFindings: i.classicFindings })),
-          linkedFindings: findings.map((f) => ({ name: f.PhysicalExamFinding.name, system: f.PhysicalExamFinding.system, clinicalSignificance: f.PhysicalExamFinding.clinicalSignificance, sensitivity: f.sensitivity, specificity: f.specificity })),
-          linkedDrugs: drugs.map((d) => ({ genericName: d.Drug.genericName, brandName: d.Drug.brandName, isFirstLine: d.isFirstLine, mechanismOfAction: d.Drug.mechanismOfAction })),
-          linkedScoringSystem: scoringSystems.map((s) => ({ name: s.ScoringSystem.name, category: s.ScoringSystem.category, whenToUse: s.ScoringSystem.whenToUse })),
+          linkedLabs: labs.map((l: { LabTest: { name: string; isHighYield: boolean }; expectedResult: string | null; significance: string | null }) => ({ name: l.LabTest.name, expectedResult: l.expectedResult, significance: l.significance, isHighYield: l.LabTest.isHighYield })),
+          linkedImaging: imaging.map((i: { ImagingStudy: { name: string; modality: string; classicSigns: string[] | null }; expectedFindings: string[] | null; classicFindings: string | null }) => ({ name: i.ImagingStudy.name, modality: i.ImagingStudy.modality, expectedFindings: i.expectedFindings, classicFindings: i.classicFindings })),
+          linkedFindings: findings.map((f: { PhysicalExamFinding: { name: string; system: string; clinicalSignificance: string | null }; sensitivity: number | null; specificity: number | null }) => ({ name: f.PhysicalExamFinding.name, system: f.PhysicalExamFinding.system, clinicalSignificance: f.PhysicalExamFinding.clinicalSignificance, sensitivity: f.sensitivity, specificity: f.specificity })),
+          linkedDrugs: drugs.map((d: { Drug: { genericName: string; brandName: string | null; mechanismOfAction: string | null }; isFirstLine: boolean }) => ({ genericName: d.Drug.genericName, brandName: d.Drug.brandName, isFirstLine: d.isFirstLine, mechanismOfAction: d.Drug.mechanismOfAction })),
+          linkedScoringSystem: scoringSystems.map((s: { ScoringSystem: { name: string; category: string; whenToUse: string | null } }) => ({ name: s.ScoringSystem.name, category: s.ScoringSystem.category, whenToUse: s.ScoringSystem.whenToUse })),
         } as DeepConditionData;
       })
     );

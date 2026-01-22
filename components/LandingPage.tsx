@@ -39,9 +39,10 @@ export function LandingPage() {
         document.body.style.overflow = 'unset';
         document.removeEventListener('keydown', handleEscape);
       };
-    } else {
-      document.body.style.overflow = 'unset';
     }
+    
+    document.body.style.overflow = 'unset';
+    return undefined;
   }, [showAuth]);
 
   const features = [

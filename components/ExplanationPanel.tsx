@@ -254,10 +254,11 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   useEffect(() => {
     if (conditionId && !basicScienceLinks.length) {
       // Load from condition content using top-level import
+      const currentConditionId = conditionId; // Capture for closure type narrowing
       async function loadBasicScienceLinks() {
         // Ensure conditions are loaded
         await loadConditions();
-        const conditionData = getConditionByIdSync(conditionId);
+        const conditionData = getConditionByIdSync(currentConditionId);
         if (conditionData?.sections?.basicScienceLinks) {
           try {
             const links =

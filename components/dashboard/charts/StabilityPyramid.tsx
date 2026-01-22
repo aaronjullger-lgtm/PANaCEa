@@ -45,8 +45,9 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
     .sort((a, b) => b.order - a.order);
 
   const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
-    if (active && payload && payload.length) {
-      const { bucket, count } = payload[0].payload;
+    const firstPayload = payload?.[0];
+    if (active && payload && payload.length && firstPayload) {
+      const { bucket, count } = firstPayload.payload;
       return (
         <div className="bg-white border border-zinc-200 rounded-lg px-3 py-2 shadow-lg">
           <p className="text-zinc-900 font-semibold text-sm">

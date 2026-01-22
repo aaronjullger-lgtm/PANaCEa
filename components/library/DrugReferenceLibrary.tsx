@@ -448,16 +448,22 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
   const handleNextDrug = () => {
     if (selectedIndex < filteredDrugs.length - 1) {
       const nextIndex = selectedIndex + 1;
-      setSelected(filteredDrugs[nextIndex]);
-      setSelectedIndex(nextIndex);
+      const nextDrug = filteredDrugs[nextIndex];
+      if (nextDrug) {
+        setSelected(nextDrug);
+        setSelectedIndex(nextIndex);
+      }
     }
   };
 
   const handlePrevDrug = () => {
     if (selectedIndex > 0) {
       const prevIndex = selectedIndex - 1;
-      setSelected(filteredDrugs[prevIndex]);
-      setSelectedIndex(prevIndex);
+      const prevDrug = filteredDrugs[prevIndex];
+      if (prevDrug) {
+        setSelected(prevDrug);
+        setSelectedIndex(prevIndex);
+      }
     }
   };
 

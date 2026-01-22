@@ -44,8 +44,11 @@ export const onRequestGet = adminEndpoint(PendingMediaQuerySchema, async ({ env,
     const offset = validated.offset || 0;
     const includeStats = validated.includeStats === 'true';
 
-    // Build where clause
-    const whereClause: any = {
+    // Build where clause - properly typed for Prisma MediaAsset queries
+    const whereClause: {
+      approvalStatus: string;
+      type?: string;
+    } = {
       approvalStatus: 'pending',
     };
 
@@ -91,7 +94,7 @@ export const onRequestGet = adminEndpoint(PendingMediaQuerySchema, async ({ env,
     }
 
     // Transform media for frontend
-    const transformedMedia = media.map((m) => ({
+    const transformedMedia = media.map((m: typeof media[0]) => ({
       id: m.id,
       filename: m.filename,
       originalUrl: m.originalUrl,

@@ -174,30 +174,30 @@ export const onRequestGet = authenticatedEndpoint(
       const aggregateStats = {
         recentAvgAccuracy:
           recentSessions.length > 0
-            ? recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length
+            ? recentSessions.reduce((sum: number, s: typeof recentSessions[0]) => sum + s.accuracy, 0) / recentSessions.length
             : null,
         recentAvgQuestions:
           recentSessions.length > 0
             ? Math.round(
-                recentSessions.reduce((sum, s) => sum + s.totalQuestions, 0) /
+                recentSessions.reduce((sum: number, s: typeof recentSessions[0]) => sum + s.totalQuestions, 0) /
                   recentSessions.length
               )
             : null,
         recentAvgMomentum:
-          recentSessions.filter((s) => s.avgMomentum !== null).length > 0
+          recentSessions.filter((s: typeof recentSessions[0]) => s.avgMomentum !== null).length > 0
             ? recentSessions
-                .filter((s) => s.avgMomentum !== null)
-                .reduce((sum, s) => sum + (s.avgMomentum || 0), 0) /
-              recentSessions.filter((s) => s.avgMomentum !== null).length
+                .filter((s: typeof recentSessions[0]) => s.avgMomentum !== null)
+                .reduce((sum: number, s: typeof recentSessions[0]) => sum + (s.avgMomentum || 0), 0) /
+              recentSessions.filter((s: typeof recentSessions[0]) => s.avgMomentum !== null).length
             : null,
-        accuracyTrend: calculateTrend(recentSessions.map((s) => s.accuracy)),
+        accuracyTrend: calculateTrend(recentSessions.map((s: typeof recentSessions[0]) => s.accuracy)),
         totalSessions: sessions.length,
       };
 
       return {
         status: 200,
         data: {
-          sessions: sessions.map((s) => ({
+          sessions: sessions.map((s: typeof sessions[0]) => ({
             ...s,
             // Convert BigInt to number for JSON serialization
             lifetimeStudyTimeMs: undefined,
@@ -318,8 +318,8 @@ function calculateTrend(values: number[]): 'improving' | 'declining' | 'stable' 
   const recent = values.slice(0, Math.floor(values.length / 2));
   const older = values.slice(Math.floor(values.length / 2));
 
-  const recentAvg = recent.reduce((s, v) => s + v, 0) / recent.length;
-  const olderAvg = older.reduce((s, v) => s + v, 0) / older.length;
+  const recentAvg = recent.reduce((s: number, v: number) => s + v, 0) / recent.length;
+  const olderAvg = older.reduce((s: number, v: number) => s + v, 0) / older.length;
 
   const diff = recentAvg - olderAvg;
 

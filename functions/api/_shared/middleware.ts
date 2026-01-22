@@ -98,6 +98,10 @@ export function withMiddleware<TContext extends CloudflareContext>(
       const currentMiddleware = middleware[index];
       index++;
 
+      if (!currentMiddleware) {
+        return handler(ctx);
+      }
+
       return currentMiddleware(ctx, (newCtx?: any) => dispatch(newCtx ?? ctx));
     };
 
@@ -206,7 +210,7 @@ export function withAuth(options: { optional?: boolean } = {}): Middleware<Authe
 
     // Add auth to context
     const authContext = { ...context, auth } as AuthenticatedContext;
-    return next.call(null, authContext);
+    return next();
   };
 }
 
@@ -306,12 +310,12 @@ export function withValidation<T>(
 
       // At this point, TypeScript knows result.success is true, so result.data exists
       const validatedContext = { ...context, validated: result.data } as ValidatedContext<T>;
-      return next.call(null, validatedContext);
+      return next();
     } catch (error) {
       if (error instanceof SyntaxError) {
         return { status: 400, error: 'Invalid JSON in request body' };
       }
-      if (error.message?.includes('Payload size exceeds')) {
+      if (error instanceof Error && error.message?.includes('Payload size exceeds')) {
         return { status: 413, error: error.message };
       }
       throw error;

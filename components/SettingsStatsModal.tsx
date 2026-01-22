@@ -177,7 +177,7 @@ const getDefaultWidgets = (): WidgetId[] =>
  */
 const AccessibilitySettings: React.FC = () => {
   // MUST call hooks at top level - Rules of Hooks requirement
-  let commuterContext = useCommuter();
+  const commuterContext = useCommuter();
   let hasCommuterContext = true;
 
   // Check if context is valid after hook call
@@ -435,7 +435,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
 
   const handleToggleSystem = (system: SystemCode) => {
-    setEnabledSystems((prev) => {
+    setEnabledSystems((prev: Set<SystemCode>) => {
       const next = new Set(prev);
       if (next.has(system)) {
         next.delete(system);
@@ -460,7 +460,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
 
   const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
-    setClinicalFidelitySettings((prev) => {
+    setClinicalFidelitySettings((prev: typeof clinicalFidelitySettings) => {
       const updated = { ...prev, [setting]: !prev[setting] };
       localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
       return updated;
@@ -543,6 +543,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         document.body.style.overflow = originalOverflow || 'unset';
       };
     }
+    return undefined;
   }, [isOpen]);
 
   // User profile update handlers
@@ -676,7 +677,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const systemBreakdown = Array.from(systemMap.entries())
       .map(([system, data]) => ({
         system,
-        label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
+        label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] ?? system,
         correct: data.correct,
         total: data.total,
         accuracy: calculateAccuracy(data.correct, data.total),
@@ -1219,9 +1220,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       >
                         <div className="font-semibold">{system}</div>
                         <div className="text-xs opacity-75 truncate">
-                          {ABBREVIATION_TO_TOPIC_MAP[system]
-                            .replace(' System', '')
-                            .replace('Psychiatry/Behavioral Science', 'Psychiatry')}
+                          {((): string => {
+                            const label = ABBREVIATION_TO_TOPIC_MAP[system];
+                            const displayText = label !== undefined ? label : String(system);
+                            return displayText
+                              .replace(' System', '')
+                              .replace('Psychiatry/Behavioral Science', 'Psychiatry');
+                          })()}
                         </div>
                       </button>
                     ))}

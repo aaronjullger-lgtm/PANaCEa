@@ -83,11 +83,18 @@ function getGridClass(columns: ContentGridProps['columns']): string {
 
   const classes = ['grid'];
 
-  if (defaultCols) classes.push(colMap[defaultCols]);
-  if (sm !== defaultCols) classes.push(`sm:${colMap[sm]}`);
-  if (md !== sm) classes.push(`md:${colMap[md]}`);
-  if (lg !== md) classes.push(`lg:${colMap[lg]}`);
-  if (xl !== lg) classes.push(`xl:${colMap[xl]}`);
+  // Guard each lookup - colMap[key] may be undefined for keys not in the map
+  const defaultClass = colMap[defaultCols];
+  const smClass = colMap[sm];
+  const mdClass = colMap[md];
+  const lgClass = colMap[lg];
+  const xlClass = colMap[xl];
+
+  if (defaultCols && defaultClass) classes.push(defaultClass);
+  if (sm !== defaultCols && smClass) classes.push(`sm:${smClass}`);
+  if (md !== sm && mdClass) classes.push(`md:${mdClass}`);
+  if (lg !== md && lgClass) classes.push(`lg:${lgClass}`);
+  if (xl !== lg && xlClass) classes.push(`xl:${xlClass}`);
 
   return classes.join(' ');
 }

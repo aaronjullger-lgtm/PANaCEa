@@ -75,19 +75,22 @@ export function Sparkline({
 
   // Generate SVG path
   const buildSmoothPath = () => {
+    if (points.length === 0) return '';
+    const firstPoint = points[0];
+    if (!firstPoint) return '';
     if (points.length === 1) {
-      return `M ${points[0].x},${points[0].y}`;
+      return `M ${firstPoint.x},${firstPoint.y}`;
     }
 
-    const d: string[] = [`M ${points[0].x},${points[0].y}`];
+    const d: string[] = [`M ${firstPoint.x},${firstPoint.y}`];
 
     for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i - 1] || points[i];
       const p1 = points[i];
       const p2 = points[i + 1];
-      const p3 = points[i + 2] || p2;
-
-      if (!p1 || !p2 || !p0 || !p3) continue;
+      if (!p1 || !p2) continue;
+      
+      const p0 = points[i - 1] ?? p1;
+      const p3 = points[i + 2] ?? p2;
 
       const cp1x = p1.x + (p2.x - p0.x) / 6;
       const cp1y = p1.y + (p2.y - p0.y) / 6;
@@ -103,11 +106,12 @@ export function Sparkline({
   const pathData = buildSmoothPath();
 
   // Generate area path if needed
-  const areaPathData = fillArea
-    ? `${pathData} L ${points[points.length - 1].x},${height - padding} L ${padding},${height - padding} Z`
+  const lastPoint = points[points.length - 1];
+  const areaPathData = fillArea && lastPoint
+    ? `${pathData} L ${lastPoint.x},${height - padding} L ${padding},${height - padding} Z`
     : '';
 
-  const lastValue = data[data.length - 1];
+  const lastValue = data[data.length - 1] ?? 0;
   const inRange = referenceRange
     ? lastValue >= referenceRange[0] && lastValue <= referenceRange[1]
     : true;
@@ -149,10 +153,10 @@ export function Sparkline({
           ))}
 
         {/* Highlight last point */}
-        {points.length > 0 && (
+        {points.length > 0 && lastPoint && (
           <circle
-            cx={points[points.length - 1].x}
-            cy={points[points.length - 1].y}
+            cx={lastPoint.x}
+            cy={lastPoint.y}
             r={strokeWidth * 1.5}
             fill={effectiveColor}
             opacity={0.8}
@@ -166,7 +170,7 @@ export function Sparkline({
           className={`text-sm font-medium ${semanticColorClass}`}
           style={{ color: effectiveColor }}
         >
-          {formatValue(data[data.length - 1])}
+          {formatValue(lastValue)}
         </span>
       )}
     </div>

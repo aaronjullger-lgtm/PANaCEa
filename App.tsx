@@ -319,8 +319,10 @@ const App: React.FC = () => {
     setPerformanceData((prev) => {
       if (prev.length === 0) return prev;
       const updated = [...prev];
+      const lastRecord = updated[updated.length - 1];
+      if (!lastRecord) return prev;
       updated[updated.length - 1] = {
-        ...updated[updated.length - 1],
+        ...lastRecord,
         errorTag: tag,
       };
       return updated;
@@ -1242,7 +1244,7 @@ const App: React.FC = () => {
                           growthAreas={growthAreas}
                           dueCount={dueQuestionsCount}
                           examLabel={examLabel ?? 'PANCE'}
-                          onStartSession={handleConfirmSession}
+                          onStartSession={handleStartSession}
                           onNavigateToDrillMode={handleNavigateToDrillMode}
                           onNavigateToToolkit={() => setView('toolkit')}
                           onNavigateToGapAnalysis={() => setView('gap_analysis')}

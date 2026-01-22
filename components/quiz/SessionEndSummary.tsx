@@ -227,7 +227,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         // Calculate final streak (current streak at end of session)
         let finalStreak = 0;
         for (let i = performanceData.length - 1; i >= 0; i--) {
-          if (performanceData[i].isCorrect) finalStreak++;
+          const record = performanceData[i];
+          if (!record) break;
+          if (record.isCorrect) finalStreak++;
           else break;
         }
 

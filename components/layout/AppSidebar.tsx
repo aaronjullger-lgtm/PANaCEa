@@ -43,6 +43,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
             <div className="space-y-1">
               {section.items.map((item) => {
                 const Icon = ICON_MAP[item.icon];
+                if (!Icon) return null;
                 return (
                   <NavLink
                     key={item.path}

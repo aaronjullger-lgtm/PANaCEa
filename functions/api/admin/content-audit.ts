@@ -257,12 +257,14 @@ export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (con
       // Update field stats
       for (const field of allFields) {
         const value = (content as Record<string, unknown>)[field];
+        const stats = fieldStats[field];
+        if (!stats) continue; // TypeScript guard - stats always exists since we initialized all fields
         if (isFieldFilled(value)) {
-          fieldStats[field].filled++;
+          stats.filled++;
         } else if (isExplicitNA(value)) {
-          fieldStats[field].explicitNA++;
+          stats.explicitNA++;
         } else {
-          fieldStats[field].missing++;
+          stats.missing++;
         }
       }
 
@@ -306,6 +308,7 @@ export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (con
     // Calculate percentages for field stats
     for (const field of allFields) {
       const stats = fieldStats[field];
+      if (!stats) continue; // TypeScript guard - stats always exists since we initialized all fields
       stats.percentComplete = Math.round(((stats.filled + stats.explicitNA) / stats.total) * 100);
     }
 

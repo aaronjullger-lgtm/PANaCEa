@@ -31,7 +31,9 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
     // Recent streak
     let streak = 0;
     for (let i = performanceData.length - 1; i >= 0; i--) {
-      if (performanceData[i].isCorrect) streak++;
+      const record = performanceData[i];
+      if (!record) break;
+      if (record.isCorrect) streak++;
       else break;
     }
 

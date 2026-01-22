@@ -169,8 +169,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         else if (['amsel'].includes(g.id)) category = 'OB/GYN';
         else if (['apgar', 'kawasaki'].includes(g.id)) category = 'Pediatrics';
 
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(g);
+        const categoryList = acc[category] ?? [];
+        categoryList.push(g);
+        acc[category] = categoryList;
         return acc;
       },
       {} as Record<string, typeof allGuidelines>

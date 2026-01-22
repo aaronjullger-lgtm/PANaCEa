@@ -72,7 +72,6 @@ router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Resp
         caseId,
         messages: [],
         status: 'active',
-        updatedAt: new Date(),
       },
     });
 
@@ -117,7 +116,6 @@ router.post('/chat', requireAuth, async (req: AuthenticatedRequest, res: Respons
       where: { id: sessionId },
       data: {
         messages: messages,
-        updatedAt: new Date(),
       },
     });
 
@@ -143,7 +141,6 @@ router.post('/complete', requireAuth, async (req: AuthenticatedRequest, res: Res
         status: 'completed',
         diagnosis,
         treatmentPlan,
-        updatedAt: new Date(),
       },
     });
 

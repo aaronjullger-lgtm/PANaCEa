@@ -56,7 +56,11 @@ function decodeJwtPayload(token: string): JwtPayload | null {
     }
     // JWT uses base64url encoding, not standard base64
     // Replace URL-safe characters and add padding if needed
-    let payload = parts[1];
+    const payloadPart = parts[1];
+    if (!payloadPart) {
+      return null;
+    }
+    let payload = payloadPart;
     payload = payload.replace(/-/g, '+').replace(/_/g, '/');
     // Add padding if needed
     while (payload.length % 4 !== 0) {

@@ -551,15 +551,17 @@ function getQuarterEndDate(quarter: QuarterlyBlock): string {
   let year = today.getFullYear();
 
   // Quarter end months: Q1=2 (March), Q2=5 (June), Q3=8 (Sept), Q4=11 (Dec)
-  const quarterEndMonths = [2, 5, 8, 11];
-  const quarterEndMonth = quarterEndMonths[quarter - 1];
+  const quarterEndMonths: readonly [number, number, number, number] = [2, 5, 8, 11];
+  // Guard: quarter is 1-4, so quarter-1 is 0-3, always valid index
+  const quarterIndex = quarter - 1;
+  const quarterEndMonth = quarterEndMonths[quarterIndex as 0 | 1 | 2 | 3];
 
   // If we're past the quarter end date, use next year
   if (currentMonth > quarterEndMonth) {
     year += 1;
   }
 
-  const endDates = {
+  const endDates: Record<QuarterlyBlock, string> = {
     1: `March 31, ${year}`,
     2: `June 30, ${year}`,
     3: `September 30, ${year}`,

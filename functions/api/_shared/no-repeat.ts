@@ -306,12 +306,16 @@ export async function getUserQuestionStats(
         timeCount++;
       }
 
-      if (!byType[r.questionType]) {
-        byType[r.questionType] = { seen: 0, correct: 0, incorrect: 0 };
+      const questionType = r.questionType as string;
+      if (!byType[questionType]) {
+        byType[questionType] = { seen: 0, correct: 0, incorrect: 0 };
       }
-      byType[r.questionType].seen++;
-      byType[r.questionType].correct += r.timesCorrect || 0;
-      byType[r.questionType].incorrect += r.timesIncorrect || 0;
+      const typeStats = byType[questionType];
+      if (typeStats) {
+        typeStats.seen++;
+        typeStats.correct += r.timesCorrect || 0;
+        typeStats.incorrect += r.timesIncorrect || 0;
+      }
     }
 
     const totalAttempts = totalCorrect + totalIncorrect;

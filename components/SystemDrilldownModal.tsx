@@ -48,10 +48,12 @@ const cleanConditionName = (raw: string | undefined): string => {
 
   if (!raw.includes('__') && !raw.includes('_')) return raw;
 
-  let s = raw;
+  let s: string = raw;
   if (s.includes('__')) {
     const parts = s.split('__');
-    s = parts[parts.length - 1];
+    // Get last part, with fallback for TypeScript strict mode
+    const lastPart = parts[parts.length - 1];
+    s = lastPart ?? raw;
   }
 
   const words = s.split('_').filter(Boolean);
@@ -176,7 +178,10 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   // Default selection: weakest subcategory
   useEffect(() => {
     if (!activeSubcategory && subcategoryStats.length > 0) {
-      setActiveSubcategory(subcategoryStats[0].subcategory);
+      const firstStat = subcategoryStats[0];
+      if (firstStat) {
+        setActiveSubcategory(firstStat.subcategory);
+      }
     }
   }, [activeSubcategory, subcategoryStats]);
 

@@ -20,7 +20,7 @@ export default defineConfig({
       'lib/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'functions/**/*.{test,spec}.{js,ts,jsx,tsx}',
     ],
-    exclude: ['**/node_modules/**', 'e2e/**'],
+    exclude: ['**/node_modules/**', 'e2e/**', 'temp_repos/**'],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,
     clearMocks: true,

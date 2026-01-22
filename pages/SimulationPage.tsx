@@ -11,7 +11,7 @@ import { Brain, Target, Flag, TrendingUp, ChevronLeft, Zap, Clock, Award } from 
 import type { SessionSettings, PerformanceRecord, Question } from '../types';
 
 interface SimulationPageProps {
-  onStartSession: (settings: SessionSettings) => void;
+  onStartSession: (settings: SessionSettings) => void | Promise<void>;
   onBack: () => void;
   performanceData: PerformanceRecord[];
   flaggedQuestions: Question[];

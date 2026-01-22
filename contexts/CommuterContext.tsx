@@ -117,10 +117,14 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
+          // Guard: result[0] may be undefined in TypeScript strict mode
+          const firstAlternative = result?.[0];
+          if (!firstAlternative) continue;
+          
           if (result.isFinal) {
-            finalTranscript += result[0].transcript;
+            finalTranscript += firstAlternative.transcript;
           } else {
-            interimTranscript += result[0].transcript;
+            interimTranscript += firstAlternative.transcript;
           }
         }
 

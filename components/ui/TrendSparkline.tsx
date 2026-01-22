@@ -97,15 +97,20 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
     // Generate smooth path using cubic bezier curves
     const buildPath = (points: { x: number; y: number }[]) => {
       if (points.length === 0) return '';
-      if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
+      const firstPoint = points[0];
+      if (!firstPoint) return '';
+      if (points.length === 1) return `M ${firstPoint.x},${firstPoint.y}`;
 
-      const d: string[] = [`M ${points[0].x},${points[0].y}`];
+      const d: string[] = [`M ${firstPoint.x},${firstPoint.y}`];
 
       for (let i = 0; i < points.length - 1; i++) {
-        const p0 = points[i - 1] || points[i];
         const p1 = points[i];
         const p2 = points[i + 1];
-        const p3 = points[i + 2] || p2;
+        // Skip if required points are missing
+        if (!p1 || !p2) continue;
+        
+        const p0 = points[i - 1] ?? p1;
+        const p3 = points[i + 2] ?? p2;
 
         const cp1x = p1.x + (p2.x - p0.x) / 6;
         const cp1y = p1.y + (p2.y - p0.y) / 6;
@@ -121,9 +126,11 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
     const pathD = buildPath(points);
 
     // Create filled area path
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
     const fillPathD =
-      points.length > 0
-        ? `${pathD} L ${points[points.length - 1].x},${height} L ${points[0].x},${height} Z`
+      points.length > 0 && firstPoint && lastPoint
+        ? `${pathD} L ${lastPoint.x},${height} L ${firstPoint.x},${height} Z`
         : '';
 
     // Calculate trend (compare last 3 points average to first 3 points average)
@@ -148,7 +155,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
       fillPathD,
       trend,
       colors,
-      latestValue: data[data.length - 1],
+      latestValue: data[data.length - 1] ?? 0,
     };
   }, [data, width, height, colorScheme]);
 

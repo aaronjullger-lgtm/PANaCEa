@@ -71,7 +71,7 @@ export async function listBranches(prisma: any, includeArchived: boolean = false
       },
     });
 
-    return branches.map((b) => ({
+    return branches.map((b: { id: string; name: string; description: string | null; baseBranch: string; status: string; createdBy: string; createdAt: Date; updatedAt: Date; mergedAt: Date | null; _count: { changes: number } }) => ({
       id: b.id,
       name: b.name,
       description: b.description,

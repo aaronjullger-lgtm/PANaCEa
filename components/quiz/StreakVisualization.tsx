@@ -32,14 +32,20 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
     }
 
     const segs: StreakSegment[] = [];
-    let currentType: 'correct' | 'incorrect' = performanceData[0].isCorrect
+    const firstRecord = performanceData[0];
+    if (!firstRecord) {
+      return { segments: [], stats: { maxStreak: 0, avgStreak: 0, totalStreaks: 0 } };
+    }
+    let currentType: 'correct' | 'incorrect' = firstRecord.isCorrect
       ? 'correct'
       : 'incorrect';
     let currentCount = 1;
     let startIndex = 0;
 
     for (let i = 1; i < performanceData.length; i++) {
-      const isCorrect = performanceData[i].isCorrect;
+      const record = performanceData[i];
+      if (!record) continue;
+      const isCorrect = record.isCorrect;
       const type = isCorrect ? 'correct' : 'incorrect';
 
       if (type === currentType) {

@@ -51,7 +51,10 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
     throw new Error(`No conditions found for topic: ${topic}`);
   }
 
-  const distractors = await prisma.medicalContent.findMany({
+  // Type for distractor query result
+  type DistractorResult = { title: string };
+  
+  const distractors: DistractorResult[] = await prisma.medicalContent.findMany({
     where: {
       system: topic,
       status: 'published',
@@ -61,7 +64,7 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
     select: { title: true },
   });
 
-  const allConditionTitles = [correctCondition.title, ...distractors.map((d) => d.title)];
+  const allConditionTitles = [correctCondition.title, ...distractors.map((d: DistractorResult) => d.title)];
 
   const prompt = `
 You are a medical education expert creating a differential diagnosis (DDx) problem.

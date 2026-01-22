@@ -18,7 +18,7 @@ interface CommandCenterPageProps {
   growthAreas: string[];
   dueCount?: number;
   examLabel?: string;
-  onStartSession: (settings?: SessionSettings) => void;
+  onStartSession: (settings?: SessionSettings) => void | Promise<void>;
   onNavigateToDrillMode: (modeId: string) => void;
   onNavigateToToolkit?: () => void;
   onNavigateToGapAnalysis?: () => void;

@@ -168,11 +168,13 @@ const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({
       (mode) => modeProgress[mode.id]?.questionsAnswered
     );
     if (modesWithProgress.length > 0) {
-      return modesWithProgress.sort((a, b) => {
+      const sorted = modesWithProgress.sort((a, b) => {
         const aLast = modeProgress[a.id]?.lastPracticed?.getTime() || 0;
         const bLast = modeProgress[b.id]?.lastPracticed?.getTime() || 0;
         return aLast - bLast;
-      })[0].id;
+      });
+      const firstMode = sorted[0];
+      return firstMode?.id ?? null;
     }
 
     // Otherwise suggest a mode they haven't tried

@@ -206,7 +206,7 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
             value={dimension.value}
             confidence={dimension.confidence}
             description={
-              dimension.descriptions[dimension.value as keyof typeof dimension.descriptions]
+              dimension.descriptions[dimension.value as keyof typeof dimension.descriptions] ?? ''
             }
           />
         ))}

@@ -64,6 +64,16 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     const randomCondition =
       config.availableConditions[Math.floor(Math.random() * config.availableConditions.length)];
 
+    if (!randomCondition) {
+      return {
+        condition: 'Mock Condition',
+        system: 'CV',
+        question: 'Preparing question...',
+        options: ['Option A', 'Option B', 'Option C', 'Option D'],
+        correctIndex: 0,
+      };
+    }
+
     return {
       condition: randomCondition.name,
       system: randomCondition.system,

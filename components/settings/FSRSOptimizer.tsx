@@ -158,7 +158,7 @@ export const FSRSOptimizer: React.FC = () => {
                 <div className="col-span-2">
                   <div className="text-[var(--color-text-secondary)]">RMSE</div>
                   <div className="font-mono text-[var(--color-text-primary)]">
-                    {result.metrics.rmse.toFixed(4)}
+                    {(result.metrics.rmse ?? 0).toFixed(4)}
                   </div>
                 </div>
               </div>

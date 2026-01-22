@@ -239,25 +239,25 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             {/* Mock Answer Buttons */}
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
               <button
-                onClick={() => handleAnswer(mockAnswers[currentQuestion])}
+                onClick={() => handleAnswer(mockAnswers[currentQuestion] ?? false)}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option A
               </button>
               <button
-                onClick={() => handleAnswer(!mockAnswers[currentQuestion])}
+                onClick={() => handleAnswer(!(mockAnswers[currentQuestion] ?? true))}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option B
               </button>
               <button
-                onClick={() => handleAnswer(mockAnswers[currentQuestion])}
+                onClick={() => handleAnswer(mockAnswers[currentQuestion] ?? false)}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option C
               </button>
               <button
-                onClick={() => handleAnswer(!mockAnswers[currentQuestion])}
+                onClick={() => handleAnswer(!(mockAnswers[currentQuestion] ?? true))}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option D

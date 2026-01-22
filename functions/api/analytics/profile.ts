@@ -114,12 +114,12 @@ export const onRequestPost = authenticatedEndpoint(
       }
 
       // Compute aggregated metrics
-      const lifetimeQuestions = allSessions.reduce((sum, s) => sum + s.totalQuestions, 0);
-      const lifetimeCorrect = allSessions.reduce((sum, s) => sum + s.correctAnswers, 0);
+      const lifetimeQuestions = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.totalQuestions, 0);
+      const lifetimeCorrect = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.correctAnswers, 0);
       const lifetimeAccuracy =
         lifetimeQuestions > 0 ? (lifetimeCorrect / lifetimeQuestions) * 100 : 0;
-      const lifetimeStudyTimeMs = allSessions.reduce((sum, s) => sum + s.totalTimeMs, 0);
-      const bestEverStreak = Math.max(...allSessions.map((s) => s.bestStreak));
+      const lifetimeStudyTimeMs = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.totalTimeMs, 0);
+      const bestEverStreak = Math.max(...allSessions.map((s: StudySessionData) => s.bestStreak));
 
       // Compute system strengths/weaknesses
       const systemStats: Record<string, { correct: number; total: number }> = {};
@@ -158,16 +158,16 @@ export const onRequestPost = authenticatedEndpoint(
         .map((s) => s.system);
 
       // Compute average calibration score
-      const sessionsWithCalibration = allSessions.filter((s) => s.calibrationScore !== null);
+      const sessionsWithCalibration = allSessions.filter((s: StudySessionData) => s.calibrationScore !== null);
       const avgCalibration =
         sessionsWithCalibration.length > 0
-          ? sessionsWithCalibration.reduce((sum, s) => sum + (s.calibrationScore || 0), 0) /
+          ? sessionsWithCalibration.reduce((sum: number, s: StudySessionData) => sum + (s.calibrationScore || 0), 0) /
             sessionsWithCalibration.length
           : null;
 
       // Compute answer change effectiveness
-      const totalHelpful = allSessions.reduce((sum, s) => sum + s.helpfulChanges, 0);
-      const totalHarmful = allSessions.reduce((sum, s) => sum + s.harmfulChanges, 0);
+      const totalHelpful = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.helpfulChanges, 0);
+      const totalHarmful = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.harmfulChanges, 0);
       const totalChanges = totalHelpful + totalHarmful;
       const changeHelpfulRatio = totalChanges > 0 ? totalHelpful / totalChanges : null;
 
@@ -177,7 +177,7 @@ export const onRequestPost = authenticatedEndpoint(
       // Compute fatigue onset (where accuracy drops)
       // This is a simplified calculation
       const sessionsWithFatigue = allSessions.filter(
-        (s) =>
+        (s: StudySessionData) =>
           s.early10Accuracy !== null &&
           s.late10Accuracy !== null &&
           s.early10Accuracy - (s.late10Accuracy || 0) > 10
@@ -281,12 +281,55 @@ export const onRequestPost = authenticatedEndpoint(
   }
 );
 
+// Type for UserLearningProfile from Prisma
+interface UserLearningProfileData {
+  id: string;
+  userId: string;
+  lifetimeQuestions: number;
+  lifetimeCorrect: number;
+  lifetimeAccuracy: number;
+  lifetimeStudyTimeMs: bigint;
+  bestEverStreak: number;
+  overallCalibrationScore: number | null;
+  changeHelpfulRatio: number | null;
+  avgSessionLength: number | null;
+  fatigueOnsetQuestion: number | null;
+  strongestSystems: string[];
+  weakestSystems: string[];
+  estimatedScore: number | null;
+  readinessLevel: string | null;
+  recommendations: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Type for StudySession from Prisma
+interface StudySessionData {
+  id: string;
+  userId: string;
+  sessionType: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  accuracy: number;
+  totalTimeMs: number;
+  bestStreak: number;
+  systemsCovered: string[];
+  calibrationScore: number | null;
+  helpfulChanges: number;
+  harmfulChanges: number;
+  early10Accuracy: number | null;
+  late10Accuracy: number | null;
+  momentumTrend: string | null;
+  startedAt: Date;
+  endedAt: Date | null;
+}
+
 /**
  * Compute additional insights from profile and recent sessions
  */
 function computeInsights(
-  profile: any,
-  recentSessions: any[]
+  profile: UserLearningProfileData,
+  recentSessions: StudySessionData[]
 ): {
   accuracyTrend: 'improving' | 'declining' | 'stable';
   momentumTrend: string;
@@ -299,8 +342,8 @@ function computeInsights(
     const recent3 = recentSessions.slice(0, 3);
     const older3 = recentSessions.slice(3, 6);
 
-    const recentAvg = recent3.reduce((s, sess) => s + sess.accuracy, 0) / 3;
-    const olderAvg = older3.reduce((s, sess) => s + sess.accuracy, 0) / 3;
+    const recentAvg = recent3.reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) / 3;
+    const olderAvg = older3.reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) / 3;
 
     if (recentAvg > olderAvg + 5) accuracyTrend = 'improving';
     else if (recentAvg < olderAvg - 5) accuracyTrend = 'declining';
@@ -313,13 +356,13 @@ function computeInsights(
       momentumCounts[session.momentumTrend] = (momentumCounts[session.momentumTrend] || 0) + 1;
     }
   }
-  const momentumTrend =
-    Object.entries(momentumCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'steady';
+  const sortedMomentum = Object.entries(momentumCounts).sort((a, b) => b[1] - a[1]);
+  const momentumTrend = sortedMomentum.length > 0 ? sortedMomentum[0][0] : 'steady';
 
   // Recent average accuracy
   const recentAvgAccuracy =
     recentSessions.length > 0
-      ? recentSessions.slice(0, 10).reduce((s, sess) => s + sess.accuracy, 0) /
+      ? recentSessions.slice(0, 10).reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) /
         Math.min(recentSessions.length, 10)
       : null;
 
@@ -335,7 +378,7 @@ function computeInsights(
     }
 
     const avgDaysBetween =
-      daysBetweenSessions.reduce((s, d) => s + d, 0) / daysBetweenSessions.length;
+      daysBetweenSessions.reduce((s: number, d: number) => s + d, 0) / daysBetweenSessions.length;
     studyConsistency = avgDaysBetween <= 2 ? 'consistent' : 'sporadic';
   }
 

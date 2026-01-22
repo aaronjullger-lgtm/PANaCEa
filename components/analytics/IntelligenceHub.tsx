@@ -90,10 +90,11 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     Object.keys(ABBREVIATION_TO_TOPIC_MAP).forEach((sys) => {
       const system = sys as SystemCode;
       // Guard: map lookup returns string | undefined, fallback to system code
-      const resolvedSystemName: string = ABBREVIATION_TO_TOPIC_MAP[system] ?? system;
+      const mappedName = ABBREVIATION_TO_TOPIC_MAP[system];
+      const systemName = mappedName !== undefined ? mappedName : system;
       statsMap.set(system, {
         system,
-        systemName: resolvedSystemName,
+        systemName,
         totalQuestions: 0,
         correctAnswers: 0,
         accuracy: 0,
@@ -334,9 +335,14 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
           <div>
             <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Intelligence Hub</h2>
             <p className="text-sm text-[var(--color-text-muted)]">
-              {viewLevel === 'dashboard' && 'System Overview'}
-              {viewLevel === 'system' && selectedSystem && `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem] ?? selectedSystem} Deep Dive`}
-              {viewLevel === 'subcategory' && selectedSubcategory}
+              {viewLevel === 'dashboard' ? 'System Overview' : ''}
+              {viewLevel === 'system' && selectedSystem
+                ? ((): string => {
+                    const systemLabel = ABBREVIATION_TO_TOPIC_MAP[selectedSystem];
+                    return `${systemLabel !== undefined ? systemLabel : selectedSystem} Deep Dive`;
+                  })()
+                : ''}
+              {viewLevel === 'subcategory' ? (selectedSubcategory ?? '') : ''}
             </p>
           </div>
         </div>

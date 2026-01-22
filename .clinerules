@@ -2,7 +2,35 @@
 **Project:** PANaCEa (Physician Assistant National Certifying Exam Adaptive Engine)
 **Mission:** Build a "Cognitive Prosthetic" that optimizes memory retention using FSRS v6, captures implicit behavioral telemetry, and visualizes epistemic uncertainty.
 **Current State:** Moving from "Prototype" to "Clinical Instrument."
+**Code Generation Protocol:** Every code change MUST be written to disk. NEVER present code in markdown blocks without file operations.
 
+**File Writing Standards:**
+1. **Always specify full file paths:** Use `/Users/aaronullger/GitHub/StudyPANaCEa/[path]` format.
+2. **Write incrementally:** After generating code, immediately write it to the target file before moving to the next component.
+3. **Verify writes:** After writing, confirm the file exists and contains the expected code.
+4. **Multi-file changes:** When modifying multiple files, write each one sequentially, not in a batch at the end.
+5. **No orphaned code:** If you generate code in a response, it MUST be written to a file in that same response.
+
+**Implementation Verification:**
+- After writing files, run `npm run typecheck` to verify TypeScript compilation.
+- If introducing new routes/functions, verify the file structure matches Cloudflare Pages expectations (`functions/api/[route].ts`).
+- When adding imports, verify the imported module exists before writing the consuming file.
+
+**Anti-Patterns to Avoid:**
+- ❌ Showing code snippets without file operations
+- ❌ Saying "create a file" without actually creating it
+- ❌ Generating multiple components but only writing the first one
+- ❌ Assuming previous writes were successful without verification
+- ❌ Using relative paths that don't resolve correctly
+
+**The "Write-First" Rule:** When asked to implement a feature, the response structure MUST be:
+1. Write file A (with full path)
+2. Verify file A was created
+3. Write file B (with full path)
+4. Verify file B was created
+5. THEN provide explanation/summary
+
+**Critical:** If you generate code but cannot write it due to tool limitations, explicitly state: "I cannot write files directly. Please copy the following code to [full file path]."
 ---
 
 # 🛠️ TECH STACK & TOOLCHAIN (STRICT COMPLIANCE)

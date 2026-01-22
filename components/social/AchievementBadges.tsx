@@ -260,7 +260,7 @@ export function AchievementBadges({
           const isUnlocked = !!achievement.unlockedAt;
           const progress = Math.min(100, (achievement.progress / achievement.requirement) * 100);
           const tierColors = TIER_COLORS[achievement.tier];
-          const IconComponent = ACHIEVEMENT_ICONS[achievement.icon] || Trophy;
+          const IconComponent = ACHIEVEMENT_ICONS[achievement.icon] ?? Trophy;
 
           return (
             <motion.div
@@ -388,7 +388,9 @@ export function AchievementBadges({
                 </button>
 
                 {(() => {
-                  const IconComponent = ACHIEVEMENT_ICONS[selectedAchievement.icon] || Trophy;
+                  const iconKey = selectedAchievement.icon;
+                  const iconLookup = ACHIEVEMENT_ICONS[iconKey];
+                  const IconComponent = iconLookup !== undefined ? iconLookup : Trophy;
                   return (
                     <div
                       className={`

@@ -130,6 +130,7 @@ export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshK
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [refreshKey]);
 
   return (

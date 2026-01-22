@@ -46,7 +46,7 @@ const SENSITIVE_PATTERNS = [
   // Email addresses (partially mask)
   {
     pattern: /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
-    replacement: (match, local, domain) => {
+    replacement: (match: string, local: string, domain: string): string => {
       const maskedLocal = local.length > 2 ? local.substring(0, 2) + '***' : '***';
       return `${maskedLocal}@${domain}`;
     },
@@ -58,7 +58,7 @@ const SENSITIVE_PATTERNS = [
   // IP addresses (partially mask)
   {
     pattern: /\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b/g,
-    replacement: (match, a, b, c, d) => {
+    replacement: (_match: string, a: string, b: string, _c: string, _d: string): string => {
       return `${a}.${b}.***.***`;
     },
   },

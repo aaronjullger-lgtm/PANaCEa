@@ -202,7 +202,10 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
               { start: 17, end: 21 },
               { start: 21, end: 6 },
             ];
+            // Guard: ranges[idx] may be undefined in TypeScript strict mode
             const range = ranges[idx];
+            if (!range) return null;
+            
             const periodStats = hourlyStats.filter((s) =>
               range.start < range.end
                 ? s.hour >= range.start && s.hour < range.end

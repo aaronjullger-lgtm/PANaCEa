@@ -1171,7 +1171,6 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
           ...mergedContent,
           relatedSystems: otherSystems,
           updatedBy: 'condition-doctor-auto-merge',
-          updatedAt: new Date(),
         },
       });
 
@@ -1185,7 +1184,6 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
           where: { id: primary.conditionId },
           data: {
             relatedSystems: otherSystems,
-            updatedAt: new Date(),
           },
         });
       }
@@ -1368,7 +1366,6 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
         data: {
           relatedSystems: otherSystems,
           aliases: allAliases,
-          updatedAt: new Date(),
         },
       });
 

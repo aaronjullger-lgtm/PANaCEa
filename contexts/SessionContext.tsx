@@ -120,7 +120,8 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
         if (settings.focus === 'review') {
           // Due questions - filter missed questions by date
-          const today = new Date().toISOString().split('T')[0];
+          // Guard: split() array access may return undefined in strict mode
+          const today = new Date().toISOString().split('T')[0] ?? '';
           const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
           setQuestionQueue(due as Question[]);
         } else if (settings.focus === 'reviewFlagged') {

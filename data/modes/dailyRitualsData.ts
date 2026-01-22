@@ -99,17 +99,35 @@ export const MEDICAL_WORDLE_WORDS = {
  * Generate today's Medical Wordle game
  */
 export function getTodaysMedicalWordle(): MedicalWordleGame {
-  const today = new Date().toISOString().split('T')[0];
+  const todayRaw = new Date().toISOString().split('T')[0];
+  // Guard: split always returns at least one element, but TypeScript sees string | undefined
+  const today = todayRaw ?? new Date().toISOString().slice(0, 10);
 
   // Use date as seed for consistent daily word
   const seed = new Date(today).getTime();
   const categories = ['drugs', 'conditions', 'anatomy'] as const;
   const categoryIndex = seed % categories.length;
-  const category = categories[categoryIndex];
+  const category = categories[categoryIndex] ?? 'drugs';
 
   const wordBank = MEDICAL_WORDLE_WORDS[category];
   const wordIndex = Math.floor(seed / categories.length) % wordBank.length;
   const selectedWord = wordBank[wordIndex];
+
+  // Guard: ensure selectedWord exists before accessing properties
+  if (!selectedWord) {
+    // Fallback to first word in drugs category
+    const fallbackWord = MEDICAL_WORDLE_WORDS.drugs[0]!;
+    return {
+      id: `wordle-${today}`,
+      date: today,
+      targetWord: fallbackWord.word,
+      category: 'drugs',
+      hints: {
+        class: fallbackWord.class,
+        system: undefined,
+      },
+    };
+  }
 
   return {
     id: `wordle-${today}`,

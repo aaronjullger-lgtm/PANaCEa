@@ -85,6 +85,7 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
       const timer = setTimeout(onAnimationComplete, 600);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [showFeedback, onAnimationComplete]);
 
   if (!showFeedback || isCorrect === null) return null;

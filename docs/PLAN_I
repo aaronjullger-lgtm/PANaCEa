@@ -1,0 +1,276 @@
+### __Current State Summary__
+
+| Component | Location | Lines | Issues | |-----------|----------|-------|--------| | `ClinicalReferenceLibrary.tsx` | `components/library/` | ~700 | Fetches from reference services (anatomy, labs, etc.) - separate from MedicalContent | | `ClinicalLibrary.tsx` | `components/toolkit/` | ~200 | Fetches from `/api/content/library` - correct MedicalContent source | | `LibraryCard.tsx` | `components/library/` | ~200 | Detail card with collapsible sections - decent but needs JSON handling fixes | | `ToolkitHub.tsx` | `components/toolkit/` | __~2000__ | __MASSIVE monolith__ - all calculators inline, needs severe refactoring |
+
+__Key Problems Identified:__
+
+1. __JSONB fields not rendering__ - `clinical_pearls`, `classic_triad`, `treatment`, `differentials`, `synonyms`, `age_demographic` stored as JSON but rendered incorrectly
+2. __Two redundant "library" components__ - `ClinicalReferenceLibrary` vs `ClinicalLibrary`
+3. __2000-line calculator monolith__ - Every calculator inline in `ToolkitHub.tsx`
+4. __Light mode design__ - Not the "dark sportsbook" aesthetic requested
+5. __No unified card system__ - Different styling across components
+
+---
+
+## 📋 PHASE 1: Fix Data Presentation (Critical)
+
+### 1.1 Create Type-Safe MedicalContent Interface
+
+```typescript
+// types/medical-content.ts
+interface MedicalContentDisplay {
+  id: string;
+  condition: string;
+  system: string;
+  subcategory?: string;
+  pance_yield?: 'HIGH' | 'MEDIUM' | 'LOW';
+  
+  // Text fields
+  overview?: string;
+  pathophysiology?: string;
+  symptoms?: string;
+  treatment?: string;
+  prognosis?: string;
+  
+  // JSONB fields (need parsing)
+  clinical_pearls?: string[] | null;
+  classic_triad?: string[] | null;
+  buzzwords?: string[] | null;
+  differentials?: string[] | null;
+  synonyms?: string[] | null;
+  age_demographic?: { min?: number; max?: number; notes?: string } | null;
+  
+  // Nested content JSONB
+  content?: {
+    definition?: string;
+    epidemiology?: string;
+    diagnosis?: { gold_standard?: string; initial_test?: string; labs?: string[] };
+    treatment?: { first_line?: string; alternatives?: string[]; mechanism?: string };
+    pearls?: string[];
+    [key: string]: unknown;
+  } | null;
+}
+```
+
+### 1.2 Create Safe JSON Parser Utility
+
+```typescript
+// lib/utils/jsonParser.ts
+export function safeParseJson<T>(value: unknown, fallback: T): T {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch { return fallback; }
+  }
+  return value as T;
+}
+
+export function normalizeToStringArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean).map(String);
+  if (typeof value === 'string') return [value];
+  if (typeof value === 'object') return Object.values(value).filter(Boolean).map(String);
+  return [];
+}
+```
+
+### 1.3 Create Robust Content Renderers
+
+```typescript
+// components/ui/content-renderers/
+├── MarkdownRenderer.tsx      // ReactMarkdown with safe rendering
+├── BulletListRenderer.tsx    // Handles string[] or string with newlines
+├── KeyValueRenderer.tsx      // Handles { key: value } objects
+├── ContentFieldRenderer.tsx  // Master switch for field types
+└── index.ts
+```
+
+__`ContentFieldRenderer` Logic:__
+
+- `null/undefined` → Return `null` (hide section)
+- `string` → `<MarkdownRenderer />`
+- `string[]` → `<BulletListRenderer />`
+- `object` with `type: 'steps'` → Stepped treatment display
+- `object` (generic) → `<KeyValueRenderer />`
+
+### 1.4 Refactor LibraryCard.tsx
+
+- Replace loose `renderContent` function with `<ContentFieldRenderer />`
+- Add proper TypeScript interface for props
+- Handle `[object Object]` rendering bugs
+- Add loading skeleton for each section
+
+---
+
+## 📋 PHASE 2: Visual Overhaul (Card System)
+
+### 2.1 Create `<MedicalContentCard />` Component
+
+__Location:__ `components/ui/cards/MedicalContentCard.tsx`
+
+__Features:__
+
+- __Dark Mode First:__ `bg-slate-900`, `border-slate-700`, `text-slate-100`
+
+- __Display Font Headers:__ Teko/Kanit for condition names
+
+- __Unified Badge System:__
+
+  - System: `<SystemBadge system="CV" />` → Deep blue pill
+  - Yield: `<YieldBadge yield="HIGH" />` → Red/Amber/Gray
+
+- __Hover States:__ Subtle glow, scale transform
+
+- __Responsive Grid:__ 3 columns desktop, 2 tablet, 1 mobile
+
+__Card Structure:__
+
+```tsx
+<MedicalContentCard>
+  <CardHeader>
+    <ConditionName /> {/* Teko font */}
+    <BadgeRow>
+      <SystemBadge /><YieldBadge />
+    </BadgeRow>
+  </CardHeader>
+  <CardBody>
+    <ClassicPatient /> {/* Highlighted box */}
+    <CollapsibleSections>
+      <Section title="Definition" defaultOpen />
+      <Section title="Clinical Pearls" />
+      <Section title="Treatment" />
+    </CollapsibleSections>
+  </CardBody>
+  <CardFooter>
+    <QuickActions /> {/* Bookmark, Add to Drill */}
+  </CardFooter>
+</MedicalContentCard>
+```
+
+### 2.2 Consolidate Library Components
+
+- __DELETE:__ `components/library/ClinicalReferenceLibrary.tsx` (redundant)
+- __KEEP & REFACTOR:__ `components/toolkit/ClinicalLibrary.tsx` → rename to `MedicalContentBrowser.tsx`
+- __KEEP:__ `components/library/LibraryCard.tsx` → evolves into `MedicalContentCard`
+
+### 2.3 Implement Masonry/Grid Layout
+
+```tsx
+// components/ui/layouts/ContentGrid.tsx
+<ContentGrid columns={{ default: 1, md: 2, lg: 3 }} gap={4}>
+  {items.map(item => <MedicalContentCard key={item.id} content={item} />)}
+</ContentGrid>
+```
+
+### 2.4 Dark Theme Variables
+
+```css
+/* Update index.css or tailwind.config.js */
+:root {
+  --color-bg-primary: #0f172a;    /* slate-900 */
+  --color-bg-secondary: #1e293b;  /* slate-800 */
+  --color-bg-tertiary: #334155;   /* slate-700 */
+  --color-border: #475569;        /* slate-600 */
+  --color-text-primary: #f1f5f9;  /* slate-100 */
+  --color-accent: #3b82f6;        /* blue-500 */
+}
+```
+
+---
+
+## 📋 PHASE 3: Calculator Standardization
+
+### 3.1 Extract Calculator Components
+
+__Split `ToolkitHub.tsx` (2000 lines) into:__
+
+```javascript
+components/toolkit/calculators/
+├── types.ts                    # CalculatorResult, CalculatorConfig interfaces
+├── CalculatorCard.tsx          # Grid card for selection
+├── CalculatorView.tsx          # Wrapper/router
+├── shared/
+│   ├── ClinicalInput.tsx       # Standardized number/checkbox input
+│   ├── ResultDisplay.tsx       # Score + Risk Bar + Recommendation
+│   └── CheckboxCriteria.tsx    # Styled criteria checkbox
+├── risk/
+│   ├── CURB65Calculator.tsx
+│   ├── CHADS2VAScCalculator.tsx
+│   ├── WellsDVTCalculator.tsx
+│   └── WellsPECalculator.tsx
+├── diagnosis/
+│   └── PERCCalculator.tsx
+├── lab/
+│   ├── GFRCalculator.tsx
+│   └── AnionGapCalculator.tsx
+└── dosing/
+    └── PediatricDosingCalculator.tsx
+```
+
+### 3.2 Create `<ClinicalInput />` Component
+
+```tsx
+// components/toolkit/calculators/shared/ClinicalInput.tsx
+interface ClinicalInputProps {
+  label: string;
+  sublabel?: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: 'number' | 'select';
+  unit?: string;
+  range?: string;
+  options?: { value: string; label: string }[];
+}
+
+// Features:
+// - Consistent styling across all calculators
+// - Inline unit display
+// - Range hint badge
+// - Dark mode optimized
+```
+
+### 3.3 Create `<ResultDisplay />` Component
+
+```tsx
+// components/toolkit/calculators/shared/ResultDisplay.tsx
+interface ResultDisplayProps {
+  score: number | string;
+  interpretation: string;
+  recommendation: string;
+  riskLevel: 'low' | 'moderate' | 'high';
+  showRiskBar?: boolean;  // Animated color gradient bar
+}
+
+// Features:
+// - Large animated score number (framer-motion)
+// - Color-coded risk bar (green → yellow → red)
+// - Prominent recommendation text
+// - Consistent across all calculators
+```
+
+### 3.4 Organize by System with Tab Switcher
+
+```tsx
+// components/toolkit/CalculatorHub.tsx (refactored ToolkitHub)
+const CALCULATOR_CATEGORIES = [
+  { id: 'cardiac', label: 'Cardiac', icon: Heart, calculators: ['chads2vasc'] },
+  { id: 'pulmonary', label: 'Pulmonary', icon: Wind, calculators: ['curb65', 'wells_pe', 'perc'] },
+  { id: 'vascular', label: 'Vascular', icon: Activity, calculators: ['wells_dvt'] },
+  { id: 'renal', label: 'Renal', icon: Droplet, calculators: ['gfr', 'anion_gap'] },
+  { id: 'pediatric', label: 'Pediatric', icon: Baby, calculators: ['pediatric_dosing'] },
+];
+
+// Framer Motion tab switcher instead of flat list
+<TabSwitcher 
+  categories={CALCULATOR_CATEGORIES}
+  activeCategory={activeCategory}
+  onCategoryChange={setActiveCategory}
+/>
+```
+
+---
+
+## 📦 Deliverables Summary
+
+| Deliverable | Action | Priority | |-------------|--------|----------| | `types/medical-content.ts` | CREATE | P0 | | `lib/utils/jsonParser.ts` | CREATE | P0 | | `components/ui/content-renderers/*` | CREATE | P0 | | `components/library/LibraryCard.tsx` | REFACTOR | P1 | | `components/toolkit/ClinicalLibrary.tsx` | REFACTOR → `MedicalContentBrowser.tsx` | P1 | | `components/ui/cards/MedicalContentCard.tsx` | CREATE | P1 | | `components/library/ClinicalReferenceLibrary.tsx` | DELETE (redundant) | P2 | | `components/toolkit/calculators/*` | EXTRACT from monolith | P2 | | `components/toolkit/ToolkitHub.tsx` | SLIM DOWN (700 lines max) | P2 | | CSS/Tailwind dark theme updates | UPDATE | P2 |
+
+---

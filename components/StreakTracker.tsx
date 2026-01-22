@@ -119,10 +119,11 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
 
         <div className="grid grid-cols-7 gap-2">
           {last7Days.map((date, index) => {
+            if (!date) return null;
             const hasStudied = hasStudiedOnDate(date);
             const isCurrentDay = isToday(date);
             // Use UTC day to ensure consistency
-            const dayName = DAY_NAMES[new Date(date + 'T00:00:00Z').getUTCDay()];
+            const dayName = DAY_NAMES[new Date(date + 'T00:00:00Z').getUTCDay()] ?? '';
 
             return (
               <motion.div

@@ -234,6 +234,8 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
       .sort()
       .forEach((system, sysIndex) => {
         const systemQuestions = questionsBySystem[system];
+        // Guard against undefined (TypeScript strict mode)
+        if (!systemQuestions || systemQuestions.length === 0) return;
 
         if (groupBySystem) {
           html += `  <div class="system-group">

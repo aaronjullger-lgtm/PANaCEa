@@ -72,14 +72,18 @@ export function useRecentConditions() {
   const addRecentCondition = useCallback((content: Partial<MedicalContentDisplay>) => {
     if (!content.id || !content.condition) return;
 
+    // Capture values for closure type narrowing
+    const contentId = content.id;
+    const contentCondition = content.condition;
+
     setRecentConditions((prev) => {
       // Remove existing entry for this condition
-      const filtered = prev.filter((c) => c.id !== content.id);
+      const filtered = prev.filter((c) => c.id !== contentId);
 
       // Add to top
       const newEntry: RecentCondition = {
-        id: content.id,
-        condition: content.condition || 'Unknown',
+        id: contentId,
+        condition: contentCondition,
         system: content.system || undefined,
         subcategory: content.subcategory || undefined,
         viewedAt: new Date().toISOString(),

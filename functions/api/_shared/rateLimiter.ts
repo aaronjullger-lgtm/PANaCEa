@@ -360,34 +360,34 @@ export async function withRateLimit(
  */
 function normalizeIPForRateLimit(ip?: string): string {
   // Default undefined inputs to empty string to avoid strict errors
-  ip = ip || '';
+  const normalizedIp: string = ip || '';
 
   // Handle empty or invalid
-  if (!ip || ip === 'anonymous') {
+  if (!normalizedIp || normalizedIp === 'anonymous') {
     return 'anonymous';
   }
 
   // Trim whitespace
-  ip = ip.trim().toLowerCase();
+  const trimmedIp: string = normalizedIp.trim().toLowerCase();
 
   // Check for IPv4-mapped IPv6 (::ffff:192.168.1.1)
-  const ipv4MappedMatch = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
+  const ipv4MappedMatch = trimmedIp.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
   if (ipv4MappedMatch) {
     return ipv4MappedMatch[1]; // Extract and return the IPv4 part
   }
 
   // Check if it's IPv4 (simple check for dotted decimal)
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
-    return ip; // Return IPv4 as-is
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(trimmedIp)) {
+    return trimmedIp; // Return IPv4 as-is
   }
 
   // Check if it's IPv6 (contains colons)
-  if (ip.includes(':')) {
-    return normalizeIPv6ToPrefix64(ip);
+  if (trimmedIp.includes(':')) {
+    return normalizeIPv6ToPrefix64(trimmedIp);
   }
 
   // Unknown format, return as-is
-  return ip;
+  return trimmedIp;
 }
 
 /**
@@ -413,8 +413,12 @@ function normalizeIPv6ToPrefix64(ipv6: string): string {
     if (ipv4Embedded) {
       // Convert embedded IPv4 to two 16-bit groups
       const ipv4Parts = ipv4Embedded[1].split('.').map(Number);
-      const high = ((ipv4Parts[0] << 8) | ipv4Parts[1]).toString(16);
-      const low = ((ipv4Parts[2] << 8) | ipv4Parts[3]).toString(16);
+      const part0 = ipv4Parts[0] ?? 0;
+      const part1 = ipv4Parts[1] ?? 0;
+      const part2 = ipv4Parts[2] ?? 0;
+      const part3 = ipv4Parts[3] ?? 0;
+      const high = ((part0 << 8) | part1).toString(16);
+      const low = ((part2 << 8) | part3).toString(16);
       ipv6 = ipv6.replace(ipv4Embedded[0], `:${high}:${low}`);
     }
 

@@ -90,7 +90,9 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
 }) => {
   // Parse JSONB fields safely
   const clinicalPearls = safeParseList(content.clinical_pearls);
-  const classicTriad = handleFakeNull(content.classic_triad, null);
+  // handleFakeNull returns T | null; we need to type assert for array check
+  const classicTriadRaw = handleFakeNull(content.classic_triad, null);
+  const classicTriad = Array.isArray(classicTriadRaw) ? classicTriadRaw as string[] : null;
   const buzzwords = safeParseList(content.buzzwords);
   const synonyms = safeParseList(content.synonyms);
 

@@ -104,13 +104,29 @@ export const v5CompatibleParameters: FSRSParameters = {
   ],
 };
 
+// Minimum stability constant
+const S_MIN = 0.01;
+
+/**
+ * Compute decay and factor from w[20] for retrievability calculation
+ * Official ts-fsrs formula
+ */
+export function computeDecayFactor(w20: number): { decay: number; factor: number } {
+  const decay = -w20;
+  const factor = Math.exp(Math.pow(decay, -1) * Math.log(0.9)) - 1.0;
+  return { decay, factor: +factor.toFixed(8) };
+}
+
 export class FSRS {
   private p: FSRSParameters;
   private readonly DECAY = -0.5; // Fixed decay constant for interval calculation
+  private decayFactor: { decay: number; factor: number };
 
   constructor(parameters: FSRSParameters = defaultParameters) {
     // Ensure we have all 21 parameters for v6
     this.p = this.normalizeParameters(parameters);
+    // Precompute decay factor for retrievability calculations
+    this.decayFactor = computeDecayFactor(this.p.w[20] ?? 0.1542);
   }
 
   /**
@@ -183,7 +199,8 @@ export class FSRS {
       newCard.state =
         rating === Rating.Good || rating === Rating.Easy ? FSRSState.Review : FSRSState.Learning;
     } else if (card.state === FSRSState.Review) {
-      const interval = card.elapsed_days;
+      // Use recalculated elapsed_days, not the stale value from input card
+      const interval = newCard.elapsed_days;
       const last_d = card.difficulty;
       const last_s = card.stability;
 
@@ -238,7 +255,9 @@ export class FSRS {
 
   /**
    * FSRS v6: Calculate retrievability using power-law decay
-   * R = (1 + t/(9*S))^(-w20)
+   * R = (1 + factor * t / S) ^ decay
+   * 
+   * Uses precomputed decay and factor from w[20] for efficiency.
    *
    * @param elapsed_days - Days since last review
    * @param stability - Current stability value
@@ -247,14 +266,16 @@ export class FSRS {
   calculateRetrievability(elapsed_days: number, stability: number): number {
     if (stability <= 0) return 0;
 
-    const w20 = this.p.w[20] ?? 0.1542; // Default to FSRS v6 calibrated value
-
-    return Math.pow(1 + elapsed_days / (9 * stability), -w20);
+    const { decay, factor } = this.decayFactor;
+    return Math.pow(1 + (factor * elapsed_days) / stability, decay);
   }
 
   /**
    * FSRS v6: Short-term stability for same-day reviews
-   * S' = S * e^(w17 * (G - 3 + w18))
+   * 
+   * Formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
+   * maskedSinc = sinc if G < Hard else max(sinc, 1.0)
+   * S' = clamp(S * maskedSinc, S_MIN, 36500)
    *
    * This handles reviews that happen within the same day,
    * where the standard stability formula doesn't apply well.
@@ -268,28 +289,63 @@ export class FSRS {
     const w18 = this.p.w[18];
     const w19 = this.p.w[19];
 
-    // G is the grade (1-4), subtract 3 to center around Good (3)
-    const gradeOffset = rating - 3 + w18;
-
-    // FSRS v6 formula: S' = S * e^(w17 * (G - 3 + w18)) * S^(-w19)
-    return stability * Math.exp(w17 * gradeOffset) * Math.pow(stability, -w19);
+    // FSRS v6 formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
+    const sinc = Math.pow(stability, -w19) * Math.exp(w17 * (rating - 3 + w18));
+    
+    // For Hard or better ratings, ensure stability doesn't decrease
+    const maskedSinc = rating >= Rating.Hard ? Math.max(sinc, 1.0) : sinc;
+    
+    // Apply and clamp to valid range
+    return Math.min(Math.max(stability * maskedSinc, S_MIN), 36500.0);
   }
 
   /**
    * Initialize difficulty and stability for a new card
+   * FSRS v6: Uses exponential formula for initial difficulty
    */
   private init_ds(card: FSRSCard, rating: Rating): void {
     card.stability = this.p.w[rating - 1];
-    card.difficulty = this.p.w[4] - (rating - 3) * this.p.w[5];
-    card.difficulty = this.constrain_difficulty(card.difficulty);
+    card.difficulty = this.init_difficulty(rating);
+  }
+
+  /**
+   * FSRS v6: Initial difficulty using exponential formula
+   * D0 = w[4] - exp((G - 1) * w[5]) + 1
+   * 
+   * @param rating - User's rating (1-4)
+   * @returns Initial difficulty value (constrained to 1-10)
+   */
+  private init_difficulty(rating: Rating): number {
+    return this.constrain_difficulty(
+      this.p.w[4] - Math.exp((rating - 1) * this.p.w[5]) + 1
+    );
   }
 
   /**
    * Update difficulty after a review
+   * FSRS v6: Uses linear_damping for difficulty changes
    */
   private next_ds(card: FSRSCard, rating: Rating): void {
-    const next_d = card.difficulty - this.p.w[6] * (rating - 3);
-    card.difficulty = this.constrain_difficulty(this.mean_reversion(this.p.w[4], next_d));
+    const delta_d = -this.p.w[6] * (rating - 3);
+    const next_d = card.difficulty + this.linear_damping(delta_d, card.difficulty);
+    // Mean reversion targets init_difficulty(Easy) per official ts-fsrs
+    card.difficulty = this.constrain_difficulty(
+      this.mean_reversion(this.init_difficulty(Rating.Easy), next_d)
+    );
+  }
+
+  /**
+   * FSRS v6: Linear damping for difficulty updates
+   * Prevents difficulty from oscillating too rapidly
+   * 
+   * Formula: delta_d * (10 - old_d) / 9
+   * 
+   * @param delta_d - Change in difficulty
+   * @param old_d - Current difficulty value
+   * @returns Damped difficulty change
+   */
+  private linear_damping(delta_d: number, old_d: number): number {
+    return (delta_d * (10 - old_d)) / 9;
   }
 
   /**
