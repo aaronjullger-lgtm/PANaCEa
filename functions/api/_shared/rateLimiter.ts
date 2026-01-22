@@ -358,7 +358,10 @@ export async function withRateLimit(
  * @param ip - The IP address to normalize
  * @returns Normalized IP identifier (IPv4 as-is, IPv6 as /64 prefix)
  */
-function normalizeIPForRateLimit(ip: string): string {
+function normalizeIPForRateLimit(ip?: string): string {
+  // Default undefined inputs to empty string to avoid strict errors
+  ip = ip || '';
+
   // Handle empty or invalid
   if (!ip || ip === 'anonymous') {
     return 'anonymous';
@@ -459,7 +462,7 @@ export function getRateLimitIdentifier(request: Request, userId?: string): strin
   const rawIp =
     request.headers.get('CF-Connecting-IP') ||
     request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
-    'anonymous';
+    '';
 
   // Normalize IP for consistent rate limiting
   const normalizedIp = normalizeIPForRateLimit(rawIp);

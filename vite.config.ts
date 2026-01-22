@@ -137,7 +137,11 @@ export default defineConfig(({ mode }) => {
         },
         // Ensure lucide-react is treated as side-effect-free for optimal tree-shaking
         treeshake: {
-          moduleSideEffects: (id) => (id.includes('lucide-react') ? false : undefined),
+          moduleSideEffects: (id) => {
+            if (id && id.includes('lucide-react')) return false;
+            // Explicitly return true for all other modules to satisfy Rollup boolean return
+            return true;
+          },
         },
       },
       chunkSizeWarningLimit: 700, // Increased limit for larger vendor chunks

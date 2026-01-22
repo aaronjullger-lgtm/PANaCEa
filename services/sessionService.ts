@@ -245,7 +245,10 @@ export function detectInterruption(questionTimestamps: number[]): boolean {
   const INTERRUPTION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
   for (let i = 1; i < questionTimestamps.length; i++) {
-    const gap = questionTimestamps[i] - questionTimestamps[i - 1];
+    const current = questionTimestamps[i];
+    const previous = questionTimestamps[i - 1];
+    if (current == null || previous == null) continue;
+    const gap = current - previous;
     if (gap > INTERRUPTION_THRESHOLD_MS) {
       return true;
     }

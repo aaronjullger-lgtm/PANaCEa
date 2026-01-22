@@ -83,8 +83,8 @@ function extractPearlsFromRationale(rationale: string): string[] {
     /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
   let match;
   while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
-    const pearl = match[1].trim();
-    if (pearl.length > 10 && pearl.length < 500) {
+    const pearl = match[1]?.trim();
+    if (pearl && pearl.length > 10 && pearl.length < 500) {
       pearls.push(pearl);
     }
   }
@@ -92,9 +92,9 @@ function extractPearlsFromRationale(rationale: string): string[] {
   // Pattern 2: Bullet points that look like pearls (start with • or - and are concise)
   const bulletPattern = /^[•-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
-    const pearl = match[1].trim();
+    const pearl = match[1]?.trim();
     // Filter for high-quality pearls (avoid generic statements)
-    if (pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
+    if (pearl && pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
       pearls.push(pearl);
     }
   }
@@ -356,7 +356,7 @@ export async function getQuestion(
     }
 
     if (questions.length > 0) {
-      dbQuestion = questions[0];
+      dbQuestion = questions[0] ?? null;
       console.log('[QuestionService] Served question from DB pool');
     }
   } catch (error) {

@@ -116,20 +116,20 @@ function simulateSingleRetention(
     // Process reviews due today
     for (let i = cards.length - 1; i >= 0; i--) {
       const item = cards[i];
-      if (item.nextReview <= currentDate) {
-        reviewsToday++;
-        totalReviews++;
+      if (!item || item.nextReview > currentDate) continue;
+      
+      reviewsToday++;
+      totalReviews++;
 
-        // Simulate rating distribution based on target retention
-        const rating = simulateRating(targetRetention);
-        const scheduled = fsrs.schedule(item.card, currentDate);
-        
-        // Update card
-        cards[i] = {
-          card: scheduled[rating].card,
-          nextReview: scheduled[rating].due,
-        };
-      }
+      // Simulate rating distribution based on target retention
+      const rating = simulateRating(targetRetention);
+      const scheduled = fsrs.schedule(item.card, currentDate);
+      
+      // Update card
+      cards[i] = {
+        card: scheduled[rating].card,
+        nextReview: scheduled[rating].due,
+      };
     }
 
     dailyReviewCounts.push(reviewsToday);

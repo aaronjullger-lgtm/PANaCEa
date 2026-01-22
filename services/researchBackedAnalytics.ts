@@ -244,7 +244,8 @@ export async function analyzeLearningEfficiency(): Promise<LearningEfficiencyMet
 
     for (let i = 0; i < sysAttempts.length; i++) {
       runningTotal++;
-      if (sysAttempts[i].isCorrect) runningCorrect++;
+      const attempt = sysAttempts[i];
+      if (attempt?.isCorrect) runningCorrect++;;
 
       if (runningTotal >= 10 && runningCorrect / runningTotal >= 0.8) {
         masteryQuestions.push(runningTotal);
@@ -347,7 +348,11 @@ export async function analyzeMetacognition(): Promise<MetacognitiveProfile> {
 
   // Self-monitoring: do they take breaks when fatigued?
   const fatigueBreaks = attempts.filter(
-    (a, i) => i > 0 && a.fatigueLevel > 70 && a.timestamp - attempts[i - 1].timestamp > 300000 // 5+ min break
+    (a, i) => {
+      if (i === 0) return false;
+      const prev = attempts[i - 1];
+      return prev && a.fatigueLevel > 70 && a.timestamp - prev.timestamp > 300000; // 5+ min break
+    }
   ).length;
   const fatigueInstances = attempts.filter((a) => a.fatigueLevel > 70).length;
   const selfMonitoringScore =
@@ -441,7 +446,10 @@ export async function analyzeCognitiveLoad(): Promise<CognitiveLoadProfile> {
   // Recovery rate - how much does accuracy improve after breaks?
   const breakRecoveries: number[] = [];
   for (let i = 1; i < attempts.length; i++) {
-    const gap = attempts[i].timestamp - attempts[i - 1].timestamp;
+    const current = attempts[i];
+    const previous = attempts[i - 1];
+    if (!current || !previous) continue;
+    const gap = current.timestamp - previous.timestamp;
     if (gap > 600000) {
       // 10+ minute break
       const beforeBreak = attempts.slice(Math.max(0, i - 10), i);
@@ -494,7 +502,8 @@ export async function analyzeCircadianPatterns(): Promise<CircadianProfile> {
   const byHour: Record<number, QuestionAttemptRecord[]> = {};
   for (let h = 0; h < 24; h++) byHour[h] = [];
   for (const a of attempts) {
-    byHour[a.hourOfDay].push(a);
+    const bucket = byHour[a.hourOfDay];
+    if (bucket) bucket.push(a);
   }
 
   const hourlyPerformance = Object.entries(byHour)
@@ -535,7 +544,8 @@ export async function analyzeCircadianPatterns(): Promise<CircadianProfile> {
   const byDay: Record<number, QuestionAttemptRecord[]> = {};
   for (let d = 0; d < 7; d++) byDay[d] = [];
   for (const a of attempts) {
-    byDay[a.dayOfWeek].push(a);
+    const bucket = byDay[a.dayOfWeek];
+    if (bucket) bucket.push(a);
   }
 
   const dailyPerformance = Object.entries(byDay)
@@ -584,13 +594,15 @@ export async function analyzeStrengthsWeaknesses(): Promise<StrengthWeaknessAnal
     const accuracy = sysAttempts.filter((a) => a.isCorrect).length / sysAttempts.length;
 
     // Calculate trend
+    const recentSystemAttempts = recentGroups[system];
+    const olderSystemAttempts = olderGroups[system];
     const recentAcc =
-      recentGroups[system]?.length > 5
-        ? recentGroups[system].filter((a) => a.isCorrect).length / recentGroups[system].length
+      recentSystemAttempts && recentSystemAttempts.length > 5
+        ? recentSystemAttempts.filter((a) => a.isCorrect).length / recentSystemAttempts.length
         : accuracy;
     const olderAcc =
-      olderGroups[system]?.length > 5
-        ? olderGroups[system].filter((a) => a.isCorrect).length / olderGroups[system].length
+      olderSystemAttempts && olderSystemAttempts.length > 5
+        ? olderSystemAttempts.filter((a) => a.isCorrect).length / olderSystemAttempts.length
         : accuracy;
 
     const trendDiff = recentAcc - olderAcc;
@@ -911,7 +923,7 @@ function groupBySystem(attempts: QuestionAttemptRecord[]): Record<string, Questi
   const groups: Record<string, QuestionAttemptRecord[]> = {};
   for (const a of attempts) {
     if (!groups[a.system]) groups[a.system] = [];
-    groups[a.system].push(a);
+    groups[a.system]!.push(a);
   }
   return groups;
 }
@@ -922,7 +934,7 @@ function groupBySession(
   const groups: Record<string, QuestionAttemptRecord[]> = {};
   for (const a of attempts) {
     if (!groups[a.sessionId]) groups[a.sessionId] = [];
-    groups[a.sessionId].push(a);
+    groups[a.sessionId]!.push(a);
   }
   return groups;
 }
@@ -986,7 +998,7 @@ function calculateReviewIntervals(
 
   for (const a of attempts) {
     if (!byQuestion[a.questionId]) byQuestion[a.questionId] = [];
-    byQuestion[a.questionId].push(a);
+    byQuestion[a.questionId]!.push(a);
   }
 
   const intervals: Array<{ actual: number; optimal: number }> = [];
@@ -997,7 +1009,10 @@ function calculateReviewIntervals(
     reviews.sort((a, b) => a.timestamp - b.timestamp);
 
     for (let i = 1; i < reviews.length; i++) {
-      const actual = (reviews[i].timestamp - reviews[i - 1].timestamp) / 86400000; // days
+      const current = reviews[i];
+      const previous = reviews[i - 1];
+      if (!current || !previous) continue;
+      const actual = (current.timestamp - previous.timestamp) / 86400000; // days
       const optimal = OPTIMAL_SPACING.initial * Math.pow(OPTIMAL_SPACING.multiplier, i - 1);
       intervals.push({ actual, optimal: Math.min(optimal, OPTIMAL_SPACING.maxInterval) });
     }

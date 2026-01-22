@@ -141,7 +141,7 @@ export function collectSessionAnalytics(
     // Streak data
     bestStreak,
     finalStreak,
-    avgStreak: patterns.avgStreakLength,
+    avgStreak: patterns.avgStreakLength ?? undefined,
     errorClusters,
 
     // Momentum metrics
@@ -153,24 +153,24 @@ export function collectSessionAnalytics(
     totalAnswerChanges: patterns.totalChanges || 0,
     helpfulChanges: patterns.changedToCorrect || 0,
     harmfulChanges: patterns.changedToWrong || 0,
-    firstInstinctAccuracy: patterns.firstInstinctAccuracy,
+    firstInstinctAccuracy: patterns.firstInstinctAccuracy ?? undefined,
 
     // Confidence calibration (calibration returns high/medium/low directly, not in breakdown)
     avgInferredConfidence: undefined, // Not available in current calibration structure
-    highConfidenceAccuracy: calibration.high?.accuracy,
-    lowConfidenceAccuracy: calibration.low?.accuracy,
-    calibrationScore: calibration.calibrationScore,
+    highConfidenceAccuracy: calibration.high?.accuracy ?? undefined,
+    lowConfidenceAccuracy: calibration.low?.accuracy ?? undefined,
+    calibrationScore: calibration.calibrationScore ?? undefined,
 
     // Time pressure analysis
     questionsUnderPar: timePressureMetrics.underPar,
     questionsOverPar: timePressureMetrics.overPar,
-    rushingAccuracy: timePressureMetrics.rushingAccuracy,
-    deliberateAccuracy: timePressureMetrics.deliberateAccuracy,
+    rushingAccuracy: timePressureMetrics.rushingAccuracy ?? undefined,
+    deliberateAccuracy: timePressureMetrics.deliberateAccuracy ?? undefined,
 
     // Fatigue indicators
-    early10Accuracy: behavioralInsights?.early10Accuracy,
-    late10Accuracy: behavioralInsights?.late10Accuracy,
-    staminaFade: behavioralInsights?.staminaFade,
+    early10Accuracy: behavioralInsights?.early10Accuracy ?? undefined,
+    late10Accuracy: behavioralInsights?.late10Accuracy ?? undefined,
+    staminaFade: behavioralInsights?.staminaFade ?? undefined,
 
     // PANCE distribution
     distributionScore: distributionSummary?.distributionScore,
@@ -396,7 +396,7 @@ function countErrorClusters(patterns: ReturnType<typeof analyzePatterns>): numbe
   // Count sequences of 3+ errors within 5 questions
   // This is a simplified approximation based on pattern data
   const errorRate =
-    patterns.firstInstinctAccuracy !== undefined ? 100 - patterns.firstInstinctAccuracy : 30; // Default assumption
+    patterns.firstInstinctAccuracy != null ? 100 - patterns.firstInstinctAccuracy : 30; // Default assumption
 
   // Estimate clusters based on error rate
   // Higher error rates tend to cluster
@@ -424,7 +424,7 @@ function calculateTimePressureMetrics(
   return {
     underPar: Math.round((insights.rushingTendency || 0) * 10),
     overPar: Math.round((1 - (insights.rushingTendency || 0.5)) * 10),
-    rushingAccuracy: insights.rushingAccuracy,
-    deliberateAccuracy: insights.deliberateAccuracy,
+    rushingAccuracy: insights.rushingAccuracy ?? undefined,
+    deliberateAccuracy: insights.deliberateAccuracy ?? undefined,
   };
 }
