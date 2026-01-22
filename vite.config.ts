@@ -148,6 +148,14 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       target: 'esnext',
     },
+    worker: {
+      format: 'es', // Use ES modules format for workers (required for WASM)
+      rollupOptions: {
+        output: {
+          format: 'es',
+        },
+      },
+    },
     optimizeDeps: {
       include: ['react', 'react-dom', '@clerk/clerk-react', 'framer-motion'],
       // Avoid prebundling the entire lucide icon set; rely on per-icon ESM imports for tree-shaking

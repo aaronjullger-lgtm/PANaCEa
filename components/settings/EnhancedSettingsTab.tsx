@@ -42,6 +42,9 @@ import { getUserContext, setUserContext, CareerStage } from '@/services/userCont
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { RotationSelector } from '../onboarding/RotationSelector';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '../SettingsStatsModal';
+import FSRSOptimizer from './FSRSOptimizer';
+import WorkloadProjector from './WorkloadProjector';
+import DataExport from './DataExport';
 
 interface EnhancedSettingsTabProps {
   theme: 'light' | 'dark';
@@ -605,6 +608,19 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           </AnimatePresence>
         </section>
       )}
+
+      {/* FSRS Optimizer Section */}
+      <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+        <FSRSOptimizer />
+      </div>
+
+      {/* Workload Projector Section */}
+      <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+        <WorkloadProjector />
+      </div>
+
+      {/* Data Export Section */}
+      <DataExport />
 
       {/* Info Tip */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
