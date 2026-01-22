@@ -1,25 +1,134 @@
 /**
- * @fileoverview Behavioral Telemetry Types
- * @description Captures response latency, interaction timing, and rapid-guess detection
- * @version 1.0.0
+ * @fileoverview Behavioral Telemetry Types (CRPL Schema)
+ * @description Captures response latency, interaction timing, rapid-guess detection,
+ *              and CRPL (Cognitive Rhythm Perception Layer) micro-kinetics
+ * @version 2.1.0
  * 
  * Phase 3 Milestone 3: Telemetry Injection
+ * Phase 4: Neuro-Symbolic Integrity - CRPL Integration Complete
  * 
- * This module defines telemetry data structures for tracking user behavior during
- * question-answering sessions. Key metrics captured:
+ * ============================================================================
+ * STORAGE: QuestionAttempt.telemetryJson (Prisma JSONB field)
+ * ============================================================================
  * 
- * 1. Response Duration (duration_ms): Total time from question display to answer submission
- * 2. Time to First Interaction: How long before user starts engaging with UI
- * 3. Rapid Guess Detection: Flag when response time is below Minimum Valid Response Time (MVRT)
+ * This module defines the TelemetryData interface that is stored as JSONB in
+ * the QuestionAttempt.telemetryJson column. The companion QuestionAttempt.durationMs
+ * field stores the integer duration for efficient querying.
  * 
- * MVRT Thresholds:
+ * ============================================================================
+ * .clinerules SYSTEM 2 ("THE NERVOUS SYSTEM") COMPLIANCE
+ * ============================================================================
+ * 
+ * Per .clinerules, this schema implements the following CRPL fields:
+ * 
+ * | .clinerules Field              | Implementation                              |
+ * |--------------------------------|---------------------------------------------|
+ * | time_to_first_interaction_ms   | TelemetryData.time_to_first_interaction_ms  |
+ * | dwell_time_ms                  | TelemetryData.duration_ms (alias)           |
+ * | hesitation_index               | trajectory_metrics.hesitationIndex          |
+ * | RAPID_GUESS flag               | TelemetryData.rapid_guess                   |
+ * | MVRT filtering                 | MVRT_THRESHOLDS + detectRapidGuess()        |
+ * 
+ * Anti-Gaming Protocol:
+ * - MVRT (Minimum Valid Response Time): If dwell_time < 500ms on vignettes, 
+ *   flag as RAPID_GUESS and exclude from FSRS optimization.
+ * 
+ * ============================================================================
+ * CRPL METRICS CAPTURED
+ * ============================================================================
+ * 
+ * 1. Response Duration (duration_ms / dwell_time_ms): 
+ *    Total time from question display to answer submission
+ * 
+ * 2. Time to First Interaction (time_to_first_interaction_ms): 
+ *    Cognitive processing time before user starts engaging with UI
+ * 
+ * 3. Rapid Guess Detection (rapid_guess): 
+ *    Flag when response time is below Minimum Valid Response Time (MVRT)
+ * 
+ * 4. Trajectory Metrics (trajectory_metrics - from lib/micro-kinetics.ts):
+ *    - hesitationIndex: Velocity drops near target (0-1) - THE hesitation_index field
+ *    - mad: Maximum Absolute Deviation from ideal path
+ *    - hoverEntropy: Shannon entropy of time distribution across options
+ *    - distractorHovers: Time spent hovering over wrong options
+ *    - jitterScore: Micro-corrections during final approach
+ *    - confidenceScore: Composite confidence derived from all metrics
+ * 
+ * 5. Typing Metrics (typing_metrics - from lib/typing-rhythm.ts):
+ *    - rhythm: Overall classification (fluent/deliberate/hesitant/fragmented/rushed)
+ *    - cognitiveLoad: Inferred cognitive effort during typing (0-1)
+ *    - fluencyScore: Measure of typing automaticity (0-1)
+ *    - deletionRatio: Proportion of keystrokes that were deletions
+ * 
+ * 6. Hesitation Count (hesitation_count): 
+ *    Aggregated count of significant cognitive pauses (>200ms)
+ * 
+ * ============================================================================
+ * MVRT THRESHOLDS
+ * ============================================================================
+ * 
  * - Vignette questions (clinical scenarios): 3000ms minimum
  * - Simple recall questions: 1500ms minimum
  * - Image-based questions: 2000ms minimum
+ * - Rapid recall drills: 800ms minimum
  * 
  * These thresholds are based on cognitive load research and reading speed analysis.
  * A response below MVRT indicates the user likely guessed without reading the full question.
  */
+
+// Re-export CRPL types from micro-kinetics module
+import type { SerializedTrajectoryMetrics } from '../lib/micro-kinetics';
+export type { SerializedTrajectoryMetrics };
+
+// ============================================================================
+// CRPL (Cognitive Rhythm Perception Layer) TYPES
+// ============================================================================
+
+/**
+ * Typing rhythm classification from keystroke dynamics analysis
+ * @see lib/typing-rhythm.ts for full analysis
+ */
+export type TypingRhythm = 'fluent' | 'deliberate' | 'hesitant' | 'fragmented' | 'rushed';
+
+/**
+ * Serialized typing analysis for API submission
+ * Captures cognitive load indicators from keystroke dynamics
+ * 
+ * Metrics explained:
+ * - rhythm: Overall classification of typing pattern
+ * - confidence: Confidence in rhythm classification (0-1)
+ * - cpm: Characters per minute (typing speed)
+ * - deletionRatio: Proportion of keystrokes that were deletions (0-1)
+ * - cognitiveLoad: Inferred cognitive effort during typing (0-1, higher = more load)
+ * - fluencyScore: Measure of typing automaticity (0-1, higher = more fluent)
+ * - pauseCount: Number of significant pauses (>200ms)
+ * - burstCoverage: Proportion of text written in fast bursts (0-1)
+ */
+export interface SerializedTypingAnalysis {
+  /** Overall typing rhythm classification */
+  rhythm: TypingRhythm;
+  
+  /** Confidence in rhythm classification (0-1) */
+  confidence: number;
+  
+  /** Characters per minute */
+  cpm: number;
+  
+  /** Ratio of deletions to total keystrokes (0-1) */
+  deletionRatio: number;
+  
+  /** Cognitive load indicator (0-1, higher = more cognitive effort) */
+  cognitiveLoad: number;
+  
+  /** Fluency score (0-1, higher = more automatic/fluent) */
+  fluencyScore: number;
+  
+  /** Number of significant pauses (>200ms between keystrokes) */
+  pauseCount: number;
+  
+  /** Proportion of text written in fast typing bursts (0-1) */
+  burstCoverage: number;
+}
 
 // ============================================================================
 // CONSTANTS
@@ -150,6 +259,28 @@ export interface TelemetryData {
   
   /** Device/viewport info for context */
   device_info?: DeviceInfo;
+  
+  // =========================================================================
+  // CRPL (Cognitive Rhythm Perception Layer) Fields - Phase 4
+  // =========================================================================
+  
+  /**
+   * Mouse trajectory analysis metrics
+   * @see lib/micro-kinetics.ts for SerializedTrajectoryMetrics
+   */
+  trajectory_metrics?: SerializedTrajectoryMetrics;
+  
+  /**
+   * Keystroke dynamics analysis
+   * Captures typing rhythm, cognitive load, and fluency indicators
+   */
+  typing_metrics?: SerializedTypingAnalysis;
+  
+  /**
+   * Count of significant hesitation events during response
+   * Hesitation = pause > 200ms during mouse movement or typing
+   */
+  hesitation_count?: number;
 }
 
 /**

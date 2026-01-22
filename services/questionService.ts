@@ -369,12 +369,24 @@ export async function getQuestion(
     return dbQuestion;
   }
 
-  // Fall back to Gemini generation
-  console.log('[QuestionService] Pool empty or failed, using Gemini generation');
-  console.time('[QuestionService] Gemini Gen');
-  const { fetchNewQuestion } = await import('./geminiService');
-  const question = await fetchNewQuestion(settings, growthAreas);
-  console.timeEnd('[QuestionService] Gemini Gen');
+  // Fall back to Gemini generation with CoVe verification
+  console.log('[QuestionService] Pool empty or failed, using Gemini generation with CoVe');
+  console.time('[QuestionService] Gemini Gen + CoVe');
+  const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
+  const verifiedResult = await fetchVerifiedQuestion({
+    settings,
+    growthAreas,
+    verificationMode: 'quick', // Use quick mode for performance
+  });
+  const question = verifiedResult.question;
+  
+  // Log verification status
+  if (verifiedResult.verified) {
+    console.log(`[QuestionService] Question verified (${verifiedResult.verificationMode}, confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+  } else {
+    console.warn(`[QuestionService] Question unverified after ${verifiedResult.attempts} attempts - serving best available`);
+  }
+  console.timeEnd('[QuestionService] Gemini Gen + CoVe');
 
   // Pearl Harvester: Extract and save clinical pearls from the rationale
   if (question.rationale && question.conditionId) {
@@ -446,17 +458,27 @@ export async function getQuestionBatch(
       return questions;
     }
 
-    // If we got some but not all, supplement with generated ones
+    // If we got some but not all, supplement with generated ones using CoVe
     const needed = count - questions.length;
-    console.log(`[QuestionService] Pool had ${questions.length}, generating ${needed} more`);
+    console.log(`[QuestionService] Pool had ${questions.length}, generating ${needed} more with CoVe`);
 
-    const { fetchNewQuestion } = await import('./geminiService');
+    const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
     const generatedQuestions: Question[] = [];
 
     for (let i = 0; i < needed; i++) {
       try {
-        const q = await fetchNewQuestion(settings, growthAreas);
+        const verifiedResult = await fetchVerifiedQuestion({
+          settings,
+          growthAreas,
+          verificationMode: 'quick', // Use quick mode for batch performance
+        });
+        const q = verifiedResult.question;
         generatedQuestions.push(q);
+
+        // Log verification status
+        if (verifiedResult.verified) {
+          console.log(`[QuestionService] Batch question ${i + 1}/${needed} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+        }
 
         // Pearl Harvester: Extract and save clinical pearls
         if (q.rationale && q.conditionId) {
@@ -468,7 +490,7 @@ export async function getQuestionBatch(
 
         seedGeneratedQuestion(q, token, system, poolDifficulty);
       } catch (error) {
-        console.error('[QuestionService] Failed to generate question:', error);
+        console.error('[QuestionService] Failed to generate verified question:', error);
         break;
       }
     }
@@ -477,29 +499,40 @@ export async function getQuestionBatch(
   } catch (error) {
     console.warn('[QuestionService] Pool fetch failed, falling back to Gemini generation:', error);
 
-    // Pool failed (possibly 401) - fall back to generating questions via Gemini
+    // Pool failed (possibly 401) - fall back to generating questions via CoVe-verified Gemini
     try {
-      const { fetchNewQuestion } = await import('./geminiService');
+      const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
       const generatedQuestions: Question[] = [];
 
+      console.log(`[QuestionService] Fallback: generating ${count} questions with CoVe verification`);
       for (let i = 0; i < count; i++) {
         try {
-          const q = await fetchNewQuestion(settings, growthAreas);
+          const verifiedResult = await fetchVerifiedQuestion({
+            settings,
+            growthAreas,
+            verificationMode: 'quick', // Use quick mode for fallback performance
+          });
+          const q = verifiedResult.question;
           generatedQuestions.push(q);
+
+          // Log verification status
+          if (verifiedResult.verified) {
+            console.log(`[QuestionService] Fallback question ${i + 1}/${count} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+          }
         } catch (genError) {
-          console.error('[QuestionService] Failed to generate question:', genError);
+          console.error('[QuestionService] Failed to generate verified question:', genError);
           break;
         }
       }
 
       if (generatedQuestions.length > 0) {
         console.log(
-          `[QuestionService] Generated ${generatedQuestions.length} questions via Gemini fallback`
+          `[QuestionService] Generated ${generatedQuestions.length} CoVe-verified questions via fallback`
         );
         return generatedQuestions;
       }
-    } catch (geminiError) {
-      console.error('[QuestionService] Gemini fallback also failed:', geminiError);
+    } catch (coveError) {
+      console.error('[QuestionService] CoVe fallback also failed:', coveError);
     }
 
     // If everything fails, throw so the UI can show an error

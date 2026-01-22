@@ -1,9 +1,11 @@
 /**
  * @fileoverview React Hook for Response Telemetry Collection
  * @description Wraps createTelemetryCollector() for use in drill components
- * @version 1.0.0
+ *              with CRPL (Cognitive Rhythm Perception Layer) integration
+ * @version 2.0.0
  * 
  * Phase 3 Milestone 3: Telemetry Injection
+ * Phase 4: Neuro-Symbolic Integrity - CRPL Integration
  * 
  * This hook provides React state management for behavioral telemetry collection
  * during question-answering sessions. It tracks:
@@ -48,11 +50,58 @@ import {
   type QuestionType,
   type TelemetryData,
   type InteractionEvent,
+  type SerializedTrajectoryMetrics,
+  type SerializedTypingAnalysis,
 } from '../types/telemetry';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+/**
+ * CRPL (Cognitive Rhythm Perception Layer) data getter functions
+ * 
+ * These are callback functions that retrieve CRPL metrics from external
+ * tracking modules (micro-kinetics for mouse, typing-rhythm for keystrokes).
+ * 
+ * Usage pattern:
+ * 1. Parent component tracks mouse/typing data using dedicated hooks
+ * 2. Parent passes getter functions to useTelemetryCollector
+ * 3. On finalize(), this hook calls getters to merge CRPL data
+ * 
+ * @example
+ * ```tsx
+ * const { trajectoryMetrics, getSerializedMetrics } = useMouseTracker();
+ * const { typingAnalysis, getSerializedAnalysis } = useTypingTracker();
+ * 
+ * const telemetry = useTelemetryCollector({
+ *   crplDataGetters: {
+ *     getTrajectoryMetrics: getSerializedMetrics,
+ *     getTypingMetrics: getSerializedAnalysis,
+ *     getHesitationCount: () => trajectoryMetrics?.reversals ?? 0,
+ *   }
+ * });
+ * ```
+ */
+export interface CRPLDataGetters {
+  /**
+   * Get serialized mouse trajectory metrics
+   * @returns SerializedTrajectoryMetrics or undefined if no trajectory data
+   */
+  getTrajectoryMetrics?: () => SerializedTrajectoryMetrics | undefined;
+  
+  /**
+   * Get serialized typing rhythm analysis
+   * @returns SerializedTypingAnalysis or undefined if no typing data
+   */
+  getTypingMetrics?: () => SerializedTypingAnalysis | undefined;
+  
+  /**
+   * Get total hesitation count from mouse/typing analysis
+   * @returns Number of significant hesitation events (pauses > 200ms)
+   */
+  getHesitationCount?: () => number | undefined;
+}
 
 /**
  * Return type for useTelemetryCollector hook
@@ -140,6 +189,13 @@ export interface UseTelemetryCollectorOptions {
    * @default true
    */
   recordInteractions?: boolean;
+
+  /**
+   * CRPL data getter functions for merging micro-kinetics/typing data
+   * These callbacks are invoked during finalizeTelemetry() to collect
+   * behavioral metrics from external tracking modules
+   */
+  crplDataGetters?: CRPLDataGetters;
 }
 
 // ============================================================================
@@ -160,6 +216,7 @@ export function useTelemetryCollector(
     updateInterval = 100,
     trackScrolling = false,
     recordInteractions = true,
+    crplDataGetters,
   } = options;
 
   // Collector instance ref (persists across renders)
@@ -232,6 +289,7 @@ export function useTelemetryCollector(
 
   /**
    * Finalize telemetry and return data
+   * Merges CRPL (Cognitive Rhythm Perception Layer) metrics from external tracking modules
    */
   const finalizeTelemetry = useCallback((sessionId?: string): TelemetryData | null => {
     if (!collectorRef.current) return null;
@@ -249,8 +307,22 @@ export function useTelemetryCollector(
     setElapsedMs(telemetry.duration_ms);
     setIsRapidGuess(telemetry.rapid_guess);
 
-    return telemetry;
-  }, []);
+    // Merge CRPL data from external tracking modules (micro-kinetics, typing-rhythm)
+    // Only include fields that have actual data to minimize payload size
+    const trajectoryMetrics = crplDataGetters?.getTrajectoryMetrics?.();
+    const typingMetrics = crplDataGetters?.getTypingMetrics?.();
+    const hesitationCount = crplDataGetters?.getHesitationCount?.();
+
+    return {
+      ...telemetry,
+      // CRPL trajectory metrics (mouse movement analysis)
+      ...(trajectoryMetrics && { trajectory_metrics: trajectoryMetrics }),
+      // CRPL typing metrics (keystroke dynamics)
+      ...(typingMetrics && { typing_metrics: typingMetrics }),
+      // Aggregated hesitation count from all sources
+      ...(hesitationCount !== undefined && { hesitation_count: hesitationCount }),
+    };
+  }, [crplDataGetters]);
 
   /**
    * Reset the collector
