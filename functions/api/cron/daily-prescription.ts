@@ -78,12 +78,13 @@ export async function onRequestPost(context: any) {
       const systemPerformance: Record<string, { correct: number; total: number }> = {};
       for (const attempt of recentAttempts) {
         if (!attempt.system) continue;
-        if (!systemPerformance[attempt.system]) {
-          systemPerformance[attempt.system] = { correct: 0, total: 0 };
+        const sys = attempt.system;
+        if (!systemPerformance[sys]) {
+          systemPerformance[sys] = { correct: 0, total: 0 };
         }
-        systemPerformance[attempt.system].total++;
+        systemPerformance[sys].total++;
         if (attempt.isCorrect) {
-          systemPerformance[attempt.system].correct++;
+          systemPerformance[sys].correct++;
         }
       }
 
@@ -93,11 +94,12 @@ export async function onRequestPost(context: any) {
         .map(([system]) => system)
         .slice(0, 5);
 
+      type ProgressRecord = { stability: number | null; retrievability: number | null; system: string | null; dueDate: Date | null };
       // Find low stability items from FSRS
       const lowStabilityItems = progress
-        .filter((p) => p.stability < 2 || (p.retrievability && p.retrievability < 0.8))
-        .map((p) => p.system)
-        .filter(Boolean);
+        .filter((p: ProgressRecord) => (p.stability ?? 0) < 2 || ((p.retrievability ?? 1) < 0.8))
+        .map((p: ProgressRecord) => p.system)
+        .filter((s: string | null): s is string => Boolean(s));
 
       // Combine for focus areas
       const focusSystems = [...new Set([...weakSystems, ...lowStabilityItems])].slice(0, 3);
@@ -107,7 +109,7 @@ export async function onRequestPost(context: any) {
       const adjustedQuestions = Math.min(30, baseQuestions);
 
       // Calculate due cards from FSRS
-      const dueCards = progress.filter((p) => {
+      const dueCards = progress.filter((p: ProgressRecord) => {
         if (!p.dueDate) return true;
         return new Date(p.dueDate) <= new Date();
       }).length;

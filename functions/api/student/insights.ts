@@ -22,6 +22,16 @@ import {
 } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
+// Type for PerformanceRecord from Prisma query
+interface PerformanceRecordResult {
+  id: string;
+  userId: string;
+  system: string;
+  isCorrect: boolean;
+  timeSpent: bigint;
+  timestamp: bigint;
+}
+
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
@@ -80,16 +90,21 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       if (!systemPerformance[record.system]) {
         systemPerformance[record.system] = { total: 0, correct: 0, accuracy: 0 };
       }
-      systemPerformance[record.system].total++;
-      if (record.isCorrect) {
-        systemPerformance[record.system].correct++;
+      const perfEntry = systemPerformance[record.system];
+      if (perfEntry) {
+        perfEntry.total++;
+        if (record.isCorrect) {
+          perfEntry.correct++;
+        }
       }
     });
 
     // Calculate accuracy per system
     Object.keys(systemPerformance).forEach((system) => {
       const data = systemPerformance[system];
-      data.accuracy = (data.correct / data.total) * 100;
+      if (data) {
+        data.accuracy = (data.correct / data.total) * 100;
+      }
     });
 
     // Identify weak areas (< 70% accuracy)
@@ -148,9 +163,12 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     }
 
     if (weakAreas.length > 2) {
-      recommendations.push(
-        `Priority focus: ${weakAreas[0].system} (${weakAreas[0].accuracy}% accuracy)`
-      );
+      const topWeakArea = weakAreas[0];
+      if (topWeakArea) {
+        recommendations.push(
+          `Priority focus: ${topWeakArea.system} (${topWeakArea.accuracy}% accuracy)`
+        );
+      }
     }
 
     if (trendDirection === 'declining') {

@@ -106,8 +106,9 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       take: limit,
     });
 
+    type ConditionResult = { id: string; name: string; system: string; subcategory: string | null; status: string | null };
     // Get full content for matched conditions to extract aliases/synonyms
-    const conditionIds = conditions.map((c) => c.id);
+    const conditionIds = conditions.map((c: ConditionResult) => c.id);
     const medicalContent = await prisma.medicalContent.findMany({
       where: {
         conditionId: { in: conditionIds },
@@ -118,12 +119,13 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       },
     });
 
+    type MedicalContentResult = { conditionId: string; synonyms: string[] | null };
     // Create a map of conditionId -> synonyms for quick lookup
-    const synonymsMap = new Map(medicalContent.map((mc) => [mc.conditionId, mc.synonyms || []]));
+    const synonymsMap = new Map(medicalContent.map((mc: MedicalContentResult) => [mc.conditionId, mc.synonyms || []]));
 
     // Score and rank results
     const results = conditions
-      .map((condition) => {
+      .map((condition: ConditionResult) => {
         const aliases = (synonymsMap.get(condition.id) || []) as string[];
         const score = calculateRelevanceScore(query, condition.name, aliases);
 
@@ -136,8 +138,8 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
           score,
         };
       })
-      .filter((result) => result.score > 0.1) // Filter out very low matches
-      .sort((a, b) => {
+      .filter((result: { id: string; condition: string; system: string; subcategory: string | null; aliases: string[]; score: number }) => result.score > 0.1) // Filter out very low matches
+      .sort((a: { score: number; condition: string }, b: { score: number; condition: string }) => {
         // Sort by score desc, then alphabetically
         if (Math.abs(b.score - a.score) < 0.01) {
           return a.condition.localeCompare(b.condition);

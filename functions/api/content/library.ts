@@ -50,8 +50,8 @@ export const onRequestGet = authenticatedEndpoint(LibrarySchema, async (context)
           WHERE search_vector @@ websearch_to_tsquery('english', ${search})
           ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC
         `;
-        searchResults = ftsResults.map((r) => r.id);
-        where.id = searchResults.length > 0 ? { in: searchResults } : { in: [] };
+        searchResults = ftsResults.map((r: { id: string }) => r.id);
+        where.id = searchResults && searchResults.length > 0 ? { in: searchResults } : { in: [] };
       } catch {
         logger.warn('Full-text search failed, falling back to LIKE');
         where.OR = [
@@ -75,8 +75,8 @@ export const onRequestGet = authenticatedEndpoint(LibrarySchema, async (context)
     });
 
     if (searchResults && searchResults.length > 0) {
-      const rankMap = new Map(searchResults.map((id, index) => [id, index]));
-      content.sort((a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999));
+      const rankMap = new Map(searchResults.map((id: string, index: number) => [id, index]));
+      content.sort((a: { id: string }, b: { id: string }) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999));
     }
 
     logger.info('Library content fetched', { count: content.length, system, search });

@@ -63,7 +63,7 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       // Fetch all drugs to build a good question pool
-      const allDrugs = await prisma.drug.findMany({
+      const allDrugs: Drug[] = await prisma.drug.findMany({
         select: {
           id: true,
           genericName: true,
@@ -104,11 +104,12 @@ export const onRequestGet = authenticatedEndpoint(
           usedDrugIds.clear(); // Reset if we run out
         }
 
-        const drug =
-          availableDrugs[Math.floor(Math.random() * (availableDrugs.length || allDrugs.length))];
+        const drugPool = availableDrugs.length > 0 ? availableDrugs : allDrugs;
+        const drug = drugPool[Math.floor(Math.random() * drugPool.length)];
+        if (!drug) continue; // Safety check for empty pool
         usedDrugIds.add(drug.id);
 
-        const questionType = category || randomQuestionType();
+        const questionType: PharmQuestionType = category ?? randomQuestionType();
         const question = generateQuestion(drug, allDrugs, questionType);
 
         if (question) {
@@ -134,7 +135,8 @@ function randomQuestionType(): PharmQuestionType {
     'drug_class',
     'clinical_use',
   ];
-  return types[Math.floor(Math.random() * types.length)];
+  const index = Math.floor(Math.random() * types.length);
+  return types[index] ?? 'mechanism';
 }
 
 /**
@@ -199,13 +201,13 @@ function generateMechanismQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion 
   const distractors = getSimilarDrugs(drug, 3, allDrugs);
   const moa = drug.mechanismOfAction || 'Mechanism of action not specified';
 
-  const options = [
-    moa.split('.')[0] + '.',
-    ...distractors.map((d) => (d.mechanismOfAction || 'Unknown mechanism').split('.')[0] + '.'),
+  const options: string[] = [
+    (moa.split('.')[0] ?? '') + '.',
+    ...distractors.map((d: Drug) => ((d.mechanismOfAction || 'Unknown mechanism').split('.')[0] ?? '') + '.'),
   ];
 
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(moa.split('.')[0] + '.');
+  const correctIndex = shuffledOptions.indexOf((moa.split('.')[0] ?? '') + '.');
 
   return {
     id: `pharm-moa-${drug.id}-${Date.now()}`,
@@ -228,12 +230,12 @@ function generateSideEffectQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion
     return generateMechanismQuestion(drug, allDrugs);
   }
 
-  const correctADE = drug.sideEffects[Math.floor(Math.random() * drug.sideEffects.length)];
+  const correctADE = drug.sideEffects[Math.floor(Math.random() * drug.sideEffects.length)] ?? 'Unknown adverse effect';
   const distractors = getSimilarDrugs(drug, 3, allDrugs);
 
-  const options = [
+  const options: string[] = [
     correctADE,
-    ...distractors.flatMap((d) => d.sideEffects || []).slice(0, 3),
+    ...distractors.flatMap((d: Drug) => d.sideEffects || []).slice(0, 3),
   ].slice(0, 4);
 
   // Pad with generic options if needed
@@ -266,12 +268,12 @@ function generateContraindicationQuestion(drug: Drug, allDrugs: Drug[]): PharmQu
   }
 
   const correctContra =
-    drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)];
+    drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)] ?? 'Unknown contraindication';
   const distractors = getRandomDrugs(3, [drug.id], allDrugs);
 
-  const options = [
+  const options: string[] = [
     correctContra,
-    ...distractors.flatMap((d) => d.contraindications || []).slice(0, 3),
+    ...distractors.flatMap((d: Drug) => d.contraindications || []).slice(0, 3),
   ].slice(0, 4);
 
   while (options.length < 4) {
@@ -302,12 +304,12 @@ function generateDrugClassQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion 
     return generateMechanismQuestion(drug, allDrugs);
   }
 
-  const correctClass = drug.drugClass[0]; // Use primary class
+  const correctClass = drug.drugClass[0] ?? 'Unknown class'; // Use primary class
   const distractors = getRandomDrugs(3, [drug.id], allDrugs);
 
-  const options = [
+  const options: string[] = [
     correctClass,
-    ...distractors.flatMap((d) => d.drugClass || []).slice(0, 3),
+    ...distractors.flatMap((d: Drug) => d.drugClass || []).slice(0, 3),
   ].slice(0, 4);
 
   const shuffledOptions = [...new Set(options)].sort(() => Math.random() - 0.5).slice(0, 4);
@@ -335,13 +337,13 @@ function generateAntidoteQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
   }
 
   const distractors = allDrugs
-    .filter((d) => d.antidote && d.id !== drug.id)
+    .filter((d: Drug) => d.antidote && d.id !== drug.id)
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
-  const options = [
+  const options: string[] = [
     drug.antidote,
-    ...distractors.map((d) => d.antidote || 'Supportive care only'),
+    ...distractors.map((d: Drug) => d.antidote || 'Supportive care only'),
   ].slice(0, 4);
 
   while (options.length < 4) {
@@ -372,12 +374,12 @@ function generateClinicalUseQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestio
     return generateMechanismQuestion(drug, allDrugs);
   }
 
-  const correctIndication = drug.indications[Math.floor(Math.random() * drug.indications.length)];
+  const correctIndication = drug.indications[Math.floor(Math.random() * drug.indications.length)] ?? 'Unknown indication';
   const distractors = getRandomDrugs(3, [drug.id], allDrugs);
 
-  const options = [
+  const options: string[] = [
     correctIndication,
-    ...distractors.flatMap((d) => d.indications || []).slice(0, 3),
+    ...distractors.flatMap((d: Drug) => d.indications || []).slice(0, 3),
   ].slice(0, 4);
 
   const shuffledOptions = [...new Set(options)].sort(() => Math.random() - 0.5).slice(0, 4);

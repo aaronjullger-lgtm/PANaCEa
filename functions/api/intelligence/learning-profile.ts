@@ -166,6 +166,9 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
       systemStats[system].timestamps.push(attempt.createdAt.getTime());
     }
 
+    // Define type for question attempts used in callbacks
+    type AttemptWithSystem = { system: string | null; wasCorrect: boolean; createdAt: Date };
+    
     const systemMastery = Object.entries(systemStats)
       .filter(([system]) => system !== 'unknown')
       .map(([system, stats]) => {
@@ -173,19 +176,19 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
         const mastery = Math.round(accuracy * 100);
 
         // Calculate trend from recent vs older attempts
-        const sortedTimes = stats.timestamps.sort((a, b) => b - a);
+        const sortedTimes = stats.timestamps.sort((a: number, b: number) => b - a);
         let trend: 'improving' | 'stable' | 'declining' = 'stable';
         if (sortedTimes.length >= 10) {
           const recentCorrectRate =
             questionAttempts
-              .filter((a) => a.system === system)
+              .filter((a: AttemptWithSystem) => a.system === system)
               .slice(0, 5)
-              .filter((a) => a.wasCorrect).length / 5;
+              .filter((a: AttemptWithSystem) => a.wasCorrect).length / 5;
           const olderCorrectRate =
             questionAttempts
-              .filter((a) => a.system === system)
+              .filter((a: AttemptWithSystem) => a.system === system)
               .slice(-5)
-              .filter((a) => a.wasCorrect).length / 5;
+              .filter((a: AttemptWithSystem) => a.wasCorrect).length / 5;
 
           if (recentCorrectRate > olderCorrectRate + 0.1) trend = 'improving';
           else if (recentCorrectRate < olderCorrectRate - 0.1) trend = 'declining';
@@ -197,7 +200,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
           questionsSeen: stats.total,
           accuracy: Math.round(accuracy * 100) / 100,
           trend,
-          lastPracticed: sortedTimes.length > 0 ? new Date(sortedTimes[0]).toISOString() : null,
+          lastPracticed: sortedTimes.length > 0 && sortedTimes[0] !== undefined ? new Date(sortedTimes[0]).toISOString() : null,
         };
       })
       .sort((a, b) => b.mastery - a.mastery);
@@ -213,7 +216,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     let learningSpeed: 'deliberate' | 'moderate' | 'rapid' = 'moderate';
     if (recentSessions.length >= 5) {
       const avgAccuracy =
-        recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length;
+        recentSessions.reduce((sum: number, s: { accuracy: number }) => sum + s.accuracy, 0) / recentSessions.length;
       if (avgAccuracy >= 0.8) learningSpeed = 'rapid';
       else if (avgAccuracy < 0.6) learningSpeed = 'deliberate';
     }
@@ -225,8 +228,16 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
       else if (userProfile.rushingTendency > 0.6) forgettingSpeed = 'fast';
     }
 
-    // Calculate error distribution
-    const errorDistribution: Record<string, number> = {
+    // Calculate error distribution with explicit interface for type safety
+    interface ErrorDistribution {
+      knowledge_gap: number;
+      careless: number;
+      interference: number;
+      overthinking: number;
+      time_pressure: number;
+    }
+
+    const errorDistribution: ErrorDistribution = {
       knowledge_gap: 0,
       careless: 0,
       interference: 0,
@@ -235,7 +246,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     };
 
     // Analyze errors from wrong answers (simplified classification)
-    const wrongAttempts = questionAttempts.filter((a) => !a.wasCorrect);
+    const wrongAttempts = questionAttempts.filter((a: AttemptWithSystem & { timeSpentMs?: number | null; answerChangedCount?: number | null }) => !a.wasCorrect);
     for (const attempt of wrongAttempts) {
       const timeMs = attempt.timeSpentMs || 45000;
       const changed = (attempt.answerChangedCount || 0) > 0;
@@ -259,18 +270,18 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     const totalErrors = Object.values(errorDistribution).reduce((a, b) => a + b, 0);
 
     if (totalErrors > 0) {
-      if (errorDistribution.overthinking / totalErrors > 0.25) {
+      if ((errorDistribution.overthinking ?? 0) / totalErrors > 0.25) {
         errorRecommendations.push(
           'Trust your first instinct more - you change correct answers too often'
         );
       }
-      if (errorDistribution.careless / totalErrors > 0.25) {
+      if ((errorDistribution.careless ?? 0) / totalErrors > 0.25) {
         errorRecommendations.push('Take an extra moment to verify answers on easier questions');
       }
-      if (errorDistribution.knowledge_gap / totalErrors > 0.3) {
+      if ((errorDistribution.knowledge_gap ?? 0) / totalErrors > 0.3) {
         errorRecommendations.push('Focus on foundational review before tackling advanced topics');
       }
-      if (errorDistribution.interference / totalErrors > 0.2) {
+      if ((errorDistribution.interference ?? 0) / totalErrors > 0.2) {
         errorRecommendations.push(
           'Practice distinguishing similar conditions with comparison drills'
         );
@@ -278,19 +289,19 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     }
 
     // Calculate study stats
-    const totalStudyTimeMs = recentSessions.reduce((sum, s) => sum + s.totalTimeMs, 0);
+    const totalStudyTimeMs = recentSessions.reduce((sum: number, s: { totalTimeMs: number }) => sum + s.totalTimeMs, 0);
     const totalStudyTimeHours = Math.round((totalStudyTimeMs / 3600000) * 10) / 10;
     const avgSessionLength =
       recentSessions.length > 0
         ? Math.round(
-            recentSessions.reduce((sum, s) => sum + s.totalQuestions, 0) / recentSessions.length
+            recentSessions.reduce((sum: number, s: { totalQuestions: number }) => sum + s.totalQuestions, 0) / recentSessions.length
           )
         : 0;
 
     // Calculate predicted PANCE score
     const overallAccuracy =
       questionAttempts.length > 0
-        ? questionAttempts.filter((a) => a.wasCorrect).length / questionAttempts.length
+        ? questionAttempts.filter((a: AttemptWithSystem) => a.wasCorrect).length / questionAttempts.length
         : 0.7;
 
     // PANCE scores range ~200-800, passing is ~350
@@ -315,21 +326,25 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
         : Math.max(1, Math.ceil((targetReadinessScore - currentReadinessScore) / 2));
 
     // Generate keystone concepts (simplified)
-    const keystoneConcepts = weakestSystems.slice(0, 5).map((system, index) => ({
-      conceptId: `${system}_foundations`,
-      conceptName: `${system.charAt(0).toUpperCase() + system.slice(1)} Foundations`,
-      system,
-      currentMastery: systemMastery.find((s) => s.system === system)?.mastery || 50,
-      directUnlocks: 15 - index * 2,
-      totalImpact: 25 - index * 3,
-      recommendedPriority: 100 - index * 15,
-    }));
+    const keystoneConcepts = weakestSystems
+      .slice(0, 5)
+      .filter((system): system is string => system !== undefined)
+      .map((system, index) => ({
+        conceptId: `${system}_foundations`,
+        conceptName: `${system.charAt(0).toUpperCase() + system.slice(1)} Foundations`,
+        system,
+        currentMastery: systemMastery.find((s) => s.system === system)?.mastery ?? 50,
+        directUnlocks: 15 - index * 2,
+        totalImpact: 25 - index * 3,
+        recommendedPriority: 100 - index * 15,
+      }));
 
     // Generate knowledge gaps from weak systems
     const knowledgeGaps = weakestSystems
-      .filter((system) => {
+      .filter((system): system is string => {
+        if (system === undefined) return false;
         const stats = systemMastery.find((s) => s.system === system);
-        return stats && stats.mastery < 60;
+        return stats !== undefined && stats.mastery < 60;
       })
       .map((system, index) => ({
         conceptId: system,
@@ -344,13 +359,16 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     // Prioritized recommendations
     const prioritizedRecommendations: string[] = [];
 
-    if (weakestSystems.length > 0) {
+    if (weakestSystems.length > 0 && weakestSystems[0]) {
       prioritizedRecommendations.push(
         `Focus on improving ${weakestSystems[0]} - your weakest area`
       );
     }
     if (errorRecommendations.length > 0) {
-      prioritizedRecommendations.push(errorRecommendations[0]);
+      const firstRec = errorRecommendations[0];
+      if (firstRec) {
+        prioritizedRecommendations.push(firstRec);
+      }
     }
     if (
       userProfile?.fatigueOnsetQuestion &&
@@ -366,11 +384,14 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
 
     // Next session focus
     const nextSessionFocus: string[] = [];
-    if (weakestSystems[0]) {
+    if (weakestSystems.length > 0 && weakestSystems[0]) {
       nextSessionFocus.push(`${weakestSystems[0]} system review`);
     }
     if (knowledgeGaps.length > 0) {
-      nextSessionFocus.push(`Address ${knowledgeGaps[0].conceptName} gap`);
+      const firstGap = knowledgeGaps[0];
+      if (firstGap) {
+        nextSessionFocus.push(`Address ${firstGap.conceptName} gap`);
+      }
     }
     nextSessionFocus.push('Mixed practice for retention');
 
@@ -392,7 +413,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
         strongestSystems,
         weakestSystems,
 
-        totalConceptsTracked: new Set(questionAttempts.map((a) => a.conditionId).filter(Boolean))
+        totalConceptsTracked: new Set(questionAttempts.map((a: { conditionId: string | null }) => a.conditionId).filter(Boolean))
           .size,
         conceptsDueForReview: Math.round(questionAttempts.length * 0.2),
         conceptsOverdue: Math.round(questionAttempts.length * 0.1),
@@ -408,7 +429,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
         currentLearningPath: null, // Would load from stored path
 
         dominantErrorType,
-        errorDistribution,
+        errorDistribution: errorDistribution as unknown as Record<string, number>,
         errorRecommendations,
 
         predictedPANCEScore: Math.max(200, Math.min(800, predictedPANCEScore)),

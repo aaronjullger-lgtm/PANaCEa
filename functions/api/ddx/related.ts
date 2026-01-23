@@ -105,10 +105,15 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
       take: Math.max(0, limit - relationsFrom.length - relationsTo.length),
     });
 
-    // Combine and deduplicate
-    const relatedMap = new Map<string, any>();
+    // Define types for Prisma query results
+    type ConditionSelect = { id: string; name: string; displayName: string | null; system: string; subcategory: string | null };
+    type RelationFromResult = { relationType: string; clinicalContext: string | null; Condition2: ConditionSelect | null };
+    type RelationToResult = { relationType: string; Condition1: ConditionSelect | null };
 
-    relationsFrom.forEach((rel) => {
+    // Combine and deduplicate
+    const relatedMap = new Map<string, ConditionSelect & { relationshipType: string; clinicalContext?: string | null; source: string }>();
+
+    relationsFrom.forEach((rel: RelationFromResult) => {
       if (rel.Condition2 && !relatedMap.has(rel.Condition2.id)) {
         relatedMap.set(rel.Condition2.id, {
           ...rel.Condition2, relationshipType: rel.relationType,
@@ -117,7 +122,7 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
       }
     });
 
-    relationsTo.forEach((rel) => {
+    relationsTo.forEach((rel: RelationToResult) => {
       if (rel.Condition1 && !relatedMap.has(rel.Condition1.id)) {
         relatedMap.set(rel.Condition1.id, {
           ...rel.Condition1, relationshipType: rel.relationType, source: 'bidirectional_relation',
@@ -125,7 +130,7 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
       }
     });
 
-    sameSystemConditions.forEach((c) => {
+    sameSystemConditions.forEach((c: ConditionSelect) => {
       if (!relatedMap.has(c.id)) {
         relatedMap.set(c.id, { ...c, relationshipType: 'same_system', source: 'system_match' });
       }

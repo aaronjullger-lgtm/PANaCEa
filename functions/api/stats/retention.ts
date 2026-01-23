@@ -9,6 +9,17 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+/** Type for SRS item from Prisma query */
+interface SRSItemRecord {
+  id: string;
+  interval: number;
+  dueDate: Date;
+  lastReviewed: Date | null;
+  easiness: number;
+  repetition: number;
+  fsrsStability: number | null;
+}
+
 const RetentionStatsSchema = z.object({});
 
 export const onRequestOptions = withCors();
@@ -47,10 +58,10 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
       },
     });
 
-    const dueCount = srsItems.filter((item) => item.dueDate <= now).length;
+    const dueCount = srsItems.filter((item: SRSItemRecord) => item.dueDate <= now).length;
 
     const avgStability =
-      srsItems.reduce((sum, item) => sum + (item.fsrsStability || 5), 0) / (srsItems.length || 1);
+      srsItems.reduce((sum: number, item: SRSItemRecord) => sum + (item.fsrsStability || 5), 0) / (srsItems.length || 1);
 
     const decayCurveData = Array.from({ length: 31 }, (_, day) => ({
       day,
@@ -65,13 +76,18 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
       { bucket: '21d+', count: 0, color: '#10b981' },
     ];
 
-    srsItems.forEach((item) => {
+    srsItems.forEach((item: SRSItemRecord) => {
       const interval = item.interval;
-      if (interval < 1) stabilityBuckets[0].count++;
-      else if (interval < 3) stabilityBuckets[1].count++;
-      else if (interval < 7) stabilityBuckets[2].count++;
-      else if (interval < 21) stabilityBuckets[3].count++;
-      else stabilityBuckets[4].count++;
+      const bucket0 = stabilityBuckets[0];
+      const bucket1 = stabilityBuckets[1];
+      const bucket2 = stabilityBuckets[2];
+      const bucket3 = stabilityBuckets[3];
+      const bucket4 = stabilityBuckets[4];
+      if (interval < 1 && bucket0) bucket0.count++;
+      else if (interval < 3 && bucket1) bucket1.count++;
+      else if (interval < 7 && bucket2) bucket2.count++;
+      else if (interval < 21 && bucket3) bucket3.count++;
+      else if (bucket4) bucket4.count++;
     });
 
     const lastTuned = new Date(now.getTime() - 6 * 60 * 60 * 1000);

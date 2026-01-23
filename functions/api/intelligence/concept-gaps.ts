@@ -167,7 +167,7 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
     ]);
 
     // Build condition lookup
-    const conditionMap = new Map(conditions.map((c) => [c.id, c]));
+    const conditionMap = new Map(conditions.map((c: { id: string; name: string; system: string }) => [c.id, c]));
 
     // Analyze errors by condition
     const conditionErrors: Map<
@@ -231,13 +231,13 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
       }
 
       // Infer gap type from error rate and attempt count
-      let gapType: GapTypeValue = GAP_TYPES.PARTIAL_UNDERSTANDING;
+      let gapType: GapTypeValue = 'partial_understanding';
       if (errorRate >= 0.8) {
-        gapType = GAP_TYPES.MISSING_FOUNDATION;
+        gapType = 'missing_foundation';
       } else if (errorRate >= 0.6 && data.total <= 5) {
-        gapType = GAP_TYPES.SHALLOW_ENCODING;
+        gapType = 'shallow_encoding';
       } else if (data.total >= 10 && errorRate >= 0.5) {
-        gapType = GAP_TYPES.APPLICATION_FAILURE;
+        gapType = 'application_failure';
       }
 
       // Calculate remediation priority
@@ -430,8 +430,8 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
       if (concepts.length >= 2) {
         for (let i = 0; i < Math.min(3, concepts.length - 1); i++) {
           interferencePatterns.push({
-            conceptA: concepts[i],
-            conceptB: concepts[i + 1],
+            conceptA: concepts[i]!,
+            conceptB: concepts[i + 1]!,
             confusionScore: 60 + Math.round(Math.random() * 30),
             confusionDirection: 'bidirectional',
             occurrences: 3 + Math.round(Math.random() * 5),
@@ -453,7 +453,7 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
         `Review ${criticalGaps} critical gap${criticalGaps > 1 ? 's' : ''} immediately`
       );
     }
-    if (keystoneConcepts[0]?.currentMastery < 60) {
+    if (keystoneConcepts[0] && keystoneConcepts[0].currentMastery < 60) {
       immediateActions.push(
         `Focus on ${keystoneConcepts[0].conceptName} - it unlocks ${keystoneConcepts[0].totalImpact} other concepts`
       );
@@ -467,7 +467,7 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
 
     const weeklyGoals: string[] = [];
 
-    if (stages.length > 0) {
+    if (stages.length > 0 && stages[0]) {
       weeklyGoals.push(`Complete Stage 1: ${stages[0].title}`);
     }
     const weakestSystem = systemGapAnalysis[0];
@@ -540,32 +540,32 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
 
 function getSuggestedResources(gapType: string): string[] {
   const resources: Record<string, string[]> = {
-    [GAP_TYPES.MISSING_FOUNDATION]: [
+    'missing_foundation': [
       'Start with the basic science overview',
       'Watch introductory video lectures',
       'Review anatomy and physiology first',
     ],
-    [GAP_TYPES.PARTIAL_UNDERSTANDING]: [
+    'partial_understanding': [
       'Re-read main topic explanation',
       'Practice with easier questions first',
       'Create summary notes',
     ],
-    [GAP_TYPES.SHALLOW_ENCODING]: [
+    'shallow_encoding': [
       'Use active recall techniques',
       'Create flashcards for key facts',
       'Teach the concept to someone else',
     ],
-    [GAP_TYPES.APPLICATION_FAILURE]: [
+    'application_failure': [
       'Work through clinical case studies',
       'Practice application questions',
       'Review worked examples',
     ],
-    [GAP_TYPES.INTEGRATION_FAILURE]: [
+    'integration_failure': [
       'Create concept maps',
       'Practice differential diagnosis',
       'Review related conditions together',
     ],
-    [GAP_TYPES.PROCEDURAL_GAP]: [
+    'procedural_gap': [
       'Review step-by-step protocols',
       'Practice clinical algorithms',
       'Watch procedural videos',

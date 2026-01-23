@@ -67,8 +67,8 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
     // 1. Get user-specific data if authenticated
     if (userId) {
       const masteryRecords = await prisma.userProgress.findMany({ where: { userId }, select: { conditionId: true, fsrsCard: true }, take: 500 });
-      masteryRecords.forEach((record) => {
-        const card = record.fsrsCard as any;
+      masteryRecords.forEach((record: { conditionId: string; fsrsCard: unknown }) => {
+        const card = record.fsrsCard as { stability?: number; difficulty?: number; state?: number } | null;
         if (card) userMastery.set(record.conditionId, { stability: card.stability || 0, difficulty: card.difficulty || 5, state: card.state || 0 });
       });
 
@@ -78,7 +78,14 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
         orderBy: { count: 'desc' }, take: 5,
       });
 
-      confusions.forEach((cp) => {
+      type ConfusionResult = {
+        realConditionId: string;
+        mistakenForId: string;
+        count: number;
+        RealCondition: { id: string; name: string } | null;
+        MistakenCondition: { id: string; name: string } | null;
+      };
+      confusions.forEach((cp: ConfusionResult) => {
         const isRealCondition = cp.realConditionId === conditionId;
         const otherCondition = isRealCondition ? cp.MistakenCondition : cp.RealCondition;
         if (otherCondition) {
@@ -100,7 +107,14 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
       take: 10,
     });
 
-    directRelations.forEach((rel) => {
+    type RelationResult = {
+      conditionId1: string;
+      conditionId2: string;
+      clinicalContext: string | null;
+      Condition1: { id: string; name: string; system: string } | null;
+      Condition2: { id: string; name: string; system: string } | null;
+    };
+    directRelations.forEach((rel: RelationResult) => {
       const otherCondition = rel.conditionId1 === condition.conditionId ? rel.Condition2 : rel.Condition1;
       if (otherCondition && !suggestions.some((s) => s.conditionId === otherCondition.id)) {
         suggestions.push({
@@ -119,9 +133,10 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
         select: { id: true, condition: true, system: true, buzzwords: true, pance_yield: true }, take: 10,
       });
 
-      similarByBuzzword.forEach((similar) => {
+      type SimilarBuzzwordResult = { id: string; condition: string; system: string; buzzwords: string[]; pance_yield: number | null };
+      similarByBuzzword.forEach((similar: SimilarBuzzwordResult) => {
         if (!suggestions.some((s) => s.conditionId === similar.id)) {
-          const overlap = condition.buzzwords.filter((b) => similar.buzzwords.includes(b));
+          const overlap = condition.buzzwords.filter((b: string) => similar.buzzwords.includes(b));
           suggestions.push({
             conditionId: similar.id, conditionName: similar.condition, system: similar.system,
             reason: `Shares ${overlap.length} buzzwords: ${overlap.slice(0, 3).join(', ')}`,
@@ -139,8 +154,9 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
       include: { Condition2: { select: { id: true, name: true, system: true } } }, take: 5,
     });
 
-    complications.forEach((rel) => {
-      if (rel.Condition2 && !suggestions.some((s) => s.conditionId === rel.Condition2.id)) {
+    type ComplicationResult = { Condition2: { id: string; name: string; system: string } | null };
+    complications.forEach((rel: ComplicationResult) => {
+      if (rel.Condition2 && !suggestions.some((s) => s.conditionId === rel.Condition2!.id)) {
         suggestions.push({
           conditionId: rel.Condition2.id, conditionName: rel.Condition2.name, system: rel.Condition2.system,
           reason: `Complication of ${condition.condition}`, priority: 'medium',
@@ -157,7 +173,8 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
         select: { id: true, condition: true, system: true, pance_yield: true }, orderBy: { pance_yield: 'desc' }, take: 20,
       });
 
-      sameSystemConditions.forEach((ssc) => {
+      type SystemConditionResult = { id: string; condition: string; system: string; pance_yield: number | null };
+      sameSystemConditions.forEach((ssc: SystemConditionResult) => {
         const mastery = userMastery.get(ssc.id);
         const isWeakArea = !mastery || mastery.stability < 1 || mastery.state === 0;
         if (isWeakArea && !suggestions.some((s) => s.conditionId === ssc.id)) {
@@ -213,7 +230,7 @@ function generateStudyRecommendation(suggestions: SmartSuggestion[], condition: 
   const confusionSuggestions = suggestions.filter((s) => s.context.type === 'confusion');
   const criticalSuggestions = suggestions.filter((s) => s.priority === 'critical');
 
-  if (criticalSuggestions.length > 0) return `PRIORITY: Focus on distinguishing ${condition.condition} from ${criticalSuggestions[0].conditionName}. You frequently confuse these conditions.`;
+  if (criticalSuggestions.length > 0) return `PRIORITY: Focus on distinguishing ${condition.condition} from ${criticalSuggestions[0]?.conditionName ?? 'this condition'}. You frequently confuse these conditions.`;
   if (confusionSuggestions.length > 0) return `Create a comparison table between ${condition.condition} and ${confusionSuggestions.map((s) => s.conditionName).join(', ')}.`;
 
   const highYieldSuggestions = suggestions.filter((s) => s.panceYield && s.panceYield >= 3);

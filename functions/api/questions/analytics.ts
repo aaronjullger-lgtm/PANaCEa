@@ -171,13 +171,13 @@ async function getSystemBreakdown(
   });
 
   const correctMap = new Map<string | null, number>(
-    correctBySystem.map((c) => [c.system, c._count.id])
+    correctBySystem.map((c: { system: string | null; _count: { id: number } }) => [c.system, c._count.id])
   );
   const attemptsMap = new Map<string | null, number>(
-    attemptsBySystem.map((a) => [a.system, a._count.id])
+    attemptsBySystem.map((a: { system: string | null; _count: { id: number } }) => [a.system, a._count.id])
   );
 
-  const systems: SystemStats[] = questionsBySystem.map((qs) => {
+  const systems: SystemStats[] = questionsBySystem.map((qs: { system: string; _count: { id: number } }) => {
     const system = qs.system;
     const questionCount = qs._count.id;
     const totalAttempts: number = attemptsMap.get(system) || 0;
@@ -228,7 +228,7 @@ async function getPoolStats(
     _count: { id: true },
   });
 
-  const usedMap = new Map<string, number>(usedBySystem.map((u) => [u.system, u._count.id]));
+  const usedMap = new Map<string, number>(usedBySystem.map((u: { system: string; _count: { id: number } }) => [u.system, u._count.id]));
 
   const systemBreakdown: Record<string, { total: number; used: number; unused: number }> = {};
   for (const s of bySystem) {
@@ -271,8 +271,8 @@ async function getQualityMetrics(
   ]);
 
   const topReasons = flagsByType
-    .map((f) => ({ reason: f.flagType, count: f._count.id }))
-    .sort((a, b) => b.count - a.count)
+    .map((f: { flagType: string; _count: { id: number } }) => ({ reason: f.flagType, count: f._count.id }))
+    .sort((a: { reason: string; count: number }, b: { reason: string; count: number }) => b.count - a.count)
     .slice(0, 5);
 
   const uniqueFlagged = await prisma.questionFlag.findMany({
@@ -318,10 +318,10 @@ async function getQuestionDetails(
   }
 
   const totalAttempts = attempts.length;
-  const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
+  const correctAttempts = attempts.filter((a: { wasCorrect: boolean }) => a.wasCorrect).length;
   const accuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
-  const timesMs = attempts.filter((a) => a.timeSpentMs).map((a) => a.timeSpentMs!);
-  const avgTimeMs = timesMs.length > 0 ? timesMs.reduce((a, b) => a + b, 0) / timesMs.length : 0;
+  const timesMs = attempts.filter((a: { timeSpentMs: number | null }) => a.timeSpentMs).map((a: { timeSpentMs: number | null }) => a.timeSpentMs!);
+  const avgTimeMs = timesMs.length > 0 ? timesMs.reduce((a: number, b: number) => a + b, 0) / timesMs.length : 0;
   const difficultyRating: 'easy' | 'medium' | 'hard' = accuracy >= 80 ? 'easy' : accuracy < 50 ? 'hard' : 'medium';
 
   return {
@@ -341,11 +341,11 @@ async function getQuestionDetails(
     },
     flags: {
       count: flags.length,
-      pending: flags.filter((f) => f.status === 'pending').length,
-      resolved: flags.filter((f) => f.status === 'resolved').length,
-      types: [...new Set(flags.map((f) => f.flagType))],
+      pending: flags.filter((f: { status: string }) => f.status === 'pending').length,
+      resolved: flags.filter((f: { status: string }) => f.status === 'resolved').length,
+      types: [...new Set(flags.map((f: { flagType: string }) => f.flagType))],
     },
-    recentAttempts: attempts.slice(0, 10).map((a) => ({
+    recentAttempts: attempts.slice(0, 10).map((a: { wasCorrect: boolean; timeSpentMs: number | null; createdAt: Date }) => ({
       wasCorrect: a.wasCorrect,
       timeSpentMs: a.timeSpentMs,
       createdAt: a.createdAt,
@@ -371,11 +371,11 @@ async function getTopQuestions(
     _count: { id: true },
   });
 
-  const correctMap = new Map<string, number>(correctCounts.map((c) => [c.questionId, c._count.id]));
+  const correctMap = new Map<string, number>(correctCounts.map((c: { questionId: string; _count: { id: number } }) => [c.questionId, c._count.id]));
 
   const stats = attempts
-    .filter((a) => a._count.id >= 5)
-    .map((a) => {
+    .filter((a: { questionId: string; _count: { id: number } }) => a._count.id >= 5)
+    .map((a: { questionId: string; _count: { id: number } }) => {
       const totalAttempts = a._count.id;
       const correctAttempts: number = correctMap.get(a.questionId) || 0;
       const accuracy = (correctAttempts / totalAttempts) * 100;
@@ -393,6 +393,6 @@ async function getTopQuestions(
     });
 
   return type === 'best'
-    ? stats.sort((a, b) => b.accuracy - a.accuracy).slice(0, limit)
-    : stats.sort((a, b) => a.accuracy - b.accuracy).slice(0, limit);
+    ? stats.sort((a: QuestionStats, b: QuestionStats) => b.accuracy - a.accuracy).slice(0, limit)
+    : stats.sort((a: QuestionStats, b: QuestionStats) => a.accuracy - b.accuracy).slice(0, limit);
 }

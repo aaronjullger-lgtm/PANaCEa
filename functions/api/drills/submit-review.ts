@@ -299,7 +299,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
       await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
     } catch (statsError) {
-      logger.warn('Failed to update user statistics after review', statsError);
+      logger.warn('Failed to update user statistics after review', { error: statsError instanceof Error ? statsError.message : String(statsError) });
     }
 
     // Phase 3: Create QuestionAttempt record with behavioral telemetry
@@ -361,7 +361,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       }
     } catch (attemptError) {
       // Don't fail the request if QuestionAttempt creation fails
-      logger.warn('Failed to create QuestionAttempt record:', attemptError);
+      logger.warn('Failed to create QuestionAttempt record:', { error: attemptError instanceof Error ? attemptError.message : String(attemptError) });
     }
 
     // If question has conditionId, also update UserProgress with review history
@@ -424,10 +424,10 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         }
         } catch (siblingError) {
           // Don't fail if sibling propagation fails
-          logger.warn('KAR3L propagation error:', siblingError);
+          logger.warn('KAR3L propagation error:', { error: siblingError instanceof Error ? siblingError.message : String(siblingError) });
         }
       } catch (progressError) {
-        logger.warn('Failed to update UserProgress:', progressError);
+        logger.warn('Failed to update UserProgress:', { error: progressError instanceof Error ? progressError.message : String(progressError) });
         // Don't fail the entire request if progress update fails
       }
     }
@@ -498,7 +498,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
           });
         }
       } catch (confusionError) {
-        logger.warn('Failed to record confusion pair', confusionError);
+        logger.warn('Failed to record confusion pair', { error: confusionError instanceof Error ? confusionError.message : String(confusionError) });
       }
     }
 

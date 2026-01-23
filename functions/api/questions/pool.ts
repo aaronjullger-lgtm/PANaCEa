@@ -17,6 +17,59 @@ import {
 } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 
+// Type definitions for question pool operations
+interface QuestionDataJson {
+  vignette?: string;
+  question?: string;
+  options?: string[];
+  answers?: string[];
+  choices?: string[];
+  correctAnswer?: string;
+  explanation?: string;
+  conditionName?: string;
+  system?: string;
+  subcategory?: string;
+  tags?: string[];
+}
+
+interface PreGeneratedQuestionRecord {
+  id: string;
+  questionType: string;
+  system: string | null;
+  conditionId: string | null;
+  medicalContentId: string | null;
+  difficulty: string | null;
+  questionData: QuestionDataJson;
+  generatedAt: Date;
+  usedAt: Date | null;
+}
+
+interface PoolQuestionOutput {
+  id: string;
+  vignette?: string;
+  question?: string;
+  options: string[];
+  correctAnswer?: string;
+  explanation?: string;
+  system: string;
+  difficulty: string;
+  tags?: string[];
+  conditionId?: string | null;
+  source: 'pool' | 'main';
+}
+
+interface MainQuestionRecord {
+  id: string;
+  vignette: string | null;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string | null;
+  system: string | null;
+  difficulty: string | null;
+  tags: string[];
+}
+
 /**
  * Fisher-Yates shuffle algorithm for unbiased randomization
  */

@@ -104,7 +104,12 @@ export const onRequestGet = publicEndpoint(WorkupSchema, async (context) => {
         workupAlgorithm, initialWorkup: ddx.initialWorkup,
         redFlags: ddx.redFlags, keyQuestions: ddx.keyQuestions, keyExamFindings: ddx.keyExamFindings, reassuringFeatures: ddx.reassuringFeatures,
         distinguishingFeatures: ddx.distinguishingFeatures,
-        linkedConditions: linkedConditions.map((lc) => ({
+        linkedConditions: linkedConditions.map((lc: {
+          Condition: { id: string; name: string; displayName: string | null; system: string } | null;
+          MedicalContent: { gold_standard_dx: string | null; best_initial_test: string | null; first_line_rx: string | null; buzzwords: string[] } | null;
+          likelihood: string | null;
+          distinguishingFeatures: string[];
+        }) => ({
           condition: lc.Condition, likelihood: lc.likelihood, distinguishingFeatures: lc.distinguishingFeatures,
           goldStandardDx: lc.MedicalContent?.gold_standard_dx, bestInitialTest: lc.MedicalContent?.best_initial_test, buzzwords: lc.MedicalContent?.buzzwords,
         })),

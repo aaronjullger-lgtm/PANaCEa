@@ -39,7 +39,8 @@ export const onRequestGet = authenticatedEndpoint(SmartReviewSchema, async (cont
       take: 20,
     });
 
-    const reviewItems = srsItems.map((item) => {
+    type SRSItemResult = { id: string; questionId: string; dueDate: Date; difficulty: number; fsrsStability: number | null; repetition: number };
+    const reviewItems = srsItems.map((item: SRSItemResult) => {
       const overdueDays = Math.floor(
         (now.getTime() - new Date(item.dueDate).getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -60,10 +61,11 @@ export const onRequestGet = authenticatedEndpoint(SmartReviewSchema, async (cont
       };
     });
 
+    type ReviewItem = { id: string; questionId: string; dueDate: Date; overdueDays: number; difficulty: number; stability: number | null; reason: string };
     const totalDue = reviewItems.length;
-    const hardCount = reviewItems.filter((i) => i.reason === 'hard').length;
-    const overdueCount = reviewItems.filter((i) => i.reason === 'overdue').length;
-    const newCount = reviewItems.filter((i) => i.reason === 'new').length;
+    const hardCount = reviewItems.filter((i: ReviewItem) => i.reason === 'hard').length;
+    const overdueCount = reviewItems.filter((i: ReviewItem) => i.reason === 'overdue').length;
+    const newCount = reviewItems.filter((i: ReviewItem) => i.reason === 'new').length;
 
     logger.info('Fetched smart review items', { userId: auth.userId, totalDue });
 

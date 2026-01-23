@@ -66,6 +66,15 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
 
   const allConditionTitles = [correctCondition.title, ...distractors.map((d: DistractorResult) => d.title)];
 
+  // Extract distractor titles safely
+  const distractor0 = distractors[0];
+  const distractor1 = distractors[1];
+  const distractor2 = distractors[2];
+  
+  if (!distractor0 || !distractor1 || !distractor2) {
+    throw new Error(`Not enough distractors found for topic.`);
+  }
+
   const prompt = `
 You are a medical education expert creating a differential diagnosis (DDx) problem.
 The primary diagnosis is: "${correctCondition.title}".
@@ -83,9 +92,9 @@ Return a single, valid JSON object with the following structure, and no other te
   "vignette": "A 65-year-old male presents with...",
   "rationales": {
     "${correctCondition.title}": "This is the most likely diagnosis because...",
-    "${distractors[0].title}": "While possible, this is less likely because...",
-    "${distractors[1].title}": "This diagnosis is not supported by the findings of...",
-    "${distractors[2].title}": "This can be ruled out due to..."
+    "${distractor0.title}": "While possible, this is less likely because...",
+    "${distractor1.title}": "This diagnosis is not supported by the findings of...",
+    "${distractor2.title}": "This can be ruled out due to..."
   }
 }
   `.trim();

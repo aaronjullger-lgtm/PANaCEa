@@ -671,19 +671,22 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async (
     }
 
     for (const [conceptId, conceptAtts] of Object.entries(conceptAttempts)) {
-      const accuracy = conceptAtts.filter((a) => a.wasCorrect).length / conceptAtts.length;
+      if (conceptAtts.length === 0) continue; // Skip empty arrays
+      
+      const accuracy = conceptAtts.filter((a: SessionAttempt) => a.wasCorrect).length / conceptAtts.length;
       const trend: 'improving' | 'stable' | 'declining' =
         conceptAtts.length >= 3
-          ? conceptAtts.slice(-2).every((a) => a.wasCorrect)
+          ? conceptAtts.slice(-2).every((a: SessionAttempt) => a.wasCorrect)
             ? 'improving'
-            : conceptAtts.slice(-2).every((a) => !a.wasCorrect)
+            : conceptAtts.slice(-2).every((a: SessionAttempt) => !a.wasCorrect)
               ? 'declining'
               : 'stable'
           : 'stable';
 
+      const firstAttempt = conceptAtts[0];
       conceptRetentionSummaries.push({
         conceptId,
-        system: conceptAtts[0]?.system || 'unknown',
+        system: firstAttempt?.system || 'unknown',
         currentRetention: Math.round(accuracy * 100),
         reviewUrgency: accuracy < 0.5 ? 'overdue' : accuracy < 0.7 ? 'due' : 'stable',
         nextOptimalReview: new Date(

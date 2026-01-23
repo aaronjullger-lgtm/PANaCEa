@@ -39,7 +39,7 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
     const whereConditions: any[] = [];
 
     // Filter by systems
-    if (config.systems.length > 0) {
+    if (config.systems && config.systems.length > 0) {
       whereConditions.push({
         system: { in: config.systems },
       });
@@ -88,22 +88,42 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
       take: requestedCount * 3,
     });
 
+    // Define type for pool question results
+    type PoolQuestion = {
+      id: string;
+      question: string;
+      options: unknown;
+      correctAnswerIndex: number;
+      rationale: string | null;
+      topic: string | null;
+      system: string | null;
+      subcategory: string | null;
+      conditionId: string | null;
+      condition: string | null;
+      pearls: unknown;
+      difficulty: number | null;
+      focusArea: string | null;
+      metadata: unknown;
+    };
+
     // Apply focus area filtering if specified
-    let filteredQuestions = poolQuestions;
+    let filteredQuestions: PoolQuestion[] = poolQuestions;
     if (config.focusAreas && config.focusAreas.length > 0) {
+      const focusAreas = config.focusAreas;
       filteredQuestions = poolQuestions.filter(
-        (q) => !q.focusArea || config.focusAreas.includes(q.focusArea)
+        (q: PoolQuestion) => !q.focusArea || focusAreas.includes(q.focusArea)
       );
     }
 
     // Apply difficulty weighting
-    let weightedQuestions = filteredQuestions;
+    let weightedQuestions: PoolQuestion[] = filteredQuestions;
     if (config.difficulty && config.difficulty !== 'same') {
-      weightedQuestions = filteredQuestions.sort((a, b) => {
+      const difficultyMode = config.difficulty;
+      weightedQuestions = filteredQuestions.sort((a: PoolQuestion, b: PoolQuestion) => {
         const aDiff = a.difficulty || 50;
         const bDiff = b.difficulty || 50;
 
-        if (config.difficulty === 'easier') {
+        if (difficultyMode === 'easier') {
           return aDiff - bDiff;
         } else {
           return bDiff - aDiff;

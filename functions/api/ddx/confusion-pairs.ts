@@ -150,7 +150,9 @@ function generateRecommendations(
 
   if (highSeverity.length > 0) {
     const topPair = highSeverity[0];
-    recommendations.push(`Focus on distinguishing ${topPair.realCondition} from ${topPair.mistakenFor} - you've confused these ${topPair.count} times.`);
+    if (topPair) {
+      recommendations.push(`Focus on distinguishing ${topPair.realCondition} from ${topPair.mistakenFor} - you've confused these ${topPair.count} times.`);
+    }
   }
   if (pairs.length > 3) recommendations.push('Consider creating a comparison table for your most confused conditions.');
   if (mediumSeverity.length > 2) recommendations.push('Use the DDx Compare feature to study the key differences between similar conditions.');

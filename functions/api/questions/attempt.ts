@@ -63,7 +63,8 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
 
     // Transaction for atomicity
-    const result = await prisma.$transaction(async (tx) => {
+    type AttemptResult = { wasCorrect: boolean; system: string | null };
+    const result = await prisma.$transaction(async (tx: typeof prisma) => {
       // 1. Record attempt
       await tx.questionAttempt.create({
         data: {
@@ -140,13 +141,13 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       });
 
       const totalQuestionsAnswered = allAttempts.length;
-      const correctAnswers = allAttempts.filter((a) => a.wasCorrect).length;
+      const correctAnswers = allAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect).length;
       const overallAccuracy = totalQuestionsAnswered > 0 ? Math.round((correctAnswers / totalQuestionsAnswered) * 100) : 0;
 
       let systemStats = null;
       if (system) {
-        const systemAttempts = allAttempts.filter((a) => a.system === system);
-        const systemCorrect = systemAttempts.filter((a) => a.wasCorrect).length;
+        const systemAttempts = allAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.system === system);
+        const systemCorrect = systemAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect).length;
         systemStats = {
           system,
           totalAttempts: systemAttempts.length,
@@ -192,7 +193,7 @@ async function getUserSystemStats(prisma: ReturnType<typeof createEdgePrismaClie
   }
 
   const totalAttempts = attempts.length;
-  const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
+  const correctAttempts = attempts.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length;
   const accuracy = Math.round((correctAttempts / totalAttempts) * 100);
 
   const recent10 = attempts.slice(0, 10);
@@ -200,8 +201,8 @@ async function getUserSystemStats(prisma: ReturnType<typeof createEdgePrismaClie
 
   let recentTrend: 'improving' | 'declining' | 'neutral' = 'neutral';
   if (recent10.length >= 5 && previous10.length >= 5) {
-    const recentAccuracy = recent10.filter((a) => a.wasCorrect).length / recent10.length;
-    const previousAccuracy = previous10.filter((a) => a.wasCorrect).length / previous10.length;
+    const recentAccuracy = recent10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length / recent10.length;
+    const previousAccuracy = previous10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length / previous10.length;
 
     if (recentAccuracy > previousAccuracy + 0.1) recentTrend = 'improving';
     else if (recentAccuracy < previousAccuracy - 0.1) recentTrend = 'declining';

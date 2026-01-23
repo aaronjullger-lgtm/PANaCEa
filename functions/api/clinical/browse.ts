@@ -163,13 +163,15 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
             conditions: conditions.sort((a, b) => a.name.localeCompare(b.name)),
           }));
 
-        const systemDrugs = drugs.filter((d) => {
-          if (Array.isArray(d.tags) && d.tags.some((t) => t.toUpperCase() === code)) return true;
+        type DrugResult = { id: string; genericName: string; drugClass: string[]; indications: string[]; sideEffects: string[]; tags: string[]; isHighYield: boolean };
+        const systemDrugs = drugs.filter((d: DrugResult) => {
+          if (Array.isArray(d.tags) && d.tags.some((t: string) => t.toUpperCase() === code)) return true;
           // Heuristic: map by class keywords
-          return d.drugClass.some((cls) => cls.toUpperCase().includes(code));
+          return d.drugClass.some((cls: string) => cls.toUpperCase().includes(code));
         });
 
-        const systemPhys = physiology.filter((p: any) =>
+        type PhysResult = { id: string; name: string; category: string; description: string | null; clinicalSignificance: string | null; system: string | null };
+        const systemPhys = physiology.filter((p: PhysResult) =>
           p.system ? p.system.toUpperCase() === code : false
         );
 
