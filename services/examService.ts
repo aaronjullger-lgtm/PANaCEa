@@ -159,7 +159,10 @@ export class ExamService {
 
       for (let i = 0; i < Math.abs(diff); i++) {
         const systemIndex = i % sortedSystems.length;
-        distribution[sortedSystems[systemIndex][0]] += diff > 0 ? 1 : -1;
+        const systemEntry = sortedSystems[systemIndex];
+        if (systemEntry && systemEntry[0] && distribution[systemEntry[0]] !== undefined) {
+          distribution[systemEntry[0]] += diff > 0 ? 1 : -1;
+        }
       }
     }
 
@@ -191,9 +194,10 @@ export class ExamService {
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
 
       for (let i = 0; i < count && i < shuffled.length; i++) {
-        if (!usedIds.has(shuffled[i].id)) {
-          selected.push(shuffled[i]);
-          usedIds.add(shuffled[i].id);
+        const question = shuffled[i];
+        if (question && !usedIds.has(question.id)) {
+          selected.push(question);
+          usedIds.add(question.id);
         }
       }
     }
@@ -202,10 +206,9 @@ export class ExamService {
     if (selected.length < totalNeeded) {
       const allAvailable = availableQuestions.filter((q) => !usedIds.has(q.id));
       const shuffled = [...allAvailable].sort(() => Math.random() - 0.5);
-
       for (const q of shuffled) {
         if (selected.length >= totalNeeded) break;
-        selected.push(q);
+        if (q) selected.push(q);
       }
     }
 
@@ -229,11 +232,14 @@ export class ExamService {
       const end = Math.min(start + questionsPerBlock, questions.length);
 
       for (let q = start; q < end; q++) {
-        blockQuestions.push({
-          ...questions[q],
-          blockNumber: b + 1,
-          questionNumber: q - start + 1,
-        });
+        const question = questions[q];
+        if (question) {
+          blockQuestions.push({
+            ...question,
+            blockNumber: b + 1,
+            questionNumber: q - start + 1,
+          });
+        }
       }
 
       blocks.push(blockQuestions);
@@ -246,7 +252,7 @@ export class ExamService {
    * Calculate time remaining for current block
    */
   static calculateBlockTimeRemaining(blockStartedAt: Date, timePerBlockMinutes: number): number {
-    const elapsed = Date.now() - blockStartedAt.getTime();
+    const elapsed = Date.now() - blockStartedAt?.getTime();
     const remaining = timePerBlockMinutes * 60 * 1000 - elapsed;
     return Math.max(0, Math.floor(remaining / 1000));
   }
@@ -259,7 +265,7 @@ export class ExamService {
     totalTimeMinutes: number,
     pausedSeconds: number = 0
   ): number {
-    const elapsed = Date.now() - examStartedAt.getTime() - pausedSeconds * 1000;
+    const elapsed = Date.now() - examStartedAt?.getTime() - pausedSeconds * 1000;
     const remaining = totalTimeMinutes * 60 * 1000 - elapsed;
     return Math.max(0, Math.floor(remaining / 1000));
   }
@@ -331,9 +337,13 @@ export class ExamService {
       if (!blockStats[answer.blockNumber]) {
         blockStats[answer.blockNumber] = { correct: 0, total: 0, time: 0 };
       }
-      blockStats[answer.blockNumber].total++;
-      blockStats[answer.blockNumber].time += answer.timeSpentSeconds;
-      if (answer.isCorrect) blockStats[answer.blockNumber].correct++;
+      if (blockStats[answer.blockNumber]) {
+        blockStats[answer.blockNumber].total++;
+        blockStats[answer.blockNumber].time += answer.timeSpentSeconds;
+        if (answer.isCorrect) {
+          blockStats[answer.blockNumber].correct++;
+        }
+      }
     }
 
     const blockScores: BlockScore[] = Object.entries(blockStats)
@@ -384,8 +394,7 @@ export class ExamService {
 
     // Allow resume within 24 hours
     const hoursSinceLastActive =
-      (Date.now() - new Date(attempt.lastActiveAt).getTime()) / (1000 * 60 * 60);
-
+      (Date.now() - new Date(attempt.lastActiveAt)?.getTime()) / (1000 * 60 * 60);
     return hoursSinceLastActive < 24;
   }
 

@@ -74,10 +74,7 @@ export const onRequestPost = adminEndpoint(BranchMergeSchema, async (context) =>
 
     return {
       status: result.success ? 200 : 400,
-      data: {
-        success: result.success,
-        ...result,
-      },
+      data: result,
     };
   } catch (error) {
     logger.error('Failed to merge branch', {

@@ -373,7 +373,7 @@ function normalizeIPForRateLimit(ip?: string): string {
   // Check for IPv4-mapped IPv6 (::ffff:192.168.1.1)
   const ipv4MappedMatch = trimmedIp.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
   if (ipv4MappedMatch) {
-    return ipv4MappedMatch[1]; // Extract and return the IPv4 part
+    return ipv4MappedMatch[1] ?? trimmedIp; // Extract and return the IPv4 part
   }
 
   // Check if it's IPv4 (simple check for dotted decimal)
@@ -412,7 +412,7 @@ function normalizeIPv6ToPrefix64(ipv6: string): string {
     const ipv4Embedded = ipv6.match(/:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
     if (ipv4Embedded) {
       // Convert embedded IPv4 to two 16-bit groups
-      const ipv4Parts = ipv4Embedded[1].split('.').map(Number);
+      const ipv4Parts = (ipv4Embedded[1] ?? '0.0.0.0').split('.').map(Number);
       const part0 = ipv4Parts[0] ?? 0;
       const part1 = ipv4Parts[1] ?? 0;
       const part2 = ipv4Parts[2] ?? 0;

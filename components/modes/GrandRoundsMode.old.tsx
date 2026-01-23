@@ -214,6 +214,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     if (!challengeData || selectedAnswer === null) return;
 
     const currentQuestion = challengeData.questions[currentQuestionIndex];
+    if (!currentQuestion) return;
 
     // Save answer
     setUserAnswers((prev) => ({
@@ -347,7 +348,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <h3 className="text-lg font-semibold text-center mb-4">14 PANCE Organ Systems</h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {PANCE_TOPIC_ABBREVIATIONS.filter((abbr) => abbr !== 'PRO').map((systemCode) => {
+              {PANCE_TOPIC_ABBREVIATIONS.filter((abbr: string) => abbr !== 'PRO').map((systemCode) => {
                 const systemName = ABBREVIATION_TO_TOPIC_MAP[systemCode];
 
                 return (

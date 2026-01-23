@@ -315,16 +315,16 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
     : 0;
   let fatigueLevel = Math.min(100, sessionMinutes * 0.8);
 
-  // Check for declining performance
-  if (attempts.length >= 20) {
-    const early = attempts.slice(0, 10);
-    const late = attempts.slice(-10);
-    const earlyAccuracy = early.filter((a) => a.wasCorrect).length / early.length;
-    const lateAccuracy = late.filter((a) => a.wasCorrect).length / late.length;
-    if (lateAccuracy < earlyAccuracy - 0.15) {
-      fatigueLevel += 20;
+    // Check for declining performance
+    if (attempts.length >= 20) {
+      const early = attempts.slice(0, 10);
+      const late = attempts.slice(-10);
+      const earlyAccuracy = early.length > 0 ? early.filter((a: SessionAttempt) => a.wasCorrect).length / early.length : 0;
+      const lateAccuracy = late.length > 0 ? late.filter((a: SessionAttempt) => a.wasCorrect).length / late.length : 0;
+      if (lateAccuracy < earlyAccuracy - 0.15) {
+        fatigueLevel += 20;
+      }
     }
-  }
 
   // Flow state
   let flowState = 50;
@@ -607,7 +607,7 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async (
     }
 
     // Build difficulty curve
-    const difficultyCurve = attempts.map((a, i) => ({
+    const difficultyCurve = attempts.map((a: SessionAttempt, i: number) => ({
       questionNumber: i + 1,
       difficulty: a.difficulty,
       correct: a.wasCorrect,
@@ -656,7 +656,7 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async (
     }
 
     // Generate concept retention summaries (simplified - would integrate with learningPatternEngine)
-    const conceptsAnalyzed = new Set(attempts.map((a) => a.conditionId).filter(Boolean)).size;
+    const conceptsAnalyzed = new Set(attempts.map((a: SessionAttempt) => a.conditionId).filter(Boolean)).size;
     const conceptRetentionSummaries: ConceptRetentionSummary[] = [];
 
     // Group by concept and calculate trends
@@ -693,9 +693,9 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async (
           Date.now() + (accuracy > 0.8 ? 7 : accuracy > 0.6 ? 3 : 1) * 86400000
         ).toISOString(),
         consecutiveCorrect: conceptAtts
-          .slice()
-          .reverse()
-          .findIndex((a) => !a.wasCorrect),
+        .slice()
+        .reverse()
+        .findIndex((a: SessionAttempt) => !a.wasCorrect),
         accuracyTrend: trend,
       });
     }
@@ -710,7 +710,7 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async (
       .map((e) => ({
         conceptId: e.conceptId,
         conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-        system: attempts.find((a) => a.conditionId === e.conceptId)?.system || 'unknown',
+        system: attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId)?.system || 'unknown',
         gapType: e.errorType,
         severity: e.confidence > 70 ? 'significant' : 'moderate',
         blocksCount: 0, // Would calculate from concept graph

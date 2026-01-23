@@ -108,7 +108,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     // Group by system, subcategory, condition
     const subcategoryMap = new Map<string, Map<string, ConditionStats>>();
 
-    performanceData.forEach((record) => {
+    performanceData.forEach((record: PerformanceRecord) => {
       if (!record.system) return;
 
       const system = record.system as SystemCode;
@@ -337,10 +337,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             <p className="text-sm text-[var(--color-text-muted)]">
               {viewLevel === 'dashboard' ? 'System Overview' : ''}
               {viewLevel === 'system' && selectedSystem
-                ? ((): string => {
-                    const systemLabel = ABBREVIATION_TO_TOPIC_MAP[selectedSystem];
-                    return `${systemLabel !== undefined ? systemLabel : selectedSystem} Deep Dive`;
-                  })()
+                ? `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem] ?? selectedSystem} Deep Dive`
                 : ''}
               {viewLevel === 'subcategory' ? (selectedSubcategory ?? '') : ''}
             </p>
@@ -629,7 +626,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
               >
                 <Play className="w-5 h-5" />
-                Quick Start PANCE Session - {ABBREVIATION_TO_TOPIC_MAP[currentSystemStats.system]}
+                Quick Start PANCE Session - {ABBREVIATION_TO_TOPIC_MAP[currentSystemStats.system] ?? currentSystemStats.system}
               </button>
             )}
 

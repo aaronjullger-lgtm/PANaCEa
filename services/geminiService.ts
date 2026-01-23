@@ -528,19 +528,25 @@ export function refillShuffledContentQueue() {
     deck = [...PANCE_DECK];
   }
 
-  // Shuffle the filtered deck
+  // Shuffle the filtered deck using Fisher-Yates algorithm
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+    // Use temporary variable to avoid strictNullChecks issues with destructuring
+    const temp = deck[i]!;
+    deck[i] = deck[j]!;
+    deck[j] = temp;
   }
   shuffledContentQueue = deck;
 }
 
 export function refillShuffledTaskQueue() {
   const deck = [...TASK_DECK];
+  // Fisher-Yates shuffle with temp variable for strictNullChecks
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+    const temp = deck[i]!;
+    deck[i] = deck[j]!;
+    deck[j] = temp;
   }
   shuffledTaskQueue = deck;
 }

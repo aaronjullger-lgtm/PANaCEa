@@ -5,7 +5,6 @@
  * Returns QuestionAttempt records with telemetry data
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
@@ -13,13 +12,13 @@ interface Env {
   DATABASE_URL: string;
 }
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: { request: Request; env: Env }) => {
   let prisma;
 
   try {
     // Authenticate request
-    const auth = await authenticateRequest(context);
-    if (!auth.authenticated || !auth.userId) {
+    const auth = await authenticateRequest(context.request, context.env);
+    if (!auth || !auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }

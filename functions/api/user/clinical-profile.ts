@@ -43,15 +43,17 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
         },
       });
 
-      totalQuestions = attempts.length;
-      correctAnswers = attempts.filter((a) => a.wasCorrect).length;
+      type AttemptType = typeof attempts[0];
 
-      const timeValues = attempts.map((a) => a.timeSpentMs || 0).filter((n) => n > 0);
+      totalQuestions = attempts.length;
+      correctAnswers = attempts.filter((a: AttemptType) => a.wasCorrect).length;
+
+      const timeValues = attempts.map((a: AttemptType) => a.timeSpentMs || 0).filter((n: number) => n > 0);
       avgTimePerQuestion = timeValues.length
         ? timeValues.reduce((sum, n) => sum + n, 0) / timeValues.length
         : null;
 
-      attempts.forEach((attempt) => {
+      attempts.forEach((attempt: AttemptType) => {
         if (attempt.system) {
           systemStats = updateSystemStats(
             systemStats,
@@ -80,8 +82,9 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
                 take: 500,
                 orderBy: { createdAt: 'desc' },
               });
+              type PeakAttemptType = typeof attempts[0];
               return derivePeakHoursFromSessions(
-                attempts.map((a) => new Date(a.createdAt).getHours())
+                attempts.map((a: PeakAttemptType) => new Date(a.createdAt).getHours())
               );
             } catch (err) {
               logger.error('Failed to derive peak hours', {
@@ -128,7 +131,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
       },
     });
 
-    const systemBreakdown = Object.entries(systemStats).map(([system, stats]) => ({
+    const systemBreakdown = Object.entries(systemStats).map(([system, stats]: [string, any]) => ({
       system,
       total: stats.total,
       correct: stats.correct,
@@ -157,8 +160,8 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
           overthinkingSystems: derived.overthinkingSystems,
         },
         diagnosisBias: Object.entries(diagnosisBias)
-          .sort((a, b) => (b[1] || 0) - (a[1] || 0))
-          .map(([condition, count]) => ({ condition, count })),
+          .sort((a: [string, number], b: [string, number]) => (b[1] || 0) - (a[1] || 0))
+          .map(([condition, count]: [string, number]) => ({ condition, count })),
         studyPatterns: {
           peakHours: peakStudyHours,
           avgSessionLength,

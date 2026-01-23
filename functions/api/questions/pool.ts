@@ -77,7 +77,9 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    const temp = shuffled[i] as T;
+    shuffled[i] = shuffled[j] as T;
+    shuffled[j] = temp;
   }
   return shuffled;
 }
@@ -164,14 +166,14 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
       where: { userId },
       select: { questionId: true },
     });
-    const seenIds = new Set<string>(seenQuestionIds.map((q) => q.questionId));
+    const seenIds = new Set<string>(seenQuestionIds.map((q: { questionId: string }) => q.questionId));
 
     // Check cache
-    const cacheKey = getQuestionPoolCacheKey({ system, category, difficulty });
-    let cachedPool: Array<any> | null = null;
+    const cacheKey = getQuestionPoolCacheKey({ system: system ?? undefined, category: category ?? undefined, difficulty: difficulty ?? undefined });
+    let cachedPool: PreGeneratedQuestionRecord[] | null = null;
 
-    if (isKVAvailable((env as any).CACHE)) {
-      cachedPool = await getFromCache((env as any).CACHE, cacheKey);
+    if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
+      cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
     }
 
     // Get from pre-generated pool
@@ -189,8 +191,8 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
     const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
 
     // Cache the pool questions if available
-    if (isKVAvailable((env as any).CACHE) && !cachedPool && poolQuestions.rawQuestions) {
-      await setInCache((env as any).CACHE, cacheKey, poolQuestions.rawQuestions, CACHE_CONFIG.TTL.QUESTION_POOL);
+    if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) && !cachedPool && poolQuestions.rawQuestions) {
+      await setInCache((env as { CACHE: KVNamespace }).CACHE, cacheKey, poolQuestions.rawQuestions, CACHE_CONFIG.TTL.QUESTION_POOL);
     }
 
     logger.info('Fetched pool questions', { userId: auth.userId, count: questions.length, poolAvailable });
@@ -259,10 +261,10 @@ async function getFromPreGeneratedPool(
   userId: string,
   seenIds: Set<string>,
   options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null },
-  cachedQuestions?: Array<any> | null
-) {
+  cachedQuestions?: PreGeneratedQuestionRecord[] | null
+): Promise<{ questions: PoolQuestionOutput[]; remaining: number; rawQuestions?: PreGeneratedQuestionRecord[] }> {
   const { count, system, category, difficulty } = options;
-  let preGenQuestions: Array<any>;
+  let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
 
   if (cachedQuestions && cachedQuestions.length > 0) {
@@ -275,7 +277,28 @@ async function getFromPreGeneratedPool(
     if (category) where.questionType = category;
 
     const fetchCount = count * 5;
-    preGenQuestions = await prisma.preGeneratedQuestion.findMany({ where, take: fetchCount, orderBy: { generatedAt: 'asc' } });
+    const dbResults = await prisma.preGeneratedQuestion.findMany({ where, take: fetchCount, orderBy: { generatedAt: 'asc' } });
+    preGenQuestions = dbResults.map((r: {
+      id: string;
+      questionType: string;
+      system: string | null;
+      conditionId: string | null;
+      medicalContentId: string | null;
+      difficulty: string | null;
+      questionData: unknown;
+      generatedAt: Date;
+      usedAt: Date | null;
+    }): PreGeneratedQuestionRecord => ({
+      id: r.id,
+      questionType: r.questionType,
+      system: r.system,
+      conditionId: r.conditionId,
+      medicalContentId: r.medicalContentId,
+      difficulty: r.difficulty,
+      questionData: r.questionData as QuestionDataJson,
+      generatedAt: r.generatedAt,
+      usedAt: r.usedAt,
+    }));
     remaining = await prisma.preGeneratedQuestion.count({ where });
   }
 
@@ -283,23 +306,23 @@ async function getFromPreGeneratedPool(
   const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
   const selectedQuestions = shuffledQuestions.slice(0, count);
 
-  const questions: Array<any> = [];
+  const questions: PoolQuestionOutput[] = [];
   const toMarkUsed: string[] = [];
 
   for (const q of selectedQuestions) {
-    const data = q.questionData as Record<string, unknown>;
+    const data = q.questionData;
     const optionsData = data.options || data.answers || data.choices;
-    const options = Array.isArray(optionsData) ? optionsData : [];
+    const optionsArr: string[] = Array.isArray(optionsData) ? optionsData : [];
 
     questions.push({
       id: q.id,
       vignette: data.vignette,
       question: data.question,
-      options,
+      options: optionsArr,
       correctAnswer: data.correctAnswer,
       explanation: data.explanation,
       system: q.system || 'General',
-      difficulty: q.difficulty,
+      difficulty: q.difficulty || 'medium',
       tags: data.tags,
       conditionId: q.conditionId,
       source: 'pool',
@@ -331,7 +354,7 @@ async function getFromMainTable(
   userId: string,
   seenIds: Set<string>,
   options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null }
-) {
+): Promise<PoolQuestionOutput[]> {
   const { count, system, category, difficulty } = options;
   const where: Record<string, unknown> = {};
   if (system) where.system = system;
@@ -346,22 +369,22 @@ async function getFromMainTable(
     select: { id: true, vignette: true, question: true, options: true, correctAnswer: true, explanation: true, system: true, difficulty: true, tags: true },
   });
 
-  const unseenQuestions = questions.filter((q) => !seenIds.has(q.id));
-  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
-  const selectedQuestions = shuffledQuestions.slice(0, count);
+  const unseenQuestions = questions.filter((q: MainQuestionRecord) => !seenIds.has(q.id));
+  const shuffledQuestions = fisherYatesShuffle<MainQuestionRecord>(unseenQuestions);
+  const selectedQuestions: MainQuestionRecord[] = shuffledQuestions.slice(0, count);
 
-  const result: Array<any> = [];
+  const result: PoolQuestionOutput[] = [];
   const toRecord: string[] = [];
 
-  for (const q of selectedQuestions as any[]) {
+  for (const q of selectedQuestions) {
     result.push({
       id: q.id,
-      vignette: q.vignette,
+      vignette: q.vignette ?? undefined,
       question: q.question,
       options: Array.isArray(q.options) ? q.options : [],
       correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      system: q.system,
+      explanation: q.explanation ?? undefined,
+      system: q.system ?? 'General',
       difficulty: q.difficulty || 'medium',
       tags: q.tags,
       source: 'main',

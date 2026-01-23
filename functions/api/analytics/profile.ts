@@ -342,8 +342,8 @@ function computeInsights(
     const recent3 = recentSessions.slice(0, 3);
     const older3 = recentSessions.slice(3, 6);
 
-    const recentAvg = recent3.reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) / 3;
-    const olderAvg = older3.reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) / 3;
+    const recentAvg = recent3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
+    const olderAvg = older3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
 
     if (recentAvg > olderAvg + 5) accuracyTrend = 'improving';
     else if (recentAvg < olderAvg - 5) accuracyTrend = 'declining';
@@ -353,16 +353,18 @@ function computeInsights(
   const momentumCounts: Record<string, number> = {};
   for (const session of recentSessions) {
     if (session.momentumTrend) {
-      momentumCounts[session.momentumTrend] = (momentumCounts[session.momentumTrend] || 0) + 1;
+      momentumCounts[session.momentumTrend] = (momentumCounts[session.momentumTrend] ?? 0) + 1;
     }
   }
-  const sortedMomentum = Object.entries(momentumCounts).sort((a, b) => b[1] - a[1]);
-  const momentumTrend = sortedMomentum.length > 0 ? sortedMomentum[0][0] : 'steady';
+  const sortedMomentum = Object.entries(momentumCounts).sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1]
+  );
+  const momentumTrend = sortedMomentum[0]?.[0] ?? 'steady';
 
   // Recent average accuracy
   const recentAvgAccuracy =
     recentSessions.length > 0
-      ? recentSessions.slice(0, 10).reduce((s: number, sess: StudySessionData) => s + sess.accuracy, 0) /
+      ? recentSessions.slice(0, 10).reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) /
         Math.min(recentSessions.length, 10)
       : null;
 

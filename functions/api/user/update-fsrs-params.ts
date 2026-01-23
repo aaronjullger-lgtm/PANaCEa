@@ -5,7 +5,6 @@
  * This creates a global fsrsParams entry that applies to all cards
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
@@ -23,12 +22,12 @@ interface RequestBody {
   };
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPost = async (context: { request: Request; env: Env }) => {
   let prisma;
 
   try {
     // Authenticate request
-    const auth = await authenticateRequest(context);
+    const auth = await authenticateRequest(context.request, context.env);
     if (!auth.authenticated || !auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -52,7 +51,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Validate all parameters are numbers
-    if (!body.parameters.every(p => typeof p === 'number' && !isNaN(p))) {
+    if (!body.parameters.every((p: number) => typeof p === 'number' && !isNaN(p))) {
       return new Response(
         JSON.stringify({ error: 'Invalid parameters: all values must be valid numbers' }),
         {

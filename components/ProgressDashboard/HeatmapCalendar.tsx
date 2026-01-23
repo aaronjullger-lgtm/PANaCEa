@@ -148,7 +148,10 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     for (const date of dates) {
       // Use UTC day of week to ensure consistency
       const dayOfWeek = date.getUTCDay();
-      grid[dayOfWeek].push(date);
+      const row = grid[dayOfWeek];
+      if (row) {
+        row.push(date);
+      }
     }
 
     // Pad each row to the same length

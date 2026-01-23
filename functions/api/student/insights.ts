@@ -80,13 +80,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Calculate metrics
     const totalQuestions = records.length;
-    const correctAnswers = records.filter((r) => r.isCorrect).length;
+    const correctAnswers = records.filter((r: typeof records[0]) => r.isCorrect).length;
     const accuracy = (correctAnswers / totalQuestions) * 100;
 
     // Group by system
     const systemPerformance: Record<string, { total: number; correct: number; accuracy: number }> =
       {};
-    records.forEach((record) => {
+    records.forEach((record: typeof records[0]) => {
       if (!systemPerformance[record.system]) {
         systemPerformance[record.system] = { total: 0, correct: 0, accuracy: 0 };
       }
@@ -100,7 +100,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     // Calculate accuracy per system
-    Object.keys(systemPerformance).forEach((system) => {
+    Object.keys(systemPerformance).forEach((system: string) => {
       const data = systemPerformance[system];
       if (data) {
         data.accuracy = (data.correct / data.total) * 100;
@@ -109,9 +109,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Identify weak areas (< 70% accuracy)
     const weakAreas = Object.entries(systemPerformance)
-      .filter(([_, data]) => data.accuracy < 70 && data.total >= 5)
-      .sort((a, b) => a[1].accuracy - b[1].accuracy)
-      .map(([system, data]) => ({
+      .filter(([_system, data]: [string, any]) => data.accuracy < 70 && data.total >= 5)
+      .sort((a: [string, any], b: [string, any]) => a[1].accuracy - b[1].accuracy)
+      .map(([system, data]: [string, any]) => ({
         system,
         accuracy: Math.round(data.accuracy),
         questionsAnswered: data.total,
@@ -120,9 +120,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Identify strong areas (> 85% accuracy)
     const strongAreas = Object.entries(systemPerformance)
-      .filter(([_, data]) => data.accuracy > 85 && data.total >= 5)
-      .sort((a, b) => b[1].accuracy - a[1].accuracy)
-      .map(([system, data]) => ({
+      .filter(([_system, data]: [string, any]) => data.accuracy > 85 && data.total >= 5)
+      .sort((a: [string, any], b: [string, any]) => b[1].accuracy - a[1].accuracy)
+      .map(([system, data]: [string, any]) => ({
         system,
         accuracy: Math.round(data.accuracy),
         questionsAnswered: data.total,
@@ -135,11 +135,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     const recentAccuracy =
       recentRecords.length > 0
-        ? (recentRecords.filter((r) => r.isCorrect).length / recentRecords.length) * 100
+        ? (recentRecords.filter((r: typeof recentRecords[0]) => r.isCorrect).length / recentRecords.length) * 100
         : 0;
     const olderAccuracy =
       olderRecords.length > 0
-        ? (olderRecords.filter((r) => r.isCorrect).length / olderRecords.length) * 100
+        ? (olderRecords.filter((r: typeof olderRecords[0]) => r.isCorrect).length / olderRecords.length) * 100
         : 0;
 
     const trend = recentAccuracy - olderAccuracy;
@@ -179,7 +179,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Time optimization
     const avgTimePerQuestion =
-      records.reduce((sum, r) => sum + Number(r.timeSpent), 0) / records.length;
+      records.reduce((sum: number, r: typeof records[0]) => sum + Number(r.timeSpent), 0) / records.length;
     const timeOptimization =
       avgTimePerQuestion > 120
         ? "You're taking time to think - good! But try to improve speed for exam conditions"
@@ -205,13 +205,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
           message: timeOptimization,
         },
         systemBreakdown: Object.entries(systemPerformance)
-          .map(([system, data]) => ({
+          .map(([system, data]: [string, any]) => ({
             system,
             total: data.total,
             correct: data.correct,
             accuracy: Math.round(data.accuracy),
           }))
-          .sort((a, b) => b.total - a.total),
+          .sort((a: any, b: any) => b.total - a.total),
       },
     });
   } catch (error: any) {

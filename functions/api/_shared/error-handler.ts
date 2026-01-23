@@ -158,7 +158,9 @@ async function sendToSentry(error: Error, context: ErrorContext, env: any): Prom
     return;
   }
 
-  const [, publicKey, host, projectId] = dsnMatch;
+  const publicKey = dsnMatch[1] ?? '';
+  const host = dsnMatch[2] ?? '';
+  const projectId = dsnMatch[3] ?? '';
   const sentryUrl = `https://${host}/api/${projectId}/store/`;
 
   try {
@@ -184,18 +186,21 @@ function parseStackTrace(
   return stack
     .split('\n')
     .slice(1) // Skip first line (error message)
-    .map((line) => {
+    .map((line: string) => {
       const match = line.match(/at (.+?) \((.+?):(\d+):(\d+)\)/);
       if (match) {
+        const fn = match[1] ?? 'unknown';
+        const file = match[2] ?? 'unknown';
+        const lineNum = match[3] ?? '0';
         return {
-          function: match[1] || 'unknown',
-          filename: match[2] || 'unknown',
-          lineno: parseInt(match[3] || '0', 10),
+          function: fn,
+          filename: file,
+          lineno: parseInt(lineNum, 10),
         };
       }
       return { filename: 'unknown', function: line.trim() };
     })
-    .filter((frame) => frame.filename !== 'unknown');
+    .filter((frame: { filename: string; function: string; lineno?: number }) => frame.filename !== 'unknown');
 }
 
 /**

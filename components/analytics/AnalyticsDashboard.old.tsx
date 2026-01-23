@@ -118,7 +118,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
             <TrendingUp className="w-4 h-4" /> Recent Accuracy
           </div>
           <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
-            {trendData.at(-1)?.accuracy ?? 0}%
+            {trendData?.at(-1)?.accuracy ?? 0}%
           </div>
           <p className="text-sm text-[var(--color-text-muted)]">Last {trendData.length} sessions</p>
         </div>
@@ -128,7 +128,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           </div>
           <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
             {timeData.length
-              ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s`
+              ? `${Math.round(timeData.reduce((s: number, t: TimeDatum) => s + t.seconds, 0) / timeData.length)}s`
               : '—'}
           </div>
           <p className="text-sm text-[var(--color-text-muted)]">

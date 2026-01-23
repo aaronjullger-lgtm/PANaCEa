@@ -64,16 +64,16 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     'distinguishing',
     'redFlag',
   ];
-  const availableTypes = questionTypes.filter((type) => {
+  const availableTypes = questionTypes.filter((type: typeof questionTypes[0]) => {
     if (type === 'mustNotMiss' && ddx.mustNotMiss?.length > 0) return true;
-    if (type === 'mostCommon' && ddx.mostCommon?.length > 0) return true;
+    if (type === 'mostCommon' && (ddx.mostCommon?.length ?? 0) > 0) return true;
     if (
       type === 'distinguishing' &&
       ddx.distinguishingFeatures &&
       Object.keys(ddx.distinguishingFeatures).length > 0
     )
       return true;
-    if (type === 'redFlag' && ddx.redFlags?.length > 0) return true;
+    if (type === 'redFlag' && (ddx.redFlags?.length ?? 0) > 0) return true;
     return false;
   });
 
@@ -100,7 +100,9 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     }
 
     case 'mostCommon': {
-      const correctAnswer = ddx.mostCommon![Math.floor(Math.random() * ddx.mostCommon!.length)];
+      const mostCommon = ddx.mostCommon ?? [];
+      if (mostCommon.length === 0) return null;
+      const correctAnswer = mostCommon[Math.floor(Math.random() * mostCommon.length)];
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
       const options = shuffleArray([correctAnswer, ...distractors]);
 
@@ -117,18 +119,20 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     }
 
     case 'distinguishing': {
-      const pairs = Object.keys(ddx.distinguishingFeatures!);
+      const features = ddx.distinguishingFeatures ?? {};
+      const pairs = Object.keys(features);
       if (pairs.length === 0) return null;
 
       const pairKey = pairs[Math.floor(Math.random() * pairs.length)];
-      const features = ddx.distinguishingFeatures![pairKey];
-      const correctFeature = features[Math.floor(Math.random() * features.length)];
+      const pairFeatures = features[pairKey] ?? [];
+      if (pairFeatures.length === 0) return null;
+      const correctFeature = pairFeatures[Math.floor(Math.random() * pairFeatures.length)];
 
       // Get distractors from other conditions' features
       const distractorFeatures = allDDx
-        .filter((d) => d.id !== ddx.id && d.distinguishingFeatures)
-        .flatMap((d) => Object.values(d.distinguishingFeatures!).flat())
-        .filter((f) => f !== correctFeature)
+        .filter((d: typeof allDDx[0]) => d.id !== ddx.id && d.distinguishingFeatures)
+        .flatMap((d: typeof allDDx[0]) => Object.values(d.distinguishingFeatures ?? {}).flat())
+        .filter((f: string | undefined): f is string => f !== undefined && f !== correctFeature)
         .slice(0, 3);
 
       const options = shuffleArray([correctFeature, ...distractorFeatures.slice(0, 3)]);
@@ -146,13 +150,15 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     }
 
     case 'redFlag': {
-      const correctAnswer = ddx.redFlags![Math.floor(Math.random() * ddx.redFlags!.length)];
+      const redFlags = ddx.redFlags ?? [];
+      if (redFlags.length === 0) return null;
+      const correctAnswer = redFlags[Math.floor(Math.random() * redFlags.length)];
 
       // Get distractors from reassuring features or other non-red-flag items
       const distractors = allDDx
-        .filter((d) => d.redFlags)
-        .flatMap((d) => d.redFlags || [])
-        .filter((f) => f !== correctAnswer && !ddx.redFlags?.includes(f))
+        .filter((d: typeof allDDx[0]) => d.redFlags)
+        .flatMap((d: typeof allDDx[0]) => d.redFlags ?? [])
+        .filter((f: string | undefined): f is string => f !== undefined && f !== correctAnswer && !redFlags.includes(f))
         .slice(0, 3);
 
       const options = shuffleArray([correctAnswer, ...distractors]);
@@ -195,9 +201,9 @@ function getDistractorDiagnoses(
   // If we need more, get from other DDx entries
   if (distractors.length < count) {
     const otherDiagnoses = allDDx
-      .filter((d) => d.id !== currentDDx.id)
-      .flatMap((d) => d.differentialList)
-      .filter((d) => d !== correct && !distractors.includes(d));
+      .filter((d: typeof allDDx[0]) => d.id !== currentDDx.id)
+      .flatMap((d: typeof allDDx[0]) => d.differentialList)
+      .filter((d: string) => d !== correct && !distractors.includes(d));
 
     distractors.push(...shuffleArray(otherDiagnoses).slice(0, count - distractors.length));
   }
@@ -209,7 +215,9 @@ function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    const temp = shuffled[i];
+    shuffled[i] = shuffled[j]!;
+    shuffled[j] = temp!;
   }
   return shuffled;
 }
@@ -270,7 +278,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         setDdxData(data);
 
         // Extract unique categories
-        const categories: string[] = [...new Set(data.map((d: DDxData) => d.category))];
+        const categories: string[] = [...new Set(data.map((d: typeof data[0]) => d.category))];
         setAvailableCategories(categories);
 
         // Generate questions from DDx data

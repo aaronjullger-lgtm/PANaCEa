@@ -220,7 +220,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
           throw new Error('Invalid response from server');
         }
 
-        const mappedQuestions = data.questions.map(mapDtoToConditionQuestion);
+        const mappedQuestions = data.questions.map((q: QuestionDTO) => mapDtoToConditionQuestion(q));
         return mappedQuestions;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load questions';

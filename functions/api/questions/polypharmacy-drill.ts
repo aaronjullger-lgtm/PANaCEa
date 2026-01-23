@@ -120,7 +120,7 @@ function generatePolypharmacyCase(
       id: `med_${drug.genericName.replace(/\s/g, '_')}`,
       name: drug.genericName,
       indication: getCommonIndication(drug.drugClass),
-      class: drug.drugClass[0],
+      class: drug.drugClass[0] ?? 'unknown',
       sideEffects: drug.sideEffects,
       interactions: drug.interactions,
     })),
@@ -128,7 +128,7 @@ function generatePolypharmacyCase(
       id: `med_${drug.genericName.replace(/\s/g, '_')}`,
       name: drug.genericName,
       indication: getCommonIndication(drug.drugClass),
-      class: drug.drugClass[0],
+      class: drug.drugClass[0] ?? 'unknown',
       sideEffects: drug.sideEffects,
       interactions: drug.interactions,
     })),
@@ -142,7 +142,7 @@ function generatePolypharmacyCase(
   selectedProblematic.forEach((drug) => {
     const medId = `med_${drug.genericName.replace(/\s/g, '_')}`;
     deprescribingRationale[medId] =
-      `${drug.genericName} (${drug.drugClass[0]}) should be stopped: ${scenario.explanation}`;
+      `${drug.genericName} (${drug.drugClass[0] ?? 'unknown'}) should be stopped: ${scenario.explanation}`;
   });
 
   return {
@@ -256,7 +256,9 @@ export const onRequestGet = authenticatedEndpoint(PolypharmacyDrillSchema, async
 
     for (let i = 0; i < count; i++) {
       const scenario = scenarios[i % scenarios.length];
-      cases.push(generatePolypharmacyCase(scenario, drugs, difficulty));
+      if (scenario) {
+        cases.push(generatePolypharmacyCase(scenario, drugs, difficulty));
+      }
     }
 
     logger.info('Polypharmacy cases generated', {

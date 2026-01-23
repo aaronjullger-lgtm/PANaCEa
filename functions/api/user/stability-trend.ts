@@ -65,12 +65,12 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
     for (const progress of allProgress) {
       if (!Array.isArray(progress.reviewHistory)) continue;
       const snapshots = (progress.reviewHistory as ReviewSnapshot[])
-        .filter((snapshot) => {
+        .filter((snapshot: ReviewSnapshot) => {
           if (!snapshot.date) return false;
           const snapshotDate = new Date(snapshot.date);
           return snapshotDate >= cutoffDate;
         })
-        .map((snapshot) => ({ ...snapshot, conditionId: progress.conditionId }));
+        .map((snapshot: ReviewSnapshot) => ({ ...snapshot, conditionId: progress.conditionId }));
       allSnapshots.push(...snapshots);
     }
 
@@ -86,9 +86,9 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
 
     const dateMap = new Map<string, { stabilities: number[]; conditions: Map<string, number> }>();
 
-    reviewHistory.forEach((snapshot) => {
-      const date = snapshot.date.split('T')[0];
-      if (!dateMap.has(date)) {
+    reviewHistory.forEach((snapshot: ReviewSnapshot & { conditionId: string }) => {
+      const date = snapshot.date?.split('T')[0] ?? '';
+      if (!date || !dateMap.has(date)) {
         dateMap.set(date, { stabilities: [], conditions: new Map() });
       }
       const entry = dateMap.get(date)!;
@@ -113,6 +113,9 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
 
     logger.info('Fetched stability trend', { userId: auth.userId, days, dataPoints: trendData.length });
 
+    const firstData = trendData[0];
+    const lastData = trendData[trendData.length - 1];
+
     return {
       data: {
         data: trendData,
@@ -120,15 +123,15 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
           days,
           totalDataPoints: trendData.length,
           totalReviews: reviewHistory.length,
-          startDate: trendData[0]?.date,
-          endDate: trendData[trendData.length - 1]?.date,
-          startStability: trendData[0]?.avgStability || 0,
-          endStability: trendData[trendData.length - 1]?.avgStability || 0,
+          startDate: firstData?.date,
+          endDate: lastData?.date,
+          startStability: firstData?.avgStability || 0,
+          endStability: lastData?.avgStability || 0,
           stabilityGrowth:
-            trendData.length > 1 && trendData[0].avgStability > 0
+            trendData.length > 1 && firstData && firstData.avgStability > 0 && lastData
               ? Math.round(
-                  ((trendData[trendData.length - 1].avgStability - trendData[0].avgStability) /
-                    trendData[0].avgStability) *
+                  ((lastData.avgStability - firstData.avgStability) /
+                    firstData.avgStability) *
                     100
                 )
               : 0,

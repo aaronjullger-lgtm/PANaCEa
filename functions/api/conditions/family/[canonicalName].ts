@@ -39,8 +39,10 @@ export const onRequestGet = publicEndpoint(FamilySchema, async ({ env, validated
       };
     }
 
+    type MemberType = typeof members[0];
+    
     const parent = members.find(
-      (m) =>
+      (m: MemberType) =>
         m.condition.toLowerCase() === decodedName.toLowerCase() ||
         m.canonicalName === m.condition ||
         !m.parentId
@@ -49,7 +51,7 @@ export const onRequestGet = publicEndpoint(FamilySchema, async ({ env, validated
     return {
       canonicalName: decodedName,
       parent,
-      members: members.filter((m) => m.id !== parent?.id),
+      members: members.filter((m: MemberType) => m.id !== parent?.id),
     };
   } finally {
     await safePrismaDisconnect(prisma);
