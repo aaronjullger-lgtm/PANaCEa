@@ -36,9 +36,14 @@ import {
   saveChatMessage,
   getSessionHistory,
   clearSession,
-} from '@/services/osceService';
+  startOSCESession,
+  saveOSCEChat,
+  completeOSCESession,
+  translateToSpanish,
+  type SpanishMode,
+  generatePatientCase,
+} from '@/services/domain';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
-import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
 import {
   chatWithPatientSimulator,
   evaluateDiagnosis,
@@ -46,10 +51,8 @@ import {
   orderDiagnosticTest,
   evaluateTreatmentPlan,
   generateAfterActionReport,
-} from '@/services/geminiService';
-import { generatePatientCase } from '@/services/patientEncounterGenerator';
-import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
-import { generateDebrief, type PreceptorFeedback } from '@/services/virtualPreceptorService';
+} from '@/services/ai';
+import { generateDebrief, type PreceptorFeedback } from '@/services/ai';
 import {
   Activity,
   Stethoscope,

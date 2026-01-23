@@ -31,7 +31,7 @@ import {
   formatFieldValue,
   groupFieldsByCategory,
   getCategoryLabel,
-} from '@/services/ddxService';
+} from '@/services/domain';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 
 interface DDxMatrixViewProps {

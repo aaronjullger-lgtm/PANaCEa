@@ -1,22 +1,14 @@
 /**
  * Error Boundary Component
  * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI
+ * logs those errors with structured error types, and displays a fallback UI
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-
-// Lazy load Sentry to avoid initialization conflicts with Clerk
-let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
-if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry')
-    .then((sentry) => {
-      captureError = sentry.captureError;
-    })
-    .catch(() => {});
-}
+import { logError, addBreadcrumb } from '../lib/errors/errorLogger';
+import { toAppError, NetworkError } from '../lib/errors/types';
 
 interface Props {
   children: ReactNode;
@@ -45,9 +37,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-
     // Store error info in state
     this.setState({
       error,
@@ -62,9 +51,44 @@ export class ErrorBoundary extends Component<Props, State> {
       error.message.includes('Unable to preload CSS') ||
       (error.message.includes('vendor-') && error.message.includes('.js'));
 
+    // Add breadcrumb for error context
+    addBreadcrumb(
+      isChunkLoadError ? 'Chunk load error detected (stale cache)' : 'Error boundary caught error',
+      'error-boundary',
+      'error',
+      {
+        errorName: error.name,
+        errorMessage: error.message,
+        isChunkError: isChunkLoadError,
+        componentStack: errorInfo.componentStack?.slice(0, 500), // Truncate for brevity
+      }
+    );
+
+    // Convert to structured error
+    const appError = isChunkLoadError
+      ? new NetworkError(
+          'Failed to load application module (stale cache)',
+          undefined,
+          {
+            errorName: error.name,
+            originalMessage: error.message,
+            componentStack: errorInfo.componentStack,
+          }
+        )
+      : toAppError(error);
+
+    // Log with structured error system
+    logError(appError, {
+      boundary: 'root',
+      isChunkError: isChunkLoadError,
+      componentStack: errorInfo.componentStack,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
+    // Auto-reload for chunk errors after a short delay
     if (isChunkLoadError) {
-      console.warn('[ErrorBoundary] Chunk load error detected - likely stale cache');
-      // Auto-reload for chunk errors after a short delay
+      console.warn('[ErrorBoundary] Chunk load error detected - clearing cache and reloading');
       setTimeout(() => {
         // Clear service worker caches
         if ('caches' in window) {
@@ -81,22 +105,6 @@ export class ErrorBoundary extends Component<Props, State> {
         // Force reload from server
         window.location.reload();
       }, 1500);
-    }
-
-    // Send to error tracking service
-    if (captureError) {
-      captureError(error, {
-        tags: {
-          boundary: 'root',
-          isChunkError: isChunkLoadError.toString(),
-        },
-        extra: {
-          componentStack: errorInfo.componentStack,
-          errorName: error.name,
-          errorMessage: error.message,
-        },
-        level: isChunkLoadError ? 'warning' : 'error',
-      });
     }
   }
 

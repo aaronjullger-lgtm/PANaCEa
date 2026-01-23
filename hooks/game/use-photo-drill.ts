@@ -1,11 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { submitDrillResult } from '@/services/drillService';
+import { submitDrillResult } from '@/services/core';
 import {
   recordDrillSession,
   getRecommendedDifficulty,
   type DrillType,
-} from '@/services/drillStatsService';
+} from '@/services/analytics';
 
 // Static fallbacks used in tests/offline mode (database-first in production)
 export const MASTER_CONDITION_LIST: string[] = [

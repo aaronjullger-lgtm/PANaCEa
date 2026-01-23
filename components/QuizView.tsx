@@ -946,24 +946,55 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion || selectedAnswerIndex === null) return;
 
     setIsExplainerLoading(true);
-    setAlternateRationale(null);
+    setAlternateRationale(''); // Start with empty string for streaming
 
     try {
       const userAnswer = currentQuestion.options[selectedAnswerIndex] ?? '';
       const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
-      const explanation = await generateAlternateRationale(
-        currentQuestion,
-        userAnswer,
-        correctAnswer
-      );
-      setAlternateRationale(explanation);
+      
+      // Build prompt for alternate explanation
+      const prompt = `You are a clinical educator helping a PA student understand why they got a question wrong.
+
+Question: ${currentQuestion.question}
+
+Their Answer: ${userAnswer}
+Correct Answer: ${correctAnswer}
+
+Original Explanation: ${currentQuestion.rationale}
+
+Provide an ALTERNATE explanation that approaches this from a different angle. Use:
+- Different clinical reasoning pathway
+- Different mnemonic or memory aid
+- Different real-world clinical scenario
+- Simpler language if the original was technical
+
+Keep it concise (3-4 sentences max) and focus on helping them understand WHY they made this mistake.`;
+
+      // Use streaming API from geminiService
+      const { callGeminiTextStreaming } = await import('@/services/geminiService');
+      
+      await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
+        onChunk: (chunk) => {
+          // Append each chunk as it arrives
+          setAlternateRationale((prev) => prev + chunk);
+        },
+        onComplete: () => {
+          setIsExplainerLoading(false);
+        },
+        onError: (err) => {
+          console.error('Error generating alternate rationale:', err);
+          setAlternateRationale(
+            "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
+          );
+          setIsExplainerLoading(false);
+        },
+      });
     } catch (err) {
       // User-friendly error message instead of technical details
       console.error('Error generating alternate rationale:', err);
       setAlternateRationale(
         "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
       );
-    } finally {
       setIsExplainerLoading(false);
     }
   }, [currentQuestion, selectedAnswerIndex]);

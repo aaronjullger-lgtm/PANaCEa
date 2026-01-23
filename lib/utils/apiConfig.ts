@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
   LABS_CASES: '/api/labs/cases',
   LABS_CASES_RANDOM: (count: number) => `/api/labs/cases/random?count=${count}`,
   GEMINI_PROXY: '/geminiProxy',
+  GEMINI_STREAM: '/api/gemini/stream',
   // Question pool and curation endpoints
   QUESTIONS_POOL: '/api/questions/pool',
   QUESTIONS_POOL_STATUS: '/api/questions/pool-status',

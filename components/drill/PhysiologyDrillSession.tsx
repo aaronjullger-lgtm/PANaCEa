@@ -11,7 +11,7 @@ import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { usePhysiologyDrill } from '@/hooks/game/use-physiology-drill';
-import { getDrillLandingStats } from '@/services/drillStatsService';
+import { getDrillLandingStats } from '@/services/analytics';
 
 interface PhysiologyDrillSessionProps {
   onExit?: () => void;

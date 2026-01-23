@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { recordDrillSession } from '@/services/drillStatsService';
+import { recordDrillSession } from '@/services/analytics';
 
 export type VentMode = 'AC' | 'SIMV' | 'PRVC' | 'PS' | 'CPAP';
 export type VentilatorDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';

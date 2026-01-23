@@ -16,7 +16,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
 import { useSession } from '@/contexts/SessionContext';
-import type { SubmitReviewResponse } from '@/services/calibrationService';
+import type { SubmitReviewResponse } from '@/services/analytics';
 
 interface ReviewItem {
   id: string;

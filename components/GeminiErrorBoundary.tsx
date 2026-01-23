@@ -2,30 +2,22 @@
  * GeminiErrorBoundary
  *
  * Specialized error boundary for Gemini API errors.
- * Provides user-friendly error messages and retry functionality.
+ * Provides user-friendly error messages and retry functionality with structured error types.
  */
 
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
-
-// Lazy load Sentry to avoid initialization conflicts with Clerk
-let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
-let addBreadcrumb:
-  | ((
-      message: string,
-      category: string,
-      level?: 'error' | 'warning' | 'info' | 'debug' | 'fatal',
-      data?: Record<string, unknown>
-    ) => void)
-  | null = null;
-if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry')
-    .then((sentry) => {
-      captureError = sentry.captureError;
-      addBreadcrumb = sentry.addBreadcrumb;
-    })
-    .catch(() => {});
-}
+import { logError, addBreadcrumb as logBreadcrumb } from '../lib/errors/errorLogger';
+import {
+  toAppError,
+  ApiError,
+  RateLimitError,
+  TimeoutError,
+  NetworkError,
+  ExternalServiceError,
+  isAppError,
+  type AppError,
+} from '../lib/errors/types';
 
 export interface GeminiErrorInfo {
   type: 'rate_limit' | 'server_error' | 'network' | 'timeout' | 'generic';
@@ -33,6 +25,7 @@ export interface GeminiErrorInfo {
   message: string;
   retryable: boolean;
   retryAfterMs?: number;
+  appError?: AppError;
 }
 
 interface GeminiErrorBoundaryProps {
@@ -49,48 +42,71 @@ interface GeminiErrorBoundaryState {
 }
 
 /**
- * Parse Gemini API error to determine type and if retryable
+ * Parse Gemini API error to determine type and create structured AppError
  */
 export function parseGeminiError(error: Error | Response | unknown): GeminiErrorInfo {
+  let appError: AppError;
+
   // Handle Response objects
   if (error instanceof Response) {
     const status = error.status;
 
     if (status === 429) {
+      appError = new RateLimitError(
+        'Too many requests. Please wait a moment before trying again.',
+        60,
+        { service: 'gemini', endpoint: error.url }
+      );
       return {
         type: 'rate_limit',
         status,
-        message: 'Too many requests. Please wait a moment before trying again.',
-        retryable: true,
-        retryAfterMs: 60000, // Default 60 seconds
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
     if (status === 503 || status === 502 || status === 504) {
+      appError = new ExternalServiceError(
+        'The AI service is temporarily unavailable. Retrying...',
+        'gemini',
+        status,
+        { endpoint: error.url }
+      );
       return {
         type: 'server_error',
         status,
-        message: 'The AI service is temporarily unavailable. Retrying...',
-        retryable: true,
-        retryAfterMs: 3000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
     if (status === 408) {
+      appError = new TimeoutError('The request timed out. Please try again.', 30000, {
+        service: 'gemini',
+        endpoint: error.url,
+      });
       return {
         type: 'timeout',
         status,
-        message: 'The request timed out. Please try again.',
-        retryable: true,
-        retryAfterMs: 1000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
+    appError = new ApiError(`Request failed with status ${status}`, status, error.url);
     return {
       type: 'generic',
       status,
-      message: `Request failed with status ${status}`,
-      retryable: status >= 500,
+      message: appError.message,
+      retryable: appError.retryMetadata.retryable,
+      retryAfterMs: appError.retryMetadata.retryAfterMs,
+      appError,
     };
   }
 
@@ -99,52 +115,72 @@ export function parseGeminiError(error: Error | Response | unknown): GeminiError
     const message = error.message.toLowerCase();
 
     if (message.includes('network') || message.includes('fetch')) {
+      appError = new NetworkError(
+        'Network connection lost. Please check your internet and try again.',
+        undefined,
+        { service: 'gemini' }
+      );
       return {
         type: 'network',
-        message: 'Network connection lost. Please check your internet and try again.',
-        retryable: true,
-        retryAfterMs: 2000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
     if (message.includes('timeout')) {
+      appError = new TimeoutError('The request took too long. Please try again.', 30000, {
+        service: 'gemini',
+      });
       return {
         type: 'timeout',
-        message: 'The request took too long. Please try again.',
-        retryable: true,
-        retryAfterMs: 1000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
     if (message.includes('rate') || message.includes('429')) {
+      appError = new RateLimitError('Rate limit reached. Please wait before retrying.', 60, {
+        service: 'gemini',
+      });
       return {
         type: 'rate_limit',
-        message: 'Rate limit reached. Please wait before retrying.',
-        retryable: true,
-        retryAfterMs: 60000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
     if (message.includes('503') || message.includes('unavailable')) {
+      appError = new ExternalServiceError('AI service temporarily unavailable.', 'gemini', 503);
       return {
         type: 'server_error',
-        message: 'AI service temporarily unavailable.',
-        retryable: true,
-        retryAfterMs: 3000,
+        message: appError.message,
+        retryable: appError.retryMetadata.retryable,
+        retryAfterMs: appError.retryMetadata.retryAfterMs,
+        appError,
       };
     }
 
+    appError = toAppError(error);
     return {
       type: 'generic',
       message: error.message || 'An unexpected error occurred',
       retryable: false,
+      appError,
     };
   }
 
+  appError = toAppError(error);
   return {
     type: 'generic',
     message: 'An unexpected error occurred',
     retryable: false,
+    appError,
   };
 }
 
@@ -188,32 +224,41 @@ export class GeminiErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[GeminiErrorBoundary] Caught error:', error, errorInfo);
-
     const errorType = this.state.errorInfo?.type || 'generic';
+    const appError = this.state.errorInfo?.appError || toAppError(error);
 
-    // Track Gemini API errors
-    if (captureError) {
-      captureError(error, {
-        tags: {
-          boundary: 'gemini',
-          errorType,
-          retryable: this.state.errorInfo?.retryable.toString() || 'false',
-        },
-        extra: {
-          componentStack: errorInfo.componentStack,
-          status: this.state.errorInfo?.status,
-          retryCount: this.state.retryCount,
-        },
-        level: errorType === 'rate_limit' ? 'warning' : 'error',
-      });
-    }
+    // Add breadcrumb for error context
+    logBreadcrumb(
+      `Gemini API error: ${errorType}`,
+      'gemini-error-boundary',
+      errorType === 'rate_limit' ? 'warning' : 'error',
+      {
+        errorType,
+        retryable: this.state.errorInfo?.retryable,
+        status: this.state.errorInfo?.status,
+        retryCount: this.state.retryCount,
+        componentStack: errorInfo.componentStack?.slice(0, 500),
+      }
+    );
+
+    // Log with structured error system
+    logError(appError, {
+      boundary: 'gemini',
+      errorType,
+      retryable: this.state.errorInfo?.retryable,
+      status: this.state.errorInfo?.status,
+      retryCount: this.state.retryCount,
+      componentStack: errorInfo.componentStack,
+    });
 
     // Add breadcrumb for retry attempts
-    if (this.state.retryCount > 0 && addBreadcrumb) {
-      addBreadcrumb(`Gemini retry attempt ${this.state.retryCount}`, 'retry', 'info', {
-        errorType,
-      });
+    if (this.state.retryCount > 0) {
+      logBreadcrumb(
+        `Gemini retry attempt ${this.state.retryCount}`,
+        'retry',
+        'info',
+        { errorType, retryCount: this.state.retryCount }
+      );
     }
   }
 

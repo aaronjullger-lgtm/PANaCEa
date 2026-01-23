@@ -23,7 +23,7 @@ import type {
 } from '@/types/drill-modes';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { toTitleCase } from '@/lib/textUtils';
-import { submitDrillResult } from '@/services/drillService';
+import { submitDrillResult } from '@/services/core';
 
 interface AntibioticModeProps {
   onExit?: () => void;

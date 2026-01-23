@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { fetchLabCases, getCachedDiagnoses } from '@/services/labCaseService';
+import { fetchLabCases, getCachedDiagnoses } from '@/services/domain';
 
 // ============================================================================
 // INTERFACES

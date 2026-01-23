@@ -23,9 +23,9 @@ import {
   processEnhancedInteraction,
   buildEnhancedPatientPrompt,
   analyzeQuestionType,
-} from '@/services/patientPersonalityEngine';
+} from '@/services/domain';
 
-import { OSCEScoringEngine, createScoringEngine } from '@/services/osceScoringEngine';
+import { OSCEScoringEngine, createScoringEngine } from '@/services/domain';
 
 export interface UseEnhancedOSCEOptions {
   enablePersonality?: boolean;

@@ -22,7 +22,7 @@ import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-d
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
-import { getDrillLandingStats } from '@/services/drillStatsService';
+import { getDrillLandingStats } from '@/services/analytics';
 
 // Action options for ventilator adjustments
 const ACTION_OPTIONS = [

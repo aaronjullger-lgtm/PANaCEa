@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { Sparkles, RefreshCw, ShieldCheck, BookOpen, Flame } from 'lucide-react';
 import ClinicalSkeleton from '../ui/ClinicalSkeleton';
-import { fetchDailyTriad, type DailyTriad } from '@/services/dailyTriadService';
+import { fetchDailyTriad, type DailyTriad } from '@/services/domain';
 
 const triadFetcher = () => fetchDailyTriad();
 

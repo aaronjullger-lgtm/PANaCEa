@@ -5,7 +5,7 @@ import {
   fetchUserConfusions,
   generateComparison,
   type UserConfusionPairSummary,
-} from '@/services/ddxService';
+} from '@/services/domain';
 
 interface ConfusionMatrixProps {
   limit?: number;

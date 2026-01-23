@@ -1,0 +1,168 @@
+// =============================================================================
+// STEP 2: HIGH-PERFORMANCE REVIEW LOG SCHEMA
+// Dedicated table for FSRS v6 optimization with proper time-series indexes
+// =============================================================================
+
+/// ReviewLog: Optimized table for FSRS batch queries and time-series analysis
+/// Replaces UserProgress.reviewHistory (Json[]) with queryable relational data
+model ReviewLog {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  // Question/Content identification
+  conditionId      String?  // MedicalContent.conditionId
+  medicalContentId String?  // Direct FK to MedicalContent
+  questionId       String?  // Source question ID
+  questionType     String?  // 'pre_generated' | 'question' | 'seed'
+  
+  // FSRS v6 State Snapshot (at time of review)
+  grade         Int     // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
+  state         Int     // 0=New, 1=Learning, 2=Review, 3=Relearning
+  stability     Float   // S value at time of review
+  difficulty    Float   // D value at time of review
+  retrievability Float? // R value at time of review (calculated)
+  
+  // Timing (critical for FSRS optimization)
+  reviewedAt    DateTime @default(now())
+  scheduledAt   DateTime? // When this review was scheduled (for adherence tracking)
+  elapsedDays   Float?    // Days since last review
+  
+  // Performance metrics
+  responseTimeMs Int?     // Time to answer (milliseconds)
+  wasCorrect     Boolean  // Actual correctness (for Brier score calculation)
+  
+  // Context
+  sessionId      String?  // FK to StudySession
+  attemptId      String?  // FK to QuestionAttempt
+  deviceType     String?  // 'mobile' | 'tablet' | 'desktop'
+  
+  // System categorization (denormalized for fast aggregation)
+  system         String?  // Normalized system code (e.g., 'CV', 'PULM')
+  
+  // Behavioral telemetry (snapshot)
+  telemetry      Json?    // Compact behavioral metrics (MVRT, hesitation, etc.)
+  
+  // Metadata
+  fsrsVersion    String   @default("6.0") // FSRS algorithm version
+  createdAt      DateTime @default(now())
+  
+  // Relations
+  User           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  MedicalContent MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  
+  // === CRITICAL INDEXES FOR FSRS OPTIMIZER ===
+  
+  // 1. Time-series queries for optimization (fetch user's reviews in chronological order)
+  @@index([userId, reviewedAt])
+  
+  // 2. Condition-specific optimization (per-topic FSRS params)
+  @@index([userId, conditionId, reviewedAt])
+  
+  // 3. System-level aggregation (cardiovascular, pulmonary, etc.)
+  @@index([userId, system, reviewedAt])
+  
+  // 4. Global time-series for batch processing
+  @@index([reviewedAt])
+  
+  // 5. Condition lookup (for content-based queries)
+  @@index([conditionId, reviewedAt])
+  
+  // 6. Medical content join performance
+  @@index([medicalContentId])
+  
+  // 7. FSRS state filtering (e.g., only Review state cards)
+  @@index([userId, state, reviewedAt])
+  
+  // 8. Grade-based queries (e.g., only "Good" or "Easy" grades)
+  @@index([userId, grade, reviewedAt])
+}
+
+// =============================================================================
+// ENHANCED INDEXES FOR EXISTING TABLES
+// =============================================================================
+
+// Note: These indexes should be ADDED to the existing QuestionAttempt model
+// in the main schema.prisma file. Do NOT duplicate the model, just add indexes.
+
+/*
+model QuestionAttempt {
+  // ... existing fields ...
+  
+  // === NEW COMPOSITE INDEXES FOR ROLLING 360 & ANALYTICS ===
+  
+  // 1. Rolling 360 queries (userId + isMainSession + createdAt)
+  @@index([userId, isMainSession, createdAt(sort: Desc)])
+  
+  // 2. System-level time-series (for system breakdowns)
+  @@index([userId, systemNormalized, createdAt])
+  
+  // 3. Correctness analysis over time
+  @@index([userId, wasCorrect, createdAt])
+  
+  // 4. Question type analytics
+  @@index([userId, questionType, createdAt])
+  
+  // 5. Mode-specific queries (drill vs exam mode)
+  @@index([userId, mode, createdAt])
+  
+  // 6. Global time-series for platform analytics
+  @@index([createdAt(sort: Desc)])
+  
+  // 7. Condition-specific performance tracking
+  @@index([conditionId, createdAt])
+}
+*/
+
+// =============================================================================
+// MIGRATION NOTES
+// =============================================================================
+
+/*
+MIGRATION STRATEGY (Database-First Workflow):
+
+1. ADD ReviewLog table (this file)
+   - Run: npx prisma migrate dev --name add_review_log_table
+   
+2. ADD composite indexes to QuestionAttempt
+   - Merge the index annotations above into the main schema.prisma
+   - Run: npx prisma migrate dev --name add_composite_indexes
+   
+3. BACKFILL ReviewLog from UserProgress.reviewHistory
+   - Script: scripts/migrations/backfill-review-log.ts
+   - Process in batches of 1000 users
+   - Validate data integrity
+   
+4. UPDATE code to write to ReviewLog on new reviews
+   - Modify: services/fsrsService.ts submitReview()
+   - Add: Parallel write to both UserProgress AND ReviewLog
+   
+5. VERIFY optimizer uses ReviewLog
+   - Modify: lib/fsrs-optimizer.ts to query ReviewLog instead of UserProgress
+   - Test with: npm run optimize-params -- --user-id <test-user>
+   
+6. DEPRECATE UserProgress.reviewHistory (do NOT remove yet)
+   - Add migration marker: reviewHistoryMigrated: Boolean @default(false)
+   - Keep for rollback safety
+   
+PERFORMANCE EXPECTATIONS:
+
+Before (UserProgress.reviewHistory as Json[]):
+  - Query 1000 reviews: ~500ms (full table scan)
+  - Filter by date range: NOT POSSIBLE (Json array)
+  - Join with MedicalContent: NOT POSSIBLE
+  - Index usage: NONE
+  
+After (ReviewLog with composite indexes):
+  - Query 1000 reviews: ~5ms (index scan)
+  - Filter by date range: ~2ms (index seek)
+  - Join with MedicalContent: ~8ms (indexed join)
+  - Index usage: 100%
+  
+Expected speedup: 100x for FSRS optimization queries
+
+CRITICAL CONSTRAINTS (Edge Runtime):
+  - All queries MUST use Prisma Accelerate connection pooling
+  - No raw SQL (not supported in Cloudflare Pages)
+  - Batch operations: max 1000 records per transaction
+  - Keep migrations reversible for 7-day rollback window
+*/

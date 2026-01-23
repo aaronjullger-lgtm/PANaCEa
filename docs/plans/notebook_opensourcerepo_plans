@@ -1,0 +1,70 @@
+Here are the "Nuclear-Grade" Architectural Instructions for your AI agent (Cline).
+I have synthesized the latest research on FSRS v6 Source 159, 1286, CRPL Telemetry Source 1-6, Chain of Verification (CoVe) Source 294, 312, and Deep Knowledge Tracing Source 550 into a unified architectural manifesto.
+Copy and paste the entire block below into your chat with Cline.
+🧠 ROLE: Senior Principal Architect & Psychometric Systems Engineer
+Project: PANaCEa (Physician Assistant National Certifying Exam Adaptive Engine)Mission: Transform the codebase from a "Flashcard App" into a "Cognitive Prosthetic."Current State: v1.2.0 (Stable).Target State: v2.0 (Neuro-Symbolic Integrity).
+🏗️ SYSTEM ARCHITECTURE & BOUNDARIES
+1. The "Split-Brain" Compute Model (CRITICAL)
+You must strictly separate Data Access from Algorithmic Compute.
+The "Spine" (Data Layer): Uses Prisma Accelerate via Cloudflare Edge.
+Role: Fast, cached reads/writes.
+Constraint: ZERO heavy math. Edge functions have 10-50ms CPU limits. Do not attempt FSRS optimization or heavy matrix operations here.
+The "Cortex" (Compute Layer): Uses Client-Side WASM (fsrs-browser).
+Role: Heavy lifting. Gradient descent, parameter optimization, and workload simulation.
+Implementation: The React client fetches ReviewLogs via the "Spine," passes them to the WASM worker, and sends the optimized w[1] parameters back to the DB.
+2. The "Immutable Truth" Data Contract
+Database First: PostgreSQL is the only source of truth.
+❌ FORBIDDEN: Static json files for content, const QUESTIONS = [...], or hardcoded registries.
+✅ REQUIRED: All content flows through MedicalContent and Question tables.
+Schema Sync: If you modify schema.prisma, you MUST run npx prisma generate --no-engine and trigger the deploy:hook to prevent Edge Client drift.
+🧬 CORE SUBSYSTEM SPECIFICATIONS
+A. The Memory Engine: FSRS v6 (21-Parameter Kernel)
+Source of Truth: Source 159, 1286
+Parameter Array: You must use the 21-parameter configuration.
+Default: [0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542]
+Short-Term Stability Formula ($S'$):
+Implement the specific v6 logic for same-day reviews to handle "Cramming" correctly:$$S' = S \cdot e^{w_{17} \cdot (G - 3 + w_{18})} \cdot S^{-w_{19}}$$
+Retrievability Power Curve:
+$$R(t, S) = (1 + \frac{t}{9S})^{-w_{20}}$$
+WASM Optimization: Create services/optimizer/fsrsWasm.ts to bind the Rust fsrs-rs crate to the frontend.
+B. The Sensory System: CRPL & Telemetry
+Source of Truth: Source 1-6, 192Move beyond duration_ms. We measure Cognitive State, not just time.
+CRPL (Cognitive Rhythm & Pause Layers):
+Hesitation Mapping: Track hover_duration on distractor answers. If hover > 2000ms on a wrong answer, flag as NEAR_MISS.
+Flight Time: Measure ms between mousedown and mouseup.
+Rapid Guessing Filter:
+If duration < 3000ms for a clinical vignette (>50 words), mark ReviewLog.rating = 0 (Invalid) to prevent polluting the FSRS optimizer.
+C. The Epistemic Engine: Chain of Verification (CoVe)
+Source of Truth: Source 294, 312AI Content Generation must be "Hallucination-Proof."
+Factored CoVe Pipeline:
+Step 1 (Draft): Generate initial vignette.
+Step 2 (Plan): "List all numerical values, drug dosages, and first-line treatments in the draft."
+Step 3 (Verify): "Cross-check these facts against the 2025 PANCE Blueprint. Output JSON: { fact: string, verified: boolean }."
+Step 4 (Refine): If verified === false, rewrite.
+Citation Enforcing: The final output must use inline citations [Source ID] linking to MedicalContent entries.
+D. The Metacognitive HUD: Workload & Uncertainty
+Source of Truth: Source 1371, 1440
+The "Goldilocks" Toggle:
+If accuracy > 90%: Prioritize cards with Retrievability $R \approx 0.75$ (Desirable Difficulty).
+If accuracy < 75%: Prioritize High Stability cards ($R > 0.9$) to restore confidence.
+CMRR (Compute Minimum Recommended Retention):
+Implement a Monte Carlo Simulator (client-side) that plots "Daily Workload" vs. "Retention Target" ($0.70 - 0.99$).
+Highlight the efficient frontier (lowest workload per unit of knowledge).
+🎨 VISUAL SYSTEM: "STORMY SLATE"
+Philosophy: Aesthetic Monotony = Cognitive Clarity.
+Strict Token Enforcement:
+Backgrounds: bg-surface-primary (#0f172a / Slate 900)
+Cards: bg-surface-card (#1e293b / Slate 800)
+Text: text-slate-50 (Primary), text-slate-400 (Muted)
+BANNED: Orange buttons, Purple gradients, Hex codes in components.
+Epistemic Uncertainty UI:
+If $N < 60$ reviews: Show Calibration Progress Bar instead of a percentage score.
+If Confidence is low: Use Ghost Bars (opacity-30) in charts.
+✅ EXECUTION PROTOCOL
+When implementing features, you must:
+Refactor Deeply: Don't patch. If fsrs.ts is outdated, rewrite the class to match v6 spec entirely.
+Verify Math: Ensure FSRS formulas handle edge cases (e.g., $S=0$).
+Check Telemetry: Confirm submitReview is receiving the new CRPL JSON blob.
+Confirm Storage: Verify UserProgress table has fsrsParams (JSONB) column.
+Start immediately by implementing the FSRS v6 Constants and the WASM Optimizer Service.
+

@@ -33,7 +33,8 @@ import {
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
 import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
-import { analyzeAnswer } from '@/services/CoachingService';
+import { analyzeAnswer } from '@/services/ai';
+import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -281,20 +282,51 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     if (!tutorQuestion.trim()) return;
 
     setLoadingTutor(true);
+    setTutorResponse(''); // Start with empty string for streaming
+
     try {
-      const response = await analyzeAnswer({
-        questionText: tutorQuestion,
-        userAnswer: '',
-        correctAnswer: '',
-        isCorrect: isCorrect,
-        explanation: explanation,
-        condition: condition,
+      // Build contextual prompt for AI tutor
+      const prompt = `You are a clinical tutor helping a PA student understand a medical concept.
+
+Context:
+- Question Status: ${isCorrect ? 'Answered Correctly' : 'Answered Incorrectly'}
+- Condition: ${condition}
+- Original Explanation: ${explanation}
+
+Student's Question: ${tutorQuestion}
+
+Provide a clear, conversational explanation that:
+- Directly answers their specific question
+- Uses simple, accessible language
+- Connects to clinical reasoning
+- Builds confidence (especially if they got it wrong)
+
+Keep your response concise (3-5 sentences max) and supportive.`;
+
+      // Use streaming API from geminiService
+      const { callGeminiTextStreaming } = await import('@/services/geminiService');
+
+      await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
+        onChunk: (chunk) => {
+          // Append each chunk as it arrives
+          setTutorResponse((prev) => prev + chunk);
+        },
+        onComplete: () => {
+          setLoadingTutor(false);
+        },
+        onError: (err) => {
+          console.error('Failed to get tutor response:', err);
+          setTutorResponse(
+            "Sorry, I couldn't answer that right now. The AI service may be temporarily busy. Please try again in a moment."
+          );
+          setLoadingTutor(false);
+        },
       });
-      setTutorResponse(response);
-    } catch (error) {
-      console.error('Failed to get tutor response:', error);
-      setTutorResponse('Sorry, I encountered an error. Please try again.');
-    } finally {
+    } catch (err) {
+      console.error('Failed to get tutor response:', err);
+      setTutorResponse(
+        "Sorry, I couldn't answer that right now. The AI service may be temporarily busy. Please try again in a moment."
+      );
       setLoadingTutor(false);
     }
   };
@@ -484,6 +516,14 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                     {loadingTutor ? 'Thinking...' : 'Ask'}
                   </button>
                 </div>
+                {/* Show skeleton while loading and no response yet */}
+                {loadingTutor && !tutorResponse && (
+                  <div className="p-4 bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200/60 dark:border-purple-700/40">
+                    <ClinicalSkeleton variant="compact" lines={4} />
+                  </div>
+                )}
+                
+                {/* Show streaming response as it arrives */}
                 {tutorResponse && (
                   <div className="p-4 bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200/60 dark:border-purple-700/40">
                     <p className="text-sm text-purple-900 dark:text-purple-100 leading-relaxed whitespace-pre-wrap">

@@ -37,7 +37,7 @@ import type {
   AnatomySystem,
 } from '../../types/anatomy-model';
 import { DEFAULT_VIEWER_CONFIG } from '../../types/anatomy-model';
-import { anatomyModelService } from '@/services/anatomyModelService';
+import { anatomyModelService } from '@/services/domain';
 
 // Skeleton loader for when 3D libraries are loading
 const ModelSkeleton = () => (

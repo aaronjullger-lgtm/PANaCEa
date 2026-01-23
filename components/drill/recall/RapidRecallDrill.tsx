@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { buzzwordService } from '@/services/buzzwordService';
+import { buzzwordService } from '@/services/domain';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
 import { useTelemetryCollector } from '@/hooks/useTelemetryCollector';
 import type { TelemetryData } from '@/types/telemetry';

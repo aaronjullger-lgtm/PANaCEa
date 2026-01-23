@@ -37,8 +37,8 @@ import {
 } from 'lucide-react';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
-import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
-import { getUserContext, setUserContext, CareerStage } from '@/services/userContextService';
+import { loadUserProfile, updateUserProfile } from '@/services/analytics';
+import { getUserContext, setUserContext, CareerStage } from '@/services/analytics';
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { RotationSelector } from '../onboarding/RotationSelector';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '../SettingsStatsModal';

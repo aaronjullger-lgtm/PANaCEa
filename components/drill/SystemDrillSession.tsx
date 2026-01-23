@@ -29,7 +29,7 @@ import {
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
+import { getDrillLandingStats, getCategoryBreakdown } from '@/services/analytics';
 import QuizView from '../QuizView';
 import type { Question, PerformanceRecord, SessionSettings } from '../../types';
 

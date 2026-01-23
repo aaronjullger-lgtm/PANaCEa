@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, CheckCircle, AlertCircle, Lightbulb, Award, Check } from 'lucide-react';
-import type { SOAPNote } from '@/services/geminiService';
+import type { SOAPNote } from '@/services/ai';
 import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
 import { storeSoapGradingEvent } from '@/lib/services/soapAnalyticsService';
 

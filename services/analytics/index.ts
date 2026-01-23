@@ -14,94 +14,78 @@
 // ============================================================================
 // PERFORMANCE SERVICE (Phase 6 Consolidation)
 // ============================================================================
-// Merged from: performanceService, panaceScorePredictor,
-// panceScorePredictorService, performancePredictionService
 
+import * as performanceServiceModule from './performanceService';
+import * as panaceScorePredictorModule from './panaceScorePredictor';
+import * as panceScorePredictorServiceModule from './panceScorePredictorService';
+import * as performancePredictionServiceModule from './performancePredictionService';
+
+export const performanceService = performanceServiceModule;
+export const panaceScorePredictor = panaceScorePredictorModule;
+export const panceScorePredictorService = panceScorePredictorServiceModule;
+export const performancePredictionService = performancePredictionServiceModule;
+
+// Named exports from performanceService
 export {
-  // Main prediction function
   predictScore,
-
-  // Legacy prediction function (prefer predictScore for new code)
   predictPANCEScore,
-
-  // Constants
   NCCPA_BLUEPRINT_WEIGHTS,
-  PANCE_CONSTANTS,
-
-  // Types
-  type SystemPerformance,
-  type ScorePrediction,
-  type PredictionResult,
-  type PerformanceSnapshot,
-  type ConditionStats,
-  type SubcategoryStats,
-  type SystemStats,
-  type PerformanceDataPoint,
-  type ISystemPerformance,
-  type IrtPredictedScore,
-  type HistoricalPrediction,
-
-  // Recording & Stats
   recordQuestionOutcome,
   getHierarchicalStats,
   clearPerformanceCache,
-
-  // Session prediction
   updatePerformancePrediction,
   getSessionPrediction,
   getConfidenceInterval,
   resetPrediction,
   calculateTrend,
-
-  // Class-based predictor
-  PANCEScorePredictorService,
 } from './performanceService';
 
-// Direct export of getPrediction for components that use it
-export { getPrediction } from '../performancePredictionService';
+// Direct export of getPrediction for components
+export { getPrediction } from './performancePredictionService';
 
 // ============================================================================
-// USER ANALYTICS SERVICE (Phase 6 Consolidation)
+// USER ANALYTICS SERVICE (Advanced, Circadian, Research-Backed)
 // ============================================================================
-// Merged from: advancedUserAnalyticsEngine, circadianAnalyticsService,
-// researchBackedAnalytics
 
+import * as advancedUserAnalyticsEngineModule from './advancedUserAnalyticsEngine';
+import * as circadianAnalyticsServiceModule from './circadianAnalyticsService';
+import * as researchBackedAnalyticsModule from './researchBackedAnalytics';
+import * as userContextServiceModule from './userContextService';
+import * as userProfileServiceModule from './userProfileService';
+import * as studentInsightsServiceModule from './studentInsightsService';
+
+export const advancedAnalytics = advancedUserAnalyticsEngineModule;
+export const circadianAnalytics = circadianAnalyticsServiceModule;
+export const researchAnalytics = researchBackedAnalyticsModule;
+export const userContextService = userContextServiceModule;
+export const userProfileService = userProfileServiceModule;
+export const studentInsightsService = studentInsightsServiceModule;
+
+// Named exports from advanced analytics
 export {
-  // Namespaces for full access
-  advancedAnalytics,
-  circadianAnalytics,
-  researchAnalytics,
-
-  // High-level unified API
-  getFullAnalyticsSnapshot,
-  getQuickStatus,
-  getOptimalConditions,
-  checkBreakNeeded,
-
-  // Cognitive state
   getCognitiveState,
   recordCognitiveDataPoint,
   shouldSuggestBreak,
-
-  // Learning velocity
   getLearningVelocity,
   recordSessionVelocity,
-
-  // Time of day
   getPerformanceByTimeOfDay,
   getOptimalStudyTime,
   recordTimeOfDayAttempt,
+  calculatePersonalizedFSRS,
+  getSystemFSRSAdjustments,
+} from './advancedUserAnalyticsEngine';
 
-  // Circadian
+// Named exports from circadian analytics
+export {
+  recordCircadianPerformance,
+  formatHour,
   isLateNightStudying,
   getCircadianInsights,
   analyzeCircadianPerformance,
+} from './circadianAnalyticsService';
 
-  // FSRS personalization
-  calculatePersonalizedFSRS,
-  getSystemFSRSAdjustments,
-
-  // Research-backed analysis
+// Named exports from research-backed analytics
+export {
   analyzeLearningEfficiency,
   analyzeMetacognition,
   analyzeCognitiveLoad,
@@ -109,16 +93,79 @@ export {
   analyzeStrengthsWeaknesses,
   assessTestReadiness,
   generateUserFriendlyStats,
-
-  // Comprehensive
   generateComprehensiveAnalytics,
   generateQuestionTargeting,
-} from './userAnalyticsService';
+} from './researchBackedAnalytics';
 
-// Additional exports from circadianAnalyticsService
-export { recordCircadianPerformance, formatHour } from '../circadianAnalyticsService';
+// ============================================================================
+// BEHAVIORAL & PATTERN ANALYSIS
+// ============================================================================
 
-// Type exports from advancedUserAnalyticsEngine (needed by components)
+import * as answerPatternServiceModule from './answerPatternService';
+import * as behavioralConfidenceServiceModule from './behavioralConfidenceService';
+import * as learningPatternEngineModule from './learningPatternEngine';
+
+export const answerPatternService = answerPatternServiceModule;
+export const behavioralConfidenceService = behavioralConfidenceServiceModule;
+export const learningPatternEngine = learningPatternEngineModule;
+
+// ============================================================================
+// PREDICTIVE ANALYTICS
+// ============================================================================
+
+import * as masteryVelocityPredictorModule from './masteryVelocityPredictor';
+import * as predictiveAnalyticsEngineModule from './predictiveAnalyticsEngine';
+
+export const masteryVelocityPredictor = masteryVelocityPredictorModule;
+export const predictiveAnalyticsEngine = predictiveAnalyticsEngineModule;
+
+// ============================================================================
+// SESSION ANALYTICS
+// ============================================================================
+
+import * as sessionAnalyticsSyncServiceModule from './sessionAnalyticsSyncService';
+import * as sessionMomentumServiceModule from './sessionMomentumService';
+
+export const sessionAnalyticsSyncService = sessionAnalyticsSyncServiceModule;
+export const sessionMomentumService = sessionMomentumServiceModule;
+
+// Named exports from session analytics
+export {
+  collectSessionAnalytics,
+  syncSessionAnalytics,
+  processPendingSync,
+  fetchLearningProfile,
+} from './sessionAnalyticsSyncService';
+
+// ============================================================================
+// ANALYTICS STORAGE
+// ============================================================================
+
+import * as deepAnalyticsStoreModule from './deepAnalyticsStore';
+import * as calibrationServiceModule from './calibrationService';
+
+export const deepAnalyticsStore = deepAnalyticsStoreModule;
+export const calibrationService = calibrationServiceModule;
+
+// Named exports from storage
+export {
+  storeQuestionAttempt,
+  getQuestionAttempts,
+  storeDailyRecord,
+  getDailyRecords,
+  storeMilestone,
+  getMilestones,
+  storeSnapshot,
+  getSnapshots,
+  getStorageStats,
+  generateId,
+  getTodayString,
+} from './deepAnalyticsStore';
+
+// ============================================================================
+// TYPE EXPORTS
+// ============================================================================
+
 export type {
   CognitiveState,
   LearningVelocity,
@@ -131,73 +178,43 @@ export type {
   ComprehensiveUserAnalytics,
   AnalyticsInsight,
   ResponsePatternMetrics,
-} from '../advancedUserAnalyticsEngine';
+} from './advancedUserAnalyticsEngine';
 
-// Type exports from researchBackedAnalytics (needed by components)
 export type {
   UserFriendlyStats,
   TestReadinessAssessment,
   StrengthWeaknessAnalysis,
-} from '../researchBackedAnalytics';
+} from './researchBackedAnalytics';
 
-// Alias for cleaner imports
-export { default as userAnalytics } from './userAnalyticsService';
+export type {
+  SystemPerformance,
+  ScorePrediction,
+  PredictionResult,
+  PerformanceSnapshot,
+  ConditionStats,
+  SubcategoryStats,
+  SystemStats,
+  PerformanceDataPoint,
+} from './performanceService';
 
-// ============================================================================
-// ANALYTICS STORAGE (deepAnalyticsStore + sessionAnalyticsSyncService)
-// ============================================================================
-
-export {
-  // Storage operations
-  storeQuestionAttempt,
-  getQuestionAttempts,
-  storeDailyRecord,
-  getDailyRecords,
-  storeMilestone,
-  getMilestones,
-  storeSnapshot,
-  getSnapshots,
-  getStorageStats,
-  generateId,
-  getTodayString,
-
-  // Types
-  type QuestionAttemptRecord,
-  type DailyStudyRecord,
-  type LearningMilestone,
-  type AnalyticsSnapshot,
-} from '../deepAnalyticsStore';
-
-export {
-  // Session sync
-  collectSessionAnalytics,
-  syncSessionAnalytics,
-  processPendingSync,
-  fetchLearningProfile,
-
-  // Types
-  type SessionAnalyticsPayload,
-} from '../sessionAnalyticsSyncService';
+export type {
+  QuestionAttemptRecord,
+  DailyStudyRecord,
+  LearningMilestone,
+  AnalyticsSnapshot,
+  SessionAnalyticsPayload,
+} from './deepAnalyticsStore';
 
 // ============================================================================
-// LEGACY EXPORTS (Deprecated - Use unified API above)
+// DEPRECATION GUIDE
 // ============================================================================
-
-import * as advancedUserAnalyticsModule from '../advancedUserAnalyticsEngine';
-import * as circadianAnalyticsModule from '../circadianAnalyticsService';
-import * as deepAnalyticsModule from '../deepAnalyticsStore';
-
 /**
- * @deprecated Use userAnalytics or direct imports from userAnalyticsService
+ * ANALYTICS SERVICE CONSOLIDATION:
+ *
+ * Import pattern change:
+ * OLD: import { performanceService } from '@/services/performanceService';
+ * NEW: import { performanceService } from '@/services/analytics';
+ *
+ * OLD: import { advancedAnalytics } from '@/services/advancedUserAnalyticsEngine';
+ * NEW: import { advancedAnalytics } from '@/services/analytics';
  */
-export const analyticsService = advancedUserAnalyticsModule;
-
-/**
- * @deprecated Use circadianAnalytics from userAnalyticsService
- */
-export const circadianService = circadianAnalyticsModule;
-
-/**
- * @deprecated Use storage functions directly from this module
- */
-export const deepAnalytics = deepAnalyticsModule;

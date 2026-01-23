@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { recordDrillSession } from '@/services/drillStatsService';
+import { recordDrillSession } from '@/services/analytics';
 
 export type AnatomyDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';
 

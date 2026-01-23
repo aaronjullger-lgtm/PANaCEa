@@ -13,7 +13,7 @@ import {
   setUserContext,
   type UserContext,
   type CareerStage,
-} from '@/services/userContextService';
+} from '@/services/analytics';
 
 // Create a simple pub/sub for context changes
 const listeners = new Set<() => void>();

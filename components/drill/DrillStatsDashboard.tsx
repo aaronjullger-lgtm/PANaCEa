@@ -43,7 +43,7 @@ import {
   getSimulationStats,
   type DrillType,
   type DrillStatistics,
-} from '@/services/drillStatsService';
+} from '@/services/analytics';
 
 interface DrillStatsDashboardProps {
   onClose?: () => void;

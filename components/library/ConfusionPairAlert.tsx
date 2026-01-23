@@ -15,7 +15,7 @@ import {
   getSeverityColor,
   getSeverityBgColor,
   generateComparison,
-} from '@/services/ddxService';
+} from '@/services/domain';
 
 interface ConfusionPairAlertProps {
   /** Current condition being viewed */

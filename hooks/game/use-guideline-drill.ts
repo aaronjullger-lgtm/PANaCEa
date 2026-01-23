@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { guidelineService } from '@/services/guidelineService';
+import { guidelineService } from '@/services/domain';
 import type { Guideline, GuidelineCase } from '@/types/guidelines';
 
 export type GuidelineDrillStatus = 'menu' | 'selecting' | 'playing' | 'feedback' | 'summary';

@@ -439,6 +439,113 @@ export async function callGeminiText(
   throw lastError || new Error('Gemini request failed after retries');
 }
 
+/**
+ * Streaming version of callGeminiText for progressive rendering
+ * Uses Server-Sent Events (SSE) for real-time text chunks
+ * 
+ * @param modelName - Gemini model to use (default: gemini-2.5-flash)
+ * @param prompt - The prompt to send to Gemini
+ * @param temperature - Temperature parameter (default: 0.8)
+ * @param options - Streaming options with callbacks
+ * @returns Promise that resolves with complete text
+ * 
+ * @example
+ * ```typescript
+ * await callGeminiTextStreaming('gemini-2.5-flash', prompt, 0.8, {
+ *   onChunk: (chunk) => setPartialText(prev => prev + chunk),
+ *   onComplete: (fullText) => setIsLoading(false),
+ *   onError: (error) => setError(error.message)
+ * });
+ * ```
+ */
+export async function callGeminiTextStreaming(
+  modelName: string = 'gemini-2.5-flash',
+  prompt: string,
+  temperature: number = 0.8,
+  options: {
+    onChunk?: (chunk: string) => void;
+    onComplete?: (fullText: string) => void;
+    onError?: (error: Error) => void;
+    signal?: AbortSignal;
+  } = {}
+): Promise<string> {
+  const isTestEnv =
+    typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
+  
+  if (isTestEnv) {
+    // Mock behavior for tests: simulate streaming
+    const hash = Array.from(prompt || '').reduce(
+      (acc, char) => (acc + char.charCodeAt(0)) % 100000,
+      0
+    );
+    const preview = prompt.replace(/\s+/g, ' ').trim();
+    const mockText = `[Gemini mock ${hash}] ${preview}`;
+    const finalText = mockText.length < 40 ? mockText.padEnd(40, '.') : mockText;
+    
+    // Simulate chunks
+    const chunks = finalText.match(/.{1,10}/g) || [finalText];
+    for (const chunk of chunks) {
+      options.onChunk?.(chunk);
+      await new Promise(resolve => setTimeout(resolve, 10)); // Simulate latency
+    }
+    options.onComplete?.(finalText);
+    return finalText;
+  }
+
+  try {
+    // Dynamic import to avoid circular dependency
+    const { streamGeminiText } = await import('../lib/utils/streamingClient');
+    
+    return await streamGeminiText(prompt, {
+      modelName,
+      temperature,
+      onChunk: options.onChunk,
+      onComplete: options.onComplete,
+      onError: options.onError,
+      signal: options.signal,
+    });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    options.onError?.(err);
+    throw err;
+  }
+}
+
+/**
+ * Create a cancellable streaming request
+ * Returns an object with the promise and an abort function
+ * 
+ * @example
+ * ```typescript
+ * const { promise, abort } = createCancellableGeminiStream(prompt, {
+ *   onChunk: (chunk) => setPartialText(prev => prev + chunk)
+ * });
+ * 
+ * // Later, if user clicks "Stop"
+ * abort();
+ * ```
+ */
+export function createCancellableGeminiStream(
+  modelName: string = 'gemini-2.5-flash',
+  prompt: string,
+  temperature: number = 0.8,
+  options: {
+    onChunk?: (chunk: string) => void;
+    onComplete?: (fullText: string) => void;
+    onError?: (error: Error) => void;
+  } = {}
+) {
+  const abortController = new AbortController();
+  
+  return {
+    promise: callGeminiTextStreaming(modelName, prompt, temperature, {
+      ...options,
+      signal: abortController.signal,
+    }),
+    abort: () => abortController.abort(),
+  };
+}
+
 // --- Helper: strip any HTML tags from a string (for options/condition) ---
 
 const stripHtmlTags = (text: string | null | undefined): string => {

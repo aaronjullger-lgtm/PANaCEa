@@ -11,7 +11,7 @@ import {
 } from '@/lib/metacognition';
 import { getBrowserTimezone } from '@/lib/circadian';
 import { useSession } from '@/contexts/SessionContext';
-import type { SubmitReviewResponse } from '@/services/calibrationService';
+import type { SubmitReviewResponse } from '@/services/analytics';
 
 export type ConditionDrillStatus =
   | 'landing'

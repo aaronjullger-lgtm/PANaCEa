@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { firstLineService } from '@/services/firstLineService';
+import { firstLineService } from '@/services/domain';
 import type { FirstLineTreatment } from '@prisma/client';
 
 export type FirstLineDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';

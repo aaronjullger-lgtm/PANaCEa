@@ -11,7 +11,7 @@ import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { useAnatomyDrill } from '@/hooks/game/use-anatomy-drill';
-import { getDrillLandingStats } from '@/services/drillStatsService';
+import { getDrillLandingStats } from '@/services/analytics';
 
 interface AnatomyDrillSessionProps {
   onExit?: () => void;

@@ -5,7 +5,7 @@
  * Consolidates hapticService.ts and adds audio feedback support.
  *
  * Usage:
- *   import { feedback } from '@/services/feedbackService';
+ *   import { feedback } from '@/services/core';
  *   feedback.correct(); // Triggers haptic + optional sound
  */
 

@@ -12,7 +12,7 @@ import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useDifferentialDrill } from '@/hooks/game/use-ddx-drill';
-import { getDrillLandingStats, DrillType } from '@/services/drillStatsService';
+import { getDrillLandingStats, DrillType } from '@/services/analytics';
 
 interface DDxDrillSessionProps {
   onExit?: () => void;

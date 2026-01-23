@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import ConditionDrillSession from './ConditionDrillSession';
-import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
+import { getDrillLandingStats, getCategoryBreakdown } from '@/services/analytics';
 
 interface SubcategoryDrillSessionProps {
   onExit?: () => void;

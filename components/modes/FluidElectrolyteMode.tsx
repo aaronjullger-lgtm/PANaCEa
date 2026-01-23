@@ -19,7 +19,7 @@ import type { FluidElectrolyteCase } from '@/types/drill-modes';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 import { useTheme } from '@/hooks/useTheme';
-import { submitDrillResult } from '@/services/drillService';
+import { submitDrillResult } from '@/services/core';
 
 interface FluidElectrolyteModeProps {
   onExit?: () => void;

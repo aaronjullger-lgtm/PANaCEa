@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { recordDrillSession } from '@/services/drillStatsService';
+import { recordDrillSession } from '@/services/analytics';
 
 export type DDxDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'complete' | 'error';
 
