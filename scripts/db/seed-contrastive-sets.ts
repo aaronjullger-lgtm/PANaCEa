@@ -69,9 +69,7 @@ async function main() {
 
     await prisma.contrastiveSet.create({
       data: {
-
         id: uuidv4(),
-
 
         symptom: set.symptom,
         conditionIds: resolvedIds, // Using resolved IDs or names as fallback

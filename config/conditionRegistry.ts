@@ -25,7 +25,7 @@ export function buildConditionDefinition(id: string): ConditionRegistryEntry {
 }
 
 export function findConditionMeta(id: string): ConditionRegistryEntry | undefined {
-  return conditionRegistry.find(c => c.id === id);
+  return conditionRegistry.find((c) => c.id === id);
 }
 
 export default conditionRegistry;

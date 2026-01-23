@@ -106,9 +106,7 @@ export function createPrismaClient(): PrismaClient {
         url: config.connectionString,
       },
     },
-    log: config.logQueries
-      ? ['query', 'info', 'warn', 'error']
-      : ['warn', 'error'],
+    log: config.logQueries ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
   });
 
   // Add connection pool monitoring
@@ -123,10 +121,7 @@ export function createPrismaClient(): PrismaClient {
  * Execute query with connection pool
  * Use for complex queries that benefit from direct SQL
  */
-export async function executeQuery<T>(
-  query: string,
-  params: any[] = []
-): Promise<T[]> {
+export async function executeQuery<T>(query: string, params: any[] = []): Promise<T[]> {
   const pool = createConnectionPool();
   const client = await pool.connect();
 

@@ -62,40 +62,46 @@ export const dateRangeSchema = z
 /**
  * Question type validation
  */
-export const questionTypeSchema = z.enum([
-  'clinical_vignette',
-  'lab_interpretation',
-  'differential_diagnosis',
-  'pharmacology',
-  'basic_science',
-  'procedure',
-  'emergency',
-], {
-  message: 'Invalid question type',
-});
+export const questionTypeSchema = z.enum(
+  [
+    'clinical_vignette',
+    'lab_interpretation',
+    'differential_diagnosis',
+    'pharmacology',
+    'basic_science',
+    'procedure',
+    'emergency',
+  ],
+  {
+    message: 'Invalid question type',
+  }
+);
 
 /**
  * Organ system validation (NCCPA Blueprint)
  */
-export const organSystemSchema = z.enum([
-  'CARDIOVASCULAR',
-  'PULMONARY',
-  'GASTROINTESTINAL',
-  'MUSCULOSKELETAL',
-  'HEENT',
-  'REPRODUCTIVE',
-  'NEUROLOGICAL',
-  'PSYCHIATRY',
-  'ENDOCRINE',
-  'DERMATOLOGY',
-  'GENITOURINARY',
-  'HEMATOLOGY',
-  'INFECTIOUS_DISEASE',
-  'NEPHROLOGY',
-  'EMERGENCY_MEDICINE',
-], {
-  message: 'Invalid organ system',
-});
+export const organSystemSchema = z.enum(
+  [
+    'CARDIOVASCULAR',
+    'PULMONARY',
+    'GASTROINTESTINAL',
+    'MUSCULOSKELETAL',
+    'HEENT',
+    'REPRODUCTIVE',
+    'NEUROLOGICAL',
+    'PSYCHIATRY',
+    'ENDOCRINE',
+    'DERMATOLOGY',
+    'GENITOURINARY',
+    'HEMATOLOGY',
+    'INFECTIOUS_DISEASE',
+    'NEPHROLOGY',
+    'EMERGENCY_MEDICINE',
+  ],
+  {
+    message: 'Invalid organ system',
+  }
+);
 
 /**
  * Question generation request validation
@@ -129,12 +135,7 @@ export const batchQuestionGenerationSchema = z
 /**
  * FSRS rating validation (1=Again, 2=Hard, 3=Good, 4=Easy)
  */
-export const fsrsRatingSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-], {
+export const fsrsRatingSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)], {
   message: 'Rating must be 1 (Again), 2 (Hard), 3 (Good), or 4 (Easy)',
 });
 
@@ -377,9 +378,7 @@ export const srsSummaryQuerySchema = z.object({}).optional().default({});
  * Used by: /api/drills/antibiotics
  */
 export const antibioticQuerySchema = z.object({
-  class: z
-    .enum(['Gram Positive', 'Gram Negative', 'Atypical', 'Fungal', 'Anaerobic'])
-    .optional(),
+  class: z.enum(['Gram Positive', 'Gram Negative', 'Atypical', 'Fungal', 'Anaerobic']).optional(),
 });
 
 /**
@@ -408,7 +407,10 @@ export const fluidsQuerySchema = z.object({
 export const labCasesQuerySchema = z.object({
   category: z.string().max(50).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  shuffle: z.string().optional().transform((val) => val !== 'false'),
+  shuffle: z
+    .string()
+    .optional()
+    .transform((val) => val !== 'false'),
 });
 
 /**
@@ -434,7 +436,17 @@ export const mediaDrillQuerySchema = z.object({
  */
 export const pharmDrillQuerySchema = z.object({
   count: z.coerce.number().int().min(1).max(50).default(10),
-  category: z.enum(['mechanism', 'side_effect', 'contraindication', 'drug_class', 'antidote', 'interaction', 'clinical_use']).optional(),
+  category: z
+    .enum([
+      'mechanism',
+      'side_effect',
+      'contraindication',
+      'drug_class',
+      'antidote',
+      'interaction',
+      'clinical_use',
+    ])
+    .optional(),
 });
 
 /**

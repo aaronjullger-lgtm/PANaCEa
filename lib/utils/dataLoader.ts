@@ -108,19 +108,19 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
 
   try {
     const apiUrl = getApiEndpoint(API_ENDPOINTS.LABS_CASES);
-    
+
     // Build headers with auth token if available
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-    
+
     if (getToken) {
       const token = await getToken();
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
-    
+
     const response = await fetch(apiUrl, { headers });
 
     // Check if response is OK and is JSON before parsing

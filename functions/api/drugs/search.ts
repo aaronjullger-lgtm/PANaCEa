@@ -1,7 +1,7 @@
 /**
  * Drug Search API
  * GET /api/drugs/search?q=metformin
- * 
+ *
  * Public endpoint for drug reference lookups
  */
 
@@ -25,7 +25,7 @@ export const onRequestGet = publicEndpoint(DrugSearchSchema, async (context) => 
 
   try {
     const query = validated.query.q;
-    
+
     if (!query) {
       return { data: [] };
     }

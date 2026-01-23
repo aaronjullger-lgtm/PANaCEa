@@ -1,7 +1,7 @@
 /**
  * DDx Generation API
  * GET /api/ddx/generate?topic=Cardiology
- * 
+ *
  * Generates differential diagnosis problems using AI
  * CRITICAL: AI generation endpoint - protect against cost abuse
  */
@@ -35,7 +35,7 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
   const conditionCount = await prisma.medicalContent.count({
     where: { system: topic, status: 'published' },
   });
-  
+
   if (conditionCount < 4) {
     throw new Error(`Not enough content for topic "${topic}" to generate a DDx problem.`);
   }
@@ -53,7 +53,7 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
 
   // Type for distractor query result
   type DistractorResult = { title: string };
-  
+
   const distractors: DistractorResult[] = await prisma.medicalContent.findMany({
     where: {
       system: topic,
@@ -64,13 +64,16 @@ async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProble
     select: { title: true },
   });
 
-  const allConditionTitles = [correctCondition.title, ...distractors.map((d: DistractorResult) => d.title)];
+  const allConditionTitles = [
+    correctCondition.title,
+    ...distractors.map((d: DistractorResult) => d.title),
+  ];
 
   // Extract distractor titles safely
   const distractor0 = distractors[0];
   const distractor1 = distractors[1];
   const distractor2 = distractors[2];
-  
+
   if (!distractor0 || !distractor1 || !distractor2) {
     throw new Error(`Not enough distractors found for topic.`);
   }

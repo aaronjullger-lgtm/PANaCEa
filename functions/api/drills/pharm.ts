@@ -2,7 +2,11 @@
 // GET endpoint for pharmacology drill questions
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import {
+  authenticatedEndpoint,
+  AuthenticatedContext,
+  ValidatedContext,
+} from '../_shared/middleware';
 import { pharmDrillQuerySchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
@@ -203,7 +207,9 @@ function generateMechanismQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion 
 
   const options: string[] = [
     (moa.split('.')[0] ?? '') + '.',
-    ...distractors.map((d: Drug) => ((d.mechanismOfAction || 'Unknown mechanism').split('.')[0] ?? '') + '.'),
+    ...distractors.map(
+      (d: Drug) => ((d.mechanismOfAction || 'Unknown mechanism').split('.')[0] ?? '') + '.'
+    ),
   ];
 
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
@@ -230,7 +236,9 @@ function generateSideEffectQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion
     return generateMechanismQuestion(drug, allDrugs);
   }
 
-  const correctADE = drug.sideEffects[Math.floor(Math.random() * drug.sideEffects.length)] ?? 'Unknown adverse effect';
+  const correctADE =
+    drug.sideEffects[Math.floor(Math.random() * drug.sideEffects.length)] ??
+    'Unknown adverse effect';
   const distractors = getSimilarDrugs(drug, 3, allDrugs);
 
   const options: string[] = [
@@ -268,7 +276,8 @@ function generateContraindicationQuestion(drug: Drug, allDrugs: Drug[]): PharmQu
   }
 
   const correctContra =
-    drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)] ?? 'Unknown contraindication';
+    drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)] ??
+    'Unknown contraindication';
   const distractors = getRandomDrugs(3, [drug.id], allDrugs);
 
   const options: string[] = [
@@ -374,7 +383,8 @@ function generateClinicalUseQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestio
     return generateMechanismQuestion(drug, allDrugs);
   }
 
-  const correctIndication = drug.indications[Math.floor(Math.random() * drug.indications.length)] ?? 'Unknown indication';
+  const correctIndication =
+    drug.indications[Math.floor(Math.random() * drug.indications.length)] ?? 'Unknown indication';
   const distractors = getRandomDrugs(3, [drug.id], allDrugs);
 
   const options: string[] = [

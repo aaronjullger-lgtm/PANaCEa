@@ -47,16 +47,17 @@ export interface PeerComparison {
 export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
   // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const groupedData: Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
-    by: ['system', 'wasCorrect'],
-    where: {
-      userId,
-      system: { not: null }, // Exclude attempts without system classification
-    },
-    _count: {
-      id: true,
-    },
-  });
+  const groupedData: Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }> =
+    await prisma.questionAttempt.groupBy({
+      by: ['system', 'wasCorrect'],
+      where: {
+        userId,
+        system: { not: null }, // Exclude attempts without system classification
+      },
+      _count: {
+        id: true,
+      },
+    });
 
   // Organize data by system
   const systemMap = new Map<string, { correct: number; total: number }>();
@@ -116,7 +117,12 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
 
   // Group by userId and system to get individual user stats
   // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const userSystemData: Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
+  const userSystemData: Array<{
+    userId: string;
+    system: string | null;
+    wasCorrect: boolean;
+    _count: { id: number };
+  }> = await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
@@ -258,7 +264,12 @@ export async function generatePeerComparison(
 
   // Get cohort distribution data for percentile calculation
   // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const cohortData: Array<{ userId: string; system: string | null; wasCorrect: boolean; _count: { id: number } }> = await prisma.questionAttempt.groupBy({
+  const cohortData: Array<{
+    userId: string;
+    system: string | null;
+    wasCorrect: boolean;
+    _count: { id: number };
+  }> = await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },

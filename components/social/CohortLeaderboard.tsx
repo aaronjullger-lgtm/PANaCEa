@@ -185,45 +185,48 @@ export function CohortLeaderboard({
       </div>
 
       {/* Podium Display */}
-      {showPodium && podium.length === 3 && !compact && (() => {
-        const first = podium[0];
-        const second = podium[1];
-        const third = podium[2];
-        if (!first || !second || !third) return null;
-        return (
-          <div className="flex justify-center items-end gap-4 py-4">
-            {/* 2nd Place */}
-            {second.userId && (
-              <PodiumSpot
-                entry={second}
-                position={2}
-                currentUserId={currentUserId}
-                onClick={() => onUserClick?.(second.userId)}
-              />
-            )}
+      {showPodium &&
+        podium.length === 3 &&
+        !compact &&
+        (() => {
+          const first = podium[0];
+          const second = podium[1];
+          const third = podium[2];
+          if (!first || !second || !third) return null;
+          return (
+            <div className="flex justify-center items-end gap-4 py-4">
+              {/* 2nd Place */}
+              {second.userId && (
+                <PodiumSpot
+                  entry={second}
+                  position={2}
+                  currentUserId={currentUserId}
+                  onClick={() => onUserClick?.(second.userId)}
+                />
+              )}
 
-            {/* 1st Place */}
-            {first.userId && (
-              <PodiumSpot
-                entry={first}
-                position={1}
-                currentUserId={currentUserId}
-                onClick={() => onUserClick?.(first.userId)}
-              />
-            )}
+              {/* 1st Place */}
+              {first.userId && (
+                <PodiumSpot
+                  entry={first}
+                  position={1}
+                  currentUserId={currentUserId}
+                  onClick={() => onUserClick?.(first.userId)}
+                />
+              )}
 
-            {/* 3rd Place */}
-            {third.userId && (
-              <PodiumSpot
-                entry={third}
-                position={3}
-                currentUserId={currentUserId}
-                onClick={() => onUserClick?.(third.userId)}
-              />
-            )}
-          </div>
-        );
-      })()}
+              {/* 3rd Place */}
+              {third.userId && (
+                <PodiumSpot
+                  entry={third}
+                  position={3}
+                  currentUserId={currentUserId}
+                  onClick={() => onUserClick?.(third.userId)}
+                />
+              )}
+            </div>
+          );
+        })()}
 
       {/* Remaining rankings */}
       <div className="space-y-2">

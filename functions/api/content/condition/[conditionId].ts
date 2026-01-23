@@ -1,7 +1,7 @@
 /**
  * Condition Content API
  * GET /api/content/condition/{conditionId}
- * 
+ *
  * Public endpoint for fetching medical condition content by ID
  */
 
@@ -39,7 +39,7 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
       logger.info('Condition not found', {
         conditionId: conditionId.substring(0, 100),
       });
-      
+
       return {
         data: {
           error: 'Condition not found',

@@ -137,3 +137,62 @@
 
 **Behavioral Note:** You are an expert. Do not ask for permission to fix obvious architectural violations (like hardcoded colors or wrong math). Fix them proactively.
 **Functionality Checks:** When finishing code and ready to move on to next step, ensure that the code works as needed.
+
+# MCPs for Cline Integration
+- firecrawl
+- memory
+- unreal-5-mcp
+- contextstream
+- filesystem
+- Browser Tools
+- fetch
+- Playwright
+- 21st-dev/magic
+- Sequential Thinking
+- sentry
+
+# MCP Usage Guidelines
+
+## firecrawl
+- Use for automated dependency analysis and vulnerability detection.
+- Integrate into CI/CD pipelines to ensure no critical vulnerabilities are deployed.
+
+## memory
+- Leverage for caching frequently accessed data to improve performance.
+- Ensure proper invalidation strategies to avoid stale data.
+
+## unreal-5-mcp
+- Utilize for advanced 3D rendering or simulation workflows.
+- Ensure compatibility with the existing React and Vite setup.
+
+## contextstream
+- Use for managing complex application state and context propagation.
+- Replace legacy context management patterns with this MCP.
+
+## filesystem
+- Employ for efficient file operations, especially in scripts and automation tasks.
+- Avoid using for runtime operations in Cloudflare Pages (Edge Runtime constraint).
+
+## Browser Tools
+- Use for browser automation tasks, such as testing or data scraping.
+- Ensure compliance with project testing standards.
+
+## fetch
+- Standardize all HTTP requests using this MCP.
+- Replace legacy `axios` or other libraries with `fetch`.
+
+## Playwright
+- Use for end-to-end testing of all user-facing features.
+- Ensure tests are integrated into the CI pipeline.
+
+## 21st-dev/magic
+- Leverage for AI-driven content generation or predictive analytics.
+- Ensure outputs are validated against project standards.
+
+## Sequential Thinking
+- Use for orchestrating complex workflows or task sequences.
+- Replace ad-hoc task chaining with this structured approach.
+
+## sentry
+- Integrate for error tracking and performance monitoring.
+- Ensure all critical paths are instrumented for telemetry.

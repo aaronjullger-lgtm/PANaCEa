@@ -164,7 +164,9 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
+            <span className="text-3xl font-bold text-[var(--color-text-primary)]">
+              {stats.totalInWindow}
+            </span>
             <span className="text-xs text-slate-400">of 50</span>
           </div>
         </div>
@@ -225,7 +227,9 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           animate={{ scale: 1, opacity: 1 }}
           className="inline-block"
         >
-          <span className="text-6xl font-bold text-[var(--color-text-primary)]">{stats.predictedScore || '---'}</span>
+          <span className="text-6xl font-bold text-[var(--color-text-primary)]">
+            {stats.predictedScore || '---'}
+          </span>
           <span className="text-xl text-slate-400 ml-2">/800</span>
         </motion.div>
         <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
@@ -241,7 +245,9 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
         </div>
         <div className="w-px h-10 bg-slate-700" />
         <div className="text-center">
-          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
+          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
+            {stats.totalInWindow}
+          </span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>
@@ -345,7 +351,9 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <p className="text-xs text-slate-400">Pass Chance</p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-semibold text-[var(--color-text-primary)]">{stats.totalInWindow}</span>
+          <span className="text-xl font-semibold text-[var(--color-text-primary)]">
+            {stats.totalInWindow}
+          </span>
           <p className="text-xs text-slate-400">Questions</p>
         </div>
       </div>

@@ -124,10 +124,12 @@ function createInitialImplicitMetrics(): ImplicitMetrics {
 
 export function useConditionDrill(): UseConditionDrillReturn {
   const { getToken, isSignedIn } = useAuth();
-  
+
   // Get calibration tracking from session context
   // Safe to call even if SessionProvider is not present (will throw if used)
-  let recordCalibrationObservation: ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void) | null = null;
+  let recordCalibrationObservation:
+    | ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void)
+    | null = null;
   try {
     const session = useSession();
     recordCalibrationObservation = session.recordCalibrationObservation;
@@ -220,7 +222,9 @@ export function useConditionDrill(): UseConditionDrillReturn {
           throw new Error('Invalid response from server');
         }
 
-        const mappedQuestions = data.questions.map((q: QuestionDTO) => mapDtoToConditionQuestion(q));
+        const mappedQuestions = data.questions.map((q: QuestionDTO) =>
+          mapDtoToConditionQuestion(q)
+        );
         return mappedQuestions;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load questions';

@@ -194,9 +194,7 @@ export function getCalibrationSummary(session: SessionCalibration): CalibrationS
 /**
  * Serialize calibration data for storage/API persistence
  */
-export function serializeSessionCalibration(
-  session: SessionCalibration
-): Record<string, unknown> {
+export function serializeSessionCalibration(session: SessionCalibration): Record<string, unknown> {
   const analysis = analyzeCalibration(session.tracker);
   return {
     sessionStart: session.sessionStart,

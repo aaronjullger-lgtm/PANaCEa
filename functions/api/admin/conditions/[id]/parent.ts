@@ -27,9 +27,7 @@ const UpdateParentSchema = z.object({
   }),
   body: z.object({
     parentId: z.string().uuid('Parent ID must be a valid UUID').nullable().optional(),
-    relationshipType: z
-      .enum(['subtype', 'complication', 'manifestation', 'variant'])
-      .optional(),
+    relationshipType: z.enum(['subtype', 'complication', 'manifestation', 'variant']).optional(),
   }),
 });
 
@@ -43,9 +41,7 @@ export const onRequestOptions = withCors();
 
 export const onRequestPatch = adminEndpoint(
   UpdateParentSchema,
-  async (
-    context: AuthenticatedContext & ValidatedContext<UpdateParentInput>
-  ) => {
+  async (context: AuthenticatedContext & ValidatedContext<UpdateParentInput>) => {
     const { env, auth, validated, params } = context;
 
     // Get condition ID from path params (Cloudflare provides this)

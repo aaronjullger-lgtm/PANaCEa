@@ -129,15 +129,15 @@ const FINAL_APPROACH_DISTANCE = 100;
 
 /**
  * Calculate Shannon entropy from a probability distribution
- * 
+ *
  * H = -Σ p(x) * log2(p(x))
- * 
+ *
  * @param probabilities - Array of probabilities (must sum to 1)
  * @returns Entropy in bits (0 = certain, log2(n) = uniform)
  */
 export function calculateShannonEntropy(probabilities: number[]): number {
   if (probabilities.length === 0) return 0;
-  
+
   let entropy = 0;
   for (const p of probabilities) {
     if (p > 0) {
@@ -149,11 +149,11 @@ export function calculateShannonEntropy(probabilities: number[]): number {
 
 /**
  * Calculate hover entropy from option hover times
- * 
+ *
  * Measures uncertainty in answer selection based on hover time distribution.
  * - Low entropy (near 0) = focused on one option = confident
  * - High entropy (near log2(n)) = evenly distributed = uncertain
- * 
+ *
  * @param hoverTimes - Map of option IDs to hover times in ms
  * @param selectedOptionId - The option that was ultimately selected
  * @returns Object with entropy metrics
@@ -170,7 +170,7 @@ export function calculateHoverMetrics(
 } {
   const optionIds = Object.keys(hoverTimes);
   const totalTime = Object.values(hoverTimes).reduce((sum, t) => sum + t, 0);
-  
+
   // Handle edge case of no hover data
   if (totalTime === 0 || optionIds.length === 0) {
     return {
@@ -181,25 +181,25 @@ export function calculateHoverMetrics(
       normalizedEntropy: 0,
     };
   }
-  
+
   // Calculate probabilities (normalized hover times)
-  const probabilities = optionIds.map(id => hoverTimes[id] / totalTime);
-  
+  const probabilities = optionIds.map((id) => hoverTimes[id] / totalTime);
+
   // Shannon entropy
   const entropy = calculateShannonEntropy(probabilities);
-  
+
   // Maximum possible entropy for this number of options
   const maxEntropy = Math.log2(optionIds.length);
-  
+
   // Normalized entropy (0-1 scale, 1 = maximum uncertainty)
   const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
-  
+
   // Build distractor hovers map (excluding selected option)
   const distractorHovers: Record<string, number> = {};
   let peakDistractorHover: string | null = null;
   let maxDistractorTime = 0;
   let totalDistractorTime = 0;
-  
+
   for (const [optionId, time] of Object.entries(hoverTimes)) {
     if (optionId !== selectedOptionId) {
       distractorHovers[optionId] = time;
@@ -210,10 +210,10 @@ export function calculateHoverMetrics(
       }
     }
   }
-  
+
   // Distractor hover ratio (time on wrong options / total time)
   const distractorHoverRatio = totalTime > 0 ? totalDistractorTime / totalTime : 0;
-  
+
   return {
     hoverEntropy: entropy,
     distractorHovers,
@@ -537,14 +537,15 @@ export function analyzeTrajectory(
   const reversals = countReversals(trajectory);
 
   // Calculate hover metrics if hover data provided
-  const hoverMetrics = options?.hoverTimes && options?.selectedOptionId
-    ? calculateHoverMetrics(options.hoverTimes, options.selectedOptionId)
-    : {
-        hoverEntropy: 0,
-        distractorHovers: {},
-        peakDistractorHover: null,
-        distractorHoverRatio: 0,
-      };
+  const hoverMetrics =
+    options?.hoverTimes && options?.selectedOptionId
+      ? calculateHoverMetrics(options.hoverTimes, options.selectedOptionId)
+      : {
+          hoverEntropy: 0,
+          distractorHovers: {},
+          peakDistractorHover: null,
+          distractorHoverRatio: 0,
+        };
 
   const baseMetrics = {
     mad,
@@ -588,7 +589,9 @@ export interface SerializedTrajectoryMetrics {
 /**
  * Serialize trajectory metrics for API submission
  */
-export function serializeTrajectoryMetrics(metrics: TrajectoryMetrics): SerializedTrajectoryMetrics {
+export function serializeTrajectoryMetrics(
+  metrics: TrajectoryMetrics
+): SerializedTrajectoryMetrics {
   return {
     mad: Math.round(metrics.mad * 1000) / 1000,
     auc: Math.round(metrics.auc * 1000) / 1000,

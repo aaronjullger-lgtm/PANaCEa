@@ -348,24 +348,26 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <h3 className="text-lg font-semibold text-center mb-4">14 PANCE Organ Systems</h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {PANCE_TOPIC_ABBREVIATIONS.filter((abbr: string) => abbr !== 'PRO').map((systemCode) => {
-                const systemName = ABBREVIATION_TO_TOPIC_MAP[systemCode];
+              {PANCE_TOPIC_ABBREVIATIONS.filter((abbr: string) => abbr !== 'PRO').map(
+                (systemCode) => {
+                  const systemName = ABBREVIATION_TO_TOPIC_MAP[systemCode];
 
-                return (
-                  <motion.button
-                    key={systemCode}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSystemSelect(systemCode as SystemCode)}
-                    className="bg-[var(--color-bg-primary)] hover:bg-amber-500/10 border-2 border-[var(--color-border)] hover:border-amber-500 rounded-xl p-4 transition-all text-center group"
-                  >
-                    <div className="text-2xl font-bold text-amber-500 mb-1">{systemCode}</div>
-                    <div className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] line-clamp-2">
-                      {systemName}
-                    </div>
-                  </motion.button>
-                );
-              })}
+                  return (
+                    <motion.button
+                      key={systemCode}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSystemSelect(systemCode as SystemCode)}
+                      className="bg-[var(--color-bg-primary)] hover:bg-amber-500/10 border-2 border-[var(--color-border)] hover:border-amber-500 rounded-xl p-4 transition-all text-center group"
+                    >
+                      <div className="text-2xl font-bold text-amber-500 mb-1">{systemCode}</div>
+                      <div className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] line-clamp-2">
+                        {systemName}
+                      </div>
+                    </motion.button>
+                  );
+                }
+              )}
             </div>
 
             <div className="pt-4 border-t border-[var(--color-border)] text-center space-y-2">

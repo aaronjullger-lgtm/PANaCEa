@@ -29,12 +29,15 @@ export const onRequestGet = publicEndpoint(SearchSchema, async (context) => {
   try {
     const query = validated.query?.q?.trim() || '';
     const limit = Math.min(Math.max(parseInt(validated.query?.limit || '10', 10), 1), 50);
-    
+
     // Parse content types to search
     let includeTypes: ('condition' | 'drug')[] = ['condition', 'drug'];
     if (validated.query?.type) {
       const types = validated.query.type.split(',').map((t) => t.trim().toLowerCase());
-      includeTypes = types.filter((t) => t === 'condition' || t === 'drug') as ('condition' | 'drug')[];
+      includeTypes = types.filter((t) => t === 'condition' || t === 'drug') as (
+        | 'condition'
+        | 'drug'
+      )[];
       if (includeTypes.length === 0) includeTypes = ['condition', 'drug'];
     }
 
@@ -46,7 +49,9 @@ export const onRequestGet = publicEndpoint(SearchSchema, async (context) => {
       headers: { 'Cache-Control': 'public, max-age=300' },
     };
   } catch (error) {
-    logger.error('Error searching content', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error searching content', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to search content');
   } finally {
     await safePrismaDisconnect(prisma);

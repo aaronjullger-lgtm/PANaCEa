@@ -88,8 +88,6 @@ async function main() {
 
         await prisma.preGeneratedQuestion.create({
           data: {
-
-
             id: uuidv4(),
             questionType: 'image',
             system: questionData.system,

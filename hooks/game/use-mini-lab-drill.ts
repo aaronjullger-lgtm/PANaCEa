@@ -1270,7 +1270,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       let cases: LabCase[] = [];
       try {
         const token = await getToken();
-        
+
         // Prevent request if token is not available
         if (!token) {
           console.warn('[MiniLab] No auth token available, skipping API call');

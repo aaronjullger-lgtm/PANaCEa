@@ -1,20 +1,20 @@
 /**
  * Workload Projection Hook (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Provides real-time workload simulation for different retention targets.
  * Visualizes the cost of high retention and highlights the CMRR point
  * (Compute Minimum Recommended Retention - optimal workload/knowledge ratio).
- * 
+ *
  * Reference: FSRS Paper - Users often set retention too high (95%+)
  * without understanding the exponential workload cost.
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  simulateRetentionWorkload, 
+import {
+  simulateRetentionWorkload,
   calculateRecommendedRetention,
   generateWorkloadChart,
-  type WorkloadSimulation 
+  type WorkloadSimulation,
 } from '../lib/fsrs/simulator';
 import { defaultParameters } from '../lib/fsrs';
 
@@ -41,7 +41,7 @@ export interface WorkloadProjectionResult {
 
 /**
  * Hook for real-time workload projection
- * 
+ *
  * @param config - Simulation configuration
  * @param autoRun - Whether to run simulation immediately
  * @returns Projection results with CMRR highlighting
@@ -70,19 +70,15 @@ export function useWorkloadProjection(
       const results = simulateRetentionWorkload({
         dailyNewCards: config.dailyNewCards,
         currentCardCount: config.currentCardCount || 0,
-        fsrsParameters: fsrsParams
+        fsrsParameters: fsrsParams,
       });
 
       setSimulations(results);
 
       // Find recommended retention based on available time
-      const recommendedResult = calculateRecommendedRetention(
-        results,
-        config.availableTimeMinutes
-      );
+      const recommendedResult = calculateRecommendedRetention(results, config.availableTimeMinutes);
 
       setRecommended(recommendedResult);
-
     } catch (err) {
       console.error('Workload simulation failed:', err);
       setError(err instanceof Error ? err.message : 'Simulation failed');
@@ -101,7 +97,7 @@ export function useWorkloadProjection(
     config.availableTimeMinutes,
     config.currentCardCount,
     fsrsParams,
-    autoRun
+    autoRun,
   ]);
 
   // Generate chart data with CMRR highlighting
@@ -125,9 +121,9 @@ export function useWorkloadProjection(
     }
 
     // Mark CMRR point
-    return data.map(point => ({
+    return data.map((point) => ({
       ...point,
-      isCMRR: Math.abs(point.retention - cmrrRetention) < 0.01
+      isCMRR: Math.abs(point.retention - cmrrRetention) < 0.01,
     }));
   }, [simulations]);
 
@@ -137,13 +133,13 @@ export function useWorkloadProjection(
     chartData,
     isLoading,
     error,
-    runSimulation
+    runSimulation,
   };
 }
 
 /**
  * Hook for comparing current vs. optimized parameters
- * 
+ *
  * Shows side-by-side workload projections to demonstrate
  * the efficiency gains from personalized parameters.
  */
@@ -167,39 +163,42 @@ export function useParameterComparison(
 
   // Calculate efficiency gain at target retention
   const efficiencyGain = useMemo(() => {
-    if (!optimizedParameters || 
-        defaultProjection.simulations.length === 0 || 
-        optimizedProjection.simulations.length === 0) {
+    if (
+      !optimizedParameters ||
+      defaultProjection.simulations.length === 0 ||
+      optimizedProjection.simulations.length === 0
+    ) {
       return 0;
     }
 
     // Compare at recommended retention (typically ~85%)
     const targetRetention = 0.85;
-    
+
     const defaultSim = defaultProjection.simulations.find(
-      s => Math.abs(s.retention - targetRetention) < 0.01
+      (s) => Math.abs(s.retention - targetRetention) < 0.01
     );
-    
+
     const optimizedSim = optimizedProjection.simulations.find(
-      s => Math.abs(s.retention - targetRetention) < 0.01
+      (s) => Math.abs(s.retention - targetRetention) < 0.01
     );
 
     if (!defaultSim || !optimizedSim) return 0;
 
-    const reduction = (defaultSim.dailyReviews - optimizedSim.dailyReviews) / defaultSim.dailyReviews;
+    const reduction =
+      (defaultSim.dailyReviews - optimizedSim.dailyReviews) / defaultSim.dailyReviews;
     return reduction * 100;
   }, [defaultProjection.simulations, optimizedProjection.simulations, optimizedParameters]);
 
   return {
     defaultProjection,
     optimizedProjection,
-    efficiencyGain
+    efficiencyGain,
   };
 }
 
 /**
  * Hook for live workload monitoring
- * 
+ *
  * Tracks current workload and warns if retention target
  * is unsustainable based on actual study time.
  */
@@ -216,13 +215,11 @@ export function useWorkloadMonitor(
   const projection = useWorkloadProjection({
     dailyNewCards,
     availableTimeMinutes: 120, // 2 hour threshold
-    customParameters: undefined
+    customParameters: undefined,
   });
 
   const currentSimulation = useMemo(() => {
-    return projection.simulations.find(
-      s => Math.abs(s.retention - targetRetention) < 0.01
-    );
+    return projection.simulations.find((s) => Math.abs(s.retention - targetRetention) < 0.01);
   }, [projection.simulations, targetRetention]);
 
   const currentWorkload = currentSimulation?.dailyReviews || 0;
@@ -236,14 +233,16 @@ export function useWorkloadMonitor(
   const timeToSteadyState = 90;
 
   let recommendation = 'Your current retention target is sustainable.';
-  
+
   if (isUnsustainable) {
     const suggestedRetention = projection.recommended?.retention || 0.85;
-    recommendation = `⚠️ Your workload is unsustainable (${timeMinutes.toFixed(0)} min/day). ` +
+    recommendation =
+      `⚠️ Your workload is unsustainable (${timeMinutes.toFixed(0)} min/day). ` +
       `Consider lowering retention to ${(suggestedRetention * 100).toFixed(0)}% ` +
       `to maintain ${projection.recommended?.timeMinutes.toFixed(0)} min/day.`;
   } else if (isExcessive) {
-    recommendation = `Your workload is high (${timeMinutes.toFixed(0)} min/day). ` +
+    recommendation =
+      `Your workload is high (${timeMinutes.toFixed(0)} min/day). ` +
       `Monitor your burnout risk and consider reducing new cards if needed.`;
   }
 
@@ -252,6 +251,6 @@ export function useWorkloadMonitor(
     isExcessive,
     isUnsustainable,
     timeToSteadyState,
-    recommendation
+    recommendation,
   };
 }

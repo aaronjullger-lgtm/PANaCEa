@@ -1,7 +1,7 @@
 /**
  * API Endpoint: /api/conditions/:identifier/extended
  *
- * Complex condition lookup (UUID ’ name ’ slug fallback) with core content
+ * Complex condition lookup (UUID ï¿½ name ï¿½ slug fallback) with core content
  * NOTE: Uses deprecated Condition table - should migrate to MedicalContent
  */
 

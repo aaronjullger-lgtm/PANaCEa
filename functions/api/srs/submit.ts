@@ -1,7 +1,7 @@
 /**
  * SRS Submit Review API
  * POST /api/srs/submit
- * 
+ *
  * Submit SRS review with FSRS v5 scheduling updates
  */
 
@@ -43,8 +43,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const { srsItemId, topicProgressId, questionId, rating, isCorrect, variantId } =
-      validated.body;
+    const { srsItemId, topicProgressId, questionId, rating, isCorrect, variantId } = validated.body;
 
     // Get user's database ID
     const user = await prisma.user.findUnique({

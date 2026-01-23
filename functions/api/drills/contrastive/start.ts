@@ -35,7 +35,10 @@ export const onRequestPost = authenticatedEndpoint(ContrastiveStartSchema, async
     logger.info('Contrastive drill started', { setId, userId: auth.userId });
     return { data: { set } };
   } catch (error) {
-    logger.error('Failed to start contrastive drill', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Failed to start contrastive drill', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw error;
   } finally {
     await safePrismaDisconnect(prisma);

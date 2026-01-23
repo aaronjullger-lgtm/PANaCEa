@@ -108,7 +108,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
         const p2 = points[i + 1];
         // Skip if required points are missing
         if (!p1 || !p2) continue;
-        
+
         const p0 = points[i - 1] ?? p1;
         const p3 = points[i + 2] ?? p2;
 

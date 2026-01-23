@@ -59,7 +59,10 @@ export const onRequestGet = authenticatedEndpoint(SessionGetSchema, async (conte
       mode,
     });
 
-    logger.info('Session questions fetched (GET)', { userId: auth.userId, count: result.questions?.length || 0 });
+    logger.info('Session questions fetched (GET)', {
+      userId: auth.userId,
+      count: result.questions?.length || 0,
+    });
 
     return { data: result };
   } catch (error) {
@@ -95,7 +98,10 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       count: Math.min(validated.body.count || 10, 50),
     });
 
-    logger.info('Session questions fetched (POST)', { userId: auth.userId, count: result.questions?.length || 0 });
+    logger.info('Session questions fetched (POST)', {
+      userId: auth.userId,
+      count: result.questions?.length || 0,
+    });
 
     return { data: result };
   } catch (error) {

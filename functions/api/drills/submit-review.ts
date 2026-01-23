@@ -23,7 +23,12 @@ import {
   updateTimingAggregates,
 } from '../../../lib/services/userStatisticsService';
 import { z } from 'zod';
-import { type TelemetryData, isTelemetryData, detectRapidGuess, type QuestionType } from '../../../types/telemetry';
+import {
+  type TelemetryData,
+  isTelemetryData,
+  detectRapidGuess,
+  type QuestionType,
+} from '../../../types/telemetry';
 
 /**
  * Question data structure from PreGeneratedQuestion.questionData field
@@ -96,31 +101,47 @@ function findSelectedOption(
 }
 
 // Zod schema for TelemetryData (Phase 3: Telemetry Injection)
-const TelemetrySchema = z.object({
-  duration_ms: z.number().int().min(0),
-  time_to_first_interaction_ms: z.number().int().min(0).nullable(),
-  rapid_guess: z.boolean(),
-  question_type: z.enum(['vignette', 'recall', 'image', 'rapid_recall', 'unknown']),
-  mvrt_threshold_ms: z.number().int().min(0),
-  question_displayed_at: z.string(),
-  answer_submitted_at: z.string(),
-  answer_changes: z.number().int().min(0),
-  hint_viewed: z.boolean(),
-  hint_view_duration_ms: z.number().int().min(0).nullable(),
-  interactions: z.array(z.object({
-    type: z.enum(['click', 'hover', 'scroll', 'keypress', 'option_select', 'hint_view', 'explanation_expand']),
-    timestamp_ms: z.number().int().min(0),
-    target: z.string().optional(),
-  })).optional(),
-  session_id: z.string().optional(),
-  device_info: z.object({
-    viewport_width: z.number().int().min(0),
-    viewport_height: z.number().int().min(0),
-    device_pixel_ratio: z.number().min(0),
-    is_touch_device: z.boolean(),
-    user_agent_short: z.string().optional(),
-  }).optional(),
-}).strict();
+const TelemetrySchema = z
+  .object({
+    duration_ms: z.number().int().min(0),
+    time_to_first_interaction_ms: z.number().int().min(0).nullable(),
+    rapid_guess: z.boolean(),
+    question_type: z.enum(['vignette', 'recall', 'image', 'rapid_recall', 'unknown']),
+    mvrt_threshold_ms: z.number().int().min(0),
+    question_displayed_at: z.string(),
+    answer_submitted_at: z.string(),
+    answer_changes: z.number().int().min(0),
+    hint_viewed: z.boolean(),
+    hint_view_duration_ms: z.number().int().min(0).nullable(),
+    interactions: z
+      .array(
+        z.object({
+          type: z.enum([
+            'click',
+            'hover',
+            'scroll',
+            'keypress',
+            'option_select',
+            'hint_view',
+            'explanation_expand',
+          ]),
+          timestamp_ms: z.number().int().min(0),
+          target: z.string().optional(),
+        })
+      )
+      .optional(),
+    session_id: z.string().optional(),
+    device_info: z
+      .object({
+        viewport_width: z.number().int().min(0),
+        viewport_height: z.number().int().min(0),
+        device_pixel_ratio: z.number().min(0),
+        is_touch_device: z.boolean(),
+        user_agent_short: z.string().optional(),
+      })
+      .optional(),
+  })
+  .strict();
 
 // Define Zod schema for request validation
 const DrillSubmitReviewSchema = z.object({
@@ -299,7 +320,9 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
       await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
     } catch (statsError) {
-      logger.warn('Failed to update user statistics after review', { error: statsError instanceof Error ? statsError.message : String(statsError) });
+      logger.warn('Failed to update user statistics after review', {
+        error: statsError instanceof Error ? statsError.message : String(statsError),
+      });
     }
 
     // Phase 3: Create QuestionAttempt record with behavioral telemetry
@@ -307,10 +330,10 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
     try {
       // Determine effective duration - prefer telemetry if provided, fallback to timeSpentMs
       const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
-      
+
       // Check for rapid guess using telemetry data or fallback detection
-      const isRapidGuess = telemetry?.rapid_guess ?? (numericTime < 1500);
-      
+      const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 1500;
+
       const attemptRecord = await prisma.questionAttempt.create({
         data: {
           userId,
@@ -319,49 +342,55 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
           isCorrect,
           // Phase 3: Behavioral telemetry fields
           durationMs: effectiveDurationMs,
-          telemetryJson: telemetry ? {
-            ...telemetry,
-            // Add server-side computed fields
-            server_computed: {
-              par_time_ms: parTimeMs,
-              latency_ratio: effectiveDurationMs / parTimeMs,
-              implicit_rating: rating,
-              implicit_confidence: implicitResult.confidence,
-              circadian_phase: circadianContext.circadianPhase,
-              is_rapid_guess: isRapidGuess,
-            },
-          } : {
-            // Minimal telemetry when client doesn't send full data
-            duration_ms: numericTime,
-            rapid_guess: isRapidGuess,
-            question_type: 'unknown' as const,
-            mvrt_threshold_ms: 2000,
-            question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
-            answer_submitted_at: new Date().toISOString(),
-            answer_changes: answerSwitches ?? 0,
-            hint_viewed: false,
-            time_to_first_interaction_ms: timeToFirstClick ?? null,
-            hint_view_duration_ms: null,
-            server_computed: {
-              par_time_ms: parTimeMs,
-              latency_ratio: numericTime / parTimeMs,
-              implicit_rating: rating,
-              implicit_confidence: implicitResult.confidence,
-              circadian_phase: circadianContext.circadianPhase,
-              is_rapid_guess: isRapidGuess,
-            },
-          },
+          telemetryJson: telemetry
+            ? {
+                ...telemetry,
+                // Add server-side computed fields
+                server_computed: {
+                  par_time_ms: parTimeMs,
+                  latency_ratio: effectiveDurationMs / parTimeMs,
+                  implicit_rating: rating,
+                  implicit_confidence: implicitResult.confidence,
+                  circadian_phase: circadianContext.circadianPhase,
+                  is_rapid_guess: isRapidGuess,
+                },
+              }
+            : {
+                // Minimal telemetry when client doesn't send full data
+                duration_ms: numericTime,
+                rapid_guess: isRapidGuess,
+                question_type: 'unknown' as const,
+                mvrt_threshold_ms: 2000,
+                question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
+                answer_submitted_at: new Date().toISOString(),
+                answer_changes: answerSwitches ?? 0,
+                hint_viewed: false,
+                time_to_first_interaction_ms: timeToFirstClick ?? null,
+                hint_view_duration_ms: null,
+                server_computed: {
+                  par_time_ms: parTimeMs,
+                  latency_ratio: numericTime / parTimeMs,
+                  implicit_rating: rating,
+                  implicit_confidence: implicitResult.confidence,
+                  circadian_phase: circadianContext.circadianPhase,
+                  is_rapid_guess: isRapidGuess,
+                },
+              },
         },
       });
       questionAttemptId = attemptRecord.id;
-      
+
       // Log rapid guess detection for analytics
       if (isRapidGuess) {
-        logger.info(`Rapid guess detected: questionId=${questionId}, duration=${effectiveDurationMs}ms, threshold=${telemetry?.mvrt_threshold_ms ?? 2000}ms`);
+        logger.info(
+          `Rapid guess detected: questionId=${questionId}, duration=${effectiveDurationMs}ms, threshold=${telemetry?.mvrt_threshold_ms ?? 2000}ms`
+        );
       }
     } catch (attemptError) {
       // Don't fail the request if QuestionAttempt creation fails
-      logger.warn('Failed to create QuestionAttempt record:', { error: attemptError instanceof Error ? attemptError.message : String(attemptError) });
+      logger.warn('Failed to create QuestionAttempt record:', {
+        error: attemptError instanceof Error ? attemptError.message : String(attemptError),
+      });
     }
 
     // If question has conditionId, also update UserProgress with review history
@@ -416,18 +445,22 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         // Propagate recall to semantic siblings (Phase 2: KAR3L)
         try {
           const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
-        // Store boost records for future application (logged for now)
-        if (siblingBoosts.length > 0) {
-          logger.info(
-            `KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings of ${question.conditionId}`
-          );
-        }
+          // Store boost records for future application (logged for now)
+          if (siblingBoosts.length > 0) {
+            logger.info(
+              `KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings of ${question.conditionId}`
+            );
+          }
         } catch (siblingError) {
           // Don't fail if sibling propagation fails
-          logger.warn('KAR3L propagation error:', { error: siblingError instanceof Error ? siblingError.message : String(siblingError) });
+          logger.warn('KAR3L propagation error:', {
+            error: siblingError instanceof Error ? siblingError.message : String(siblingError),
+          });
         }
       } catch (progressError) {
-        logger.warn('Failed to update UserProgress:', { error: progressError instanceof Error ? progressError.message : String(progressError) });
+        logger.warn('Failed to update UserProgress:', {
+          error: progressError instanceof Error ? progressError.message : String(progressError),
+        });
         // Don't fail the entire request if progress update fails
       }
     }
@@ -498,7 +531,9 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
           });
         }
       } catch (confusionError) {
-        logger.warn('Failed to record confusion pair', { error: confusionError instanceof Error ? confusionError.message : String(confusionError) });
+        logger.warn('Failed to record confusion pair', {
+          error: confusionError instanceof Error ? confusionError.message : String(confusionError),
+        });
       }
     }
 

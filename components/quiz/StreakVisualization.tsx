@@ -36,9 +36,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
     if (!firstRecord) {
       return { segments: [], stats: { maxStreak: 0, avgStreak: 0, totalStreaks: 0 } };
     }
-    let currentType: 'correct' | 'incorrect' = firstRecord.isCorrect
-      ? 'correct'
-      : 'incorrect';
+    let currentType: 'correct' | 'incorrect' = firstRecord.isCorrect ? 'correct' : 'incorrect';
     let currentCount = 1;
     let startIndex = 0;
 

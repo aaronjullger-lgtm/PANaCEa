@@ -1,6 +1,6 @@
 /**
  * FSRS Optimizer UI Component (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Provides user interface for running client-side FSRS parameter optimization.
  * Shows before/after parameter comparison and efficiency gains.
  */
@@ -13,7 +13,7 @@ import {
   saveOptimizedParameters,
   getOptimizationStatus,
   type OptimizationResult,
-  type OptimizationProgress
+  type OptimizationProgress,
 } from '../../services/optimizer/fsrsOptimizer';
 
 export const FSRSOptimizer: React.FC = () => {
@@ -54,7 +54,6 @@ export const FSRSOptimizer: React.FC = () => {
       setResult(optimizationResult);
       setLastOptimized(new Date());
       setProgress(null);
-
     } catch (err) {
       console.error('Optimization failed:', err);
       setError(err instanceof Error ? err.message : 'Optimization failed');
@@ -76,8 +75,8 @@ export const FSRSOptimizer: React.FC = () => {
             </h3>
           </div>
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-            Personalizes your spacing algorithm based on your memory patterns. 
-            Default parameters are 20-30% less efficient than optimized ones.
+            Personalizes your spacing algorithm based on your memory patterns. Default parameters
+            are 20-30% less efficient than optimized ones.
           </p>
         </div>
 
@@ -108,9 +107,7 @@ export const FSRSOptimizer: React.FC = () => {
         ) : (
           <>
             <Play className="w-4 h-4" />
-            <span>
-              {lastOptimized ? 'Re-Optimize Algorithm' : 'Optimize Algorithm'}
-            </span>
+            <span>{lastOptimized ? 'Re-Optimize Algorithm' : 'Optimize Algorithm'}</span>
           </>
         )}
       </button>
@@ -120,9 +117,7 @@ export const FSRSOptimizer: React.FC = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-[var(--color-text-secondary)]">{progress.message}</span>
-            <span className="font-mono text-[var(--color-text-primary)]">
-              {progress.progress}%
-            </span>
+            <span className="font-mono text-[var(--color-text-primary)]">{progress.progress}%</span>
           </div>
           <div className="w-full h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
             <div
@@ -139,9 +134,7 @@ export const FSRSOptimizer: React.FC = () => {
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-green-400 mb-2">
-                Optimization Complete!
-              </p>
+              <p className="text-sm font-medium text-green-400 mb-2">Optimization Complete!</p>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <div className="text-[var(--color-text-secondary)]">Efficiency Gain</div>
@@ -173,12 +166,8 @@ export const FSRSOptimizer: React.FC = () => {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-400 mb-1">
-                Optimization Failed
-              </p>
-              <p className="text-xs text-[var(--color-text-secondary)]">
-                {error}
-              </p>
+              <p className="text-sm font-medium text-red-400 mb-1">Optimization Failed</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">{error}</p>
             </div>
           </div>
         </div>
@@ -188,8 +177,8 @@ export const FSRSOptimizer: React.FC = () => {
       {!isOptimizing && !result && !error && (
         <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
           <p className="text-xs text-blue-400">
-            ℹ️ Requires at least 50 reviews across 20+ unique questions. 
-            Optimization takes 10-30 seconds and runs client-side using WebAssembly.
+            ℹ️ Requires at least 50 reviews across 20+ unique questions. Optimization takes 10-30
+            seconds and runs client-side using WebAssembly.
           </p>
         </div>
       )}

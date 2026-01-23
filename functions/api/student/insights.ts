@@ -80,13 +80,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Calculate metrics
     const totalQuestions = records.length;
-    const correctAnswers = records.filter((r: typeof records[0]) => r.isCorrect).length;
+    const correctAnswers = records.filter((r: (typeof records)[0]) => r.isCorrect).length;
     const accuracy = (correctAnswers / totalQuestions) * 100;
 
     // Group by system
     const systemPerformance: Record<string, { total: number; correct: number; accuracy: number }> =
       {};
-    records.forEach((record: typeof records[0]) => {
+    records.forEach((record: (typeof records)[0]) => {
       if (!systemPerformance[record.system]) {
         systemPerformance[record.system] = { total: 0, correct: 0, accuracy: 0 };
       }
@@ -135,11 +135,15 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     const recentAccuracy =
       recentRecords.length > 0
-        ? (recentRecords.filter((r: typeof recentRecords[0]) => r.isCorrect).length / recentRecords.length) * 100
+        ? (recentRecords.filter((r: (typeof recentRecords)[0]) => r.isCorrect).length /
+            recentRecords.length) *
+          100
         : 0;
     const olderAccuracy =
       olderRecords.length > 0
-        ? (olderRecords.filter((r: typeof olderRecords[0]) => r.isCorrect).length / olderRecords.length) * 100
+        ? (olderRecords.filter((r: (typeof olderRecords)[0]) => r.isCorrect).length /
+            olderRecords.length) *
+          100
         : 0;
 
     const trend = recentAccuracy - olderAccuracy;
@@ -179,7 +183,8 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Time optimization
     const avgTimePerQuestion =
-      records.reduce((sum: number, r: typeof records[0]) => sum + Number(r.timeSpent), 0) / records.length;
+      records.reduce((sum: number, r: (typeof records)[0]) => sum + Number(r.timeSpent), 0) /
+      records.length;
     const timeOptimization =
       avgTimePerQuestion > 120
         ? "You're taking time to think - good! But try to improve speed for exam conditions"

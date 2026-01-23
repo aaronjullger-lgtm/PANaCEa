@@ -153,11 +153,13 @@ function getPriority(
 }
 
 const ContentAuditSchema = z.object({
-  query: z.object({
-    system: z.string().optional(),
-    limit: z.string().optional(),
-    includeComplete: z.string().optional(),
-  }).optional(),
+  query: z
+    .object({
+      system: z.string().optional(),
+      limit: z.string().optional(),
+      includeComplete: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -174,7 +176,13 @@ export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (con
       select: { role: true, id: true },
     });
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && user.role !== 'admin' && user.role !== 'superadmin')) {
+    if (
+      !user ||
+      (user.role !== 'ADMIN' &&
+        user.role !== 'SUPERADMIN' &&
+        user.role !== 'admin' &&
+        user.role !== 'superadmin')
+    ) {
       logger.warn('Non-admin attempted content audit', {
         userId: auth.userId,
         role: user?.role,

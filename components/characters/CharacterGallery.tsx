@@ -83,7 +83,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
       const timeoutId = setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
       return () => clearTimeout(timeoutId);
     }
-    
+
     setProgress(updatedProgress);
     saveOrganProgress(updatedProgress);
     return undefined;

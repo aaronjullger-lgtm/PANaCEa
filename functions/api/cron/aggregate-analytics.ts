@@ -5,7 +5,11 @@
  * Called by: Cloudflare Scheduled Handler at 2 AM UTC
  */
 
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -91,14 +95,26 @@ export async function onRequestPost(context: any) {
       });
 
       // Define attempt type for type safety
-      type AttemptRecord = { isCorrect: boolean; timeSpentMs: number | null; system: string | null };
-      
+      type AttemptRecord = {
+        isCorrect: boolean;
+        timeSpentMs: number | null;
+        system: string | null;
+      };
+
       const totalAttempts = attempts.length;
       const correctAttempts = attempts.filter((a: AttemptRecord) => a.isCorrect).length;
-      const avgTime = attempts.reduce((sum: number, a: AttemptRecord) => sum + (a.timeSpentMs || 0), 0) / totalAttempts;
+      const avgTime =
+        attempts.reduce((sum: number, a: AttemptRecord) => sum + (a.timeSpentMs || 0), 0) /
+        totalAttempts;
 
       // Systems studied
-      const systems = [...new Set(attempts.map((a: AttemptRecord) => a.system).filter((s: string | null): s is string => Boolean(s)))];
+      const systems = [
+        ...new Set(
+          attempts
+            .map((a: AttemptRecord) => a.system)
+            .filter((s: string | null): s is string => Boolean(s))
+        ),
+      ];
 
       // Upsert daily analytics
       await prisma.sessionAnalytics.upsert({

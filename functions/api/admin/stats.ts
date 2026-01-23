@@ -21,11 +21,11 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/admin/stats');
-  
+
   // If no DATABASE_URL, return placeholder data
   if (!env.DATABASE_URL) {
     logger.warn('Database not configured', { userId: auth.userId });
-    
+
     return {
       data: {
         success: true,
@@ -117,8 +117,8 @@ export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (conte
 
     // Format popular systems
     const popularSystems = systemStats
-      .filter((s: typeof systemStats[0]) => s.system)
-      .map((s: typeof systemStats[0]) => ({
+      .filter((s: (typeof systemStats)[0]) => s.system)
+      .map((s: (typeof systemStats)[0]) => ({
         system: s.system,
         count: s._count.id,
       }));

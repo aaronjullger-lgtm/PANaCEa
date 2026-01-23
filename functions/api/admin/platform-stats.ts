@@ -18,11 +18,13 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { isAdmin, type UserRole } from '../_shared/rbac';
 
 const PlatformStatsSchema = z.object({
-  query: z.object({
-    start: z.string().optional(),
-    end: z.string().optional(),
-    limit: z.string().optional(),
-  }).optional(),
+  query: z
+    .object({
+      start: z.string().optional(),
+      end: z.string().optional(),
+      limit: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -85,20 +87,41 @@ export const onRequestGet = authenticatedEndpoint(PlatformStatsSchema, async (co
       stats.length > 0
         ? {
             totalDays: stats.length,
-            avgDAU: Math.round(stats.reduce((sum: number, s: typeof stats[0]) => sum + s.dau, 0) / stats.length),
-            avgWAU: Math.round(stats.reduce((sum: number, s: typeof stats[0]) => sum + s.wau, 0) / stats.length),
-            avgMAU: Math.round(stats.reduce((sum: number, s: typeof stats[0]) => sum + s.mau, 0) / stats.length),
-            totalQuestionsAnswered: stats.reduce((sum: number, s: typeof stats[0]) => sum + s.questionsAnswered, 0),
+            avgDAU: Math.round(
+              stats.reduce((sum: number, s: (typeof stats)[0]) => sum + s.dau, 0) / stats.length
+            ),
+            avgWAU: Math.round(
+              stats.reduce((sum: number, s: (typeof stats)[0]) => sum + s.wau, 0) / stats.length
+            ),
+            avgMAU: Math.round(
+              stats.reduce((sum: number, s: (typeof stats)[0]) => sum + s.mau, 0) / stats.length
+            ),
+            totalQuestionsAnswered: stats.reduce(
+              (sum: number, s: (typeof stats)[0]) => sum + s.questionsAnswered,
+              0
+            ),
             avgAccuracy: stats
-              .filter((s: typeof stats[0]) => s.averageAccuracy !== null)
-              .reduce((sum: number, s: typeof stats[0], _: number, arr: typeof stats) => sum + Number(s.averageAccuracy) / arr.length, 0),
-            totalNewUsers: stats.reduce((sum: number, s: typeof stats[0]) => sum + s.newUsers, 0),
+              .filter((s: (typeof stats)[0]) => s.averageAccuracy !== null)
+              .reduce(
+                (sum: number, s: (typeof stats)[0], _: number, arr: typeof stats) =>
+                  sum + Number(s.averageAccuracy) / arr.length,
+                0
+              ),
+            totalNewUsers: stats.reduce((sum: number, s: (typeof stats)[0]) => sum + s.newUsers, 0),
             avgRetention7Day: stats
-              .filter((s: typeof stats[0]) => s.retention7Day !== null)
-              .reduce((sum: number, s: typeof stats[0], _: number, arr: typeof stats) => sum + Number(s.retention7Day) / arr.length, 0),
+              .filter((s: (typeof stats)[0]) => s.retention7Day !== null)
+              .reduce(
+                (sum: number, s: (typeof stats)[0], _: number, arr: typeof stats) =>
+                  sum + Number(s.retention7Day) / arr.length,
+                0
+              ),
             avgRetention30Day: stats
-              .filter((s: typeof stats[0]) => s.retention30Day !== null)
-              .reduce((sum: number, s: typeof stats[0], _: number, arr: typeof stats) => sum + Number(s.retention30Day) / arr.length, 0),
+              .filter((s: (typeof stats)[0]) => s.retention30Day !== null)
+              .reduce(
+                (sum: number, s: (typeof stats)[0], _: number, arr: typeof stats) =>
+                  sum + Number(s.retention30Day) / arr.length,
+                0
+              ),
           }
         : null;
 

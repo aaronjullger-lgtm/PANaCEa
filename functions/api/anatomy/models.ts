@@ -9,7 +9,11 @@
 
 import { publicEndpoint } from '../_shared/middleware';
 import { withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -122,9 +126,9 @@ export const onRequestGet = publicEndpoint(AnatomyModelsSchema, async ({ env, va
 
     const total = (totalQuery as any[])[0]?.count || 0;
 
-    log.info('Anatomy models fetched successfully', { 
-      count: modelsQuery.length, 
-      total 
+    log.info('Anatomy models fetched successfully', {
+      count: modelsQuery.length,
+      total,
     });
 
     return {

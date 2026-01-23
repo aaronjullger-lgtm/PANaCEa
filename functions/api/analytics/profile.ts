@@ -78,208 +78,224 @@ export const onRequestGet = authenticatedEndpoint(
 /**
  * POST: Trigger profile recomputation from historical data
  */
-export const onRequestPost = authenticatedEndpoint(
-  profileRecomputeSchema,
-  async (context) => {
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(profileRecomputeSchema, async (context) => {
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-    try {
-      // const { force } = context.validated; // Optional: use force to bypass cache
+  try {
+    // const { force } = context.validated; // Optional: use force to bypass cache
 
-      const user = await prisma.user.findUnique({
-        where: { clerkId: context.auth.userId },
-        select: { id: true },
-      });
+    const user = await prisma.user.findUnique({
+      where: { clerkId: context.auth.userId },
+      select: { id: true },
+    });
 
-      if (!user) {
-        return {
-          status: 404,
-          error: 'User not found',
-        };
-      }
+    if (!user) {
+      return {
+        status: 404,
+        error: 'User not found',
+      };
+    }
 
-      // Get all sessions for this user
-      const allSessions = await prisma.studySession.findMany({
-        where: { userId: user.id },
-        orderBy: { startedAt: 'desc' },
-      });
+    // Get all sessions for this user
+    const allSessions = await prisma.studySession.findMany({
+      where: { userId: user.id },
+      orderBy: { startedAt: 'desc' },
+    });
 
-      if (allSessions.length === 0) {
-        return {
-          status: 200,
-          data: {
-            message: 'No sessions found to compute profile from',
-          },
-        };
-      }
-
-      // Compute aggregated metrics
-      const lifetimeQuestions = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.totalQuestions, 0);
-      const lifetimeCorrect = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.correctAnswers, 0);
-      const lifetimeAccuracy =
-        lifetimeQuestions > 0 ? (lifetimeCorrect / lifetimeQuestions) * 100 : 0;
-      const lifetimeStudyTimeMs = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.totalTimeMs, 0);
-      const bestEverStreak = Math.max(...allSessions.map((s: StudySessionData) => s.bestStreak));
-
-      // Compute system strengths/weaknesses
-      const systemStats: Record<string, { correct: number; total: number }> = {};
-      for (const session of allSessions) {
-        for (const system of session.systemsCovered) {
-          if (!systemStats[system]) {
-            systemStats[system] = { correct: 0, total: 0 };
-          }
-          // Approximate - we'd need per-question data for exact numbers
-          systemStats[system].total += Math.ceil(
-            session.totalQuestions / session.systemsCovered.length
-          );
-          systemStats[system].correct += Math.ceil(
-            session.correctAnswers / session.systemsCovered.length
-          );
-        }
-      }
-
-      const systemAccuracies = Object.entries(systemStats)
-        .filter(([_, stats]) => stats.total >= 10)
-        .map(([system, stats]) => ({
-          system,
-          accuracy: (stats.correct / stats.total) * 100,
-          total: stats.total,
-        }))
-        .sort((a, b) => b.accuracy - a.accuracy);
-
-      const strongestSystems = systemAccuracies
-        .filter((s) => s.accuracy >= 75)
-        .slice(0, 5)
-        .map((s) => s.system);
-
-      const weakestSystems = systemAccuracies
-        .filter((s) => s.accuracy < 60)
-        .slice(-5)
-        .map((s) => s.system);
-
-      // Compute average calibration score
-      const sessionsWithCalibration = allSessions.filter((s: StudySessionData) => s.calibrationScore !== null);
-      const avgCalibration =
-        sessionsWithCalibration.length > 0
-          ? sessionsWithCalibration.reduce((sum: number, s: StudySessionData) => sum + (s.calibrationScore || 0), 0) /
-            sessionsWithCalibration.length
-          : null;
-
-      // Compute answer change effectiveness
-      const totalHelpful = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.helpfulChanges, 0);
-      const totalHarmful = allSessions.reduce((sum: number, s: StudySessionData) => sum + s.harmfulChanges, 0);
-      const totalChanges = totalHelpful + totalHarmful;
-      const changeHelpfulRatio = totalChanges > 0 ? totalHelpful / totalChanges : null;
-
-      // Compute average session metrics
-      const avgSessionLength = Math.round(lifetimeQuestions / allSessions.length);
-
-      // Compute fatigue onset (where accuracy drops)
-      // This is a simplified calculation
-      const sessionsWithFatigue = allSessions.filter(
-        (s: StudySessionData) =>
-          s.early10Accuracy !== null &&
-          s.late10Accuracy !== null &&
-          s.early10Accuracy - (s.late10Accuracy || 0) > 10
-      );
-      const fatigueOnsetQuestion =
-        sessionsWithFatigue.length > 0
-          ? Math.round(avgSessionLength * 0.7) // Approximate
-          : null;
-
-      // Estimate PANCE score based on accuracy
-      // Very rough estimate: 60% → 400, 80% → 600, etc.
-      const estimatedScore = Math.round(200 + (lifetimeAccuracy / 100) * 600);
-
-      // Determine readiness level
-      let readinessLevel = 'not_ready';
-      if (lifetimeQuestions >= 1000 && lifetimeAccuracy >= 75) {
-        readinessLevel = 'ready';
-      } else if (lifetimeQuestions >= 500 && lifetimeAccuracy >= 70) {
-        readinessLevel = 'almost_ready';
-      } else if (lifetimeQuestions >= 200 && lifetimeAccuracy >= 60) {
-        readinessLevel = 'progressing';
-      }
-
-      // Generate recommendations
-      const recommendations: string[] = [];
-
-      if (weakestSystems.length > 0) {
-        recommendations.push(
-          `Focus on ${weakestSystems.slice(0, 3).join(', ')} - these are your weakest areas`
-        );
-      }
-
-      if (changeHelpfulRatio !== null && changeHelpfulRatio < 0.4) {
-        recommendations.push('Trust your first instinct more - you often change to wrong answers');
-      }
-
-      if (fatigueOnsetQuestion && fatigueOnsetQuestion < 30) {
-        recommendations.push(
-          `Consider shorter study sessions (~${fatigueOnsetQuestion} questions) for optimal retention`
-        );
-      }
-
-      if (lifetimeAccuracy < 70) {
-        recommendations.push('Review content in your weak areas before doing more questions');
-      }
-
-      // Upsert the profile
-      const updatedProfile = await prisma.userLearningProfile.upsert({
-        where: { userId: user.id },
-        create: {
-          id: `profile_${user.id}`,
-          userId: user.id,
-          lifetimeQuestions,
-          lifetimeCorrect,
-          lifetimeAccuracy,
-          lifetimeStudyTimeMs: BigInt(lifetimeStudyTimeMs),
-          bestEverStreak,
-          overallCalibrationScore: avgCalibration,
-          changeHelpfulRatio,
-          avgSessionLength,
-          fatigueOnsetQuestion,
-          strongestSystems,
-          weakestSystems,
-          estimatedScore,
-          readinessLevel,
-          recommendations,
-        },
-        update: {
-          lifetimeQuestions,
-          lifetimeCorrect,
-          lifetimeAccuracy,
-          lifetimeStudyTimeMs: BigInt(lifetimeStudyTimeMs),
-          bestEverStreak,
-          overallCalibrationScore: avgCalibration,
-          changeHelpfulRatio,
-          avgSessionLength,
-          fatigueOnsetQuestion,
-          strongestSystems,
-          weakestSystems,
-          estimatedScore,
-          readinessLevel,
-          recommendations,
-          updatedAt: new Date(),
-        },
-      });
-
+    if (allSessions.length === 0) {
       return {
         status: 200,
         data: {
-          success: true,
-          message: 'Profile recomputed from historical data',
-          profile: {
-            ...updatedProfile,
-            lifetimeStudyTimeMs: Number(updatedProfile.lifetimeStudyTimeMs),
-          },
+          message: 'No sessions found to compute profile from',
         },
       };
-    } finally {
-      await safePrismaDisconnect(prisma);
     }
+
+    // Compute aggregated metrics
+    const lifetimeQuestions = allSessions.reduce(
+      (sum: number, s: StudySessionData) => sum + (s.totalQuestions ?? 0),
+      0
+    );
+    const lifetimeCorrect = allSessions.reduce(
+      (sum: number, s: StudySessionData) => sum + (s.correctAnswers ?? 0),
+      0
+    );
+    const lifetimeAccuracy =
+      lifetimeQuestions > 0 ? (lifetimeCorrect / lifetimeQuestions) * 100 : 0;
+    const lifetimeStudyTimeMs = allSessions.reduce(
+      (sum: number, s: StudySessionData) => sum + (s.totalTimeMs ?? 0),
+      0
+    );
+    const bestEverStreak = Math.max(...allSessions.map((s: StudySessionData) => s.bestStreak ?? 0));
+
+    // Compute system strengths/weaknesses
+    const systemStats: Record<string, { correct: number; total: number }> = {};
+    for (const session of allSessions) {
+      for (const system of session.systemsCovered) {
+        if (!systemStats[system]) {
+          systemStats[system] = { correct: 0, total: 0 };
+        }
+        // Approximate - we'd need per-question data for exact numbers
+        systemStats[system].total += Math.ceil(
+          session.totalQuestions / session.systemsCovered.length
+        );
+        systemStats[system].correct += Math.ceil(
+          session.correctAnswers / session.systemsCovered.length
+        );
+      }
+    }
+
+    const systemAccuracies = Object.entries(systemStats)
+      .filter(([_, stats]) => stats.total >= 10)
+      .map(([system, stats]) => ({
+        system,
+        accuracy: (stats.correct / stats.total) * 100,
+        total: stats.total,
+      }))
+      .sort((a, b) => b.accuracy - a.accuracy);
+
+    const strongestSystems = systemAccuracies
+      .filter((s) => s.accuracy >= 75)
+      .slice(0, 5)
+      .map((s) => s.system);
+
+    const weakestSystems = systemAccuracies
+      .filter((s) => s.accuracy < 60)
+      .slice(-5)
+      .map((s) => s.system);
+
+    // Compute average calibration score
+    const sessionsWithCalibration = allSessions.filter(
+      (s: StudySessionData) => s.calibrationScore !== null
+    );
+    const avgCalibration =
+      sessionsWithCalibration.length > 0
+        ? sessionsWithCalibration.reduce(
+            (sum: number, s: StudySessionData) => sum + (s.calibrationScore || 0),
+            0
+          ) / sessionsWithCalibration.length
+        : null;
+
+    // Compute answer change effectiveness
+    const totalHelpful = allSessions.reduce(
+      (sum: number, s: StudySessionData) => sum + s.helpfulChanges,
+      0
+    );
+    const totalHarmful = allSessions.reduce(
+      (sum: number, s: StudySessionData) => sum + s.harmfulChanges,
+      0
+    );
+    const totalChanges = totalHelpful + totalHarmful;
+    const changeHelpfulRatio = totalChanges > 0 ? totalHelpful / totalChanges : null;
+
+    // Compute average session metrics
+    const avgSessionLength = Math.round(lifetimeQuestions / allSessions.length);
+
+    // Compute fatigue onset (where accuracy drops)
+    // This is a simplified calculation
+    const sessionsWithFatigue = allSessions.filter(
+      (s: StudySessionData) =>
+        s.early10Accuracy !== null &&
+        s.late10Accuracy !== null &&
+        s.early10Accuracy - (s.late10Accuracy || 0) > 10
+    );
+    const fatigueOnsetQuestion =
+      sessionsWithFatigue.length > 0
+        ? Math.round(avgSessionLength * 0.7) // Approximate
+        : null;
+
+    // Estimate PANCE score based on accuracy
+    // Very rough estimate: 60% → 400, 80% → 600, etc.
+    const estimatedScore = Math.round(200 + (lifetimeAccuracy / 100) * 600);
+
+    // Determine readiness level
+    let readinessLevel = 'not_ready';
+    if (lifetimeQuestions >= 1000 && lifetimeAccuracy >= 75) {
+      readinessLevel = 'ready';
+    } else if (lifetimeQuestions >= 500 && lifetimeAccuracy >= 70) {
+      readinessLevel = 'almost_ready';
+    } else if (lifetimeQuestions >= 200 && lifetimeAccuracy >= 60) {
+      readinessLevel = 'progressing';
+    }
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+
+    if (weakestSystems.length > 0) {
+      recommendations.push(
+        `Focus on ${weakestSystems.slice(0, 3).join(', ')} - these are your weakest areas`
+      );
+    }
+
+    if (changeHelpfulRatio !== null && changeHelpfulRatio < 0.4) {
+      recommendations.push('Trust your first instinct more - you often change to wrong answers');
+    }
+
+    if (fatigueOnsetQuestion && fatigueOnsetQuestion < 30) {
+      recommendations.push(
+        `Consider shorter study sessions (~${fatigueOnsetQuestion} questions) for optimal retention`
+      );
+    }
+
+    if (lifetimeAccuracy < 70) {
+      recommendations.push('Review content in your weak areas before doing more questions');
+    }
+
+    // Upsert the profile
+    const updatedProfile = await prisma.userLearningProfile.upsert({
+      where: { userId: user.id },
+      create: {
+        id: `profile_${user.id}`,
+        userId: user.id,
+        lifetimeQuestions,
+        lifetimeCorrect,
+        lifetimeAccuracy,
+        lifetimeStudyTimeMs: BigInt(lifetimeStudyTimeMs),
+        bestEverStreak,
+        overallCalibrationScore: avgCalibration,
+        changeHelpfulRatio,
+        avgSessionLength,
+        fatigueOnsetQuestion,
+        strongestSystems,
+        weakestSystems,
+        estimatedScore,
+        readinessLevel,
+        recommendations,
+      },
+      update: {
+        lifetimeQuestions,
+        lifetimeCorrect,
+        lifetimeAccuracy,
+        lifetimeStudyTimeMs: BigInt(lifetimeStudyTimeMs),
+        bestEverStreak,
+        overallCalibrationScore: avgCalibration,
+        changeHelpfulRatio,
+        avgSessionLength,
+        fatigueOnsetQuestion,
+        strongestSystems,
+        weakestSystems,
+        estimatedScore,
+        readinessLevel,
+        recommendations,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      status: 200,
+      data: {
+        success: true,
+        message: 'Profile recomputed from historical data',
+        profile: {
+          ...updatedProfile,
+          lifetimeStudyTimeMs: Number(updatedProfile.lifetimeStudyTimeMs),
+        },
+      },
+    };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});
 
 // Type for UserLearningProfile from Prisma
 interface UserLearningProfileData {
@@ -342,8 +358,10 @@ function computeInsights(
     const recent3 = recentSessions.slice(0, 3);
     const older3 = recentSessions.slice(3, 6);
 
-    const recentAvg = recent3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
-    const olderAvg = older3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
+    const recentAvg =
+      recent3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
+    const olderAvg =
+      older3.reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) / 3;
 
     if (recentAvg > olderAvg + 5) accuracyTrend = 'improving';
     else if (recentAvg < olderAvg - 5) accuracyTrend = 'declining';
@@ -364,7 +382,9 @@ function computeInsights(
   // Recent average accuracy
   const recentAvgAccuracy =
     recentSessions.length > 0
-      ? recentSessions.slice(0, 10).reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) /
+      ? recentSessions
+          .slice(0, 10)
+          .reduce((s: number, sess: StudySessionData) => s + (sess.accuracy ?? 0), 0) /
         Math.min(recentSessions.length, 10)
       : null;
 

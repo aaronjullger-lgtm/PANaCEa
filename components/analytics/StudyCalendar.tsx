@@ -351,7 +351,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({
 
   // Type-safe month name lookup
   const monthName = MONTH_NAMES[month];
-  
+
   return (
     <div className="flex-shrink-0">
       <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 text-center">

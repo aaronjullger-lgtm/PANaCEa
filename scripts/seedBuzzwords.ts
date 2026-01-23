@@ -110,9 +110,7 @@ async function main() {
       // Create new
       await prisma.buzzword.create({
         data: {
-
           id: uuidv4(),
-
 
           condition: condition,
           buzzword: entry.buzzword,

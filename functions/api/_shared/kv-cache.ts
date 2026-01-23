@@ -28,11 +28,7 @@ type KVNamespace = {
     options?: { expirationTtl?: number; expiration?: number; metadata?: any }
   ): Promise<void>;
   delete(key: string): Promise<void>;
-  list(options?: {
-    prefix?: string;
-    limit?: number;
-    cursor?: string;
-  }): Promise<{
+  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{
     keys: Array<{ name: string; expiration?: number; metadata?: any }>;
     list_complete: boolean;
     cursor?: string;

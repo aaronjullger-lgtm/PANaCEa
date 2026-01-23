@@ -168,7 +168,9 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => 
                 <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
                   Clinical Context
                 </h3>
-                <p className="text-[var(--color-text-primary)]">{String(currentCase.clinicalContext)}</p>
+                <p className="text-[var(--color-text-primary)]">
+                  {String(currentCase.clinicalContext)}
+                </p>
               </div>
             )}
             <div className="w-full max-w-4xl bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">

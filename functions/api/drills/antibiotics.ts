@@ -64,7 +64,7 @@ export const onRequestGet = publicEndpoint(
       }
 
       // Parse JSON fields (effective and resistant arrays)
-      const parsedGuidelines = allGuidelines.map((guideline) => ({
+      const parsedGuidelines = allGuidelines.map((guideline: any) => ({
         id: guideline.id,
         organism: guideline.organism,
         class: guideline.class,

@@ -7,7 +7,11 @@
  */
 
 import { z } from 'zod';
-import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from './_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  type EdgePrismaClient,
+} from './_shared/prisma-edge';
 import { publicEndpoint, authenticatedEndpoint, withCors } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 
@@ -27,9 +31,20 @@ const PostPoolStatsSchema = z.object({
 // ============================================================================
 
 const SYSTEMS = [
-  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 
-  'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 
-  'PSYCH', 'ID', 'GU',
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
 ];
 
 // ============================================================================
@@ -40,86 +55,80 @@ const SYSTEMS = [
  * GET /api/pool-stats
  * Returns pool health statistics (public endpoint for monitoring)
  */
-export const onRequestGet = publicEndpoint(
-  GetPoolStatsSchema,
-  async (context) => {
-    const log = createEndpointLogger('GET /api/pool-stats');
-    let prisma: EdgePrismaClient | null = null;
+export const onRequestGet = publicEndpoint(GetPoolStatsSchema, async (context) => {
+  const log = createEndpointLogger('GET /api/pool-stats');
+  let prisma: EdgePrismaClient | null = null;
 
-    try {
-      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  try {
+    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-      const stats = await Promise.all(
-        SYSTEMS.map(async (system) => {
-          const [total, unused] = await Promise.all([
-            prisma!.preGeneratedQuestion.count({ where: { system } }),
-            prisma!.preGeneratedQuestion.count({ where: { system, usedAt: null } }),
-          ]);
-          return { system, total, unused };
-        })
-      );
+    const stats = await Promise.all(
+      SYSTEMS.map(async (system) => {
+        const [total, unused] = await Promise.all([
+          prisma!.preGeneratedQuestion.count({ where: { system } }),
+          prisma!.preGeneratedQuestion.count({ where: { system, usedAt: null } }),
+        ]);
+        return { system, total, unused };
+      })
+    );
 
-      const totalQuestions = stats.reduce((s, x) => s + x.total, 0);
-      const totalUnused = stats.reduce((s, x) => s + x.unused, 0);
+    const totalQuestions = stats.reduce((s, x) => s + x.total, 0);
+    const totalUnused = stats.reduce((s, x) => s + x.unused, 0);
 
-      const health = totalUnused < 100 ? 'critical' : totalUnused < 500 ? 'warning' : 'healthy';
+    const health = totalUnused < 100 ? 'critical' : totalUnused < 500 ? 'warning' : 'healthy';
 
-      log.info('Pool stats retrieved', { 
-        health, 
-        totalQuestions, 
-        totalUnused 
-      });
+    log.info('Pool stats retrieved', {
+      health,
+      totalQuestions,
+      totalUnused,
+    });
 
-      return {
-        data: {
-          health,
-          totalQuestions,
-          totalUnused,
-          systems: stats,
-        },
-      };
-    } catch (error) {
-      log.error('Failed to get pool stats', error);
-      return { status: 500, error: 'Failed to get pool stats' };
-    } finally {
-      await safePrismaDisconnect(prisma);
-    }
+    return {
+      data: {
+        health,
+        totalQuestions,
+        totalUnused,
+        systems: stats,
+      },
+    };
+  } catch (error) {
+    log.error('Failed to get pool stats', error);
+    return { status: 500, error: 'Failed to get pool stats' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});
 
 /**
  * POST /api/pool-stats
  * Triggers batch generation for low systems (authenticated)
  */
-export const onRequestPost = authenticatedEndpoint(
-  PostPoolStatsSchema,
-  async (context) => {
-    const log = createEndpointLogger('POST /api/pool-stats', context.auth.userId);
-    const { system, count } = context.validated;
+export const onRequestPost = authenticatedEndpoint(PostPoolStatsSchema, async (context) => {
+  const log = createEndpointLogger('POST /api/pool-stats', context.auth.userId);
+  const { system, count } = context.validated;
 
-    try {
-      // In production, this would queue a background job
-      // For now, just acknowledge the request
-      log.info('Batch generation queued', { 
-        system: system || 'all', 
-        count,
-        requestedBy: context.auth.userId 
-      });
+  try {
+    // In production, this would queue a background job
+    // For now, just acknowledge the request
+    log.info('Batch generation queued', {
+      system: system || 'all',
+      count,
+      requestedBy: context.auth.userId,
+    });
 
-      return {
-        data: {
-          queued: true,
-          system: system || 'all',
-          count: count || 25,
-          message: 'Batch generation queued',
-        },
-      };
-    } catch (error) {
-      log.error('Failed to queue generation', error);
-      return { status: 500, error: 'Failed to queue generation' };
-    }
+    return {
+      data: {
+        queued: true,
+        system: system || 'all',
+        count: count || 25,
+        message: 'Batch generation queued',
+      },
+    };
+  } catch (error) {
+    log.error('Failed to queue generation', error);
+    return { status: 500, error: 'Failed to queue generation' };
   }
-);
+});
 
 /**
  * OPTIONS handler for CORS preflight

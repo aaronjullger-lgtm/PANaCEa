@@ -379,12 +379,16 @@ export async function getQuestion(
     verificationMode: 'quick', // Use quick mode for performance
   });
   const question = verifiedResult.question;
-  
+
   // Log verification status
   if (verifiedResult.verified) {
-    console.log(`[QuestionService] Question verified (${verifiedResult.verificationMode}, confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+    console.log(
+      `[QuestionService] Question verified (${verifiedResult.verificationMode}, confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
+    );
   } else {
-    console.warn(`[QuestionService] Question unverified after ${verifiedResult.attempts} attempts - serving best available`);
+    console.warn(
+      `[QuestionService] Question unverified after ${verifiedResult.attempts} attempts - serving best available`
+    );
   }
   console.timeEnd('[QuestionService] Gemini Gen + CoVe');
 
@@ -460,7 +464,9 @@ export async function getQuestionBatch(
 
     // If we got some but not all, supplement with generated ones using CoVe
     const needed = count - questions.length;
-    console.log(`[QuestionService] Pool had ${questions.length}, generating ${needed} more with CoVe`);
+    console.log(
+      `[QuestionService] Pool had ${questions.length}, generating ${needed} more with CoVe`
+    );
 
     const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
     const generatedQuestions: Question[] = [];
@@ -477,7 +483,9 @@ export async function getQuestionBatch(
 
         // Log verification status
         if (verifiedResult.verified) {
-          console.log(`[QuestionService] Batch question ${i + 1}/${needed} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+          console.log(
+            `[QuestionService] Batch question ${i + 1}/${needed} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
+          );
         }
 
         // Pearl Harvester: Extract and save clinical pearls
@@ -504,7 +512,9 @@ export async function getQuestionBatch(
       const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
       const generatedQuestions: Question[] = [];
 
-      console.log(`[QuestionService] Fallback: generating ${count} questions with CoVe verification`);
+      console.log(
+        `[QuestionService] Fallback: generating ${count} questions with CoVe verification`
+      );
       for (let i = 0; i < count; i++) {
         try {
           const verifiedResult = await fetchVerifiedQuestion({
@@ -517,7 +527,9 @@ export async function getQuestionBatch(
 
           // Log verification status
           if (verifiedResult.verified) {
-            console.log(`[QuestionService] Fallback question ${i + 1}/${count} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`);
+            console.log(
+              `[QuestionService] Fallback question ${i + 1}/${count} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
+            );
           }
         } catch (genError) {
           console.error('[QuestionService] Failed to generate verified question:', genError);

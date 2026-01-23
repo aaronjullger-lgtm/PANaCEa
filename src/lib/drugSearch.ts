@@ -202,17 +202,17 @@ async function ensureRegistryLoaded(): Promise<void> {
 function levenshtein(a: string, b: string): number {
   // Initialize DP matrix with proper row creation
   const dp: number[][] = [];
-  
+
   // Create all rows first
   for (let i = 0; i <= a.length; i++) {
     dp[i] = new Array(b.length + 1).fill(0);
   }
-  
+
   // Initialize first column
   for (let i = 0; i <= a.length; i++) {
     dp[i]![0] = i;
   }
-  
+
   // Initialize first row
   for (let j = 0; j <= b.length; j++) {
     dp[0]![j] = j;
@@ -224,14 +224,10 @@ function levenshtein(a: string, b: string): number {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       const row = dp[i]!;
       const prevRow = dp[i - 1]!;
-      row[j] = Math.min(
-        prevRow[j]! + 1,
-        row[j - 1]! + 1,
-        prevRow[j - 1]! + cost
-      );
+      row[j] = Math.min(prevRow[j]! + 1, row[j - 1]! + 1, prevRow[j - 1]! + cost);
     }
   }
-  
+
   return dp[a.length]![b.length]!;
 }
 

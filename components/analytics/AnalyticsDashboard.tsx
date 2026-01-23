@@ -309,8 +309,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* FSRS Calibration Progress - Epistemic Uncertainty UI */}
-          <CalibrationProgress 
-            current={performanceData.length} 
+          <CalibrationProgress
+            current={performanceData.length}
             target={CALIBRATION_THRESHOLD}
             showDetails={true}
           />
@@ -482,7 +482,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       labelStyle={chartTheme.tooltip.labelStyle}
                       formatter={(value: number | string | undefined, name?: string) => {
                         if (value === undefined) return ['—', name ?? ''];
-                        if (name === 'avgStability') return [typeof value === 'number' ? value.toFixed(2) : value, 'Stability'];
+                        if (name === 'avgStability')
+                          return [
+                            typeof value === 'number' ? value.toFixed(2) : value,
+                            'Stability',
+                          ];
                         return [value, name ?? ''];
                       }}
                     />
@@ -507,7 +511,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           {(() => {
                             const lastItem = stabilityTrendData[stabilityTrendData.length - 1];
                             const firstItem = stabilityTrendData[0];
-                            return lastItem && firstItem && lastItem.avgStability > firstItem.avgStability
+                            return lastItem &&
+                              firstItem &&
+                              lastItem.avgStability > firstItem.avgStability
                               ? 'increased'
                               : 'remained stable';
                           })()}
@@ -549,13 +555,17 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     height={60}
                   />
                   <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                  <Tooltip 
-                    formatter={(value: number | string | undefined, name?: string, props?: { payload?: TimeDatum }) => {
+                  <Tooltip
+                    formatter={(
+                      value: number | string | undefined,
+                      name?: string,
+                      props?: { payload?: TimeDatum }
+                    ) => {
                       if (value === undefined) return ['—', 'Avg time'];
                       const entry = props?.payload;
                       return [
                         `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
-                        'Avg time'
+                        'Avg time',
                       ];
                     }}
                   />

@@ -27,7 +27,7 @@ export type Breakpoint = keyof typeof BREAKPOINTS;
  */
 export function getCurrentBreakpoint(): Breakpoint | 'xs' {
   if (typeof window === 'undefined') return 'md'; // SSR fallback
-  
+
   const width = window.innerWidth;
   if (width >= BREAKPOINTS['2xl']) return '2xl';
   if (width >= BREAKPOINTS.xl) return 'xl';
@@ -75,19 +75,19 @@ export function useMediaQuery(breakpoint: Breakpoint): boolean {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(`(min-width: ${BREAKPOINTS[breakpoint]}px)`);
-    
+
     const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
       setMatches(e.matches);
     };
 
     handleChange(mediaQuery);
-    
+
     // Modern browsers
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
-    
+
     // Legacy browsers
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
@@ -165,8 +165,9 @@ export function getDeviceInfo(): DeviceInfo {
   const isMobileUA = /mobile|android|iphone|ipod/.test(ua);
   const isTabletUA = /tablet|ipad/.test(ua) || (isAndroid && !/mobile/.test(ua));
   const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   return {
@@ -191,16 +192,16 @@ export function useDeviceInfo(): DeviceInfo {
 
   useEffect(() => {
     const handleChange = () => setDeviceInfo(getDeviceInfo());
-    
+
     // Listen for orientation changes
     window.addEventListener('orientationchange', handleChange);
-    
+
     // Listen for reduced motion preference changes
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (motionQuery.addEventListener) {
       motionQuery.addEventListener('change', handleChange);
     }
-    
+
     return () => {
       window.removeEventListener('orientationchange', handleChange);
       if (motionQuery.removeEventListener) {
@@ -219,7 +220,15 @@ export function useDeviceInfo(): DeviceInfo {
 /**
  * Touch gesture types
  */
-export type GestureType = 'tap' | 'doubletap' | 'longpress' | 'swipeleft' | 'swiperight' | 'swipeup' | 'swipedown' | 'pinch';
+export type GestureType =
+  | 'tap'
+  | 'doubletap'
+  | 'longpress'
+  | 'swipeleft'
+  | 'swiperight'
+  | 'swipeup'
+  | 'swipedown'
+  | 'pinch';
 
 /**
  * Touch gesture event data
@@ -285,19 +294,36 @@ export function useGestures<T extends HTMLElement>(
     longPressTimer: null as NodeJS.Timeout | null,
   });
 
-  const emitGesture = useCallback((event: GestureEvent) => {
-    onGesture?.(event);
-    
-    switch (event.type) {
-      case 'swipeleft': onSwipeLeft?.(event); break;
-      case 'swiperight': onSwipeRight?.(event); break;
-      case 'swipeup': onSwipeUp?.(event); break;
-      case 'swipedown': onSwipeDown?.(event); break;
-      case 'tap': onTap?.(event); break;
-      case 'doubletap': onDoubleTap?.(event); break;
-      case 'longpress': onLongPress?.(event); break;
-    }
-  }, [onGesture, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onTap, onDoubleTap, onLongPress]);
+  const emitGesture = useCallback(
+    (event: GestureEvent) => {
+      onGesture?.(event);
+
+      switch (event.type) {
+        case 'swipeleft':
+          onSwipeLeft?.(event);
+          break;
+        case 'swiperight':
+          onSwipeRight?.(event);
+          break;
+        case 'swipeup':
+          onSwipeUp?.(event);
+          break;
+        case 'swipedown':
+          onSwipeDown?.(event);
+          break;
+        case 'tap':
+          onTap?.(event);
+          break;
+        case 'doubletap':
+          onDoubleTap?.(event);
+          break;
+        case 'longpress':
+          onLongPress?.(event);
+          break;
+      }
+    },
+    [onGesture, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onTap, onDoubleTap, onLongPress]
+  );
 
   useEffect(() => {
     const element = ref.current;
@@ -435,7 +461,7 @@ export function useSwipeNavigation(
 
     const handleTouchEnd = (e: TouchEvent) => {
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-      
+
       if (Math.abs(deltaX) > threshold) {
         if (deltaX > 0) {
           onSwipeRight?.();
@@ -496,14 +522,18 @@ export function getViewportInfo(): ViewportInfo {
   return {
     width: window.innerWidth,
     height: window.innerHeight,
-    safeAreaTop: parseInt(style.getPropertyValue('--sat') || '0', 10) || 
-                 parseInt(style.getPropertyValue('env(safe-area-inset-top)') || '0', 10),
-    safeAreaBottom: parseInt(style.getPropertyValue('--sab') || '0', 10) ||
-                    parseInt(style.getPropertyValue('env(safe-area-inset-bottom)') || '0', 10),
-    safeAreaLeft: parseInt(style.getPropertyValue('--sal') || '0', 10) ||
-                  parseInt(style.getPropertyValue('env(safe-area-inset-left)') || '0', 10),
-    safeAreaRight: parseInt(style.getPropertyValue('--sar') || '0', 10) ||
-                   parseInt(style.getPropertyValue('env(safe-area-inset-right)') || '0', 10),
+    safeAreaTop:
+      parseInt(style.getPropertyValue('--sat') || '0', 10) ||
+      parseInt(style.getPropertyValue('env(safe-area-inset-top)') || '0', 10),
+    safeAreaBottom:
+      parseInt(style.getPropertyValue('--sab') || '0', 10) ||
+      parseInt(style.getPropertyValue('env(safe-area-inset-bottom)') || '0', 10),
+    safeAreaLeft:
+      parseInt(style.getPropertyValue('--sal') || '0', 10) ||
+      parseInt(style.getPropertyValue('env(safe-area-inset-left)') || '0', 10),
+    safeAreaRight:
+      parseInt(style.getPropertyValue('--sar') || '0', 10) ||
+      parseInt(style.getPropertyValue('env(safe-area-inset-right)') || '0', 10),
     orientation: window.innerHeight > window.innerWidth ? 'portrait' : 'landscape',
     isKeyboardVisible: false, // Will be updated by hook
   };
@@ -601,12 +631,10 @@ export interface TouchButtonOptions {
 /**
  * Get touch-friendly button props
  */
-export function getTouchButtonProps(options: TouchButtonOptions = {}): React.HTMLAttributes<HTMLButtonElement> {
-  const {
-    minTouchTarget = 44,
-    hapticFeedback = true,
-    preventDoubleZoom = true,
-  } = options;
+export function getTouchButtonProps(
+  options: TouchButtonOptions = {}
+): React.HTMLAttributes<HTMLButtonElement> {
+  const { minTouchTarget = 44, hapticFeedback = true, preventDoubleZoom = true } = options;
 
   return {
     style: {
@@ -647,7 +675,7 @@ export function usePressable<T extends HTMLElement>(
     const handleStart = () => {
       setIsPressed(true);
       isLongPress.current = false;
-      
+
       if (onLongPress) {
         longPressTimer.current = setTimeout(() => {
           isLongPress.current = true;
@@ -662,7 +690,7 @@ export function usePressable<T extends HTMLElement>(
 
     const handleEnd = () => {
       setIsPressed(false);
-      
+
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
         longPressTimer.current = null;
@@ -808,7 +836,7 @@ export function usePullToRefresh(
 
       const currentY = e.touches[0].clientY;
       const distance = Math.max(0, (currentY - startY.current) * 0.5); // Dampen pull
-      
+
       if (distance > 0 && window.scrollY === 0) {
         e.preventDefault();
         setPullDistance(Math.min(distance, threshold * 1.5));
@@ -817,7 +845,7 @@ export function usePullToRefresh(
 
     const handleTouchEnd = async () => {
       if (!isPulling) return;
-      
+
       if (pullDistance >= threshold && !isRefreshing) {
         setIsRefreshing(true);
         try {
@@ -826,7 +854,7 @@ export function usePullToRefresh(
           setIsRefreshing(false);
         }
       }
-      
+
       setIsPulling(false);
       setPullDistance(0);
     };
@@ -842,5 +870,10 @@ export function usePullToRefresh(
     };
   }, [enabled, isPulling, isRefreshing, pullDistance, threshold, onRefresh]);
 
-  return { isPulling, isRefreshing, pullDistance, pullProgress: Math.min(pullDistance / threshold, 1) };
+  return {
+    isPulling,
+    isRefreshing,
+    pullDistance,
+    pullProgress: Math.min(pullDistance / threshold, 1),
+  };
 }

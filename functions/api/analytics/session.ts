@@ -174,30 +174,42 @@ export const onRequestGet = authenticatedEndpoint(
       const aggregateStats = {
         recentAvgAccuracy:
           recentSessions.length > 0
-            ? recentSessions.reduce((sum: number, s: typeof recentSessions[0]) => sum + s.accuracy, 0) / recentSessions.length
+            ? recentSessions.reduce(
+                (sum: number, s: (typeof recentSessions)[0]) => sum + s.accuracy,
+                0
+              ) / recentSessions.length
             : null,
         recentAvgQuestions:
           recentSessions.length > 0
             ? Math.round(
-                recentSessions.reduce((sum: number, s: typeof recentSessions[0]) => sum + s.totalQuestions, 0) /
-                  recentSessions.length
+                recentSessions.reduce(
+                  (sum: number, s: (typeof recentSessions)[0]) => sum + s.totalQuestions,
+                  0
+                ) / recentSessions.length
               )
             : null,
         recentAvgMomentum:
-          recentSessions.filter((s: typeof recentSessions[0]) => s.avgMomentum !== null).length > 0
+          recentSessions.filter((s: (typeof recentSessions)[0]) => s.avgMomentum !== null).length >
+          0
             ? recentSessions
-                .filter((s: typeof recentSessions[0]) => s.avgMomentum !== null)
-                .reduce((sum: number, s: typeof recentSessions[0]) => sum + (s.avgMomentum || 0), 0) /
-              recentSessions.filter((s: typeof recentSessions[0]) => s.avgMomentum !== null).length
+                .filter((s: (typeof recentSessions)[0]) => s.avgMomentum !== null)
+                .reduce(
+                  (sum: number, s: (typeof recentSessions)[0]) => sum + (s.avgMomentum || 0),
+                  0
+                ) /
+              recentSessions.filter((s: (typeof recentSessions)[0]) => s.avgMomentum !== null)
+                .length
             : null,
-        accuracyTrend: calculateTrend(recentSessions.map((s: typeof recentSessions[0]) => s.accuracy)),
+        accuracyTrend: calculateTrend(
+          recentSessions.map((s: (typeof recentSessions)[0]) => s.accuracy)
+        ),
         totalSessions: sessions.length,
       };
 
       return {
         status: 200,
         data: {
-          sessions: sessions.map((s: typeof sessions[0]) => ({
+          sessions: sessions.map((s: (typeof sessions)[0]) => ({
             ...s,
             // Convert BigInt to number for JSON serialization
             lifetimeStudyTimeMs: undefined,

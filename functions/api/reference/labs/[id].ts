@@ -1,14 +1,18 @@
 /**
  * Single Lab Test Reference API
- * 
+ *
  * GET /api/reference/labs/:id - Fetch a single lab test by ID
- * 
+ *
  * Security: Sprint 3 - Authenticated endpoint with secure middleware
  */
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 // ============================================================================

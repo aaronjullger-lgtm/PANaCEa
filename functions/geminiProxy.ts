@@ -108,7 +108,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
     if (!rateLimitResult.allowed) {
       // Add CORS headers to rate limit response
-      const rateLimitResponse = (rateLimitResult as { allowed: false; response: Response }).response;
+      const rateLimitResponse = (rateLimitResult as { allowed: false; response: Response })
+        .response;
       const newHeaders = new Headers(rateLimitResponse.headers);
       newHeaders.set('Access-Control-Allow-Origin', '*');
       return new Response(rateLimitResponse.body, {

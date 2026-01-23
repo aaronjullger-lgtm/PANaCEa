@@ -1219,17 +1219,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         }`}
                       >
                         <div className="font-semibold">{system}</div>
-                          <div className="text-xs opacity-75 truncate">
-                            {((): string => {
-                              const label = ABBREVIATION_TO_TOPIC_MAP[system];
-                              if (label === undefined) {
-                                return String(system);
-                              }
-                              return label
-                                .replace(' System', '')
-                                .replace('Psychiatry/Behavioral Science', 'Psychiatry');
-                            })()}
-                          </div>
+                        <div className="text-xs opacity-75 truncate">
+                          {((): string => {
+                            const label = ABBREVIATION_TO_TOPIC_MAP[system];
+                            if (label === undefined) {
+                              return String(system);
+                            }
+                            return label
+                              .replace(' System', '')
+                              .replace('Psychiatry/Behavioral Science', 'Psychiatry');
+                          })()}
+                        </div>
                       </button>
                     ))}
                   </div>

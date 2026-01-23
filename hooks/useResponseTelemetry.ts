@@ -42,7 +42,12 @@ interface InteractionEvent {
 }
 
 export interface CRPLTelemetryHook {
-  recordInteraction: (type: 'click' | 'hover' | 'focus', targetId: string, x?: number, y?: number) => void;
+  recordInteraction: (
+    type: 'click' | 'hover' | 'focus',
+    targetId: string,
+    x?: number,
+    y?: number
+  ) => void;
   recordHover: (answerId: string, durationMs: number) => void;
   recordMouseMove: (x: number, y: number) => void;
   recordAnswerChange: () => void;
@@ -70,11 +75,7 @@ export interface CRPLTelemetryHook {
  * ```
  */
 export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemetryHook {
-  const {
-    questionDisplayTime,
-    mvrtThresholdMs = 500,
-    correctAnswerId,
-  } = options;
+  const { questionDisplayTime, mvrtThresholdMs = 500, correctAnswerId } = options;
 
   const interactions = useRef<InteractionEvent[]>([]);
   const hoverMap = useRef<Record<string, number>>({});
@@ -86,27 +87,35 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
   /**
    * Record a generic interaction event (click, hover, focus)
    */
-  const recordInteraction = useCallback((type: 'click' | 'hover' | 'focus', targetId: string, x?: number, y?: number) => {
-    const timestamp = performance.now();
+  const recordInteraction = useCallback(
+    (type: 'click' | 'hover' | 'focus', targetId: string, x?: number, y?: number) => {
+      const timestamp = performance.now();
 
-    interactions.current.push({
-      timestamp,
-      type,
-      targetId,
-      x,
-      y,
-    });
+      interactions.current.push({
+        timestamp,
+        type,
+        targetId,
+        x,
+        y,
+      });
 
-    // Track first interaction time
-    if (firstInteractionTime.current === null) {
-      firstInteractionTime.current = timestamp;
-    }
+      // Track first interaction time
+      if (firstInteractionTime.current === null) {
+        firstInteractionTime.current = timestamp;
+      }
 
-    // Track first click position for efficiency calculation
-    if (type === 'click' && x !== undefined && y !== undefined && firstClickPosition.current === null) {
-      firstClickPosition.current = { x, y };
-    }
-  }, []);
+      // Track first click position for efficiency calculation
+      if (
+        type === 'click' &&
+        x !== undefined &&
+        y !== undefined &&
+        firstClickPosition.current === null
+      ) {
+        firstClickPosition.current = { x, y };
+      }
+    },
+    []
+  );
 
   /**
    * Record hover time for a specific answer option
@@ -167,7 +176,10 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
    * Calculate mouse movement efficiency
    * Returns ratio of optimal distance to actual distance traveled
    */
-  const calculateMouseEfficiency = useCallback((): { efficiency: number; totalDistance: number } => {
+  const calculateMouseEfficiency = useCallback((): {
+    efficiency: number;
+    totalDistance: number;
+  } => {
     if (mousePositions.current.length < 2 || !firstClickPosition.current) {
       return { efficiency: 1.0, totalDistance: 0 };
     }
@@ -263,7 +275,14 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
       total_mouse_distance: Math.round(mouseMetrics.totalDistance),
       answer_changes: answerChanges.current,
     };
-  }, [questionDisplayTime, mvrtThresholdMs, analyzePauses, detectHesitation, calculateMouseEfficiency, calculateHoverEntropy]);
+  }, [
+    questionDisplayTime,
+    mvrtThresholdMs,
+    analyzePauses,
+    detectHesitation,
+    calculateMouseEfficiency,
+    calculateHoverEntropy,
+  ]);
 
   /**
    * Reset telemetry state for new question

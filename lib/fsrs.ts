@@ -85,9 +85,8 @@ export const defaultParameters: FSRSParameters = {
   request_retention: 0.9,
   maximum_interval: 36500,
   w: [
-    0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
-    0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
-    0.0912, 0.0658, 0.1542,
+    0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835,
+    0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542,
   ],
 };
 
@@ -256,7 +255,7 @@ export class FSRS {
   /**
    * FSRS v6: Calculate retrievability using power-law decay
    * R = (1 + factor * t / S) ^ decay
-   * 
+   *
    * Uses precomputed decay and factor from w[20] for efficiency.
    *
    * @param elapsed_days - Days since last review
@@ -272,7 +271,7 @@ export class FSRS {
 
   /**
    * FSRS v6: Short-term stability for same-day reviews
-   * 
+   *
    * Formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
    * maskedSinc = sinc if G < Hard else max(sinc, 1.0)
    * S' = clamp(S * maskedSinc, S_MIN, 36500)
@@ -291,10 +290,10 @@ export class FSRS {
 
     // FSRS v6 formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
     const sinc = Math.pow(stability, -w19) * Math.exp(w17 * (rating - 3 + w18));
-    
+
     // For Hard or better ratings, ensure stability doesn't decrease
     const maskedSinc = rating >= Rating.Hard ? Math.max(sinc, 1.0) : sinc;
-    
+
     // Apply and clamp to valid range
     return Math.min(Math.max(stability * maskedSinc, S_MIN), 36500.0);
   }
@@ -311,14 +310,12 @@ export class FSRS {
   /**
    * FSRS v6: Initial difficulty using exponential formula
    * D0 = w[4] - exp((G - 1) * w[5]) + 1
-   * 
+   *
    * @param rating - User's rating (1-4)
    * @returns Initial difficulty value (constrained to 1-10)
    */
   private init_difficulty(rating: Rating): number {
-    return this.constrain_difficulty(
-      this.p.w[4] - Math.exp((rating - 1) * this.p.w[5]) + 1
-    );
+    return this.constrain_difficulty(this.p.w[4] - Math.exp((rating - 1) * this.p.w[5]) + 1);
   }
 
   /**
@@ -337,9 +334,9 @@ export class FSRS {
   /**
    * FSRS v6: Linear damping for difficulty updates
    * Prevents difficulty from oscillating too rapidly
-   * 
+   *
    * Formula: delta_d * (10 - old_d) / 9
-   * 
+   *
    * @param delta_d - Change in difficulty
    * @param old_d - Current difficulty value
    * @returns Damped difficulty change

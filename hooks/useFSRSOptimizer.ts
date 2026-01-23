@@ -393,9 +393,7 @@ export function useAutoOptimization(
     const reviewCount = reviewHistory.length;
 
     if (optimizer.shouldAutoOptimize(reviewCount)) {
-      console.log(
-        `[useAutoOptimization] Triggering auto-optimization (${reviewCount} reviews)`
-      );
+      console.log(`[useAutoOptimization] Triggering auto-optimization (${reviewCount} reviews)`);
       hasTriggeredRef.current = true;
       optimizer.optimize(reviewHistory, systemCodes);
     }

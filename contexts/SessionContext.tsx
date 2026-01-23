@@ -10,7 +10,15 @@
  * Extracted from App.tsx to reduce component complexity.
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useMemo,
+  useRef,
+} from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getQuestionBatch } from '../services/questionService';
 import {
@@ -58,7 +66,7 @@ interface SessionContextValue {
   setQuestionQueue: React.Dispatch<React.SetStateAction<Question[]>>;
   /** Clear error */
   clearError: () => void;
-  
+
   // ===== JOL Calibration Tracking =====
   /** Current calibration tracker (null if no active session) */
   calibration: SessionCalibration | null;
@@ -89,10 +97,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // JOL Calibration state
   const [calibration, setCalibration] = useState<SessionCalibration | null>(null);
-  
+
   // Use ref to track if calibration was reset to avoid stale closure issues
   const calibrationRef = useRef<SessionCalibration | null>(null);
 
@@ -109,7 +117,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     ) => {
       setSessionSettings(settings);
       setError(null);
-      
+
       // Initialize fresh calibration tracker for new session
       const newCalibration = initSessionCalibration();
       setCalibration(newCalibration);
@@ -138,7 +146,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
           setQuestionQueue(initialQuestions);
         }
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to start session. Please try again in a moment.';
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to start session. Please try again in a moment.';
         console.error('Error starting session:', err);
         setError(errorMessage);
         // Reset session on error
@@ -166,7 +177,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   /**
    * Record a calibration observation after answering a question
-   * 
+   *
    * Called from question submission flow with the submit-review API response.
    * Creates a JOL observation from behavioral metrics and updates the tracker.
    */
@@ -180,11 +191,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
         // Create JOL observation from API response
         const observation = createJOLObservation(questionId, response, organSystem);
-        
+
         // Record observation and get updated tracker
         const updated = recordObservation(prevCalibration, observation);
         calibrationRef.current = updated;
-        
+
         return updated;
       });
     },
@@ -193,7 +204,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   /**
    * Get calibration summary for session end display
-   * 
+   *
    * Returns analysis of metacognitive calibration including:
    * - Calibration state (well_calibrated, overconfident, underconfident, etc.)
    * - Brier score (prediction accuracy)
@@ -210,7 +221,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   /**
    * Check if calibration has enough data for reliable analysis
-   * 
+   *
    * Requires minimum 10 observations for statistically meaningful insights.
    */
   const hasReliableCalibrationData = useCallback((): boolean => {
@@ -223,7 +234,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   /**
    * Get progress towards reliable calibration analysis
-   * 
+   *
    * Shows how many more questions needed for reliable insights.
    */
   const calibrationProgress = useMemo((): CalibrationProgress => {

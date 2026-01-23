@@ -511,13 +511,16 @@ const QuizView: React.FC<QuizViewProps> = ({
       recordSessionAnswer: typeof recordSessionAnswer,
       recordQuestionAttempt: typeof recordQuestionAttempt,
     };
-    
+
     const undefinedFunctions = Object.entries(functionChecks)
       .filter(([_, type]) => type !== 'function')
       .map(([name, type]) => `${name}: ${type}`);
-    
+
     if (undefinedFunctions.length > 0) {
-      console.error('[QuizView] CRITICAL: Undefined functions detected in handleSubmitAnswer:', undefinedFunctions);
+      console.error(
+        '[QuizView] CRITICAL: Undefined functions detected in handleSubmitAnswer:',
+        undefinedFunctions
+      );
     }
 
     setIsAnswered(true);
@@ -562,7 +565,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       quickInitialSelection:
         firstSelectedAnswer !== null && Date.now() - questionStartTime < parTime * 0.5,
     };
-    
+
     // Defensive calls - wrap analytics functions to prevent crashes
     try {
       if (typeof recordBehavioralConfidence === 'function') {
@@ -605,7 +608,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       let inferredConfidenceValue = 0.5; // Default
       if (typeof inferConfidence === 'function') {
         const confidenceResult = inferConfidence(behaviorSignals);
-        inferredConfidenceValue = typeof confidenceResult === 'number' ? confidenceResult : confidenceResult?.score ?? 0.5;
+        inferredConfidenceValue =
+          typeof confidenceResult === 'number'
+            ? confidenceResult
+            : (confidenceResult?.score ?? 0.5);
       }
       if (typeof updatePerformancePrediction === 'function') {
         updatePerformancePrediction({
@@ -1397,7 +1403,11 @@ const QuizView: React.FC<QuizViewProps> = ({
           onClose={() => setShowReportModal(false)}
           questionId={currentQuestion.id || `temp-${Date.now()}`}
           questionText={currentQuestion.question}
-          correctAnswer={typeof currentQuestion.correctIndex === 'number' ? currentQuestion.answers?.[currentQuestion.correctIndex] : undefined}
+          correctAnswer={
+            typeof currentQuestion.correctIndex === 'number'
+              ? currentQuestion.answers?.[currentQuestion.correctIndex]
+              : undefined
+          }
           topic={currentQuestion.topic}
           system={currentQuestion.system || undefined}
           userId={user?.id || 'anonymous'}

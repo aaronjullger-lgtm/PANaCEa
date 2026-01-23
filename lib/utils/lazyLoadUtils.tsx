@@ -31,11 +31,12 @@ export function lazyWithPreload<P extends object>(
       console.error('Lazy load failed:', error);
       // Return a fallback component if import fails
       return {
-        default: () => options.errorFallback || (
-          <ErrorBoundary>
-            <div>Error loading component</div>
-          </ErrorBoundary>
-        ),
+        default: () =>
+          options.errorFallback || (
+            <ErrorBoundary>
+              <div>Error loading component</div>
+            </ErrorBoundary>
+          ),
       };
     });
   });
@@ -137,10 +138,12 @@ export function createPreloadStrategy() {
 
         // Add delay between preloads to avoid blocking
         if (i < preloadQueue.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
 
-        console.log(`Preloaded component ${i + 1}/${preloadQueue.length} in ${loadTime.toFixed(2)}ms`);
+        console.log(
+          `Preloaded component ${i + 1}/${preloadQueue.length} in ${loadTime.toFixed(2)}ms`
+        );
       }
     } catch (error) {
       console.error('Preload queue error:', error);
@@ -166,10 +169,7 @@ export function createPreloadStrategy() {
 /**
  * Performance monitoring for lazy loaded components
  */
-export function monitorLazyLoadPerformance(
-  componentName: string,
-  importFn: () => Promise<any>
-) {
+export function monitorLazyLoadPerformance(componentName: string, importFn: () => Promise<any>) {
   const startTime = performance.now();
 
   return importFn()
@@ -249,7 +249,7 @@ export function lazyWithRetry<P extends object>(
     } catch (error) {
       if (attempt < maxRetries) {
         console.warn(`Attempt ${attempt} failed, retrying in ${retryDelay}ms...`, error);
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
         return importWithRetry(attempt + 1);
       }
       console.error(`All ${maxRetries} attempts failed:`, error);

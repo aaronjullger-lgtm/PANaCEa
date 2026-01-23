@@ -1,6 +1,15 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, RotateCcw, ArrowRight, Loader2, BadgeCheck, Zap, AlertTriangle } from 'lucide-react';
+import {
+  X,
+  Flame,
+  RotateCcw,
+  ArrowRight,
+  Loader2,
+  BadgeCheck,
+  Zap,
+  AlertTriangle,
+} from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import { buzzwordService } from '@/services/buzzwordService';
@@ -33,7 +42,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
   const { getToken } = useAuth();
 
   // Telemetry collector for behavioral tracking (Phase 3 Milestone 3)
-  const telemetry = useTelemetryCollector({ 
+  const telemetry = useTelemetryCollector({
     defaultQuestionType: 'rapid_recall',
     updateInterval: 100, // Update elapsed time every 100ms
   });
@@ -188,7 +197,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
 
     // Guard for array access returning undefined
     if (!selectedBuzzword) return;
-    
+
     const answer = buzzwordDictionary[selectedBuzzword];
     // Guard for Record lookup returning undefined
     if (!answer) return;
@@ -238,7 +247,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
 
       // Finalize telemetry data before validation (Phase 3 Milestone 3)
       const telemetryData = telemetry.finalizeTelemetry();
-      
+
       const normalizedAnswer = normalizeDiagnosis(answer);
       const normalizedCorrect = normalizeDiagnosis(currentAnswer);
 

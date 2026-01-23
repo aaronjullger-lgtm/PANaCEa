@@ -78,9 +78,7 @@ async function seedECGPatterns(dryRun = false) {
       if (!dryRun) {
         await prisma.eCGPattern.create({
           data: {
-
             id: uuidv4(),
-
 
             name: pattern.name,
             category: pattern.category,

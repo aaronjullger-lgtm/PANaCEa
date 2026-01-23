@@ -103,15 +103,11 @@ const MetricCard: React.FC<{
     <div className="flex items-baseline gap-2">
       <span className="text-2xl font-semibold text-text-primary">{value}</span>
       {trend && (
-      <span
-        className={`text-sm ${
-          trend === 'up'
-            ? 'text-success'
-            : trend === 'down'
-              ? 'text-error'
-              : 'text-text-tertiary'
-        }`}
-      >
+        <span
+          className={`text-sm ${
+            trend === 'up' ? 'text-success' : trend === 'down' ? 'text-error' : 'text-text-tertiary'
+          }`}
+        >
           {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
         </span>
       )}
@@ -224,13 +220,10 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
   }, [selectedRetention, cmrrResult]);
 
   // Handlers
-  const handleSliderChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseFloat(e.target.value);
-      setSelectedRetention(value);
-    },
-    []
-  );
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    setSelectedRetention(value);
+  }, []);
 
   const handleSliderCommit = useCallback(() => {
     if (onRetentionChange) {
@@ -280,9 +273,7 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
 
       {/* Confidence indicator */}
       {cmrrResult.confidenceLevel !== 'high' && (
-        <div
-          className="mb-4 p-3 rounded-lg text-sm bg-action-muted text-action-primary border border-surface-border"
-        >
+        <div className="mb-4 p-3 rounded-lg text-sm bg-action-muted text-action-primary border border-surface-border">
           {cmrrResult.recommendation}
         </div>
       )}

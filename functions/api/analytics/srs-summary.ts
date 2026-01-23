@@ -179,7 +179,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Calculate projected retention using FSRS formula
       // R = (1 + t/S)^-1 where t is days since review, S is stability
-      const retentionSum = progressData.reduce((sum: number, card: typeof progressData[0]) => {
+      const retentionSum = progressData.reduce((sum: number, card: (typeof progressData)[0]) => {
         const stability = card.stability || 1;
         const lastReview = card.lastReviewDate ? new Date(card.lastReviewDate) : now;
         const daysSinceReview = (now.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
@@ -190,7 +190,8 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Recent reviews count (cards reviewed in last 7 days)
       const recentReviews = progressData.filter(
-        (card: typeof progressData[0]) => card.lastReviewDate && new Date(card.lastReviewDate) >= sevenDaysAgo
+        (card: (typeof progressData)[0]) =>
+          card.lastReviewDate && new Date(card.lastReviewDate) >= sevenDaysAgo
       ).length;
 
       // Learning velocity (cards reaching review state per day)

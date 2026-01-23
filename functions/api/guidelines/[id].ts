@@ -4,7 +4,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -16,69 +20,72 @@ const GuidelineByIdSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(GuidelineByIdSchema, async ({ env, validated, auth }) => {
-  const log = createEndpointLogger('/api/guidelines/[id]', auth.userId);
-  let prisma: EdgePrismaClient | null = null;
+export const onRequestGet = authenticatedEndpoint(
+  GuidelineByIdSchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/guidelines/[id]', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
 
-  try {
-    const { id } = validated.params;
+    try {
+      const { id } = validated.params;
 
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const guideline = await prisma.guideline.findUnique({
-      where: { id },
-      include: {
-        Condition: {
-          select: {
-            id: true,
-            name: true,
-            system: true,
-            panceYield: true,
+      const guideline = await prisma.guideline.findUnique({
+        where: { id },
+        include: {
+          Condition: {
+            select: {
+              id: true,
+              name: true,
+              system: true,
+              panceYield: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!guideline) {
-      log.warn('Guideline not found', { id });
+      if (!guideline) {
+        log.warn('Guideline not found', { id });
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Guideline not found',
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      log.info('Fetched guideline', { id, name: guideline.name });
+
       return new Response(
         JSON.stringify({
-          success: false,
-          error: 'Guideline not found',
+          success: true,
+          data: guideline,
         }),
         {
-          status: 404,
+          status: 200,
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    } catch (error: any) {
+      log.error('Error fetching guideline', { error: error.message });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to fetch guideline',
+          details: error.message,
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    log.info('Fetched guideline', { id, name: guideline.name });
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: guideline,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error: any) {
-    log.error('Error fetching guideline', { error: error.message });
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Failed to fetch guideline',
-        details: error.message,
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
   }
-});
+);

@@ -9,7 +9,11 @@
 
 import { publicEndpoint } from '../_shared/middleware';
 import { withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -102,9 +106,9 @@ export const onRequestGet = publicEndpoint(AnatomyByIdSchema, async ({ env, vali
       dateAccessed: new Date().toISOString().split('T')[0],
     };
 
-    log.info('Anatomy model fetched successfully', { 
-      modelId, 
-      relatedConditionsCount: relatedConditions.length 
+    log.info('Anatomy model fetched successfully', {
+      modelId,
+      relatedConditionsCount: relatedConditions.length,
     });
 
     return {

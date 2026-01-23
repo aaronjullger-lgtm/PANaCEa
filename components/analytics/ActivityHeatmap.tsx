@@ -233,11 +233,11 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
       .fill(null)
       .map(() => []);
 
-  for (const date of dates) {
-    // Use UTC day of week to ensure consistency
-    const dayOfWeek = date.getUTCDay();
-    grid[dayOfWeek]?.push(date);
-  }
+    for (const date of dates) {
+      // Use UTC day of week to ensure consistency
+      const dayOfWeek = date.getUTCDay();
+      grid[dayOfWeek]?.push(date);
+    }
 
     // Pad each row to the same length
     const maxLen = Math.max(...grid.map((row) => row.length));

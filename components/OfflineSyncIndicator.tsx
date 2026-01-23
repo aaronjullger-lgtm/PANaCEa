@@ -34,18 +34,20 @@ export function OfflineSyncIndicator() {
     const updateStatus = () => {
       const newStatus = getSyncStatus();
       const newIsOnline = checkOnline();
-      
+
       // Only update state if values actually changed to prevent infinite loops
-      setStatus(prev => {
-        if (prev.pendingCount !== newStatus.pendingCount ||
-            prev.lastSyncTime !== newStatus.lastSyncTime ||
-            prev.isOffline !== newStatus.isOffline) {
+      setStatus((prev) => {
+        if (
+          prev.pendingCount !== newStatus.pendingCount ||
+          prev.lastSyncTime !== newStatus.lastSyncTime ||
+          prev.isOffline !== newStatus.isOffline
+        ) {
           return newStatus;
         }
         return prev;
       });
-      
-      setIsOnline(prev => prev !== newIsOnline ? newIsOnline : prev);
+
+      setIsOnline((prev) => (prev !== newIsOnline ? newIsOnline : prev));
     };
 
     updateStatus();

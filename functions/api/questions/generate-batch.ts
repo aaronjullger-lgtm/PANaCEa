@@ -22,7 +22,20 @@ const DEFAULT_BATCH_SIZE = 10;
 const MAX_BATCH_SIZE = 50;
 
 const SYSTEMS = [
-  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU',
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
 ];
 
 export const onRequestOptions = withCors();

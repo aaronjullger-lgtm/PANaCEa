@@ -131,9 +131,7 @@ async function processQuestionGeneration(job: any): Promise<void> {
       // Store in PreGeneratedQuestion table
       await prisma.preGeneratedQuestion.create({
         data: {
-
           id: uuidv4(),
-
 
           questionType: 'vignette',
           system: system,
@@ -196,9 +194,7 @@ async function processHealthCheck(job: any): Promise<void> {
   // Store health report
   await prisma.contentHealthReport.create({
     data: {
-
       id: uuidv4(),
-
 
       totalContent: Object.keys(content).length,
       missingExplanations: issues.filter((i) => i.issueType === 'missing_explanation').length,

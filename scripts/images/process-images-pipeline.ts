@@ -338,9 +338,7 @@ print("success")
 /**
  * Detect text in image using OCR (pytesseract)
  */
-async function detectText(
-  imagePath: string
-): Promise<{
+async function detectText(imagePath: string): Promise<{
   text: string;
   regions: Array<{ x: number; y: number; width: number; height: number; text: string }>;
 }> {

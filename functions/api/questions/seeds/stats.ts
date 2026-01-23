@@ -5,7 +5,8 @@ import { z } from 'zod';
 const EmptySchema = z.object({});
 
 export const onRequestGet = adminEndpoint(EmptySchema, async ({ env }) => {
-  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createEdgePrismaClient, safePrismaDisconnect } =
+    await import('../../_shared/prisma-edge');
   const { getSeedStats } = await import('../../_shared/question-seeds');
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

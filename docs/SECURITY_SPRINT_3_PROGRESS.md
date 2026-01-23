@@ -56,7 +56,8 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - ✅ `session.ts` - Session management
 - ✅ `system-drill.ts` - System-specific drills
 
-**Impact:** 
+**Impact:**
+
 - AI cost protection (generate.ts was burning $$$ via unauthenticated access)
 - Data integrity for learning algorithm
 - Consistent validation across all question endpoints
@@ -77,6 +78,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - ✅ `stats.ts` - General statistics
 
 **Impact:**
+
 - Zero unauthorized admin access
 - Content integrity protected
 - Platform metrics secured
@@ -100,6 +102,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - ✅ `related-content.ts` - **NEW** Related content retrieval (physiology, anatomy, labs)
 
 **Impact:**
+
 - FSRS learning algorithm integrity maintained
 - No data manipulation of spaced repetition state
 - Consistent drill session management
@@ -113,10 +116,12 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 **ALL user data endpoints now secure (Sprint 3: 11 already secure, Sprint 4: +2 newly secured):**
 
 **Critical PII Endpoints:**
+
 - ✅ `preferences.ts` - **CRITICAL PII** User preferences (4 HTTP methods: GET, POST, PATCH, DELETE)
 - ✅ `goals.ts` - User goal management (4 HTTP methods: GET, POST, PATCH, DELETE)
 
 **Analytics & Performance:**
+
 - ✅ `analytics.ts` - User performance analytics
 - ✅ `behavior-metrics.ts` - Detailed interaction tracking (timing, confidence, patterns)
 - ✅ `clinical-profile.ts` - Clinical strengths/weaknesses assessment
@@ -127,11 +132,13 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - ✅ `rolling-360-stats.ts` - Rolling performance metrics
 
 **Learning Intelligence:**
+
 - ✅ `confusion.ts` - Confusion pair tracking (diagnostic mistakes)
 - ✅ `confusions.ts` - Re-export endpoint (secure by proxy)
 - ✅ `session.ts` - Study session management
 
 **Impact:**
+
 - User PII fully protected (preferences, goals, personal data)
 - Learning analytics bulletproof (behavior, confusion, performance)
 - FSRS integrity maintained (stability trends, rolling stats)
@@ -150,6 +157,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - ✅ `generate.ts` - AI recommendation generation
 
 **Impact:**
+
 - AI recommendation costs controlled
 - User interaction tracking secured
 - Recommendation data integrity maintained
@@ -161,7 +169,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 ### Critical Vulnerability Elimination
 
 | Vulnerability Type            | Before Sprint 3 | After Sprint 3 | Reduction |
-|-------------------------------|-----------------|----------------|-----------|
+| ----------------------------- | --------------- | -------------- | --------- |
 | **Unauthenticated AI Access** | 3 endpoints     | 0              | **100%**  |
 | **PII Injection Risks**       | 5 endpoints     | 0              | **100%**  |
 | **FSRS Data Manipulation**    | 1 endpoint      | 0              | **100%**  |
@@ -172,6 +180,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 ### Attack Surface Reduction
 
 **Before:**
+
 - 200+ endpoints with varying security postures
 - 35 high-risk endpoints identified
 - Inconsistent auth enforcement (~60%)
@@ -181,6 +190,7 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 - Error messages leak implementation details
 
 **After (35 endpoints secured):**
+
 - ✅ **0** critical vulnerabilities in secured endpoints
 - ✅ **100%** authentication enforcement where required
 - ✅ **100%** input validation with Zod schemas
@@ -195,45 +205,53 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 ## 🔒 SECURITY FEATURES APPLIED (ALL 35 ENDPOINTS)
 
 ### 1. Clerk Authentication ✅
+
 - Automatic 401 responses for unauthenticated requests
 - Clerk user ID available in `context.auth.userId`
 - No manual auth code needed
 
 ### 2. Zod Input Validation ✅
+
 - Type-safe schemas for all inputs (body, query, params)
 - Clear validation error messages
 - Prevents injection attacks
 - 150+ validation rules across 35 endpoints
 
 ### 3. CORS Protection ✅
+
 - Secure origin allowlist (no wildcards!)
 - Automatic OPTIONS method handling
 - Production-ready configuration
 
 ### 4. Structured Logging ✅
+
 - Request/response logging
 - 13 secret redaction patterns
 - Context-aware log levels
 - Debug information without security risks
 
 ### 5. Error Handling ✅
+
 - Consistent error format
 - No stack trace leaks
 - User-friendly error messages
 - Proper HTTP status codes
 
 ### 6. Database Cleanup ✅
+
 - Prisma disconnect in finally blocks
 - No connection pool exhaustion
 - Proper resource management
 
 ### 7. Type Safety ✅
+
 - Full TypeScript support
 - Context properly typed
 - Cannot access undefined properties
 - Compile-time error catching
 
 ### 8. Ownership Validation ✅
+
 - User data isolation (goals, preferences, recommendations)
 - Cross-user data access prevented
 - Admin role checks where needed
@@ -244,22 +262,22 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 
 ### Conversion Speed
 
-| Metric                          | Target      | Actual      | Status    |
-|---------------------------------|-------------|-------------|-----------|
-| Time per endpoint (simple)      | 15-20 min   | 12-18 min   | ✅ BEAT   |
-| Time per endpoint (complex)     | 30-40 min   | 20-30 min   | ✅ BEAT   |
-| Endpoints secured per day       | 3-5         | 8-12        | ✅ BEAT   |
-| TypeScript errors introduced    | <5          | 0           | ✅ BEAT   |
-| Security regressions            | 0           | 0           | ✅ PERFECT|
+| Metric                       | Target    | Actual    | Status     |
+| ---------------------------- | --------- | --------- | ---------- |
+| Time per endpoint (simple)   | 15-20 min | 12-18 min | ✅ BEAT    |
+| Time per endpoint (complex)  | 30-40 min | 20-30 min | ✅ BEAT    |
+| Endpoints secured per day    | 3-5       | 8-12      | ✅ BEAT    |
+| TypeScript errors introduced | <5        | 0         | ✅ BEAT    |
+| Security regressions         | 0         | 0         | ✅ PERFECT |
 
 ### Code Quality
 
-| Metric                     | Target | Actual | Status    |
-|----------------------------|--------|--------|-----------|
-| TypeScript errors          | 0      | 0      | ✅ PERFECT|
-| Consistent pattern usage   | 90%    | 100%   | ✅ BEAT   |
-| Documentation coverage     | 80%    | 100%   | ✅ BEAT   |
-| Schema validation coverage | 90%    | 100%   | ✅ BEAT   |
+| Metric                     | Target | Actual | Status     |
+| -------------------------- | ------ | ------ | ---------- |
+| TypeScript errors          | 0      | 0      | ✅ PERFECT |
+| Consistent pattern usage   | 90%    | 100%   | ✅ BEAT    |
+| Documentation coverage     | 80%    | 100%   | ✅ BEAT    |
+| Schema validation coverage | 90%    | 100%   | ✅ BEAT    |
 
 ---
 
@@ -270,12 +288,14 @@ Sprint 3 has **EXCEEDED ALL GOALS** by securing 35 production-critical endpoints
 The composable middleware pattern proved to be **incredibly efficient**. Converting an endpoint took just 15-20 minutes on average, with zero security gaps.
 
 **Before Pattern:**
+
 - 2-3 hours per endpoint
 - Inconsistent implementations
 - Easy to miss security checks
 - Hard to maintain
 
 **After Pattern:**
+
 - 15-20 minutes per endpoint
 - 100% consistent
 - Impossible to miss security (enforced by middleware)
@@ -292,6 +312,7 @@ TypeScript's strict type checking caught **dozens of potential runtime errors** 
 ### 4. Batch Conversion is Efficient
 
 Converting entire directories at once (e.g., all 19 question endpoints) was more efficient than one-off conversions due to:
+
 - Schema reuse across similar endpoints
 - Pattern recognition and copy-paste
 - Momentum and focus
@@ -307,12 +328,14 @@ Clear examples (`example-secure-endpoint.ts`) and priority lists (`ENDPOINT_SECU
 ### AI API Protection
 
 **Before:** `/api/questions/generate.ts` was **UNPROTECTED**
+
 - No authentication required
 - No rate limiting
 - Could exhaust Gemini API credits ($$$$$)
 - Open to abuse/scraping
 
 **After:** Fully protected
+
 - Clerk authentication required
 - Input validation prevents injection
 - Structured logging tracks usage
@@ -339,6 +362,7 @@ All 35 secured endpoints are now ready for:
 ### ✅ Completed (2/13 user endpoints newly secured)
 
 **User Directory - COMPLETE (13/13 files):**
+
 - ✅ `user/daily-performance.ts` - Daily performance trends with caching
 - ✅ `user/stats.ts` - Comprehensive analytics with AI recommendations (complex endpoint with KV caching)
 
@@ -347,6 +371,7 @@ All 35 secured endpoints are now ready for:
 ### Next Priority Targets
 
 **Batch 2: Buzzwords, Achievements & Streaks (5 endpoints):**
+
 1. `/api/buzzwords/all.ts` - Buzzword library (public)
 2. `/api/buzzwords/random.ts` - Random buzzword (public)
 3. `/api/buzzwords/index.ts` - Buzzword index
@@ -456,18 +481,18 @@ All 35 secured endpoints are now ready for:
 
 ## ✅ SUCCESS CRITERIA - FINAL SCORECARD
 
-| Criterion                       | Target    | Actual    | Status         |
-|---------------------------------|-----------|-----------|----------------|
-| Middleware pattern created      | ✅        | ✅        | ✅ DONE        |
-| TypeScript errors               | 0         | 0         | ✅ PERFECT     |
-| Example templates               | 3         | 3+        | ✅ DONE        |
-| Critical endpoints secured      | 3         | 3         | ✅ DONE        |
-| High priority secured           | 4         | 8+        | ✅ EXCEEDED    |
-| Medium priority secured         | 3         | 24+       | ✅ EXCEEDED    |
-| Total endpoints secured         | 10        | **35**    | ✅ **250%!**   |
-| Security regressions            | 0         | 0         | ✅ PERFECT     |
-| Pattern consistency             | 90%       | 100%      | ✅ BEAT        |
-| Documentation coverage          | 80%       | 100%      | ✅ BEAT        |
+| Criterion                  | Target | Actual | Status       |
+| -------------------------- | ------ | ------ | ------------ |
+| Middleware pattern created | ✅     | ✅     | ✅ DONE      |
+| TypeScript errors          | 0      | 0      | ✅ PERFECT   |
+| Example templates          | 3      | 3+     | ✅ DONE      |
+| Critical endpoints secured | 3      | 3      | ✅ DONE      |
+| High priority secured      | 4      | 8+     | ✅ EXCEEDED  |
+| Medium priority secured    | 3      | 24+    | ✅ EXCEEDED  |
+| Total endpoints secured    | 10     | **35** | ✅ **250%!** |
+| Security regressions       | 0      | 0      | ✅ PERFECT   |
+| Pattern consistency        | 90%    | 100%   | ✅ BEAT      |
+| Documentation coverage     | 80%    | 100%   | ✅ BEAT      |
 
 ---
 
@@ -476,18 +501,21 @@ All 35 secured endpoints are now ready for:
 **Sprint 3 Status:** ✅ **95% COMPLETE - PHENOMENAL SUCCESS!**
 
 **What We Built:**
+
 - Bulletproof middleware foundation (0 TypeScript errors)
 - 35 production-ready secured endpoints
 - Comprehensive documentation (2000+ lines)
 - Reusable patterns for 165 remaining endpoints
 
 **What We Achieved:**
+
 - 100% elimination of critical vulnerabilities in secured endpoints
 - 85% reduction in highest-risk attack surface
 - $5k-10k/month in API abuse protection
 - 250% goal exceed (35 vs 10 target)
 
 **What's Next:**
+
 - Sprint 4: Secure next 25 endpoints + testing
 - Sprints 5-12: Complete 100% coverage (165 endpoints remaining)
 - Q1 2026: SOC 2 / security certification prep
@@ -509,6 +537,7 @@ All 35 secured endpoints are now ready for:
 **Status:** User directory audit complete - discovered 11 endpoints were already secured, secured 2 additional endpoints
 
 **Newly Secured:**
+
 1. ✅ `user/daily-performance.ts` - Converted from manual auth to middleware
 2. ✅ `user/stats.ts` - Complex endpoint with Cloudflare KV caching, now fully secured
 
@@ -521,36 +550,36 @@ All 35 secured endpoints are now ready for:
 **Status:** Surveyed 7 endpoints, discovered 24 already secured, converted 4 analytics endpoints to middleware
 
 **Already Secured (discovered):**
+
 1. ✅ `buzzwords/random.ts` - Public endpoint with RANDOM() SQL, count limits
 2. ✅ `analytics/performance-deltas.ts` - User vs cohort gap analysis
 3. ✅ `stats/retention.ts` - SRS retention analytics with decay curves
 
 **Newly Converted (Sprint 4 Phase 2 - Analytics Directory):**
+
 1. ✅ `analytics/profile.ts` - GET + POST, learning profile recomputation (~350 lines, 15 min)
    - Converted to `authenticatedEndpoint(profileRecomputeSchema)` for both methods
    - GET: Learning profile with computed insights (strengths, weaknesses, timing patterns)
    - POST: Profile regeneration trigger
    - Schema: `profileRecomputeSchema` (empty schema for POST)
-   
 2. ✅ `analytics/question-quality.ts` - Admin-only quality metrics dashboard (~200 lines, 12 min)
    - Converted to `adminEndpoint(questionQualityQuerySchema)`
    - Quality metrics with validation status filtering
    - Admin role enforcement via middleware
    - Schema: `questionQualityQuerySchema` (system, validationStatus, limit)
-   
 3. ✅ `analytics/session.ts` - GET + POST, session recording pipeline (~400 lines, 20 min)
    - Converted to `authenticatedEndpoint()` with separate schemas for GET/POST
    - POST: Comprehensive session recording (timing, confidence, mouse trajectories)
    - GET: Session analytics retrieval with optional profile enrichment
    - **CRITICAL:** Behavioral analytics protection - prevents cross-user data leaks
    - Schemas: `sessionAnalyticsSchema` (40+ fields), `sessionAnalyticsQuerySchema`
-   
 4. ✅ `analytics/srs-summary.ts` - FSRS dashboard analytics (~300 lines, 10 min)
    - Converted to `authenticatedEndpoint(srsSummaryQuerySchema)`
    - Stability distribution, retention rates, FSRS stats
    - Schema: `srsSummaryQuerySchema` (empty schema for GET)
 
 **Conversion Stats:**
+
 - Total time: 57 minutes for 4 analytics endpoints
 - Average: 14 minutes per endpoint
 - Complexity range: 10-20 minutes (simple to complex endpoints)
@@ -561,24 +590,28 @@ All 35 secured endpoints are now ready for:
 ### Sprint 4 Progress Summary
 
 **Total Secured:** **65 endpoints** 🎉
+
 - Sprint 3: 35 endpoints
 - Sprint 4 Phase 1 (User): +2 endpoints
 - Sprint 4 Phase 2 (Survey): +24 endpoints discovered already secured
 - Sprint 4 Phase 2 (Conversion): +4 analytics endpoints converted
 
 **Phase 2 Complete:**
+
 - ✅ User directory completion (2 endpoints)
 - ✅ Systematic survey (24 already-secured endpoints discovered)
 - ✅ Analytics directory conversion (4 endpoints converted)
 - ✅ All FSRS and behavioral analytics endpoints now secured
 
-**Time Investment:** 
+**Time Investment:**
+
 - Phase 1 Conversion: 18 minutes for 2 user endpoints (9 min/endpoint average)
 - Phase 2 Survey: 20 minutes for 7-file analysis
 - Phase 2 Conversion: 57 minutes for 4 analytics endpoints (14 min/endpoint average)
 - **Total Sprint 4:** ~95 minutes for 30 endpoints identified/secured
 
 **Phase 2 Analytics Achievements:**
+
 - ✅ `analytics/profile.ts` - Learning profile with computed insights
 - ✅ `analytics/question-quality.ts` - Admin-only quality dashboard
 - ✅ `analytics/session.ts` - Critical behavioral analytics pipeline
@@ -599,39 +632,36 @@ All 35 secured endpoints are now ready for:
    - Converted to `authenticatedEndpoint(pharmDrillQuerySchema)`
    - Drug mechanism, side effect, contraindication, interaction drills
    - Schema: `pharmDrillQuerySchema` (count: 1-50, category: 7 enum values)
-   
 2. ✅ `drills/related-content.ts` - Related content retrieval (~250 lines, 15 min)
    - Converted to `authenticatedEndpoint(relatedContentSchema)`
    - Physiology, anatomy, lab, ECG, procedure, finding categories
    - Schema: `relatedContentSchema` (category, tags, conceptId, limit)
-   
 3. ✅ `drills/code-blue.ts` - Emergency scenarios drill (~200 lines, 10 min)
    - Converted to `authenticatedEndpoint(codeBlueQuerySchema)`
    - ACLS/emergency response training scenarios
    - Schema: `codeBlueQuerySchema` (count, difficulty)
-   
 4. ✅ `drills/fluids.ts` - Fluid/electrolyte calculations (~220 lines, 12 min)
    - Converted to `authenticatedEndpoint(fluidsQuerySchema)`
    - IV fluid and electrolyte replacement calculations
    - Schema: `fluidsQuerySchema` (count, category)
-   
 5. ✅ `drills/media.ts` - Medical image recognition (~180 lines, 10 min)
    - Converted to `authenticatedEndpoint(mediaQuerySchema)`
    - Radiology, dermatology, pathology image drills
    - Schema: `mediaQuerySchema` (count, mediaType)
-   
 6. ✅ `drills/lab-cases.ts` - Lab interpretation cases (~240 lines, 15 min)
    - Converted to `authenticatedEndpoint(labCasesQuerySchema)`
    - CBC, BMP, LFT, ABG interpretation scenarios
    - Schema: `labCasesQuerySchema` (count, labType, difficulty)
 
 **Conversion Stats:**
+
 - Total time: 74 minutes for 6 drills endpoints
 - Average: 12.3 minutes per endpoint
 - Complexity range: 10-15 minutes (consistent difficulty)
 - All schemas added to `functions/api/_shared/zodSchemas.ts` (DRILLS SCHEMAS section)
 
 **Phase 4 Drills Achievements:**
+
 - ✅ `drills/pharm.ts` - Pharmacology knowledge testing
 - ✅ `drills/related-content.ts` - Cross-referenced content retrieval
 - ✅ `drills/code-blue.ts` - Emergency response training
@@ -643,6 +673,7 @@ All 35 secured endpoints are now ready for:
 - ✅ 100% pattern consistency maintained
 
 **Drills Security Impact:**
+
 - All learning drill endpoints now protected from unauthenticated access
 - FSRS learning algorithm integrity fully maintained
 - Medical content (images, labs, drugs) access controlled
@@ -653,6 +684,7 @@ All 35 secured endpoints are now ready for:
 ### Sprint 4 Cumulative Progress
 
 **Total Secured:** **73 endpoints** 🎉
+
 - Sprint 3: 35 endpoints
 - Sprint 4 Phase 1 (User): +2 endpoints
 - Sprint 4 Phase 2 (Survey): +24 endpoints discovered already secured
@@ -661,6 +693,7 @@ All 35 secured endpoints are now ready for:
 - Sprint 4 Phase 5 (Final Sweeps): +2 endpoints converted
 
 **Directory Completion Status:**
+
 - ✅ Questions: 19/19 (100%)
 - ✅ Admin: 9/9 (100%) - includes conditions subdirectory
 - ✅ Drills: 10/10 (100%)
@@ -691,6 +724,7 @@ All 35 secured endpoints are now ready for:
    - Returns questions with clinical pearls and explanations for Grand Rounds mode
 
 **Conversion Stats:**
+
 - Total time: 22 minutes for 2 endpoints
 - Average: 11 minutes per endpoint
 - Both schemas added to `functions/api/_shared/zodSchemas.ts`
@@ -698,6 +732,7 @@ All 35 secured endpoints are now ready for:
 - 100% pattern consistency maintained
 
 **Phase 5 Achievements:**
+
 - ✅ Complete elimination of old `authenticateRequest` pattern across codebase
 - ✅ All endpoints now use standardized middleware stack
 - ✅ Admin conditions subdirectory fully secured
@@ -706,6 +741,7 @@ All 35 secured endpoints are now ready for:
 ---
 
 **Next Targets (Sprint 4 Phase 6):**
+
 - Survey and convert additional directories (content, ddx, drugs, srs)
 - Estimated: 10-15 endpoints per phase
 - Target: 90+ endpoints secured by end of Sprint 4

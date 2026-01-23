@@ -26,7 +26,7 @@ interface StudyCardProps {
 
 /**
  * StudyCard - Reusable card component for study modes, systems, and conditions
- * 
+ *
  * Features:
  * - Theme-aware with CSS variables for light/dark mode
  * - AAA accessible button text (pure white on Action Blue)
@@ -49,7 +49,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   const cardBg = isActive
     ? 'bg-action-blue-600/10 dark:bg-action-blue-600/20'
     : 'bg-white dark:bg-slate-800/50';
-  
+
   const cardBorder = isActive
     ? 'border-action-blue-600 ring-2 ring-action-blue-600/30'
     : 'border-slate-200 dark:border-slate-700 hover:border-action-blue-400 dark:hover:border-action-blue-500';
@@ -81,26 +81,27 @@ export const StudyCard: React.FC<StudyCardProps> = ({
       {/* Header with icon and title */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Icon 
+          <Icon
             className={`
               w-5 h-5 
               ${isActive ? 'text-action-blue-600' : 'text-action-blue-600 dark:text-action-blue-400'}
-            `} 
+            `}
           />
-          <h3 
+          <h3
             className={`
               text-lg 
               font-bold 
-              ${isActive 
-                ? 'text-action-blue-600 dark:text-action-blue-400' 
-                : 'text-[var(--color-text-primary)] dark:text-white'
+              ${
+                isActive
+                  ? 'text-action-blue-600 dark:text-action-blue-400'
+                  : 'text-[var(--color-text-primary)] dark:text-white'
               }
             `}
           >
             {title}
           </h3>
         </div>
-        
+
         {/* Optional badge */}
         {badge && (
           <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
@@ -175,11 +176,7 @@ export const StudyCardGrid: React.FC<StudyCardGridProps> = ({
     4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   };
 
-  return (
-    <div className={`grid ${gridCols[columns]} gap-4 ${className}`}>
-      {children}
-    </div>
-  );
+  return <div className={`grid ${gridCols[columns]} gap-4 ${className}`}>{children}</div>;
 };
 
 export default StudyCard;

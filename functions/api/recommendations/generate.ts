@@ -1,7 +1,4 @@
-import {
-  authenticatedEndpoint,
-  withCors,
-} from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { generateRecommendations } from '../../../lib/recommendationEngine';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -17,28 +14,31 @@ const RecommendationGenerationSchema = z.object({});
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(RecommendationGenerationSchema, async (context) => {
-  const { env, auth } = context;
-  const logger = createEndpointLogger('/api/recommendations/generate');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestPost = authenticatedEndpoint(
+  RecommendationGenerationSchema,
+  async (context) => {
+    const { env, auth } = context;
+    const logger = createEndpointLogger('/api/recommendations/generate');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const recommendations = await generateRecommendations(auth.userId, prisma);
+    try {
+      const recommendations = await generateRecommendations(auth.userId, prisma);
 
-    return {
-      data: {
-        success: true,
-        count: recommendations.length,
-        recommendations,
-      },
-    };
-  } catch (error) {
-    logger.error('Recommendation generation failed', error);
-    return {
-      status: 500,
-      error: 'Failed to generate recommendations',
-    };
-  } finally {
-    await safePrismaDisconnect(prisma);
+      return {
+        data: {
+          success: true,
+          count: recommendations.length,
+          recommendations,
+        },
+      };
+    } catch (error) {
+      logger.error('Recommendation generation failed', error);
+      return {
+        status: 500,
+        error: 'Failed to generate recommendations',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-});
+);

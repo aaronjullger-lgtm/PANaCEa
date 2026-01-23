@@ -6,7 +6,10 @@
 import { useEffect, useCallback } from 'react';
 
 // Screen reader announcements
-export function announceToScreenReader(message: string, priority: 'polite' | 'assertive' = 'polite') {
+export function announceToScreenReader(
+  message: string,
+  priority: 'polite' | 'assertive' = 'polite'
+) {
   let region = document.getElementById('sr-announcements');
   if (!region) {
     region = document.createElement('div');
@@ -17,14 +20,16 @@ export function announceToScreenReader(message: string, priority: 'polite' | 'as
     document.body.appendChild(region);
   }
   region.textContent = message;
-  setTimeout(() => { region!.textContent = ''; }, 3000);
+  setTimeout(() => {
+    region!.textContent = '';
+  }, 3000);
 }
 
 // Focus management hook
 export function useFocusTrap(containerRef: React.RefObject<HTMLElement>, isActive: boolean) {
   useEffect(() => {
     if (!isActive || !containerRef.current) return;
-    
+
     const focusableElements = containerRef.current.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
@@ -62,7 +67,8 @@ export function useKeyboardNavigation(onEscape?: () => void) {
 // Skip link component helper
 export function createSkipLink() {
   return {
-    className: 'sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600',
-    href: '#main-content'
+    className:
+      'sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600',
+    href: '#main-content',
   };
 }

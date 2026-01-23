@@ -76,36 +76,36 @@ The following registry files exist in the root directory. Audit ALL imports of t
 ### server.ts
 
 - [ ] **Line 2619** - `// TODO: Create proper Express handler or migrate to Cloudflare Functions`  
-      **Context:** Likely related to endpoint migration  
-      **Priority:** Medium - Part of Cloudflare migration strategy
+       **Context:** Likely related to endpoint migration  
+       **Priority:** Medium - Part of Cloudflare migration strategy
 
 ### components/CommandCenter.tsx
 
 - [ ] **Line 86** - `// TODO: Load SRS items separately - they're not in PerformanceRecord`  
-      **Context:** Data structure mismatch between SRS and performance tracking  
-      **Priority:** Medium - May cause data inconsistency
+       **Context:** Data structure mismatch between SRS and performance tracking  
+       **Priority:** Medium - May cause data inconsistency
 
 ### components/MenuView.tsx
 
 - [ ] **Line 938** - `// Note: Full implementation would trigger a special review session mode`  
-      **Context:** Incomplete feature - review session mode  
-      **Priority:** Low - Feature stub
+       **Context:** Incomplete feature - review session mode  
+       **Priority:** Low - Feature stub
 
 - [ ] **Line 953** - `// Note: Full implementation would update in parent state/database`  
-      **Context:** Incomplete database sync logic  
-      **Priority:** Medium - Data persistence gap
+       **Context:** Incomplete database sync logic  
+       **Priority:** Medium - Data persistence gap
 
 ### components/analytics/WeaknessCheatsheetExporter.tsx
 
 - [ ] **Line 6** - `/* Note: This component generates a simplified cheatsheet based on performance */`  
-      **Context:** Documentation comment  
-      **Priority:** Low - Informational only
+       **Context:** Documentation comment  
+       **Priority:** Low - Informational only
 
 ### components/SettingsStatsModal.tsx
 
 - [ ] **Line 1449** - `[i] <strong>Note:</strong> Clinical Fidelity features are optional enhancements...`  
-      **Context:** User-facing documentation  
-      **Priority:** Low - Not a code TODO
+       **Context:** User-facing documentation  
+       **Priority:** Low - Not a code TODO
 
 ---
 
@@ -271,36 +271,36 @@ Based on fetch/async operations detected, these components should be audited:
 #### ⚠️ **Needs Review (May Be Missing States)**
 
 - [ ] **components/social/StudyGroupDashboard.tsx**  
-      **Fetches:** `/api/social/groups`, `/api/social/leaderboard`, `/api/social/groups/join`  
-      **Check:** Verify loading/error states for all 4 fetch operations
+       **Fetches:** `/api/social/groups`, `/api/social/leaderboard`, `/api/social/groups/join`  
+       **Check:** Verify loading/error states for all 4 fetch operations
 
 - [ ] **components/dashboard/GapAnalysisDashboard.tsx**  
-      **Fetches:** `/api/analytics/performance-deltas`  
-      **Check:** Verify loading state during data fetch
+       **Fetches:** `/api/analytics/performance-deltas`  
+       **Check:** Verify loading state during data fetch
 
 - [ ] **components/dashboard/RetentionWidget.tsx**  
-      **Fetches:** `/api/srs/stats`  
-      **Check:** Verify loading/error display
+       **Fetches:** `/api/srs/stats`  
+       **Check:** Verify loading/error display
 
 - [ ] **components/admin/ContentEditor.tsx**  
-      **Fetches:** `/api/admin/generate-draft`  
-      **Check:** Line 152 has error catch, verify UI shows error to user
+       **Fetches:** `/api/admin/generate-draft`  
+       **Check:** Line 152 has error catch, verify UI shows error to user
 
 - [ ] **components/admin/MediaApprovalDashboard.tsx**  
-      **Fetches:** `/api/media/pending`, `/api/media/approve` (multiple calls)  
-      **Check:** Verify loading states for async operations
+       **Fetches:** `/api/media/pending`, `/api/media/approve` (multiple calls)  
+       **Check:** Verify loading states for async operations
 
 - [ ] **components/ConditionDetailModal.tsx**  
-      **Fetches:** `/api/conditions/${id}/extended`  
-      **Check:** Verify loading spinner and error message display
+       **Fetches:** `/api/conditions/${id}/extended`  
+       **Check:** Verify loading spinner and error message display
 
 - [ ] **components/modes/SmartReviewMode.tsx**  
-      **Fetches:** `/api/drills/smart-review`, `/api/drills/submit-review`  
-      **Check:** Verify loading state for both operations
+       **Fetches:** `/api/drills/smart-review`, `/api/drills/submit-review`  
+       **Check:** Verify loading state for both operations
 
 - [ ] **components/CommandPalette.tsx**  
-      **Fetches:** Search API (line 109)  
-      **Check:** Verify loading state during search
+       **Fetches:** Search API (line 109)  
+       **Check:** Verify loading state during search
 
 ---
 

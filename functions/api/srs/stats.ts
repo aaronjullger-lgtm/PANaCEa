@@ -45,7 +45,9 @@ export const onRequestGet = authenticatedEndpoint(SRSStatsSchema, async (context
 
     const retentionRate =
       recentAttempts.length > 0
-        ? Math.round((recentAttempts.filter((a) => a.isCorrect).length / recentAttempts.length) * 100)
+        ? Math.round(
+            (recentAttempts.filter((a) => a.isCorrect).length / recentAttempts.length) * 100
+          )
         : 0;
 
     logger.info('Fetched SRS stats', { userId: auth.userId, dueCount, totalCards });

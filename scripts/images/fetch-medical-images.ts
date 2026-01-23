@@ -200,8 +200,6 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
   try {
     await prisma.mediaAsset.create({
       data: {
-
-
         id: uuidv4(),
         conditionId,
         type: 'clinical_photo',

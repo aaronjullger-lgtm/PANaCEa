@@ -83,7 +83,10 @@ export interface UseMouseTrajectoryReturn {
   /** Get raw trajectory data (for debugging) */
   getRawTrajectory: () => TrajectoryPoint[];
   /** Get serialized metrics for API submission */
-  getSerializedMetrics: (target: TargetInfo, selectedOptionId?: string) => SerializedTrajectoryMetrics | null;
+  getSerializedMetrics: (
+    target: TargetInfo,
+    selectedOptionId?: string
+  ) => SerializedTrajectoryMetrics | null;
   /** Register an option element for hover tracking. Returns cleanup function. */
   registerOption: (optionId: string, element: HTMLElement | null) => UnregisterOptionFn;
   /** Get current hover times for all registered options */
@@ -174,58 +177,61 @@ export function useMouseTrajectory(): UseMouseTrajectoryReturn {
   /**
    * Register an option element for hover tracking
    */
-  const registerOption = useCallback((optionId: string, element: HTMLElement | null): UnregisterOptionFn => {
-    // If element is null, return no-op cleanup
-    if (!element) {
-      return () => {};
-    }
-
-    // Create hover state for this option
-    const state: HoverState = {
-      element,
-      totalTime: 0,
-      enterCount: 0,
-      hoverStartTime: null,
-    };
-
-    // Mouse enter handler
-    const handleEnter = () => {
-      if (!isTrackingRef.current) return;
-
-      const currentState = hoverStatesRef.current.get(optionId);
-      if (currentState && currentState.hoverStartTime === null) {
-        currentState.hoverStartTime = Date.now();
-        currentState.enterCount++;
+  const registerOption = useCallback(
+    (optionId: string, element: HTMLElement | null): UnregisterOptionFn => {
+      // If element is null, return no-op cleanup
+      if (!element) {
+        return () => {};
       }
-    };
 
-    // Mouse leave handler
-    const handleLeave = () => {
-      if (!isTrackingRef.current) return;
+      // Create hover state for this option
+      const state: HoverState = {
+        element,
+        totalTime: 0,
+        enterCount: 0,
+        hoverStartTime: null,
+      };
 
-      const currentState = hoverStatesRef.current.get(optionId);
-      if (currentState && currentState.hoverStartTime !== null) {
-        currentState.totalTime += Date.now() - currentState.hoverStartTime;
-        currentState.hoverStartTime = null;
-      }
-    };
+      // Mouse enter handler
+      const handleEnter = () => {
+        if (!isTrackingRef.current) return;
 
-    // Store state and handlers
-    hoverStatesRef.current.set(optionId, state);
-    handlersRef.current.set(optionId, { enter: handleEnter, leave: handleLeave });
+        const currentState = hoverStatesRef.current.get(optionId);
+        if (currentState && currentState.hoverStartTime === null) {
+          currentState.hoverStartTime = Date.now();
+          currentState.enterCount++;
+        }
+      };
 
-    // Attach event listeners
-    element.addEventListener('mouseenter', handleEnter);
-    element.addEventListener('mouseleave', handleLeave);
+      // Mouse leave handler
+      const handleLeave = () => {
+        if (!isTrackingRef.current) return;
 
-    // Return cleanup function
-    return () => {
-      element.removeEventListener('mouseenter', handleEnter);
-      element.removeEventListener('mouseleave', handleLeave);
-      hoverStatesRef.current.delete(optionId);
-      handlersRef.current.delete(optionId);
-    };
-  }, []);
+        const currentState = hoverStatesRef.current.get(optionId);
+        if (currentState && currentState.hoverStartTime !== null) {
+          currentState.totalTime += Date.now() - currentState.hoverStartTime;
+          currentState.hoverStartTime = null;
+        }
+      };
+
+      // Store state and handlers
+      hoverStatesRef.current.set(optionId, state);
+      handlersRef.current.set(optionId, { enter: handleEnter, leave: handleLeave });
+
+      // Attach event listeners
+      element.addEventListener('mouseenter', handleEnter);
+      element.addEventListener('mouseleave', handleLeave);
+
+      // Return cleanup function
+      return () => {
+        element.removeEventListener('mouseenter', handleEnter);
+        element.removeEventListener('mouseleave', handleLeave);
+        hoverStatesRef.current.delete(optionId);
+        handlersRef.current.delete(optionId);
+      };
+    },
+    []
+  );
 
   /**
    * Finalize any ongoing hovers (called when tracking stops)

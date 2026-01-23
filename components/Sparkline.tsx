@@ -88,7 +88,7 @@ export function Sparkline({
       const p1 = points[i];
       const p2 = points[i + 1];
       if (!p1 || !p2) continue;
-      
+
       const p0 = points[i - 1] ?? p1;
       const p3 = points[i + 2] ?? p2;
 
@@ -107,9 +107,10 @@ export function Sparkline({
 
   // Generate area path if needed
   const lastPoint = points[points.length - 1];
-  const areaPathData = fillArea && lastPoint
-    ? `${pathData} L ${lastPoint.x},${height - padding} L ${padding},${height - padding} Z`
-    : '';
+  const areaPathData =
+    fillArea && lastPoint
+      ? `${pathData} L ${lastPoint.x},${height - padding} L ${padding},${height - padding} Z`
+      : '';
 
   const lastValue = data[data.length - 1] ?? 0;
   const inRange = referenceRange

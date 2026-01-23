@@ -81,14 +81,22 @@ export async function optimizeAllUsersFSRS(): Promise<{
     }
 
     // Process in batches
-    for (let i = 0; i < eligibleUsers.length && stats.processed < MAX_USERS_PER_RUN; i += BATCH_SIZE) {
+    for (
+      let i = 0;
+      i < eligibleUsers.length && stats.processed < MAX_USERS_PER_RUN;
+      i += BATCH_SIZE
+    ) {
       const batch = eligibleUsers.slice(i, i + BATCH_SIZE);
       console.log(`🔄 [FSRS Optimization] Processing batch ${Math.floor(i / BATCH_SIZE) + 1}...`);
 
       await Promise.all(
         batch.map(async (user) => {
           try {
-            const result = await optimizeUserFSRS(user.userId, user.reviewCount, user.lastOptimizedAt);
+            const result = await optimizeUserFSRS(
+              user.userId,
+              user.reviewCount,
+              user.lastOptimizedAt
+            );
             stats.processed++;
 
             if (result.optimized) {
@@ -157,7 +165,8 @@ export async function generateOptimizationReport(): Promise<{
 
   const averageImprovement =
     optimizedUsers > 0
-      ? optimizedParams.reduce((sum, p) => sum + (p.improvementOverDefault ?? 0), 0) / optimizedUsers
+      ? optimizedParams.reduce((sum, p) => sum + (p.improvementOverDefault ?? 0), 0) /
+        optimizedUsers
       : 0;
 
   const systemsAnalyzed = optimizedParams.reduce((count, p) => {
@@ -363,7 +372,10 @@ async function optimizeUserFSRS(
   // Validate results
   const validation = validateParameters(result.w);
   if (!validation.valid) {
-    console.warn(`⚠️ [FSRS Optimization] Invalid parameters for user ${userId}:`, validation.errors);
+    console.warn(
+      `⚠️ [FSRS Optimization] Invalid parameters for user ${userId}:`,
+      validation.errors
+    );
     return { optimized: false, improvement: 0 };
   }
 

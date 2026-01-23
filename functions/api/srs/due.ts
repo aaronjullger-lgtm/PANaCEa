@@ -1,7 +1,7 @@
 /**
  * SRS Due Items API
  * GET /api/srs/due
- * 
+ *
  * Fetch all SRS items due for review for the authenticated user
  */
 
@@ -11,9 +11,14 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const SRSDueSchema = z.object({
-  query: z.object({
-    limit: z.string().optional().transform(val => val ? Math.min(Number(val), 200) : 100),
-  }).optional(),
+  query: z
+    .object({
+      limit: z
+        .string()
+        .optional()
+        .transform((val) => (val ? Math.min(Number(val), 200) : 100)),
+    })
+    .optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -34,7 +39,7 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
 
     if (!user) {
       logger.warn('User not found in database', { clerkId: auth.userId.substring(0, 10) });
-      return { 
+      return {
         data: { error: 'User not found. Please refresh and try again.' },
         status: 404,
       };

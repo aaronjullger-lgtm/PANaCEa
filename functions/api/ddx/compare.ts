@@ -45,10 +45,31 @@ interface DeepConditionData {
   pance_yield?: number;
   clinical_pearls?: any;
   mnemonic?: string;
-  linkedLabs?: Array<{ name: string; expectedResult?: string; significance?: string; isHighYield: boolean }>;
-  linkedImaging?: Array<{ name: string; modality: string; expectedFindings?: string[]; classicFindings?: string }>;
-  linkedFindings?: Array<{ name: string; system: string; clinicalSignificance?: string; sensitivity?: number; specificity?: number }>;
-  linkedDrugs?: Array<{ genericName: string; brandName?: string; isFirstLine: boolean; mechanismOfAction?: string }>;
+  linkedLabs?: Array<{
+    name: string;
+    expectedResult?: string;
+    significance?: string;
+    isHighYield: boolean;
+  }>;
+  linkedImaging?: Array<{
+    name: string;
+    modality: string;
+    expectedFindings?: string[];
+    classicFindings?: string;
+  }>;
+  linkedFindings?: Array<{
+    name: string;
+    system: string;
+    clinicalSignificance?: string;
+    sensitivity?: number;
+    specificity?: number;
+  }>;
+  linkedDrugs?: Array<{
+    genericName: string;
+    brandName?: string;
+    isFirstLine: boolean;
+    mechanismOfAction?: string;
+  }>;
   linkedScoringSystem?: Array<{ name: string; category: string; whenToUse?: string }>;
 }
 
@@ -63,7 +84,10 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
     const conditionIds = validated.query?.ids?.split(',').filter(Boolean) || [];
 
     if (conditionIds.length < 2) {
-      return { data: { error: 'At least 2 condition IDs required (comma-separated)' }, status: 400 };
+      return {
+        data: { error: 'At least 2 condition IDs required (comma-separated)' },
+        status: 400,
+      };
     }
 
     if (conditionIds.length > 5) {
@@ -75,13 +99,36 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
         const medicalContent = await prisma.medicalContent.findUnique({
           where: { id },
           select: {
-            id: true, conditionId: true, condition: true, system: true, subcategory: true, content: true,
-            buzzwords: true, symptoms: true, pathophysiology: true, etiology: true, riskFactors: true,
-            physicalExam: true, diagnostics: true, differentialDiagnosis: true, treatment: true,
-            complications: true, prognosis: true, overview: true, gold_standard_dx: true, best_initial_test: true,
-            first_line_rx: true, rx_mechanism: true, rx_side_effects: true, age_demographic: true,
-            gender_bias: true, classic_patient: true, pance_yield: true, clinical_pearls: true,
-            mnemonic: true, prevention: true,
+            id: true,
+            conditionId: true,
+            condition: true,
+            system: true,
+            subcategory: true,
+            content: true,
+            buzzwords: true,
+            symptoms: true,
+            pathophysiology: true,
+            etiology: true,
+            riskFactors: true,
+            physicalExam: true,
+            diagnostics: true,
+            differentialDiagnosis: true,
+            treatment: true,
+            complications: true,
+            prognosis: true,
+            overview: true,
+            gold_standard_dx: true,
+            best_initial_test: true,
+            first_line_rx: true,
+            rx_mechanism: true,
+            rx_side_effects: true,
+            age_demographic: true,
+            gender_bias: true,
+            classic_patient: true,
+            pance_yield: true,
+            clinical_pearls: true,
+            mnemonic: true,
+            prevention: true,
           },
         });
 
@@ -90,22 +137,49 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
         const [labs, imaging, findings, drugs, scoringSystems] = await Promise.all([
           prisma.labConditionLink.findMany({
             where: { medicalContentId: id },
-            include: { LabTest: { select: { name: true, category: true, isHighYield: true, panceYield: true } } },
+            include: {
+              LabTest: {
+                select: { name: true, category: true, isHighYield: true, panceYield: true },
+              },
+            },
             take: 10,
           }),
           prisma.imagingConditionLink.findMany({
             where: { medicalContentId: id },
-            include: { ImagingStudy: { select: { name: true, modality: true, classicSigns: true, isHighYield: true } } },
+            include: {
+              ImagingStudy: {
+                select: { name: true, modality: true, classicSigns: true, isHighYield: true },
+              },
+            },
             take: 10,
           }),
           prisma.findingConditionLink.findMany({
             where: { medicalContentId: id },
-            include: { PhysicalExamFinding: { select: { name: true, system: true, clinicalSignificance: true, sensitivity: true, specificity: true } } },
+            include: {
+              PhysicalExamFinding: {
+                select: {
+                  name: true,
+                  system: true,
+                  clinicalSignificance: true,
+                  sensitivity: true,
+                  specificity: true,
+                },
+              },
+            },
             take: 10,
           }),
           prisma.drugConditionLink.findMany({
             where: { medicalContentId: id },
-            include: { Drug: { select: { genericName: true, brandName: true, mechanismOfAction: true, isFirstLine: true } } },
+            include: {
+              Drug: {
+                select: {
+                  genericName: true,
+                  brandName: true,
+                  mechanismOfAction: true,
+                  isFirstLine: true,
+                },
+              },
+            },
             take: 10,
           }),
           prisma.scoringSystemConditionLink.findMany({
@@ -117,11 +191,71 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
 
         return {
           ...medicalContent,
-          linkedLabs: labs.map((l: { LabTest: { name: string; isHighYield: boolean }; expectedResult: string | null; significance: string | null }) => ({ name: l.LabTest.name, expectedResult: l.expectedResult, significance: l.significance, isHighYield: l.LabTest.isHighYield })),
-          linkedImaging: imaging.map((i: { ImagingStudy: { name: string; modality: string; classicSigns: string[] | null }; expectedFindings: string[] | null; classicFindings: string | null }) => ({ name: i.ImagingStudy.name, modality: i.ImagingStudy.modality, expectedFindings: i.expectedFindings, classicFindings: i.classicFindings })),
-          linkedFindings: findings.map((f: { PhysicalExamFinding: { name: string; system: string; clinicalSignificance: string | null }; sensitivity: number | null; specificity: number | null }) => ({ name: f.PhysicalExamFinding.name, system: f.PhysicalExamFinding.system, clinicalSignificance: f.PhysicalExamFinding.clinicalSignificance, sensitivity: f.sensitivity, specificity: f.specificity })),
-          linkedDrugs: drugs.map((d: { Drug: { genericName: string; brandName: string | null; mechanismOfAction: string | null }; isFirstLine: boolean }) => ({ genericName: d.Drug.genericName, brandName: d.Drug.brandName, isFirstLine: d.isFirstLine, mechanismOfAction: d.Drug.mechanismOfAction })),
-          linkedScoringSystem: scoringSystems.map((s: { ScoringSystem: { name: string; category: string; whenToUse: string | null } }) => ({ name: s.ScoringSystem.name, category: s.ScoringSystem.category, whenToUse: s.ScoringSystem.whenToUse })),
+          linkedLabs: labs.map(
+            (l: {
+              LabTest: { name: string; isHighYield: boolean };
+              expectedResult: string | null;
+              significance: string | null;
+            }) => ({
+              name: l.LabTest.name,
+              expectedResult: l.expectedResult,
+              significance: l.significance,
+              isHighYield: l.LabTest.isHighYield,
+            })
+          ),
+          linkedImaging: imaging.map(
+            (i: {
+              ImagingStudy: { name: string; modality: string; classicSigns: string[] | null };
+              expectedFindings: string[] | null;
+              classicFindings: string | null;
+            }) => ({
+              name: i.ImagingStudy.name,
+              modality: i.ImagingStudy.modality,
+              expectedFindings: i.expectedFindings,
+              classicFindings: i.classicFindings,
+            })
+          ),
+          linkedFindings: findings.map(
+            (f: {
+              PhysicalExamFinding: {
+                name: string;
+                system: string;
+                clinicalSignificance: string | null;
+              };
+              sensitivity: number | null;
+              specificity: number | null;
+            }) => ({
+              name: f.PhysicalExamFinding.name,
+              system: f.PhysicalExamFinding.system,
+              clinicalSignificance: f.PhysicalExamFinding.clinicalSignificance,
+              sensitivity: f.sensitivity,
+              specificity: f.specificity,
+            })
+          ),
+          linkedDrugs: drugs.map(
+            (d: {
+              Drug: {
+                genericName: string;
+                brandName: string | null;
+                mechanismOfAction: string | null;
+              };
+              isFirstLine: boolean;
+            }) => ({
+              genericName: d.Drug.genericName,
+              brandName: d.Drug.brandName,
+              isFirstLine: d.isFirstLine,
+              mechanismOfAction: d.Drug.mechanismOfAction,
+            })
+          ),
+          linkedScoringSystem: scoringSystems.map(
+            (s: {
+              ScoringSystem: { name: string; category: string; whenToUse: string | null };
+            }) => ({
+              name: s.ScoringSystem.name,
+              category: s.ScoringSystem.category,
+              whenToUse: s.ScoringSystem.whenToUse,
+            })
+          ),
         } as DeepConditionData;
       })
     );
@@ -133,7 +267,14 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
     }
 
     const discriminatingFeatures: string[] = [];
-    const fieldsToCheck = ['classic_patient', 'gold_standard_dx', 'best_initial_test', 'first_line_rx', 'age_demographic', 'gender_bias'];
+    const fieldsToCheck = [
+      'classic_patient',
+      'gold_standard_dx',
+      'best_initial_test',
+      'first_line_rx',
+      'age_demographic',
+      'gender_bias',
+    ];
 
     fieldsToCheck.forEach((field) => {
       const values = validConditions.map((c) => c[field as keyof DeepConditionData]);
@@ -143,8 +284,12 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
 
     const uniqueEntities = validConditions.map((condition) => {
       const otherConditions = validConditions.filter((c) => c.id !== condition.id);
-      const otherLabNames = new Set(otherConditions.flatMap((c) => c.linkedLabs?.map((l) => l.name) || []));
-      const otherImagingNames = new Set(otherConditions.flatMap((c) => c.linkedImaging?.map((i) => i.name) || []));
+      const otherLabNames = new Set(
+        otherConditions.flatMap((c) => c.linkedLabs?.map((l) => l.name) || [])
+      );
+      const otherImagingNames = new Set(
+        otherConditions.flatMap((c) => c.linkedImaging?.map((i) => i.name) || [])
+      );
       return {
         conditionId: condition.id,
         uniqueLabs: condition.linkedLabs?.filter((l) => !otherLabNames.has(l.name)) || [],
@@ -174,7 +319,12 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
           { key: 'diagnostics', label: 'Diagnostics', category: 'diagnosis' },
           { key: 'linkedLabs', label: 'Labs', category: 'diagnosis', isLinkedEntity: true },
           { key: 'linkedImaging', label: 'Imaging', category: 'diagnosis', isLinkedEntity: true },
-          { key: 'linkedFindings', label: 'Exam Findings', category: 'diagnosis', isLinkedEntity: true },
+          {
+            key: 'linkedFindings',
+            label: 'Exam Findings',
+            category: 'diagnosis',
+            isLinkedEntity: true,
+          },
           { key: 'first_line_rx', label: 'First-Line Rx', category: 'treatment' },
           { key: 'treatment', label: 'Treatment', category: 'treatment' },
           { key: 'rx_mechanism', label: 'Rx Mechanism', category: 'treatment' },
@@ -186,7 +336,9 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
       },
     };
   } catch (error) {
-    logger.error('Error comparing conditions', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error comparing conditions', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to compare conditions');
   } finally {
     await safePrismaDisconnect(prisma);

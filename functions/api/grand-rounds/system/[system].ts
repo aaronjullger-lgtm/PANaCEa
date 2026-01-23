@@ -22,10 +22,7 @@ import { logger } from '../../_shared/secureLogger';
 
 const GrandRoundsSystemSchema = z.object({
   params: z.object({
-    system: z
-      .string()
-      .min(1, 'System parameter is required')
-      .max(50, 'System name too long'),
+    system: z.string().min(1, 'System parameter is required').max(50, 'System name too long'),
   }),
 });
 
@@ -39,9 +36,7 @@ export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   GrandRoundsSystemSchema,
-  async (
-    context: AuthenticatedContext & ValidatedContext<GrandRoundsSystemInput>
-  ) => {
+  async (context: AuthenticatedContext & ValidatedContext<GrandRoundsSystemInput>) => {
     const { env, auth, params } = context;
 
     // Extract system from path params

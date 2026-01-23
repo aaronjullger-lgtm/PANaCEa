@@ -39,8 +39,8 @@ export const onRequestGet = publicEndpoint(FamilySchema, async ({ env, validated
       };
     }
 
-    type MemberType = typeof members[0];
-    
+    type MemberType = (typeof members)[0];
+
     const parent = members.find(
       (m: MemberType) =>
         m.condition.toLowerCase() === decodedName.toLowerCase() ||

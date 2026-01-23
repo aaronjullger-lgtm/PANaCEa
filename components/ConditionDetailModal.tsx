@@ -353,9 +353,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                           return (
                             <img
                               src={`/media/${
-                                currentMedia.includes('.')
-                                  ? currentMedia
-                                  : `${currentMedia}.png`
+                                currentMedia.includes('.') ? currentMedia : `${currentMedia}.png`
                               }`}
                               alt={`${condition.condition} media ${mediaIndex + 1}`}
                             />

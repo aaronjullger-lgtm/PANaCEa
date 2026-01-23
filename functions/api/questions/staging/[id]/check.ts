@@ -26,71 +26,68 @@ export const onRequestOptions = (context: { request: Request }) => {
   });
 };
 
-export const onRequestPost = adminEndpoint(
-  CheckRequestSchema,
-  async (context) => {
-    const { env, params, validated } = context;
-    const { id } = params as { id: string };
-    const logger = createEndpointLogger('questions/staging/[id]/check');
+export const onRequestPost = adminEndpoint(CheckRequestSchema, async (context) => {
+  const { env, params, validated } = context;
+  const { id } = params as { id: string };
+  const logger = createEndpointLogger('questions/staging/[id]/check');
 
-    if (!env.DATABASE_URL) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Database not configured',
-        }),
-        {
-          status: 503,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    try {
-      logger.info('Running adequacy check on staging question', {
-        stagingId: id,
-        force: validated?.body?.force,
-      });
-
-      const result = await runAdequacyCheck(prisma, env, id);
-
-      logger.info('Adequacy check completed', {
-        stagingId: id,
-        result: result ? 'passed' : 'failed',
-      });
-
-      return new Response(JSON.stringify({ success: true, result }), {
+  if (!env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Database not configured',
+      }),
+      {
+        status: 503,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-      });
-    } catch (error) {
-      logger.error('Failed to run adequacy check', {
-        stagingId: id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to run adequacy check',
-        }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    } finally {
-      await safePrismaDisconnect(prisma);
-    }
+      }
+    );
   }
-);
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    logger.info('Running adequacy check on staging question', {
+      stagingId: id,
+      force: validated?.body?.force,
+    });
+
+    const result = await runAdequacyCheck(prisma, env, id);
+
+    logger.info('Adequacy check completed', {
+      stagingId: id,
+      result: result ? 'passed' : 'failed',
+    });
+
+    return new Response(JSON.stringify({ success: true, result }), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to run adequacy check', {
+      stagingId: id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to run adequacy check',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+});

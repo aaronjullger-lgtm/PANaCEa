@@ -878,7 +878,8 @@ async function run() {
   let successCount = 0;
 
   // Legacy registry no longer exists
-  for (const item of [] as any[]) { // CONDITION_REGISTRY_ADDITIONAL
+  for (const item of [] as any[]) {
+    // CONDITION_REGISTRY_ADDITIONAL
     const id = buildConditionId(item.system, item.subcategory, item.condition);
 
     // Check if we have generated content for this condition

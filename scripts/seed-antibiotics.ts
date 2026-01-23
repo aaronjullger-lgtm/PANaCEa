@@ -288,9 +288,7 @@ async function seedAntibioticGuidelines() {
     for (const guideline of ORGANISM_GUIDELINES) {
       await prisma.antibioticGuideline.create({
         data: {
-
           id: uuidv4(),
-
 
           organism: guideline.organism,
           class: guideline.class,

@@ -36,7 +36,10 @@ export const onRequestGet = publicEndpoint(ConditionsListSchema, async ({ env, v
       if (!bySystem[condition.system]) {
         bySystem[condition.system] = [];
       }
-      bySystem[condition.system].push(condition);
+      const systemArray = bySystem[condition.system];
+      if (systemArray) {
+        systemArray.push(condition);
+      }
     }
 
     return {

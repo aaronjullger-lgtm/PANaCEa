@@ -30,7 +30,8 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } = validated.body;
+    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } =
+      validated.body;
     const isRankedAttempt = isRankedMode(mode);
     const now = new Date();
 
@@ -79,7 +80,9 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
       try {
         await updateGlobalAccuracy(prisma as any, userId);
       } catch (statsError) {
-        logger.warn('Failed to update ranked stats', { error: statsError instanceof Error ? statsError.message : String(statsError) });
+        logger.warn('Failed to update ranked stats', {
+          error: statsError instanceof Error ? statsError.message : String(statsError),
+        });
       }
     }
 

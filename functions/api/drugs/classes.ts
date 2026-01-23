@@ -41,7 +41,9 @@ export const onRequestGet = authenticatedEndpoint(DrugClassesSchema, async (cont
     logger.info('Drug classes fetched', { count: classes.length });
     return { data: classes, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    logger.error('Failed to fetch drug classes', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Failed to fetch drug classes', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to fetch drug classes');
   } finally {
     await safePrismaDisconnect(prisma);

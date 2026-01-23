@@ -106,7 +106,13 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       take: limit,
     });
 
-    type ConditionResult = { id: string; name: string; system: string; subcategory: string | null; status: string | null };
+    type ConditionResult = {
+      id: string;
+      name: string;
+      system: string;
+      subcategory: string | null;
+      status: string | null;
+    };
     // Get full content for matched conditions to extract aliases/synonyms
     const conditionIds = conditions.map((c: ConditionResult) => c.id);
     const medicalContent = await prisma.medicalContent.findMany({
@@ -121,7 +127,9 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
 
     type MedicalContentResult = { conditionId: string; synonyms: string[] | null };
     // Create a map of conditionId -> synonyms for quick lookup
-    const synonymsMap = new Map(medicalContent.map((mc: MedicalContentResult) => [mc.conditionId, mc.synonyms || []]));
+    const synonymsMap = new Map(
+      medicalContent.map((mc: MedicalContentResult) => [mc.conditionId, mc.synonyms || []])
+    );
 
     // Score and rank results
     const results = conditions
@@ -138,7 +146,16 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
           score,
         };
       })
-      .filter((result: { id: string; condition: string; system: string; subcategory: string | null; aliases: string[]; score: number }) => result.score > 0.1) // Filter out very low matches
+      .filter(
+        (result: {
+          id: string;
+          condition: string;
+          system: string;
+          subcategory: string | null;
+          aliases: string[];
+          score: number;
+        }) => result.score > 0.1
+      ) // Filter out very low matches
       .sort((a: { score: number; condition: string }, b: { score: number; condition: string }) => {
         // Sort by score desc, then alphabetically
         if (Math.abs(b.score - a.score) < 0.01) {

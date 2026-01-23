@@ -33,8 +33,10 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
     const whereClause: any = { userId: auth.userId, count: { gte: minCount } };
     if (conditionId) {
       whereClause.OR = [
-        { realConditionId: conditionId }, { mistakenForId: conditionId },
-        { correctConditionId: conditionId }, { selectedConditionId: conditionId },
+        { realConditionId: conditionId },
+        { mistakenForId: conditionId },
+        { correctConditionId: conditionId },
+        { selectedConditionId: conditionId },
       ];
     }
 
@@ -61,8 +63,18 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
       mistakenForId: string | null;
       correctConditionId: string | null;
       selectedConditionId: string | null;
-      RealCondition: { id: string; name: string; displayName: string | null; system: string } | null;
-      MistakenCondition: { id: string; name: string; displayName: string | null; system: string } | null;
+      RealCondition: {
+        id: string;
+        name: string;
+        displayName: string | null;
+        system: string;
+      } | null;
+      MistakenCondition: {
+        id: string;
+        name: string;
+        displayName: string | null;
+        system: string;
+      } | null;
       CorrectCondition: { id: string; condition: string; system: string } | null;
       SelectedCondition: { id: string; condition: string; system: string } | null;
     };
@@ -76,22 +88,37 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
       selectedConditionId: string | null | undefined;
       count: number;
       lastOccurrence: Date;
-      realConditionData: { id: string; condition?: string; name?: string; displayName?: string | null; system: string } | null;
-      mistakenConditionData: { id: string; condition?: string; name?: string; displayName?: string | null; system: string } | null;
+      realConditionData: {
+        id: string;
+        condition?: string;
+        name?: string;
+        displayName?: string | null;
+        system: string;
+      } | null;
+      mistakenConditionData: {
+        id: string;
+        condition?: string;
+        name?: string;
+        displayName?: string | null;
+        system: string;
+      } | null;
       severity: 'high' | 'medium' | 'low';
     };
 
     const enrichedPairs: EnrichedPair[] = confusionPairs.map((pair: ConfusionPairResult) => {
       const realConditionName = pair.CorrectCondition?.condition || pair.realCondition;
       const mistakenConditionName = pair.SelectedCondition?.condition || pair.mistakenFor;
-      const severity: 'high' | 'medium' | 'low' = pair.count >= 5 ? 'high' : pair.count >= 3 ? 'medium' : 'low';
+      const severity: 'high' | 'medium' | 'low' =
+        pair.count >= 5 ? 'high' : pair.count >= 3 ? 'medium' : 'low';
 
       return {
         id: pair.id,
         realCondition: realConditionName,
         mistakenFor: mistakenConditionName,
-        correctConditionId: pair.correctConditionId ?? pair.CorrectCondition?.id ?? pair.realConditionId,
-        selectedConditionId: pair.selectedConditionId ?? pair.SelectedCondition?.id ?? pair.mistakenForId,
+        correctConditionId:
+          pair.correctConditionId ?? pair.CorrectCondition?.id ?? pair.realConditionId,
+        selectedConditionId:
+          pair.selectedConditionId ?? pair.SelectedCondition?.id ?? pair.mistakenForId,
         count: pair.count,
         lastOccurrence: pair.lastOccurrence,
         realConditionData: pair.CorrectCondition ?? pair.RealCondition,
@@ -101,20 +128,28 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
     });
 
     // Group by system for summary
-    type SystemSummaryValue = { count: number; pairs: Array<{ real: string; mistaken: string; count: number }> };
+    type SystemSummaryValue = {
+      count: number;
+      pairs: Array<{ real: string; mistaken: string; count: number }>;
+    };
     const systemSummary = enrichedPairs.reduce(
       (acc: Record<string, SystemSummaryValue>, pair: EnrichedPair) => {
         const system = pair.realConditionData?.system || 'Unknown';
         if (!acc[system]) acc[system] = { count: 0, pairs: [] };
         acc[system].count += pair.count;
-        acc[system].pairs.push({ real: pair.realCondition, mistaken: pair.mistakenFor, count: pair.count });
+        acc[system].pairs.push({
+          real: pair.realCondition,
+          mistaken: pair.mistakenFor,
+          count: pair.count,
+        });
         return acc;
       },
       {} as Record<string, SystemSummaryValue>
     );
 
     const confusionScore = enrichedPairs.reduce(
-      (sum: number, p: EnrichedPair) => sum + p.count * (p.severity === 'high' ? 3 : p.severity === 'medium' ? 2 : 1),
+      (sum: number, p: EnrichedPair) =>
+        sum + p.count * (p.severity === 'high' ? 3 : p.severity === 'medium' ? 2 : 1),
       0
     );
 
@@ -151,12 +186,21 @@ function generateRecommendations(
   if (highSeverity.length > 0) {
     const topPair = highSeverity[0];
     if (topPair) {
-      recommendations.push(`Focus on distinguishing ${topPair.realCondition} from ${topPair.mistakenFor} - you've confused these ${topPair.count} times.`);
+      recommendations.push(
+        `Focus on distinguishing ${topPair.realCondition} from ${topPair.mistakenFor} - you've confused these ${topPair.count} times.`
+      );
     }
   }
-  if (pairs.length > 3) recommendations.push('Consider creating a comparison table for your most confused conditions.');
-  if (mediumSeverity.length > 2) recommendations.push('Use the DDx Compare feature to study the key differences between similar conditions.');
-  if (pairs.length === 0) recommendations.push("Great job! You don't have significant confusion patterns. Keep practicing!");
+  if (pairs.length > 3)
+    recommendations.push('Consider creating a comparison table for your most confused conditions.');
+  if (mediumSeverity.length > 2)
+    recommendations.push(
+      'Use the DDx Compare feature to study the key differences between similar conditions.'
+    );
+  if (pairs.length === 0)
+    recommendations.push(
+      "Great job! You don't have significant confusion patterns. Keep practicing!"
+    );
 
   return recommendations;
 }

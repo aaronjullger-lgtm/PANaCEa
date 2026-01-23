@@ -120,7 +120,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
           // Guard: result[0] may be undefined in TypeScript strict mode
           const firstAlternative = result?.[0];
           if (!firstAlternative) continue;
-          
+
           if (result.isFinal) {
             finalTranscript += firstAlternative.transcript;
           } else {

@@ -40,7 +40,7 @@ export function LandingPage() {
         document.removeEventListener('keydown', handleEscape);
       };
     }
-    
+
     document.body.style.overflow = 'unset';
     return undefined;
   }, [showAuth]);

@@ -8,7 +8,11 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import {
+  authenticatedEndpoint,
+  AuthenticatedContext,
+  ValidatedContext,
+} from '../_shared/middleware';
 import { labCasesQuerySchema, labCasesActionSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
@@ -447,11 +451,15 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       // Transform to frontend format
-      let transformedCases = dbCases.map(transformLabCase).filter((c: TransformedLabCase) => c.panels.length > 0); // Only include cases with valid panels
+      let transformedCases = dbCases
+        .map(transformLabCase)
+        .filter((c: TransformedLabCase) => c.panels.length > 0); // Only include cases with valid panels
 
       // Filter by category if specified
       if (category && category !== 'random') {
-        transformedCases = transformedCases.filter((c: TransformedLabCase) => c.category === category);
+        transformedCases = transformedCases.filter(
+          (c: TransformedLabCase) => c.category === category
+        );
       }
 
       // Shuffle if requested
@@ -504,7 +512,9 @@ export const onRequestPost = authenticatedEndpoint(
           select: { correctDiagnosis: true },
         });
 
-        const diagnoses = [...new Set(cases.map((c: { correctDiagnosis: string }) => c.correctDiagnosis))].sort();
+        const diagnoses = [
+          ...new Set(cases.map((c: { correctDiagnosis: string }) => c.correctDiagnosis)),
+        ].sort();
 
         return {
           data: {

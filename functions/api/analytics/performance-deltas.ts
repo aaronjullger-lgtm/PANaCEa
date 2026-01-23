@@ -12,25 +12,56 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 // NCCPA Blueprint Systems
 const NCCPA_SYSTEMS = [
-  'CV', 'PULM', 'GI', 'MSK', 'HEENT', 'REPRO', 'NEURO', 'PSYCH',
-  'ENDO', 'DERM', 'GU', 'HEME', 'ID', 'RENAL',
+  'CV',
+  'PULM',
+  'GI',
+  'MSK',
+  'HEENT',
+  'REPRO',
+  'NEURO',
+  'PSYCH',
+  'ENDO',
+  'DERM',
+  'GU',
+  'HEME',
+  'ID',
+  'RENAL',
 ];
 
 // Human-readable system names
 const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
-  CV: 'Cardiovascular', PULM: 'Pulmonary', GI: 'Gastrointestinal', MSK: 'Musculoskeletal',
-  HEENT: 'HEENT', REPRO: 'Reproductive', NEURO: 'Neurological', PSYCH: 'Psychiatry',
-  ENDO: 'Endocrine', DERM: 'Dermatology', GU: 'Genitourinary', HEME: 'Hematology',
-  ID: 'Infectious Disease', RENAL: 'Nephrology',
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  MSK: 'Musculoskeletal',
+  HEENT: 'HEENT',
+  REPRO: 'Reproductive',
+  NEURO: 'Neurological',
+  PSYCH: 'Psychiatry',
+  ENDO: 'Endocrine',
+  DERM: 'Dermatology',
+  GU: 'Genitourinary',
+  HEME: 'Hematology',
+  ID: 'Infectious Disease',
+  RENAL: 'Nephrology',
 };
 
 // Default cohort benchmarks
 const DEFAULT_BENCHMARKS: Record<string, { average: number; p90: number }> = {
-  CV: { average: 72, p90: 88 }, PULM: { average: 70, p90: 86 }, GI: { average: 71, p90: 87 },
-  MSK: { average: 69, p90: 85 }, HEENT: { average: 68, p90: 84 }, REPRO: { average: 67, p90: 83 },
-  NEURO: { average: 66, p90: 82 }, PSYCH: { average: 70, p90: 86 }, ENDO: { average: 65, p90: 81 },
-  DERM: { average: 71, p90: 87 }, GU: { average: 68, p90: 84 }, HEME: { average: 64, p90: 80 },
-  ID: { average: 67, p90: 83 }, RENAL: { average: 63, p90: 79 },
+  CV: { average: 72, p90: 88 },
+  PULM: { average: 70, p90: 86 },
+  GI: { average: 71, p90: 87 },
+  MSK: { average: 69, p90: 85 },
+  HEENT: { average: 68, p90: 84 },
+  REPRO: { average: 67, p90: 83 },
+  NEURO: { average: 66, p90: 82 },
+  PSYCH: { average: 70, p90: 86 },
+  ENDO: { average: 65, p90: 81 },
+  DERM: { average: 71, p90: 87 },
+  GU: { average: 68, p90: 84 },
+  HEME: { average: 64, p90: 80 },
+  ID: { average: 67, p90: 83 },
+  RENAL: { average: 63, p90: 79 },
 };
 
 const PerformanceDeltasSchema = z.object({
@@ -124,8 +155,10 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
 
     for (const system of NCCPA_SYSTEMS) {
       const stats = userStats[system];
-      const benchmark = cohortBenchmarks[system] || DEFAULT_BENCHMARKS[system] || { average: 70, p90: 85 };
-      const accuracy = stats && stats.total >= 5 ? Math.round((stats.correct / stats.total) * 100) : 0;
+      const benchmark = cohortBenchmarks[system] ||
+        DEFAULT_BENCHMARKS[system] || { average: 70, p90: 85 };
+      const accuracy =
+        stats && stats.total >= 5 ? Math.round((stats.correct / stats.total) * 100) : 0;
       const isInsufficientData = !stats || stats.total < 10;
       const cohortAverage = Math.round(benchmark.average);
       const cohortP90 = Math.round(benchmark.p90);
@@ -143,11 +176,13 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
       systems.push({
         name: SYSTEM_DISPLAY_NAMES[system] || system,
         accuracy: isInsufficientData ? 0 : accuracy,
-        cohortAverage, cohortP90,
+        cohortAverage,
+        cohortP90,
         cohortDelta: isInsufficientData ? -cohortAverage : cohortDelta,
         topPerformerGap: isInsufficientData ? cohortP90 : topPerformerGap,
         yieldScore: isInsufficientData ? 100 : yieldScore,
-        status, isInsufficientData,
+        status,
+        isInsufficientData,
       });
     }
 
@@ -162,7 +197,11 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
     return {
       data: {
         success: true,
-        data: { userTotalAttempts: totalAttempts, overallPercentile: Math.round(overallPercentile), systems },
+        data: {
+          userTotalAttempts: totalAttempts,
+          overallPercentile: Math.round(overallPercentile),
+          systems,
+        },
       },
     };
   } catch (error) {

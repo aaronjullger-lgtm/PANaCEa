@@ -785,8 +785,6 @@ async function saveMediaAsset(
 ): Promise<void> {
   await prisma.mediaAsset.create({
     data: {
-
-
       id: uuidv4(),
       conditionId,
       type: 'derm',

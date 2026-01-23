@@ -23,11 +23,13 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 // Validation schemas
 const GoalListSchema = z.object({
-  query: z.object({
-    status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
-    goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
-    limit: z.string().regex(/^\d+$/).optional(),
-  }).optional(),
+  query: z
+    .object({
+      status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
+      goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
+      limit: z.string().regex(/^\d+$/).optional(),
+    })
+    .optional(),
 });
 
 const GoalCreateSchema = z.object({
@@ -239,7 +241,8 @@ export const onRequestPatch = authenticatedEndpoint(GoalUpdateSchema, async (con
     let lastMetDate = existingGoal.lastMetDate;
 
     const currentValue = existingGoal.currentValue ?? 0;
-    const newCurrentValue = updates.currentValue !== undefined ? updates.currentValue : currentValue;
+    const newCurrentValue =
+      updates.currentValue !== undefined ? updates.currentValue : currentValue;
 
     if (existingGoal.targetValue) {
       progressPercentage = Math.min(100, (newCurrentValue / existingGoal.targetValue) * 100);

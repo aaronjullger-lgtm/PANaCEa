@@ -114,10 +114,12 @@ async function main() {
 
     // Create Condition
     try {
-      const aliases = meta.aliases 
-        ? Array.isArray(meta.aliases) ? meta.aliases : [meta.aliases]
+      const aliases = meta.aliases
+        ? Array.isArray(meta.aliases)
+          ? meta.aliases
+          : [meta.aliases]
         : [];
-      
+
       await prisma.condition.upsert({
         where: { id: conditionId },
         update: {
@@ -163,7 +165,9 @@ async function main() {
             diagnostics: normalizedContent.diagnostics || null,
             treatment: normalizedContent.treatment || null,
             prognosis: flattenToText(normalizedContent.prognosis),
-            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis).join('\n'),
+            differentialDiagnosis: flattenToStringArray(
+              normalizedContent.differential_diagnosis
+            ).join('\n'),
             riskFactors: flattenToStringArray(normalizedContent.risk_factors).join('\n'),
             complications: flattenToStringArray(normalizedContent.complications).join('\n'),
             buzzwords: flattenToStringArray(normalizedContent.buzzwords),
@@ -188,7 +192,9 @@ async function main() {
             diagnostics: normalizedContent.diagnostics || null,
             treatment: normalizedContent.treatment || null,
             prognosis: flattenToText(normalizedContent.prognosis),
-            differentialDiagnosis: flattenToStringArray(normalizedContent.differential_diagnosis).join('\n'),
+            differentialDiagnosis: flattenToStringArray(
+              normalizedContent.differential_diagnosis
+            ).join('\n'),
             riskFactors: flattenToStringArray(normalizedContent.risk_factors).join('\n'),
             complications: flattenToStringArray(normalizedContent.complications).join('\n'),
             buzzwords: flattenToStringArray(normalizedContent.buzzwords),

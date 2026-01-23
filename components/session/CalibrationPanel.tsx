@@ -168,11 +168,7 @@ function BrierScoreGauge({ score }: { score: number }) {
 /**
  * Mini calibration curve visualization
  */
-function CalibrationCurve({
-  curve,
-}: {
-  curve: CalibrationSummary['calibrationCurve'];
-}) {
+function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCurve'] }) {
   const maxCount = Math.max(...curve.map((b) => b.count), 1);
 
   return (
@@ -183,13 +179,13 @@ function CalibrationCurve({
       </div>
       <div className="flex items-end gap-1 h-16">
         {curve.map((bin, i) => {
-          const height = bin.count > 0 ? Math.max(10, (bin.actualAccuracy * 100)) : 0;
-          const expectedHeight = bin.count > 0 ? Math.max(10, (bin.avgConfidence * 100)) : 0;
+          const height = bin.count > 0 ? Math.max(10, bin.actualAccuracy * 100) : 0;
+          const expectedHeight = bin.count > 0 ? Math.max(10, bin.avgConfidence * 100) : 0;
           const hasData = bin.count > 0;
 
           // Calculate calibration error as difference between actual and expected
           const calibrationError = bin.actualAccuracy - bin.avgConfidence;
-          
+
           return (
             <div key={bin.label} className="flex-1 flex flex-col items-center gap-0.5">
               <div className="relative w-full h-16 flex items-end justify-center gap-0.5">
@@ -215,9 +211,7 @@ function CalibrationCurve({
                     />
                   </>
                 )}
-                {!hasData && (
-                  <div className="w-4 h-2 bg-slate-200 dark:bg-slate-700 rounded" />
-                )}
+                {!hasData && <div className="w-4 h-2 bg-slate-200 dark:bg-slate-700 rounded" />}
               </div>
               <span className="text-[10px] text-slate-400">{bin.label.split('-')[0]}</span>
             </div>

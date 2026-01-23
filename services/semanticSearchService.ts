@@ -285,16 +285,12 @@ function calculateEditDistance(str1: string, str2: string): number {
   for (let i = 1; i <= str2.length; i++) {
     const row = matrix[i]!;
     const prevRow = matrix[i - 1]!;
-    
+
     for (let j = 1; j <= str1.length; j++) {
       if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
         row[j] = prevRow[j - 1]!;
       } else {
-        row[j] = Math.min(
-          prevRow[j - 1]! + 1,
-          row[j - 1]! + 1,
-          prevRow[j]! + 1
-        );
+        row[j] = Math.min(prevRow[j - 1]! + 1, row[j - 1]! + 1, prevRow[j]! + 1);
       }
     }
   }

@@ -13,7 +13,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -168,7 +172,7 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
 
     // Define type for question attempts used in callbacks
     type AttemptWithSystem = { system: string | null; wasCorrect: boolean; createdAt: Date };
-    
+
     const systemMastery = Object.entries(systemStats)
       .filter(([system]) => system !== 'unknown')
       .map(([system, stats]) => {
@@ -200,7 +204,10 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
           questionsSeen: stats.total,
           accuracy: Math.round(accuracy * 100) / 100,
           trend,
-          lastPracticed: sortedTimes.length > 0 && sortedTimes[0] !== undefined ? new Date(sortedTimes[0]).toISOString() : null,
+          lastPracticed:
+            sortedTimes.length > 0 && sortedTimes[0] !== undefined
+              ? new Date(sortedTimes[0]).toISOString()
+              : null,
         };
       })
       .sort((a, b) => b.mastery - a.mastery);
@@ -216,7 +223,8 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     let learningSpeed: 'deliberate' | 'moderate' | 'rapid' = 'moderate';
     if (recentSessions.length >= 5) {
       const avgAccuracy =
-        recentSessions.reduce((sum: number, s: { accuracy: number }) => sum + s.accuracy, 0) / recentSessions.length;
+        recentSessions.reduce((sum: number, s: { accuracy: number }) => sum + s.accuracy, 0) /
+        recentSessions.length;
       if (avgAccuracy >= 0.8) learningSpeed = 'rapid';
       else if (avgAccuracy < 0.6) learningSpeed = 'deliberate';
     }
@@ -246,7 +254,11 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     };
 
     // Analyze errors from wrong answers (simplified classification)
-    const wrongAttempts = questionAttempts.filter((a: AttemptWithSystem & { timeSpentMs?: number | null; answerChangedCount?: number | null }) => !a.wasCorrect);
+    const wrongAttempts = questionAttempts.filter(
+      (
+        a: AttemptWithSystem & { timeSpentMs?: number | null; answerChangedCount?: number | null }
+      ) => !a.wasCorrect
+    );
     for (const attempt of wrongAttempts) {
       const timeMs = attempt.timeSpentMs || 45000;
       const changed = (attempt.answerChangedCount || 0) > 0;
@@ -289,19 +301,26 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
     }
 
     // Calculate study stats
-    const totalStudyTimeMs = recentSessions.reduce((sum: number, s: { totalTimeMs: number }) => sum + s.totalTimeMs, 0);
+    const totalStudyTimeMs = recentSessions.reduce(
+      (sum: number, s: { totalTimeMs: number }) => sum + s.totalTimeMs,
+      0
+    );
     const totalStudyTimeHours = Math.round((totalStudyTimeMs / 3600000) * 10) / 10;
     const avgSessionLength =
       recentSessions.length > 0
         ? Math.round(
-            recentSessions.reduce((sum: number, s: { totalQuestions: number }) => sum + s.totalQuestions, 0) / recentSessions.length
+            recentSessions.reduce(
+              (sum: number, s: { totalQuestions: number }) => sum + s.totalQuestions,
+              0
+            ) / recentSessions.length
           )
         : 0;
 
     // Calculate predicted PANCE score
     const overallAccuracy =
       questionAttempts.length > 0
-        ? questionAttempts.filter((a: AttemptWithSystem) => a.wasCorrect).length / questionAttempts.length
+        ? questionAttempts.filter((a: AttemptWithSystem) => a.wasCorrect).length /
+          questionAttempts.length
         : 0.7;
 
     // PANCE scores range ~200-800, passing is ~350
@@ -413,8 +432,9 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
         strongestSystems,
         weakestSystems,
 
-        totalConceptsTracked: new Set(questionAttempts.map((a: { conditionId: string | null }) => a.conditionId).filter(Boolean))
-          .size,
+        totalConceptsTracked: new Set(
+          questionAttempts.map((a: { conditionId: string | null }) => a.conditionId).filter(Boolean)
+        ).size,
         conceptsDueForReview: Math.round(questionAttempts.length * 0.2),
         conceptsOverdue: Math.round(questionAttempts.length * 0.1),
         conceptsInFlowState: Math.round(questionAttempts.length * 0.15),

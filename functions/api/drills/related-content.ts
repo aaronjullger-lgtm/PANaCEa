@@ -6,7 +6,11 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import {
+  authenticatedEndpoint,
+  AuthenticatedContext,
+  ValidatedContext,
+} from '../_shared/middleware';
 import { relatedContentSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 

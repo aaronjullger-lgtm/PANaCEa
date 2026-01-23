@@ -337,7 +337,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             <p className="text-sm text-[var(--color-text-muted)]">
               {viewLevel === 'dashboard' ? 'System Overview' : ''}
               {viewLevel === 'system' && selectedSystem
-                ? `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem] ?? selectedSystem} Deep Dive`
+                ? `${ABBREVIATION_TO_TOPIC_MAP[selectedSystem] || selectedSystem} Deep Dive`
                 : ''}
               {viewLevel === 'subcategory' ? (selectedSubcategory ?? '') : ''}
             </p>
@@ -626,7 +626,8 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
               >
                 <Play className="w-5 h-5" />
-                Quick Start PANCE Session - {ABBREVIATION_TO_TOPIC_MAP[currentSystemStats.system] ?? currentSystemStats.system}
+                Quick Start PANCE Session -{' '}
+                {ABBREVIATION_TO_TOPIC_MAP[currentSystemStats.system] ?? currentSystemStats.system}
               </button>
             )}
 

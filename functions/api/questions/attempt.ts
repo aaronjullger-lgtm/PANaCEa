@@ -94,7 +94,9 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       if (timeSpentMillis && timeSpentMillis > 0) {
         if (existingSeen?.avgTimeMs) {
           const currentCount = existingSeen.timesShown || 1;
-          newAvgTimeMs = Math.round((existingSeen.avgTimeMs * (currentCount - 1) + timeSpentMillis) / currentCount);
+          newAvgTimeMs = Math.round(
+            (existingSeen.avgTimeMs * (currentCount - 1) + timeSpentMillis) / currentCount
+          );
         } else {
           newAvgTimeMs = timeSpentMillis;
         }
@@ -141,22 +143,38 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       });
 
       const totalQuestionsAnswered = allAttempts.length;
-      const correctAnswers = allAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect).length;
-      const overallAccuracy = totalQuestionsAnswered > 0 ? Math.round((correctAnswers / totalQuestionsAnswered) * 100) : 0;
+      const correctAnswers = allAttempts.filter(
+        (a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect
+      ).length;
+      const overallAccuracy =
+        totalQuestionsAnswered > 0
+          ? Math.round((correctAnswers / totalQuestionsAnswered) * 100)
+          : 0;
 
       let systemStats = null;
       if (system) {
-        const systemAttempts = allAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.system === system);
-        const systemCorrect = systemAttempts.filter((a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect).length;
+        const systemAttempts = allAttempts.filter(
+          (a: { wasCorrect: boolean; system: string | null }) => a.system === system
+        );
+        const systemCorrect = systemAttempts.filter(
+          (a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect
+        ).length;
         systemStats = {
           system,
           totalAttempts: systemAttempts.length,
           correctAnswers: systemCorrect,
-          accuracy: systemAttempts.length > 0 ? Math.round((systemCorrect / systemAttempts.length) * 100) : 0,
+          accuracy:
+            systemAttempts.length > 0
+              ? Math.round((systemCorrect / systemAttempts.length) * 100)
+              : 0,
         };
       }
 
-      return { attemptId, stats: { totalQuestionsAnswered, correctAnswers, overallAccuracy }, systemStats };
+      return {
+        attemptId,
+        stats: { totalQuestionsAnswered, correctAnswers, overallAccuracy },
+        systemStats,
+      };
     });
 
     // Get detailed system stats
@@ -173,14 +191,21 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       },
     };
   } catch (error) {
-    logger.error('Error recording attempt', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error recording attempt', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to record attempt');
   } finally {
     await safePrismaDisconnect(prisma);
   }
 });
 
-async function getUserSystemStats(prisma: ReturnType<typeof createEdgePrismaClient>, userId: string, system: string) {
+async function getUserSystemStats(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  userId: string,
+  system: string
+) {
   const attempts = await prisma.questionAttempt.findMany({
     where: { userId, system },
     select: { wasCorrect: true, createdAt: true },
@@ -189,11 +214,19 @@ async function getUserSystemStats(prisma: ReturnType<typeof createEdgePrismaClie
   });
 
   if (attempts.length === 0) {
-    return { system, totalAttempts: 0, correctAttempts: 0, accuracy: 0, recentTrend: 'neutral' as const };
+    return {
+      system,
+      totalAttempts: 0,
+      correctAttempts: 0,
+      accuracy: 0,
+      recentTrend: 'neutral' as const,
+    };
   }
 
   const totalAttempts = attempts.length;
-  const correctAttempts = attempts.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length;
+  const correctAttempts = attempts.filter(
+    (a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect
+  ).length;
   const accuracy = Math.round((correctAttempts / totalAttempts) * 100);
 
   const recent10 = attempts.slice(0, 10);
@@ -201,8 +234,12 @@ async function getUserSystemStats(prisma: ReturnType<typeof createEdgePrismaClie
 
   let recentTrend: 'improving' | 'declining' | 'neutral' = 'neutral';
   if (recent10.length >= 5 && previous10.length >= 5) {
-    const recentAccuracy = recent10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length / recent10.length;
-    const previousAccuracy = previous10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length / previous10.length;
+    const recentAccuracy =
+      recent10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length /
+      recent10.length;
+    const previousAccuracy =
+      previous10.filter((a: { wasCorrect: boolean; createdAt: Date }) => a.wasCorrect).length /
+      previous10.length;
 
     if (recentAccuracy > previousAccuracy + 0.1) recentTrend = 'improving';
     else if (recentAccuracy < previousAccuracy - 0.1) recentTrend = 'declining';

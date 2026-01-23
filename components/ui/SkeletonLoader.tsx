@@ -57,12 +57,16 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 /**
  * SkeletonText - Convenience component for text line skeletons
  */
-export const SkeletonText: React.FC<{ lines?: number; className?: string; lastLineWidth?: string }> = ({
-  lines = 1,
-  className = '',
-  lastLineWidth = '80%',
-}) => (
-  <div className={`space-y-2 ${className}`} role="status" aria-label={`Loading ${lines} lines of text`}>
+export const SkeletonText: React.FC<{
+  lines?: number;
+  className?: string;
+  lastLineWidth?: string;
+}> = ({ lines = 1, className = '', lastLineWidth = '80%' }) => (
+  <div
+    className={`space-y-2 ${className}`}
+    role="status"
+    aria-label={`Loading ${lines} lines of text`}
+  >
     {Array.from({ length: lines }).map((_, i) => (
       <SkeletonLoader key={i} variant="text" width={i === lines - 1 ? lastLineWidth : '100%'} />
     ))}
@@ -104,12 +108,12 @@ export const SkeletonQuestionCard: React.FC<{ className?: string }> = ({ classNa
       <SkeletonLoader variant="rectangular" width="120px" height="28px" className="rounded-full" />
       <SkeletonLoader variant="text" width="80px" />
     </div>
-    
+
     {/* Question text (3-4 lines typical) */}
     <div className="mb-6">
       <SkeletonText lines={4} lastLineWidth="60%" />
     </div>
-    
+
     {/* Answer options (4 choices) */}
     <div className="space-y-3">
       {Array.from({ length: 4 }).map((_, i) => (
@@ -129,7 +133,9 @@ export const SkeletonQuestionCard: React.FC<{ className?: string }> = ({ classNa
  * SkeletonAnalyticsDashboard - Skeleton for analytics dashboard
  * Matches AnalyticsDashboard layout
  */
-export const SkeletonAnalyticsDashboard: React.FC<{ className?: string }> = ({ className = '' }) => (
+export const SkeletonAnalyticsDashboard: React.FC<{ className?: string }> = ({
+  className = '',
+}) => (
   <div className={`space-y-6 ${className}`} role="status" aria-label="Loading analytics">
     {/* Summary stats row */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -143,13 +149,13 @@ export const SkeletonAnalyticsDashboard: React.FC<{ className?: string }> = ({ c
         </div>
       ))}
     </div>
-    
+
     {/* Chart area */}
     <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-6">
       <SkeletonLoader variant="text" width="200px" className="mb-4" />
       <SkeletonLoader variant="rectangular" width="100%" height="250px" />
     </div>
-    
+
     {/* Performance breakdown */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {Array.from({ length: 2 }).map((_, i) => (
@@ -162,7 +168,12 @@ export const SkeletonAnalyticsDashboard: React.FC<{ className?: string }> = ({ c
             {Array.from({ length: 5 }).map((_, j) => (
               <div key={j} className="flex items-center gap-3">
                 <SkeletonLoader variant="text" width="40%" />
-                <SkeletonLoader variant="rectangular" width="60%" height="12px" className="rounded-full" />
+                <SkeletonLoader
+                  variant="rectangular"
+                  width="60%"
+                  height="12px"
+                  className="rounded-full"
+                />
               </div>
             ))}
           </div>
@@ -196,11 +207,11 @@ export const SkeletonListItem: React.FC<{ showAvatar?: boolean; className?: stri
 /**
  * SkeletonList - Multiple list items skeleton
  */
-export const SkeletonList: React.FC<{ count?: number; showAvatars?: boolean; className?: string }> = ({
-  count = 5,
-  showAvatars = true,
-  className = '',
-}) => (
+export const SkeletonList: React.FC<{
+  count?: number;
+  showAvatars?: boolean;
+  className?: string;
+}> = ({ count = 5, showAvatars = true, className = '' }) => (
   <div className={`space-y-3 ${className}`} role="status" aria-label={`Loading ${count} items`}>
     {Array.from({ length: count }).map((_, i) => (
       <SkeletonListItem key={i} showAvatar={showAvatars} />

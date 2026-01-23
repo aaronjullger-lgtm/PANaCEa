@@ -17,6 +17,7 @@ graph TD
 ```
 
 **Components:**
+
 - **Clerk**: JWT-based authentication
 - **Middleware**: `withAuth()` for endpoint protection
 - **Context**: User context injected into handlers
@@ -32,6 +33,7 @@ graph TD
 ```
 
 **Implementation:**
+
 - **Cloudflare KV**: Distributed rate limiting
 - **Tiered Limits**: Different limits for API/auth/admin endpoints
 - **Fallback**: Graceful degradation if KV unavailable
@@ -47,6 +49,7 @@ graph TD
 ```
 
 **Validation Layers:**
+
 - **Zod Schemas**: Type-safe input validation
 - **Payload Size**: Enforce maximum payload sizes
 - **Sanitization**: Clean input data
@@ -81,14 +84,11 @@ export async function authenticateRequest(request: Request, env: Env): Promise<A
 
 ```typescript
 // Protected endpoint
-export const onRequestPost = authenticatedEndpoint(
-  questionGenerationSchema,
-  async (context) => {
-    // context.auth.userId is guaranteed to exist
-    const userId = context.auth.userId;
-    // Business logic...
-  }
-);
+export const onRequestPost = authenticatedEndpoint(questionGenerationSchema, async (context) => {
+  // context.auth.userId is guaranteed to exist
+  const userId = context.auth.userId;
+  // Business logic...
+});
 ```
 
 ## 🚦 Rate Limiting Implementation
@@ -110,7 +110,8 @@ export function withRateLimit(options: {
   endpointType?: 'api' | 'auth' | 'admin';
 }): Middleware<AuthenticatedContext> {
   return async (context, next) => {
-    const identifier = context.auth?.userId || context.request.headers.get('cf-connecting-ip') || 'unknown';
+    const identifier =
+      context.auth?.userId || context.request.headers.get('cf-connecting-ip') || 'unknown';
     const key = `rate_limit:${identifier}`;
 
     const isRateLimited = await checkRateLimit(context.env, key, options.requestsPerMinute, 60);
@@ -127,7 +128,7 @@ export function withRateLimit(options: {
 ### Tiered Rate Limits
 
 | Endpoint Type | Requests/Minute | Window (seconds) |
-|---------------|-----------------|------------------|
+| ------------- | --------------- | ---------------- |
 | API           | 100             | 60               |
 | Auth          | 20              | 60               |
 | Admin         | 30              | 60               |
@@ -295,9 +296,9 @@ if (user.role !== 'admin') {
 
 ```typescript
 // Multiple security layers
-app.use(helmet());       // Security headers
-app.use(cors());         // CORS restrictions
-app.use(rateLimit());    // Rate limiting
+app.use(helmet()); // Security headers
+app.use(cors()); // CORS restrictions
+app.use(rateLimit()); // Rate limiting
 app.use(authMiddleware); // Authentication
 ```
 

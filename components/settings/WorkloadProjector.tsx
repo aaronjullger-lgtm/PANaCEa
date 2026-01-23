@@ -1,6 +1,6 @@
 /**
  * Workload Projector UI Component (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Interactive workload calculator showing the relationship between
  * retention targets and daily study time. Highlights the CMRR point.
  */
@@ -23,9 +23,7 @@ export const WorkloadProjector: React.FC = () => {
       >
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-blue-500" />
-          <h3 className="font-semibold text-[var(--color-text-primary)]">
-            Workload Projector
-          </h3>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Workload Projector</h3>
         </div>
         {isExpanded ? (
           <ChevronUp className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]" />

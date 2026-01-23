@@ -148,9 +148,7 @@ async function seedPhysiologyConcepts() {
       // Create record - matching Prisma schema field names
       await prisma.physiologyConcept.create({
         data: {
-
           id: uuidv4(),
-
 
           name: concept.name,
           system: concept.system,

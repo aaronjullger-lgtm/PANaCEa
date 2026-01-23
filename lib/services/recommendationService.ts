@@ -140,18 +140,19 @@ export const recommendationService = {
       include: { MedicalContent: { select: { system: true } } };
     }>;
 
-    const userSystems = await prisma.userProgress.findMany({
+    const userSystems = (await prisma.userProgress.findMany({
       where: { userId },
       include: {
         MedicalContent: { select: { system: true } },
       },
       distinct: ['conditionId'],
-    }) as UserProgressWithContent[];
+    })) as UserProgressWithContent[];
 
     const studiedSystemNames = new Set(
       userSystems
-        .filter((u): u is UserProgressWithContent & { MedicalContent: { system: string } } => 
-          u.MedicalContent !== null && typeof u.MedicalContent.system === 'string'
+        .filter(
+          (u): u is UserProgressWithContent & { MedicalContent: { system: string } } =>
+            u.MedicalContent !== null && typeof u.MedicalContent.system === 'string'
         )
         .map((u) => u.MedicalContent.system)
     );

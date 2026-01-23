@@ -167,8 +167,8 @@ async function seedVentilatorQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ 
-      data: { 
+    await prisma.question.create({
+      data: {
         id: uuidv4(),
         ...q,
       } as any,
@@ -261,8 +261,8 @@ async function seedPhysiologyQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ 
-      data: { 
+    await prisma.question.create({
+      data: {
         id: uuidv4(),
         ...q,
       } as any,
@@ -369,8 +369,8 @@ async function seedAnatomyQuestions() {
 
   let count = 0;
   for (const q of questions) {
-    await prisma.question.create({ 
-      data: { 
+    await prisma.question.create({
+      data: {
         id: uuidv4(),
         ...q,
       } as any,

@@ -51,7 +51,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         const letter = upper[i];
         const targetLetter = target[i];
         if (!letter) continue;
-        
+
         if (targetLetter && letter === targetLetter) {
           status[letter] = 'correct';
         } else if (target.includes(letter) && status[letter] !== 'correct') {
@@ -92,7 +92,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
         const letter = guessUpper[i];
         if (!letter) continue;
-        
+
         const targetIndex = targetLetters.findIndex(
           (t, idx) => t === letter && !usedIndices.includes(idx)
         );

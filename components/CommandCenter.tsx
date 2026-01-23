@@ -313,41 +313,42 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
         </motion.div>
 
         {/* What to Study Now - Primary CTA */}
-        {recommendations.length > 0 && (() => {
-          const topRecommendation = recommendations[0];
-          if (!topRecommendation) return null;
-          const IconComponent = topRecommendation.icon;
-          
-          return (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative"
-            >
-              <div
-                className="p-6 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-xl cursor-pointer hover:shadow-2xl hover:brightness-110 transition-all group"
-                onClick={() => onNavigate(topRecommendation.actionDestination)}
+        {recommendations.length > 0 &&
+          (() => {
+            const topRecommendation = recommendations[0];
+            if (!topRecommendation) return null;
+            const IconComponent = topRecommendation.icon;
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <IconComponent className="w-6 h-6" />
-                      <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
-                        Recommended Now
-                      </span>
+                <div
+                  className="p-6 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-xl cursor-pointer hover:shadow-2xl hover:brightness-110 transition-all group"
+                  onClick={() => onNavigate(topRecommendation.actionDestination)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <IconComponent className="w-6 h-6" />
+                        <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
+                          Recommended Now
+                        </span>
+                      </div>
+                      <h2 className="text-2xl font-bold mb-2">{topRecommendation.title}</h2>
+                      <p className="text-white/90 mb-4">{topRecommendation.description}</p>
+                      <button className="px-6 py-2 bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
+                        {topRecommendation.action}
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
                     </div>
-                    <h2 className="text-2xl font-bold mb-2">{topRecommendation.title}</h2>
-                    <p className="text-white/90 mb-4">{topRecommendation.description}</p>
-                    <button className="px-6 py-2 bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30 rounded-lg font-medium backdrop-blur-sm transition-all flex items-center gap-2">
-                      {topRecommendation.action}
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          );
-        })()}
+              </motion.div>
+            );
+          })()}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

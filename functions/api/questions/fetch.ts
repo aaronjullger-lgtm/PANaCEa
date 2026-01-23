@@ -53,7 +53,11 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
       orderBy: [{ generatedAt: 'asc' }],
     });
 
-    logger.info('Fetched questions', { userId: auth.userId, count: questions.length, filters: { system, conditionId, questionType } });
+    logger.info('Fetched questions', {
+      userId: auth.userId,
+      count: questions.length,
+      filters: { system, conditionId, questionType },
+    });
 
     return {
       data: {

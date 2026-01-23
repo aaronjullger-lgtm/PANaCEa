@@ -253,6 +253,7 @@ NODE_ENV=production node dist-server/server.js
    - Check folder moved to "clinical_verified"
 
 5. **Verify in database:**
+
    ```bash
    npm run db:studio
    ```
@@ -515,11 +516,11 @@ If deployment fails:
 
 ---
 
-**Deployment Date:** ******\_******
+**Deployment Date:** **\*\***\_**\*\***
 
-**Deployed By:** ******\_******
+**Deployed By:** **\*\***\_**\*\***
 
-**Version:** ******\_******
+**Version:** **\*\***\_**\*\***
 
 **Notes:**
 

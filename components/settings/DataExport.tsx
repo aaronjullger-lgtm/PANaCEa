@@ -1,9 +1,9 @@
 /**
  * Data Export Component (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Provides data sovereignty - exports complete review history
  * including behavioral telemetry for offline analysis.
- * 
+ *
  * Export Formats:
  * - CSV: Full review history with telemetry (for Excel/Python)
  * - PDF: "Cognitive Health Report" with memory profile and behavioral flags
@@ -40,7 +40,7 @@ export const DataExport: React.FC = () => {
    */
   const fetchReviewHistory = async (): Promise<ReviewExportData[]> => {
     const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch review history: ${response.statusText}`);
     }
@@ -62,15 +62,15 @@ export const DataExport: React.FC = () => {
       if (reviews.length === 0) {
         setExportStatus({
           type: 'error',
-          message: 'No review data available to export'
+          message: 'No review data available to export',
         });
         return;
       }
 
       // Transform data for CSV export
-      const csvData = reviews.map(review => {
+      const csvData = reviews.map((review) => {
         const telemetry = review.telemetryJson || {};
-        
+
         return {
           review_id: review.id,
           question_id: review.questionId,
@@ -80,29 +80,33 @@ export const DataExport: React.FC = () => {
           timestamp: new Date(review.createdAt).toISOString(),
           date: new Date(review.createdAt).toLocaleDateString(),
           time: new Date(review.createdAt).toLocaleTimeString(),
-          
+
           // Duration metrics
           duration_ms: review.durationMs || 0,
           duration_seconds: (review.durationMs || 0) / 1000,
-          
+
           // Behavioral metrics
           answer_changes: review.answerChangedCount || 0,
-          
+
           // CRPL telemetry (if available)
           time_to_first_interaction_ms: telemetry.time_to_first_interaction_ms || 0,
           mouse_efficiency_index: telemetry.mouse_efficiency_index || 0,
           hover_entropy: telemetry.hover_entropy || 0,
           total_mouse_distance_px: telemetry.total_mouse_distance || 0,
-          
+
           // Pause analysis
           short_pauses_count: telemetry.short_pauses?.length || 0,
           medium_pauses_count: telemetry.medium_pauses?.length || 0,
           long_pauses_count: telemetry.long_pauses?.length || 0,
-          
+
           // Flags
           is_rapid_guess: telemetry.behavioral_flags?.includes('RAPID_GUESS') ? 'YES' : 'NO',
-          is_excessive_hesitation: telemetry.behavioral_flags?.includes('EXCESSIVE_HESITATION') ? 'YES' : 'NO',
-          is_answer_oscillation: telemetry.behavioral_flags?.includes('ANSWER_OSCILLATION') ? 'YES' : 'NO'
+          is_excessive_hesitation: telemetry.behavioral_flags?.includes('EXCESSIVE_HESITATION')
+            ? 'YES'
+            : 'NO',
+          is_answer_oscillation: telemetry.behavioral_flags?.includes('ANSWER_OSCILLATION')
+            ? 'YES'
+            : 'NO',
         };
       });
 
@@ -113,25 +117,27 @@ export const DataExport: React.FC = () => {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
-      link.setAttribute('download', `panacea-review-history-${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        'download',
+        `panacea-review-history-${new Date().toISOString().split('T')[0]}.csv`
+      );
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       setExportStatus({
         type: 'success',
-        message: `Successfully exported ${reviews.length} review records to CSV`
+        message: `Successfully exported ${reviews.length} review records to CSV`,
       });
-
     } catch (error) {
       console.error('CSV export failed:', error);
       setExportStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Export failed'
+        message: error instanceof Error ? error.message : 'Export failed',
       });
     } finally {
       setIsExporting(false);
@@ -151,7 +157,7 @@ export const DataExport: React.FC = () => {
       if (reviews.length === 0) {
         setExportStatus({
           type: 'error',
-          message: 'No review data available to export'
+          message: 'No review data available to export',
         });
         return;
       }
@@ -179,8 +185,9 @@ export const DataExport: React.FC = () => {
       doc.text('Memory Profile', 20, yPosition);
       yPosition += 8;
 
-      const accuracy = (reviews.filter(r => r.wasCorrect).length / reviews.length) * 100;
-      const avgDuration = reviews.reduce((sum, r) => sum + (r.durationMs || 0), 0) / reviews.length / 1000;
+      const accuracy = (reviews.filter((r) => r.wasCorrect).length / reviews.length) * 100;
+      const avgDuration =
+        reviews.reduce((sum, r) => sum + (r.durationMs || 0), 0) / reviews.length / 1000;
 
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
@@ -197,25 +204,37 @@ export const DataExport: React.FC = () => {
       doc.text('Behavioral Flags', 20, yPosition);
       yPosition += 8;
 
-      const rapidGuessCount = reviews.filter(r => 
+      const rapidGuessCount = reviews.filter((r) =>
         r.telemetryJson?.behavioral_flags?.includes('RAPID_GUESS')
       ).length;
 
-      const hesitationCount = reviews.filter(r =>
+      const hesitationCount = reviews.filter((r) =>
         r.telemetryJson?.behavioral_flags?.includes('EXCESSIVE_HESITATION')
       ).length;
 
-      const oscillationCount = reviews.filter(r =>
+      const oscillationCount = reviews.filter((r) =>
         r.telemetryJson?.behavioral_flags?.includes('ANSWER_OSCILLATION')
       ).length;
 
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Rapid Guesses (<500ms): ${rapidGuessCount} (${(rapidGuessCount/reviews.length*100).toFixed(1)}%)`, 25, yPosition);
+      doc.text(
+        `Rapid Guesses (<500ms): ${rapidGuessCount} (${((rapidGuessCount / reviews.length) * 100).toFixed(1)}%)`,
+        25,
+        yPosition
+      );
       yPosition += 6;
-      doc.text(`Excessive Hesitation: ${hesitationCount} (${(hesitationCount/reviews.length*100).toFixed(1)}%)`, 25, yPosition);
+      doc.text(
+        `Excessive Hesitation: ${hesitationCount} (${((hesitationCount / reviews.length) * 100).toFixed(1)}%)`,
+        25,
+        yPosition
+      );
       yPosition += 6;
-      doc.text(`Answer Oscillation: ${oscillationCount} (${(oscillationCount/reviews.length*100).toFixed(1)}%)`, 25, yPosition);
+      doc.text(
+        `Answer Oscillation: ${oscillationCount} (${((oscillationCount / reviews.length) * 100).toFixed(1)}%)`,
+        25,
+        yPosition
+      );
       yPosition += 15;
 
       // Recommendations
@@ -226,19 +245,23 @@ export const DataExport: React.FC = () => {
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      
+
       if (rapidGuessCount / reviews.length > 0.15) {
         doc.text('• Consider slowing down - high rate of rapid guessing detected', 25, yPosition);
         yPosition += 6;
       }
-      
+
       if (accuracy < 70) {
         doc.text('• Focus on understanding over speed - accuracy below target', 25, yPosition);
         yPosition += 6;
       }
-      
-      if (hesitationCount / reviews.length > 0.20) {
-        doc.text('• Review content fundamentals - high hesitation rate suggests knowledge gaps', 25, yPosition);
+
+      if (hesitationCount / reviews.length > 0.2) {
+        doc.text(
+          '• Review content fundamentals - high hesitation rate suggests knowledge gaps',
+          25,
+          yPosition
+        );
         yPosition += 6;
       }
 
@@ -249,14 +272,13 @@ export const DataExport: React.FC = () => {
 
       setExportStatus({
         type: 'success',
-        message: 'Successfully generated Cognitive Health Report PDF'
+        message: 'Successfully generated Cognitive Health Report PDF',
       });
-
     } catch (error) {
       console.error('PDF export failed:', error);
       setExportStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Export failed'
+        message: error instanceof Error ? error.message : 'Export failed',
       });
     } finally {
       setIsExporting(false);
@@ -266,9 +288,7 @@ export const DataExport: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-          Data Export
-        </h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Data Export</h3>
         <p className="text-sm text-[var(--color-text-secondary)]">
           Export your complete review history and behavioral telemetry for offline analysis.
         </p>
@@ -287,9 +307,7 @@ export const DataExport: React.FC = () => {
         >
           <FileSpreadsheet className="w-8 h-8 text-green-500" />
           <div className="text-left">
-            <div className="font-semibold text-[var(--color-text-primary)]">
-              Export to CSV
-            </div>
+            <div className="font-semibold text-[var(--color-text-primary)]">Export to CSV</div>
             <div className="text-xs text-[var(--color-text-secondary)] mt-1">
               Full review history with telemetry
             </div>

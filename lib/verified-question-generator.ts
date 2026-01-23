@@ -114,7 +114,9 @@ export async function fetchVerifiedQuestion(
   let attempts = 0;
   let lastQuestion: Question | null = null;
   let lastVerification: CoVeResult | undefined;
-  let lastQuickVerification: { passed: boolean; confidence: number; criticalIssues: string[] } | undefined;
+  let lastQuickVerification:
+    | { passed: boolean; confidence: number; criticalIssues: string[] }
+    | undefined;
 
   const startTime = performance.now();
 
@@ -124,7 +126,7 @@ export async function fetchVerifiedQuestion(
     try {
       // Step 1: Generate question
       onProgress?.('Generating question...', (attempts - 1) * 33);
-      
+
       const question = await fetchNewQuestion(settings, growthAreas);
       lastQuestion = question;
 
@@ -149,17 +151,12 @@ export async function fetchVerifiedQuestion(
 
       if (verificationMode === 'full') {
         // Full CoVe pipeline
-        const verification = await runCoVePipeline(
-          question,
-          context,
-          geminiApiWrapper,
-          coveConfig
-        );
+        const verification = await runCoVePipeline(question, context, geminiApiWrapper, coveConfig);
         lastVerification = verification;
 
         if (verification.passed || verification.overallConfidence >= AUTO_ACCEPT_CONFIDENCE) {
           onProgress?.('Verification complete!', 100);
-          
+
           return {
             question,
             verification,
@@ -183,7 +180,7 @@ export async function fetchVerifiedQuestion(
 
         if (quickResult.passed || quickResult.confidence >= AUTO_ACCEPT_CONFIDENCE) {
           onProgress?.('Verification complete!', 100);
-          
+
           return {
             question,
             quickVerification: quickResult,
@@ -246,9 +243,8 @@ async function buildVerificationContext(question: Question): Promise<Verificatio
   let databaseContent: VerificationContext['databaseContent'];
 
   try {
-    const { fetchConditionContent, hasCompleteContent } = await import(
-      '../services/conditionContentService'
-    );
+    const { fetchConditionContent, hasCompleteContent } =
+      await import('../services/conditionContentService');
     const dbContent = await fetchConditionContent(conditionName);
 
     if (dbContent && hasCompleteContent(dbContent) && dbContent.content) {
@@ -256,16 +252,8 @@ async function buildVerificationContext(question: Question): Promise<Verificatio
       databaseContent = {
         overview: c.overview,
         pathophysiology: c.pathophysiology,
-        symptoms: Array.isArray(c.symptoms)
-          ? c.symptoms
-          : c.symptoms
-            ? [c.symptoms]
-            : undefined,
-        signs: Array.isArray(c.signs)
-          ? c.signs
-          : c.signs
-            ? [c.signs]
-            : undefined,
+        symptoms: Array.isArray(c.symptoms) ? c.symptoms : c.symptoms ? [c.symptoms] : undefined,
+        signs: Array.isArray(c.signs) ? c.signs : c.signs ? [c.signs] : undefined,
         diagnostics: Array.isArray(c.diagnostics)
           ? (c.diagnostics as string[])
           : c.diagnostics
@@ -304,10 +292,7 @@ async function buildVerificationContext(question: Question): Promise<Verificatio
       };
     }
   } catch (error) {
-    console.warn(
-      `[VerifiedQuestion] Could not load database content for ${conditionName}:`,
-      error
-    );
+    console.warn(`[VerifiedQuestion] Could not load database content for ${conditionName}:`, error);
   }
 
   return {

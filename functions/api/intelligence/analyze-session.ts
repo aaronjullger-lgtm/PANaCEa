@@ -15,7 +15,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -310,21 +314,24 @@ function calculateCognitiveState(attempts: SessionAttempt[]): CognitiveStateSnap
   // Fatigue from session length and error clustering
   const lastAttempt = attempts[attempts.length - 1];
   const firstAttempt = attempts[0];
-  const sessionMinutes = lastAttempt && firstAttempt 
-    ? (lastAttempt.timestamp - firstAttempt.timestamp) / 60000 
-    : 0;
+  const sessionMinutes =
+    lastAttempt && firstAttempt ? (lastAttempt.timestamp - firstAttempt.timestamp) / 60000 : 0;
   let fatigueLevel = Math.min(100, sessionMinutes * 0.8);
 
-    // Check for declining performance
-    if (attempts.length >= 20) {
-      const early = attempts.slice(0, 10);
-      const late = attempts.slice(-10);
-      const earlyAccuracy = early.length > 0 ? early.filter((a: SessionAttempt) => a.wasCorrect).length / early.length : 0;
-      const lateAccuracy = late.length > 0 ? late.filter((a: SessionAttempt) => a.wasCorrect).length / late.length : 0;
-      if (lateAccuracy < earlyAccuracy - 0.15) {
-        fatigueLevel += 20;
-      }
+  // Check for declining performance
+  if (attempts.length >= 20) {
+    const early = attempts.slice(0, 10);
+    const late = attempts.slice(-10);
+    const earlyAccuracy =
+      early.length > 0
+        ? early.filter((a: SessionAttempt) => a.wasCorrect).length / early.length
+        : 0;
+    const lateAccuracy =
+      late.length > 0 ? late.filter((a: SessionAttempt) => a.wasCorrect).length / late.length : 0;
+    if (lateAccuracy < earlyAccuracy - 0.15) {
+      fatigueLevel += 20;
     }
+  }
 
   // Flow state
   let flowState = 50;
@@ -575,265 +582,274 @@ function determineNextSessionFocus(
 // Main Handler
 // ============================================================================
 
-export const onRequestPost = authenticatedEndpoint(AnalyzeSessionSchema, async ({ env, validated, auth }) => {
-  const log = createEndpointLogger('/api/intelligence/analyze-session', auth.userId);
-  let prisma: EdgePrismaClient | null = null;
+export const onRequestPost = authenticatedEndpoint(
+  AnalyzeSessionSchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/intelligence/analyze-session', auth.userId);
+    let prisma: EdgePrismaClient | null = null;
 
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const { attempts, sessionStartTime, sessionEndTime, mode } = validated.body;
+      const { attempts, sessionStartTime, sessionEndTime, mode } = validated.body;
 
-    // Calculate basic metrics
-    const totalCorrect = attempts.filter((a) => a.wasCorrect).length;
-    const sessionScore = Math.round((totalCorrect / attempts.length) * 100);
+      // Calculate basic metrics
+      const totalCorrect = attempts.filter((a) => a.wasCorrect).length;
+      const sessionScore = Math.round((totalCorrect / attempts.length) * 100);
 
-    // Calculate accuracy by system
-    const accuracyBySystem: Record<string, { correct: number; total: number; accuracy: number }> =
-      {};
-    for (const attempt of attempts) {
-      const system = attempt.system || 'unknown';
-      if (!accuracyBySystem[system]) {
-        accuracyBySystem[system] = { correct: 0, total: 0, accuracy: 0 };
-      }
-      accuracyBySystem[system].total++;
-      if (attempt.wasCorrect) {
-        accuracyBySystem[system].correct++;
-      }
-    }
-    for (const system of Object.keys(accuracyBySystem)) {
-      accuracyBySystem[system].accuracy =
-        accuracyBySystem[system].correct / accuracyBySystem[system].total;
-    }
-
-    // Build difficulty curve
-    const difficultyCurve = attempts.map((a: SessionAttempt, i: number) => ({
-      questionNumber: i + 1,
-      difficulty: a.difficulty,
-      correct: a.wasCorrect,
-    }));
-
-    // Classify errors
-    const avgResponseTime =
-      attempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / attempts.length;
-    const incorrectAttempts = attempts.filter((a) => !a.wasCorrect);
-    const errorClassifications: ErrorClassification[] = [];
-
-    for (const attempt of incorrectAttempts) {
-      const previousAttempts = attempts.filter((a) => a.timestamp < attempt.timestamp);
-      const classification = classifyError(attempt, previousAttempts, avgResponseTime);
-      errorClassifications.push(classification);
-    }
-
-    // Calculate error distribution
-    const errorDistribution: Record<string, number> = {};
-    for (const err of errorClassifications) {
-      errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
-    }
-
-    // Find dominant error type
-    const dominantErrorType =
-      Object.entries(errorDistribution).sort(([, a], [, b]) => b - a)[0]?.[0] || 'none';
-
-    // Calculate cognitive state
-    const cognitiveState = calculateCognitiveState(attempts);
-
-    // Should take break?
-    const shouldTakeBreak =
-      cognitiveState.fatigueLevel > 75 ||
-      cognitiveState.attentionLevel < 40 ||
-      (cognitiveState.cognitiveLoad > 85 && cognitiveState.flowState < 30);
-
-    let breakReason: string | undefined;
-    if (shouldTakeBreak) {
-      if (cognitiveState.fatigueLevel > 75) {
-        breakReason = 'High fatigue detected - your accuracy may decline';
-      } else if (cognitiveState.attentionLevel < 40) {
-        breakReason = 'Attention is wandering - a short break may help';
-      } else {
-        breakReason = 'Cognitive overload - give your brain a rest';
-      }
-    }
-
-    // Generate concept retention summaries (simplified - would integrate with learningPatternEngine)
-    const conceptsAnalyzed = new Set(attempts.map((a: SessionAttempt) => a.conditionId).filter(Boolean)).size;
-    const conceptRetentionSummaries: ConceptRetentionSummary[] = [];
-
-    // Group by concept and calculate trends
-    const conceptAttempts: Record<string, SessionAttempt[]> = {};
-    for (const attempt of attempts) {
-      if (attempt.conditionId) {
-        if (!conceptAttempts[attempt.conditionId]) {
-          conceptAttempts[attempt.conditionId] = [];
+      // Calculate accuracy by system
+      const accuracyBySystem: Record<string, { correct: number; total: number; accuracy: number }> =
+        {};
+      for (const attempt of attempts) {
+        const system = attempt.system || 'unknown';
+        if (!accuracyBySystem[system]) {
+          accuracyBySystem[system] = { correct: 0, total: 0, accuracy: 0 };
         }
-        conceptAttempts[attempt.conditionId].push(attempt);
+        accuracyBySystem[system].total++;
+        if (attempt.wasCorrect) {
+          accuracyBySystem[system].correct++;
+        }
       }
-    }
+      for (const system of Object.keys(accuracyBySystem)) {
+        accuracyBySystem[system].accuracy =
+          accuracyBySystem[system].correct / accuracyBySystem[system].total;
+      }
 
-    for (const [conceptId, conceptAtts] of Object.entries(conceptAttempts)) {
-      if (conceptAtts.length === 0) continue; // Skip empty arrays
-      
-      const accuracy = conceptAtts.filter((a: SessionAttempt) => a.wasCorrect).length / conceptAtts.length;
-      const trend: 'improving' | 'stable' | 'declining' =
-        conceptAtts.length >= 3
-          ? conceptAtts.slice(-2).every((a: SessionAttempt) => a.wasCorrect)
-            ? 'improving'
-            : conceptAtts.slice(-2).every((a: SessionAttempt) => !a.wasCorrect)
-              ? 'declining'
-              : 'stable'
-          : 'stable';
-
-      const firstAttempt = conceptAtts[0];
-      conceptRetentionSummaries.push({
-        conceptId,
-        system: firstAttempt?.system || 'unknown',
-        currentRetention: Math.round(accuracy * 100),
-        reviewUrgency: accuracy < 0.5 ? 'overdue' : accuracy < 0.7 ? 'due' : 'stable',
-        nextOptimalReview: new Date(
-          Date.now() + (accuracy > 0.8 ? 7 : accuracy > 0.6 ? 3 : 1) * 86400000
-        ).toISOString(),
-        consecutiveCorrect: conceptAtts
-        .slice()
-        .reverse()
-        .findIndex((a: SessionAttempt) => !a.wasCorrect),
-        accuracyTrend: trend,
-      });
-    }
-
-    // Knowledge gaps (simplified)
-    const knowledgeGaps: KnowledgeGap[] = errorClassifications
-      .filter(
-        (e) =>
-          e.errorType === ERROR_TYPES.KNOWLEDGE_GAP ||
-          e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
-      )
-      .map((e) => ({
-        conceptId: e.conceptId,
-        conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-        system: attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId)?.system || 'unknown',
-        gapType: e.errorType,
-        severity: e.confidence > 70 ? 'significant' : 'moderate',
-        blocksCount: 0, // Would calculate from concept graph
-        suggestedResources: [e.remediation],
+      // Build difficulty curve
+      const difficultyCurve = attempts.map((a: SessionAttempt, i: number) => ({
+        questionNumber: i + 1,
+        difficulty: a.difficulty,
+        correct: a.wasCorrect,
       }));
 
-    // Calculate learning metrics
-    const learningEfficiency = Math.round(
-      sessionScore * 0.4 +
-        (100 - cognitiveState.cognitiveLoad) * 0.3 +
-        cognitiveState.flowState * 0.3
-    );
-    const retentionStrength = Math.round(
-      sessionScore * 0.5 +
-        (conceptRetentionSummaries.filter((c) => c.accuracyTrend === 'improving').length /
-          Math.max(1, conceptRetentionSummaries.length)) *
-          50
-    );
-    const spacingEffectiveness = 70; // Would calculate from actual spacing data
+      // Classify errors
+      const avgResponseTime =
+        attempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / attempts.length;
+      const incorrectAttempts = attempts.filter((a) => !a.wasCorrect);
+      const errorClassifications: ErrorClassification[] = [];
 
-    // Predictions (simplified)
-    const predictedRetention7Days = Math.round(retentionStrength * 0.85);
-    const predictedRetention30Days = Math.round(retentionStrength * 0.65);
-    const estimatedTimeToMastery = Math.max(0, Math.round(((80 - sessionScore) / 10) * 3)); // hours
-
-    // Generate insights
-    const insights = generateInsights(
-      attempts,
-      errorClassifications,
-      cognitiveState,
-      accuracyBySystem
-    );
-
-    // Generate recommendations
-    const prioritizedRecommendations = generateRecommendations(
-      insights,
-      errorClassifications,
-      accuracyBySystem
-    );
-
-    // Determine next session focus
-    const nextSessionFocus = determineNextSessionFocus(accuracyBySystem, errorClassifications);
-
-    // Save session analytics to database (optional)
-    try {
-      await prisma.studySession.create({
-        data: {
-          id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-          userId: auth.userId,
-          startedAt: new Date(sessionStartTime),
-          endedAt: new Date(sessionEndTime),
-          totalQuestions: attempts.length,
-          correctAnswers: totalCorrect,
-          accuracy: totalCorrect / attempts.length,
-          totalTimeMs: sessionEndTime - sessionStartTime,
-          avgTimePerQuestion: Math.round(avgResponseTime),
-          systemsCovered: [...new Set(attempts.map((a) => a.system).filter(Boolean))] as string[],
-          mode,
-        },
-      });
-
-      log.info('Session analytics saved', {
-        sessionScore,
-        totalQuestions: attempts.length,
-        correctCount: totalCorrect,
-      });
-    } catch (dbError: any) {
-      log.warn('Failed to save session to database', { error: dbError.message });
-      // Continue with analysis even if DB save fails
-    }
-
-    const response: SessionAnalysisResponse = {
-      success: true,
-      analysis: {
-        sessionScore,
-        accuracyBySystem,
-        difficultyCurve,
-        learningEfficiency,
-        retentionStrength,
-        spacingEffectiveness,
-        errorClassifications,
-        errorDistribution,
-        dominantErrorType,
-        conceptsAnalyzed,
-        conceptRetentionSummaries,
-        conceptsNeedingReview: conceptRetentionSummaries.filter((c) => c.reviewUrgency !== 'stable')
-          .length,
-        conceptsOverdue: conceptRetentionSummaries.filter((c) => c.reviewUrgency === 'overdue')
-          .length,
-        knowledgeGaps,
-        criticalGapsCount: knowledgeGaps.filter(
-          (g) => g.severity === 'significant' || g.severity === 'critical'
-        ).length,
-        totalBlockedConcepts: knowledgeGaps.reduce((sum, g) => sum + g.blocksCount, 0),
-        cognitiveState,
-        shouldTakeBreak,
-        breakReason,
-        predictedRetention7Days,
-        predictedRetention30Days,
-        estimatedTimeToMastery,
-        insights,
-        prioritizedRecommendations,
-        nextSessionFocus,
-      },
-    };
-
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error: any) {
-    log.error('Session analysis error', { error: error.message });
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: error.message || 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+      for (const attempt of incorrectAttempts) {
+        const previousAttempts = attempts.filter((a) => a.timestamp < attempt.timestamp);
+        const classification = classifyError(attempt, previousAttempts, avgResponseTime);
+        errorClassifications.push(classification);
       }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
+
+      // Calculate error distribution
+      const errorDistribution: Record<string, number> = {};
+      for (const err of errorClassifications) {
+        errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
+      }
+
+      // Find dominant error type
+      const dominantErrorType =
+        Object.entries(errorDistribution).sort(([, a], [, b]) => b - a)[0]?.[0] || 'none';
+
+      // Calculate cognitive state
+      const cognitiveState = calculateCognitiveState(attempts);
+
+      // Should take break?
+      const shouldTakeBreak =
+        cognitiveState.fatigueLevel > 75 ||
+        cognitiveState.attentionLevel < 40 ||
+        (cognitiveState.cognitiveLoad > 85 && cognitiveState.flowState < 30);
+
+      let breakReason: string | undefined;
+      if (shouldTakeBreak) {
+        if (cognitiveState.fatigueLevel > 75) {
+          breakReason = 'High fatigue detected - your accuracy may decline';
+        } else if (cognitiveState.attentionLevel < 40) {
+          breakReason = 'Attention is wandering - a short break may help';
+        } else {
+          breakReason = 'Cognitive overload - give your brain a rest';
+        }
+      }
+
+      // Generate concept retention summaries (simplified - would integrate with learningPatternEngine)
+      const conceptsAnalyzed = new Set(
+        attempts.map((a: SessionAttempt) => a.conditionId).filter(Boolean)
+      ).size;
+      const conceptRetentionSummaries: ConceptRetentionSummary[] = [];
+
+      // Group by concept and calculate trends
+      const conceptAttempts: Record<string, SessionAttempt[]> = {};
+      for (const attempt of attempts) {
+        if (attempt.conditionId) {
+          if (!conceptAttempts[attempt.conditionId]) {
+            conceptAttempts[attempt.conditionId] = [];
+          }
+          conceptAttempts[attempt.conditionId].push(attempt);
+        }
+      }
+
+      for (const [conceptId, conceptAtts] of Object.entries(conceptAttempts)) {
+        if (conceptAtts.length === 0) continue; // Skip empty arrays
+
+        const accuracy =
+          conceptAtts.filter((a: SessionAttempt) => a.wasCorrect).length / conceptAtts.length;
+        const trend: 'improving' | 'stable' | 'declining' =
+          conceptAtts.length >= 3
+            ? conceptAtts.slice(-2).every((a: SessionAttempt) => a.wasCorrect)
+              ? 'improving'
+              : conceptAtts.slice(-2).every((a: SessionAttempt) => !a.wasCorrect)
+                ? 'declining'
+                : 'stable'
+            : 'stable';
+
+        const firstAttempt = conceptAtts[0];
+        conceptRetentionSummaries.push({
+          conceptId,
+          system: firstAttempt?.system || 'unknown',
+          currentRetention: Math.round(accuracy * 100),
+          reviewUrgency: accuracy < 0.5 ? 'overdue' : accuracy < 0.7 ? 'due' : 'stable',
+          nextOptimalReview: new Date(
+            Date.now() + (accuracy > 0.8 ? 7 : accuracy > 0.6 ? 3 : 1) * 86400000
+          ).toISOString(),
+          consecutiveCorrect: conceptAtts
+            .slice()
+            .reverse()
+            .findIndex((a: SessionAttempt) => !a.wasCorrect),
+          accuracyTrend: trend,
+        });
+      }
+
+      // Knowledge gaps (simplified)
+      const knowledgeGaps: KnowledgeGap[] = errorClassifications
+        .filter(
+          (e) =>
+            e.errorType === ERROR_TYPES.KNOWLEDGE_GAP ||
+            e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
+        )
+        .map((e) => ({
+          conceptId: e.conceptId,
+          conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          system:
+            attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId)?.system ||
+            'unknown',
+          gapType: e.errorType,
+          severity: e.confidence > 70 ? 'significant' : 'moderate',
+          blocksCount: 0, // Would calculate from concept graph
+          suggestedResources: [e.remediation],
+        }));
+
+      // Calculate learning metrics
+      const learningEfficiency = Math.round(
+        sessionScore * 0.4 +
+          (100 - cognitiveState.cognitiveLoad) * 0.3 +
+          cognitiveState.flowState * 0.3
+      );
+      const retentionStrength = Math.round(
+        sessionScore * 0.5 +
+          (conceptRetentionSummaries.filter((c) => c.accuracyTrend === 'improving').length /
+            Math.max(1, conceptRetentionSummaries.length)) *
+            50
+      );
+      const spacingEffectiveness = 70; // Would calculate from actual spacing data
+
+      // Predictions (simplified)
+      const predictedRetention7Days = Math.round(retentionStrength * 0.85);
+      const predictedRetention30Days = Math.round(retentionStrength * 0.65);
+      const estimatedTimeToMastery = Math.max(0, Math.round(((80 - sessionScore) / 10) * 3)); // hours
+
+      // Generate insights
+      const insights = generateInsights(
+        attempts,
+        errorClassifications,
+        cognitiveState,
+        accuracyBySystem
+      );
+
+      // Generate recommendations
+      const prioritizedRecommendations = generateRecommendations(
+        insights,
+        errorClassifications,
+        accuracyBySystem
+      );
+
+      // Determine next session focus
+      const nextSessionFocus = determineNextSessionFocus(accuracyBySystem, errorClassifications);
+
+      // Save session analytics to database (optional)
+      try {
+        await prisma.studySession.create({
+          data: {
+            id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+            userId: auth.userId,
+            startedAt: new Date(sessionStartTime),
+            endedAt: new Date(sessionEndTime),
+            totalQuestions: attempts.length,
+            correctAnswers: totalCorrect,
+            accuracy: totalCorrect / attempts.length,
+            totalTimeMs: sessionEndTime - sessionStartTime,
+            avgTimePerQuestion: Math.round(avgResponseTime),
+            systemsCovered: [...new Set(attempts.map((a) => a.system).filter(Boolean))] as string[],
+            mode,
+          },
+        });
+
+        log.info('Session analytics saved', {
+          sessionScore,
+          totalQuestions: attempts.length,
+          correctCount: totalCorrect,
+        });
+      } catch (dbError: any) {
+        log.warn('Failed to save session to database', { error: dbError.message });
+        // Continue with analysis even if DB save fails
+      }
+
+      const response: SessionAnalysisResponse = {
+        success: true,
+        analysis: {
+          sessionScore,
+          accuracyBySystem,
+          difficultyCurve,
+          learningEfficiency,
+          retentionStrength,
+          spacingEffectiveness,
+          errorClassifications,
+          errorDistribution,
+          dominantErrorType,
+          conceptsAnalyzed,
+          conceptRetentionSummaries,
+          conceptsNeedingReview: conceptRetentionSummaries.filter(
+            (c) => c.reviewUrgency !== 'stable'
+          ).length,
+          conceptsOverdue: conceptRetentionSummaries.filter((c) => c.reviewUrgency === 'overdue')
+            .length,
+          knowledgeGaps,
+          criticalGapsCount: knowledgeGaps.filter(
+            (g) => g.severity === 'significant' || g.severity === 'critical'
+          ).length,
+          totalBlockedConcepts: knowledgeGaps.reduce((sum, g) => sum + g.blocksCount, 0),
+          cognitiveState,
+          shouldTakeBreak,
+          breakReason,
+          predictedRetention7Days,
+          predictedRetention30Days,
+          estimatedTimeToMastery,
+          insights,
+          prioritizedRecommendations,
+          nextSessionFocus,
+        },
+      };
+
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error: any) {
+      log.error('Session analysis error', { error: error.message });
+      return new Response(
+        JSON.stringify({
+          error: 'Internal server error',
+          details: error.message || 'Unknown error',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-});
+);

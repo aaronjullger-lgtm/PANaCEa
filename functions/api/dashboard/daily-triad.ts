@@ -57,93 +57,90 @@ function extractPearl(clinicalPearls: unknown): string | null {
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
-  DailyTriadSchema,
-  async ({ env, auth }) => {
-    const log = createEndpointLogger('/api/dashboard/daily-triad', auth.userId);
-    let prisma: EdgePrismaClient | null = null;
+export const onRequestGet = authenticatedEndpoint(DailyTriadSchema, async ({ env, auth }) => {
+  const log = createEndpointLogger('/api/dashboard/daily-triad', auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
-    try {
-      if (!env.DATABASE_URL) {
-        log.error('Database not configured');
-        return { status: 500, error: 'Database not configured' };
-      }
-
-      prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-      const where = {
-        status: 'published',
-        OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }],
-      } as const;
-
-      const total = await prisma.medicalContent.count({ where });
-      if (total === 0) {
-        log.warn('No high-yield content available');
-        return { status: 404, error: 'No high-yield content available' };
-      }
-
-      const randomSkip = Math.max(0, Math.floor(Math.random() * total));
-
-      const record = await prisma.medicalContent.findFirst({
-        where,
-        skip: randomSkip,
-        take: 1,
-        orderBy: { conditionId: 'asc' },
-        select: {
-          conditionId: true,
-          condition: true,
-          system: true,
-          subcategory: true,
-          gold_standard_dx: true,
-          clinical_pearls: true,
-          buzzwords: true,
-          pance_yield: true,
-          updatedAt: true,
-        },
-      });
-
-      if (!record) {
-        log.warn('No triad found after random selection');
-        return { status: 404, error: 'No triad found' };
-      }
-
-      const goldStandard = record.gold_standard_dx?.trim();
-      const pearl = extractPearl(record.clinical_pearls);
-      const highlight = goldStandard || pearl;
-
-      if (!highlight) {
-        log.warn('No triad content found for record', { conditionId: record.conditionId });
-        return { status: 404, error: 'No triad content found' };
-      }
-
-      const payload: DailyTriadResponse = {
-        conditionId: record.conditionId,
-        condition: record.condition,
-        system: record.system,
-        subcategory: record.subcategory,
-        type: goldStandard ? 'gold_standard' : 'clinical_pearl',
-        highlight,
-        buzzwords: record.buzzwords || [],
-        panceYield: record.pance_yield ?? null,
-        updatedAt: record.updatedAt.toISOString(),
-        source: 'database',
-      };
-
-      log.info('Daily triad fetched', {
-        conditionId: payload.conditionId,
-        type: payload.type,
-      });
-
-      return {
-        success: true,
-        data: payload,
-        _cacheControl: 'public, max-age=600',
-      };
-    } catch (error) {
-      log.error('Error fetching daily triad', error);
-      return { status: 500, error: 'Failed to fetch daily triad' };
-    } finally {
-      await safePrismaDisconnect(prisma);
+  try {
+    if (!env.DATABASE_URL) {
+      log.error('Database not configured');
+      return { status: 500, error: 'Database not configured' };
     }
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const where = {
+      status: 'published',
+      OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }],
+    } as const;
+
+    const total = await prisma.medicalContent.count({ where });
+    if (total === 0) {
+      log.warn('No high-yield content available');
+      return { status: 404, error: 'No high-yield content available' };
+    }
+
+    const randomSkip = Math.max(0, Math.floor(Math.random() * total));
+
+    const record = await prisma.medicalContent.findFirst({
+      where,
+      skip: randomSkip,
+      take: 1,
+      orderBy: { conditionId: 'asc' },
+      select: {
+        conditionId: true,
+        condition: true,
+        system: true,
+        subcategory: true,
+        gold_standard_dx: true,
+        clinical_pearls: true,
+        buzzwords: true,
+        pance_yield: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!record) {
+      log.warn('No triad found after random selection');
+      return { status: 404, error: 'No triad found' };
+    }
+
+    const goldStandard = record.gold_standard_dx?.trim();
+    const pearl = extractPearl(record.clinical_pearls);
+    const highlight = goldStandard || pearl;
+
+    if (!highlight) {
+      log.warn('No triad content found for record', { conditionId: record.conditionId });
+      return { status: 404, error: 'No triad content found' };
+    }
+
+    const payload: DailyTriadResponse = {
+      conditionId: record.conditionId,
+      condition: record.condition,
+      system: record.system,
+      subcategory: record.subcategory,
+      type: goldStandard ? 'gold_standard' : 'clinical_pearl',
+      highlight,
+      buzzwords: record.buzzwords || [],
+      panceYield: record.pance_yield ?? null,
+      updatedAt: record.updatedAt.toISOString(),
+      source: 'database',
+    };
+
+    log.info('Daily triad fetched', {
+      conditionId: payload.conditionId,
+      type: payload.type,
+    });
+
+    return {
+      success: true,
+      data: payload,
+      _cacheControl: 'public, max-age=600',
+    };
+  } catch (error) {
+    log.error('Error fetching daily triad', error);
+    return { status: 500, error: 'Failed to fetch daily triad' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});

@@ -16,16 +16,18 @@ import { isAdmin, type UserRole } from '../_shared/rbac';
 
 // Query schema for GET requests
 const GetQuerySchema = z.object({
-  query: z.object({
-    validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
-    system: z.string().optional(),
-    minQualityScore: z.string().optional(),
-    maxFlagRate: z.string().optional(),
-    limit: z.string().optional(),
-    offset: z.string().optional(),
-    sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).optional(),
-    sortOrder: z.enum(['asc', 'desc']).optional(),
-  }).optional(),
+  query: z
+    .object({
+      validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
+      system: z.string().optional(),
+      minQualityScore: z.string().optional(),
+      maxFlagRate: z.string().optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
+      sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).optional(),
+      sortOrder: z.enum(['asc', 'desc']).optional(),
+    })
+    .optional(),
 });
 
 // Validation schema for POST requests
@@ -73,8 +75,12 @@ export const onRequestGet = authenticatedEndpoint(GetQuerySchema, async (context
     // Parse query parameters with defaults
     const validationStatus = validated.query?.validationStatus || 'pending';
     const system = validated.query?.system;
-    const minQualityScore = validated.query?.minQualityScore ? parseFloat(validated.query.minQualityScore) : undefined;
-    const maxFlagRate = validated.query?.maxFlagRate ? parseFloat(validated.query.maxFlagRate) : undefined;
+    const minQualityScore = validated.query?.minQualityScore
+      ? parseFloat(validated.query.minQualityScore)
+      : undefined;
+    const maxFlagRate = validated.query?.maxFlagRate
+      ? parseFloat(validated.query.maxFlagRate)
+      : undefined;
     const limit = validated.query?.limit ? parseInt(validated.query.limit) : 50;
     const offset = validated.query?.offset ? parseInt(validated.query.offset) : 0;
     const sortBy = validated.query?.sortBy || 'generatedAt';

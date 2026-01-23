@@ -1,10 +1,10 @@
 /**
  * FSRS Workload Simulator
  * Phase 4: Neuro-Symbolic Integrity - Milestone 4
- * 
+ *
  * Implements CMRR (Compute Minimum Recommended Retention) simulation
  * to help users understand the workload implications of their retention targets.
- * 
+ *
  * Based on: https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Optimal-Retention
  */
 
@@ -32,14 +32,14 @@ export interface SimulationParams {
 /**
  * Simulate workload for multiple retention levels
  * Returns projections to help users choose optimal retention
- * 
+ *
  * @example
  * ```ts
  * const results = simulateRetentionWorkload({
  *   fsrsParams: defaultParameters,
  *   dailyNewCards: 20
  * });
- * 
+ *
  * // results = [
  * //   { retention: 0.80, dailyReviews: 45, timeMinutes: 22 },
  * //   { retention: 0.85, dailyReviews: 58, timeMinutes: 29 },
@@ -48,10 +48,8 @@ export interface SimulationParams {
  * // ]
  * ```
  */
-export function simulateRetentionWorkload(
-  params: SimulationParams
-): WorkloadSimulation[] {
-  const retentionLevels = [0.80, 0.85, 0.88, 0.90, 0.92, 0.95];
+export function simulateRetentionWorkload(params: SimulationParams): WorkloadSimulation[] {
+  const retentionLevels = [0.8, 0.85, 0.88, 0.9, 0.92, 0.95];
   const results: WorkloadSimulation[] = [];
 
   for (const retention of retentionLevels) {
@@ -72,9 +70,7 @@ interface SingleSimulationParams extends SimulationParams {
 /**
  * Simulate workload for a single retention target
  */
-function simulateSingleRetention(
-  params: SingleSimulationParams
-): WorkloadSimulation {
+function simulateSingleRetention(params: SingleSimulationParams): WorkloadSimulation {
   const {
     fsrsParams,
     dailyNewCards,
@@ -105,7 +101,7 @@ function simulateSingleRetention(
     for (let i = 0; i < dailyNewCards; i++) {
       const newCard = fsrs.createEmptyCard();
       const scheduled = fsrs.schedule(newCard, currentDate);
-      
+
       // Assume user rates "Good" on first exposure
       cards.push({
         card: scheduled[Rating.Good].card,
@@ -117,14 +113,14 @@ function simulateSingleRetention(
     for (let i = cards.length - 1; i >= 0; i--) {
       const item = cards[i];
       if (!item || item.nextReview > currentDate) continue;
-      
+
       reviewsToday++;
       totalReviews++;
 
       // Simulate rating distribution based on target retention
       const rating = simulateRating(targetRetention);
       const scheduled = fsrs.schedule(item.card, currentDate);
-      
+
       // Update card
       cards[i] = {
         card: scheduled[rating].card,
@@ -137,7 +133,8 @@ function simulateSingleRetention(
 
   // Calculate steady-state daily reviews (last 90 days average)
   const steadyStateDays = dailyReviewCounts.slice(-90);
-  const avgDailyReviews = steadyStateDays.reduce((sum, count) => sum + count, 0) / steadyStateDays.length;
+  const avgDailyReviews =
+    steadyStateDays.reduce((sum, count) => sum + count, 0) / steadyStateDays.length;
 
   // Calculate time investment
   const timeInvestmentMinutes = (avgDailyReviews * avgReviewTimeSeconds) / 60;
@@ -165,34 +162,34 @@ function simulateRating(targetRetention: number): Rating {
   // Model: Higher retention = more conservative rating distribution
   if (targetRetention >= 0.95) {
     // Very high retention - stricter ratings
-    if (rand < 0.10) return Rating.Again;  // 10% fail
-    if (rand < 0.35) return Rating.Hard;   // 25% hard
-    if (rand < 0.80) return Rating.Good;   // 45% good
-    return Rating.Easy;                     // 20% easy
-  } else if (targetRetention >= 0.90) {
+    if (rand < 0.1) return Rating.Again; // 10% fail
+    if (rand < 0.35) return Rating.Hard; // 25% hard
+    if (rand < 0.8) return Rating.Good; // 45% good
+    return Rating.Easy; // 20% easy
+  } else if (targetRetention >= 0.9) {
     // High retention
-    if (rand < 0.08) return Rating.Again;  // 8% fail
-    if (rand < 0.28) return Rating.Hard;   // 20% hard
-    if (rand < 0.78) return Rating.Good;   // 50% good
-    return Rating.Easy;                     // 22% easy
+    if (rand < 0.08) return Rating.Again; // 8% fail
+    if (rand < 0.28) return Rating.Hard; // 20% hard
+    if (rand < 0.78) return Rating.Good; // 50% good
+    return Rating.Easy; // 22% easy
   } else if (targetRetention >= 0.85) {
     // Moderate-high retention
-    if (rand < 0.12) return Rating.Again;  // 12% fail
-    if (rand < 0.32) return Rating.Hard;   // 20% hard
-    if (rand < 0.80) return Rating.Good;   // 48% good
-    return Rating.Easy;                     // 20% easy
+    if (rand < 0.12) return Rating.Again; // 12% fail
+    if (rand < 0.32) return Rating.Hard; // 20% hard
+    if (rand < 0.8) return Rating.Good; // 48% good
+    return Rating.Easy; // 20% easy
   } else {
     // Lower retention (80-85%)
-    if (rand < 0.18) return Rating.Again;  // 18% fail
-    if (rand < 0.38) return Rating.Hard;   // 20% hard
-    if (rand < 0.83) return Rating.Good;   // 45% good
-    return Rating.Easy;                     // 17% easy
+    if (rand < 0.18) return Rating.Again; // 18% fail
+    if (rand < 0.38) return Rating.Hard; // 20% hard
+    if (rand < 0.83) return Rating.Good; // 45% good
+    return Rating.Easy; // 17% easy
   }
 }
 
 /**
  * Calculate recommended retention based on available study time
- * 
+ *
  * @param dailyTimeAvailableMinutes - How many minutes per day user can study
  * @param dailyNewCards - How many new cards per day
  * @param fsrsParams - User's FSRS parameters
@@ -224,7 +221,7 @@ export function calculateRecommendedRetention(
 
   // If even lowest retention exceeds budget, recommend reducing new cards
   return {
-    recommendedRetention: 0.80,
+    recommendedRetention: 0.8,
     explanation: `Your current pace (${dailyNewCards} new cards/day) exceeds ${dailyTimeAvailableMinutes} min/day even at 80% retention. Consider reducing new cards to ${Math.floor(dailyNewCards * 0.7)}/day.`,
   };
 }
@@ -237,8 +234,8 @@ export function generateWorkloadChart(
   params: SimulationParams
 ): Array<{ retention: number; reviews: number; minutes: number }> {
   const simulations = simulateRetentionWorkload(params);
-  
-  return simulations.map(sim => ({
+
+  return simulations.map((sim) => ({
     retention: sim.retention,
     reviews: sim.projectedDailyReviews,
     minutes: sim.timeInvestmentMinutes,

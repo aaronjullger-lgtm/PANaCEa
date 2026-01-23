@@ -144,7 +144,7 @@ const generateCoverageDrill = (
 
   const guidelineIndex = Math.floor(Math.random() * guidelines.length);
   const guideline = guidelines[guidelineIndex];
-  
+
   // Guard for array access returning undefined
   if (!guideline) return null;
 
@@ -180,9 +180,9 @@ const generateMechanismDrill = (): AntibioticDrillQuestion | null => {
   const penicillin = ANTIBIOTICS[0];
   const vancomycin = ANTIBIOTICS[7];
   const azithromycin = ANTIBIOTICS[8];
-  
+
   if (!penicillin || !vancomycin || !azithromycin) return null;
-  
+
   const mechanisms = [
     {
       drug: penicillin, // Penicillin
@@ -227,7 +227,7 @@ const generateMechanismDrill = (): AntibioticDrillQuestion | null => {
 
   const selectedIndex = Math.floor(Math.random() * mechanisms.length);
   const selected = mechanisms[selectedIndex];
-  
+
   // Guard for array access returning undefined
   if (!selected) return null;
 
@@ -247,9 +247,9 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion | null => {
   const azithromycin = ANTIBIOTICS[8];
   const vancomycin = ANTIBIOTICS[7];
   const ciprofloxacin = ANTIBIOTICS[9];
-  
+
   if (!azithromycin || !vancomycin || !ciprofloxacin) return null;
-  
+
   const sideEffects = [
     {
       drug: azithromycin, // Azithromycin
@@ -289,7 +289,7 @@ const generateSideEffectDrill = (): AntibioticDrillQuestion | null => {
 
   const selectedIndex = Math.floor(Math.random() * sideEffects.length);
   const selected = sideEffects[selectedIndex];
-  
+
   // Guard for array access returning undefined
   if (!selected) return null;
 
@@ -344,7 +344,7 @@ const generateEmpiricChoiceDrill = (): AntibioticDrillQuestion | null => {
 
   const selectedIndex = Math.floor(Math.random() * scenarios.length);
   const selected = scenarios[selectedIndex];
-  
+
   // Guard for array access returning undefined
   if (!selected) return null;
 
@@ -372,7 +372,7 @@ const generateAntibioticDrill = (
   ];
   const typeIndex = Math.floor(Math.random() * types.length);
   const randomType = types[typeIndex];
-  
+
   // Guard for array access returning undefined - default to coverage
   if (!randomType) {
     return generateCoverageDrill(guidelines);

@@ -49,10 +49,10 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
     const totalCount = await prisma.question.count({ where });
 
     if (totalCount === 0) {
-      logger.info('No questions found for system', { 
-        system, 
-        subcategory, 
-        userId: auth.userId 
+      logger.info('No questions found for system', {
+        system,
+        subcategory,
+        userId: auth.userId,
       });
 
       return {

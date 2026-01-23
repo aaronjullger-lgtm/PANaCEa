@@ -2,7 +2,7 @@
  * POST /api/questions/generate-enhanced
  * Generate high-quality PANCE questions using rich database context.
  * Uses Gemini API with condition data, linked entities, and PANCE task focus.
- * 
+ *
  * PHASE 4: NEURO-SYMBOLIC INTEGRITY - Milestone 1
  * Now includes Chain of Verification (CoVe) to prevent AI hallucinations.
  */
@@ -53,7 +53,8 @@ function parseConditionContext(contextString: string): ParsedConditionContent {
     signs: /(?:signs|physical exam|examination):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
     diagnostics: /(?:diagnostics?|diagnosis|workup|labs?|imaging):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
     treatment: /(?:treatment|management|therapy):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
-    differentialDiagnosis: /(?:differential|ddx|differential diagnosis):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
+    differentialDiagnosis:
+      /(?:differential|ddx|differential diagnosis):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
     complications: /(?:complications?|sequelae):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
     riskFactors: /(?:risk factors?|predisposing|causes):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
     buzzwords: /(?:buzzwords?|key terms?|high[- ]yield):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
@@ -66,8 +67,19 @@ function parseConditionContext(contextString: string): ParsedConditionContent {
     if (match && match[1]) {
       const content = match[1].trim();
       // For array fields, split by common delimiters
-      if (['symptoms', 'signs', 'diagnostics', 'treatment', 'differentialDiagnosis', 
-           'complications', 'riskFactors', 'buzzwords', 'clinicalPearls'].includes(key)) {
+      if (
+        [
+          'symptoms',
+          'signs',
+          'diagnostics',
+          'treatment',
+          'differentialDiagnosis',
+          'complications',
+          'riskFactors',
+          'buzzwords',
+          'clinicalPearls',
+        ].includes(key)
+      ) {
         // Split by newlines, bullets, semicolons, or numbered lists
         const items = content
           .split(/\n|[•-]\s*|;\s*|\d+\.\s*/)
@@ -237,7 +249,11 @@ CRITICAL RULES:
     // ========================================================================
     let questionData;
     let verificationResult: CoVeResult | null = null;
-    let quickVerifyResult: { passed: boolean; confidence: number; criticalIssues: string[] } | null = null;
+    let quickVerifyResult: {
+      passed: boolean;
+      confidence: number;
+      criticalIssues: string[];
+    } | null = null;
     let attempt = 0;
     let previousIssues: string[] = [];
 
@@ -267,7 +283,9 @@ CRITICAL RULES:
           error: parseError instanceof Error ? parseError.message : String(parseError),
           userId: auth.userId,
         });
-        previousIssues = ['Generated response was not valid JSON. Please return ONLY a valid JSON object.'];
+        previousIssues = [
+          'Generated response was not valid JSON. Please return ONLY a valid JSON object.',
+        ];
         continue; // Retry
       }
 
@@ -283,7 +301,9 @@ CRITICAL RULES:
           fields: Object.keys(questionData),
           userId: auth.userId,
         });
-        previousIssues = ['Generated question was missing required fields. Include all fields: vignette, question, options, correctAnswerIndex, rationale.'];
+        previousIssues = [
+          'Generated question was missing required fields. Include all fields: vignette, question, options, correctAnswerIndex, rationale.',
+        ];
         continue; // Retry
       }
 
@@ -321,9 +341,16 @@ CRITICAL RULES:
             break; // Success - exit loop
           } else {
             // Extract issues for retry prompt
-            previousIssues = verificationResult.flags.map((f) => `[${f.severity.toUpperCase()}] ${f.message}`);
-            if (verificationResult.answerVerification && !verificationResult.answerVerification.isCorrect) {
-              previousIssues.unshift(`The marked correct answer may be wrong: ${verificationResult.answerVerification.reasoning}`);
+            previousIssues = verificationResult.flags.map(
+              (f) => `[${f.severity.toUpperCase()}] ${f.message}`
+            );
+            if (
+              verificationResult.answerVerification &&
+              !verificationResult.answerVerification.isCorrect
+            ) {
+              previousIssues.unshift(
+                `The marked correct answer may be wrong: ${verificationResult.answerVerification.reasoning}`
+              );
             }
             logger.warn(`[CoVe] Verification FAILED, will retry`, {
               userId: auth.userId,
@@ -371,7 +398,8 @@ CRITICAL RULES:
 
     // Final check - if we exhausted retries without passing
     const verificationPassed = verificationResult?.passed ?? quickVerifyResult?.passed ?? false;
-    const verificationConfidence = verificationResult?.overallConfidence ?? quickVerifyResult?.confidence ?? 0;
+    const verificationConfidence =
+      verificationResult?.overallConfidence ?? quickVerifyResult?.confidence ?? 0;
 
     if (!verificationPassed && attempt >= MAX_COVE_RETRIES) {
       logger.warn(`[CoVe] Max retries exhausted, accepting with warnings`, {
@@ -450,16 +478,20 @@ CRITICAL RULES:
           confidence: verificationConfidence,
           attempts: attempt,
           verificationId: verificationResult?.verificationId ?? null,
-          recommendation: verificationResult?.recommendation ?? (quickVerifyResult?.passed ? 'accept' : 'review'),
-          flags: verificationResult?.flags?.map((f) => ({
-            severity: f.severity,
-            code: f.code,
-            message: f.message,
-          })) ?? (quickVerifyResult?.criticalIssues?.map((issue) => ({
-            severity: 'warning' as const,
-            code: 'QUICK_VERIFY_ISSUE',
-            message: issue,
-          })) ?? []),
+          recommendation:
+            verificationResult?.recommendation ?? (quickVerifyResult?.passed ? 'accept' : 'review'),
+          flags:
+            verificationResult?.flags?.map((f) => ({
+              severity: f.severity,
+              code: f.code,
+              message: f.message,
+            })) ??
+            quickVerifyResult?.criticalIssues?.map((issue) => ({
+              severity: 'warning' as const,
+              code: 'QUICK_VERIFY_ISSUE',
+              message: issue,
+            })) ??
+            [],
           summary: verificationResult?.summary ?? null,
         },
       },

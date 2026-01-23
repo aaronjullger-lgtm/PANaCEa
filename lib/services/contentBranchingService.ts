@@ -157,14 +157,14 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
       include: { BranchChange: true };
     }>;
 
-    const branch = await prisma.contentBranch.findUnique({
+    const branch = (await prisma.contentBranch.findUnique({
       where: { name: branchName },
       include: {
         BranchChange: {
           orderBy: { createdAt: 'desc' },
         },
       },
-    }) as BranchWithChanges | null;
+    })) as BranchWithChanges | null;
 
     if (!branch) {
       throw new Error(`Branch "${branchName}" not found`);
@@ -329,7 +329,7 @@ export async function listBranches(includeArchived: boolean = false): Promise<an
 
     const { prisma } = await import('../prisma');
 
-    const branches = await prisma.contentBranch.findMany({
+    const branches = (await prisma.contentBranch.findMany({
       where: includeArchived ? {} : { status: { not: 'archived' } },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -337,7 +337,7 @@ export async function listBranches(includeArchived: boolean = false): Promise<an
           select: { BranchChange: true },
         },
       },
-    }) as Array<any & { _count: { BranchChange: number } }>;
+    })) as Array<any & { _count: { BranchChange: number } }>;
 
     return branches.map((b) => ({
       id: b.id,

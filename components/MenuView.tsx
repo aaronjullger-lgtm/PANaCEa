@@ -851,7 +851,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   lastStudyDate={(() => {
                     const lastRecord = performanceData[performanceData.length - 1];
                     return lastRecord
-                      ? new Date(lastRecord.timestamp).toISOString().split('T')[0] ?? ''
+                      ? (new Date(lastRecord.timestamp).toISOString().split('T')[0] ?? '')
                       : undefined;
                   })()}
                 />

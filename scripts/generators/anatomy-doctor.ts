@@ -150,9 +150,7 @@ async function seedAnatomyStructures() {
       // Create record - matching Prisma schema field names
       await prisma.anatomyStructure.create({
         data: {
-
           id: uuidv4(),
-
 
           name: structure.name,
           system: structure.system,

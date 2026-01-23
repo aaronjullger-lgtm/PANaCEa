@@ -177,6 +177,7 @@ package.json              # New test scripts added
    - Tests all critical paths
 
 3. **Generate New Tests:**
+
    ```bash
    npx playwright codegen http://localhost:3000
    ```

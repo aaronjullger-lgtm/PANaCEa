@@ -17,6 +17,7 @@ Phase 3 focused on delivering a world-class user experience with WCAG 2.1 AA com
 ### File: `lib/utils/accessibilityUtils.ts`
 
 #### Screen Reader Support
+
 ```typescript
 import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
 
@@ -28,18 +29,20 @@ announceToScreenReader('Session ended - 85% correct!', 'assertive');
 ```
 
 **Implementation Details:**
+
 - Creates `aria-live` region dynamically if not present
 - Auto-clears announcements after 3 seconds to prevent stale content
 - Hidden visually but accessible to screen readers via `.sr-only` class
 
 #### Focus Trap for Modals
+
 ```typescript
 import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
 
 function Modal({ isOpen, onClose }) {
   const containerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(containerRef, isOpen);
-  
+
   return (
     <div ref={containerRef} role="dialog" aria-modal="true">
       {/* Modal content */}
@@ -49,28 +52,31 @@ function Modal({ isOpen, onClose }) {
 ```
 
 **Features:**
+
 - Traps Tab/Shift+Tab within modal boundaries
 - Auto-focuses first focusable element on mount
 - Wraps focus from last→first and first→last elements
 
 #### Keyboard Navigation
+
 ```typescript
 import { useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 
 function Component({ onClose }) {
   useKeyboardNavigation(onClose); // Escape key handler
-  
+
   return <div>Press Escape to close</div>;
 }
 ```
 
 #### Skip Links
+
 ```typescript
 import { createSkipLink } from '@/lib/utils/accessibilityUtils';
 
 function Layout() {
   const skipLinkProps = createSkipLink();
-  
+
   return (
     <>
       <a {...skipLinkProps}>Skip to main content</a>
@@ -83,18 +89,18 @@ function Layout() {
 
 ### WCAG 2.1 AA Compliance Checklist
 
-| Criterion | Status | Implementation |
-|-----------|--------|----------------|
-| 1.1.1 Non-text Content | ✅ | All images have alt text |
-| 1.3.1 Info and Relationships | ✅ | Semantic HTML structure |
-| 1.4.3 Contrast (Minimum) | ✅ | 4.5:1 ratio for text |
-| 1.4.4 Resize Text | ✅ | rem units throughout |
-| 2.1.1 Keyboard | ✅ | All interactive elements focusable |
-| 2.1.2 No Keyboard Trap | ✅ | Focus trap with escape hatch |
-| 2.4.1 Bypass Blocks | ✅ | Skip links implemented |
-| 2.4.3 Focus Order | ✅ | Logical tab order |
-| 2.4.7 Focus Visible | ✅ | Clear focus indicators |
-| 4.1.2 Name, Role, Value | ✅ | ARIA attributes on all controls |
+| Criterion                    | Status | Implementation                     |
+| ---------------------------- | ------ | ---------------------------------- |
+| 1.1.1 Non-text Content       | ✅     | All images have alt text           |
+| 1.3.1 Info and Relationships | ✅     | Semantic HTML structure            |
+| 1.4.3 Contrast (Minimum)     | ✅     | 4.5:1 ratio for text               |
+| 1.4.4 Resize Text            | ✅     | rem units throughout               |
+| 2.1.1 Keyboard               | ✅     | All interactive elements focusable |
+| 2.1.2 No Keyboard Trap       | ✅     | Focus trap with escape hatch       |
+| 2.4.1 Bypass Blocks          | ✅     | Skip links implemented             |
+| 2.4.3 Focus Order            | ✅     | Logical tab order                  |
+| 2.4.7 Focus Visible          | ✅     | Clear focus indicators             |
+| 4.1.2 Name, Role, Value      | ✅     | ARIA attributes on all controls    |
 
 ---
 
@@ -104,21 +110,22 @@ function Layout() {
 
 #### Core Components
 
-| Component | Use Case | Props |
-|-----------|----------|-------|
-| `SkeletonLoader` | Base building block | `width`, `height`, `variant`, `animation` |
-| `SkeletonText` | Text line placeholders | `lines`, `lastLineWidth` |
-| `SkeletonCard` | Generic card with avatar | - |
-| `SkeletonQuestionCard` | Question card in drills | - |
-| `SkeletonAnalyticsDashboard` | Full analytics page | - |
-| `SkeletonListItem` | Single list item | `showAvatar` |
-| `SkeletonList` | Multiple list items | `count`, `showAvatars` |
-| `SkeletonButton` | Button placeholder | `size` |
-| `SkeletonImage` | Image with aspect ratio | `aspectRatio` |
-| `SkeletonNavbar` | Navigation header | - |
-| `SkeletonTable` | Data table | `rows`, `columns` |
+| Component                    | Use Case                 | Props                                     |
+| ---------------------------- | ------------------------ | ----------------------------------------- |
+| `SkeletonLoader`             | Base building block      | `width`, `height`, `variant`, `animation` |
+| `SkeletonText`               | Text line placeholders   | `lines`, `lastLineWidth`                  |
+| `SkeletonCard`               | Generic card with avatar | -                                         |
+| `SkeletonQuestionCard`       | Question card in drills  | -                                         |
+| `SkeletonAnalyticsDashboard` | Full analytics page      | -                                         |
+| `SkeletonListItem`           | Single list item         | `showAvatar`                              |
+| `SkeletonList`               | Multiple list items      | `count`, `showAvatars`                    |
+| `SkeletonButton`             | Button placeholder       | `size`                                    |
+| `SkeletonImage`              | Image with aspect ratio  | `aspectRatio`                             |
+| `SkeletonNavbar`             | Navigation header        | -                                         |
+| `SkeletonTable`              | Data table               | `rows`, `columns`                         |
 
 #### Animation Options
+
 ```typescript
 // Pulse animation (default)
 <SkeletonLoader animation="pulse" />
@@ -131,6 +138,7 @@ function Layout() {
 ```
 
 #### Usage Pattern
+
 ```typescript
 import { SkeletonQuestionCard } from '@/components/ui/SkeletonLoader';
 
@@ -138,12 +146,13 @@ function QuestionView({ isLoading, question }) {
   if (isLoading) {
     return <SkeletonQuestionCard />;
   }
-  
+
   return <QuestionCard question={question} />;
 }
 ```
 
 #### Performance Impact
+
 - **Before:** CLS = 0.15-0.25 (Poor)
 - **After:** CLS = 0.0 (Excellent)
 - All skeletons match exact dimensions of loaded content
@@ -156,22 +165,23 @@ function QuestionView({ isLoading, question }) {
 
 #### Error Categories
 
-| Category | HTTP Status | User Message |
-|----------|-------------|--------------|
-| `network` | - | "We couldn't connect to the server..." |
-| `authentication` | 401 | "Your session has expired..." |
-| `authorization` | 403 | "You don't have permission..." |
-| `validation` | 400, 422 | "Please check your input..." |
-| `server` | 500+ | "Something went wrong on our end..." |
-| `database` | - | "We had trouble saving your data..." |
-| `timeout` | - | "The request took too long..." |
-| `rate_limit` | 429 | "You've made too many requests..." |
-| `not_found` | 404 | "We couldn't find what you're looking for." |
-| `conflict` | 409 | "This action conflicts with existing data..." |
+| Category         | HTTP Status | User Message                                  |
+| ---------------- | ----------- | --------------------------------------------- |
+| `network`        | -           | "We couldn't connect to the server..."        |
+| `authentication` | 401         | "Your session has expired..."                 |
+| `authorization`  | 403         | "You don't have permission..."                |
+| `validation`     | 400, 422    | "Please check your input..."                  |
+| `server`         | 500+        | "Something went wrong on our end..."          |
+| `database`       | -           | "We had trouble saving your data..."          |
+| `timeout`        | -           | "The request took too long..."                |
+| `rate_limit`     | 429         | "You've made too many requests..."            |
+| `not_found`      | 404         | "We couldn't find what you're looking for."   |
+| `conflict`       | 409         | "This action conflicts with existing data..." |
 
 #### Core Functions
 
 **Create Structured Error:**
+
 ```typescript
 import { createAppError } from '@/lib/utils/errorHandlingUtils';
 
@@ -184,30 +194,29 @@ try {
 ```
 
 **Auto-Retry with Backoff:**
+
 ```typescript
 import { withRetry } from '@/lib/utils/errorHandlingUtils';
 
-const data = await withRetry(
-  () => fetchQuestions(sessionId),
-  {
-    maxRetries: 3,
-    delayMs: 1000,
-    backoffMultiplier: 2, // 1s, 2s, 4s
-    onRetry: (attempt, error) => {
-      console.log(`Retry ${attempt}: ${error.category}`);
-    }
-  }
-);
+const data = await withRetry(() => fetchQuestions(sessionId), {
+  maxRetries: 3,
+  delayMs: 1000,
+  backoffMultiplier: 2, // 1s, 2s, 4s
+  onRetry: (attempt, error) => {
+    console.log(`Retry ${attempt}: ${error.category}`);
+  },
+});
 ```
 
 **Safe Fetch Wrapper:**
+
 ```typescript
 import { safeFetch } from '@/lib/utils/errorHandlingUtils';
 
-const { data, error } = await safeFetch<QuestionData>(
-  '/api/questions/next',
-  { timeout: 10000, context: { sessionId } }
-);
+const { data, error } = await safeFetch<QuestionData>('/api/questions/next', {
+  timeout: 10000,
+  context: { sessionId },
+});
 
 if (error) {
   showToast(formatErrorForToast(error));
@@ -218,6 +227,7 @@ if (error) {
 ```
 
 #### Sentry Integration
+
 ```typescript
 import { reportError } from '@/lib/utils/errorHandlingUtils';
 
@@ -231,6 +241,7 @@ reportError(appError);
 ```
 
 #### Recovery Suggestions
+
 ```typescript
 import { getRecoverySuggestions } from '@/lib/utils/errorHandlingUtils';
 
@@ -247,10 +258,10 @@ const suggestions = getRecoverySuggestions(appError);
 #### Breakpoint Detection
 
 ```typescript
-import { 
-  useBreakpoint, 
-  useIsMobile, 
-  useIsTablet, 
+import {
+  useBreakpoint,
+  useIsMobile,
+  useIsTablet,
   useIsDesktop,
   useMediaQuery
 } from '@/lib/utils/mobileOptimization';
@@ -261,7 +272,7 @@ function ResponsiveLayout() {
   const isTablet = useIsTablet();     // md to lg (768-1024px)
   const isDesktop = useIsDesktop();   // >= lg (1024px)
   const isLargeScreen = useMediaQuery('xl'); // >= 1280px
-  
+
   return (
     <div className={isMobile ? 'mobile-layout' : 'desktop-layout'}>
       {isMobile && <MobileNav />}
@@ -278,18 +289,18 @@ import { useDeviceInfo } from '@/lib/utils/mobileOptimization';
 
 function AdaptiveComponent() {
   const device = useDeviceInfo();
-  
+
   // Available properties:
   // device.isMobile, device.isTablet, device.isDesktop
   // device.isTouchDevice, device.isIOS, device.isAndroid
   // device.isSafari, device.isStandalone (PWA)
   // device.prefersReducedMotion, device.devicePixelRatio
-  
+
   return (
     <motion.div
       animate={{ opacity: 1 }}
-      transition={{ 
-        duration: device.prefersReducedMotion ? 0 : 0.3 
+      transition={{
+        duration: device.prefersReducedMotion ? 0 : 0.3
       }}
     >
       {device.isTouchDevice ? <TouchUI /> : <PointerUI />}
@@ -305,7 +316,7 @@ import { useGestures, useSwipeNavigation } from '@/lib/utils/mobileOptimization'
 
 function DrillSession({ questions, currentIndex, setIndex }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Full gesture detection
   useGestures(containerRef, {
     swipeThreshold: 50,
@@ -314,19 +325,20 @@ function DrillSession({ questions, currentIndex, setIndex }) {
     onDoubleTap: () => toggleBookmark(),
     onLongPress: () => showOptions(),
   });
-  
+
   // Or simple swipe navigation
   useSwipeNavigation(
     () => setIndex(i => i + 1),  // swipe left
     () => setIndex(i => i - 1),  // swipe right
     { threshold: 100 }
   );
-  
+
   return <div ref={containerRef}>{/* content */}</div>;
 }
 ```
 
 **Supported Gestures:**
+
 - `tap` - Single tap (with double-tap detection delay)
 - `doubletap` - Quick double tap
 - `longpress` - Press and hold (500ms default)
@@ -336,23 +348,23 @@ function DrillSession({ questions, currentIndex, setIndex }) {
 #### Viewport Utilities
 
 ```typescript
-import { 
-  useViewportInfo, 
-  useBodyScrollLock 
+import {
+  useViewportInfo,
+  useBodyScrollLock
 } from '@/lib/utils/mobileOptimization';
 
 function MobileModal({ isOpen, onClose }) {
   const viewport = useViewportInfo();
   useBodyScrollLock(isOpen);
-  
+
   // viewport.width, viewport.height
   // viewport.orientation ('portrait' | 'landscape')
   // viewport.isKeyboardVisible
   // viewport.safeAreaTop/Bottom/Left/Right (for notched devices)
-  
+
   return (
-    <div 
-      style={{ 
+    <div
+      style={{
         paddingBottom: viewport.safeAreaBottom,
         height: viewport.isKeyboardVisible ? '50vh' : '100vh'
       }}
@@ -366,8 +378,8 @@ function MobileModal({ isOpen, onClose }) {
 #### Touch-Friendly Interactions
 
 ```typescript
-import { 
-  getTouchButtonProps, 
+import {
+  getTouchButtonProps,
   usePressable,
   getIOSInputProps
 } from '@/lib/utils/mobileOptimization';
@@ -378,7 +390,7 @@ function TouchButton({ onClick }) {
     onPress: onClick,
     onLongPress: () => showContextMenu(),
   });
-  
+
   return (
     <button
       ref={buttonRef}
@@ -406,11 +418,11 @@ function QuestionList({ onRefresh }) {
     },
     { threshold: 80 }
   );
-  
+
   return (
     <div>
       {(isPulling || isRefreshing) && (
-        <div 
+        <div
           className="refresh-indicator"
           style={{ opacity: pullProgress }}
         >
@@ -426,6 +438,7 @@ function QuestionList({ onRefresh }) {
 #### Safe Area CSS
 
 Add to global CSS:
+
 ```css
 /* From SAFE_AREA_CSS export */
 :root {
@@ -435,11 +448,15 @@ Add to global CSS:
   --sar: env(safe-area-inset-right);
 }
 
-.safe-top { padding-top: env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-.safe-all { 
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 
-           env(safe-area-inset-bottom) env(safe-area-inset-left);
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-all {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 ```
 
@@ -450,24 +467,28 @@ Add to global CSS:
 ### Recommended Integration Order
 
 1. **Add CSS Variables** (global.css)
+
    ```css
    @import from '@/lib/utils/mobileOptimization' { SAFE_AREA_CSS };
    ```
 
 2. **Add Skip Link** (App.tsx or Layout.tsx)
+
    ```tsx
    import { createSkipLink } from '@/lib/utils/accessibilityUtils';
-   
+
    const skipLink = createSkipLink();
-   <a {...skipLink}>Skip to main content</a>
+   <a {...skipLink}>Skip to main content</a>;
    ```
 
-3. **Wrap API Calls** (services/*.ts)
+3. **Wrap API Calls** (services/\*.ts)
+
    ```typescript
    import { safeFetch, withRetry } from '@/lib/utils/errorHandlingUtils';
    ```
 
-4. **Add Skeleton States** (components/**/*.tsx)
+4. **Add Skeleton States** (components/\*_/_.tsx)
+
    ```tsx
    import { SkeletonQuestionCard } from '@/components/ui/SkeletonLoader';
    ```
@@ -501,44 +522,43 @@ export function DrillSessionPage() {
   const { showToast } = useToast();
   const isMobile = useIsMobile();
   const device = useDeviceInfo();
-  
+
   // Swipe navigation for mobile
   useSwipeNavigation(
     () => {
       if (currentIndex < questions.length - 1) {
-        setCurrentIndex(i => i + 1);
+        setCurrentIndex((i) => i + 1);
         announceToScreenReader(`Question ${currentIndex + 2} of ${questions.length}`);
       }
     },
     () => {
       if (currentIndex > 0) {
-        setCurrentIndex(i => i - 1);
+        setCurrentIndex((i) => i - 1);
         announceToScreenReader(`Question ${currentIndex} of ${questions.length}`);
       }
     },
     { enabled: isMobile }
   );
-  
+
   // Load questions
   useEffect(() => {
     async function load() {
-      const { data, error } = await safeFetch<{ questions: Question[] }>(
-        '/api/questions/session',
-        { timeout: 15000 }
-      );
-      
+      const { data, error } = await safeFetch<{ questions: Question[] }>('/api/questions/session', {
+        timeout: 15000,
+      });
+
       if (error) {
         showToast(formatErrorForToast(error));
         return;
       }
-      
+
       setQuestions(data?.questions || []);
       setIsLoading(false);
       announceToScreenReader(`Loaded ${data?.questions.length} questions`);
     }
     load();
   }, []);
-  
+
   // Show skeleton during load
   if (isLoading) {
     return (
@@ -547,25 +567,20 @@ export function DrillSessionPage() {
       </div>
     );
   }
-  
+
   const question = questions[currentIndex];
-  
+
   return (
-    <div 
+    <div
       ref={containerRef}
       className="p-4 safe-top safe-bottom"
       role="region"
       aria-label={`Question ${currentIndex + 1} of ${questions.length}`}
     >
-      <QuestionCard 
-        question={question}
-        onAnswer={(answer) => handleAnswer(answer)}
-      />
-      
+      <QuestionCard question={question} onAnswer={(answer) => handleAnswer(answer)} />
+
       {isMobile && (
-        <p className="text-sm text-center text-gray-500 mt-4">
-          Swipe left/right to navigate
-        </p>
+        <p className="text-sm text-center text-gray-500 mt-4">Swipe left/right to navigate</p>
       )}
     </div>
   );
@@ -622,23 +637,23 @@ export function DrillSessionPage() {
 
 ### Target Metrics (Web Vitals)
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| LCP (Largest Contentful Paint) | < 2.5s | ✅ ~1.8s |
-| FID (First Input Delay) | < 100ms | ✅ ~45ms |
-| CLS (Cumulative Layout Shift) | < 0.1 | ✅ 0.0 |
+| Metric                          | Target  | Achieved  |
+| ------------------------------- | ------- | --------- |
+| LCP (Largest Contentful Paint)  | < 2.5s  | ✅ ~1.8s  |
+| FID (First Input Delay)         | < 100ms | ✅ ~45ms  |
+| CLS (Cumulative Layout Shift)   | < 0.1   | ✅ 0.0    |
 | INP (Interaction to Next Paint) | < 200ms | ✅ ~150ms |
-| TTFB (Time to First Byte) | < 800ms | ✅ ~400ms |
+| TTFB (Time to First Byte)       | < 800ms | ✅ ~400ms |
 
 ### Bundle Impact
 
-| Utility | Gzipped Size |
-|---------|--------------|
-| accessibilityUtils.ts | ~1.2 KB |
-| errorHandlingUtils.ts | ~2.8 KB |
-| mobileOptimization.ts | ~4.5 KB |
-| SkeletonLoader.tsx | ~3.1 KB |
-| **Total Phase 3** | **~11.6 KB** |
+| Utility               | Gzipped Size |
+| --------------------- | ------------ |
+| accessibilityUtils.ts | ~1.2 KB      |
+| errorHandlingUtils.ts | ~2.8 KB      |
+| mobileOptimization.ts | ~4.5 KB      |
+| SkeletonLoader.tsx    | ~3.1 KB      |
+| **Total Phase 3**     | **~11.6 KB** |
 
 ---
 
@@ -669,13 +684,14 @@ Phase 3 delivers:
 ✅ **WCAG 2.1 AA Compliance** - Full accessibility support with screen readers, keyboard navigation, focus management  
 ✅ **Zero Layout Shift** - 10+ skeleton components matching exact layouts  
 ✅ **Robust Error Handling** - Categorized errors, retry logic, Sentry integration, user-friendly messages  
-✅ **Mobile-First Experience** - Touch gestures, safe areas, responsive breakpoints, pull-to-refresh  
+✅ **Mobile-First Experience** - Touch gestures, safe areas, responsive breakpoints, pull-to-refresh
 
 **Total New Code:** ~900 lines across 4 files  
 **Bundle Impact:** ~11.6 KB gzipped  
-**Test Coverage:** Ready for unit and E2E testing  
+**Test Coverage:** Ready for unit and E2E testing
 
 The application is now production-ready for diverse user populations, including:
+
 - Users with visual impairments (screen reader support)
 - Users with motor impairments (keyboard navigation, large touch targets)
 - Mobile users (gesture support, responsive design)

@@ -62,7 +62,10 @@ export const onRequestGet = authenticatedEndpoint(
         return { status: 404, error: 'Procedure not found' };
       }
 
-      log.info('Procedure fetched successfully', { id, conditionCount: result.conditions?.length || 0 });
+      log.info('Procedure fetched successfully', {
+        id,
+        conditionCount: result.conditions?.length || 0,
+      });
       return { data: { success: true, data: result } };
     } catch (error) {
       log.error('Failed to fetch procedure', error);

@@ -81,24 +81,30 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Calculate overall stats
     const totalAttempts = allAttempts.length;
-    const correctAttempts = allAttempts.filter((a: typeof allAttempts[0]) => a.wasCorrect).length;
+    const correctAttempts = allAttempts.filter((a: (typeof allAttempts)[0]) => a.wasCorrect).length;
     const overallAccuracy =
       totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
 
     // Calculate average time metrics
-    const attemptsWithTime = allAttempts.filter((a: typeof allAttempts[0]) => a.timeSpentMs && a.timeSpentMs > 0);
+    const attemptsWithTime = allAttempts.filter(
+      (a: (typeof allAttempts)[0]) => a.timeSpentMs && a.timeSpentMs > 0
+    );
     const avgTimeMs =
       attemptsWithTime.length > 0
         ? Math.round(
-            attemptsWithTime.reduce((sum: number, a: typeof attemptsWithTime[0]) => sum + (a.timeSpentMs || 0), 0) /
-              attemptsWithTime.length
+            attemptsWithTime.reduce(
+              (sum: number, a: (typeof attemptsWithTime)[0]) => sum + (a.timeSpentMs || 0),
+              0
+            ) / attemptsWithTime.length
           )
         : null;
     const avgAnswerChanges =
       attemptsWithTime.length > 0
         ? +(
-            attemptsWithTime.reduce((sum: number, a: typeof attemptsWithTime[0]) => sum + (a.answerChangedCount || 0), 0) /
-            attemptsWithTime.length
+            attemptsWithTime.reduce(
+              (sum: number, a: (typeof attemptsWithTime)[0]) => sum + (a.answerChangedCount || 0),
+              0
+            ) / attemptsWithTime.length
           ).toFixed(2)
         : null;
 
@@ -116,9 +122,11 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     > = {};
 
     for (const system of SYSTEMS) {
-      const systemAttempts = allAttempts.filter((a: typeof allAttempts[0]) => a.system === system);
+      const systemAttempts = allAttempts.filter(
+        (a: (typeof allAttempts)[0]) => a.system === system
+      );
       const total = systemAttempts.length;
-      const correct = systemAttempts.filter((a: typeof systemAttempts[0]) => a.wasCorrect).length;
+      const correct = systemAttempts.filter((a: (typeof systemAttempts)[0]) => a.wasCorrect).length;
       const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
       // Calculate trend
@@ -126,20 +134,24 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       if (systemAttempts.length >= 10) {
         const recent5 = systemAttempts.slice(0, 5);
         const previous5 = systemAttempts.slice(5, 10);
-        const recentAcc = recent5.filter((a: typeof recent5[0]) => a.wasCorrect).length / 5;
-        const prevAcc = previous5.filter((a: typeof previous5[0]) => a.wasCorrect).length / 5;
+        const recentAcc = recent5.filter((a: (typeof recent5)[0]) => a.wasCorrect).length / 5;
+        const prevAcc = previous5.filter((a: (typeof previous5)[0]) => a.wasCorrect).length / 5;
 
         if (recentAcc > prevAcc + 0.15) trend = 'improving';
         else if (recentAcc < prevAcc - 0.15) trend = 'declining';
       }
 
       // Calculate average time for this system
-      const systemWithTime = systemAttempts.filter((a: typeof systemAttempts[0]) => a.timeSpentMs && a.timeSpentMs > 0);
+      const systemWithTime = systemAttempts.filter(
+        (a: (typeof systemAttempts)[0]) => a.timeSpentMs && a.timeSpentMs > 0
+      );
       const sysAvgTime =
         systemWithTime.length > 0
           ? Math.round(
-              systemWithTime.reduce((sum: number, a: typeof systemWithTime[0]) => sum + (a.timeSpentMs || 0), 0) /
-                systemWithTime.length
+              systemWithTime.reduce(
+                (sum: number, a: (typeof systemWithTime)[0]) => sum + (a.timeSpentMs || 0),
+                0
+              ) / systemWithTime.length
             )
           : null;
 
@@ -155,9 +167,15 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Identify weak areas (systems with accuracy < 70% and at least 5 attempts)
     const weakAreas = Object.entries(systemStats)
-      .filter(([_sys, stats]: [string, typeof systemStats[string]]) => stats.total >= 5 && stats.accuracy < 70)
-      .sort((a: [string, typeof systemStats[string]], b: [string, typeof systemStats[string]]) => a[1].accuracy - b[1].accuracy)
-      .map(([system, stats]: [string, typeof systemStats[string]]) => ({
+      .filter(
+        ([_sys, stats]: [string, (typeof systemStats)[string]]) =>
+          stats.total >= 5 && stats.accuracy < 70
+      )
+      .sort(
+        (a: [string, (typeof systemStats)[string]], b: [string, (typeof systemStats)[string]]) =>
+          a[1].accuracy - b[1].accuracy
+      )
+      .map(([system, stats]: [string, (typeof systemStats)[string]]) => ({
         system,
         accuracy: stats.accuracy,
         attempts: stats.total,
@@ -166,9 +184,15 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Identify strong areas (systems with accuracy >= 80% and at least 10 attempts)
     const strongAreas = Object.entries(systemStats)
-      .filter(([_sys, stats]: [string, typeof systemStats[string]]) => stats.total >= 10 && stats.accuracy >= 80)
-      .sort((a: [string, typeof systemStats[string]], b: [string, typeof systemStats[string]]) => b[1].accuracy - a[1].accuracy)
-      .map(([system, stats]: [string, typeof systemStats[string]]) => ({
+      .filter(
+        ([_sys, stats]: [string, (typeof systemStats)[string]]) =>
+          stats.total >= 10 && stats.accuracy >= 80
+      )
+      .sort(
+        (a: [string, (typeof systemStats)[string]], b: [string, (typeof systemStats)[string]]) =>
+          b[1].accuracy - a[1].accuracy
+      )
+      .map(([system, stats]: [string, (typeof systemStats)[string]]) => ({
         system,
         accuracy: stats.accuracy,
         attempts: stats.total,
@@ -192,8 +216,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     }
 
     const conditionStats = Object.values(conditionCounts)
-      .filter((c: typeof conditionCounts[string]) => c.total >= 3) // At least 3 attempts
-      .map((c: typeof conditionCounts[string]) => ({
+      .filter((c: (typeof conditionCounts)[string]) => c.total >= 3) // At least 3 attempts
+      .map((c: (typeof conditionCounts)[string]) => ({
         conditionId: c.conditionId,
         total: c.total,
         correct: c.correct,
@@ -204,8 +228,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Identify weak conditions (accuracy < 60% with at least 5 attempts)
     const weakConditions = Object.values(conditionCounts)
-      .filter((c: typeof conditionCounts[string]) => c.total >= 5 && c.correct / c.total < 0.6)
-      .map((c: typeof conditionCounts[string]) => ({
+      .filter((c: (typeof conditionCounts)[string]) => c.total >= 5 && c.correct / c.total < 0.6)
+      .map((c: (typeof conditionCounts)[string]) => ({
         conditionId: c.conditionId,
         total: c.total,
         correct: c.correct,
@@ -215,7 +239,9 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       .slice(0, 10); // Top 10 weakest
 
     // Calculate study streak (days with at least 1 attempt)
-    const attemptDates = new Set(allAttempts.map((a: typeof allAttempts[0]) => a.createdAt.toISOString().split('T')[0]));
+    const attemptDates = new Set(
+      allAttempts.map((a: (typeof allAttempts)[0]) => a.createdAt.toISOString().split('T')[0])
+    );
     const sortedDates = Array.from(attemptDates).sort().reverse() as string[];
 
     let currentStreak = 0;
@@ -251,21 +277,27 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
 
-    const last7DaysAttempts = allAttempts.filter((a: typeof allAttempts[0]) => a.createdAt >= sevenDaysAgo);
+    const last7DaysAttempts = allAttempts.filter(
+      (a: (typeof allAttempts)[0]) => a.createdAt >= sevenDaysAgo
+    );
     const prev7DaysAttempts = allAttempts.filter(
-      (a: typeof allAttempts[0]) => a.createdAt >= fourteenDaysAgo && a.createdAt < sevenDaysAgo
+      (a: (typeof allAttempts)[0]) => a.createdAt >= fourteenDaysAgo && a.createdAt < sevenDaysAgo
     );
 
     const last7Accuracy =
       last7DaysAttempts.length > 0
         ? Math.round(
-            (last7DaysAttempts.filter((a: typeof last7DaysAttempts[0]) => a.wasCorrect).length / last7DaysAttempts.length) * 100
+            (last7DaysAttempts.filter((a: (typeof last7DaysAttempts)[0]) => a.wasCorrect).length /
+              last7DaysAttempts.length) *
+              100
           )
         : null;
     const prev7Accuracy =
       prev7DaysAttempts.length > 0
         ? Math.round(
-            (prev7DaysAttempts.filter((a: typeof prev7DaysAttempts[0]) => a.wasCorrect).length / prev7DaysAttempts.length) * 100
+            (prev7DaysAttempts.filter((a: (typeof prev7DaysAttempts)[0]) => a.wasCorrect).length /
+              prev7DaysAttempts.length) *
+              100
           )
         : null;
 
@@ -285,8 +317,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     }
 
     const underStudiedSystems = Object.entries(systemStats)
-      .filter(([_sys, stats]: [string, typeof systemStats[string]]) => stats.total < 10)
-      .map(([system]: [string, typeof systemStats[string]]) => system);
+      .filter(([_sys, stats]: [string, (typeof systemStats)[string]]) => stats.total < 10)
+      .map(([system]: [string, (typeof systemStats)[string]]) => system);
 
     if (underStudiedSystems.length > 0) {
       recommendations.push(`Try more questions in: ${underStudiedSystems.slice(0, 3).join(', ')}`);

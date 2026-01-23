@@ -48,7 +48,9 @@ export const onRequestGet = authenticatedEndpoint(DrugDetailSchema, async (conte
     logger.info('Fetched drug detail', { drugId });
     return { data: drug, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    logger.error('Failed to fetch drug', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Failed to fetch drug', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to fetch drug');
   } finally {
     await safePrismaDisconnect(prisma);

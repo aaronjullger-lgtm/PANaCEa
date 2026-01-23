@@ -44,16 +44,18 @@ type ViewState = 'loading' | 'active' | 'complete';
 
 const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
-  
+
   // Safely get calibration tracking from SessionContext (may not be available if used standalone)
-  let recordCalibrationObservation: ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void) | null = null;
+  let recordCalibrationObservation:
+    | ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void)
+    | null = null;
   try {
     const session = useSession();
     recordCalibrationObservation = session.recordCalibrationObservation;
   } catch {
     // SessionProvider not available - calibration tracking disabled for standalone usage
   }
-  
+
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -122,9 +124,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           timeSpentMs,
         }),
       });
-      
+
       const result = await response.json();
-      
+
       // Record JOL calibration observation for metacognitive tracking
       if (recordCalibrationObservation && result.implicitMetrics) {
         recordCalibrationObservation(

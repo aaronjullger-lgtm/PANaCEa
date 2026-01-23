@@ -8,7 +8,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -163,14 +167,15 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
             conditions: conditions.sort((a, b) => a.name.localeCompare(b.name)),
           }));
 
-        type DrugResult = typeof drugs[0];
+        type DrugResult = (typeof drugs)[0];
         const systemDrugs = drugs.filter((d: DrugResult) => {
-          if (Array.isArray(d.tags) && d.tags.some((t: string) => t.toUpperCase() === code)) return true;
+          if (Array.isArray(d.tags) && d.tags.some((t: string) => t.toUpperCase() === code))
+            return true;
           // Heuristic: map by class keywords
           return d.drugClass.some((cls: string) => cls.toUpperCase().includes(code));
         });
 
-        type PhysResult = typeof physiology[0];
+        type PhysResult = (typeof physiology)[0];
         const systemPhys = physiology.filter((p: PhysResult) =>
           p.system ? p.system.toUpperCase() === code : false
         );
@@ -191,7 +196,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
       })
       .filter((s) => s.categories.length > 0 || s.drugs.length > 0 || s.physiology.length > 0);
 
-    log.info('Clinical browser payload built successfully', { 
+    log.info('Clinical browser payload built successfully', {
       systemsCount: systems.length,
       totalConditions: content.length,
       totalDrugs: drugs.length,

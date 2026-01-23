@@ -103,7 +103,7 @@ export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, valida
     });
 
     // Transform to response format
-    let results: HighYieldConditionResponse[] = conditions.map((c) => ({
+    let results: HighYieldConditionResponse[] = conditions.map((c: any) => ({
       condition: c.condition,
       system: c.system,
       pearl: extractPearl(c.clinical_pearls, c.overview),

@@ -208,9 +208,7 @@ async function seedCodeBlueQuestions() {
     for (const q of CODE_BLUE_QUESTIONS) {
       await prisma.question.create({
         data: {
-
           id: uuidv4(),
-
 
           question: q.question,
           vignette: '',

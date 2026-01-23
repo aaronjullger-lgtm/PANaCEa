@@ -152,9 +152,7 @@ async function seedExamFindings() {
       // Create record - matching Prisma schema field names
       await prisma.physicalExamFinding.create({
         data: {
-
           id: uuidv4(),
-
 
           name: finding.name,
           system: finding.system,

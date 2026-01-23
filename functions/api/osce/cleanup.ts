@@ -7,7 +7,13 @@
  */
 
 import { z } from 'zod';
-import { withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
+import {
+  withCors,
+  withMiddleware,
+  withAuth,
+  withErrorHandling,
+  withLogging,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { IDSchema } from '../_shared/schemas';

@@ -2,7 +2,7 @@
  * API Endpoint: /api/performance/record
  *
  * Record drill session performance data to the database
- * 
+ *
  * SECURITY: Sprint 4 - Converted to middleware pattern
  * - authenticatedEndpoint for auth enforcement
  * - Zod schema validation

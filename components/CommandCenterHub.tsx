@@ -443,13 +443,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     today.setHours(0, 0, 0, 0);
 
     const checkDate = new Date(today);
-      const dateSet = new Set<string>();
+    const dateSet = new Set<string>();
 
-      for (const record of sortedData) {
-        const recordDate = new Date(record.timestamp);
-        recordDate.setHours(0, 0, 0, 0);
-        const isoDateParts = recordDate.toISOString().split('T');
-        const dateStr = isoDateParts[0] ?? recordDate.toDateString();
+    for (const record of sortedData) {
+      const recordDate = new Date(record.timestamp);
+      recordDate.setHours(0, 0, 0, 0);
+      const isoDateParts = recordDate.toISOString().split('T');
+      const dateStr = isoDateParts[0] ?? recordDate.toDateString();
 
       if (!dateSet.has(dateStr)) {
         dateSet.add(dateStr);

@@ -274,8 +274,6 @@ async function main(): Promise<void> {
       if (!dryRun) {
         await prisma.eCGPattern.create({
           data: {
-
-
             id: uuidv4(),
             name: pattern.name,
             displayName: content.displayName || pattern.name,

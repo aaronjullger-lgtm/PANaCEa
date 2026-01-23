@@ -427,11 +427,7 @@ async function checkRateLimit(
     }
 
     // Increment count with expiration
-    await kv.put(
-      key,
-      currentCount + 1,
-      { expirationTtl: windowSeconds }
-    );
+    await kv.put(key, currentCount + 1, { expirationTtl: windowSeconds });
 
     return false;
   } catch (error) {

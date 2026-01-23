@@ -9,7 +9,11 @@
  */
 
 import { z } from 'zod';
-import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from './_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  type EdgePrismaClient,
+} from './_shared/prisma-edge';
 import { authenticatedEndpoint, withCors } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 
@@ -163,192 +167,189 @@ export const onRequestGet = authenticatedEndpoint(
  * POST /api/sync
  * Upload/merge local data to the cloud
  */
-export const onRequestPost = authenticatedEndpoint(
-  PostSyncSchema,
-  async (context) => {
-    const log = createEndpointLogger('POST /api/sync', context.auth.userId);
-    let prisma: EdgePrismaClient | null = null;
+export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (context) => {
+  const log = createEndpointLogger('POST /api/sync', context.auth.userId);
+  let prisma: EdgePrismaClient | null = null;
 
-    const payload = context.validated;
+  const payload = context.validated;
 
-    // Verify user ID matches authenticated user
-    if (payload.userId !== context.auth.userId) {
-      log.warn('User ID mismatch', {
-        expected: context.auth.userId,
-        received: payload.userId,
-      });
-      return { status: 403, error: 'User ID mismatch' };
-    }
-
-    try {
-      prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-      // Resolve user ID
-      const internalUserId = await resolveUserId(prisma, context.auth.userId);
-
-      // Process data in a transaction
-      await prisma.$transaction(async (tx: any) => {
-        // 1. Insert PerformanceRecords
-        if (payload.performanceRecords?.length) {
-          for (const record of payload.performanceRecords) {
-            const recordId = record.id || crypto.randomUUID();
-            await tx.performanceRecord.upsert({
-              where: { id: recordId },
-              create: {
-                id: recordId,
-                userId: internalUserId,
-                topic: record.topic,
-                system: record.system || null,
-                focus: record.focus,
-                difficulty: record.difficulty,
-                isCorrect: record.isCorrect,
-                timestamp: BigInt(record.timestamp),
-                questionWordCount: record.questionWordCount || null,
-                errorTag: record.errorTag || null,
-                subcategoryName: record.subcategoryName || null,
-                conditionName: record.conditionName || null,
-              },
-              update: {},
-            });
-          }
-        }
-
-        // 2. Upsert SRSItems with Conflict Resolution
-        if (payload.srsItems?.length) {
-          for (const item of payload.srsItems) {
-            const existing = await tx.sRSItem.findUnique({
-              where: {
-                userId_questionId: {
-                  userId: internalUserId,
-                  questionId: item.questionId,
-                },
-              },
-            });
-
-            // Last Write Wins based on updatedAt
-            if (
-              existing &&
-              item.updatedAt &&
-              new Date(existing.updatedAt) > new Date(item.updatedAt)
-            ) {
-              continue;
-            }
-
-            const data = {
-              userId: internalUserId,
-              questionId: item.questionId,
-              interval: item.interval,
-              repetition: item.repetition,
-              easiness: item.easiness,
-              dueDate: new Date(item.dueDate),
-              lastReviewed: new Date(item.lastReviewed),
-              quality: item.quality,
-              difficulty: item.difficulty,
-              stabilityScore: item.stabilityScore,
-              ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-            };
-
-            if (existing) {
-              await tx.sRSItem.update({
-                where: { id: existing.id },
-                data,
-              });
-            } else {
-              await tx.sRSItem.create({ data });
-            }
-          }
-        }
-
-        // 3. Upsert SavedQuestions with Conflict Resolution
-        if (payload.savedQuestions?.length) {
-          for (const item of payload.savedQuestions) {
-            const existing = await tx.savedQuestion.findUnique({
-              where: {
-                userId_questionId_type: {
-                  userId: internalUserId,
-                  questionId: item.questionId,
-                  type: item.type,
-                },
-              },
-            });
-
-            // Last Write Wins based on updatedAt
-            if (
-              existing &&
-              item.updatedAt &&
-              new Date(existing.updatedAt) > new Date(item.updatedAt)
-            ) {
-              continue;
-            }
-
-            const data = {
-              userId: internalUserId,
-              questionId: item.questionId,
-              questionText: item.questionText,
-              correctAnswer: item.correctAnswer,
-              explanation: item.explanation,
-              topic: item.topic,
-              system: item.system,
-              type: item.type,
-              userNote: item.userNote,
-              repetitionLevel: item.repetitionLevel,
-              nextReviewDate: item.nextReviewDate,
-              ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-            };
-
-            if (existing) {
-              await tx.savedQuestion.update({
-                where: { id: existing.id },
-                data,
-              });
-            } else {
-              await tx.savedQuestion.create({ data });
-            }
-          }
-        }
-      });
-
-      // Fetch updated data
-      const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
-        prisma.performanceRecord.findMany({
-          where: { userId: internalUserId },
-        }),
-        prisma.sRSItem.findMany({
-          where: { userId: internalUserId },
-        }),
-        prisma.savedQuestion.findMany({
-          where: { userId: internalUserId },
-        }),
-      ]);
-
-      log.info('Sync completed', {
-        performanceRecords: performanceRecords.length,
-        srsItems: srsItems.length,
-        savedQuestions: savedQuestions.length,
-      });
-
-      return {
-        data: {
-          success: true,
-          message: 'Data synced successfully',
-          data: {
-            performanceRecords: performanceRecords.map((r) => ({
-              ...r,
-              timestamp: Number(r.timestamp),
-            })),
-            srsItems,
-            savedQuestions,
-          },
-        },
-      };
-    } catch (error) {
-      log.error('Sync POST failed', error);
-      return { status: 500, error: 'Internal server error' };
-    } finally {
-      await safePrismaDisconnect(prisma);
-    }
+  // Verify user ID matches authenticated user
+  if (payload.userId !== context.auth.userId) {
+    log.warn('User ID mismatch', {
+      expected: context.auth.userId,
+      received: payload.userId,
+    });
+    return { status: 403, error: 'User ID mismatch' };
   }
-);
+
+  try {
+    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+
+    // Resolve user ID
+    const internalUserId = await resolveUserId(prisma, context.auth.userId);
+
+    // Process data in a transaction
+    await prisma.$transaction(async (tx: any) => {
+      // 1. Insert PerformanceRecords
+      if (payload.performanceRecords?.length) {
+        for (const record of payload.performanceRecords) {
+          const recordId = record.id || crypto.randomUUID();
+          await tx.performanceRecord.upsert({
+            where: { id: recordId },
+            create: {
+              id: recordId,
+              userId: internalUserId,
+              topic: record.topic,
+              system: record.system || null,
+              focus: record.focus,
+              difficulty: record.difficulty,
+              isCorrect: record.isCorrect,
+              timestamp: BigInt(record.timestamp),
+              questionWordCount: record.questionWordCount || null,
+              errorTag: record.errorTag || null,
+              subcategoryName: record.subcategoryName || null,
+              conditionName: record.conditionName || null,
+            },
+            update: {},
+          });
+        }
+      }
+
+      // 2. Upsert SRSItems with Conflict Resolution
+      if (payload.srsItems?.length) {
+        for (const item of payload.srsItems) {
+          const existing = await tx.sRSItem.findUnique({
+            where: {
+              userId_questionId: {
+                userId: internalUserId,
+                questionId: item.questionId,
+              },
+            },
+          });
+
+          // Last Write Wins based on updatedAt
+          if (
+            existing &&
+            item.updatedAt &&
+            new Date(existing.updatedAt) > new Date(item.updatedAt)
+          ) {
+            continue;
+          }
+
+          const data = {
+            userId: internalUserId,
+            questionId: item.questionId,
+            interval: item.interval,
+            repetition: item.repetition,
+            easiness: item.easiness,
+            dueDate: new Date(item.dueDate),
+            lastReviewed: new Date(item.lastReviewed),
+            quality: item.quality,
+            difficulty: item.difficulty,
+            stabilityScore: item.stabilityScore,
+            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+          };
+
+          if (existing) {
+            await tx.sRSItem.update({
+              where: { id: existing.id },
+              data,
+            });
+          } else {
+            await tx.sRSItem.create({ data });
+          }
+        }
+      }
+
+      // 3. Upsert SavedQuestions with Conflict Resolution
+      if (payload.savedQuestions?.length) {
+        for (const item of payload.savedQuestions) {
+          const existing = await tx.savedQuestion.findUnique({
+            where: {
+              userId_questionId_type: {
+                userId: internalUserId,
+                questionId: item.questionId,
+                type: item.type,
+              },
+            },
+          });
+
+          // Last Write Wins based on updatedAt
+          if (
+            existing &&
+            item.updatedAt &&
+            new Date(existing.updatedAt) > new Date(item.updatedAt)
+          ) {
+            continue;
+          }
+
+          const data = {
+            userId: internalUserId,
+            questionId: item.questionId,
+            questionText: item.questionText,
+            correctAnswer: item.correctAnswer,
+            explanation: item.explanation,
+            topic: item.topic,
+            system: item.system,
+            type: item.type,
+            userNote: item.userNote,
+            repetitionLevel: item.repetitionLevel,
+            nextReviewDate: item.nextReviewDate,
+            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+          };
+
+          if (existing) {
+            await tx.savedQuestion.update({
+              where: { id: existing.id },
+              data,
+            });
+          } else {
+            await tx.savedQuestion.create({ data });
+          }
+        }
+      }
+    });
+
+    // Fetch updated data
+    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      prisma.performanceRecord.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.sRSItem.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.savedQuestion.findMany({
+        where: { userId: internalUserId },
+      }),
+    ]);
+
+    log.info('Sync completed', {
+      performanceRecords: performanceRecords.length,
+      srsItems: srsItems.length,
+      savedQuestions: savedQuestions.length,
+    });
+
+    return {
+      data: {
+        success: true,
+        message: 'Data synced successfully',
+        data: {
+          performanceRecords: performanceRecords.map((r) => ({
+            ...r,
+            timestamp: Number(r.timestamp),
+          })),
+          srsItems,
+          savedQuestions,
+        },
+      },
+    };
+  } catch (error) {
+    log.error('Sync POST failed', error);
+    return { status: 500, error: 'Internal server error' };
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+});
 
 /**
  * OPTIONS handler for CORS preflight

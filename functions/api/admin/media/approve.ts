@@ -12,7 +12,11 @@
 import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { logger } from '../../_shared/secureLogger';
-import { adminEndpoint, type AuthenticatedContext, type ValidatedContext } from '../../_shared/middleware';
+import {
+  adminEndpoint,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../../_shared/middleware';
 
 // Single approval schema
 const SingleApproveSchema = z.object({
@@ -163,7 +167,10 @@ export const onRequestPut = adminEndpoint(
       logger.error('Batch approval error', error, {
         userId: context.auth.userId,
       });
-      return { status: 500, error: error instanceof Error ? error.message : 'Batch approval failed' };
+      return {
+        status: 500,
+        error: error instanceof Error ? error.message : 'Batch approval failed',
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }

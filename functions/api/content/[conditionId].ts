@@ -9,7 +9,13 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { getFromCache, setInCache, getConditionCacheKey, CACHE_CONFIG, isKVAvailable } from '../_shared/cache';
+import {
+  getFromCache,
+  setInCache,
+  getConditionCacheKey,
+  CACHE_CONFIG,
+  isKVAvailable,
+} from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 
 const ConditionDetailSchema = z.object({
@@ -39,7 +45,10 @@ export const onRequestGet = authenticatedEndpoint(ConditionDetailSchema, async (
       const cached = await getFromCache((env as any).CACHE, cacheKey);
       if (cached) {
         logger.info('Cache hit for condition', { conditionId: sanitizedId });
-        return { data: cached, headers: { 'X-Cache': 'HIT', 'Cache-Control': 'public, max-age=3600' } };
+        return {
+          data: cached,
+          headers: { 'X-Cache': 'HIT', 'Cache-Control': 'public, max-age=3600' },
+        };
       }
     }
 
@@ -64,9 +73,14 @@ export const onRequestGet = authenticatedEndpoint(ConditionDetailSchema, async (
     }
 
     logger.info('Fetched condition detail', { conditionId: sanitizedId });
-    return { data: content, headers: { 'X-Cache': 'MISS', 'Cache-Control': 'public, max-age=3600' } };
+    return {
+      data: content,
+      headers: { 'X-Cache': 'MISS', 'Cache-Control': 'public, max-age=3600' },
+    };
   } catch (error) {
-    logger.error('Error fetching condition', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error fetching condition', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to fetch medical content');
   } finally {
     await safePrismaDisconnect(prisma);

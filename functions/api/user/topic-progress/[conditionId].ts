@@ -2,7 +2,7 @@
  * API Endpoint: /api/user/topic-progress/[conditionId]
  *
  * Get user's FSRS progress data for a specific condition across all task types
- * 
+ *
  * SECURITY: Sprint 4 - Converted to middleware pattern
  * - authenticatedEndpoint for auth enforcement
  * - Zod schema validation (params)

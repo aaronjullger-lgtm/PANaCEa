@@ -11,11 +11,11 @@ interface CalibrationProgressProps {
 
 /**
  * CalibrationProgress - Displays calibration state for FSRS algorithm
- * 
+ *
  * The FSRS algorithm requires approximately 60 reviews to establish
  * reliable stability predictions. This component shows users their
  * progress toward this calibration threshold.
- * 
+ *
  * Phase 3 Milestone 4: Epistemic Uncertainty UI
  */
 export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
@@ -26,7 +26,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
 }) => {
   const progress = Math.min((current / target) * 100, 100);
   const isCalibrated = current >= target;
-  
+
   // Determine calibration state for messaging
   const getCalibrationState = () => {
     if (current === 0) return 'not_started';
@@ -35,9 +35,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     if (current < 60) return 'refining';
     return 'calibrated';
   };
-  
+
   const state = getCalibrationState();
-  
+
   const stateMessages = {
     not_started: {
       title: 'Begin Calibration',
@@ -65,9 +65,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       color: 'emerald',
     },
   };
-  
+
   const currentState = stateMessages[state];
-  
+
   // Compact version for inline display
   if (compact) {
     return (
@@ -95,7 +95,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       </div>
     );
   }
-  
+
   return (
     <div
       className={`p-4 rounded-xl border-2 transition-colors ${
@@ -122,7 +122,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           )}
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h4
@@ -138,7 +138,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
               {current}/{target} reviews
             </span>
           </div>
-          
+
           {/* Progress bar */}
           <div className="relative w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
             <motion.div
@@ -161,16 +161,14 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
                 <div
                   key={milestone}
                   className={`w-0.5 h-full ${
-                    current >= milestone
-                      ? 'bg-white/50'
-                      : 'bg-slate-400/30 dark:bg-slate-500/30'
+                    current >= milestone ? 'bg-white/50' : 'bg-slate-400/30 dark:bg-slate-500/30'
                   }`}
                   style={{ marginLeft: `${(milestone / target) * 100}%` }}
                 />
               ))}
             </div>
           </div>
-          
+
           {showDetails && (
             <p
               className={`text-sm ${
@@ -184,7 +182,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Calibration milestones (only show when not calibrated) */}
       {!isCalibrated && showDetails && (
         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">

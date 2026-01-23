@@ -94,10 +94,15 @@ export async function onRequestPost(context: any) {
         .map(([system]) => system)
         .slice(0, 5);
 
-      type ProgressRecord = { stability: number | null; retrievability: number | null; system: string | null; dueDate: Date | null };
+      type ProgressRecord = {
+        stability: number | null;
+        retrievability: number | null;
+        system: string | null;
+        dueDate: Date | null;
+      };
       // Find low stability items from FSRS
       const lowStabilityItems = progress
-        .filter((p: ProgressRecord) => (p.stability ?? 0) < 2 || ((p.retrievability ?? 1) < 0.8))
+        .filter((p: ProgressRecord) => (p.stability ?? 0) < 2 || (p.retrievability ?? 1) < 0.8)
         .map((p: ProgressRecord) => p.system)
         .filter((s: string | null): s is string => Boolean(s));
 

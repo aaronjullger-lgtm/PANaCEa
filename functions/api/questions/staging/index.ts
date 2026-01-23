@@ -7,7 +7,8 @@ const StagingQuestionSchema = z.object({
 });
 
 export const onRequestPost = adminEndpoint(StagingQuestionSchema, async ({ env, validated }) => {
-  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createEdgePrismaClient, safePrismaDisconnect } =
+    await import('../../_shared/prisma-edge');
   const { saveToStaging } = await import('../../_shared/staging-questions');
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

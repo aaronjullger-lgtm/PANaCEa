@@ -165,7 +165,11 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
       warning = `Only ${questions.length} questions available matching your filters. Consider broadening your selection.`;
     }
 
-    logger.info('Custom session questions fetched', { userId, count: questions.length, systems: config.systems });
+    logger.info('Custom session questions fetched', {
+      userId,
+      count: questions.length,
+      systems: config.systems,
+    });
 
     return {
       data: {

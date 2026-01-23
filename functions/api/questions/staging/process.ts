@@ -7,7 +7,8 @@ const ProcessRequestSchema = z.object({
 });
 
 export const onRequestPost = adminEndpoint(ProcessRequestSchema, async ({ env, validated }) => {
-  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createEdgePrismaClient, safePrismaDisconnect } =
+    await import('../../_shared/prisma-edge');
   const { processStagingQueue } = await import('../../_shared/staging-questions');
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

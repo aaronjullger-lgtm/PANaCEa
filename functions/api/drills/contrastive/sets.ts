@@ -31,10 +31,18 @@ export const onRequestGet = authenticatedEndpoint(ContrastiveSetsSchema, async (
       orderBy: { symptom: 'asc' },
     });
 
-    logger.info(`Fetched ${sets.length} contrastive sets`, { userId: auth.userId, symptom, system, highYield });
+    logger.info(`Fetched ${sets.length} contrastive sets`, {
+      userId: auth.userId,
+      symptom,
+      system,
+      highYield,
+    });
     return { data: { sets, total: sets.length } };
   } catch (error) {
-    logger.error('Failed to fetch contrastive sets', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Failed to fetch contrastive sets', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to fetch contrastive sets');
   } finally {
     await safePrismaDisconnect(prisma);

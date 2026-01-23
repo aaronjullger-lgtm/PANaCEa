@@ -60,8 +60,8 @@ function parseInitialVitals(initial: any): ParsedVitals {
       typeof initial.o2 === 'number'
         ? initial.o2
         : typeof initial.o2sat === 'number'
-        ? initial.o2sat
-        : DEFAULT_VITALS.o2,
+          ? initial.o2sat
+          : DEFAULT_VITALS.o2,
   };
 }
 
@@ -143,11 +143,27 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
       const lastRr = prev.rr[prev.rr.length - 1];
       const lastO2 = prev.o2[prev.o2.length - 1];
 
-      const nextHr = clamp(lastHr + randomBetween(deltas.hr?.[0] ?? 0, deltas.hr?.[1] ?? 0), 35, 180);
-      const nextSbp = clamp(lastSbp + randomBetween(deltas.sbp?.[0] ?? 0, deltas.sbp?.[1] ?? 0), 70, 200);
-      const nextDbp = clamp(lastDbp + randomBetween(deltas.dbp?.[0] ?? 0, deltas.dbp?.[1] ?? 0), 40, 140);
+      const nextHr = clamp(
+        lastHr + randomBetween(deltas.hr?.[0] ?? 0, deltas.hr?.[1] ?? 0),
+        35,
+        180
+      );
+      const nextSbp = clamp(
+        lastSbp + randomBetween(deltas.sbp?.[0] ?? 0, deltas.sbp?.[1] ?? 0),
+        70,
+        200
+      );
+      const nextDbp = clamp(
+        lastDbp + randomBetween(deltas.dbp?.[0] ?? 0, deltas.dbp?.[1] ?? 0),
+        40,
+        140
+      );
       const nextRr = clamp(lastRr + randomBetween(deltas.rr?.[0] ?? 0, deltas.rr?.[1] ?? 0), 6, 40);
-      const nextO2 = clamp(lastO2 + randomBetween(deltas.o2?.[0] ?? 0, deltas.o2?.[1] ?? 0), 70, 100);
+      const nextO2 = clamp(
+        lastO2 + randomBetween(deltas.o2?.[0] ?? 0, deltas.o2?.[1] ?? 0),
+        70,
+        100
+      );
 
       return {
         hr: appendWithLimit(prev.hr, nextHr),

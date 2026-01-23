@@ -226,10 +226,7 @@ export const onRequestGet = authenticatedEndpoint(PolypharmacyDrillSchema, async
 
   try {
     const count = Math.min(parseInt(validated.query.count || '1', 10), 5); // Max 5 cases
-    const difficulty = (validated.query.difficulty || 'medium') as
-      | 'easy'
-      | 'medium'
-      | 'hard';
+    const difficulty = (validated.query.difficulty || 'medium') as 'easy' | 'medium' | 'hard';
 
     // Query drug registry for case generation
     const drugs = await prisma.drug.findMany({

@@ -71,7 +71,10 @@ export const onRequestPost = adminEndpoint(CurationRequestSchema, async (context
           where: { id: questionId },
         });
 
-        logger.info('Question approved and moved to main pool', { userId: auth.userId, questionId });
+        logger.info('Question approved and moved to main pool', {
+          userId: auth.userId,
+          questionId,
+        });
 
         return { data: { success: true, message: 'Question approved and moved to main pool' } };
       }
@@ -119,7 +122,10 @@ export const onRequestPost = adminEndpoint(CurationRequestSchema, async (context
         return { data: { error: `Unknown action: ${action}` }, status: 400 };
     }
   } catch (error) {
-    logger.error('Error curating question', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error curating question', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to curate question');
   } finally {
     await safePrismaDisconnect(prisma);

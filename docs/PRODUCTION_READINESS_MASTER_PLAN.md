@@ -185,6 +185,7 @@ This document outlines **every step required** to take PANaCEa from current stat
 ### Tasks
 
 - [ ] **2.1.1** Add additional foreign keys to MediaAsset
+
   ```prisma
   model MediaAsset {
     // Existing
@@ -205,6 +206,7 @@ This document outlines **every step required** to take PANaCEa from current stat
     Drug           Drug? @relation(fields: [drugId], references: [id])
   }
   ```
+
 - [ ] **2.1.2** Create migration
   ```bash
   npx prisma migrate dev --name add_media_asset_fks
@@ -265,6 +267,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
 ### Tasks
 
 - [ ] **2.3.1** Enhance PatientEncounterCase schema
+
   ```prisma
   model PatientEncounterCase {
     // Existing fields...
@@ -277,6 +280,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     dispositionOptions    Json     // ED: admit/discharge criteria
   }
   ```
+
 - [ ] **2.3.2** Create case workup validation service
 
   ```typescript
@@ -522,6 +526,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
   - Explanations should be stored, not regenerated
   - Hints should be cached per question
 - [ ] **4.3.3** Implement response caching layer
+
   ```typescript
   // lib/aiCache.ts
   async function getCachedOrGenerate(
@@ -537,6 +542,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     return result;
   }
   ```
+
 - [ ] **4.3.4** Add cost tracking to all AI calls
   ```typescript
   async function trackAICost(userId: string, tokens: number, model: string) {
@@ -580,6 +586,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
   id = "xxx"
   ```
 - [ ] **5.1.3** Cache frequent queries
+
   ```typescript
   // functions/api/conditions/index.ts
   export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
@@ -606,6 +613,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     });
   };
   ```
+
 - [ ] **5.1.4** Add cache invalidation on content updates
 - [ ] **5.1.5** Implement stale-while-revalidate pattern
 
@@ -691,6 +699,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
   });
   ```
 - [ ] **6.1.2** Create random drill tester
+
   ```typescript
   // scripts/testing/random-drill-tester.ts
   async function testRandomDrills(count: number) {
@@ -713,6 +722,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     }
   }
   ```
+
 - [ ] **6.1.3** Schedule nightly test runs
   ```yaml
   # .github/workflows/nightly-tests.yml
@@ -801,6 +811,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
 ### Tasks
 
 - [ ] **6.3.1** Verify Grand Rounds generates for ALL users
+
   ```typescript
   // scripts/automation/dailyTasks.ts
   async function generateDailyGrandRounds() {
@@ -816,6 +827,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     }
   }
   ```
+
 - [ ] **6.3.2** Add personalization based on weak areas
 - [ ] **6.3.3** Add "Clinical Pearl of the Day" to Grand Rounds
 - [ ] **6.3.4** Add streak bonuses for consecutive Grand Rounds completion
@@ -1002,6 +1014,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
   }
   ```
 - [ ] **8.2.2** Add group streak tracking
+
   ```typescript
   async function updateGroupStreak(groupId: string) {
     const members = await prisma.studyGroupMember.findMany({
@@ -1019,6 +1032,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     });
   }
   ```
+
 - [ ] **8.2.3** Add private leaderboard component
 - [ ] **8.2.4** Add group challenge creation
 - [ ] **8.2.5** Add notification system for group activity
@@ -1048,6 +1062,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
   }
   ```
 - [ ] **8.3.2** Add maintenance check integration
+
   ```typescript
   // scripts/automation/dailyTasks.ts
   async function generateAllDailyPrescriptions() {
@@ -1066,6 +1081,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     }
   }
   ```
+
 - [ ] **8.3.3** Pre-cache for offline access
 - [ ] **8.3.4** Add push notification for daily prescription
 
@@ -1113,6 +1129,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
 - [ ] **9.2.1** Set up Sentry for error tracking
 - [ ] **9.2.2** Set up Cloudflare Analytics
 - [ ] **9.2.3** Create health check endpoint
+
   ```typescript
   // functions/api/health.ts
   export const onRequestGet = async ({ env }) => {
@@ -1137,6 +1154,7 @@ Students shouldn't be able to recognize "normal" results by memorizing specific 
     );
   };
   ```
+
 - [ ] **9.2.4** Set up uptime monitoring (e.g., BetterUptime)
 - [ ] **9.2.5** Create alerting for:
   - Error rate spikes

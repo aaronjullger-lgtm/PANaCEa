@@ -140,9 +140,10 @@ export function OptimizedImage({
       <div
         className={`bg-gray-200 dark:bg-gray-700 animate-pulse ${className}`}
         style={{
-          aspectRatio: mergedConfig.maxWidth && mergedConfig.maxHeight
-            ? `${mergedConfig.maxWidth}/${mergedConfig.maxHeight}`
-            : '16/9',
+          aspectRatio:
+            mergedConfig.maxWidth && mergedConfig.maxHeight
+              ? `${mergedConfig.maxWidth}/${mergedConfig.maxHeight}`
+              : '16/9',
           minHeight: '200px',
         }}
       >
@@ -161,18 +162,15 @@ export function OptimizedImage({
       <div
         className={`bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${className}`}
         style={{
-          aspectRatio: mergedConfig.maxWidth && mergedConfig.maxHeight
-            ? `${mergedConfig.maxWidth}/${mergedConfig.maxHeight}`
-            : '16/9',
+          aspectRatio:
+            mergedConfig.maxWidth && mergedConfig.maxHeight
+              ? `${mergedConfig.maxWidth}/${mergedConfig.maxHeight}`
+              : '16/9',
           minHeight: '200px',
         }}
       >
         <div className="text-gray-500 dark:text-gray-400 text-center p-4">
-          <svg
-            className="w-12 h-12 mx-auto mb-2"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
@@ -225,7 +223,7 @@ export function useImagePreloader(imageUrls: string[], config: ImageOptimization
 
     const preloadImages = async () => {
       const results = await Promise.allSettled(
-        imageUrls.map(url => {
+        imageUrls.map((url) => {
           return new Promise((resolve, reject) => {
             const img = new Image();
             img.src = url;
@@ -245,8 +243,10 @@ export function useImagePreloader(imageUrls: string[], config: ImageOptimization
 
       if (!isMounted) return;
 
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').map(r => r.reason) as string[];
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results
+        .filter((r) => r.status === 'rejected')
+        .map((r) => r.reason) as string[];
 
       setLoadedCount(successful);
       setErrors(failed);
@@ -321,7 +321,7 @@ export function useOptimizedImage(src: string, config: ImageOptimizationConfig =
         setIsLoading(true);
 
         // Simulate optimization process
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // In a real implementation, this would call an image optimization API
         // For now, we'll just add optimization parameters

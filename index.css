@@ -169,12 +169,12 @@ body,
 
   /* ===== ACTION BLUE DESIGN SYSTEM ===== */
   /* Primary action color for buttons, CTAs, and interactive elements */
-  --color-action: #2563EB;           /* action-blue-600 - PRIMARY */
-  --color-action-hover: #1D4ED8;     /* action-blue-700 - hover state */
-  --color-action-light: #EFF6FF;     /* action-blue-50 - subtle backgrounds */
-  --color-action-text: #FFFFFF;      /* Pure white for AAA contrast */
-  --color-label-primary: #0F172A;    /* Deep navy for light mode labels */
-  --color-label-secondary: #475569;  /* Slate-600 for secondary text */
+  --color-action: #2563eb; /* action-blue-600 - PRIMARY */
+  --color-action-hover: #1d4ed8; /* action-blue-700 - hover state */
+  --color-action-light: #eff6ff; /* action-blue-50 - subtle backgrounds */
+  --color-action-text: #ffffff; /* Pure white for AAA contrast */
+  --color-label-primary: #0f172a; /* Deep navy for light mode labels */
+  --color-label-secondary: #475569; /* Slate-600 for secondary text */
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE (DEFAULT) ===== */
 
@@ -268,12 +268,12 @@ body,
 .dark {
   /* ===== ACTION BLUE DESIGN SYSTEM - DARK MODE ===== */
   /* Action Blue stays consistent for brand recognition */
-  --color-action: #2563EB;           /* action-blue-600 - stays same */
-  --color-action-hover: #3B82F6;     /* action-blue-500 - lighter for dark bg hover */
-  --color-action-light: #1E3A8A;     /* action-blue-900 - dark backgrounds */
-  --color-action-text: #FFFFFF;      /* Pure white for AAA contrast */
-  --color-label-primary: #FFFFFF;    /* White for dark mode labels */
-  --color-label-secondary: #94A3B8;  /* Slate-400 for muted text */
+  --color-action: #2563eb; /* action-blue-600 - stays same */
+  --color-action-hover: #3b82f6; /* action-blue-500 - lighter for dark bg hover */
+  --color-action-light: #1e3a8a; /* action-blue-900 - dark backgrounds */
+  --color-action-text: #ffffff; /* Pure white for AAA contrast */
+  --color-label-primary: #ffffff; /* White for dark mode labels */
+  --color-label-secondary: #94a3b8; /* Slate-400 for muted text */
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 

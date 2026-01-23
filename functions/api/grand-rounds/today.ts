@@ -8,7 +8,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -78,7 +82,10 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
         },
       });
 
-      log.info('Created new Grand Rounds challenge', { challengeId: challenge.id, questionCount: questionIds.length });
+      log.info('Created new Grand Rounds challenge', {
+        challengeId: challenge.id,
+        questionCount: questionIds.length,
+      });
     }
 
     // Check if user already completed today
@@ -121,7 +128,10 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
           ? Math.round(((totalAttempts - ranking) / (totalAttempts - 1)) * 100)
           : 100;
 
-      log.info('Returning completed challenge stats', { userId: user.id, score: existingAttempt.score });
+      log.info('Returning completed challenge stats', {
+        userId: user.id,
+        score: existingAttempt.score,
+      });
 
       return {
         data: {
@@ -161,7 +171,10 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
       .map((qid) => questions.find((q) => q.id === qid))
       .filter(Boolean);
 
-    log.info('Returning active challenge', { challengeId: challenge.id, questionCount: orderedQuestions.length });
+    log.info('Returning active challenge', {
+      challengeId: challenge.id,
+      questionCount: orderedQuestions.length,
+    });
 
     return {
       data: {

@@ -1,7 +1,7 @@
 /**
  * POST /api/srs/sync
  * Sync SRS items from localStorage to database for authenticated users
- * 
+ *
  * Security: Authenticated endpoint with Zod validation
  * Sprint: Security Hardening Sprint 3 - Middleware Pattern
  */

@@ -245,7 +245,7 @@ export async function analyzeLearningEfficiency(): Promise<LearningEfficiencyMet
     for (let i = 0; i < sysAttempts.length; i++) {
       runningTotal++;
       const attempt = sysAttempts[i];
-      if (attempt?.isCorrect) runningCorrect++;;
+      if (attempt?.isCorrect) runningCorrect++;
 
       if (runningTotal >= 10 && runningCorrect / runningTotal >= 0.8) {
         masteryQuestions.push(runningTotal);
@@ -347,13 +347,11 @@ export async function analyzeMetacognition(): Promise<MetacognitiveProfile> {
   const predictionAccuracy = recentAccuracy > midAccuracy ? 70 : 50;
 
   // Self-monitoring: do they take breaks when fatigued?
-  const fatigueBreaks = attempts.filter(
-    (a, i) => {
-      if (i === 0) return false;
-      const prev = attempts[i - 1];
-      return prev && a.fatigueLevel > 70 && a.timestamp - prev.timestamp > 300000; // 5+ min break
-    }
-  ).length;
+  const fatigueBreaks = attempts.filter((a, i) => {
+    if (i === 0) return false;
+    const prev = attempts[i - 1];
+    return prev && a.fatigueLevel > 70 && a.timestamp - prev.timestamp > 300000; // 5+ min break
+  }).length;
   const fatigueInstances = attempts.filter((a) => a.fatigueLevel > 70).length;
   const selfMonitoringScore =
     fatigueInstances > 0 ? Math.min(100, Math.round((fatigueBreaks / fatigueInstances) * 200)) : 50;

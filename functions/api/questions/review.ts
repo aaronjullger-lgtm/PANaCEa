@@ -63,11 +63,18 @@ export const onRequestGet = authenticatedEndpoint(ReviewGetSchema, async (contex
     const reviewQuestions = await reviewService.getReviewQuestions(mode, limit, system);
     const summary = generateSummary(reviewQuestions);
 
-    logger.info('Review questions fetched', { userId: auth.userId, mode, count: reviewQuestions.length });
+    logger.info('Review questions fetched', {
+      userId: auth.userId,
+      mode,
+      count: reviewQuestions.length,
+    });
 
     return { data: { questions: reviewQuestions, summary, mode, userId: auth.userId } };
   } catch (error) {
-    logger.error('Error fetching review questions', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error fetching review questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to fetch review questions');
   } finally {
     await safePrismaDisconnect(prisma);
@@ -89,7 +96,14 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
       return { data: { error: 'User not found' }, status: 404 };
     }
 
-    const { questionId, wasCorrect, timeSpentMs, quality: inputQuality, srsItemId, conditionId } = validated.body;
+    const {
+      questionId,
+      wasCorrect,
+      timeSpentMs,
+      quality: inputQuality,
+      srsItemId,
+      conditionId,
+    } = validated.body;
     const now = new Date();
     const quality = inputQuality ?? (wasCorrect ? 4 : 1);
 
@@ -174,7 +188,9 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
 
     // Update UserQuestionSeen
     await prisma.userQuestionSeen.upsert({
-      where: { userId_questionId_questionType: { userId: user.id, questionId, questionType: 'review' } },
+      where: {
+        userId_questionId_questionType: { userId: user.id, questionId, questionType: 'review' },
+      },
       create: {
         userId: user.id,
         questionId,
@@ -197,7 +213,10 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
 
     return { data: { success: true, message: 'Review recorded' } };
   } catch (error) {
-    logger.error('Error recording review', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error recording review', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to record review');
   } finally {
     await safePrismaDisconnect(prisma);
@@ -216,7 +235,10 @@ function generateSummary(questions: ReviewQuestion[]): ReviewSummary {
   };
 }
 
-function calculateNewInterval(srsItem: { interval: number; easiness: number; repetition: number }, quality: number): number {
+function calculateNewInterval(
+  srsItem: { interval: number; easiness: number; repetition: number },
+  quality: number
+): number {
   if (quality < 3) return 0;
   const { easiness, interval, repetition } = srsItem;
   if (repetition === 0) return 1;

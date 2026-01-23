@@ -31,7 +31,7 @@ router.get(
 
       // 2. If not found, try name match (exact)
       if (!condition) {
-        const conditions = await prisma.condition.findMany({
+        const conditions = (await prisma.condition.findMany({
           where: {
             name: {
               equals: identifier.replace(/-/g, ' '),
@@ -43,7 +43,7 @@ router.get(
             SpecialTest: true,
             MediaAsset: true,
           },
-        }) as any;
+        })) as any;
 
         if (conditions.length > 0) {
           condition = conditions[0];
@@ -52,7 +52,7 @@ router.get(
 
       // 3. If still not found, try searching with the raw identifier
       if (!condition) {
-        const conditions = await prisma.condition.findMany({
+        const conditions = (await prisma.condition.findMany({
           where: {
             name: {
               equals: identifier,
@@ -64,7 +64,7 @@ router.get(
             SpecialTest: true,
             MediaAsset: true,
           },
-        }) as any;
+        })) as any;
         if (conditions.length > 0) {
           condition = conditions[0];
         }

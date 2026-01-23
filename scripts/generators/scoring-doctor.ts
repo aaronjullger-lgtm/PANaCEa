@@ -74,9 +74,7 @@ async function seedScoringSystems(dryRun = false) {
       if (!dryRun) {
         await prisma.scoringSystem.create({
           data: {
-
             id: uuidv4(),
-
 
             name: system.name,
             condition: system.condition,

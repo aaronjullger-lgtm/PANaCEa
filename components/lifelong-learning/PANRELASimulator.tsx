@@ -110,7 +110,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-2xl text-center">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">No Questions Available</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            No Questions Available
+          </h2>
           <button
             onClick={onExit}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"

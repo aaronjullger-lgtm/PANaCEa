@@ -306,9 +306,7 @@ async function seedFluidCases() {
     for (const fluidCase of FLUID_CASES) {
       await prisma.fluidCase.create({
         data: {
-
           id: uuidv4(),
-
 
           title: fluidCase.title,
           scenario: fluidCase.scenario,

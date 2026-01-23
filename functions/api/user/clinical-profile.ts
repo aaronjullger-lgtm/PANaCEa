@@ -43,12 +43,14 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
         },
       });
 
-      type AttemptType = typeof attempts[0];
+      type AttemptType = (typeof attempts)[0];
 
       totalQuestions = attempts.length;
       correctAnswers = attempts.filter((a: AttemptType) => a.wasCorrect).length;
 
-      const timeValues = attempts.map((a: AttemptType) => a.timeSpentMs || 0).filter((n: number) => n > 0);
+      const timeValues = attempts
+        .map((a: AttemptType) => a.timeSpentMs || 0)
+        .filter((n: number) => n > 0);
       avgTimePerQuestion = timeValues.length
         ? timeValues.reduce((sum, n) => sum + n, 0) / timeValues.length
         : null;
@@ -82,7 +84,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
                 take: 500,
                 orderBy: { createdAt: 'desc' },
               });
-              type PeakAttemptType = typeof attempts[0];
+              type PeakAttemptType = (typeof attempts)[0];
               return derivePeakHoursFromSessions(
                 attempts.map((a: PeakAttemptType) => new Date(a.createdAt).getHours())
               );

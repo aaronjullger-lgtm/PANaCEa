@@ -12,7 +12,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -167,7 +171,9 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
     ]);
 
     // Build condition lookup
-    const conditionMap = new Map(conditions.map((c: { id: string; name: string; system: string }) => [c.id, c]));
+    const conditionMap = new Map(
+      conditions.map((c: { id: string; name: string; system: string }) => [c.id, c])
+    );
 
     // Analyze errors by condition
     const conditionErrors: Map<
@@ -540,32 +546,32 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
 
 function getSuggestedResources(gapType: string): string[] {
   const resources: Record<string, string[]> = {
-    'missing_foundation': [
+    missing_foundation: [
       'Start with the basic science overview',
       'Watch introductory video lectures',
       'Review anatomy and physiology first',
     ],
-    'partial_understanding': [
+    partial_understanding: [
       'Re-read main topic explanation',
       'Practice with easier questions first',
       'Create summary notes',
     ],
-    'shallow_encoding': [
+    shallow_encoding: [
       'Use active recall techniques',
       'Create flashcards for key facts',
       'Teach the concept to someone else',
     ],
-    'application_failure': [
+    application_failure: [
       'Work through clinical case studies',
       'Practice application questions',
       'Review worked examples',
     ],
-    'integration_failure': [
+    integration_failure: [
       'Create concept maps',
       'Practice differential diagnosis',
       'Review related conditions together',
     ],
-    'procedural_gap': [
+    procedural_gap: [
       'Review step-by-step protocols',
       'Practice clinical algorithms',
       'Watch procedural videos',

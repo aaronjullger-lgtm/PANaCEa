@@ -1,7 +1,7 @@
 /**
  * SRS Next Item API
  * GET /api/srs/next
- * 
+ *
  * Returns the next due spaced repetition item for the authenticated user
  */
 
@@ -33,7 +33,7 @@ export const onRequestGet = authenticatedEndpoint(SRSNextSchema, async (context)
 
     if (!user) {
       logger.warn('User not found in database', { clerkId: auth.userId.substring(0, 10) });
-      return { 
+      return {
         data: { error: 'User not found' },
         status: 404,
       };
@@ -76,7 +76,7 @@ export const onRequestGet = authenticatedEndpoint(SRSNextSchema, async (context)
 
       if (availableVariants.length > 0) {
         const variant = availableVariants[0];
-        
+
         logger.info('SRS next item (variant) retrieved', {
           userId: userId.substring(0, 10),
           topicProgressId: topic.id.substring(0, 10),
@@ -111,7 +111,7 @@ export const onRequestGet = authenticatedEndpoint(SRSNextSchema, async (context)
 
     if (items.length === 0) {
       logger.info('No SRS items due', { userId: userId.substring(0, 10) });
-      return { 
+      return {
         data: { message: 'No items due' },
       };
     }

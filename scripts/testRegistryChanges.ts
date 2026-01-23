@@ -23,7 +23,11 @@ const portWineStain = CONDITION_REGISTRY.find((c) => c.condition.includes('Port-
 if (portWineStain) {
   console.log(`✅ Port-Wine Stain test:`);
   console.log(`   Name: ${portWineStain.condition}`);
-  const pwsAliases = Array.isArray(portWineStain.aliases) ? portWineStain.aliases : portWineStain.aliases ? [portWineStain.aliases] : [];
+  const pwsAliases = Array.isArray(portWineStain.aliases)
+    ? portWineStain.aliases
+    : portWineStain.aliases
+      ? [portWineStain.aliases]
+      : [];
   console.log(`   Aliases: ${pwsAliases.join(', ') || 'none'}`);
   console.log(`   Clean? ${!portWineStain.condition.includes('(')}`);
 } else {
@@ -48,7 +52,11 @@ if (mrna) {
   console.log(`\n✅ mRNA test:`);
   console.log(`   Name: ${mrna.name}`);
   console.log(`   Display: ${mrna.displayName || mrna.name}`);
-  const mrnaAliases = Array.isArray(mrna.aliases) ? mrna.aliases : mrna.aliases ? [mrna.aliases] : [];
+  const mrnaAliases = Array.isArray(mrna.aliases)
+    ? mrna.aliases
+    : mrna.aliases
+      ? [mrna.aliases]
+      : [];
   console.log(`   Aliases: ${mrnaAliases.join(', ') || 'none'}`);
 } else {
   console.log('\n❌ mRNA not found in physiology concepts');

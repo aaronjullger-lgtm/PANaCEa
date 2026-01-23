@@ -53,7 +53,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
     });
 
     if (cached) {
-      logger.info('Returning cached question', { similarity: cached.similarity, userId: auth.userId });
+      logger.info('Returning cached question', {
+        similarity: cached.similarity,
+        userId: auth.userId,
+      });
 
       return {
         data: {

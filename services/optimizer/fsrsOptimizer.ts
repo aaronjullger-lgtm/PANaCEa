@@ -1,10 +1,10 @@
 /**
  * FSRS Optimizer Service (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Leverages the existing fsrs-params API endpoint which already implements
  * L-BFGS optimization on the server side. This provides a simpler integration
  * than client-side WASM while still delivering personalized parameters.
- * 
+ *
  * Reference: FSRS Paper - Default parameters are 20-30% less efficient than
  * personalized parameters for mature users (20k+ user study).
  */
@@ -38,7 +38,7 @@ export interface OptimizationProgress {
 
 /**
  * Main optimization function - triggers server-side optimization
- * 
+ *
  * @param userId - User ID to optimize for
  * @param onProgress - Optional callback for progress updates
  * @returns OptimizationResult with new parameters and metrics
@@ -52,20 +52,20 @@ export async function optimizeFSRSParameters(
     onProgress?.({
       stage: 'fetching',
       progress: 10,
-      message: 'Fetching your review history...'
+      message: 'Fetching your review history...',
     });
 
     // Stage 2: Compute parameters (server-side)
     onProgress?.({
       stage: 'computing',
       progress: 50,
-      message: 'Running optimization (this may take 10-30 seconds)...'
+      message: 'Running optimization (this may take 10-30 seconds)...',
     });
 
     const response = await fetch('/api/user/fsrs-params', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
+      body: JSON.stringify({ userId }),
     });
 
     if (!response.ok) {
@@ -79,7 +79,7 @@ export async function optimizeFSRSParameters(
     onProgress?.({
       stage: 'validating',
       progress: 80,
-      message: 'Validating optimized parameters...'
+      message: 'Validating optimized parameters...',
     });
 
     if (!data.params || !data.params.w || data.params.w.length !== 21) {
@@ -93,7 +93,7 @@ export async function optimizeFSRSParameters(
     onProgress?.({
       stage: 'complete',
       progress: 100,
-      message: `Optimization complete! ${improvement.toFixed(1)}% improvement over defaults.`
+      message: `Optimization complete! ${improvement.toFixed(1)}% improvement over defaults.`,
     });
 
     return {
@@ -102,11 +102,10 @@ export async function optimizeFSRSParameters(
         rmse: data.params.brierScore || undefined,
         logLoss: undefined,
         recordCount: data.params.sampleSize || 0,
-        improvementVsDefault: improvement
+        improvementVsDefault: improvement,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-
   } catch (error) {
     console.error('FSRS optimization failed:', error);
     throw error;
@@ -116,10 +115,7 @@ export async function optimizeFSRSParameters(
 /**
  * Save optimized parameters (handled by server endpoint)
  */
-export async function saveOptimizedParameters(
-  userId: string,
-  parameters: number[]
-): Promise<void> {
+export async function saveOptimizedParameters(userId: string, parameters: number[]): Promise<void> {
   // Parameters are already saved by the POST endpoint
   // This is a no-op for API compatibility
   return Promise.resolve();
@@ -135,7 +131,7 @@ export async function getOptimizationStatus(userId: string): Promise<{
   recordCount?: number;
 }> {
   const response = await fetch(`/api/user/fsrs-params`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to get optimization status: ${response.statusText}`);
   }
@@ -146,7 +142,6 @@ export async function getOptimizationStatus(userId: string): Promise<{
     isOptimized: !data.params.isDefault,
     lastOptimized: data.params.lastOptimizedAt ? new Date(data.params.lastOptimizedAt) : undefined,
     parameters: data.params.w,
-    recordCount: data.params.sampleSize
+    recordCount: data.params.sampleSize,
   };
 }
-

@@ -1,16 +1,16 @@
 /**
  * Chain of Verification (CoVe) for Medical Content Generation
- * 
+ *
  * PHASE 4: NEURO-SYMBOLIC INTEGRITY - Milestone 1
- * 
+ *
  * This module implements a multi-step verification pipeline to prevent AI hallucinations
  * in generated medical questions. It follows the CoVe pattern:
- * 
+ *
  * 1. EXTRACT: Parse factual claims from generated content
  * 2. VERIFY: Cross-reference claims against authoritative sources (DB)
  * 3. VALIDATE: Ensure correct answer is definitively correct
  * 4. CHECK DISTRACTORS: Verify plausibility without accidental correctness
- * 
+ *
  * @see https://arxiv.org/abs/2309.11495 (Chain-of-Verification paper)
  */
 
@@ -38,7 +38,7 @@ export interface FactualClaim {
   source: 'vignette' | 'option' | 'rationale' | 'pearl';
 }
 
-export type ClaimCategory = 
+export type ClaimCategory =
   | 'etiology'
   | 'pathophysiology'
   | 'symptom'
@@ -231,7 +231,7 @@ Do NOT include:
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     const claims = JSON.parse(cleanedJson) as Array<{
       text: string;
       category: string;
@@ -272,7 +272,7 @@ export async function verifyClaims(
   }
 
   // Build database context string
-  const dbContext = context.databaseContent 
+  const dbContext = context.databaseContent
     ? buildDbContextString(context.databaseContent)
     : 'No database content available for verification.';
 
@@ -313,7 +313,7 @@ If contradicted, provide the correct information in "correction".`;
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     const verifications = JSON.parse(cleanedJson) as Array<{
       claimIndex: number;
       verified: boolean;
@@ -355,9 +355,9 @@ If contradicted, provide the correct information in "correction".`;
  */
 function buildDbContextString(content: VerificationContext['databaseContent']): string {
   if (!content) return '';
-  
+
   const parts: string[] = [];
-  
+
   if (content.overview) parts.push(`Overview: ${content.overview}`);
   if (content.pathophysiology) parts.push(`Pathophysiology: ${content.pathophysiology}`);
   if (content.symptoms?.length) parts.push(`Symptoms: ${content.symptoms.join(', ')}`);
@@ -367,11 +367,13 @@ function buildDbContextString(content: VerificationContext['databaseContent']): 
   if (content.differentialDiagnosis?.length) {
     parts.push(`Differential Diagnosis: ${content.differentialDiagnosis.join(', ')}`);
   }
-  if (content.complications?.length) parts.push(`Complications: ${content.complications.join(', ')}`);
+  if (content.complications?.length)
+    parts.push(`Complications: ${content.complications.join(', ')}`);
   if (content.riskFactors?.length) parts.push(`Risk Factors: ${content.riskFactors.join(', ')}`);
   if (content.buzzwords?.length) parts.push(`Buzzwords: ${content.buzzwords.join(', ')}`);
-  if (content.clinicalPearls?.length) parts.push(`Clinical Pearls: ${content.clinicalPearls.join('; ')}`);
-  
+  if (content.clinicalPearls?.length)
+    parts.push(`Clinical Pearls: ${content.clinicalPearls.join('; ')}`);
+
   return parts.join('\n\n');
 }
 
@@ -393,7 +395,7 @@ export async function verifyCorrectAnswer(
   const correctIndex = question.correctAnswerIndex ?? 0;
   const correctAnswer = options[correctIndex] || '';
 
-  const dbContext = context.databaseContent 
+  const dbContext = context.databaseContent
     ? buildDbContextString(context.databaseContent)
     : 'No database content available.';
 
@@ -442,7 +444,7 @@ If the answer is WRONG, include suggestedCorrection:
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     return JSON.parse(cleanedJson) as AnswerVerification;
   } catch (error) {
     console.error('[CoVe] Failed to verify answer:', error);
@@ -479,7 +481,7 @@ export async function checkDistractors(
     return [];
   }
 
-  const dbContext = context.databaseContent 
+  const dbContext = context.databaseContent
     ? buildDbContextString(context.databaseContent)
     : 'No database content available.';
 
@@ -534,7 +536,7 @@ Return ONLY JSON array with no markdown:
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     return JSON.parse(cleanedJson) as DistractorCheck[];
   } catch (error) {
     console.error('[CoVe] Failed to check distractors:', error);
@@ -609,14 +611,14 @@ export async function runCoVePipeline(
   // Step 2: Verify claims against database
   console.log('[CoVe] Step 2: Verifying claims...');
   const claimVerifications = await verifyClaims(claims, context, geminiApiCall);
-  
+
   const verifiedCount = claimVerifications.filter((v) => v.verified).length;
   const contradictedCount = claimVerifications.filter((v) => v.correction).length;
-  const unverifiedCount = claimVerifications.filter(
-    (v) => !v.verified && !v.correction
-  ).length;
+  const unverifiedCount = claimVerifications.filter((v) => !v.verified && !v.correction).length;
 
-  console.log(`[CoVe] Verified: ${verifiedCount}, Contradicted: ${contradictedCount}, Unverified: ${unverifiedCount}`);
+  console.log(
+    `[CoVe] Verified: ${verifiedCount}, Contradicted: ${contradictedCount}, Unverified: ${unverifiedCount}`
+  );
 
   if (contradictedCount > 0) {
     flags.push({
@@ -637,7 +639,7 @@ export async function runCoVePipeline(
   // Step 3: Verify correct answer
   console.log('[CoVe] Step 3: Verifying correct answer...');
   const answerVerification = await verifyCorrectAnswer(question, context, geminiApiCall);
-  
+
   if (!answerVerification.isCorrect) {
     flags.push({
       severity: 'critical',
@@ -649,18 +651,22 @@ export async function runCoVePipeline(
   // Step 4: Check distractors
   console.log('[CoVe] Step 4: Checking distractors...');
   const distractorChecks = await checkDistractors(question, context, geminiApiCall);
-  
+
   const accidentallyCorrect = distractorChecks.filter((d) => d.isAccidentallyCorrect);
   if (accidentallyCorrect.length > 0) {
     flags.push({
       severity: 'critical',
       code: 'DISTRACTOR_ACCIDENTALLY_CORRECT',
       message: `${accidentallyCorrect.length} distractor(s) may be accidentally correct`,
-      location: accidentallyCorrect.map((d) => `Option ${String.fromCharCode(65 + d.optionIndex)}`).join(', '),
+      location: accidentallyCorrect
+        .map((d) => `Option ${String.fromCharCode(65 + d.optionIndex)}`)
+        .join(', '),
     });
   }
 
-  const lowQualityDistractors = distractorChecks.filter((d) => d.quality < cfg.minDistractorQuality);
+  const lowQualityDistractors = distractorChecks.filter(
+    (d) => d.quality < cfg.minDistractorQuality
+  );
   if (lowQualityDistractors.length > 0) {
     flags.push({
       severity: 'warning',
@@ -671,28 +677,26 @@ export async function runCoVePipeline(
 
   // Calculate summary statistics
   const verificationRate = claims.length > 0 ? verifiedCount / claims.length : 1;
-  const avgDistractorQuality = distractorChecks.length > 0
-    ? distractorChecks.reduce((sum, d) => sum + d.quality, 0) / distractorChecks.length
-    : 1;
+  const avgDistractorQuality =
+    distractorChecks.length > 0
+      ? distractorChecks.reduce((sum, d) => sum + d.quality, 0) / distractorChecks.length
+      : 1;
 
   // Calculate overall confidence
-  const claimConfidence = claimVerifications.length > 0
-    ? claimVerifications.reduce((sum, v) => sum + v.confidence, 0) / claimVerifications.length
-    : 1;
-  const overallConfidence = (
-    claimConfidence * 0.3 +
-    answerVerification.confidence * 0.4 +
-    avgDistractorQuality * 0.3
-  );
+  const claimConfidence =
+    claimVerifications.length > 0
+      ? claimVerifications.reduce((sum, v) => sum + v.confidence, 0) / claimVerifications.length
+      : 1;
+  const overallConfidence =
+    claimConfidence * 0.3 + answerVerification.confidence * 0.4 + avgDistractorQuality * 0.3;
 
   // Determine recommendation
   let recommendation: CoVeResult['recommendation'];
   const hasCriticalFlags = flags.some((f) => f.severity === 'critical');
-  
+
   if (hasCriticalFlags) {
-    recommendation = contradictedCount > 0 || !answerVerification.isCorrect
-      ? 'reject'
-      : 'regenerate';
+    recommendation =
+      contradictedCount > 0 || !answerVerification.isCorrect ? 'reject' : 'regenerate';
   } else if (verificationRate < cfg.minVerificationRate || overallConfidence < cfg.minConfidence) {
     recommendation = 'review';
   } else {
@@ -746,7 +750,7 @@ export async function quickVerify(
   const correctIndex = question.correctAnswerIndex ?? 0;
   const rationale = question.rationale || '';
 
-  const dbContext = context.databaseContent 
+  const dbContext = context.databaseContent
     ? buildDbContextString(context.databaseContent)
     : 'No database content available.';
 
@@ -792,7 +796,7 @@ If issues found:
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     return JSON.parse(cleanedJson);
   } catch (error) {
     console.error('[CoVe] Quick verify failed:', error);

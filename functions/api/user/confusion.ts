@@ -11,12 +11,14 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const ConfusionPostSchema = z.object({
-  body: z.object({
-    correctConditionId: z.string().min(1),
-    selectedConditionId: z.string().min(1),
-  }).refine((data) => data.correctConditionId !== data.selectedConditionId, {
-    message: 'correctConditionId and selectedConditionId must differ',
-  }),
+  body: z
+    .object({
+      correctConditionId: z.string().min(1),
+      selectedConditionId: z.string().min(1),
+    })
+    .refine((data) => data.correctConditionId !== data.selectedConditionId, {
+      message: 'correctConditionId and selectedConditionId must differ',
+    }),
 });
 
 const ConfusionGetSchema = z.object({

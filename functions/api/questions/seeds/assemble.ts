@@ -15,13 +15,18 @@ const AssembleRequestSchema = z.object({
 });
 
 export const onRequestPost = adminEndpoint(AssembleRequestSchema, async ({ env, validated }) => {
-  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createEdgePrismaClient, safePrismaDisconnect } =
+    await import('../../_shared/prisma-edge');
   const { assembleQuestionsFromSeeds } = await import('../../_shared/question-seeds');
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const questions = await assembleQuestionsFromSeeds(prisma, validated.filter || {}, validated.count || 10);
+    const questions = await assembleQuestionsFromSeeds(
+      prisma,
+      validated.filter || {},
+      validated.count || 10
+    );
     return { status: 200, data: { success: true, questions } };
   } finally {
     await safePrismaDisconnect(prisma);

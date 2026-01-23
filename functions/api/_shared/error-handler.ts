@@ -200,7 +200,10 @@ function parseStackTrace(
       }
       return { filename: 'unknown', function: line.trim() };
     })
-    .filter((frame: { filename: string; function: string; lineno?: number }) => frame.filename !== 'unknown');
+    .filter(
+      (frame: { filename: string; function: string; lineno?: number }) =>
+        frame.filename !== 'unknown'
+    );
 }
 
 /**
@@ -213,7 +216,7 @@ export function withErrorHandler(
     logErrors?: boolean;
   }
 ): PagesFunction {
-  return async (context: EventContext<any, any, any>): Promise<Response> => {
+  return async (context: EventContext<any, any, any>) => {
     const { request, env } = context;
     const endpoint = options?.endpoint || new URL(request.url).pathname;
     const requestId = crypto.randomUUID();

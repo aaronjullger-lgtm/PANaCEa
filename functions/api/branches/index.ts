@@ -6,7 +6,11 @@
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, EdgePrismaClient } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  EdgePrismaClient,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { listBranches, createBranch } from '../_shared/content-branching';
 import { z } from 'zod';
@@ -30,74 +34,80 @@ const CreateBranchSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(ListBranchesSchema, async ({ env, validated, auth }) => {
-  const log = createEndpointLogger('/api/branches', auth.userId);
-  
-  if (!env.DATABASE_URL) {
-    log.warn('Database not configured, returning empty branches');
-    return { success: true, branches: [] };
+export const onRequestGet = authenticatedEndpoint(
+  ListBranchesSchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/branches', auth.userId);
+
+    if (!env.DATABASE_URL) {
+      log.warn('Database not configured, returning empty branches');
+      return { success: true, branches: [] };
+    }
+
+    let prisma: EdgePrismaClient | null = null;
+
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const includeArchived = validated.query.includeArchived === 'true';
+
+      log.info('Listing branches', { includeArchived });
+
+      const branches = await listBranches(prisma, includeArchived);
+
+      log.info('Branches listed successfully', { count: branches.length });
+
+      return { success: true, branches };
+    } catch (error) {
+      log.error('Failed to list branches', error);
+      return {
+        status: 500,
+        error: 'Failed to list branches',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
+);
 
-  let prisma: EdgePrismaClient | null = null;
+export const onRequestPost = authenticatedEndpoint(
+  CreateBranchSchema,
+  async ({ env, validated, auth }) => {
+    const log = createEndpointLogger('/api/branches', auth.userId);
 
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const includeArchived = validated.query.includeArchived === 'true';
+    if (!env.DATABASE_URL) {
+      log.warn('Database not configured');
+      return {
+        status: 503,
+        error: 'Database not configured',
+      };
+    }
 
-    log.info('Listing branches', { includeArchived });
+    let prisma: EdgePrismaClient | null = null;
 
-    const branches = await listBranches(prisma, includeArchived);
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const { name, description, baseBranch, createdBy } = validated.body;
 
-    log.info('Branches listed successfully', { count: branches.length });
+      log.info('Creating branch', { name, baseBranch, createdBy });
 
-    return { success: true, branches };
-  } catch (error) {
-    log.error('Failed to list branches', error);
-    return {
-      status: 500,
-      error: 'Failed to list branches',
-    };
-  } finally {
-    await safePrismaDisconnect(prisma);
+      const branchId = await createBranch(prisma, {
+        name,
+        description,
+        baseBranch,
+        createdBy,
+      });
+
+      log.info('Branch created successfully', { branchId, name });
+
+      return { success: true, branchId };
+    } catch (error) {
+      log.error('Failed to create branch', error);
+      return {
+        status: 500,
+        error: error instanceof Error ? error.message : 'Failed to create branch',
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-});
-
-export const onRequestPost = authenticatedEndpoint(CreateBranchSchema, async ({ env, validated, auth }) => {
-  const log = createEndpointLogger('/api/branches', auth.userId);
-
-  if (!env.DATABASE_URL) {
-    log.warn('Database not configured');
-    return {
-      status: 503,
-      error: 'Database not configured',
-    };
-  }
-
-  let prisma: EdgePrismaClient | null = null;
-
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const { name, description, baseBranch, createdBy } = validated.body;
-
-    log.info('Creating branch', { name, baseBranch, createdBy });
-
-    const branchId = await createBranch(prisma, {
-      name,
-      description,
-      baseBranch,
-      createdBy,
-    });
-
-    log.info('Branch created successfully', { branchId, name });
-
-    return { success: true, branchId };
-  } catch (error) {
-    log.error('Failed to create branch', error);
-    return {
-      status: 500,
-      error: error instanceof Error ? error.message : 'Failed to create branch',
-    };
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-});
+);

@@ -112,7 +112,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
   const topPair = confusionData[0];
   // Guard against undefined - TypeScript doesn't narrow from length checks
   if (!topPair) return null;
-  
+
   const severityColor = getSeverityColor(topPair.severity);
   const severityBg = getSeverityBgColor(topPair.severity);
 

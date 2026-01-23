@@ -131,14 +131,19 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
     });
 
     if (!user) {
-      return { data: { error: 'User not found', message: 'Your user account has not been synced yet.' }, status: 404 };
+      return {
+        data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
+        status: 404,
+      };
     }
 
     const userId = user.id;
     const system = validated.query?.system || null;
     const category = validated.query?.category || null;
     const difficulty = validated.query?.difficulty || null;
-    const count = validated.query?.count ? parseInt(validated.query.count, 10) : DEFAULT_FETCH_COUNT;
+    const count = validated.query?.count
+      ? parseInt(validated.query.count, 10)
+      : DEFAULT_FETCH_COUNT;
     const mode = validated.query?.mode || null;
 
     // ADMIN CURATION MODE
@@ -157,7 +162,10 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
         take: 100,
       });
 
-      logger.info('Admin fetched curation questions', { userId: auth.userId, count: curationQuestions.length });
+      logger.info('Admin fetched curation questions', {
+        userId: auth.userId,
+        count: curationQuestions.length,
+      });
       return { data: curationQuestions };
     }
 
@@ -166,10 +174,16 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
       where: { userId },
       select: { questionId: true },
     });
-    const seenIds = new Set<string>(seenQuestionIds.map((q: { questionId: string }) => q.questionId));
+    const seenIds = new Set<string>(
+      seenQuestionIds.map((q: { questionId: string }) => q.questionId)
+    );
 
     // Check cache
-    const cacheKey = getQuestionPoolCacheKey({ system: system ?? undefined, category: category ?? undefined, difficulty: difficulty ?? undefined });
+    const cacheKey = getQuestionPoolCacheKey({
+      system: system ?? undefined,
+      category: category ?? undefined,
+      difficulty: difficulty ?? undefined,
+    });
     let cachedPool: PreGeneratedQuestionRecord[] | null = null;
 
     if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
@@ -177,25 +191,49 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
     }
 
     // Get from pre-generated pool
-    const poolQuestions = await getFromPreGeneratedPool(prisma, userId, seenIds, { count, system, category, difficulty }, cachedPool);
+    const poolQuestions = await getFromPreGeneratedPool(
+      prisma,
+      userId,
+      seenIds,
+      { count, system, category, difficulty },
+      cachedPool
+    );
     let questions = poolQuestions.questions;
     const poolAvailable = poolQuestions.remaining;
 
     // If pool insufficient, supplement from main Question table
     if (questions.length < count) {
       const needed = count - questions.length;
-      const mainQuestions = await getFromMainTable(prisma, userId, seenIds, { count: needed, system, category, difficulty });
+      const mainQuestions = await getFromMainTable(prisma, userId, seenIds, {
+        count: needed,
+        system,
+        category,
+        difficulty,
+      });
       questions = [...questions, ...mainQuestions];
     }
 
     const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
 
     // Cache the pool questions if available
-    if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) && !cachedPool && poolQuestions.rawQuestions) {
-      await setInCache((env as { CACHE: KVNamespace }).CACHE, cacheKey, poolQuestions.rawQuestions, CACHE_CONFIG.TTL.QUESTION_POOL);
+    if (
+      isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) &&
+      !cachedPool &&
+      poolQuestions.rawQuestions
+    ) {
+      await setInCache(
+        (env as { CACHE: KVNamespace }).CACHE,
+        cacheKey,
+        poolQuestions.rawQuestions,
+        CACHE_CONFIG.TTL.QUESTION_POOL
+      );
     }
 
-    logger.info('Fetched pool questions', { userId: auth.userId, count: questions.length, poolAvailable });
+    logger.info('Fetched pool questions', {
+      userId: auth.userId,
+      count: questions.length,
+      poolAvailable,
+    });
 
     return {
       data: {
@@ -205,7 +243,10 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
       headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
     };
   } catch (error) {
-    logger.error('Error fetching pool questions', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error fetching pool questions', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to fetch pool questions');
   } finally {
     await safePrismaDisconnect(prisma);
@@ -248,7 +289,10 @@ export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (contex
 
     return { data: { success: true }, status: 201 };
   } catch (error) {
-    logger.error('Error seeding question to pool', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error seeding question to pool', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to seed question to pool');
   } finally {
     await safePrismaDisconnect(prisma);
@@ -260,9 +304,18 @@ async function getFromPreGeneratedPool(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   userId: string,
   seenIds: Set<string>,
-  options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null },
+  options: {
+    count: number;
+    system?: string | null;
+    category?: string | null;
+    difficulty?: string | null;
+  },
   cachedQuestions?: PreGeneratedQuestionRecord[] | null
-): Promise<{ questions: PoolQuestionOutput[]; remaining: number; rawQuestions?: PreGeneratedQuestionRecord[] }> {
+): Promise<{
+  questions: PoolQuestionOutput[];
+  remaining: number;
+  rawQuestions?: PreGeneratedQuestionRecord[];
+}> {
   const { count, system, category, difficulty } = options;
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
@@ -277,28 +330,34 @@ async function getFromPreGeneratedPool(
     if (category) where.questionType = category;
 
     const fetchCount = count * 5;
-    const dbResults = await prisma.preGeneratedQuestion.findMany({ where, take: fetchCount, orderBy: { generatedAt: 'asc' } });
-    preGenQuestions = dbResults.map((r: {
-      id: string;
-      questionType: string;
-      system: string | null;
-      conditionId: string | null;
-      medicalContentId: string | null;
-      difficulty: string | null;
-      questionData: unknown;
-      generatedAt: Date;
-      usedAt: Date | null;
-    }): PreGeneratedQuestionRecord => ({
-      id: r.id,
-      questionType: r.questionType,
-      system: r.system,
-      conditionId: r.conditionId,
-      medicalContentId: r.medicalContentId,
-      difficulty: r.difficulty,
-      questionData: r.questionData as QuestionDataJson,
-      generatedAt: r.generatedAt,
-      usedAt: r.usedAt,
-    }));
+    const dbResults = await prisma.preGeneratedQuestion.findMany({
+      where,
+      take: fetchCount,
+      orderBy: { generatedAt: 'asc' },
+    });
+    preGenQuestions = dbResults.map(
+      (r: {
+        id: string;
+        questionType: string;
+        system: string | null;
+        conditionId: string | null;
+        medicalContentId: string | null;
+        difficulty: string | null;
+        questionData: unknown;
+        generatedAt: Date;
+        usedAt: Date | null;
+      }): PreGeneratedQuestionRecord => ({
+        id: r.id,
+        questionType: r.questionType,
+        system: r.system,
+        conditionId: r.conditionId,
+        medicalContentId: r.medicalContentId,
+        difficulty: r.difficulty,
+        questionData: r.questionData as QuestionDataJson,
+        generatedAt: r.generatedAt,
+        usedAt: r.usedAt,
+      })
+    );
     remaining = await prisma.preGeneratedQuestion.count({ where });
   }
 
@@ -353,7 +412,12 @@ async function getFromMainTable(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   userId: string,
   seenIds: Set<string>,
-  options: { count: number; system?: string | null; category?: string | null; difficulty?: string | null }
+  options: {
+    count: number;
+    system?: string | null;
+    category?: string | null;
+    difficulty?: string | null;
+  }
 ): Promise<PoolQuestionOutput[]> {
   const { count, system, category, difficulty } = options;
   const where: Record<string, unknown> = {};
@@ -366,7 +430,17 @@ async function getFromMainTable(
     where,
     take: fetchCount,
     orderBy: { createdAt: 'desc' },
-    select: { id: true, vignette: true, question: true, options: true, correctAnswer: true, explanation: true, system: true, difficulty: true, tags: true },
+    select: {
+      id: true,
+      vignette: true,
+      question: true,
+      options: true,
+      correctAnswer: true,
+      explanation: true,
+      system: true,
+      difficulty: true,
+      tags: true,
+    },
   });
 
   const unseenQuestions = questions.filter((q: MainQuestionRecord) => !seenIds.has(q.id));

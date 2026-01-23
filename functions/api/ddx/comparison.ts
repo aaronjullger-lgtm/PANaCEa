@@ -36,7 +36,10 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
 
     const rawIds = validated.query?.conditions || validated.query?.ids;
     const conditionIds = rawIds
-      ? rawIds.split(',').map((id) => id.trim()).filter(Boolean)
+      ? rawIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
       : [];
 
     if (conditionIds.length < 2) {
@@ -50,10 +53,17 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
     const medicalContent = await prisma.medicalContent.findMany({
       where: { id: { in: conditionIds } },
       select: {
-        id: true, condition: true, system: true, content: true,
-        buzzwords: true, symptoms: true, pathophysiology: true,
-        gold_standard_dx: true, best_initial_test: true,
-        first_line_rx: true, classic_patient: true,
+        id: true,
+        condition: true,
+        system: true,
+        content: true,
+        buzzwords: true,
+        symptoms: true,
+        pathophysiology: true,
+        gold_standard_dx: true,
+        best_initial_test: true,
+        first_line_rx: true,
+        classic_patient: true,
       },
     });
 
@@ -61,9 +71,13 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
       return { data: { error: 'One or more conditions not found' }, status: 404 };
     }
 
-    const cacheKey = conditionIds.slice().sort((a, b) => a.localeCompare(b)).join('|');
+    const cacheKey = conditionIds
+      .slice()
+      .sort((a, b) => a.localeCompare(b))
+      .join('|');
     const cachedContent = (medicalContent[0].content as Record<string, unknown> | null) || {};
-    const cachedComparisons = (cachedContent.comparisons as Record<string, ComparisonResult> | undefined) || {};
+    const cachedComparisons =
+      (cachedContent.comparisons as Record<string, ComparisonResult> | undefined) || {};
     const cached = cachedComparisons[cacheKey];
     if (cached) {
       logger.info('Returning cached comparison', { userId: auth.userId, cacheKey });
@@ -82,15 +96,18 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
 
     // Cache comparison on all involved MedicalContent rows
     await Promise.all(
-      medicalContent.map(async (mc: { id: string; condition: string; system: string; content: unknown }) => {
-        const contentJson = (mc.content as Record<string, unknown> | null) || {};
-        const comparisons = (contentJson.comparisons as Record<string, ComparisonResult> | undefined) || {};
-        comparisons[cacheKey] = comparison;
-        return prisma!.medicalContent.update({
-          where: { id: mc.id },
-          data: { content: { ...contentJson, comparisons } },
-        });
-      })
+      medicalContent.map(
+        async (mc: { id: string; condition: string; system: string; content: unknown }) => {
+          const contentJson = (mc.content as Record<string, unknown> | null) || {};
+          const comparisons =
+            (contentJson.comparisons as Record<string, ComparisonResult> | undefined) || {};
+          comparisons[cacheKey] = comparison;
+          return prisma!.medicalContent.update({
+            where: { id: mc.id },
+            data: { content: { ...contentJson, comparisons } },
+          });
+        }
+      )
     );
 
     logger.info('Generated new comparison', { userId: auth.userId, conditionIds });
@@ -106,12 +123,20 @@ export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (conte
   }
 });
 
-function buildComparisonPrompt(medicalContent: Array<{
-  id: string; condition: string; system: string; buzzwords: string[] | null;
-  symptoms?: string | null; pathophysiology?: string | null;
-  gold_standard_dx?: string | null; best_initial_test?: string | null;
-  first_line_rx?: string | null; classic_patient?: string | null;
-}>) {
+function buildComparisonPrompt(
+  medicalContent: Array<{
+    id: string;
+    condition: string;
+    system: string;
+    buzzwords: string[] | null;
+    symptoms?: string | null;
+    pathophysiology?: string | null;
+    gold_standard_dx?: string | null;
+    best_initial_test?: string | null;
+    first_line_rx?: string | null;
+    classic_patient?: string | null;
+  }>
+) {
   const lines = medicalContent.map((mc) => {
     const buzz = mc.buzzwords?.slice(0, 5).join(', ') || 'n/a';
     return `- ${mc.condition} (system: ${mc.system}). Buzzwords: ${buzz}. Key features: ${mc.symptoms || 'n/a'}. Pathophys: ${mc.pathophysiology || 'n/a'}. Gold standard: ${mc.gold_standard_dx || 'n/a'}. First line rx: ${mc.first_line_rx || 'n/a'}.`;
@@ -145,25 +170,36 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<strin
   return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 }
 
-function parseComparison(raw: string, medicalContent: Array<{ condition: string; system?: string }>): ComparisonResult {
+function parseComparison(
+  raw: string,
+  medicalContent: Array<{ condition: string; system?: string }>
+): ComparisonResult {
   try {
     const parsed = JSON.parse(raw);
     const features = Array.isArray(parsed.features) ? parsed.features.map(String) : [];
-    const distinguishers = Array.isArray(parsed.distinguishers) ? parsed.distinguishers.map(String) : [];
+    const distinguishers = Array.isArray(parsed.distinguishers)
+      ? parsed.distinguishers.map(String)
+      : [];
     if (features.length || distinguishers.length) {
       return { features, distinguishers, generatedAt: new Date().toISOString(), source: 'gemini' };
     }
   } catch {
     // JSON parse failed, use fallback
   }
-  return buildFallbackComparison(medicalContent.map((item) => ({ condition: item.condition, system: item.system || 'Unknown' })));
+  return buildFallbackComparison(
+    medicalContent.map((item) => ({ condition: item.condition, system: item.system || 'Unknown' }))
+  );
 }
 
-function buildFallbackComparison(medicalContent: Array<{ condition: string; system: string }>): ComparisonResult {
+function buildFallbackComparison(
+  medicalContent: Array<{ condition: string; system: string }>
+): ComparisonResult {
   const names = medicalContent.map((mc) => mc.condition);
   return {
     features: [`No AI output available. Conditions compared: ${names.join(', ')}.`],
-    distinguishers: ['Review diagnostic gold standards and classic presentations for each condition.'],
+    distinguishers: [
+      'Review diagnostic gold standards and classic presentations for each condition.',
+    ],
     generatedAt: new Date().toISOString(),
     source: 'fallback',
   };

@@ -36,7 +36,9 @@ export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (c
     logger.info('Systems fetched', { count: systems.length });
     return { data: systems, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    logger.error('Failed to fetch systems', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Failed to fetch systems', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to fetch systems');
   } finally {
     await safePrismaDisconnect(prisma);

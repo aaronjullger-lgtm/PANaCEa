@@ -55,7 +55,11 @@ function extractConditionsArray(
   }
 
   // Fallback: log warning and return empty array
-  console.error('[conditionService] Unexpected API response format:', typeof data, Object.keys(dataObj));
+  console.error(
+    '[conditionService] Unexpected API response format:',
+    typeof data,
+    Object.keys(dataObj)
+  );
   return [];
 }
 

@@ -7,14 +7,16 @@ const INPUT_JSON = path.resolve('src/conditionContent.generated.json');
 const OUTPUT_JSON = INPUT_JSON;
 
 export function asciiClean(str: string = ''): string {
-  return str
-    .normalize('NFKC')
-    .replace(/[“”„‟]/g, '"')
-    .replace(/[''‚‛]/g, "'")
-    .replace(/[–—]/g, '-')
-    .replace(/\u00A0/g, ' ')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[^\x00-\x7F]/g, '');
+  return (
+    str
+      .normalize('NFKC')
+      .replace(/[“”„‟]/g, '"')
+      .replace(/[''‚‛]/g, "'")
+      .replace(/[–—]/g, '-')
+      .replace(/\u00A0/g, ' ')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[^\x00-\x7F]/g, '')
+  );
 }
 
 function normalizeWhitespace(value: string): string {

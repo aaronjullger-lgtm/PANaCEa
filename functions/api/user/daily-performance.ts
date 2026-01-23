@@ -25,7 +25,7 @@ export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async 
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
+
     // Parse and validate days parameter
     const days = Math.min(parseInt(validated.query?.days || '30'), 90); // Max 90 days
 

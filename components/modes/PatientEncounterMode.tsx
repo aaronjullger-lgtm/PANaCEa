@@ -1116,7 +1116,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               <span
                                 className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp ?? 0, [90, 140])}`}
                               >
-                                {Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)} mmHg
+                                {Math.round(currentVitals.sbp ?? 0)}/
+                                {Math.round(currentVitals.dbp ?? 0)} mmHg
                               </span>
                             </div>
                             <Sparkline

@@ -252,7 +252,9 @@ async function syncSingleOperation(
 
     // Handle 401 Unauthorized - do NOT retry, mark as failed
     if (response.status === 401) {
-      console.warn(`[OfflineSync] Operation ${op.id} failed with 401 Unauthorized - authentication required`);
+      console.warn(
+        `[OfflineSync] Operation ${op.id} failed with 401 Unauthorized - authentication required`
+      );
       // Mark as permanently failed by setting retries to max
       op.retries = MAX_RETRIES;
       return false;

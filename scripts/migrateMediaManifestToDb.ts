@@ -74,9 +74,7 @@ async function migrateMediaManifest() {
 
         await prisma.mediaAsset.create({
           data: {
-
             id: uuidv4(),
-
 
             conditionId: conditionId || null,
             type: entry.category,

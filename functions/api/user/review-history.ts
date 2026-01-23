@@ -1,6 +1,6 @@
 /**
  * API Endpoint: GET /api/user/review-history
- * 
+ *
  * Fetches complete review history for FSRS optimizer
  * Returns QuestionAttempt records with telemetry data
  */
@@ -21,7 +21,7 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     if (!auth || !auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -44,34 +44,33 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
         durationMs: true,
         telemetryJson: true,
         answerChangedCount: true,
-        timeSpentMs: true
+        timeSpentMs: true,
       },
       orderBy: { createdAt: 'asc' },
-      take: limit
+      take: limit,
     });
 
     return new Response(
       JSON.stringify({
         reviews,
         count: reviews.length,
-        userId
+        userId,
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       }
     );
-
   } catch (error) {
     console.error('Failed to fetch review history:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to fetch review history',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   } finally {

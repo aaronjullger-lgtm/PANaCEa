@@ -145,13 +145,13 @@ npx prisma migrate dev --name add-fulltext-indexes
 
 ## 📈 Expected Performance Improvements
 
-| Query Type | Current Time | Expected Time | Improvement |
-|------------|--------------|---------------|-------------|
-| User progress lookup | 80ms | 5ms | 94% faster |
-| Question retrieval | 120ms | 8ms | 93% faster |
-| Media asset search | 150ms | 10ms | 93% faster |
-| Condition search | 200ms | 15ms | 92% faster |
-| Analytics queries | 300ms | 20ms | 93% faster |
+| Query Type           | Current Time | Expected Time | Improvement |
+| -------------------- | ------------ | ------------- | ----------- |
+| User progress lookup | 80ms         | 5ms           | 94% faster  |
+| Question retrieval   | 120ms        | 8ms           | 93% faster  |
+| Media asset search   | 150ms        | 10ms          | 93% faster  |
+| Condition search     | 200ms        | 15ms          | 92% faster  |
+| Analytics queries    | 300ms        | 20ms          | 93% faster  |
 
 ## 🔍 Query Optimization Examples
 

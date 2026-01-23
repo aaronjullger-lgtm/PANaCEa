@@ -8,11 +8,11 @@
 interface BuzzwordEntry {
   id: string;
   word: string;
-  buzzword?: string;  // Alias for word
+  buzzword?: string; // Alias for word
   definition?: string;
   category?: string;
   conditionId?: string;
-  condition?: string;  // Display name for the condition
+  condition?: string; // Display name for the condition
 }
 
 let buzzwordCache: BuzzwordEntry[] | null = null;

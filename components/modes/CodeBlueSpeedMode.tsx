@@ -413,7 +413,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
   // Active drill page - Guard for TypeScript (currentQuestion must exist at this point)
   if (!currentQuestion) return null;
-  
+
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const isCorrect = selectedAnswer === currentQuestion.correctIndex;
 

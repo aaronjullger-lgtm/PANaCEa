@@ -61,7 +61,8 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
     const dueCount = srsItems.filter((item: SRSItemRecord) => item.dueDate <= now).length;
 
     const avgStability =
-      srsItems.reduce((sum: number, item: SRSItemRecord) => sum + (item.fsrsStability || 5), 0) / (srsItems.length || 1);
+      srsItems.reduce((sum: number, item: SRSItemRecord) => sum + (item.fsrsStability || 5), 0) /
+      (srsItems.length || 1);
 
     const decayCurveData = Array.from({ length: 31 }, (_, day) => ({
       day,
@@ -94,7 +95,11 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
     const tuningReason = 'Pharmacology';
     const adjustment: 'tighten' | 'loosen' = 'tighten';
 
-    logger.info('Fetched retention stats', { userId: auth.userId, dueCount, totalCards: srsItems.length });
+    logger.info('Fetched retention stats', {
+      userId: auth.userId,
+      dueCount,
+      totalCards: srsItems.length,
+    });
 
     return {
       data: {

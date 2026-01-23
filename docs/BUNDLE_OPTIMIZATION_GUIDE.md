@@ -15,24 +15,26 @@ pnpm build --analyze
 
 ### Key Metrics
 
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| **Main Bundle** | ~850KB | <500KB | ⚠️ Needs optimization |
-| **Vendor Chunks** | ~1.2MB | <800KB | ⚠️ Needs optimization |
-| **Total JS** | ~2.1MB | <1.2MB | ⚠️ Needs optimization |
-| **Gzip Size** | ~650KB | <400KB | ⚠️ Needs optimization |
+| Metric            | Current | Target | Status                |
+| ----------------- | ------- | ------ | --------------------- |
+| **Main Bundle**   | ~850KB  | <500KB | ⚠️ Needs optimization |
+| **Vendor Chunks** | ~1.2MB  | <800KB | ⚠️ Needs optimization |
+| **Total JS**      | ~2.1MB  | <1.2MB | ⚠️ Needs optimization |
+| **Gzip Size**     | ~650KB  | <400KB | ⚠️ Needs optimization |
 
 ## 🛠️ Optimization Strategies
 
 ### 1. Code Splitting & Lazy Loading
 
 **Current Implementation:**
+
 ```typescript
 // App.tsx - Current lazy loading
 const QuizView = lazy(() => import('./components/QuizView'));
 ```
 
 **Enhanced Implementation:**
+
 ```typescript
 // Use optimized lazy loading with preload
 const { component: QuizView, preload: preloadQuiz } = lazyWithPreload(
@@ -50,6 +52,7 @@ useEffect(() => {
 ### 2. Vite Configuration Optimization
 
 **Optimized `vite.config.ts`:**
+
 ```typescript
 export default defineConfig({
   build: {
@@ -60,7 +63,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['framer-motion', 'lucide-react', '@radix-ui/react-progress'],
           'data-vendor': ['zod', 'idb-keyval'],
-          'charting': ['recharts'],
+          charting: ['recharts'],
         },
         // Better compression
         intro: 'var global=global||window;var exports=exports||{};',
@@ -83,14 +86,7 @@ export default defineConfig({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      '@clerk/clerk-react',
-      'framer-motion',
-      'lucide-react',
-      'zod',
-    ],
+    include: ['react', 'react-dom', '@clerk/clerk-react', 'framer-motion', 'lucide-react', 'zod'],
     exclude: ['@google/genai', '@google/generative-ai'],
   },
 });
@@ -100,34 +96,31 @@ export default defineConfig({
 
 ```typescript
 // Use webpack magic comments for better chunk naming
-const Component = lazy(() =>
-  import(
-    /* webpackChunkName: "critical-component" */
-    /* webpackPrefetch: true */
-    /* webpackPreload: true */
-    './components/CriticalComponent'
-  )
+const Component = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "critical-component" */
+      /* webpackPrefetch: true */
+      /* webpackPreload: true */
+      './components/CriticalComponent'
+    )
 );
 ```
 
 ### 4. Tree Shaking Optimization
 
 **Ensure proper side effect declarations:**
+
 ```json
 {
-  "sideEffects": [
-    "*.css",
-    "*.scss",
-    "*.sass",
-    "@sentry/*",
-    "@google/*"
-  ]
+  "sideEffects": ["*.css", "*.scss", "*.sass", "@sentry/*", "@google/*"]
 }
 ```
 
 ### 5. Image Optimization
 
 **Use modern formats and responsive images:**
+
 ```typescript
 // OptimizedImage component usage
 <OptimizedImage
@@ -144,12 +137,12 @@ const Component = lazy(() =>
 
 ## 📈 Expected Improvements
 
-| Optimization | Current Size | Target Size | Improvement |
-|--------------|--------------|-------------|-------------|
-| **Code Splitting** | 2.1MB | 1.2MB | 43% reduction |
-| **Tree Shaking** | 850KB | 500KB | 41% reduction |
-| **Compression** | 650KB | 350KB | 46% reduction |
-| **Image Optimization** | 1.2MB | 400KB | 67% reduction |
+| Optimization           | Current Size | Target Size | Improvement   |
+| ---------------------- | ------------ | ----------- | ------------- |
+| **Code Splitting**     | 2.1MB        | 1.2MB       | 43% reduction |
+| **Tree Shaking**       | 850KB        | 500KB       | 41% reduction |
+| **Compression**        | 650KB        | 350KB       | 46% reduction |
+| **Image Optimization** | 1.2MB        | 400KB       | 67% reduction |
 
 ## 🎯 Implementation Roadmap
 
@@ -283,10 +276,10 @@ const routes = [
 
 ```html
 <!-- Preload critical resources -->
-<link rel="preload" href="/critical.js" as="script">
+<link rel="preload" href="/critical.js" as="script" />
 
 <!-- Prefetch non-critical resources -->
-<link rel="prefetch" href="/non-critical.js" as="script">
+<link rel="prefetch" href="/non-critical.js" as="script" />
 ```
 
 ### 4. Performance Budgets

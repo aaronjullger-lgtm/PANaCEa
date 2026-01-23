@@ -360,8 +360,12 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
               {flags.map((flag) => {
                 const isExpanded = expandedFlags.has(flag.id);
                 // Use type guards for safe lookups with proper TypeScript narrowing
-                const statusConfig = isStatusKey(flag.status) ? STATUS_CONFIG[flag.status] : STATUS_CONFIG.pending;
-                const priorityConfig = isPriorityKey(flag.priority) ? PRIORITY_CONFIG[flag.priority] : PRIORITY_CONFIG.medium;
+                const statusConfig = isStatusKey(flag.status)
+                  ? STATUS_CONFIG[flag.status]
+                  : STATUS_CONFIG.pending;
+                const priorityConfig = isPriorityKey(flag.priority)
+                  ? PRIORITY_CONFIG[flag.priority]
+                  : PRIORITY_CONFIG.medium;
                 const StatusIcon = statusConfig.icon;
 
                 return (

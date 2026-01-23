@@ -69,7 +69,9 @@ function calculateSimilarity(query: string, target: string): number {
  * Calculate Levenshtein distance
  */
 function levenshteinDistance(a: string, b: string): number {
-  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () =>
+    new Array<number>(b.length + 1).fill(0)
+  );
 
   for (let i = 0; i <= a.length; i++) {
     const row = dp[i];
@@ -319,12 +321,20 @@ export async function searchContent(
         take: limit * 2,
       });
 
-      conditions.forEach((condition: { id: string; name: string; displayName?: string; aliases?: string[]; system?: string }) => {
-        const ranked = rankCondition(condition, sanitizedQuery);
-        if (ranked.score > 0) {
-          results.push(ranked);
+      conditions.forEach(
+        (condition: {
+          id: string;
+          name: string;
+          displayName?: string;
+          aliases?: string[];
+          system?: string;
+        }) => {
+          const ranked = rankCondition(condition, sanitizedQuery);
+          if (ranked.score > 0) {
+            results.push(ranked);
+          }
         }
-      });
+      );
     }
 
     // Search drugs
@@ -342,12 +352,21 @@ export async function searchContent(
         take: limit * 2,
       });
 
-      drugs.forEach((drug: { id: string; genericName: string; brandName?: string; aliases?: string[]; drugClass?: string[]; displayName?: string }) => {
-        const ranked = rankDrug(drug, sanitizedQuery);
-        if (ranked.score > 0) {
-          results.push(ranked);
+      drugs.forEach(
+        (drug: {
+          id: string;
+          genericName: string;
+          brandName?: string;
+          aliases?: string[];
+          drugClass?: string[];
+          displayName?: string;
+        }) => {
+          const ranked = rankDrug(drug, sanitizedQuery);
+          if (ranked.score > 0) {
+            results.push(ranked);
+          }
         }
-      });
+      );
     }
 
     // Sort by score and take top results

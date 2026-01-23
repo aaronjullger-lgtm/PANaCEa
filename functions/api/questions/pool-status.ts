@@ -15,7 +15,20 @@ const PoolStatusSchema = z.object({
 
 const POOL_LOW_THRESHOLD = 20;
 const SYSTEMS = [
-  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU',
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
 ];
 
 export const onRequestOptions = withCors();
@@ -98,7 +111,8 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
           ? {
               seen: totalUserSeen,
               fresh: totalInPool - totalUserSeen,
-              percentExplored: totalInPool > 0 ? Math.round((totalUserSeen / totalInPool) * 100) : 0,
+              percentExplored:
+                totalInPool > 0 ? Math.round((totalUserSeen / totalInPool) * 100) : 0,
             }
           : null,
         mainTable: { total: mainQuestionCount },
@@ -112,7 +126,10 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
       },
     };
   } catch (error) {
-    logger.error('Error fetching pool status', { error: error instanceof Error ? error.message : String(error), userId: auth.userId });
+    logger.error('Error fetching pool status', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
     throw new Error('Failed to fetch pool status');
   } finally {
     await safePrismaDisconnect(prisma);

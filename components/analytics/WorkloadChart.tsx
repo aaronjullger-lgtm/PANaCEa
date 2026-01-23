@@ -1,10 +1,10 @@
 /**
  * CMRR Workload Chart Component (Phase 5: Self-Optimizing Engine)
- * 
+ *
  * Visualizes the relationship between retention target and daily workload.
  * Highlights the CMRR point (Compute Minimum Recommended Retention) - the
  * optimal balance between retention and review burden.
- * 
+ *
  * Reference: FSRS Paper - The "sweet spot" is typically 85-88% retention,
  * where you get maximum knowledge retention per minute of study time.
  */
@@ -21,7 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
-  Cell
+  Cell,
 } from 'recharts';
 import { useWorkloadProjection } from '../../hooks/useWorkloadProjection';
 
@@ -52,7 +52,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
           </span>
         )}
       </p>
-      
+
       <div className="space-y-1 text-xs">
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Daily Reviews:</span>
@@ -60,21 +60,25 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
             {data.dailyReviews.toFixed(0)} cards
           </span>
         </div>
-        
+
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Time Required:</span>
           <span className="font-mono text-[var(--color-text-primary)]">
             {data.timeMinutes.toFixed(0)} min/day
           </span>
         </div>
-        
+
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Sustainability:</span>
-          <span className={`font-mono ${
-            data.sustainability >= 70 ? 'text-green-400' :
-            data.sustainability >= 40 ? 'text-yellow-400' :
-            'text-red-400'
-          }`}>
+          <span
+            className={`font-mono ${
+              data.sustainability >= 70
+                ? 'text-green-400'
+                : data.sustainability >= 40
+                  ? 'text-yellow-400'
+                  : 'text-red-400'
+            }`}
+          >
             {data.sustainability.toFixed(0)}%
           </span>
         </div>
@@ -82,9 +86,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
 
       {data.isCMRR && (
         <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-          <p className="text-xs text-blue-400">
-            ⭐ Optimal balance of retention and workload
-          </p>
+          <p className="text-xs text-blue-400">⭐ Optimal balance of retention and workload</p>
         </div>
       )}
     </div>
@@ -100,13 +102,13 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   currentCardCount = 0,
   customParameters,
   showTimeAxis = true,
-  height = 400
+  height = 400,
 }) => {
   const { chartData, recommended, isLoading, error } = useWorkloadProjection({
     dailyNewCards,
     availableTimeMinutes,
     currentCardCount,
-    customParameters
+    customParameters,
   });
 
   if (isLoading) {
@@ -136,15 +138,13 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   if (chartData.length === 0) {
     return (
       <div className="flex items-center justify-center" style={{ height }}>
-        <p className="text-sm text-[var(--color-text-secondary)]">
-          No workload data available
-        </p>
+        <p className="text-sm text-[var(--color-text-secondary)]">No workload data available</p>
       </div>
     );
   }
 
-  const cmrrPoint = chartData.find(d => d.isCMRR);
-  const maxTime = Math.max(...chartData.map(d => d.timeMinutes));
+  const cmrrPoint = chartData.find((d) => d.isCMRR);
+  const maxTime = Math.max(...chartData.map((d) => d.timeMinutes));
 
   return (
     <div className="w-full">
@@ -157,11 +157,12 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
                 ⭐ Recommended Retention: {(cmrrPoint.retention * 100).toFixed(0)}%
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
-                Optimal balance: {cmrrPoint.dailyReviews.toFixed(0)} reviews/day 
-                ({cmrrPoint.timeMinutes.toFixed(0)} min) with {cmrrPoint.sustainability.toFixed(0)}% sustainability
+                Optimal balance: {cmrrPoint.dailyReviews.toFixed(0)} reviews/day (
+                {cmrrPoint.timeMinutes.toFixed(0)} min) with {cmrrPoint.sustainability.toFixed(0)}%
+                sustainability
               </p>
             </div>
-            
+
             {recommended && (
               <div className="text-right">
                 <p className="text-xs text-[var(--color-text-secondary)]">
@@ -178,62 +179,55 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-        >
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke="var(--color-border)" 
-            opacity={0.3}
-          />
-          
+        <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+
           <XAxis
             dataKey="retention"
             tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
-            label={{ 
-              value: 'Retention Target', 
-              position: 'insideBottom', 
+            label={{
+              value: 'Retention Target',
+              position: 'insideBottom',
               offset: -10,
-              style: { fill: 'var(--color-text-secondary)', fontSize: 12 }
+              style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
             }}
             stroke="var(--color-text-secondary)"
             tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
           />
-          
+
           <YAxis
             yAxisId="left"
-            label={{ 
-              value: 'Daily Reviews', 
-              angle: -90, 
+            label={{
+              value: 'Daily Reviews',
+              angle: -90,
               position: 'insideLeft',
-              style: { fill: 'var(--color-text-secondary)', fontSize: 12 }
+              style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
             }}
             stroke="var(--color-text-secondary)"
             tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
           />
-          
+
           {showTimeAxis && (
             <YAxis
               yAxisId="right"
               orientation="right"
-              label={{ 
-                value: 'Time (minutes)', 
-                angle: 90, 
+              label={{
+                value: 'Time (minutes)',
+                angle: 90,
                 position: 'insideRight',
-                style: { fill: 'var(--color-text-secondary)', fontSize: 12 }
+                style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
               }}
               stroke="var(--color-text-secondary)"
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
             />
           )}
-          
+
           <Tooltip content={<CustomTooltip />} />
-          
-          <Legend 
-            wrapperStyle={{ 
+
+          <Legend
+            wrapperStyle={{
               paddingTop: '20px',
-              fontSize: '12px'
+              fontSize: '12px',
             }}
           />
 
@@ -250,26 +244,24 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
                 position: 'top',
                 fill: '#3b82f6',
                 fontSize: 11,
-                fontWeight: 'bold'
+                fontWeight: 'bold',
               }}
             />
           )}
 
           {/* Workload bars with color coding */}
-          <Bar 
-            yAxisId="left"
-            dataKey="dailyReviews" 
-            name="Daily Reviews"
-            radius={[4, 4, 0, 0]}
-          >
+          <Bar yAxisId="left" dataKey="dailyReviews" name="Daily Reviews" radius={[4, 4, 0, 0]}>
             {chartData.map((entry, index) => (
-              <Cell 
+              <Cell
                 key={`cell-${index}`}
                 fill={
-                  entry.isCMRR ? '#3b82f6' : // Blue for CMRR
-                  entry.sustainability >= 70 ? '#1e293b' : // Stormy slate for sustainable
-                  entry.sustainability >= 40 ? '#f59e0b' : // Amber for moderate
-                  '#ef4444' // Red for unsustainable
+                  entry.isCMRR
+                    ? '#3b82f6' // Blue for CMRR
+                    : entry.sustainability >= 70
+                      ? '#1e293b' // Stormy slate for sustainable
+                      : entry.sustainability >= 40
+                        ? '#f59e0b' // Amber for moderate
+                        : '#ef4444' // Red for unsustainable
                 }
                 opacity={entry.isCMRR ? 1 : 0.7}
               />

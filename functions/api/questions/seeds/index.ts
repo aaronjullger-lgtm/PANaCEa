@@ -16,7 +16,8 @@ const QuestionSeedSchema = z.object({
 });
 
 export const onRequestPost = adminEndpoint(QuestionSeedSchema, async ({ env, validated }) => {
-  const { createEdgePrismaClient, safePrismaDisconnect } = await import('../../_shared/prisma-edge');
+  const { createEdgePrismaClient, safePrismaDisconnect } =
+    await import('../../_shared/prisma-edge');
   const { createQuestionSeed } = await import('../../_shared/question-seeds');
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

@@ -117,8 +117,6 @@ async function main() {
     try {
       await prisma.grandRoundsChallenge.create({
         data: {
-
-
           id: uuidv4(),
           date: challengeDate,
           questionIds: selectedIds,

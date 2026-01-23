@@ -42,8 +42,18 @@ export const onRequestGet = authenticatedEndpoint(ContextWidgetsSchema, async (c
     if (widgetType === 'pharm') {
       contextData.treatment = condition.treatment;
       const drugs = await prisma.medicalContent.findMany({
-        where: { content_type: 'drug', OR: [{ associatedConditions: { has: condition.condition } }] },
-        select: { id: true, name: true, drugClass: true, mechanism: true, indications: true, adverseEffects: true },
+        where: {
+          content_type: 'drug',
+          OR: [{ associatedConditions: { has: condition.condition } }],
+        },
+        select: {
+          id: true,
+          name: true,
+          drugClass: true,
+          mechanism: true,
+          indications: true,
+          adverseEffects: true,
+        },
         take: 5,
       });
       contextData.relatedDrugs = drugs;
@@ -60,7 +70,9 @@ export const onRequestGet = authenticatedEndpoint(ContextWidgetsSchema, async (c
     logger.info('Fetched context widgets', { conditionId, type: widgetType });
     return { data: contextData, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    logger.error('Error fetching context', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error fetching context', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new Error('Failed to fetch context');
   } finally {
     await safePrismaDisconnect(prisma);

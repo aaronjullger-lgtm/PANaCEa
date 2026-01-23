@@ -1,7 +1,7 @@
 /**
  * Random Drugs API
  * GET /api/drugs/random?count=10
- * 
+ *
  * Public endpoint for random drug flashcards/quizzes
  */
 
@@ -12,7 +12,10 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 const RandomDrugsSchema = z.object({
   query: z.object({
-    count: z.string().optional().transform(val => val ? parseInt(val, 10) : 10),
+    count: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : 10)),
   }),
 });
 

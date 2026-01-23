@@ -481,6 +481,7 @@ Full offline capability with smart caching and transparent sync.
 #### 8.3 Cloudflare KV/Durable Objects
 
 - [ ] **8.3.1** Cache GET /api/conditions in KV:
+
   ```typescript
   // functions/api/conditions/index.ts
   export async function onRequestGet(context: EventContext) {
@@ -497,6 +498,7 @@ Full offline capability with smart caching and transparent sync.
     return new Response(JSON.stringify(conditions));
   }
   ```
+
 - [ ] **8.3.2** Add KV caching for drugs, labs, imaging
 - [ ] **8.3.3** Invalidate cache on admin content updates
 
@@ -537,6 +539,7 @@ Automated testing, content freshness monitoring, and error reporting.
 #### 9.2 Drift Detection
 
 - [ ] **9.2.1** Track content freshness:
+
   ```typescript
   // scripts/automation/drift-detection.ts
   async function detectStaleContent() {
@@ -562,6 +565,7 @@ Automated testing, content freshness monitoring, and error reporting.
     }
   }
   ```
+
 - [ ] **9.2.2** Add guideline version tracking
 - [ ] **9.2.3** Auto-flag outdated treatment plans
 

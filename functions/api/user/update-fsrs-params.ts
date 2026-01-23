@@ -1,6 +1,6 @@
 /**
  * API Endpoint: POST /api/user/update-fsrs-params
- * 
+ *
  * Saves optimized FSRS parameters to UserProgress.fsrsParams
  * This creates a global fsrsParams entry that applies to all cards
  */
@@ -31,7 +31,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     if (!auth.authenticated || !auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -45,7 +45,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
         JSON.stringify({ error: 'Invalid parameters: must be array of 21 numbers' }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         }
       );
     }
@@ -56,7 +56,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
         JSON.stringify({ error: 'Invalid parameters: all values must be valid numbers' }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         }
       );
     }
@@ -69,7 +69,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     const optimizationData = {
       w: body.parameters,
       optimizedAt: new Date().toISOString(),
-      ...body.metadata
+      ...body.metadata,
     };
 
     // For now, we'll update all UserProgress records for this user
@@ -77,8 +77,8 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     const updated = await prisma.userProgress.updateMany({
       where: { userId },
       data: {
-        fsrsParams: optimizationData
-      }
+        fsrsParams: optimizationData,
+      },
     });
 
     return new Response(
@@ -86,24 +86,23 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
         success: true,
         message: `Updated ${updated.count} progress records with optimized parameters`,
         parameters: body.parameters,
-        metadata: body.metadata
+        metadata: body.metadata,
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       }
     );
-
   } catch (error) {
     console.error('Failed to update FSRS parameters:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to update parameters',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   } finally {

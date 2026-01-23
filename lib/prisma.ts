@@ -4,7 +4,7 @@
  * Handles the Prisma 7 + Accelerate "Catch-22":
  * - @prisma/extension-accelerate forces WASM engine
  * - WASM engine requires either Accelerate URL OR Driver Adapter
- * 
+ *
  * Solution:
  * - Local (NODE_ENV=development): Use PG Adapter with direct postgres:// connection
  * - Production: Use Accelerate extension with prisma:// connection
@@ -25,7 +25,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 /**
  * Extended PrismaClient type that works with both development (PG Adapter)
  * and production (Accelerate) configurations.
- * 
+ *
  * We use PrismaClient as the base type since both configurations expose
  * the same API - the only difference is internal implementation.
  */

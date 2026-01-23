@@ -65,7 +65,12 @@ export function VersionHistoryViewer({
   const handleCompare = () => {
     const firstVersion = selectedVersions[0];
     const secondVersion = selectedVersions[1];
-    if (selectedVersions.length === 2 && onCompare && firstVersion !== undefined && secondVersion !== undefined) {
+    if (
+      selectedVersions.length === 2 &&
+      onCompare &&
+      firstVersion !== undefined &&
+      secondVersion !== undefined
+    ) {
       onCompare(firstVersion, secondVersion);
     }
   };

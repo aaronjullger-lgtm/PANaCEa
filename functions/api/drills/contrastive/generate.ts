@@ -7,7 +7,12 @@ import { z } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { authenticatedEndpoint, withCors, AuthenticatedContext, ValidatedContext } from '../../_shared/middleware';
+import {
+  authenticatedEndpoint,
+  withCors,
+  AuthenticatedContext,
+  ValidatedContext,
+} from '../../_shared/middleware';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import {
   buildContrastivePrompt,
@@ -96,7 +101,9 @@ export const onRequestPost = authenticatedEndpoint(
       if (condition) {
         targetConditionName = condition.name;
       } else {
-        const content = await prisma.medicalContent.findUnique({ where: { id: targetConditionId } });
+        const content = await prisma.medicalContent.findUnique({
+          where: { id: targetConditionId },
+        });
         if (content) {
           targetConditionName = content.condition;
         }

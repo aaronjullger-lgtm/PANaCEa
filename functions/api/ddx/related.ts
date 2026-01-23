@@ -92,9 +92,15 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
         OR: [{ differentialList: { has: condition.name } }, { primaryConditionId: condition.id }],
       },
       select: {
-        presentingComplaint: true, differentialList: true, mustNotMiss: true,
-        distinguishingFeatures: true, mostCommon: true, mostDangerous: true,
-        redFlags: true, keyExamFindings: true, keyQuestions: true,
+        presentingComplaint: true,
+        differentialList: true,
+        mustNotMiss: true,
+        distinguishingFeatures: true,
+        mostCommon: true,
+        mostDangerous: true,
+        redFlags: true,
+        keyExamFindings: true,
+        keyQuestions: true,
       },
     });
 
@@ -106,18 +112,37 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
     });
 
     // Define types for Prisma query results
-    type ConditionSelect = { id: string; name: string; displayName: string | null; system: string; subcategory: string | null };
-    type RelationFromResult = { relationType: string; clinicalContext: string | null; Condition2: ConditionSelect | null };
+    type ConditionSelect = {
+      id: string;
+      name: string;
+      displayName: string | null;
+      system: string;
+      subcategory: string | null;
+    };
+    type RelationFromResult = {
+      relationType: string;
+      clinicalContext: string | null;
+      Condition2: ConditionSelect | null;
+    };
     type RelationToResult = { relationType: string; Condition1: ConditionSelect | null };
 
     // Combine and deduplicate
-    const relatedMap = new Map<string, ConditionSelect & { relationshipType: string; clinicalContext?: string | null; source: string }>();
+    const relatedMap = new Map<
+      string,
+      ConditionSelect & {
+        relationshipType: string;
+        clinicalContext?: string | null;
+        source: string;
+      }
+    >();
 
     relationsFrom.forEach((rel: RelationFromResult) => {
       if (rel.Condition2 && !relatedMap.has(rel.Condition2.id)) {
         relatedMap.set(rel.Condition2.id, {
-          ...rel.Condition2, relationshipType: rel.relationType,
-          clinicalContext: rel.clinicalContext, source: 'direct_relation',
+          ...rel.Condition2,
+          relationshipType: rel.relationType,
+          clinicalContext: rel.clinicalContext,
+          source: 'direct_relation',
         });
       }
     });
@@ -125,7 +150,9 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
     relationsTo.forEach((rel: RelationToResult) => {
       if (rel.Condition1 && !relatedMap.has(rel.Condition1.id)) {
         relatedMap.set(rel.Condition1.id, {
-          ...rel.Condition1, relationshipType: rel.relationType, source: 'bidirectional_relation',
+          ...rel.Condition1,
+          relationshipType: rel.relationType,
+          source: 'bidirectional_relation',
         });
       }
     });
@@ -138,20 +165,25 @@ export const onRequestGet = publicEndpoint(RelatedSchema, async (context) => {
 
     const relatedConditions = Array.from(relatedMap.values()).slice(0, limit);
 
-    logger.info('Fetched related conditions', { conditionId: condition.id, count: relatedConditions.length });
+    logger.info('Fetched related conditions', {
+      conditionId: condition.id,
+      count: relatedConditions.length,
+    });
 
     return {
       data: {
         condition: { id: condition.id, name: condition.name, system: condition.system },
         relatedConditions,
-        differentialContext: differentialDiagnosis ? {
-          presentingComplaint: differentialDiagnosis.presentingComplaint,
-          mustNotMiss: differentialDiagnosis.mustNotMiss,
-          mostDangerous: differentialDiagnosis.mostDangerous,
-          redFlags: differentialDiagnosis.redFlags,
-          keyExamFindings: differentialDiagnosis.keyExamFindings,
-          distinguishingFeatures: differentialDiagnosis.distinguishingFeatures,
-        } : null,
+        differentialContext: differentialDiagnosis
+          ? {
+              presentingComplaint: differentialDiagnosis.presentingComplaint,
+              mustNotMiss: differentialDiagnosis.mustNotMiss,
+              mostDangerous: differentialDiagnosis.mostDangerous,
+              redFlags: differentialDiagnosis.redFlags,
+              keyExamFindings: differentialDiagnosis.keyExamFindings,
+              distinguishingFeatures: differentialDiagnosis.distinguishingFeatures,
+            }
+          : null,
         totalFound: relatedConditions.length,
       },
     };

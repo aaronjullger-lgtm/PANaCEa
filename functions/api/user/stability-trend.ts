@@ -80,7 +80,10 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
 
     if (reviewHistory.length === 0) {
       return {
-        data: { data: [], message: 'No review history found. Complete some questions to see stability trends!' },
+        data: {
+          data: [],
+          message: 'No review history found. Complete some questions to see stability trends!',
+        },
       };
     }
 
@@ -98,7 +101,8 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
 
     const trendData: StabilityTrendDataPoint[] = Array.from(dateMap.entries())
       .map(([date, entry]) => {
-        const avgStability = entry.stabilities.reduce((sum, s) => sum + s, 0) / entry.stabilities.length;
+        const avgStability =
+          entry.stabilities.reduce((sum, s) => sum + s, 0) / entry.stabilities.length;
         return {
           date,
           avgStability: Math.round(avgStability * 100) / 100,
@@ -111,7 +115,11 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
       })
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    logger.info('Fetched stability trend', { userId: auth.userId, days, dataPoints: trendData.length });
+    logger.info('Fetched stability trend', {
+      userId: auth.userId,
+      days,
+      dataPoints: trendData.length,
+    });
 
     const firstData = trendData[0];
     const lastData = trendData[trendData.length - 1];
@@ -130,9 +138,7 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
           stabilityGrowth:
             trendData.length > 1 && firstData && firstData.avgStability > 0 && lastData
               ? Math.round(
-                  ((lastData.avgStability - firstData.avgStability) /
-                    firstData.avgStability) *
-                    100
+                  ((lastData.avgStability - firstData.avgStability) / firstData.avgStability) * 100
                 )
               : 0,
         },

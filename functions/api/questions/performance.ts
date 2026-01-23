@@ -66,7 +66,9 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
       _count: { id: true },
     });
 
-    const flagCountMap = new Map<string, number>(flagCounts.map((f) => [f.questionId, f._count.id]));
+    const flagCountMap = new Map<string, number>(
+      flagCounts.map((f) => [f.questionId, f._count.id])
+    );
 
     // Get question details
     const questions = await prisma.question.findMany({
@@ -91,7 +93,11 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
         accuracy: Number(stat.accuracy),
         avgTimeMs: stat.avgTimeMs ? Math.round(Number(stat.avgTimeMs)) : null,
         flagCount,
-        qualityScore: calculateQualityScore(Number(stat.accuracy), flagCount, Number(stat.totalAttempts)),
+        qualityScore: calculateQualityScore(
+          Number(stat.accuracy),
+          flagCount,
+          Number(stat.totalAttempts)
+        ),
       };
     });
 
@@ -107,14 +113,20 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
       totalQuestionsAnalyzed: performanceData.length,
       avgAccuracy:
         performanceData.length > 0
-          ? Math.round((performanceData.reduce((sum, q) => sum + q.accuracy, 0) / performanceData.length) * 10) / 10
+          ? Math.round(
+              (performanceData.reduce((sum, q) => sum + q.accuracy, 0) / performanceData.length) *
+                10
+            ) / 10
           : 0,
       lowAccuracyCount: performanceData.filter((q) => q.accuracy < 50).length,
       highFlagCount: performanceData.filter((q) => q.flagCount >= 3).length,
       needsReviewCount: performanceData.filter((q) => q.qualityScore < 50).length,
     };
 
-    logger.info('Question performance fetched', { userId: auth.userId, questionsAnalyzed: performanceData.length });
+    logger.info('Question performance fetched', {
+      userId: auth.userId,
+      questionsAnalyzed: performanceData.length,
+    });
 
     return { data: { success: true, data: { questions: performanceData, summary } } };
   } catch (error) {
