@@ -7,8 +7,8 @@
  * - Only trigger AI generation as fallback when no unseen questions exist
  */
 
-import { prisma } from '../lib/prisma';
-import { generateSingleQuestion } from '../lib/questionGenerator';
+import { prisma } from '@/lib/prisma';
+import { generateSingleQuestion } from '@/lib/questionGenerator';
 import { saveToStaging, runAdequacyCheck, promoteToLive } from './stagingQuestionService';
 
 interface QuestionFilter {

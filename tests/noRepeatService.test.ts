@@ -23,7 +23,7 @@ import {
   fetchUnseenQuestions,
   getQuestionsWithNoRepeat,
   getRepositoryStats,
-} from '../services/noRepeatService';
+} from '@/services/core/noRepeatService';
 
 // Import mocked prisma
 import { prisma } from '../lib/prisma';

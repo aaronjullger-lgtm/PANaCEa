@@ -1,5 +1,5 @@
-import { prisma } from '../lib/prisma';
-import conditionRegistry from '../config/conditionRegistry';
+import { prisma } from '@/lib/prisma';
+import conditionRegistry from '@/config/conditionRegistry';
 
 export interface ConditionData {
   id: string;

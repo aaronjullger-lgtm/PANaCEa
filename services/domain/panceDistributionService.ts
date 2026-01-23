@@ -5,7 +5,7 @@
  * Tracks system coverage and ensures questions follow the official PANCE percentages.
  */
 
-import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
+import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
 // Official PANCE Content Blueprint Percentages (2024)
 export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {

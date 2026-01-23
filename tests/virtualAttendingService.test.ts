@@ -12,7 +12,7 @@ import {
   loadPreferredPersona,
   getMotivationalMessage,
   ATTENDING_PERSONAS,
-} from '../services/virtualAttendingService';
+} from '@/services/ai/virtualAttendingService';
 
 describe('Virtual Attending Service', () => {
   // Mock localStorage for tests

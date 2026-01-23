@@ -3,7 +3,7 @@
 
 import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from '../../pharm/drugTypes';
 import { BRAND_NAME_MAP } from '../../lib/drugBrandNames';
-import { drugService } from '../../services/drugService';
+import { drugService } from '@/services/domain';
 
 // ============================================================================
 // TYPES

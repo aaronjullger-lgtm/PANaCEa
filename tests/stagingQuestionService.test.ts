@@ -48,7 +48,7 @@ import {
   saveToStaging,
   runAdequacyCheck,
   getStagingStats,
-} from '../services/stagingQuestionService';
+} from '@/services/core/stagingQuestionService';
 
 // Import mocked prisma
 import { prisma } from '../lib/prisma';

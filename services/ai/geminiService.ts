@@ -8,17 +8,17 @@ import {
   TASK_DECK,
   GEMINI_FLASH_MODEL,
   GEMINI_PRO_MODEL,
-} from '../src/constants';
-import type { Question, SessionSettings, SystemCode, ConditionDefinition } from '../types';
-import type { PatientEncounterCase, PatientPersona } from '../types/drill-modes';
-import type { ConditionMeta } from '../src/types/conditions';
+} from '@/src/constants';
+import type { Question, SessionSettings, SystemCode, ConditionDefinition } from '@/types';
+import type { PatientEncounterCase, PatientPersona } from '@/types/drill-modes';
+import type { ConditionMeta } from '@/src/types/conditions';
 import {
   getConditionByIdSync,
   isMeaningfulContent,
   normalizeConditionContent,
-} from '../lib/loadConditions';
-import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
-import { getConditionsBySystem, getAllConditions } from './conditionService';
+} from '@/lib/loadConditions';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getConditionsBySystem, getAllConditions } from '@/services/ai';
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
@@ -494,7 +494,7 @@ export async function callGeminiTextStreaming(
 
   try {
     // Dynamic import to avoid circular dependency
-    const { streamGeminiText } = await import('../lib/utils/streamingClient');
+    const { streamGeminiText } = await import('@/lib/utils/streamingClient');
     
     return await streamGeminiText(prompt, {
       modelName,
@@ -670,7 +670,7 @@ export async function fetchNewQuestion(
   let userContextInstruction = '';
   try {
     // Dynamic import with type assertion to handle TS inference issues
-    const userContextModule = (await import('./userContextService')) as {
+    const userContextModule = (await import('@/services/ai/userContextService')) as {
       getUserContext: () => { isPANREUser: boolean };
     };
     const userContext = userContextModule.getUserContext();

@@ -8,7 +8,7 @@
  * - Real-time adaptation to user fatigue and learning velocity
  */
 
-import { FSRS, FSRSCard, FSRSParameters, FSRSState, Rating, defaultParameters } from '../lib/fsrs';
+import { FSRS, FSRSCard, FSRSParameters, FSRSState, Rating, defaultParameters } from '@/lib/fsrs';
 import {
   getCognitiveState,
   getLearningVelocity,
@@ -18,7 +18,7 @@ import {
   type CognitiveState,
   type LearningVelocity,
   type SystemMasteryProfile,
-} from './advancedUserAnalyticsEngine';
+} from '@/services/domain';
 
 // ============================================================================
 // Types

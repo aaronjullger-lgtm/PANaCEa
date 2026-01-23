@@ -14,7 +14,7 @@ import {
   loadConditionData,
   getAllConditionIds,
   getConditionsBySystem,
-} from '../services/conditionDataLoader';
+} from '@/services/core/conditionDataLoader';
 
 import { prisma } from '../lib/prisma';
 

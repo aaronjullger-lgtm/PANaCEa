@@ -196,3 +196,43 @@
 ## sentry
 - Integrate for error tracking and performance monitoring.
 - Ensure all critical paths are instrumented for telemetry.
+
+# Hooks for Automated Triggers
+
+## No-Static-Json Watchdog
+- **Rule:** Before creating any file ending in `.ts` or `.json` that contains an array of content (like `conditionRegistry.ts`), STOP.
+- **Action:** Ask me: "This violates the Database-First architecture. Should I create a Prisma Seed script instead?"
+
+## Production Stability Check
+- **Rule:** Before modifying `server.ts` or any Express route.
+- **Action:** Verify that all error paths return `res.status(x).json(...)`. If any path sends `res.send()` or HTML, flag it as a potential "Unexpected token '<'" crash risk.
+
+## PANCE Blueprint Validator
+- **Rule:** When generating a new Question seed or UI component.
+- **Action:** Check if the associated "Tag" or "Organ System" exists in the official PANCE Blueprint list. If the tag is "General" or vague, suggest a specific system (e.g., "Musculoskeletal") to ensure proper Analytics Dashboard tracking.
+
+## Hybrid Engine Cache Check
+- **Rule:** When writing a function that calls `GoogleGenerativeAI`.
+- **Action:** Ensure there is a preceding database lookup (`Prisma findFirst`) to check if the content already exists in the "Staging Lake." If not, add it.
+
+# Revolutionary Hooks (Guardrails)
+
+## Hook 1: The "Strict Database-First" Firewall
+> **IF** your proposed code creates a `.ts` or `.json` file containing an array of object literals representing medical data ( > 5 items),
+> **THEN** STOP immediately.
+> **ACTION:** You must instead propose a Prisma Schema change or a `prisma/seed.ts` addition. Quote the "Strict Database-First" rule from `README.md`.
+
+## Hook 2: The "Main Session" Quarantine
+> **IF** your code modifies `lib/fsrs.ts` or writes a query touching `ReviewLog`,
+> **THEN** Check for the filter.
+> **ACTION:** Ensure `WHERE session_type = 'MAIN'` is present. If the code allows "Cram Mode" or "Rapid Recall" to update `stability` or `retrievability`, REJECT it and explain that this pollutes long-term stats [Source: User Constraint].
+
+## Hook 3: The "Latency Masking" Auditor
+> **IF** you are writing a `useEffect` or `fetch` call that hits the Gemini API (`/api/generate`),
+> **THEN** Verify streaming.
+> **ACTION:** If the code `await`s the full JSON, suggest refactoring to `StreamData` (Vercel pattern) to support the "Hybrid Content Engine" requirements.
+
+## Hook 4: The "Deployment Safety" Valve
+> **IF** you modify `server.ts`,
+> **THEN** Check for `DATABASE_URL`.
+> **ACTION:** Ensure the code fails gracefully if `process.env.DATABASE_URL` is missing, logging a clear text error rather than crashing with a stack trace. This prevents the specific "Database connection errors" listed in Troubleshooting.

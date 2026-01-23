@@ -5,7 +5,7 @@
  * Errors propagate to UI for proper handling.
  */
 
-import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 const isTestEnv =
   typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
