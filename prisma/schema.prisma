@@ -57,7 +57,7 @@ model AnatomyConditionLink {
   updatedAt        DateTime
   AnatomyStructure AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
   Condition        Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent?  @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent?  @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([anatomyId, conditionId])
   @@index([conditionId])
@@ -660,7 +660,7 @@ model DrugConditionLink {
   updatedAt        DateTime
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   Drug             Drug            @relation(fields: [drugId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([drugId, conditionId, relationshipType])
   @@index([conditionId])
@@ -683,7 +683,7 @@ model ECGConditionLink {
   updatedAt          DateTime        @default(now())
   Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ECGPattern         ECGPattern      @relation(fields: [ecgPatternId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([ecgPatternId, conditionId, relationshipType])
   @@index([conditionId])
@@ -856,7 +856,7 @@ model FindingConditionLink {
   updatedAt           DateTime
   Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   PhysicalExamFinding PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
-  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([findingId, conditionId])
   @@index([conditionId])
@@ -973,7 +973,7 @@ model ImagingConditionLink {
   panceYield         Int?
   Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   ImagingStudy       ImagingStudy    @relation(fields: [imagingId], references: [id], onDelete: Cascade)
-  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([imagingId, conditionId, relationshipType])
   @@index([conditionId])
@@ -1053,7 +1053,7 @@ model LabConditionLink {
   updatedAt        DateTime
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   LabTest          LabTest         @relation(fields: [labTestId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([labTestId, conditionId, relationshipType])
   @@index([conditionId])
@@ -1316,6 +1316,11 @@ model MedicalContent {
   @@index([status, conditionId])
 }
 
+// =============================================================================
+// UserProgress: DEPRECATED - Replaced by ReviewLog for performance (500ms → 5ms)
+// The reviewHistory Json[] field is a major anti-pattern for large datasets
+// TODO: Remove after confirming ReviewLog is fully operational
+// =============================================================================
 model UserProgress {
   id             String         @id @default(uuid())
   userId         String
@@ -1345,46 +1350,47 @@ model UserProgress {
 // =============================================================================
 
 model ReviewLog {
-  id        String   @id @default(cuid())
-  userId    String
-  
+  id     String @id @default(cuid())
+  userId String
+
   // Question/Content identification
-  conditionId      String?  // MedicalContent.conditionId
-  medicalContentId String?  // Direct FK to MedicalContent
-  questionId       String?  // Source question ID
-  questionType     String?  // 'pre_generated' | 'question' | 'seed'
-  
+  conditionId      String? // MedicalContent.conditionId
+  medicalContentId String? // Direct FK to MedicalContent
+  questionId       String? // Source question ID
+  questionType     String? // 'pre_generated' | 'question' | 'seed'
+
   // FSRS v6 State Snapshot (at time of review)
-  grade         Int     // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-  state         Int     // 0=New, 1=Learning, 2=Review, 3=Relearning
-  stability     Float   // S value at time of review
-  difficulty    Float   // D value at time of review
+  grade          Int // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
+  state          Int // 0=New, 1=Learning, 2=Review, 3=Relearning
+  stability      Float // S value at time of review
+  difficulty     Float // D value at time of review
   retrievability Float? // R value at time of review (calculated)
-  
+
   // Timing (critical for FSRS optimization)
-  reviewedAt    DateTime @default(now())
-  scheduledAt   DateTime? // When this review was scheduled
-  elapsedDays   Float?    // Days since last review
-  
+  reviewedAt  DateTime  @default(now())
+  scheduledAt DateTime? // When this review was scheduled
+  elapsedDays Float? // Days since last review
+
   // Performance metrics
-  responseTimeMs Int?     // Time to answer (milliseconds)
-  wasCorrect     Boolean  // Actual correctness
-  
+  responseTimeMs Int? // Time to answer (milliseconds)
+  wasCorrect     Boolean // Actual correctness
+
   // Context
-  sessionId      String?  // FK to StudySession
-  attemptId      String?  // FK to QuestionAttempt
-  deviceType     String?  // 'mobile' | 'tablet' | 'desktop'
-  system         String?  // Normalized system code (e.g., 'CV', 'PULM')
-  telemetry      Json?    // Compact behavioral metrics
-  
+  sessionType SessionType @default(MAIN) // CRITICAL: Only MAIN sessions affect FSRS weights
+  sessionId   String? // FK to StudySession
+  attemptId   String? // FK to QuestionAttempt
+  deviceType  String? // 'mobile' | 'tablet' | 'desktop'
+  system      String? // Normalized system code (e.g., 'CV', 'PULM')
+  telemetry   Json? // Compact behavioral metrics
+
   // Metadata
-  fsrsVersion    String   @default("6.0")
-  createdAt      DateTime @default(now())
-  
+  fsrsVersion String   @default("6.0")
+  createdAt   DateTime @default(now())
+
   // Relations
   User           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   MedicalContent MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  
+
   // === 8 CRITICAL INDEXES FOR FSRS OPTIMIZER ===
   // These indexes enable:
   // 1. Fast user review history queries (userId + time)
@@ -1398,6 +1404,7 @@ model ReviewLog {
   @@index([conditionId, reviewedAt])
   @@index([medicalContentId])
   @@index([userId, state, reviewedAt])
+  @@index([userId, sessionType, reviewedAt]) // CRITICAL: Fast filtering of MAIN sessions
   @@index([userId, grade, reviewedAt])
 }
 
@@ -1599,7 +1606,7 @@ model PhysiologyConditionLink {
   updatedAt         DateTime
   Condition         Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   PhysiologyConcept PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
-  MedicalContent    MedicalContent?   @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent    MedicalContent?   @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([physiologyId, conditionId])
   @@index([conditionId])
@@ -1732,7 +1739,7 @@ model ProcedureConditionLink {
   updatedAt        DateTime
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   Procedure        Procedure       @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([procedureId, conditionId])
   @@index([conditionId])
@@ -1787,7 +1794,7 @@ model QuestionAttempt {
 
   // Phase 3: Telemetry Injection (Cognitive Fidelity)
   telemetryJson Json? // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
-  durationMs    Int?  // Total duration from question display to submission (ms)
+  durationMs    Int? // Total duration from question display to submission (ms)
 
   @@index([isRankedAttempt])
   @@index([mode])
@@ -1795,7 +1802,6 @@ model QuestionAttempt {
   @@index([userId, createdAt])
   @@index([system])
   @@index([userId, isMainSession, createdAt])
-  
   // === 7 ADDITIONAL INDEXES FOR ROLLING 360 ANALYTICS ===
   // These indexes enable:
   // 1. Fast DESC sorting for latest attempts
@@ -1888,6 +1894,14 @@ model QuestionSeed {
   @@index([system])
 }
 
+// DEPRECATED: Legacy SRSItem - use Card model instead
+// This model mixes SM-2 and FSRS fields creating architectural drift
+// TODO: Migrate to Card model after data migration
+// =============================================================================
+// SRSItem: DEPRECATED - Use Card model instead
+// This model mixes SM-2 and FSRS fields creating architectural drift
+// TODO: Migrate to Card model after data migration
+// =============================================================================
 model SRSItem {
   id             String    @id
   userId         String
@@ -1912,6 +1926,39 @@ model SRSItem {
   @@index([questionId])
   @@index([userId, dueDate])
   @@index([userId])
+}
+
+// =============================================================================
+// CARD: FSRS v6 Compliant Model (Replaces SRSItem)
+// Matches ts-fsrs Card interface exactly for seamless integration
+// =============================================================================
+model Card {
+  id         String @id @default(cuid())
+  userId     String
+  questionId String // Connects to Question/MedicalContent
+
+  // FSRS v6 State (matches ts-fsrs Card interface)
+  due            DateTime // Next review date
+  stability      Float     @default(0.0) // S - memory stability in days
+  difficulty     Float     @default(0.0) // D - item difficulty [0-10]
+  elapsed_days   Float     @default(0.0) // Days since card creation
+  scheduled_days Float     @default(0.0) // Days until next review
+  reps           Int       @default(0) // Total review count
+  lapses         Int       @default(0) // Number of failed reviews
+  state          Int       @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
+  last_review    DateTime? // Timestamp of last review
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, due]) // CRITICAL: Fast "Due Today" queries
+  @@index([userId, state]) // Filter by learning state
+  @@index([questionId]) // Lookup by content
 }
 
 model SavedQuestion {
@@ -2246,7 +2293,7 @@ model TreatmentConditionLink {
   updatedAt        DateTime
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   Treatment        Treatment       @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([treatmentId, conditionId, relationshipType])
   @@index([conditionId])
@@ -2284,6 +2331,7 @@ model User {
   PeerStatistic           PeerStatistic[]
   PerformanceRecord       PerformanceRecord[]
   SRSItem                 SRSItem[]
+  Card                    Card[] // FSRS v6 compliant cards
   SavedQuestion           SavedQuestion[]
   StudyGroupMember        StudyGroupMember[]
   UserAchievement         UserAchievement[]
@@ -2393,6 +2441,14 @@ model UserQuestionHistory {
   @@index([userId])
 }
 
+// DEPRECATED: Use PersonalizedFSRSParams instead
+// This model is redundant and will be removed after data migration
+// TODO: Migrate wWeights to PersonalizedFSRSParams.w and drop this table
+// =============================================================================
+// UserSRSConfig: DEPRECATED - Use PersonalizedFSRSParams instead
+// This model is redundant and will be removed after data migration
+// TODO: Migrate wWeights to PersonalizedFSRSParams.w and drop this table
+// =============================================================================
 model UserSRSConfig {
   id               String   @id
   userId           String   @unique
@@ -2480,7 +2536,7 @@ model DifferentialConditionLink {
   updatedAt              DateTime              @default(now())
   DifferentialDiagnosis  DifferentialDiagnosis @relation(fields: [differentialId], references: [id], onDelete: Cascade)
   Condition              Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent         MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent         MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([differentialId, conditionId])
   @@index([differentialId])
@@ -2504,7 +2560,7 @@ model AntibioticConditionLink {
   updatedAt           DateTime            @default(now())
   AntibioticGuideline AntibioticGuideline @relation(fields: [antibioticId], references: [id], onDelete: Cascade)
   Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([antibioticId, conditionId])
   @@index([antibioticId])
@@ -2527,7 +2583,7 @@ model VitalSignConditionLink {
   updatedAt            DateTime        @default(now())
   VitalSignRange       VitalSignRange  @relation(fields: [vitalSignId], references: [id], onDelete: Cascade)
   Condition            Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent       MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent       MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([vitalSignId, conditionId])
   @@index([vitalSignId])
@@ -2547,7 +2603,7 @@ model ScoringSystemConditionLink {
   updatedAt        DateTime        @default(now())
   ScoringSystem    ScoringSystem   @relation(fields: [scoringSystemId], references: [id], onDelete: Cascade)
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([scoringSystemId, conditionId])
   @@index([scoringSystemId])
@@ -2566,7 +2622,7 @@ model PearlConditionLink {
   updatedAt        DateTime        @default(now())
   ClinicalPearl    ClinicalPearl   @relation(fields: [pearlId], references: [id], onDelete: Cascade)
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([pearlId, conditionId])
   @@index([pearlId])
@@ -2629,7 +2685,7 @@ model UserTopicProgress {
 }
 
 model StudyRecommendation {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   type        String // "drill_session" | "review" | "new_topic"
   topic       String // e.g., "Cardiology", "Beta Blockers" (or conditionId)
@@ -2637,7 +2693,7 @@ model StudyRecommendation {
   priority    String // "high", "medium", "low"
   status      String // "pending", "completed", "dismissed"
   data        Json? // Optional context (e.g., list of question IDs)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
 
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2703,6 +2759,12 @@ enum WordleStatus {
   playing
   won
   lost
+}
+
+enum SessionType {
+  MAIN // Only these count for FSRS optimization
+  CRAM // Practice mode - excluded from stats
+  RAPID_RECALL // Quick review - excluded from stats
 }
 
 // ============================================================================
@@ -3377,58 +3439,58 @@ model SessionAnalytics {
 
 /// NCCPA PANCE Blueprint configuration for exam distribution validation
 model NCCPABlueprintConfig {
-  id            String   @id @default(cuid())
-  version       String   @unique // "2024", "2025", etc.
-  isActive      Boolean  @default(false)
-  weights       Json     // {"Cardiovascular": 0.11, "Pulmonary": 0.09, ...}
-  systemCount   Int
-  effectiveDate DateTime @db.Date
+  id             String    @id @default(cuid())
+  version        String    @unique // "2024", "2025", etc.
+  isActive       Boolean   @default(false)
+  weights        Json // {"Cardiovascular": 0.11, "Pulmonary": 0.09, ...}
+  systemCount    Int
+  effectiveDate  DateTime  @db.Date
   expirationDate DateTime? @db.Date
-  createdAt     DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([isActive])
 }
 
 /// Cache table for O(1) dashboard reads of Rolling 360 metrics
 model UserRolling360Stats {
-  id                       String   @id @default(cuid())
-  userId                   String   @unique
+  id     String @id @default(cuid())
+  userId String @unique
 
   // Rolling Aggregates (max 360)
-  totalInWindow            Int      @default(0)
-  correctInWindow          Int      @default(0)
-  accuracyPercent          Decimal? @db.Decimal(5, 2)
+  totalInWindow   Int      @default(0)
+  correctInWindow Int      @default(0)
+  accuracyPercent Decimal? @db.Decimal(5, 2)
 
   // System Breakdown (JSONB)
   // Format: {"Cardiovascular": {"total": 42, "correct": 35}, ...}
-  systemStats              Json     @default("{}")
+  systemStats Json @default("{}")
 
   // PANCE Score Prediction (200-800 scale)
-  predictedScore           Int?
-  scoreConfidence          String?  // 'collecting' | 'provisional' | 'confident'
-  passLikelihood           Decimal? @db.Decimal(5, 2) // 0-100%
+  predictedScore  Int?
+  scoreConfidence String? // 'collecting' | 'provisional' | 'confident'
+  passLikelihood  Decimal? @db.Decimal(5, 2) // 0-100%
 
   // Blueprint Adherence
-  blueprintAdherence       Decimal? @db.Decimal(5, 4) // 0-1 (cosine similarity)
-  isValidExamDistribution  Boolean  @default(false)
+  blueprintAdherence      Decimal? @db.Decimal(5, 4) // 0-1 (cosine similarity)
+  isValidExamDistribution Boolean  @default(false)
 
   // Weakness Detection
-  weakestSystems           String[] @default([])
-  strongestSystems         String[] @default([])
+  weakestSystems   String[] @default([])
+  strongestSystems String[] @default([])
 
   // Window Tracking
-  windowStartAttemptId     String?  // Oldest attempt in window
-  windowEndAttemptId       String?  // Newest attempt in window
-  windowStartTime          DateTime?
-  windowEndTime            DateTime?
+  windowStartAttemptId String? // Oldest attempt in window
+  windowEndAttemptId   String? // Newest attempt in window
+  windowStartTime      DateTime?
+  windowEndTime        DateTime?
 
   // Circular Buffer Index
-  currentSlotIndex         Int      @default(0) // 0-359
+  currentSlotIndex Int @default(0) // 0-359
 
   // Metadata
-  lastRecalculatedAt       DateTime @default(now())
-  recalculationVersion     Int      @default(1)
-  createdAt                DateTime @default(now())
+  lastRecalculatedAt   DateTime @default(now())
+  recalculationVersion Int      @default(1)
+  createdAt            DateTime @default(now())
 
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -3438,18 +3500,18 @@ model UserRolling360Stats {
 
 /// Circular buffer table for O(1) sliding window updates (360 slots per user)
 model Rolling360Buffer {
-  id               String   @id @default(cuid())
-  userId           String
-  slotIndex        Int      // 0-359
+  id        String @id @default(cuid())
+  userId    String
+  slotIndex Int // 0-359
 
   // Cached data from original QuestionAttempt
-  attemptId        String?  // FK to QuestionAttempt
+  attemptId        String? // FK to QuestionAttempt
   isCorrect        Boolean?
   systemNormalized String?
   answeredAt       DateTime?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, slotIndex])
   @@index([userId, slotIndex])
@@ -3461,7 +3523,8 @@ model PersonalizedFSRSParams {
   userId String @unique
 
   // Optimized w[] array (21 parameters for FSRS v6)
-  w Json // The 21 FSRS weights (v6)
+  // Changed from Json to Float[] for direct Rust optimizer compatibility
+  w Float[] // The 21 FSRS weights (v6) - Postgres array for performance
 
   // Optimization metadata
   sampleSize             Int? // Reviews used for optimization
@@ -3483,4 +3546,31 @@ model PersonalizedFSRSParams {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// =============================================================================
+// ContentIndex: Global Search Index (OPTIONAL - For Hybrid Content Engine)
+// Enables unified search across all content types without multiple JOINs
+// Populate via background job or triggers for 2,195+ content items
+// =============================================================================
+model ContentIndex {
+  id         String  @id @default(cuid())
+  entityId   String // ID of Drug, Condition, Anatomy, etc.
+  entityType String // "Drug", "Condition", "Anatomy", "Symptom", "ECGPattern"
+  title      String // Searchable title/name
+  body       String  @db.Text // Full-text searchable content
+  panceYield Int? // PANCE priority score
+  system     String? // Organ system (CV, PULM, etc.)
+
+  // Search optimization
+  searchVector String? @db.Text // Optional: For PostgreSQL full-text search
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([title])
+  @@index([entityType, panceYield])
+  @@index([system])
 }
