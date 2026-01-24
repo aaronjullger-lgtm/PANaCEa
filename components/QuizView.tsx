@@ -971,7 +971,7 @@ Provide an ALTERNATE explanation that approaches this from a different angle. Us
 Keep it concise (3-4 sentences max) and focus on helping them understand WHY they made this mistake.`;
 
       // Use streaming API from geminiService
-      const { callGeminiTextStreaming } = await import('@/services/geminiService');
+      const { callGeminiTextStreaming } = await import('@/services/domain/geminiService');
       
       await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
         onChunk: (chunk) => {
