@@ -106,7 +106,7 @@ export {
 // ============================================================================
 
 import * as conditionServiceModule from '../conditionService';
-import * as conditionContentServiceModule from './conditionContentService';
+import * as conditionContentServiceModule from '../conditionContentService';
 import * as conditionDataLoaderModule from './conditionDataLoader';
 
 export const conditionService = conditionServiceModule;
