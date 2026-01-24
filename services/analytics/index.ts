@@ -93,8 +93,6 @@ export {
   analyzeStrengthsWeaknesses,
   assessTestReadiness,
   generateUserFriendlyStats,
-  generateComprehensiveAnalytics,
-  generateQuestionTargeting,
 } from './researchBackedAnalytics';
 
 // ============================================================================
@@ -138,6 +136,29 @@ export {
 } from './sessionAnalyticsSyncService';
 
 // ============================================================================
+// DRILL ANALYTICS
+// ============================================================================
+
+import * as drillStatsServiceModule from '../core/drillStatsService';
+
+export const drillStatsService = drillStatsServiceModule;
+
+// Named exports from drill stats service
+export {
+  getDrillLandingStats,
+  getAllDrillStats,
+  getDrillProgress,
+  getCategoryBreakdown,
+  getDrillsDueForReview,
+  getSimulationStats,
+  getDrillPerformanceSummary,
+  type DrillType,
+  type DrillStatistics,
+  type DrillProgress,
+  type DrillSession,
+} from '../core/drillStatsService';
+
+// ============================================================================
 // ANALYTICS STORAGE
 // ============================================================================
 
@@ -146,6 +167,9 @@ import * as calibrationServiceModule from './calibrationService';
 
 export const deepAnalyticsStore = deepAnalyticsStoreModule;
 export const calibrationService = calibrationServiceModule;
+
+// Named exports from calibration service
+export { type SubmitReviewResponse } from './calibrationService';
 
 // Named exports from storage
 export {
@@ -178,6 +202,7 @@ export {
   shouldShowPANREContent,
   shouldShowPANCEContent,
   getExamLabel,
+  type CareerStage,
 } from './userContextService';
 
 // ============================================================================
@@ -213,6 +238,9 @@ export type {
   SubcategoryStats,
   SystemStats,
   PerformanceDataPoint,
+  IrtPredictedScore,
+  ISystemPerformance,
+  HistoricalPrediction,
 } from './performanceService';
 
 export type {
@@ -220,7 +248,6 @@ export type {
   DailyStudyRecord,
   LearningMilestone,
   AnalyticsSnapshot,
-  SessionAnalyticsPayload,
 } from './deepAnalyticsStore';
 
 // ============================================================================

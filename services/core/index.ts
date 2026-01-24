@@ -105,7 +105,7 @@ export {
 // CONTENT SERVICES - Medical content and condition management
 // ============================================================================
 
-import * as conditionServiceModule from './conditionService';
+import * as conditionServiceModule from '../conditionService';
 import * as conditionContentServiceModule from './conditionContentService';
 import * as conditionDataLoaderModule from './conditionDataLoader';
 

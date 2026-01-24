@@ -935,7 +935,7 @@ class LearningPatternEngine {
 
     // High: Active interference patterns
     const activeInterference = interference.filter((p) => p.confusionScore >= 50);
-    if (activeInterference.length > 0) {
+    if (activeInterference.length > 0 && activeInterference[0]) {
       recommendations.push({
         priority: 'high',
         type: 'interference',
@@ -965,7 +965,7 @@ class LearningPatternEngine {
       .flatMap((m) => this.getConsolidationWindows(m.conceptId))
       .filter((w) => w.strength > 70);
 
-    if (consolidationWindows.length > 0) {
+    if (consolidationWindows.length > 0 && consolidationWindows[0]) {
       recommendations.push({
         priority: 'low',
         type: 'consolidation',

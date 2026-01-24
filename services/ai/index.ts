@@ -15,8 +15,17 @@ import * as geminiServiceModule from './geminiService';
 
 export const geminiService = geminiServiceModule;
 
-// Re-export commonly used functions from geminiService
-export { generateAlternateRationale } from './geminiService';
+// Re-export commonly used functions and types from geminiService
+export {
+  generateAlternateRationale,
+  callGeminiText,
+  callGeminiTextStreaming,
+  createCancellableGeminiStream,
+  type SOAPNote,
+  type GradingResult,
+  type ChatMessage,
+  type StreamChunk,
+} from './geminiService';
 
 // ============================================================================
 // INTELLIGENT QUESTION SERVICES
@@ -65,6 +74,13 @@ export const socraticService = socraticHintServiceModule;
 export const virtualPreceptor = virtualPreceptorServiceModule;
 export const virtualAttending = virtualAttendingServiceModule;
 
+// Re-export commonly used functions and types from virtualPreceptorService
+export {
+  generateDebrief,
+  type PreceptorFeedback,
+  type EncounterSessionSummary,
+} from './virtualPreceptorService';
+
 // Re-export attending persona types and functions
 export {
   type AttendingPersona,
@@ -104,7 +120,6 @@ export {
   orderDiagnosticTest,
   evaluateTreatmentPlan,
   generateAfterActionReport,
-  generateDebrief,
 } from './patientSimulatorService';
 
 // Named exports from condition service
@@ -113,19 +128,18 @@ export {
   getAllConditions,
 } from './conditionService';
 
-// ============================================================================
-// TYPE EXPORTS
-// ============================================================================
-
-// Export common types for consumer convenience
-export type {
-  IntelligentQuestionResult,
-} from './intelligentQuestionService';
-
-export type {
-  AttendingPersona,
-  PersonaProfile,
-} from './virtualAttendingService';
+// Export CoachingService functions and types
+export {
+  analyzeAnswer,
+  getSocraticHint,
+  calculateUserMetrics,
+  generateStudyPrescription,
+  analyzeSearchHistory,
+  type AnalyzeAnswerParams,
+  type UserMetrics,
+  type StudyRecommendation,
+  type SearchHistoryEntry,
+} from '../core/CoachingService';
 
 // ============================================================================
 // DEPRECATION GUIDE

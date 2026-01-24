@@ -134,6 +134,9 @@
   "dependencies": {
     "@clerk/backend": "^2.25.0",
     "@clerk/clerk-react": "^5.57.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google/genai": "^1.33.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^7.2.0",

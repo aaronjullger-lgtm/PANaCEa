@@ -39,7 +39,7 @@ const pulseAnimation = {
 /**
  * ClinicalSkeleton - Latency masking skeleton for AI content
  */
-export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
+const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
   variant = 'default',
   lines = 3,
   className = '',
@@ -75,6 +75,7 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
             {...pulseAnimation}
             style={{
               animationDelay: `${index * 0.1}s`,
+              width: `${width}%`,
             }}
             className={`
               ${isCompact ? 'h-4' : 'h-5'}
@@ -82,7 +83,6 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
               dark:from-slate-700 dark:to-slate-600
               rounded
             `}
-            style={{ width: `${width}%` }}
           />
         ))}
       </div>
@@ -105,6 +105,9 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
     </div>
   );
 };
+
+export { ClinicalSkeleton };
+export default ClinicalSkeleton;
 
 /**
  * StreamingSkeleton - Skeleton that fades out as content streams in

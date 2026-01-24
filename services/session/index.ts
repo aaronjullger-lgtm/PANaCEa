@@ -74,7 +74,7 @@ export {
   resetAnswerPatterns,
   type AnswerPatternData,
   type PatternInsights,
-} from '../answerPatternService';
+} from '../analytics/answerPatternService';
 
 export {
   // Behavioral confidence
@@ -88,7 +88,7 @@ export {
   type BehaviorSignals,
   type InferredConfidenceResult,
   type BehavioralConfidenceRecord,
-} from '../behavioralConfidenceService';
+} from '../analytics/behavioralConfidenceService';
 
 export {
   // Smart pause
@@ -98,15 +98,15 @@ export {
   getQuickEncouragement,
   resetPauseTracking,
   type PauseRecommendation,
-} from '../smartPauseService';
+} from '../domain/smartPauseService';
 
 // ============================================================================
 // LEGACY EXPORTS (Deprecated)
 // ============================================================================
 
-import * as mainSessionModule from '../mainSessionService';
-import * as momentumModule from '../sessionMomentumService';
-import * as optimizerModule from '../realTimeSessionOptimizer';
+import * as mainSessionModule from '../core/mainSessionService';
+import * as momentumModule from '../analytics/sessionMomentumService';
+import * as optimizerModule from '../ai/realTimeSessionOptimizer';
 
 /** @deprecated Use sessionService or direct imports */
 export const mainSession = mainSessionModule;

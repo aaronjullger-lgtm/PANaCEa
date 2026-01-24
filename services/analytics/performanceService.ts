@@ -29,7 +29,7 @@ export {
   type SystemPerformance as ISystemPerformance,
   type PredictedScore as IrtPredictedScore,
   type HistoricalPrediction,
-} from '../panceScorePredictorService';
+} from './panceScorePredictorService';
 
 // Session-scoped prediction (temporary session data)
 export {
@@ -41,7 +41,7 @@ export {
   calculateTrend,
   type PredictionResult,
   type PerformanceSnapshot,
-} from '../performancePredictionService';
+} from './performancePredictionService';
 
 // ============================================================================
 // Unified Types (consolidate duplicates)
@@ -369,11 +369,11 @@ export default {
 
   // Session prediction
   getSessionPrediction: async () =>
-    (await import('../performancePredictionService')).getPrediction(),
+    (await import('./performancePredictionService')).getPrediction(),
 
   // Class-based predictor (for advanced use)
   PANCEScorePredictorService: async () =>
-    (await import('../panceScorePredictorService')).PANCEScorePredictorService,
+    (await import('./panceScorePredictorService')).PANCEScorePredictorService,
 
   // Constants
   NCCPA_BLUEPRINT_WEIGHTS,

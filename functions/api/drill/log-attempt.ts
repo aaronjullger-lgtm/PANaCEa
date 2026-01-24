@@ -26,13 +26,14 @@ export async function onRequestPost(context: any) {
 
   try {
     // Authenticate
-    const userId = await authenticateRequest(context);
-    if (!userId) {
+    const authContext = await authenticateRequest(request, env);
+    if (!authContext) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    const userId = authContext.userId;
 
     // Parse body
     const body = await request.json();
@@ -66,14 +67,14 @@ export async function onRequestPost(context: any) {
       );
     }
 
-    // Log attempt
+    // Log attempt (map responseTimeMs from request body to durationMs for interface)
     const attemptData: DrillAttemptData = {
       userId,
       questionId,
       conditionId,
       drillType,
       wasCorrect,
-      responseTimeMs,
+      durationMs: responseTimeMs, // Map to correct interface property
       metadata,
     };
 

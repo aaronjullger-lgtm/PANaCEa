@@ -17,13 +17,14 @@ export async function onRequestGet(context: any) {
 
   try {
     // Authenticate
-    const userId = await authenticateRequest(context);
-    if (!userId) {
+    const authContext = await authenticateRequest(request, env);
+    if (!authContext) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    const userId = authContext.userId;
 
     // Get overview
     const overview = await getDrillOverview(userId);

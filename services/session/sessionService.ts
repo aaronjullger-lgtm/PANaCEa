@@ -11,9 +11,9 @@
  * @module services/session/sessionService
  */
 
-import * as mainSession from '../mainSessionService';
-import * as momentum from '../sessionMomentumService';
-import * as optimizer from '../realTimeSessionOptimizer';
+import * as mainSession from '../core/mainSessionService';
+import * as momentum from '../analytics/sessionMomentumService';
+import * as optimizer from '../ai/realTimeSessionOptimizer';
 
 // ============================================================================
 // Re-exports from Main Session Service
@@ -38,7 +38,7 @@ export {
   // Pool management
   getPoolStatus,
   checkAndReplenishPool,
-} from '../mainSessionService';
+} from '../core/mainSessionService';
 
 // Re-export types
 export type { SessionSettings, Question } from '../../types';
@@ -60,7 +60,7 @@ export {
   // Types
   type MomentumLevel,
   type MomentumState,
-} from '../sessionMomentumService';
+} from '../analytics/sessionMomentumService';
 
 // ============================================================================
 // Re-exports from Real-Time Optimizer
@@ -79,7 +79,7 @@ export {
   type CognitiveSnapshot,
   type SessionOptimization,
   type PerformanceMetrics,
-} from '../realTimeSessionOptimizer';
+} from '../ai/realTimeSessionOptimizer';
 
 // ============================================================================
 // Unified High-Level API

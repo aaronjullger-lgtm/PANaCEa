@@ -387,7 +387,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
           setIsLoadingHint(true);
 
           // Generate Socratic hint
-          const { getSocraticHint } = await import('@/services/CoachingService');
+          const { getSocraticHint } = await import('@/services/core/CoachingService');
           const hint = await getSocraticHint(
             currentQuestion.question,
             currentQuestion.options[currentQuestion.correctAnswerIndex],
@@ -461,7 +461,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
           setStatus('coaching');
           setIsLoadingHint(true);
 
-          import('@/services/CoachingService').then((module) => {
+          import('@/services/core/CoachingService').then((module) => {
             module
               .getSocraticHint(
                 currentQuestion.question,

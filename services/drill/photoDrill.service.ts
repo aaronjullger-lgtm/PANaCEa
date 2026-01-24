@@ -23,7 +23,6 @@ export interface PhotoDrillQuestion {
   id: string;
   imageUrl: string;
   thumbnailUrl?: string;
-  blurHash?: string;
   correctAnswer: string;
   correctConditionId: string;
   distractors: string[];
@@ -105,41 +104,43 @@ export async function getPhotoDrillBatch(
     }
 
     // Generate questions with distractors
-    const questions = await Promise.all(
-      mediaAssets.map(async (asset) => {
-        const correctCondition = asset.Condition || asset.MedicalContent;
-        
-        if (!correctCondition) {
-          return null; // Skip assets without condition link
-        }
+    const questions: PhotoDrillQuestion[] = [];
+    
+    for (const asset of mediaAssets) {
+      const correctCondition = asset.Condition || asset.MedicalContent;
+      
+      // Skip assets without condition link or null imageUrl
+      if (!correctCondition || !asset.originalUrl) {
+        continue;
+      }
 
-        const correctAnswer = correctCondition.name;
-        const conditionSystem = 'system' in correctCondition ? correctCondition.system : undefined;
+      // Handle union type: Condition has 'name', MedicalContent has 'condition'
+      const correctAnswer = 'name' in correctCondition 
+        ? correctCondition.name 
+        : correctCondition.condition;
+      const conditionSystem = 'system' in correctCondition ? correctCondition.system : undefined;
 
-        // Generate 3 distractors from the same system
-        const distractors = await generateDistractors(
-          correctCondition.id,
-          conditionSystem as string | undefined,
-          asset.modality || 'dermatology'
-        );
+      // Generate 3 distractors from the same system
+      const distractors = await generateDistractors(
+        correctCondition.id,
+        conditionSystem as string | undefined,
+        asset.modality || 'dermatology'
+      );
 
-        return {
-          id: asset.id,
-          imageUrl: asset.originalUrl,
-          thumbnailUrl: asset.thumbnailUrl || undefined,
-          blurHash: asset.blurHash || undefined,
-          correctAnswer,
-          correctConditionId: correctCondition.id,
-          distractors,
-          modality: (asset.modality || 'dermatology') as 'dermatology' | 'radiology',
-          difficulty: asset.difficulty || 'medium',
-          system: conditionSystem as string | undefined,
-        };
-      })
-    );
+      questions.push({
+        id: asset.id,
+        imageUrl: asset.originalUrl,
+        thumbnailUrl: asset.thumbnailUrl ?? undefined,
+        correctAnswer,
+        correctConditionId: correctCondition.id,
+        distractors,
+        modality: (asset.modality || 'dermatology') as 'dermatology' | 'radiology',
+        difficulty: asset.difficulty || 'medium',
+        system: conditionSystem as string | undefined,
+      });
+    }
 
-    // Filter out nulls
-    return questions.filter((q): q is PhotoDrillQuestion => q !== null);
+    return questions;
   } catch (error) {
     console.error('Error fetching photo drill batch:', error);
     throw new Error('Failed to fetch photo drill questions');
@@ -177,7 +178,7 @@ async function generateDistractors(
       where: whereClause,
       take: 20, // Get more than needed for randomization
       select: {
-        name: true,
+        condition: true,
       },
     });
 
@@ -191,15 +192,15 @@ async function generateDistractors(
         },
         take: 3,
         select: {
-          name: true,
+          condition: true,
         },
       });
-      return fallbackDistractors.map((d) => d.name);
+      return fallbackDistractors.map((d) => d.condition);
     }
 
     // Shuffle and take 3
     const shuffled = potentialDistractors.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3).map((d) => d.name);
+    return shuffled.slice(0, 3).map((d) => d.condition);
   } catch (error) {
     console.error('Error generating distractors:', error);
     return ['Unknown Condition A', 'Unknown Condition B', 'Unknown Condition C'];
@@ -222,7 +223,7 @@ export async function getPhotoDrillStats(userId: string) {
       },
       select: {
         wasCorrect: true,
-        responseTimeMs: true,
+        durationMs: true,
         createdAt: true,
       },
     });
@@ -231,7 +232,7 @@ export async function getPhotoDrillStats(userId: string) {
     const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
     const accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
     const avgResponseTime =
-      attempts.reduce((sum, a) => sum + (a.responseTimeMs || 0), 0) / totalAttempts || 0;
+      attempts.reduce((sum, a) => sum + (a.durationMs || 0), 0) / totalAttempts || 0;
 
     return {
       totalAttempts,

@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
   CONTENT_ALL: '/api/content/all',
   CONDITIONS: '/api/conditions',
   QUESTIONS: '/api/questions',
+  QUESTIONS_POOL: '/api/questions/pool',
+  QUESTIONS_CURATE: '/api/questions/curate',
   LAB_TESTS: '/api/labtests',
   IMAGING: '/api/imaging',
   DRUGS: '/api/drugs',

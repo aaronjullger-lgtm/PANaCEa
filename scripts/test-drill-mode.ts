@@ -91,7 +91,7 @@ async function testRolling360Isolation() {
       where: { userId: testUser.id },
     });
 
-    const questionCountBefore = rolling360Before?.totalQuestions || 0;
+    const questionCountBefore = rolling360Before?.totalInWindow || 0;
 
     // Log 5 drill attempts
     for (let i = 0; i < 5; i++) {
@@ -108,7 +108,7 @@ async function testRolling360Isolation() {
       where: { userId: testUser.id },
     });
 
-    const questionCountAfter = rolling360After?.totalQuestions || 0;
+    const questionCountAfter = rolling360After?.totalInWindow || 0;
 
     // Stats should NOT change
     const passed = questionCountBefore === questionCountAfter;

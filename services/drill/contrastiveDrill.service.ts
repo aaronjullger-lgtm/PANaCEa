@@ -4,6 +4,12 @@
  * DDx Compare mode for distinguishing similar conditions.
  * Targets "Confusion Pairs" identified in user's review history.
  * 
+ * CRITICAL SCHEMA NOTES:
+ * - ContrastiveSet uses conditionIds: String[] (NOT FK relations)
+ * - ConfusionPair uses count (NOT occurrences), realConditionId/mistakenForId
+ * - MedicalContent has 'condition' field (NOT 'name')
+ * - ContrastiveDrillAttempt has setId, correctAnswers, timeSpentMs
+ * 
  * @module services/drill/contrastiveDrill.service
  */
 
@@ -19,14 +25,10 @@ if (typeof window === 'undefined') {
 
 export interface ContrastiveQuestion {
   id: string;
-  condition1: {
+  conditions: Array<{
     id: string;
     name: string;
-  };
-  condition2: {
-    id: string;
-    name: string;
-  };
+  }>;
   symptom: string;
   distinguishers: DistinguisherFeature[];
   difficulty: string;
@@ -36,7 +38,7 @@ export interface ContrastiveQuestion {
 export interface DistinguisherFeature {
   id: string;
   text: string;
-  belongsTo: 1 | 2; // Which condition does this feature belong to?
+  belongsTo: number; // Which condition index does this feature belong to?
   category?: 'symptom' | 'lab' | 'physical_exam' | 'history';
 }
 
@@ -74,7 +76,7 @@ export async function getContrastiveDrillBatch(
     } else {
       // Get general high-yield contrastive sets
       const whereClause: any = {
-        isHighYield: true,
+        highYield: true,
       };
 
       if (system) {
@@ -88,43 +90,41 @@ export async function getContrastiveDrillBatch(
       contrastiveSets = await prisma.contrastiveSet.findMany({
         where: whereClause,
         take: count,
-        include: {
-          Condition1: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          Condition2: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
       });
     }
 
     // Transform to ContrastiveQuestion format
-    const questions: ContrastiveQuestion[] = contrastiveSets.map((set) => {
-      const distinguishers = parseDistinguishers(set.distinguishers);
+    // Manually fetch condition details since schema uses conditionIds array
+    const questions: ContrastiveQuestion[] = await Promise.all(
+      contrastiveSets.map(async (set) => {
+        // Fetch all conditions for this set
+        const conditions = await prisma.medicalContent.findMany({
+          where: {
+            id: {
+              in: set.conditionIds,
+            },
+          },
+          select: {
+            id: true,
+            condition: true, // NOT 'name'
+          },
+        });
 
-      return {
-        id: set.id,
-        condition1: {
-          id: set.Condition1.id,
-          name: set.Condition1.name,
-        },
-        condition2: {
-          id: set.Condition2.id,
-          name: set.Condition2.name,
-        },
-        symptom: set.symptom,
-        distinguishers,
-        difficulty: set.difficulty || 'medium',
-        system: set.system || undefined,
-      };
-    });
+        const distinguishers = parseDistinguishers(set.distinguishers, conditions.length);
+
+        return {
+          id: set.id,
+          conditions: conditions.map((c) => ({
+            id: c.id,
+            name: c.condition, // Use 'condition' field from schema
+          })),
+          symptom: set.symptom,
+          distinguishers,
+          difficulty: set.difficulty || 'medium',
+          system: set.system || undefined,
+        };
+      })
+    );
 
     return questions;
   } catch (error) {
@@ -135,46 +135,41 @@ export async function getContrastiveDrillBatch(
 
 /**
  * Parse distinguishers from JSON format
+ * Supports flexible N-condition format
  * 
  * @param distinguishersJson - Raw JSON from database
+ * @param conditionCount - Number of conditions in the set
  * @returns Array of parsed distinguisher features
  */
-function parseDistinguishers(distinguishersJson: any): DistinguisherFeature[] {
+function parseDistinguishers(distinguishersJson: any, conditionCount: number): DistinguisherFeature[] {
   try {
     if (!distinguishersJson) {
       return [];
     }
 
-    // Expected format:
-    // {
-    //   "condition1": ["Feature A", "Feature B"],
-    //   "condition2": ["Feature C", "Feature D"]
-    // }
     const parsed = typeof distinguishersJson === 'string'
       ? JSON.parse(distinguishersJson)
       : distinguishersJson;
 
     const features: DistinguisherFeature[] = [];
 
-    if (parsed.condition1 && Array.isArray(parsed.condition1)) {
-      parsed.condition1.forEach((text: string, index: number) => {
-        features.push({
-          id: `c1-${index}`,
-          text,
-          belongsTo: 1,
-        });
-      });
-    }
+    // Support flexible format: {"condition1": [...], "condition2": [...], ...}
+    // OR indexed format: {"0": [...], "1": [...], ...}
+    Object.keys(parsed).forEach((key) => {
+      const conditionIndex = key.startsWith('condition') 
+        ? parseInt(key.replace('condition', '')) - 1 // condition1 -> index 0
+        : parseInt(key); // Direct index
 
-    if (parsed.condition2 && Array.isArray(parsed.condition2)) {
-      parsed.condition2.forEach((text: string, index: number) => {
-        features.push({
-          id: `c2-${index}`,
-          text,
-          belongsTo: 2,
+      if (Array.isArray(parsed[key])) {
+        parsed[key].forEach((text: string, featureIndex: number) => {
+          features.push({
+            id: `c${conditionIndex}-${featureIndex}`,
+            text,
+            belongsTo: conditionIndex,
+          });
         });
-      });
-    }
+      }
+    });
 
     // Shuffle features for the drill
     return features.sort(() => 0.5 - Math.random());
@@ -196,76 +191,59 @@ async function getPersonalizedContrastiveSets(
   count: number
 ): Promise<any[]> {
   try {
-    // Find user's confusion pairs
+    // Find user's confusion pairs using correct field names
     const confusionPairs = await prisma.confusionPair.findMany({
       where: {
         userId,
-        occurrences: {
+        count: { // NOT 'occurrences'
           gte: 2, // At least 2 confusions
         },
       },
       orderBy: {
-        occurrences: 'desc',
+        count: 'desc', // NOT 'occurrences'
       },
       take: count,
-      include: {
-        Condition1: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        Condition2: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+      select: {
+        realConditionId: true, // NOT 'condition1Id'
+        mistakenForId: true,   // NOT 'condition2Id'
       },
     });
 
     // Find or create contrastive sets for these pairs
     const sets = await Promise.all(
       confusionPairs.map(async (pair) => {
-        // Look for existing contrastive set
-        let set = await prisma.contrastiveSet.findFirst({
+        if (!pair.realConditionId || !pair.mistakenForId) {
+          return null;
+        }
+
+        // Look for existing contrastive set containing both conditions
+        const set = await prisma.contrastiveSet.findFirst({
           where: {
-            OR: [
+            AND: [
               {
-                condition1Id: pair.condition1Id,
-                condition2Id: pair.condition2Id,
+                conditionIds: {
+                  has: pair.realConditionId,
+                },
               },
               {
-                condition1Id: pair.condition2Id,
-                condition2Id: pair.condition1Id,
+                conditionIds: {
+                  has: pair.mistakenForId,
+                },
               },
             ],
           },
-          include: {
-            Condition1: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            Condition2: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
         });
 
-        // If no set exists, create a basic one
-        if (!set) {
-          set = await createBasicContrastiveSet(
-            pair.condition1Id,
-            pair.condition2Id
-          );
+        // If set exists, return it
+        if (set) {
+          return set;
         }
 
-        return set;
+        // Otherwise, create a basic one
+        return await createBasicContrastiveSet(
+          pair.realConditionId,
+          pair.mistakenForId
+        );
       })
     );
 
@@ -280,76 +258,61 @@ async function getPersonalizedContrastiveSets(
  * Create a basic contrastive set for two conditions
  * (Fallback when no pre-defined set exists)
  * 
- * @param condition1Id - First condition ID
- * @param condition2Id - Second condition ID
+ * @param conditionId1 - First condition ID
+ * @param conditionId2 - Second condition ID
  * @returns Created contrastive set
  */
 async function createBasicContrastiveSet(
-  condition1Id: string,
-  condition2Id: string
+  conditionId1: string,
+  conditionId2: string
 ): Promise<any | null> {
   try {
     // Fetch both conditions
-    const [condition1, condition2] = await Promise.all([
-      prisma.medicalContent.findUnique({
-        where: { id: condition1Id },
-        select: {
-          id: true,
-          name: true,
-          system: true,
-          symptoms: true,
+    const conditions = await prisma.medicalContent.findMany({
+      where: {
+        id: {
+          in: [conditionId1, conditionId2],
         },
-      }),
-      prisma.medicalContent.findUnique({
-        where: { id: condition2Id },
-        select: {
-          id: true,
-          name: true,
-          system: true,
-          symptoms: true,
-        },
-      }),
-    ]);
+      },
+      select: {
+        id: true,
+        condition: true, // NOT 'name'
+        system: true,
+        symptoms: true,
+      },
+    });
 
+    if (conditions.length !== 2) {
+      return null;
+    }
+
+    const [condition1, condition2] = conditions;
+
+    // Null check: Ensure both conditions exist
     if (!condition1 || !condition2) {
       return null;
     }
 
-    // Create a basic distinguisher structure
+    // Create a basic distinguisher structure using array indices
     const distinguishers = {
-      condition1: [
-        `Classic presentation for ${condition1.name}`,
+      "0": [ // Index-based (0 = first condition)
+        `Classic presentation for ${condition1.condition}`,
         'Key diagnostic feature',
       ],
-      condition2: [
-        `Classic presentation for ${condition2.name}`,
+      "1": [ // Index-based (1 = second condition)
+        `Classic presentation for ${condition2.condition}`,
         'Key diagnostic feature',
       ],
     };
 
     const set = await prisma.contrastiveSet.create({
       data: {
-        condition1Id,
-        condition2Id,
+        conditionIds: [conditionId1, conditionId2], // Array of IDs
         symptom: 'Similar presentation',
         distinguishers: distinguishers as any,
-        isHighYield: false,
+        highYield: false,
         difficulty: 'medium',
         system: condition1.system || condition2.system || undefined,
-      },
-      include: {
-        Condition1: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        Condition2: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
     });
 
@@ -366,25 +329,23 @@ async function createBasicContrastiveSet(
  * @param userId - User ID
  * @param setId - Contrastive set ID
  * @param userAssignments - User's assignments of features
- * @param isCorrect - Whether all assignments were correct
+ * @param correctAnswerCount - Number of correct assignments
  * @param timeMs - Time taken in milliseconds
  */
 export async function logContrastiveDrillAttempt(
   userId: string,
   setId: string,
-  userAssignments: Record<string, 1 | 2>,
-  isCorrect: boolean,
+  userAssignments: Record<string, number>,
+  correctAnswerCount: number,
   timeMs: number
 ): Promise<void> {
   try {
     await prisma.contrastiveDrillAttempt.create({
       data: {
         userId,
-        contrastiveSetId: setId,
-        userAssignments: userAssignments as any,
-        wasCorrect: isCorrect,
-        responseTimeMs: timeMs,
-        createdAt: new Date(),
+        setId, // NOT 'contrastiveSetId'
+        correctAnswers: correctAnswerCount, // NOT 'wasCorrect'
+        timeSpentMs: timeMs, // NOT 'responseTimeMs'
       },
     });
   } catch (error) {
@@ -404,31 +365,38 @@ export async function getContrastiveDrillStats(userId: string) {
     const attempts = await prisma.contrastiveDrillAttempt.findMany({
       where: { userId },
       select: {
-        wasCorrect: true,
-        responseTimeMs: true,
-        createdAt: true,
+        correctAnswers: true, // NOT 'wasCorrect'
+        timeSpentMs: true,     // NOT 'responseTimeMs'
+        completedAt: true,     // NOT 'createdAt'
+      },
+      orderBy: {
+        completedAt: 'desc',
       },
     });
 
     const totalAttempts = attempts.length;
-    const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
-    const accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
+    
+    // Calculate average correct answers per attempt
+    const totalCorrect = attempts.reduce((sum, a) => sum + a.correctAnswers, 0);
+    const avgCorrectPerAttempt = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
+    
+    // Calculate average response time
     const avgResponseTime =
-      attempts.reduce((sum, a) => sum + (a.responseTimeMs || 0), 0) / totalAttempts || 0;
+      attempts.reduce((sum, a) => sum + (a.timeSpentMs || 0), 0) / totalAttempts || 0;
 
     return {
       totalAttempts,
-      correctAttempts,
-      accuracy,
+      totalCorrect,
+      avgCorrectPerAttempt,
       avgResponseTime,
-      lastAttempt: attempts[0]?.createdAt,
+      lastAttempt: attempts[0]?.completedAt,
     };
   } catch (error) {
     console.error('Error fetching contrastive drill stats:', error);
     return {
       totalAttempts: 0,
-      correctAttempts: 0,
-      accuracy: 0,
+      totalCorrect: 0,
+      avgCorrectPerAttempt: 0,
       avgResponseTime: 0,
       lastAttempt: null,
     };

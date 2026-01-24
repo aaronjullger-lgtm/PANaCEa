@@ -46,7 +46,7 @@ export function calculateTimeToMastery(
   if (practiceHistory.length >= 3) {
     let forgotCount = 0;
     for (let i = 1; i < practiceHistory.length; i++) {
-      if (practiceHistory[i - 1].wasCorrect && !practiceHistory[i].wasCorrect) forgotCount++;
+      if (practiceHistory[i - 1] && practiceHistory[i] && practiceHistory[i - 1].wasCorrect && !practiceHistory[i].wasCorrect) forgotCount++;
     }
     decayRate = Math.min(0.5, forgotCount / practiceHistory.length + 0.2);
   }

@@ -19,7 +19,7 @@ import {
   type VerificationContext,
   type CoVeConfig,
 } from './cove-verification';
-import { callGeminiText, fetchNewQuestion } from '../services/ai/geminiService';
+import { callGeminiText, fetchNewQuestion } from '@/services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '../src/constants';
 
 // ============================================================================
