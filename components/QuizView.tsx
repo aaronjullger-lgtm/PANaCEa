@@ -89,7 +89,7 @@ import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '../hooks/useImplicitMetrics';
 
 // Other services (non-barrel)
-import { feedback } from '../services/feedbackService';
+import { feedback } from '../services/core/feedbackService';
 
 interface QuizViewProps {
   initialQueue: Question[];
