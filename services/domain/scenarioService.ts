@@ -5,7 +5,7 @@
  * Supports branching decision trees based on user actions.
  */
 
-import { createEdgePrismaClient } from '../functions/api/_shared/prisma-edge';
+import { createEdgePrismaClient } from '../../functions/api/_shared/prisma-edge';
 
 export interface ScenarioStep {
   id: string;

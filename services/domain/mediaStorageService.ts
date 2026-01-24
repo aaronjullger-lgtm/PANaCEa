@@ -5,8 +5,8 @@
  * Handles upload, retrieval, and metadata management for the photo drill modes.
  */
 
-import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
-import { prisma } from '../lib/prisma';
+import { supabaseAdmin, getStorageUrl } from '../../lib/supabase';
+import { prisma } from '../../lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { processUploadedMedia } from './mediaApprovalService';
 import { optimizeImage } from './imageQualityService';

@@ -87,6 +87,33 @@ export const sessionOptimizer = realTimeSessionOptimizerModule;
 export const semanticSearch = semanticSearchServiceModule;
 
 // ============================================================================
+// PATIENT SIMULATION SERVICES
+// ============================================================================
+
+import * as patientSimulatorServiceModule from './patientSimulatorService';
+import * as conditionServiceModule from './conditionService';
+
+export const patientSimulator = patientSimulatorServiceModule;
+export const conditionService = conditionServiceModule;
+
+// Named exports from patient simulator service
+export {
+  chatWithPatientSimulator,
+  evaluateDiagnosis,
+  performPhysicalExam,
+  orderDiagnosticTest,
+  evaluateTreatmentPlan,
+  generateAfterActionReport,
+  generateDebrief,
+} from './patientSimulatorService';
+
+// Named exports from condition service
+export {
+  getConditionsBySystem,
+  getAllConditions,
+} from './conditionService';
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 

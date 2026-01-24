@@ -9,8 +9,8 @@
  * - Provides probability distributions for outcomes
  */
 
-import type { SystemMasteryProfile } from './advancedUserAnalyticsEngine';
-import { getCognitiveState, getLearningVelocity } from './advancedUserAnalyticsEngine';
+import type { SystemMasteryProfile } from '../advancedUserAnalyticsEngine';
+import { getCognitiveState, getLearningVelocity } from '../advancedUserAnalyticsEngine';
 
 // ============================================================================
 // Types

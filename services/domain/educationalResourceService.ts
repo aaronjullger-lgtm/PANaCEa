@@ -5,10 +5,10 @@
  * Extracts content, links to conditions, and enables search
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
+import { supabaseAdmin, getStorageUrl } from '../../lib/supabase';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const RESOURCE_BUCKET = 'educational-resources';

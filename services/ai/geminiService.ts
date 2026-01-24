@@ -469,10 +469,33 @@ export async function callGeminiTextStreaming(
     signal?: AbortSignal;
   } = {}
 ): Promise<string> {
+  // Input validation
+  if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    const error = new Error('[callGeminiTextStreaming] Prompt is required and must be a non-empty string');
+    console.error(error.message);
+    options.onError?.(error);
+    throw error;
+  }
+
+  if (typeof modelName !== 'string' || modelName.trim().length === 0) {
+    const error = new Error('[callGeminiTextStreaming] Model name is required and must be a non-empty string');
+    console.error(error.message);
+    options.onError?.(error);
+    throw error;
+  }
+
+  if (typeof temperature !== 'number' || temperature < 0 || temperature > 2) {
+    const error = new Error('[callGeminiTextStreaming] Temperature must be a number between 0 and 2');
+    console.error(error.message);
+    options.onError?.(error);
+    throw error;
+  }
+
   const isTestEnv =
     typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
   
   if (isTestEnv) {
+    console.log('[callGeminiTextStreaming] Running in test mode, using mock response');
     // Mock behavior for tests: simulate streaming
     const hash = Array.from(prompt || '').reduce(
       (acc, char) => (acc + char.charCodeAt(0)) % 100000,
@@ -493,10 +516,46 @@ export async function callGeminiTextStreaming(
   }
 
   try {
-    // Dynamic import to avoid circular dependency
-    const { streamGeminiText } = await import('@/lib/utils/streamingClient');
+    console.log(`[callGeminiTextStreaming] Starting streaming request with model: ${modelName}`);
     
-    return await streamGeminiText(prompt, {
+    // Dynamic import to avoid circular dependency
+    // Type assertion for the imported module
+    type StreamingClientModule = {
+      streamGeminiText: (
+        prompt: string,
+        options: {
+          modelName: string;
+          temperature: number;
+          onChunk?: (chunk: string) => void;
+          onComplete?: (fullText: string) => void;
+          onError?: (error: Error) => void;
+          signal?: AbortSignal;
+        }
+      ) => Promise<string>;
+    };
+
+    let streamingModule: StreamingClientModule;
+    
+    try {
+      streamingModule = await import('@/lib/utils/streamingClient') as StreamingClientModule;
+    } catch (importError) {
+      const error = new Error(
+        `[callGeminiTextStreaming] Failed to load streaming client module: ${importError instanceof Error ? importError.message : String(importError)}`
+      );
+      console.error(error.message, importError);
+      options.onError?.(error);
+      throw error;
+    }
+
+    // Validate that the imported function exists
+    if (!streamingModule.streamGeminiText || typeof streamingModule.streamGeminiText !== 'function') {
+      const error = new Error('[callGeminiTextStreaming] streamGeminiText function not found in streaming client module');
+      console.error(error.message);
+      options.onError?.(error);
+      throw error;
+    }
+    
+    const result = await streamingModule.streamGeminiText(prompt, {
       modelName,
       temperature,
       onChunk: options.onChunk,
@@ -504,8 +563,19 @@ export async function callGeminiTextStreaming(
       onError: options.onError,
       signal: options.signal,
     });
+
+    console.log('[callGeminiTextStreaming] Streaming request completed successfully');
+    return result;
   } catch (error) {
+    // Structured error handling with proper logging
     const err = error instanceof Error ? error : new Error(String(error));
+    console.error('[callGeminiTextStreaming] Streaming request failed:', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+    });
+    
+    // Ensure error callback is invoked
     options.onError?.(err);
     throw err;
   }
@@ -667,34 +737,14 @@ export async function fetchNewQuestion(
   const { focus, difficulty } = settings;
 
   // Get user context for career-aware prompting
+  // NOTE: userContextService.ts does not exist yet, using default PANCE context
   let userContextInstruction = '';
-  try {
-    // Dynamic import with type assertion to handle TS inference issues
-    const userContextModule = (await import('@/services/ai/userContextService')) as {
-      getUserContext: () => { isPANREUser: boolean };
-    };
-    const userContext = userContextModule.getUserContext();
-
-    if (userContext.isPANREUser) {
-      userContextInstruction = `
-Context: This question is for a PRACTICING PA preparing for PANRE recertification.
-- Assume baseline clinical competency and familiarity with common presentations.
-- Focus on nuanced clinical decision-making, complex patient scenarios, and current guideline updates.
-- Include scenarios with multiple comorbidities where appropriate.
-- Test clinical reasoning and management more than basic recognition.`;
-    } else {
-      userContextInstruction = `
+  // Default to PANCE student context (foundational learning)
+  userContextInstruction = `
 Context: This question is for a PA STUDENT preparing for the initial PANCE certification exam.
 - Focus on building foundational knowledge and recognition of classic presentations.
 - Emphasize first-order clinical reasoning (diagnosis, classic findings, first-line treatments).
 - Use clear, textbook presentations for "easier" difficulty, and standard PANCE complexity for "same" difficulty.`;
-    }
-  } catch (e) {
-    // If userContextService fails, continue without context adjustment
-    console.warn(
-      '[geminiService] Could not load user context, continuing without context-aware prompting'
-    );
-  }
 
   let detailedDifficultyInstruction = '';
   switch (difficulty) {
@@ -738,10 +788,10 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       chosenConditionDef = buildConditionDefinition(meta);
 
       // Load database content via API (browser-safe)
-      try {
-        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-          await import('./conditionContentService');
-        const dbContent = await fetchConditionContent(settings.conditionName);
+        try {
+          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
+            await import('../conditionContentService');
+          const dbContent = await fetchConditionContent(settings.conditionName);
 
         if (dbContent && hasCompleteContent(dbContent)) {
           conditionRegistryNotes = buildDatabaseContext(dbContent);
@@ -796,7 +846,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
         // Load database content via API (browser-safe)
         try {
           const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('./conditionContentService');
+            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(
             safeString(selectedConditionMeta.condition)
           );
@@ -943,7 +993,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         // Fetch database content via API (browser-safe)
         try {
           const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('./conditionContentService');
+            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(safeString(chosenConditionMeta.condition));
 
           if (dbContent && hasCompleteContent(dbContent)) {

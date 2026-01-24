@@ -87,6 +87,20 @@ export const drillStatsService = drillStatsServiceModule;
 export const dailyTriadService = dailyTriadServiceModule;
 export const wordleService = wordleServiceModule;
 
+// Named exports from drill services
+export { submitDrillResult } from './drillService';
+
+export {
+  getDrillLandingStats,
+  getCategoryBreakdown,
+  recordDrillSession,
+  getRecommendedDifficulty,
+  getDrillStats,
+  getAllDrillStats,
+  getDrillProgress,
+  calculateNextDifficulty,
+} from './drillStatsService';
+
 // ============================================================================
 // CONTENT SERVICES - Medical content and condition management
 // ============================================================================

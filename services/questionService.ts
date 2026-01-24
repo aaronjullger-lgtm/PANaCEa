@@ -589,7 +589,7 @@ export async function getEnhancedQuestion(
   enabledSystems?: Set<string>
 ): Promise<Question> {
   try {
-    const { generateEnhancedQuestion } = await import('./enhancedQuestionService');
+    const { generateEnhancedQuestion } = await import('./ai/enhancedQuestionService');
     const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems);
 
     if (question) {

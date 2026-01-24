@@ -7,15 +7,21 @@
  * - Provide "Daily Pearl" and "Review My Pearls" features
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { v4 as uuidv4 } from 'uuid';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../../lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
 // Lazy initialization of AI model to improve testability and error handling
-let aiModel: any = null;
-function getAIModel() {
+let aiModel: GenerativeModel | null = null;
+
+/**
+ * Get or initialize the AI model for pearl extraction
+ * @returns GenerativeModel instance or null if API key is not configured
+ */
+function getAIModel(): GenerativeModel | null {
   if (!API_KEY) {
     return null;
   }
@@ -34,6 +40,7 @@ interface ExtractedPearl {
 
 /**
  * Extract a clinical pearl from a question explanation using AI
+ * @throws Error if explanation is empty or invalid
  */
 export async function extractPearlFromExplanation(
   explanation: string,
@@ -42,9 +49,15 @@ export async function extractPearlFromExplanation(
     system?: string;
   }
 ): Promise<ExtractedPearl | null> {
+  // Input validation
+  if (!explanation || explanation.trim().length === 0) {
+    console.warn('[extractPearlFromExplanation] Empty explanation provided');
+    return null;
+  }
+
   const model = getAIModel();
   if (!model) {
-    console.warn('AI model not available for pearl extraction');
+    console.warn('[extractPearlFromExplanation] AI model not available (missing API key)');
     return null;
   }
 
@@ -73,17 +86,24 @@ The pearl should be:
 
     try {
       const parsed = JSON.parse(sanitized);
+      
+      // Validate parsed structure
+      if (!parsed.pearlText || typeof parsed.pearlText !== 'string') {
+        console.error('[extractPearlFromExplanation] Invalid pearlText in response');
+        return null;
+      }
+
       return {
         pearlText: parsed.pearlText,
         category: parsed.category,
-        tags: parsed.tags || [],
+        tags: Array.isArray(parsed.tags) ? parsed.tags : [],
       };
-    } catch {
-      console.error('Failed to parse pearl extraction response');
+    } catch (parseError) {
+      console.error('[extractPearlFromExplanation] Failed to parse JSON:', parseError);
       return null;
     }
   } catch (error) {
-    console.error('Error extracting pearl:', error);
+    console.error('[extractPearlFromExplanation] AI generation error:', error);
     return null;
   }
 }
@@ -159,61 +179,69 @@ export async function extractPearlsFromQuestions(questionIds: string[]) {
 
 /**
  * Get daily pearl (random high-quality pearl)
+ * Prefers pearls from user's history if userId provided
  */
 export async function getDailyPearl(userId?: string) {
-  // If userId provided, prefer pearls from questions they've seen
-  let pearl;
+  try {
+    let pearl;
 
-  if (userId) {
-    // Get pearls from questions the user has answered
-    const userHistory = await prisma.userQuestionSeen.findMany({
-      where: { userId },
-      select: { questionId: true },
-      take: 100, // Recent questions
-      orderBy: { lastSeenAt: 'desc' },
-    });
-
-    const questionIds = userHistory.map((h) => h.questionId);
-
-    if (questionIds.length > 0) {
-      // Random pearl from user's history
-      const count = await prisma.clinicalPearl.count({
-        where: { questionId: { in: questionIds } },
+    if (userId) {
+      // Get pearls from questions the user has answered
+      const userHistory = await prisma.userQuestionSeen.findMany({
+        where: { userId },
+        select: { questionId: true },
+        take: 100, // Recent questions
+        orderBy: { lastSeenAt: 'desc' },
       });
 
-      if (count > 0) {
-        const skip = Math.floor(Math.random() * count);
-        pearl = await prisma.clinicalPearl.findFirst({
+      const questionIds = userHistory.map((h) => h.questionId);
+
+      if (questionIds.length > 0) {
+        // Random pearl from user's history
+        const count = await prisma.clinicalPearl.count({
           where: { questionId: { in: questionIds } },
-          skip,
         });
+
+        if (count > 0) {
+          const skip = Math.floor(Math.random() * count);
+          pearl = await prisma.clinicalPearl.findFirst({
+            where: { questionId: { in: questionIds } },
+            skip,
+          });
+        }
       }
     }
-  }
 
-  // Fallback: any random pearl
-  if (!pearl) {
-    const count = await prisma.clinicalPearl.count();
-    if (count > 0) {
+    // Fallback: any random pearl
+    if (!pearl) {
+      const count = await prisma.clinicalPearl.count();
+      if (count === 0) {
+        console.warn('[getDailyPearl] No pearls available in database');
+        return null;
+      }
+
       const skip = Math.floor(Math.random() * count);
       pearl = await prisma.clinicalPearl.findFirst({ skip });
     }
-  }
 
-  // Update view count
-  if (pearl) {
-    await prisma.clinicalPearl.update({
-      where: { id: pearl.id },
-      data: { viewCount: { increment: 1 } },
-    });
+    // Update view count and track user interaction
+    if (pearl) {
+      await prisma.clinicalPearl.update({
+        where: { id: pearl.id },
+        data: { viewCount: { increment: 1 } },
+      });
 
-    // Track user view if userId provided
-    if (userId) {
-      await recordUserPearlView(userId, pearl.id);
+      // Track user view if userId provided
+      if (userId) {
+        await recordUserPearlView(userId, pearl.id);
+      }
     }
-  }
 
-  return pearl;
+    return pearl;
+  } catch (error) {
+    console.error('[getDailyPearl] Database error:', error);
+    throw new Error('Failed to retrieve daily pearl');
+  }
 }
 
 /**
@@ -281,36 +309,50 @@ export async function recordUserPearlView(userId: string, pearlId: string) {
 }
 
 /**
- * Mark a pearl as useful
+ * Mark a pearl as useful with transaction safety
+ * @throws Error if database operation fails
  */
 export async function markPearlUseful(userId: string, pearlId: string, notes?: string) {
-  await prisma.userPearl.upsert({
-    where: {
-      userId_pearlId: {
-        userId,
-        pearlId,
-      },
-    },
-    update: {
-      markedUseful: true,
-      notes,
-    },
-    create: {
-      id: uuidv4(),
-      userId,
-      pearlId,
-      markedUseful: true,
-      notes,
-    },
-  });
+  // Input validation
+  if (!userId || !pearlId) {
+    throw new Error('userId and pearlId are required');
+  }
 
-  // Increment useful votes on the pearl
-  await prisma.clinicalPearl.update({
-    where: { id: pearlId },
-    data: {
-      usefulVotes: { increment: 1 },
-    },
-  });
+  try {
+    // Use transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+      await tx.userPearl.upsert({
+        where: {
+          userId_pearlId: {
+            userId,
+            pearlId,
+          },
+        },
+        update: {
+          markedUseful: true,
+          notes,
+        },
+        create: {
+          id: uuidv4(),
+          userId,
+          pearlId,
+          markedUseful: true,
+          notes,
+        },
+      });
+
+      // Increment useful votes on the pearl
+      await tx.clinicalPearl.update({
+        where: { id: pearlId },
+        data: {
+          usefulVotes: { increment: 1 },
+        },
+      });
+    });
+  } catch (error) {
+    console.error('[markPearlUseful] Transaction failed:', error);
+    throw new Error('Failed to mark pearl as useful');
+  }
 }
 
 /**
@@ -353,7 +395,7 @@ export async function getUserFavoritePearls(userId: string) {
 }
 
 /**
- * Search pearls by keyword or category
+ * Search pearls by keyword or category with proper type safety
  */
 export async function searchPearls(query: {
   keywords?: string;
@@ -362,7 +404,8 @@ export async function searchPearls(query: {
   tags?: string[];
   limit?: number;
 }) {
-  const where: any = {};
+  // Build type-safe where clause
+  const where: Prisma.ClinicalPearlWhereInput = {};
 
   if (query.system) {
     where.system = query.system;
@@ -385,13 +428,18 @@ export async function searchPearls(query: {
     ];
   }
 
-  const pearls = await prisma.clinicalPearl.findMany({
-    where,
-    orderBy: [{ usefulVotes: 'desc' }, { viewCount: 'desc' }],
-    take: query.limit || 20,
-  });
+  try {
+    const pearls = await prisma.clinicalPearl.findMany({
+      where,
+      orderBy: [{ usefulVotes: 'desc' }, { viewCount: 'desc' }],
+      take: query.limit || 20,
+    });
 
-  return pearls;
+    return pearls;
+  } catch (error) {
+    console.error('[searchPearls] Database error:', error);
+    throw new Error('Failed to search clinical pearls');
+  }
 }
 
 /**

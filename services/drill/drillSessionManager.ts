@@ -481,16 +481,6 @@ export async function getDrillOverview(userId: string): Promise<DrillOverview> {
     throw error;
   }
 }
-      const stats = systemStats[system];
-      stats.accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
-    });
-
-    return systemStats;
-  } catch (error) {
-    console.error('Error getting drill performance by system:', error);
-    return {};
-  }
-}
 
 export async function disconnect() {
   await prisma.$disconnect();

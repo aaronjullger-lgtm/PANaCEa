@@ -47,8 +47,8 @@ export { getPrediction } from './performancePredictionService';
 // USER ANALYTICS SERVICE (Advanced, Circadian, Research-Backed)
 // ============================================================================
 
-import * as advancedUserAnalyticsEngineModule from './advancedUserAnalyticsEngine';
-import * as circadianAnalyticsServiceModule from './circadianAnalyticsService';
+import * as advancedUserAnalyticsEngineModule from '../advancedUserAnalyticsEngine';
+import * as circadianAnalyticsServiceModule from '../circadianAnalyticsService';
 import * as researchBackedAnalyticsModule from './researchBackedAnalytics';
 import * as userContextServiceModule from './userContextService';
 import * as userProfileServiceModule from './userProfileService';
@@ -73,7 +73,7 @@ export {
   recordTimeOfDayAttempt,
   calculatePersonalizedFSRS,
   getSystemFSRSAdjustments,
-} from './advancedUserAnalyticsEngine';
+} from '../advancedUserAnalyticsEngine';
 
 // Named exports from circadian analytics
 export {
@@ -82,7 +82,7 @@ export {
   isLateNightStudying,
   getCircadianInsights,
   analyzeCircadianPerformance,
-} from './circadianAnalyticsService';
+} from '../circadianAnalyticsService';
 
 // Named exports from research-backed analytics
 export {
@@ -162,6 +162,24 @@ export {
   getTodayString,
 } from './deepAnalyticsStore';
 
+// Named exports from user profile service
+export {
+  loadUserProfile,
+  saveUserProfile,
+  updateUserProfile,
+  clearUserProfile,
+  hasCompletedOnboarding,
+} from './userProfileService';
+
+// Named exports from user context service
+export {
+  getUserContext,
+  setUserContext,
+  shouldShowPANREContent,
+  shouldShowPANCEContent,
+  getExamLabel,
+} from './userContextService';
+
 // ============================================================================
 // TYPE EXPORTS
 // ============================================================================
@@ -178,7 +196,7 @@ export type {
   ComprehensiveUserAnalytics,
   AnalyticsInsight,
   ResponsePatternMetrics,
-} from './advancedUserAnalyticsEngine';
+} from '../advancedUserAnalyticsEngine';
 
 export type {
   UserFriendlyStats,

@@ -1,7 +1,28 @@
 // Global test setup for Vitest.
 // - Ensures browser-like APIs (localStorage) exist even in edge cases.
+// - Sets up DATABASE_URL for Prisma client initialization in tests
 
 import { afterEach, beforeEach } from 'vitest';
+
+// Set DATABASE_URL for Prisma client initialization in tests
+// This prevents "DATABASE_URL environment variable is not set!" errors
+// Note: Tests should mock actual database operations
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
+}
+
+// Set Supabase configuration for test environment
+// This prevents "supabaseUrl is required" errors when importing modules that use Supabase
+// Note: Tests should mock actual Supabase operations
+if (!process.env.SUPABASE_URL) {
+  process.env.SUPABASE_URL = 'https://test.supabase.co';
+}
+if (!process.env.SUPABASE_ANON_KEY) {
+  process.env.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.key';
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.service.key';
+}
 
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();

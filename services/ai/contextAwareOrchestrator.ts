@@ -12,7 +12,7 @@
  * with accurate, high-quality medical content.
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');

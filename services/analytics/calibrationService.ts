@@ -22,7 +22,7 @@ import {
   type CalibrationAnalysis,
   type JOLObservation,
   type CalibrationState,
-} from '../lib/jol-calibration';
+} from '../../lib/jol-calibration';
 
 /**
  * Response shape from /api/drills/submit-review

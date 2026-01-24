@@ -5,7 +5,7 @@
  * Implements a "no-use" to "use" folder system via approval status.
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '../../lib/prisma';
 import {
   assessImageQuality,
   shouldAutoApprove,
@@ -13,7 +13,7 @@ import {
   optimizeImage,
   QualityAssessment,
 } from './imageQualityService';
-import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
+import { supabaseAdmin, getStorageUrl } from '../../lib/supabase';
 
 const MEDIA_BUCKET = 'medical-images';
 

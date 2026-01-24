@@ -22,8 +22,7 @@ import type {
   ErrorTag,
   UserProfile,
 } from './types';
-import { hasCompletedOnboarding, saveUserProfile } from './services/userProfileService';
-import { getExamLabel } from './services/userContextService';
+import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './services/analytics';
 import type { TrainingModeId } from './config/training-modes';
 import { CommuterProvider } from './contexts/CommuterContext';
 import { ToastProvider } from './contexts/ToastContext';

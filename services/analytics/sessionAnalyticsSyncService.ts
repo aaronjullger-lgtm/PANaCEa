@@ -5,7 +5,7 @@
  * Collects data from all Sprint 4 behavioral services and sends to /api/analytics/session.
  */
 
-import { getSessionSummary, calculateDistributionDrift } from './panceDistributionService';
+import { getSessionSummary, calculateDistributionDrift } from '../domain/panceDistributionService';
 import { analyzePatterns } from './answerPatternService';
 import {
   calculateBehavioralCalibration,
