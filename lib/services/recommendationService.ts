@@ -1,7 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Prisma } from '@prisma/client';
-import { UserRole } from '@prisma/client';
 import { prisma } from '../prisma';
+
+// Local type definition for UserRole to avoid runtime Prisma import
+const UserRole = {
+  USER: 'USER' as const,
+  ADMIN: 'ADMIN' as const,
+  MODERATOR: 'MODERATOR' as const,
+} as const;
 
 export interface RecommendationContext {
   userId: string;

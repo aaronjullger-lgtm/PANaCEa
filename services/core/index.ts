@@ -14,18 +14,18 @@
 
 import * as questionServiceModule from './questionService';
 import * as attemptServiceModule from './attemptService';
-import * as questionPoolServiceModule from './questionPoolService';
+// REMOVED: questionPoolService - has runtime prisma import, server-only
 import * as questionQualityServiceModule from './questionQualityService';
-import * as questionSeedServiceModule from './questionSeedService';
-import * as stagingQuestionServiceModule from './stagingQuestionService';
+// REMOVED: questionSeedService - has runtime prisma import, server-only
+// REMOVED: stagingQuestionService - has runtime prisma import, server-only
 import * as variantQueueServiceModule from './variantQueueService';
 
 export const questionService = questionServiceModule;
 export const attemptService = attemptServiceModule;
-export const questionPoolService = questionPoolServiceModule;
+// export const questionPoolService = questionPoolServiceModule; // SERVER-ONLY: use API
 export const questionQualityService = questionQualityServiceModule;
-export const questionSeedService = questionSeedServiceModule;
-export const stagingQuestionService = stagingQuestionServiceModule;
+// export const questionSeedService = questionSeedServiceModule; // SERVER-ONLY: use API
+// export const stagingQuestionService = stagingQuestionServiceModule; // SERVER-ONLY: use API
 export const variantQueueService = variantQueueServiceModule;
 
 // Named exports for common operations (tree-shakeable)
@@ -54,13 +54,13 @@ export { recordQuestionAttempt, getUserStats } from './attemptService';
 import * as mainSessionServiceModule from './mainSessionService';
 import * as customSessionServiceModule from './customSessionService';
 import * as sessionServiceModule from './sessionService';
-import * as noRepeatServiceModule from './noRepeatService';
+// REMOVED: noRepeatService - has runtime prisma import, server-only
 import * as poolMonitorServiceModule from './poolMonitorService';
 
 export const sessionService = mainSessionServiceModule;
 export const customSessionService = customSessionServiceModule;
 export const sessionMgmt = sessionServiceModule;
-export const noRepeatService = noRepeatServiceModule;
+// export const noRepeatService = noRepeatServiceModule; // SERVER-ONLY: use API
 export const poolMonitorService = poolMonitorServiceModule;
 
 // Named exports from session services
@@ -80,12 +80,12 @@ export {
 import * as drillServiceModule from './drillService';
 import * as drillStatsServiceModule from './drillStatsService';
 import * as dailyTriadServiceModule from './dailyTriadService';
-import * as wordleServiceModule from './wordleService';
+// REMOVED: wordleService - has runtime prisma import, server-only
 
 export const drillService = drillServiceModule;
 export const drillStatsService = drillStatsServiceModule;
 export const dailyTriadService = dailyTriadServiceModule;
-export const wordleService = wordleServiceModule;
+// export const wordleService = wordleServiceModule; // SERVER-ONLY: use API
 
 // Named exports from drill services
 export { submitDrillResult } from './drillService';
@@ -107,11 +107,11 @@ export {
 
 import * as conditionServiceModule from '../conditionService';
 import * as conditionContentServiceModule from '../conditionContentService';
-import * as conditionDataLoaderModule from './conditionDataLoader';
+// REMOVED: conditionDataLoader - has runtime prisma import, server-only
 
 export const conditionService = conditionServiceModule;
 export const conditionContentService = conditionContentServiceModule;
-export const conditionDataLoader = conditionDataLoaderModule;
+// export const conditionDataLoader = conditionDataLoaderModule; // SERVER-ONLY: use API
 
 // ============================================================================
 // SUPPORT SERVICES - Coaching, feedback, and other utilities
