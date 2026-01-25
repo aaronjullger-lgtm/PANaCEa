@@ -1,0 +1,284 @@
+
+> pance-ai@0.0.1 typecheck
+> tsc --noEmit
+
+components/analytics/AnalyticsDashboard.old.tsx(71,25): error TS2532: Object is possibly 'undefined'.
+components/analytics/IntelligenceHub.tsx(169,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/drill/ContrastiveCard.tsx(234,27): error TS2551: Property 'condition1' does not exist on type 'ContrastiveQuestion'. Did you mean 'conditions'?
+components/drill/ContrastiveCard.tsx(270,27): error TS2551: Property 'condition2' does not exist on type 'ContrastiveQuestion'. Did you mean 'conditions'?
+components/drill/recall/RapidRecallDrill.tsx(113,44): error TS2339: Property 'getBuzzwordDictionary' does not exist on type 'typeof import("/Users/aaronullger/GitHub/StudyPANaCEa/services/domain/buzzwordService")'.
+components/drill/recall/RapidRecallDrill.tsx(114,49): error TS2339: Property 'getAllBuzzwordConditions' does not exist on type 'typeof import("/Users/aaronullger/GitHub/StudyPANaCEa/services/domain/buzzwordService")'.
+components/library/ConfusionPairAlert.tsx(52,48): error TS2554: Expected 0 arguments, but got 2.
+components/library/ConfusionPairAlert.tsx(59,36): error TS2339: Property 'confusionPairs' does not exist on type 'ConfusionPair[]'.
+components/library/ConfusionPairAlert.tsx(60,12): error TS7006: Parameter 'p' implicitly has an 'any' type.
+components/library/ConfusionPairAlert.tsx(84,61): error TS2339: Property 'realConditionData' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(85,63): error TS2339: Property 'mistakenConditionData' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(116,42): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/library/ConfusionPairAlert.tsx(117,41): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/library/ConfusionPairAlert.tsx(120,35): error TS2339: Property 'realConditionData' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(121,39): error TS2339: Property 'mistakenConditionData' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(133,54): error TS2339: Property 'mistakenFor' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(189,26): error TS2339: Property 'realCondition' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(198,26): error TS2339: Property 'mistakenFor' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(209,34): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(223,26): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(224,27): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(227,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(228,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(229,37): error TS2339: Property 'realCondition' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(230,37): error TS2339: Property 'mistakenFor' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(235,26): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(236,27): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(239,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(240,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(241,37): error TS2339: Property 'realCondition' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(242,37): error TS2339: Property 'mistakenFor' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(247,26): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(248,27): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(251,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(252,37): error TS2339: Property 'keyDifferences' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(253,37): error TS2339: Property 'realCondition' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(254,37): error TS2339: Property 'mistakenFor' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(259,26): error TS2339: Property 'distinguishingFeatures' does not exist on type 'ConfusionPair'.
+components/library/ConfusionPairAlert.tsx(265,32): error TS2339: Property 'distinguishingFeatures' does not exist on type 'ConfusionPair'.
+components/library/DDxMatrixView.tsx(109,26): error TS2554: Expected 2 arguments, but got 1.
+components/library/DDxMatrixView.tsx(110,25): error TS2345: Argument of type '{ correct: DeepConditionData; selected: DeepConditionData; fields: ComparisonField[]; }' is not assignable to parameter of type 'SetStateAction<{ conditions: DeepConditionData[]; discriminatingFeatures: string[]; uniqueEntities: any[]; comparisonFields: ComparisonField[]; } | null>'.
+components/library/DDxMatrixView.tsx(137,24): error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string | string[]'.
+  Type 'undefined' is not assignable to type 'string | string[]'.
+components/library/DDxMatrixView.tsx(306,47): error TS2339: Property 'isLinkedEntity' does not exist on type 'ComparisonField'.
+components/library/DDxMatrixView.tsx(359,49): error TS2339: Property 'condition' does not exist on type 'DeepConditionData'.
+components/library/DDxMatrixView.tsx(387,70): error TS2339: Property 'isLinkedEntity' does not exist on type 'ComparisonField'.
+components/library/DDxMatrixView.tsx(389,64): error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string | string[]'.
+  Type 'undefined' is not assignable to type 'string | string[]'.
+components/library/DDxMatrixView.tsx(438,71): error TS2339: Property 'condition' does not exist on type 'DeepConditionData'.
+components/modes/GrandRoundsMode.old.tsx(761,20): error TS18048: 'currentQuestion' is possibly 'undefined'.
+components/QuizView.tsx(974,15): error TS2339: Property 'callGeminiTextStreaming' does not exist on type 'typeof import("/Users/aaronullger/GitHub/StudyPANaCEa/services/domain/geminiService")'.
+components/QuizView.tsx(977,19): error TS7006: Parameter 'chunk' implicitly has an 'any' type.
+components/QuizView.tsx(984,19): error TS7006: Parameter 'err' implicitly has an 'any' type.
+components/SettingsStatsModal.tsx(639,22): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/social/AchievementBadges.tsx(332,20): error TS2532: Object is possibly 'undefined'.
+components/ui/ClinicalSkeleton.tsx(73,12): error TS2322: Type '{ style: { animationDelay: `${number}s`; width: string; }; className: string; initial: { opacity: number; }; animate: { opacity: number; }; transition: { repeat: number; repeatType: "reverse"; duration: number; ease: string; }; key: number; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">'.
+  Types of property 'transition' are incompatible.
+    Type '{ repeat: number; repeatType: "reverse"; duration: number; ease: string; }' is not assignable to type 'Transition<any> | undefined'.
+      Type '{ repeat: number; repeatType: "reverse"; duration: number; ease: string; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+        Type '{ repeat: number; repeatType: "reverse"; duration: number; ease: string; }' is not assignable to type 'ValueAnimationTransition<any>'.
+          Types of property 'ease' are incompatible.
+            Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+functions/api/_shared/error-handler.ts(219,3): error TS2322: Type '(context: EventContext<any, any, any>) => Promise<Response | Response>' is not assignable to type 'PagesFunction'.
+  Type 'Promise<Response | Response>' is not assignable to type 'Response | Promise<Response>'.
+    Type 'Promise<Response | Response>' is not assignable to type 'Promise<Response>'.
+      Type 'Response | Response' is not assignable to type 'Response'.
+        Property 'webSocket' is missing in type 'Response' but required in type 'import("/Users/aaronullger/GitHub/StudyPANaCEa/node_modules/@cloudflare/workers-types/index").Response'.
+functions/api/analytics/profile.ts(398,18): error TS2532: Object is possibly 'undefined'.
+functions/api/analytics/profile.ts(399,18): error TS2532: Object is possibly 'undefined'.
+functions/api/clinical/browse.ts(188,39): error TS7006: Parameter 'p' implicitly has an 'any' type.
+functions/api/exam/complete.ts(87,49): error TS7006: Parameter 'answer' implicitly has an 'any' type.
+functions/api/first-line/categories.ts(57,42): error TS7006: Parameter 'c' implicitly has an 'any' type.
+functions/api/grand-rounds/leaderboard.ts(56,40): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+functions/api/grand-rounds/leaderboard.ts(56,47): error TS7006: Parameter 'index' implicitly has an 'any' type.
+functions/api/grand-rounds/system/[system].ts(116,49): error TS7006: Parameter 'q' implicitly has an 'any' type.
+functions/api/grand-rounds/today.ts(76,53): error TS7006: Parameter 'q' implicitly has an 'any' type.
+functions/api/grand-rounds/today.ts(171,37): error TS7006: Parameter 'q' implicitly has an 'any' type.
+functions/api/intelligence/analyze-session.ts(620,9): error TS2532: Object is possibly 'undefined'.
+functions/api/intelligence/analyze-session.ts(621,11): error TS2532: Object is possibly 'undefined'.
+functions/api/intelligence/analyze-session.ts(621,46): error TS2532: Object is possibly 'undefined'.
+functions/api/intelligence/analyze-session.ts(686,11): error TS2532: Object is possibly 'undefined'.
+functions/api/questions/custom-session.ts(196,6): error TS2322: Type 'T | undefined' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'T | undefined'.
+functions/api/questions/custom-session.ts(196,19): error TS2322: Type 'T | undefined' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'T | undefined'.
+functions/api/questions/fetch.ts(40,42): error TS7006: Parameter 'h' implicitly has an 'any' type.
+functions/api/questions/generate-batch.ts(65,7): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+functions/api/questions/generate-enhanced.ts(320,9): error TS2561: Object literal may only specify known properties, but 'conditionName' does not exist in type 'Question'. Did you mean to write 'condition'?
+functions/api/questions/performance.ts(70,23): error TS7006: Parameter 'f' implicitly has an 'any' type.
+functions/api/questions/performance.ts(80,70): error TS7006: Parameter 'q' implicitly has an 'any' type.
+functions/api/questions/polypharmacy-drill.ts(172,3): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+functions/api/questions/pool-status.ts(61,44): error TS7006: Parameter 'h' implicitly has an 'any' type.
+functions/api/questions/pool-status.ts(87,46): error TS7006: Parameter 'h' implicitly has an 'any' type.
+functions/api/questions/pool-status.ts(100,46): error TS2532: Object is possibly 'undefined'.
+functions/api/questions/review.ts(123,54): error TS7006: Parameter 'q' implicitly has an 'any' type.
+functions/api/srs/due.ts(80,41): error TS7006: Parameter 'item' implicitly has an 'any' type.
+functions/api/srs/stats.ts(49,37): error TS7006: Parameter 'a' implicitly has an 'any' type.
+functions/api/srs/submit.ts(202,9): error TS2454: Variable 'nextReviewDate' is used before being assigned.
+functions/api/sync.ts(147,57): error TS7006: Parameter 'r' implicitly has an 'any' type.
+functions/api/sync.ts(337,55): error TS7006: Parameter 'r' implicitly has an 'any' type.
+functions/api/user/analytics.ts(348,21): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+functions/api/user/clinical-profile.ts(55,30): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+functions/api/user/clinical-profile.ts(55,35): error TS7006: Parameter 'n' implicitly has an 'any' type.
+functions/api/user/confusion.ts(135,32): error TS7006: Parameter 'pair' implicitly has an 'any' type.
+functions/api/user/daily-performance.ts(92,42): error TS7006: Parameter 'a' implicitly has an 'any' type.
+functions/api/user/stats.ts(213,9): error TS2532: Object is possibly 'undefined'.
+functions/api/user/stats.ts(214,33): error TS2532: Object is possibly 'undefined'.
+functions/api/user/stats.ts(310,21): error TS2532: Object is possibly 'undefined'.
+functions/api/user/stats.ts(310,59): error TS2532: Object is possibly 'undefined'.
+functions/api/user/topic-progress/[conditionId].ts(86,32): error TS7006: Parameter 'record' implicitly has an 'any' type.
+functions/api/user/update-fsrs-params.ts(31,10): error TS18047: 'auth' is possibly 'null'.
+functions/api/user/update-fsrs-params.ts(31,15): error TS2339: Property 'authenticated' does not exist on type 'AuthContext'.
+functions/api/user/update-fsrs-params.ts(31,33): error TS18047: 'auth' is possibly 'null'.
+functions/api/user/update-fsrs-params.ts(38,20): error TS18047: 'auth' is possibly 'null'.
+hooks/game/use-condition-drill.ts(393,13): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-condition-drill.ts(468,17): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-condition-drill.ts(522,16): error TS2345: Argument of type '(prev: ConditionQuestion[]) => (ConditionQuestion | undefined)[]' is not assignable to parameter of type 'SetStateAction<ConditionQuestion[]>'.
+  Type '(prev: ConditionQuestion[]) => (ConditionQuestion | undefined)[]' is not assignable to type '(prevState: ConditionQuestion[]) => ConditionQuestion[]'.
+    Type '(ConditionQuestion | undefined)[]' is not assignable to type 'ConditionQuestion[]'.
+      Type 'ConditionQuestion | undefined' is not assignable to type 'ConditionQuestion'.
+        Type 'undefined' is not assignable to type 'ConditionQuestion'.
+hooks/game/use-ddx-drill.ts(87,50): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-ddx-drill.ts(94,9): error TS2322: Type '(string | undefined)[]' is not assignable to type 'string[]'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-ddx-drill.ts(106,50): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-ddx-drill.ts(113,9): error TS2322: Type '(string | undefined)[]' is not assignable to type 'string[]'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-ddx-drill.ts(127,37): error TS2538: Type 'undefined' cannot be used as an index type.
+hooks/game/use-ddx-drill.ts(173,9): error TS2322: Type '(string | undefined)[]' is not assignable to type 'string[]'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-first-line-drill.ts(100,3): error TS2322: Type '{ id: string; createdAt: Date; updatedAt: Date; condition: string; category: string; treatment: string; } | undefined' is not assignable to type '{ id: string; createdAt: Date; updatedAt: Date; condition: string; category: string; treatment: string; }'.
+  Type 'undefined' is not assignable to type '{ id: string; createdAt: Date; updatedAt: Date; condition: string; category: string; treatment: string; }'.
+hooks/game/use-first-line-drill.ts(126,45): error TS2339: Property 'getAll' does not exist on type 'typeof import("/Users/aaronullger/GitHub/StudyPANaCEa/services/domain/firstLineService")'.
+hooks/game/use-guideline-drill.ts(56,45): error TS2339: Property 'getAllGuidelines' does not exist on type 'typeof import("/Users/aaronullger/GitHub/StudyPANaCEa/services/domain/guidelineService")'.
+hooks/game/use-guideline-drill.ts(185,5): error TS2322: Type 'GuidelineCase | null | undefined' is not assignable to type 'GuidelineCase | null'.
+  Type 'undefined' is not assignable to type 'GuidelineCase | null'.
+hooks/game/use-mini-lab-drill.test.ts(50,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-mini-lab-drill.test.ts(61,16): error TS18048: 'addedPanel' is possibly 'undefined'.
+hooks/game/use-mini-lab-drill.test.ts(86,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-mini-lab-drill.ts(1117,26): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-mini-lab-drill.ts(1125,24): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | RegExp'.
+      Type 'undefined' is not assignable to type 'string | RegExp'.
+hooks/game/use-mini-lab-drill.ts(1169,32): error TS18048: 'randomCase' is possibly 'undefined'.
+hooks/game/use-mini-lab-drill.ts(1178,24): error TS18048: 'randomCase' is possibly 'undefined'.
+hooks/game/use-mini-lab-drill.ts(1186,41): error TS18048: 'randomCase' is possibly 'undefined'.
+hooks/game/use-mini-lab-drill.ts(1186,64): error TS18048: 'randomCase' is possibly 'undefined'.
+hooks/game/use-mini-lab-drill.ts(1188,3): error TS2322: Type '{ id: string; patientAge: number; patientSex: "M" | "F"; panels: { values: { value: string; name: string; unit: string; referenceRange: string; isAbnormal: boolean; isCritical?: boolean; abnormalDirection?: "high" | "low"; }[]; name: string; }[]; ... 6 more ...; orderedTests?: string[]; }' is not assignable to type 'LabCase'.
+  Types of property 'clinicalContext' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-mini-lab-drill.ts(1436,21): error TS2345: Argument of type 'LabCase | null' is not assignable to parameter of type 'LabCase'.
+  Type 'null' is not assignable to type 'LabCase'.
+hooks/game/use-photo-drill.ts(132,102): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | boolean'.
+hooks/game/use-photo-drill.ts(134,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/game/use-photo-drill.ts(290,5): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(293,5): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(300,7): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(301,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(301,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(302,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(302,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(303,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(303,9): error TS2532: Object is possibly 'undefined'.
+hooks/game/use-photo-drill.ts(308,3): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/game/use-photo-drill.ts(308,10): error TS2532: Object is possibly 'undefined'.
+hooks/useAchievements.ts(277,7): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+hooks/useAdvancedAnalytics.ts(326,11): error TS2345: Argument of type 'import("/Users/aaronullger/GitHub/StudyPANaCEa/services/advancedUserAnalyticsEngine").SystemMasteryProfile[]' is not assignable to parameter of type 'import("/Users/aaronullger/GitHub/StudyPANaCEa/services/ai/advancedUserAnalyticsEngine").SystemMasteryProfile[]'.
+  Type 'SystemMasteryProfile' is missing the following properties from type 'SystemMasteryProfile': recentAccuracy, trend
+hooks/useAdvancedAnalytics.ts(359,59): error TS2345: Argument of type 'import("/Users/aaronullger/GitHub/StudyPANaCEa/services/advancedUserAnalyticsEngine").SystemMasteryProfile[]' is not assignable to parameter of type 'import("/Users/aaronullger/GitHub/StudyPANaCEa/services/ai/advancedUserAnalyticsEngine").SystemMasteryProfile[]'.
+  Type 'SystemMasteryProfile' is missing the following properties from type 'SystemMasteryProfile': recentAccuracy, trend
+hooks/useReducedMotion.ts(11,13): error TS7030: Not all code paths return a value.
+hooks/useResponseTelemetry.ts(161,19): error TS2532: Object is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(161,55): error TS2532: Object is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(192,18): error TS18048: 'curr' is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(192,27): error TS18048: 'prev' is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(193,18): error TS18048: 'curr' is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(193,27): error TS18048: 'prev' is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(200,24): error TS18048: 'start' is possibly 'undefined'.
+hooks/useResponseTelemetry.ts(201,24): error TS18048: 'start' is possibly 'undefined'.
+hooks/useSpeechSynthesis.ts(81,25): error TS2345: Argument of type 'SpeechSynthesisVoice | undefined' is not assignable to parameter of type 'SetStateAction<SpeechSynthesisVoice | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<SpeechSynthesisVoice | null>'.
+hooks/useTelemetry.ts(218,7): error TS2532: Object is possibly 'undefined'.
+hooks/useTelemetry.ts(275,13): error TS2532: Object is possibly 'undefined'.
+hooks/useUserStats.test.ts(266,40): error TS2339: Property 'SYNC' does not exist on type '{ readonly CONTENT_ALL: "/api/content/all"; readonly CONDITIONS: "/api/conditions"; readonly QUESTIONS: "/api/questions"; readonly QUESTIONS_POOL: "/api/questions/pool"; readonly QUESTIONS_CURATE: "/api/questions/curate"; ... 8 more ...; readonly REVIEWS: "/api/reviews"; }'.
+hooks/useUserStats.test.ts(305,40): error TS2339: Property 'SYNC' does not exist on type '{ readonly CONTENT_ALL: "/api/content/all"; readonly CONDITIONS: "/api/conditions"; readonly QUESTIONS: "/api/questions"; readonly QUESTIONS_POOL: "/api/questions/pool"; readonly QUESTIONS_CURATE: "/api/questions/curate"; ... 8 more ...; readonly REVIEWS: "/api/reviews"; }'.
+hooks/useUserStats.ts(131,65): error TS2339: Property 'SYNC' does not exist on type '{ readonly CONTENT_ALL: "/api/content/all"; readonly CONDITIONS: "/api/conditions"; readonly QUESTIONS: "/api/questions"; readonly QUESTIONS_POOL: "/api/questions/pool"; readonly QUESTIONS_CURATE: "/api/questions/curate"; ... 8 more ...; readonly REVIEWS: "/api/reviews"; }'.
+hooks/useUserStats.ts(211,65): error TS2339: Property 'SYNC' does not exist on type '{ readonly CONTENT_ALL: "/api/content/all"; readonly CONDITIONS: "/api/conditions"; readonly QUESTIONS: "/api/questions"; readonly QUESTIONS_POOL: "/api/questions/pool"; readonly QUESTIONS_CURATE: "/api/questions/curate"; ... 8 more ...; readonly REVIEWS: "/api/reviews"; }'.
+hooks/useVitalsEngine.ts(34,30): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/useVitalsEngine.ts(34,59): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/useVitalsEngine.ts(147,9): error TS18048: 'lastHr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(152,9): error TS18048: 'lastSbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(157,9): error TS18048: 'lastDbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(161,28): error TS18048: 'lastRr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(163,9): error TS18048: 'lastO2' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(187,28): error TS18048: 'lastHr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(188,29): error TS18048: 'lastSbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(189,29): error TS18048: 'lastDbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(190,28): error TS18048: 'lastRr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(191,28): error TS18048: 'lastO2' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(227,36): error TS18048: 'lastSbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(228,36): error TS18048: 'lastDbp' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(229,35): error TS18048: 'lastHr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(230,44): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useVitalsEngine.ts(231,48): error TS18048: 'lastRr' is possibly 'undefined'.
+hooks/useVitalsEngine.ts(233,44): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useVitalsEngine.ts(234,46): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useVitalsEngine.ts(235,46): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useVitalsEngine.ts(236,44): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useVitalsEngine.ts(237,44): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+hooks/useWorkloadProjection.ts(72,9): error TS2353: Object literal may only specify known properties, and 'currentCardCount' does not exist in type 'SimulationParams'.
+hooks/useWorkloadProjection.ts(79,33): error TS2554: Expected 3 arguments, but got 2.
+hooks/useWorkloadProjection.ts(81,22): error TS2345: Argument of type '{ recommendedRetention: number; explanation: string; }' is not assignable to parameter of type 'SetStateAction<WorkloadSimulation | null>'.
+hooks/useWorkloadProjection.ts(107,40): error TS2345: Argument of type 'WorkloadSimulation[]' is not assignable to parameter of type 'SimulationParams'.
+  Type 'WorkloadSimulation[]' is missing the following properties from type 'SimulationParams': fsrsParams, dailyNewCards
+hooks/useWorkloadProjection.ts(116,27): error TS2339: Property 'timeMinutes' does not exist on type '{ retention: number; reviews: number; minutes: number; }'.
+hooks/useWorkloadProjection.ts(133,5): error TS2322: Type '{ isCMRR: boolean; retention: number; reviews: number; minutes: number; }[]' is not assignable to type '{ retention: number; dailyReviews: number; timeMinutes: number; sustainability: number; isCMRR: boolean; }[]'.
+  Type '{ isCMRR: boolean; retention: number; reviews: number; minutes: number; }' is missing the following properties from type '{ retention: number; dailyReviews: number; timeMinutes: number; sustainability: number; isCMRR: boolean; }': dailyReviews, timeMinutes, sustainability
+hooks/useWorkloadProjection.ts(188,19): error TS2339: Property 'dailyReviews' does not exist on type 'WorkloadSimulation'.
+hooks/useWorkloadProjection.ts(188,47): error TS2339: Property 'dailyReviews' does not exist on type 'WorkloadSimulation'.
+hooks/useWorkloadProjection.ts(188,74): error TS2339: Property 'dailyReviews' does not exist on type 'WorkloadSimulation'.
+hooks/useWorkloadProjection.ts(225,46): error TS2339: Property 'dailyReviews' does not exist on type 'WorkloadSimulation'.
+hooks/useWorkloadProjection.ts(226,42): error TS2339: Property 'timeMinutes' does not exist on type 'WorkloadSimulation'.
+hooks/useWorkloadProjection.ts(242,46): error TS2339: Property 'timeMinutes' does not exist on type 'WorkloadSimulation'.
+lib/analyticsExport.ts(136,35): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/analyticsExport.ts(137,18): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/auth/rbac.ts(40,28): error TS2345: Argument of type 'UserRole | undefined' is not assignable to parameter of type 'UserRole'.
+  Type 'undefined' is not assignable to type 'UserRole'.
+lib/auth/rbac.ts(91,11): error TS2322: Type 'UserRole | undefined' is not assignable to type 'UserRole'.
+  Type 'undefined' is not assignable to type 'UserRole'.
+lib/auth/rbac.ts(91,23): error TS2322: Type 'UserRole | undefined' is not assignable to type 'UserRole'.
+  Type 'undefined' is not assignable to type 'UserRole'.
+lib/buzzwordRegistry.ts(17,51): error TS2339: Property 'BUZZWORDS_ALL' does not exist on type '{ readonly CONTENT_ALL: "/api/content/all"; readonly CONDITIONS: "/api/conditions"; readonly QUESTIONS: "/api/questions"; readonly QUESTIONS_POOL: "/api/questions/pool"; readonly QUESTIONS_CURATE: "/api/questions/curate"; ... 8 more ...; readonly REVIEWS: "/api/reviews"; }'.
+lib/buzzwordRegistry.ts(63,16): error TS2322: Type 'BuzzwordEntry | undefined' is not assignable to type 'BuzzwordEntry | null'.
+  Type 'undefined' is not assignable to type 'BuzzwordEntry | null'.
+lib/circadian.ts(109,10): error TS18048: 'hours' is possibly 'undefined'.
+lib/circadian.ts(109,18): error TS18048: 'minutes' is possibly 'undefined'.
+lib/cmrr-optimizer.ts(148,40): error TS2532: Object is possibly 'undefined'.
+lib/cmrr-optimizer.ts(151,40): error TS2532: Object is possibly 'undefined'.
+lib/cmrr-optimizer.ts(154,16): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(35,5): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(41,9): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(41,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/conditionResolver.ts(41,24): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(43,9): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(44,11): error TS2532: Object is possibly 'undefined'.
+lib/conditionResolver.ts(44,11): error TS2532: Object is possibly 'undefined'.

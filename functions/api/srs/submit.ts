@@ -63,7 +63,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
     const fsrs = new FSRS();
     const now = new Date();
 
-    let nextReviewDate: Date;
+    let nextReviewDate: Date = new Date(); // Default to now, will be updated by FSRS
     let reviewState: any;
     let conditionId: string | null = null;
     let taskType: string | null = null;

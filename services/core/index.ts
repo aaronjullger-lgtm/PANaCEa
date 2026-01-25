@@ -55,13 +55,14 @@ import * as mainSessionServiceModule from './mainSessionService';
 import * as customSessionServiceModule from './customSessionService';
 import * as sessionServiceModule from './sessionService';
 // REMOVED: noRepeatService - has runtime prisma import, server-only
+// REMOVED: poolMonitorService - has runtime prisma import, server-only
 import * as poolMonitorServiceModule from './poolMonitorService';
 
 export const sessionService = mainSessionServiceModule;
 export const customSessionService = customSessionServiceModule;
 export const sessionMgmt = sessionServiceModule;
 // export const noRepeatService = noRepeatServiceModule; // SERVER-ONLY: use API
-export const poolMonitorService = poolMonitorServiceModule;
+// export const poolMonitorService = poolMonitorServiceModule; // SERVER-ONLY: use API
 
 // Named exports from session services
 export {

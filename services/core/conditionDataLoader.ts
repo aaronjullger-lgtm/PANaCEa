@@ -1,17 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import conditionRegistry from '@/config/conditionRegistry';
 
-export interface ConditionData {
-  id: string;
-  conditionId: string;
-  system: string;
-  subcategory?: string | null;
-  condition: string;
-  relatedSystems?: string[];
-  content: any;
-  status?: string;
-  meta?: Record<string, any>;
-}
+// Import and re-export type from client-safe types file
+// This prevents client code from importing this server-only service just to get the type
+export type { ConditionData } from '../../types/medical-content';
 
 function hasDatabase(): boolean {
   return Boolean(process.env.DATABASE_URL);

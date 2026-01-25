@@ -231,7 +231,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full bg-purple-500" />
               <h3 className="text-lg font-semibold text-slate-700">
-                {question.condition1.name}
+                {question.conditions[0]?.name}
               </h3>
             </div>
             <SortableContext
@@ -267,7 +267,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full bg-orange-500" />
               <h3 className="text-lg font-semibold text-slate-700">
-                {question.condition2.name}
+                {question.conditions[1]?.name}
               </h3>
             </div>
             <SortableContext

@@ -55,12 +55,15 @@ export {
 // Import directly: import { ... } from '@/services/ai/automatedContentPipeline';
 // Do NOT export here to prevent bundling Node.js modules into browser
 
+// REMOVED: batchGeneratorService - has runtime prisma import, server-only
 import * as batchGeneratorServiceModule from './batchGeneratorService';
-import * as contextAwareOrchestratorModule from './contextAwareOrchestrator';
-import * as studyGuideGeneratorModule from './StudyGuideGenerator';
+// export const batchGenerator = batchGeneratorServiceModule; // SERVER-ONLY: use API
 
-export const batchGenerator = batchGeneratorServiceModule;
-export const contextOrchestrator = contextAwareOrchestratorModule;
+// REMOVED: contextAwareOrchestrator - has runtime prisma import, server-only
+import * as contextAwareOrchestratorModule from './contextAwareOrchestrator';
+// export const contextOrchestrator = contextAwareOrchestratorModule; // SERVER-ONLY: use API
+
+import * as studyGuideGeneratorModule from './StudyGuideGenerator';
 export const studyGuideGenerator = studyGuideGeneratorModule;
 
 // ============================================================================

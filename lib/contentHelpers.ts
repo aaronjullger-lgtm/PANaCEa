@@ -5,7 +5,8 @@
  * and calculating search relevance scores.
  */
 
-import type { ConditionData } from '../services/core/conditionDataLoader';
+// FIXED: Import from client-safe types file instead of server-only conditionDataLoader
+import type { ConditionData } from '../types/medical-content';
 
 /**
  * Check if database content is complete enough for question generation

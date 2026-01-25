@@ -48,24 +48,25 @@ export * from './examService';
 // CLINICAL REFERENCE DATA
 // ============================================================================
 
-import * as drugServiceModule from './drugService';
-import * as labServiceModule from './labService';
+import { drugService as drugServiceObj } from './drugService';
+import { labService as labServiceObj } from './labService';
 import * as labCaseServiceModule from './labCaseService';
+// REMOVED: clinicalPearlService - has runtime prisma import via lib/prisma, server-only
 import * as clinicalPearlServiceModule from './clinicalPearlService';
-import * as buzzwordServiceModule from './buzzwordService';
-import * as firstLineServiceModule from './firstLineService';
-import * as guidelineServiceModule from './guidelineService';
+import { buzzwordService as buzzwordServiceObj } from './buzzwordService';
+import { firstLineService as firstLineServiceObj } from './firstLineService';
+import { guidelineService as guidelineServiceObj } from './guidelineService';
 import * as referenceDataServiceModule from './referenceDataService';
 import * as dailyTriadServiceModule from './dailyTriadService';
 import * as confusionServiceModule from './confusionService';
 
-export const drugService = drugServiceModule;
-export const labService = labServiceModule;
+export const drugService = drugServiceObj;
+export const labService = labServiceObj;
 export const labCaseService = labCaseServiceModule;
-export const clinicalPearlService = clinicalPearlServiceModule;
-export const buzzwordService = buzzwordServiceModule;
-export const firstLineService = firstLineServiceModule;
-export const guidelineService = guidelineServiceModule;
+// export const clinicalPearlService = clinicalPearlServiceModule; // SERVER-ONLY: use API
+export const buzzwordService = buzzwordServiceObj;
+export const firstLineService = firstLineServiceObj;
+export const guidelineService = guidelineServiceObj;
 export const referenceData = referenceDataServiceModule;
 export const dailyTriadService = dailyTriadServiceModule;
 export const confusionService = confusionServiceModule;
@@ -186,15 +187,20 @@ export {
 // MEDIA & RESOURCES
 // ============================================================================
 
+// REMOVED: mediaStorageService - has runtime prisma import, server-only
 import * as mediaStorageServiceModule from './mediaStorageService';
-import * as mediaApprovalServiceModule from './mediaApprovalService';
-import * as imageQualityServiceModule from './imageQualityService';
-import * as educationalResourceServiceModule from './educationalResourceService';
+// export const mediaStorage = mediaStorageServiceModule; // SERVER-ONLY: use API
 
-export const mediaStorage = mediaStorageServiceModule;
-export const mediaApproval = mediaApprovalServiceModule;
+// REMOVED: mediaApprovalService - has runtime prisma import, server-only
+import * as mediaApprovalServiceModule from './mediaApprovalService';
+// export const mediaApproval = mediaApprovalServiceModule; // SERVER-ONLY: use API
+
+import * as imageQualityServiceModule from './imageQualityService';
 export const imageQuality = imageQualityServiceModule;
-export const educationalResources = educationalResourceServiceModule;
+
+// REMOVED: educationalResourceService - has runtime prisma import, server-only
+import * as educationalResourceServiceModule from './educationalResourceService';
+// export const educationalResources = educationalResourceServiceModule; // SERVER-ONLY: use API
 
 // ============================================================================
 // SPECIALIZED FEATURES

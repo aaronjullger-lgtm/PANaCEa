@@ -971,24 +971,21 @@ Provide an ALTERNATE explanation that approaches this from a different angle. Us
 Keep it concise (3-4 sentences max) and focus on helping them understand WHY they made this mistake.`;
 
       // Use streaming API from geminiService
-      const { callGeminiTextStreaming } = await import('@/services/domain/geminiService');
+      const { callGeminiStream } = await import('@/services/domain/geminiService');
       
-      await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
-        onChunk: (chunk) => {
+      try {
+        for await (const chunk of callGeminiStream('gemini-2.0-flash-exp', prompt, 0.7)) {
           // Append each chunk as it arrives
           setAlternateRationale((prev) => prev + chunk);
-        },
-        onComplete: () => {
-          setIsExplainerLoading(false);
-        },
-        onError: (err) => {
-          console.error('Error generating alternate rationale:', err);
-          setAlternateRationale(
-            "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
-          );
-          setIsExplainerLoading(false);
-        },
-      });
+        }
+        setIsExplainerLoading(false);
+      } catch (err) {
+        console.error('Error generating alternate rationale:', err);
+        setAlternateRationale(
+          "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
+        );
+        setIsExplainerLoading(false);
+      }
     } catch (err) {
       // User-friendly error message instead of technical details
       console.error('Error generating alternate rationale:', err);
