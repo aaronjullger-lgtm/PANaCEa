@@ -370,7 +370,7 @@ export async function getOptimalQuestions(
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
   if (useIntelligent && systemMastery.length > 0) {
     try {
-      const { getIntelligentQuestions } = await import('../intelligentQuestionService');
+      const { getIntelligentQuestions } = await import('../ai/intelligentQuestionService');
       const result = await getIntelligentQuestions(
         { maxQuestions: count },
         systemMastery,
@@ -410,17 +410,17 @@ export default {
 
   // Enhanced generation
   generateEnhancedQuestion: async (
-    ...args: Parameters<typeof import('../enhancedQuestionService').generateEnhancedQuestion>
-  ) => (await import('../enhancedQuestionService')).generateEnhancedQuestion(...args),
+    ...args: Parameters<typeof import('../ai/enhancedQuestionService').generateEnhancedQuestion>
+  ) => (await import('../ai/enhancedQuestionService')).generateEnhancedQuestion(...args),
 
   // Intelligent selection
   getIntelligentQuestions: async (
-    ...args: Parameters<typeof import('../intelligentQuestionService').getIntelligentQuestions>
-  ) => (await import('../intelligentQuestionService')).getIntelligentQuestions(...args),
+    ...args: Parameters<typeof import('../ai/intelligentQuestionService').getIntelligentQuestions>
+  ) => (await import('../ai/intelligentQuestionService')).getIntelligentQuestions(...args),
 
   // Adaptive algorithms
-  calculateAdaptiveState: (await import('../adaptiveQuestionEngine')).calculateAdaptiveState,
-  selectOptimalQuestions: (await import('../adaptiveQuestionEngine')).selectOptimalQuestions,
+  calculateAdaptiveState: (await import('../ai/adaptiveQuestionEngine')).calculateAdaptiveState,
+  selectOptimalQuestions: (await import('../ai/adaptiveQuestionEngine')).selectOptimalQuestions,
 
   // Unified
   getOptimalQuestions,
