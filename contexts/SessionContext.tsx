@@ -31,7 +31,7 @@ import {
   type SessionCalibration,
   type CalibrationSummary,
   type SubmitReviewResponse,
-} from '../services/calibrationService';
+} from '../services/analytics/calibrationService';
 import type { Question, SessionSettings } from '../types';
 
 const INITIAL_QUEUE_SIZE = 3;
