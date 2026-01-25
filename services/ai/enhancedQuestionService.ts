@@ -5,7 +5,7 @@
  * Uses MedicalContent, Condition, and linked entities for contextual generation.
  */
 
-import type { Question, SessionSettings } from '../types';
+import type { Question, SessionSettings } from '@/types';
 import {
   getWeightedRandomSystem,
   getWeightedRandomTask,

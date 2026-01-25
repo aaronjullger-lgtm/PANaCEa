@@ -7,7 +7,7 @@
  */
 
 import { callGeminiText, type ChatMessage } from './geminiService';
-import type { PatientEncounterCase } from '../types/drill-modes';
+import type { PatientEncounterCase } from '@/types/drill-modes';
 
 /**
  * Structured feedback from the Virtual Preceptor

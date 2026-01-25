@@ -7,7 +7,7 @@
  * - No FSRS tracking (session state is local only)
  */
 
-import type { Question } from '../types';
+import type { Question } from '@/types';
 import type {
   CustomSessionConfig,
   CustomSessionState,
@@ -19,10 +19,10 @@ import type {
   GenerateCustomSessionRequest,
   GenerateCustomSessionResponse,
   FocusArea,
-} from '../types/custom-session';
-import { CUSTOM_SESSION_STORAGE_KEY, DEFAULT_CUSTOM_SESSION_CONFIG } from '../types/custom-session';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
-import type { SystemCode } from '../types';
+} from '@/types/custom-session';
+import { CUSTOM_SESSION_STORAGE_KEY, DEFAULT_CUSTOM_SESSION_CONFIG } from '@/types/custom-session';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import type { SystemCode } from '@/types';
 
 // ============================================================================
 // SESSION STATE MANAGEMENT (localStorage - ephemeral)

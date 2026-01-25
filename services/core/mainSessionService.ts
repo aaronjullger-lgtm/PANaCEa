@@ -8,7 +8,7 @@
  * - Provides hooks for real-time updates
  */
 
-import type { Question, SessionSettings } from '../types';
+import type { Question, SessionSettings } from '@/types';
 import { getQuestionBatch } from './questionService';
 
 // Session analytics from API

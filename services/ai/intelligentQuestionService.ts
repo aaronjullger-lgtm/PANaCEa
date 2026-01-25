@@ -8,7 +8,7 @@
  * - Optimizes for flow state and learning velocity
  */
 
-import type { Question, SessionSettings } from '../types';
+import type { Question, SessionSettings } from '@/types';
 import {
   getCognitiveState,
   getLearningVelocity,

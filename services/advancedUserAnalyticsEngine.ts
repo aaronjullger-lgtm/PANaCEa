@@ -11,8 +11,8 @@
  * This is the brain of the personalized learning system.
  */
 
-import type { FSRSParameters } from '../lib/fsrs';
-import { defaultParameters } from '../lib/fsrs';
+import type { FSRSParameters } from '@/lib/fsrs';
+import { defaultParameters } from '@/lib/fsrs';
 
 // ============================================================================
 // Types & Interfaces

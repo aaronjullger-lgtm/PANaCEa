@@ -16,7 +16,7 @@ import type {
   ModelCatalog,
   NIHCitation,
   ModelAnnotation,
-} from '../types/anatomy-model';
+} from '@/types/anatomy-model';
 
 // Map database enum to type system
 export type AnatomySystem3D =

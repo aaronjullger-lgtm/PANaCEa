@@ -1,5 +1,5 @@
-import { PerformanceRecord } from '../types';
-import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+import { PerformanceRecord } from '@/types';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 const isTestEnv =
   typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');

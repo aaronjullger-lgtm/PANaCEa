@@ -4,7 +4,7 @@
  * Phase 17: Requirement 67
  */
 
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 interface SearchResult {
   question: Question;

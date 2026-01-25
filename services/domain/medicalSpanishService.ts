@@ -4,7 +4,7 @@
  * Additional Requirement: 58
  */
 
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 export type SpanishMode = 'english' | 'spanish' | 'side-by-side';
 

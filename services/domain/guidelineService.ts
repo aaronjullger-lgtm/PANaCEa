@@ -1,4 +1,4 @@
-import type { Guideline } from '../types/guidelines';
+import type { Guideline } from '@/types/guidelines';
 
 let guidelineCache: Guideline[] | null = null;
 

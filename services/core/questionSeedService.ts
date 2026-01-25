@@ -7,7 +7,7 @@
  * - Ensure users never see the exact same text twice
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 
 interface QuestionSeedData {
