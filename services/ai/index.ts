@@ -52,12 +52,14 @@ export {
 // CONTENT GENERATION & ORCHESTRATION
 // ============================================================================
 
-import * as automatedContentPipelineModule from './automatedContentPipeline';
+// NOTE: automatedContentPipeline.ts is SERVER-ONLY (uses Node.js fs/path)
+// Import directly: import { ... } from '@/services/ai/automatedContentPipeline';
+// Do NOT export here to prevent bundling Node.js modules into browser
+
 import * as batchGeneratorServiceModule from './batchGeneratorService';
 import * as contextAwareOrchestratorModule from './contextAwareOrchestrator';
 import * as studyGuideGeneratorModule from './StudyGuideGenerator';
 
-export const contentPipeline = automatedContentPipelineModule;
 export const batchGenerator = batchGeneratorServiceModule;
 export const contextOrchestrator = contextAwareOrchestratorModule;
 export const studyGuideGenerator = studyGuideGeneratorModule;
@@ -148,7 +150,7 @@ export {
  * - enhancedQuestionService.ts → Use for AI-enriched explanations
  *
  * CONTENT GENERATION:
- * - automatedContentPipeline.ts → Use for batch content generation
+ * - automatedContentPipeline.ts → SERVER-ONLY! Import directly, not from barrel
  * - batchGeneratorService.ts → Use for bulk question creation
  * - StudyGuideGenerator.ts → Use for personalized study materials
  *
