@@ -5,7 +5,16 @@
  * Following the database-first principle from .clinerules.
  */
 
-import type { PrismaClient } from '@prisma/client';
+// Edge-safe type definition - does NOT import PrismaClient to avoid bundler initialization
+// This prevents Cloudflare Pages from attempting to initialize PrismaClient at module level
+// The prisma parameter accepts any object with the required database methods
+type PrismaLike = {
+  medicalContent: {
+    findFirst: (args: any) => Promise<any>;
+    findMany: (args: any) => Promise<any[]>;
+    count: (args?: any) => Promise<number>;
+  };
+};
 
 export interface ConditionContent {
   overview?: string;
@@ -34,12 +43,12 @@ export interface ConditionData {
 /**
  * Load condition data from the database by name or partial match
  *
- * @param prisma - Prisma client instance
+ * @param prisma - Prisma client instance (accepts PrismaLike interface)
  * @param queryText - Condition name or search query
  * @returns ConditionData or null if not found
  */
 export async function loadConditionData(
-  prisma: PrismaClient | any,
+  prisma: PrismaLike,
   queryText: string
 ): Promise<ConditionData | null> {
   try {
@@ -122,13 +131,13 @@ export async function loadConditionData(
 /**
  * Load multiple conditions by system for bulk generation
  *
- * @param prisma - Prisma client instance
+ * @param prisma - Prisma client instance (accepts PrismaLike interface)
  * @param system - Organ system name
  * @param limit - Maximum number of conditions to return
  * @returns Array of ConditionData
  */
 export async function loadConditionsBySystem(
-  prisma: PrismaClient | any,
+  prisma: PrismaLike,
   system: string,
   limit: number = 10
 ): Promise<ConditionData[]> {
@@ -166,12 +175,12 @@ export async function loadConditionsBySystem(
 /**
  * Load a random condition for random question generation
  *
- * @param prisma - Prisma client instance
+ * @param prisma - Prisma client instance (accepts PrismaLike interface)
  * @param excludeIds - IDs to exclude (e.g., recently used)
  * @returns ConditionData or null
  */
 export async function loadRandomCondition(
-  prisma: PrismaClient | any,
+  prisma: PrismaLike,
   excludeIds: string[] = []
 ): Promise<ConditionData | null> {
   try {

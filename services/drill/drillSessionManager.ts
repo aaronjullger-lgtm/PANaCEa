@@ -9,10 +9,28 @@
  * @module services/drill/drillSessionManager
  */
 
-import type { PrismaClient } from '@prisma/client';
-
-// Type alias for any Prisma-compatible client (standard or edge)
-type PrismaLike = Pick<PrismaClient, 'questionAttempt' | 'studySession' | 'reviewLog' | 'userRolling360Stats' | '$disconnect'>;
+// Edge-safe type definition - does NOT import PrismaClient to avoid bundler initialization
+// This prevents Cloudflare Pages from attempting to initialize PrismaClient at module level
+type PrismaLike = {
+  questionAttempt: {
+    create: (args: any) => Promise<any>;
+    findMany: (args?: any) => Promise<any[]>;
+    count: (args?: any) => Promise<number>;
+  };
+  studySession: {
+    create: (args: any) => Promise<any>;
+    update: (args: any) => Promise<any>;
+    findMany: (args?: any) => Promise<any[]>;
+    findUnique: (args: any) => Promise<any>;
+  };
+  reviewLog: {
+    count: (args?: any) => Promise<number>;
+  };
+  userRolling360Stats: {
+    findUnique: (args: any) => Promise<any>;
+  };
+  $disconnect: () => Promise<void>;
+};
 
 export type DrillType = 'photo_drill' | 'contrastive_drill' | 'rapid_recall' | 'wordle';
 
