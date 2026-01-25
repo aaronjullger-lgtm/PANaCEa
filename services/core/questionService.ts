@@ -350,22 +350,15 @@ export async function getOptimalQuestions(
     useEnhanced = true,
   } = options;
 
-  // NEW: If prisma + userId provided, use enhanced pool with Sprint A & B utilities
+  // NOTE: Enhanced pool with Sprint A & B utilities is SERVER-ONLY
+  // The browser build should not include imports of ./enhancedQuestionPool
+  // which contains @prisma/client. Use API endpoints instead.
   if (useEnhanced && prisma && userId) {
-    try {
-      const { getEnhancedQuestionBatch } = await import('./enhancedQuestionPool');
-      const result = await getEnhancedQuestionBatch(prisma, userId, settings, count);
-
-      if (result.questions.length >= count * 0.8) {
-        console.log(
-          '[Core QuestionService] Using enhanced pool with Sprint A & B:',
-          result.metadata
-        );
-        return result.questions;
-      }
-    } catch (error) {
-      console.warn('[Core QuestionService] Enhanced pool failed, falling back:', error);
-    }
+    // This code path is server-only (prisma client passed in)
+    // On the browser, prisma will always be undefined
+    console.warn(
+      '[Core QuestionService] Enhanced pool requires server-side execution. Use /api/questions/session endpoint.'
+    );
   }
 
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
@@ -419,9 +412,15 @@ export default {
     ...args: Parameters<typeof import('../ai/intelligentQuestionService').getIntelligentQuestions>
   ) => (await import('../ai/intelligentQuestionService')).getIntelligentQuestions(...args),
 
-  // Adaptive algorithms
-  calculateAdaptiveState: (await import('../ai/adaptiveQuestionEngine')).calculateAdaptiveState,
-  selectOptimalQuestions: (await import('../ai/adaptiveQuestionEngine')).selectOptimalQuestions,
+  // Adaptive algorithms - wrapped to avoid top-level await
+  calculateAdaptiveState: async (...args: Parameters<typeof calculateAdaptiveState>) => {
+    const mod = await import('../ai/adaptiveQuestionEngine');
+    return mod.calculateAdaptiveState(...args);
+  },
+  selectOptimalQuestions: async (...args: Parameters<typeof selectOptimalQuestions>) => {
+    const mod = await import('../ai/adaptiveQuestionEngine');
+    return mod.selectOptimalQuestions(...args);
+  },
 
   // Unified
   getOptimalQuestions,

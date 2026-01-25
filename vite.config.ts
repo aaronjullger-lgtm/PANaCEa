@@ -4,6 +4,109 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
+/**
+ * Vite plugin to completely remove Prisma imports from browser bundles.
+ * Uses transform to strip out Prisma imports before they reach Rollup.
+ */
+function prismaExcludePlugin(): Plugin {
+  const prismaPatterns = [
+    '@prisma/client',
+    '@prisma/client/edge',
+    '.prisma/client',
+    '@prisma/extension-accelerate',
+  ];
+
+  return {
+    name: 'prisma-exclude',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      // Don't intercept imports from server-side code (functions/)
+      if (importer && importer.includes('/functions/')) {
+        return null;
+      }
+      
+      // Intercept @prisma/client and related packages
+      if (prismaPatterns.some((p) => source === p || source.includes(p))) {
+        return { id: 'virtual:prisma-stub', moduleSideEffects: false };
+      }
+      // Intercept lib/prisma imports (various forms)
+      if (
+        source.endsWith('lib/prisma') ||
+        source.endsWith('lib/prisma.ts') ||
+        source === '../prisma' ||
+        source === '../../lib/prisma' ||
+        source === '@/lib/prisma'
+      ) {
+        return { id: 'virtual:prisma-stub', moduleSideEffects: false };
+      }
+      return null;
+    },
+    load(id) {
+      if (id === 'virtual:prisma-stub') {
+        // Return a stub module that exports empty objects/functions
+        return `
+          export const PrismaClient = class PrismaClient {
+            constructor() {
+              if (typeof window !== 'undefined') {
+                console.warn('[Browser] PrismaClient is not available in browser bundles');
+              }
+            }
+          };
+          export const Prisma = {};
+          export const prisma = null;
+          export default { PrismaClient, Prisma };
+        `;
+      }
+      return null;
+    },
+    // Transform hook to catch imports that slip through resolveId
+    transform(code, id) {
+      // Skip node_modules and functions/ (server-side code)
+      if (id.includes('node_modules') || id.includes('/functions/')) return null;
+
+      // Check if the file contains Prisma imports
+      const hasPrismaImport = prismaPatterns.some(
+        (p) => code.includes(`from '${p}'`) || code.includes(`from "${p}"`) || code.includes(`import('${p}')`) || code.includes(`import("${p}")`)
+      );
+
+      if (hasPrismaImport) {
+        // Replace import statements with stub imports
+        let transformed = code;
+        let importCounter = 0;
+
+        for (const pattern of prismaPatterns) {
+          const escapedPattern = pattern.replace('/', '\\/').replace('.', '\\.');
+          
+          // Replace static imports with unique variable names
+          transformed = transformed.replace(
+            new RegExp(`import\\s*{[^}]*}\\s*from\\s*['"]${escapedPattern}['"]`, 'g'),
+            () => {
+              importCounter++;
+              return `/* [Prisma removed ${importCounter}] */ const { PrismaClient: _PC${importCounter}, Prisma: _P${importCounter} } = { PrismaClient: class {}, Prisma: {} }`;
+            }
+          );
+          // Replace default imports
+          transformed = transformed.replace(
+            new RegExp(`import\\s+\\w+\\s+from\\s*['"]${escapedPattern}['"]`, 'g'),
+            () => {
+              importCounter++;
+              return `/* [Prisma removed ${importCounter}] */ const _prismaDefault${importCounter} = { PrismaClient: class {}, Prisma: {} }`;
+            }
+          );
+          // Replace dynamic imports with a null promise
+          transformed = transformed.replace(
+            new RegExp(`import\\(['"]${escapedPattern}['"]\\)`, 'g'),
+            `Promise.resolve({ PrismaClient: class {}, Prisma: {}, prisma: null })`
+          );
+        }
+        return { code: transformed, map: null };
+      }
+
+      return null;
+    },
+  };
+}
+
 // Build cache buster: 2026-01-06-v10-force-esm-exclude
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -26,6 +129,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
+      prismaExcludePlugin(),
       react(),
       VitePWA({
         registerType: 'autoUpdate',
@@ -121,14 +225,9 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       rollupOptions: {
-        external: [
-          // Externalize Prisma packages - they should never be in browser bundles
-          '@prisma/client',
-          '@prisma/client/edge',
-          '.prisma/client',
-          '.prisma/client/edge',
-          '@prisma/extension-accelerate',
-        ],
+        // NOTE: Prisma packages are now handled by prismaExcludePlugin
+        // which stubs them out instead of externalizing (which leaves bare imports)
+        external: [],
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
           interop: 'compat',

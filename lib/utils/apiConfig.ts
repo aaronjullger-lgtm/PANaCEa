@@ -29,6 +29,12 @@ export type ApiEndpoint = keyof typeof API_ENDPOINTS;
  * In development/test, returns relative paths
  */
 export function getApiEndpoint(endpoint: ApiEndpoint | string): string {
+  // Defensive check for undefined/null
+  if (!endpoint) {
+    console.warn('[apiConfig] getApiEndpoint called with undefined/null endpoint');
+    return '/api';
+  }
+
   // If it's a known endpoint constant, use it
   if (endpoint in API_ENDPOINTS) {
     return API_ENDPOINTS[endpoint as ApiEndpoint];
