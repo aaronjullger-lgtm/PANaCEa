@@ -17,4 +17,4 @@ export type {
   ModelCatalog,
 } from '../../types/anatomy-model';
 
-export { anatomyModelService } from '../../services/anatomyModelService';
+export { anatomyModelService } from '../../services/domain/anatomyModelService';

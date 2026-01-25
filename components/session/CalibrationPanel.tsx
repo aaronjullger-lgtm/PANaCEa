@@ -24,8 +24,8 @@ import {
   BarChart3,
   Info,
 } from 'lucide-react';
-import type { CalibrationSummary } from '../../services/calibrationService';
-import { getCalibrationStateLabel } from '../../services/calibrationService';
+import type { CalibrationSummary } from '../../services/analytics/calibrationService';
+import { getCalibrationStateLabel } from '../../services/analytics/calibrationService';
 
 interface CalibrationPanelProps {
   /** Calibration summary from session end */

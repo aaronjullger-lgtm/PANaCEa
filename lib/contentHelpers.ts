@@ -5,7 +5,7 @@
  * and calculating search relevance scores.
  */
 
-import type { ConditionData } from '../services/conditionDataLoader';
+import type { ConditionData } from '../services/core/conditionDataLoader';
 
 /**
  * Check if database content is complete enough for question generation

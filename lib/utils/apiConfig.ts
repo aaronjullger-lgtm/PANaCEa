@@ -10,8 +10,12 @@ export const API_ENDPOINTS = {
   QUESTIONS_POOL: '/api/questions/pool',
   QUESTIONS_CURATE: '/api/questions/curate',
   LAB_TESTS: '/api/labtests',
+  LAB_CASES: '/api/labcases',
+  LAB_CASES_RANDOM: (count: number) => `/api/labcases/random/${count}`,
   IMAGING: '/api/imaging',
   DRUGS: '/api/drugs',
+  GEMINI_PROXY: '/api/gemini',
+  DDX_GENERATE: '/api/ddx/generate',
   SESSIONS: '/api/sessions',
   REVIEWS: '/api/reviews',
 } as const;

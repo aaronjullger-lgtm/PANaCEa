@@ -13,7 +13,7 @@
 
 import * as advancedAnalytics from '../advancedUserAnalyticsEngine';
 import * as circadianAnalytics from '../circadianAnalyticsService';
-import * as researchAnalytics from '../researchBackedAnalytics';
+import * as researchAnalytics from './researchBackedAnalytics';
 
 // ============================================================================
 // Namespace Re-exports

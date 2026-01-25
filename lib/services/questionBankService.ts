@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma';
-import { loadConditionData } from '../../services/conditionDataLoader';
+import { loadConditionData } from '../../services/core/conditionDataLoader';
 import { generateSingleQuestion } from '../questionGenerator';
 
 export interface GetQuestionsParams {

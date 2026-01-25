@@ -304,7 +304,7 @@ Provide a clear, conversational explanation that:
 Keep your response concise (3-5 sentences max) and supportive.`;
 
       // Use streaming API from geminiService
-      const { callGeminiTextStreaming } = await import('@/services/geminiService');
+      const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
 
       await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
         onChunk: (chunk) => {

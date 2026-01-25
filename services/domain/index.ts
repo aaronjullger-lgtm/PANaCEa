@@ -56,6 +56,8 @@ import * as buzzwordServiceModule from './buzzwordService';
 import * as firstLineServiceModule from './firstLineService';
 import * as guidelineServiceModule from './guidelineService';
 import * as referenceDataServiceModule from './referenceDataService';
+import * as dailyTriadServiceModule from './dailyTriadService';
+import * as confusionServiceModule from './confusionService';
 
 export const drugService = drugServiceModule;
 export const labService = labServiceModule;
@@ -65,6 +67,37 @@ export const buzzwordService = buzzwordServiceModule;
 export const firstLineService = firstLineServiceModule;
 export const guidelineService = guidelineServiceModule;
 export const referenceData = referenceDataServiceModule;
+export const dailyTriadService = dailyTriadServiceModule;
+export const confusionService = confusionServiceModule;
+
+// Named exports from lab case service
+export {
+  fetchLabCases,
+  getCachedDiagnoses,
+} from './labCaseService';
+
+// Named exports from daily triad service
+export {
+  fetchDailyTriad,
+  type DailyTriad,
+} from './dailyTriadService';
+
+// Named exports from confusion service
+export {
+  fetchUserConfusions,
+  fetchConfusionPairs,
+  fetchConditionComparison,
+  generateComparison,
+  getSeverityColor,
+  getSeverityBgColor,
+  formatFieldValue,
+  groupFieldsByCategory,
+  getCategoryLabel,
+  type UserConfusionPairSummary,
+  type ConfusionPair,
+  type ComparisonField,
+  type DeepConditionData,
+} from './confusionService';
 
 // ============================================================================
 // DIFFERENTIAL DIAGNOSIS & RISK ASSESSMENT
@@ -88,6 +121,9 @@ export const anatomyModel = anatomyModelServiceModule;
 export const knowledgeGraph = knowledgeGraphServiceModule;
 export const conceptDependency = conceptDependencyServiceModule;
 
+// Named export for direct singleton access
+export { anatomyModelService } from './anatomyModelService';
+
 // ============================================================================
 // OSCE & PATIENT ENCOUNTERS
 // ============================================================================
@@ -103,6 +139,48 @@ export const osceScoring = osceScoringEngineModule;
 export const patientEncounter = patientEncounterGeneratorModule;
 export const patientPersonality = patientPersonalityEngineModule;
 export const scenarioService = scenarioServiceModule;
+
+// Named exports from OSCE service
+export {
+  getRandomEncounterCase,
+  startOSCESession,
+  saveOSCEChat,
+  completeOSCESession,
+  saveChatMessage,
+  getSessionHistory,
+  clearSession,
+  calculateEncounterScore,
+} from './osceService';
+
+// Named exports from OSCE scoring engine
+export {
+  OSCEScoringEngine,
+  createScoringEngine,
+  getCriticalActionsForCondition,
+} from './osceScoringEngine';
+
+// Named exports from patient encounter generator
+export {
+  generatePatientCase,
+  generatePatientEncounterFromCondition,
+  getFreshPatientEncounter,
+} from './patientEncounterGenerator';
+
+// Named exports from patient personality engine
+export {
+  generatePatientPersonality,
+  selectNonVerbalCue,
+  initializeRapportMeter,
+  updateRapport,
+  analyzeQuestionType,
+  generateInformationRules,
+  shouldRevealInformation,
+  initializeEmotionalState,
+  updateEmotionalState,
+  buildEnhancedPatientPrompt,
+  processEnhancedInteraction,
+  type EnhancedChatResult,
+} from './patientPersonalityEngine';
 
 // ============================================================================
 // MEDIA & RESOURCES
@@ -132,8 +210,11 @@ export const clinicalBrowser = clinicalBrowserServiceModule;
 export const smartPause = smartPauseServiceModule;
 export const studyGroup = studyGroupServiceModule;
 
-// Spanish mode types (type-only to avoid extra bundling)
-export type { SpanishMode } from './medicalSpanishService';
+// Named exports from medical spanish service
+export {
+  translateToSpanish,
+  type SpanishMode,
+} from './medicalSpanishService';
 
 // ============================================================================
 // TYPE EXPORTS
@@ -144,10 +225,6 @@ export type {
   StudySessionPlan,
 } from './adaptiveFSRSService';
 
-export type {
-  SpanishMode,
-} from './medicalSpanishService';
-
 // ============================================================================
 // USAGE GUIDE
 // ============================================================================
@@ -155,49 +232,49 @@ export type {
  * DOMAIN SERVICE ORGANIZATION:
  *
  * SPACED REPETITION:
- * - adaptiveFSRSService.ts ’ FSRS v6 algorithm implementation
+ * - adaptiveFSRSService.ts ï¿½ FSRS v6 algorithm implementation
  *
  * EXAM SIMULATION:
- * - examService.ts ’ PANCE exam simulation and scoring
- * - panceDistributionService.ts ’ Blueprint-aligned question distribution
+ * - examService.ts ï¿½ PANCE exam simulation and scoring
+ * - panceDistributionService.ts ï¿½ Blueprint-aligned question distribution
  *
  * CLINICAL REFERENCE:
- * - drugService.ts ’ Medication database and interactions
- * - labService.ts ’ Laboratory test reference
- * - labCaseService.ts ’ Clinical laboratory scenarios
- * - clinicalPearlService.ts ’ High-yield clinical facts
- * - buzzwordService.ts ’ Pathognomonic findings
- * - firstLineService.ts ’ First-line treatment recommendations
- * - guidelineService.ts ’ Clinical practice guidelines
- * - referenceDataService.ts ’ General reference data
+ * - drugService.ts ï¿½ Medication database and interactions
+ * - labService.ts ï¿½ Laboratory test reference
+ * - labCaseService.ts ï¿½ Clinical laboratory scenarios
+ * - clinicalPearlService.ts ï¿½ High-yield clinical facts
+ * - buzzwordService.ts ï¿½ Pathognomonic findings
+ * - firstLineService.ts ï¿½ First-line treatment recommendations
+ * - guidelineService.ts ï¿½ Clinical practice guidelines
+ * - referenceDataService.ts ï¿½ General reference data
  *
  * DIFFERENTIAL DIAGNOSIS:
- * - ddxService.ts ’ Differential diagnosis generation
- * - riskAssessmentEngine.ts ’ Clinical risk stratification
+ * - ddxService.ts ï¿½ Differential diagnosis generation
+ * - riskAssessmentEngine.ts ï¿½ Clinical risk stratification
  *
  * KNOWLEDGE STRUCTURES:
- * - anatomyModelService.ts ’ 3D anatomy models and interactions
- * - knowledgeGraphService.ts ’ Medical concept relationships
- * - conceptDependencyService.ts ’ Learning path dependencies
+ * - anatomyModelService.ts ï¿½ 3D anatomy models and interactions
+ * - knowledgeGraphService.ts ï¿½ Medical concept relationships
+ * - conceptDependencyService.ts ï¿½ Learning path dependencies
  *
  * OSCE & ENCOUNTERS:
- * - osceService.ts ’ OSCE station management
- * - osceScoringEngine.ts ’ OSCE performance scoring
- * - patientEncounterGenerator.ts ’ Realistic patient scenarios
- * - patientPersonalityEngine.ts ’ Patient persona simulation
- * - scenarioService.ts ’ Clinical scenario orchestration
+ * - osceService.ts ï¿½ OSCE station management
+ * - osceScoringEngine.ts ï¿½ OSCE performance scoring
+ * - patientEncounterGenerator.ts ï¿½ Realistic patient scenarios
+ * - patientPersonalityEngine.ts ï¿½ Patient persona simulation
+ * - scenarioService.ts ï¿½ Clinical scenario orchestration
  *
  * MEDIA & RESOURCES:
- * - mediaStorageService.ts ’ Image/video storage and retrieval
- * - mediaApprovalService.ts ’ Content moderation workflow
- * - imageQualityService.ts ’ Image quality assessment
- * - educationalResourceService.ts ’ External learning materials
+ * - mediaStorageService.ts ï¿½ Image/video storage and retrieval
+ * - mediaApprovalService.ts ï¿½ Content moderation workflow
+ * - imageQualityService.ts ï¿½ Image quality assessment
+ * - educationalResourceService.ts ï¿½ External learning materials
  *
  * SPECIALIZED:
- * - medicalSpanishService.ts ’ Spanish language mode
- * - clinicalBrowserService.ts ’ Clinical reference browser
- * - smartPauseService.ts ’ Intelligent study break recommendations
- * - studyGroupService.ts ’ Collaborative learning features
+ * - medicalSpanishService.ts ï¿½ Spanish language mode
+ * - clinicalBrowserService.ts ï¿½ Clinical reference browser
+ * - smartPauseService.ts ï¿½ Intelligent study break recommendations
+ * - studyGroupService.ts ï¿½ Collaborative learning features
  *
  * This barrel intentionally limits exports to client-safe services.
  */

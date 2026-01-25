@@ -14,7 +14,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { CalibrationPanel } from './CalibrationPanel';
-import type { CalibrationSummary } from '../../services/calibrationService';
+import type { CalibrationSummary } from '../../services/analytics/calibrationService';
 import type { SessionImpact } from '../../lib/driftCalculator';
 
 // =============================================================================

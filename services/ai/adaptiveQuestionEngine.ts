@@ -4,7 +4,7 @@
  * AI-powered question selection that adapts to learning patterns.
  */
 
-import type { SystemPerformance } from './panaceScorePredictor';
+import type { SystemPerformance } from '../analytics/panaceScorePredictor';
 
 export interface QuestionSelectionCriteria {
   userId: string;

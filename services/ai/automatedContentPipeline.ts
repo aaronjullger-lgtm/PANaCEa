@@ -9,9 +9,9 @@
 import { prisma } from '../../lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { processUploadedMedia } from './mediaApprovalService';
-import { uploadEducationalResource } from './educationalResourceService';
-import { assessImageQuality } from './imageQualityService';
+import { processUploadedMedia } from '../domain/mediaApprovalService';
+import { uploadEducationalResource } from '../domain/educationalResourceService';
+import { assessImageQuality } from '../domain/imageQualityService';
 import fs from 'fs';
 import path from 'path';
 

@@ -23,7 +23,7 @@ import {
   ChevronDown,
   Star,
 } from 'lucide-react';
-import type { LeaderboardEntry } from '../../services/studyGroupService';
+import type { LeaderboardEntry } from '../../services/domain/studyGroupService';
 
 // =============================================================================
 // TYPES

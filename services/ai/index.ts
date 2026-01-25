@@ -24,7 +24,6 @@ export {
   type SOAPNote,
   type GradingResult,
   type ChatMessage,
-  type StreamChunk,
 } from './geminiService';
 
 // ============================================================================

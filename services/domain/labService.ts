@@ -40,7 +40,7 @@ class LabService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_TESTS), { headers });
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LAB_TESTS), { headers });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -62,7 +62,7 @@ class LabService {
       throw new Error('Authentication required to fetch lab cases');
     }
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES), {
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LAB_CASES), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -88,7 +88,7 @@ class LabService {
       throw new Error('Authentication required to fetch lab cases');
     }
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES_RANDOM(count)), {
+    const response = await fetch(API_ENDPOINTS.LAB_CASES_RANDOM(count), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

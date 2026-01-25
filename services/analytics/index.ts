@@ -146,6 +146,8 @@ export const drillStatsService = drillStatsServiceModule;
 
 // Named exports from drill stats service
 export {
+  recordDrillSession,
+  getDrillStats,
   getDrillLandingStats,
   getAllDrillStats,
   getDrillProgress,
@@ -153,6 +155,12 @@ export {
   getDrillsDueForReview,
   getSimulationStats,
   getDrillPerformanceSummary,
+  getRecommendedDifficulty,
+  calculateNextDifficulty,
+  calculateNextReview,
+  resetDrillStats,
+  exportDrillStats,
+  clearDrillStatsCache,
   type DrillType,
   type DrillStatistics,
   type DrillProgress,
@@ -204,6 +212,7 @@ export {
   shouldShowPANCEContent,
   getExamLabel,
   type CareerStage,
+  type UserContext,
 } from './userContextService';
 
 // ============================================================================
