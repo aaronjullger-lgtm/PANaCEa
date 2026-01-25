@@ -11,8 +11,8 @@ import {
   ValidationError,
   type AppError,
   isAppError,
-} from '../../lib/errors/types';
-import { logError, addBreadcrumb } from '../../lib/errors/errorLogger';
+} from '../../../lib/errors/types';
+import { logError, addBreadcrumb } from '../../../lib/errors/errorLogger';
 
 interface Env {
   GEMINI_API_KEY: string;

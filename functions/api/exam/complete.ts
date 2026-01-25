@@ -10,7 +10,7 @@ import {
   EdgePrismaClient,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { ExamService } from '../../../services/examService';
+import { ExamService } from '../../../services/domain/examService';
 import { z } from 'zod';
 
 const CompleteExamSchema = z.object({

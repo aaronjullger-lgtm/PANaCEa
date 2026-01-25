@@ -125,7 +125,7 @@ export function generateRandomCase(
     xray: '0ea5e9',
   };
 
-  const explanation = options.educationalCaption || 'Key features support this diagnosis.';
+  const explanation: string = options.educationalCaption ?? 'Key features support this diagnosis.';
 
   return {
     id: `photo-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -511,25 +511,32 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
    */
   const exitToMenu = useCallback(() => {
     // Record session if any questions were attempted
-    if (sessionDataRef.current.questionsAttempted > 0 && selectedCategory) {
+    const sessionData = sessionDataRef.current;
+    if (sessionData?.questionsAttempted && sessionData.questionsAttempted > 0 && selectedCategory) {
       const endTime = Date.now();
       const drillTypeMap: Record<string, DrillType> = {
         ecg: 'ecg_drill',
         derm: 'derm_drill',
         radiology: 'imaging_drill',
       };
-      const drillType = drillTypeMap[selectedCategory as string] || 'imaging_drill';
+      const categoryKey = selectedCategory as string;
+      const drillType: DrillType = drillTypeMap[categoryKey] ?? 'imaging_drill';
+
+      const questionsAttempted = sessionData.questionsAttempted ?? 0;
+      const correctAnswers = sessionData.correctAnswers ?? 0;
+      const accuracy = questionsAttempted > 0 
+        ? (correctAnswers / questionsAttempted) * 100 
+        : 0;
 
       recordDrillSession({
         drillType,
         startTime: new Date(sessionStartRef.current).toISOString(),
         endTime: new Date(endTime).toISOString(),
-        questionsAttempted: sessionDataRef.current.questionsAttempted,
-        correctAnswers: sessionDataRef.current.correctAnswers,
-        accuracy:
-          (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
+        questionsAttempted,
+        correctAnswers,
+        accuracy,
         timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
-        bestStreak: sessionDataRef.current.bestStreak,
+        bestStreak: sessionData.bestStreak ?? 0,
         difficulty: getRecommendedDifficulty(drillType),
       });
     }

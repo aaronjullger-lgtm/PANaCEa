@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { callGeminiText } from '../../../services/geminiService';
+import { callGeminiText } from '../../../services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '../../../src/constants';
 
 export interface DdxProblem {

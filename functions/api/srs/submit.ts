@@ -17,7 +17,7 @@ import {
   FSRSState,
   FSRSCard,
 } from '../../../lib/fsrs';
-import { VariantQueueService } from '../../../services/variantQueueService';
+import { VariantQueueService } from '../../../services/core/variantQueueService';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
 
 const SRSSubmitSchema = z.object({
