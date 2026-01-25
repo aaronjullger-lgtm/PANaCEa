@@ -18,7 +18,7 @@ import {
   type CognitiveState,
   type LearningVelocity,
   type SystemMasteryProfile,
-} from '@/services/domain';
+} from '@/services/analytics';
 
 // ============================================================================
 // Types
