@@ -18,13 +18,17 @@
  */
 
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { logDrillAttempt, DrillAttemptData } from '../../../services/drill/drillSessionManager';
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
+  let prisma: any = null;
 
   try {
+    // Create edge Prisma client
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    
     // Authenticate
     const authContext = await authenticateRequest(request, env);
     if (!authContext) {
@@ -78,7 +82,7 @@ export async function onRequestPost(context: any) {
       metadata,
     };
 
-    const attempt = await logDrillAttempt(attemptData);
+    const attempt = await logDrillAttempt(prisma, attemptData);
 
     return new Response(
       JSON.stringify({ 
@@ -97,5 +101,7 @@ export async function onRequestPost(context: any) {
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
 }

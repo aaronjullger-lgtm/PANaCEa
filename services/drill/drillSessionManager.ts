@@ -4,18 +4,15 @@
  * Handles session logging for all drill modes with strict statistical isolation.
  * CRITICAL: All drill attempts use isMainSession = false to prevent FSRS contamination.
  * 
+ * Edge-compatible: All functions accept a Prisma client parameter.
+ * 
  * @module services/drill/drillSessionManager
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 
-let prisma: PrismaClient;
-
-if (typeof window === 'undefined') {
-  prisma = new PrismaClient();
-} else {
-  throw new Error('Drill Session Manager must run server-side only');
-}
+// Type alias for any Prisma-compatible client (standard or edge)
+type PrismaLike = Pick<PrismaClient, 'questionAttempt' | 'studySession' | 'reviewLog' | 'userRolling360Stats' | '$disconnect'>;
 
 export type DrillType = 'photo_drill' | 'contrastive_drill' | 'rapid_recall' | 'wordle';
 
@@ -48,10 +45,11 @@ export interface DrillOverview {
  * 
  * CRITICAL: Sets isMainSession = false to prevent FSRS weight updates
  * 
+ * @param prisma - Prisma client instance
  * @param data - Drill attempt data
  * @returns Created attempt record
  */
-export async function logDrillAttempt(data: DrillAttemptData) {
+export async function logDrillAttempt(prisma: PrismaLike, data: DrillAttemptData) {
   const {
     userId,
     questionId,
@@ -92,12 +90,14 @@ export async function logDrillAttempt(data: DrillAttemptData) {
 /**
  * Create a new drill session
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Type of drill
  * @param targetSystem - Optional target system
  * @returns Created session
  */
 export async function createDrillSession(
+  prisma: PrismaLike,
   userId: string,
   drillType: DrillType,
   targetSystem?: string
@@ -124,12 +124,14 @@ export async function createDrillSession(
 /**
  * Complete a drill session and calculate stats
  * 
+ * @param prisma - Prisma client instance
  * @param sessionId - Session ID
  * @param questionCount - Number of questions attempted
  * @param correctCount - Number of correct answers
  * @returns Updated session
  */
 export async function completeDrillSession(
+  prisma: PrismaLike,
   sessionId: string,
   questionCount: number,
   correctCount: number
@@ -157,11 +159,13 @@ export async function completeDrillSession(
 /**
  * Get drill session statistics for a user
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Optional filter by drill type
  * @returns Session statistics
  */
 export async function getDrillSessionStats(
+  prisma: PrismaLike,
   userId: string,
   drillType?: DrillType
 ) {
@@ -233,10 +237,11 @@ export async function getDrillSessionStats(
 /**
  * Verify statistical isolation - ensure drill attempts don't affect main stats
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Verification report
  */
-export async function verifyStatisticalIsolation(userId: string) {
+export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: string) {
   try {
     // Get main session attempts count
     const mainAttempts = await prisma.questionAttempt.count({
@@ -296,11 +301,13 @@ export async function verifyStatisticalIsolation(userId: string) {
 /**
  * Get drill performance by system
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Drill type
  * @returns Performance breakdown by system
  */
 export async function getDrillPerformanceBySystem(
+  prisma: PrismaLike,
   userId: string,
   drillType?: DrillType
 ) {
@@ -367,10 +374,11 @@ export async function getDrillPerformanceBySystem(
  * 
  * Aggregates all drill activity for a user
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Drill overview statistics
  */
-export async function getDrillOverview(userId: string): Promise<DrillOverview> {
+export async function getDrillOverview(prisma: PrismaLike, userId: string): Promise<DrillOverview> {
   try {
     // Get all drill sessions (isMainSession = false)
     const sessions = await prisma.studySession.findMany({
@@ -505,6 +513,3 @@ export async function getDrillOverview(userId: string): Promise<DrillOverview> {
   }
 }
 
-export async function disconnect() {
-  await prisma.$disconnect();
-}

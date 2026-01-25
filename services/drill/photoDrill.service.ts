@@ -4,20 +4,15 @@
  * High-intensity rapid-fire image recognition for Dermatology and Radiology.
  * Implements strict statistical isolation - drill attempts do NOT affect FSRS weights.
  * 
+ * Edge-compatible: All functions accept a Prisma client parameter.
+ * 
  * @module services/drill/photoDrill.service
  */
 
-import { PrismaClient, MediaAsset, Condition, MedicalContent } from '@prisma/client';
+import type { PrismaClient, MediaAsset, Condition, MedicalContent } from '@prisma/client';
 
-// Edge-compatible Prisma client
-let prisma: PrismaClient;
-
-if (typeof window === 'undefined') {
-  // Server-side: Use standard Prisma
-  prisma = new PrismaClient();
-} else {
-  throw new Error('Photo Drill Service must run server-side only');
-}
+// Type alias for any Prisma-compatible client (standard or edge)
+type PrismaLike = Pick<PrismaClient, 'mediaAsset' | 'medicalContent' | 'questionAttempt' | '$disconnect'>;
 
 export interface PhotoDrillQuestion {
   id: string;
@@ -32,6 +27,7 @@ export interface PhotoDrillQuestion {
 }
 
 export interface PhotoDrillBatchOptions {
+  prisma: PrismaLike;
   system?: string;
   modality?: 'dermatology' | 'radiology';
   difficulty?: 'easy' | 'medium' | 'hard';
@@ -46,9 +42,10 @@ export interface PhotoDrillBatchOptions {
  * @returns Array of photo drill questions with distractors
  */
 export async function getPhotoDrillBatch(
-  options: PhotoDrillBatchOptions = {}
+  options: PhotoDrillBatchOptions
 ): Promise<PhotoDrillQuestion[]> {
   const {
+    prisma,
     system,
     modality,
     difficulty = 'medium',
@@ -122,6 +119,7 @@ export async function getPhotoDrillBatch(
 
       // Generate 3 distractors from the same system
       const distractors = await generateDistractors(
+        prisma,
         correctCondition.id,
         conditionSystem as string | undefined,
         asset.modality || 'dermatology'
@@ -150,12 +148,14 @@ export async function getPhotoDrillBatch(
 /**
  * Generate distractor conditions for a photo drill question
  * 
+ * @param prisma - Prisma client instance
  * @param correctConditionId - ID of the correct condition
  * @param system - Organ system to pull distractors from
  * @param modality - Image modality (derm/radiology)
  * @returns Array of 3 distractor condition names
  */
 async function generateDistractors(
+  prisma: PrismaLike,
   correctConditionId: string,
   system?: string,
   modality?: string
@@ -210,10 +210,11 @@ async function generateDistractors(
 /**
  * Get statistics for photo drill mode (isolated from main stats)
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Photo drill statistics
  */
-export async function getPhotoDrillStats(userId: string) {
+export async function getPhotoDrillStats(prisma: PrismaLike, userId: string) {
   try {
     const attempts = await prisma.questionAttempt.findMany({
       where: {
@@ -253,9 +254,3 @@ export async function getPhotoDrillStats(userId: string) {
   }
 }
 
-/**
- * Clean up - close Prisma connection
- */
-export async function disconnect() {
-  await prisma.$disconnect();
-}

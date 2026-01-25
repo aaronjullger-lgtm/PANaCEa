@@ -549,7 +549,7 @@ function determineNextSessionFocus(
     .sort(([, a], [, b]) => a.accuracy - b.accuracy);
 
   const weakestSystem = sortedSystems[0];
-  if (weakestSystem && weakestSystem[1].accuracy < 0.7) {
+  if (weakestSystem && weakestSystem[1]?.accuracy !== undefined && weakestSystem[1].accuracy < 0.7) {
     focus.push(`${weakestSystem[0]} system review`);
   }
 

@@ -13,13 +13,17 @@
  */
 
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getPhotoDrillBatch } from '../../../services/drill/photoDrill.service';
 
 export async function onRequestGet(context: any) {
   const { request, env } = context;
+  let prisma: any = null;
 
   try {
+    // Create edge Prisma client
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    
     // Authenticate
     const authContext = await authenticateRequest(request, env);
     if (!authContext) {
@@ -46,6 +50,7 @@ export async function onRequestGet(context: any) {
 
     // Get drill batch
     const questions = await getPhotoDrillBatch({
+      prisma,
       system: system || undefined,
       difficulty: difficulty as any,
       count,
@@ -64,5 +69,7 @@ export async function onRequestGet(context: any) {
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
 }
