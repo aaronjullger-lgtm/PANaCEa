@@ -10,18 +10,18 @@
  * - MedicalContent has 'condition' field (NOT 'name')
  * - ContrastiveDrillAttempt has setId, correctAnswers, timeSpentMs
  * 
+ * EDGE COMPATIBILITY:
+ * - All functions accept a PrismaClient instance as parameter
+ * - No module-level PrismaClient instantiation
+ * - Works with both standard and edge Prisma clients
+ * 
  * @module services/drill/contrastiveDrill.service
  */
 
-import { PrismaClient, ContrastiveSet, ContrastiveDrillAttempt } from '@prisma/client';
+import type { PrismaClient, ContrastiveSet, ContrastiveDrillAttempt } from '@prisma/client';
 
-let prisma: PrismaClient;
-
-if (typeof window === 'undefined') {
-  prisma = new PrismaClient();
-} else {
-  throw new Error('Contrastive Drill Service must run server-side only');
-}
+// Type for any Prisma-like client (standard or edge)
+type PrismaLike = Pick<PrismaClient, 'contrastiveSet' | 'medicalContent' | 'confusionPair' | 'contrastiveDrillAttempt' | '$disconnect'>;
 
 export interface ContrastiveQuestion {
   id: string;
@@ -43,6 +43,7 @@ export interface DistinguisherFeature {
 }
 
 export interface ContrastiveDrillOptions {
+  prisma: PrismaLike;
   system?: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   count?: number;
@@ -53,13 +54,14 @@ export interface ContrastiveDrillOptions {
 /**
  * Get a batch of contrastive drill questions
  * 
- * @param options - Filtering options
+ * @param options - Filtering options including prisma client
  * @returns Array of contrastive questions
  */
 export async function getContrastiveDrillBatch(
-  options: ContrastiveDrillOptions = {}
+  options: ContrastiveDrillOptions
 ): Promise<ContrastiveQuestion[]> {
   const {
+    prisma,
     system,
     difficulty = 'medium',
     count = 5,
@@ -72,7 +74,7 @@ export async function getContrastiveDrillBatch(
 
     if (targetConfusionPairs && userId) {
       // Get user's actual confusion pairs from history
-      contrastiveSets = await getPersonalizedContrastiveSets(userId, count);
+      contrastiveSets = await getPersonalizedContrastiveSets(prisma, userId, count);
     } else {
       // Get general high-yield contrastive sets
       const whereClause: any = {
@@ -182,11 +184,13 @@ function parseDistinguishers(distinguishersJson: any, conditionCount: number): D
 /**
  * Get personalized contrastive sets based on user's confusion history
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param count - Number of sets to return
  * @returns Array of contrastive sets targeting user's weak areas
  */
 async function getPersonalizedContrastiveSets(
+  prisma: PrismaLike,
   userId: string,
   count: number
 ): Promise<any[]> {
@@ -241,6 +245,7 @@ async function getPersonalizedContrastiveSets(
 
         // Otherwise, create a basic one
         return await createBasicContrastiveSet(
+          prisma,
           pair.realConditionId,
           pair.mistakenForId
         );
@@ -258,11 +263,13 @@ async function getPersonalizedContrastiveSets(
  * Create a basic contrastive set for two conditions
  * (Fallback when no pre-defined set exists)
  * 
+ * @param prisma - Prisma client instance
  * @param conditionId1 - First condition ID
  * @param conditionId2 - Second condition ID
  * @returns Created contrastive set
  */
 async function createBasicContrastiveSet(
+  prisma: PrismaLike,
   conditionId1: string,
   conditionId2: string
 ): Promise<any | null> {
@@ -326,6 +333,7 @@ async function createBasicContrastiveSet(
 /**
  * Log a contrastive drill attempt
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param setId - Contrastive set ID
  * @param userAssignments - User's assignments of features
@@ -333,6 +341,7 @@ async function createBasicContrastiveSet(
  * @param timeMs - Time taken in milliseconds
  */
 export async function logContrastiveDrillAttempt(
+  prisma: PrismaLike,
   userId: string,
   setId: string,
   userAssignments: Record<string, number>,
@@ -357,10 +366,11 @@ export async function logContrastiveDrillAttempt(
 /**
  * Get contrastive drill statistics for a user
  * 
+ * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Drill statistics
  */
-export async function getContrastiveDrillStats(userId: string) {
+export async function getContrastiveDrillStats(prisma: PrismaLike, userId: string) {
   try {
     const attempts = await prisma.contrastiveDrillAttempt.findMany({
       where: { userId },
@@ -401,8 +411,4 @@ export async function getContrastiveDrillStats(userId: string) {
       lastAttempt: null,
     };
   }
-}
-
-export async function disconnect() {
-  await prisma.$disconnect();
 }

@@ -14,11 +14,12 @@
  */
 
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getContrastiveDrillBatch } from '../../../services/drill/contrastiveDrill.service';
 
 export async function onRequestGet(context: any) {
   const { request, env } = context;
+  let prisma: any = null;
 
   try {
     // Authenticate
@@ -30,6 +31,9 @@ export async function onRequestGet(context: any) {
       );
     }
     const userId = authContext.userId;
+
+    // Create edge Prisma client
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Parse query params
     const url = new URL(request.url);
@@ -46,8 +50,9 @@ export async function onRequestGet(context: any) {
       );
     }
 
-    // Get drill batch
+    // Get drill batch - pass prisma client
     const questions = await getContrastiveDrillBatch({
+      prisma,
       userId: personalized ? userId : undefined,
       system: system || undefined,
       difficulty: difficulty as any,
@@ -67,5 +72,7 @@ export async function onRequestGet(context: any) {
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
 }

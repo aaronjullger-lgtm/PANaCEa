@@ -377,7 +377,8 @@ function computeInsights(
   const sortedMomentum = Object.entries(momentumCounts).sort(
     (a: [string, number], b: [string, number]) => b[1] - a[1]
   );
-  const momentumTrend = sortedMomentum[0]?.[0] ?? 'steady';
+  const topMomentum = sortedMomentum[0];
+  const momentumTrend = topMomentum?.[0] ?? 'steady';
 
   // Recent average accuracy
   const recentAvgAccuracy =

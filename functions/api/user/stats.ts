@@ -249,7 +249,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
     // Check if studied today or yesterday
-    if (sortedDates[0] === today || sortedDates[0] === yesterday) {
+    const mostRecentDate = sortedDates[0];
+    if (mostRecentDate && (mostRecentDate === today || mostRecentDate === yesterday)) {
       currentStreak = 1;
       for (let i = 1; i < sortedDates.length; i++) {
         const prevDateStr = sortedDates[i - 1];
