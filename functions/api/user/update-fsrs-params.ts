@@ -28,7 +28,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
   try {
     // Authenticate request
     const auth = await authenticateRequest(context.request, context.env);
-    if (!auth.authenticated || !auth.userId) {
+    if (!auth || !auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },

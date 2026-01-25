@@ -1,4 +1,4 @@
-import { getApiEndpoint, API_ENDPOINTS } from './utils/apiConfig';
+import { getApiEndpoint } from './utils/apiConfig';
 
 export interface BuzzwordEntry {
   buzzword: string;
@@ -14,7 +14,7 @@ export async function loadBuzzwords(): Promise<Record<string, BuzzwordEntry>> {
 
   loadPromise = (async () => {
     try {
-      const apiUrl = getApiEndpoint(API_ENDPOINTS.BUZZWORDS_ALL);
+      const apiUrl = getApiEndpoint('/api/buzzwords/all');
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -60,7 +60,7 @@ export const getBuzzword = (conditionName: string): BuzzwordEntry | null => {
     (k) => lowerName.includes(k.toLowerCase()) || k.toLowerCase().includes(lowerName)
   );
 
-  return key ? buzzwordCache[key] : null;
+  return key ? (buzzwordCache[key] ?? null) : null;
 };
 
 // Deprecated static registry for backward compatibility

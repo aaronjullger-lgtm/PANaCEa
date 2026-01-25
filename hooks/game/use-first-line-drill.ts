@@ -82,7 +82,7 @@ function getRandomTreatmentByCategory(
   treatments: FirstLineTreatment[],
   category: FirstLineCategory,
   exclude?: Set<string>
-): FirstLineTreatment {
+): FirstLineTreatment | undefined {
   let pool = treatments;
 
   if (category !== 'random') {
@@ -94,12 +94,13 @@ function getRandomTreatmentByCategory(
 
   // Filter out recently seen conditions
   if (exclude && exclude.size > 0) {
-    const filtered = pool.filter((t) => !exclude.has(t.condition));
+    const filtered = pool.filter((t) => t.condition && !exclude.has(t.condition));
     if (filtered.length > 0) {
       pool = filtered;
     }
   }
 
+  if (pool.length === 0) return undefined;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -127,7 +128,12 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     const loadTreatments = async () => {
       try {
         const data = await firstLineService.getAll();
-        setAllTreatments(data);
+        // Filter to only include treatments with valid condition strings
+        // Filter to only include treatments with valid condition strings
+        const validData = data.filter(
+          (t) => typeof t.condition === 'string' && t.condition !== ''
+        ) as FirstLineTreatment[];
+        setAllTreatments(validData);
       } catch (error) {
         console.error('Failed to load first line treatments', error);
       } finally {
@@ -148,6 +154,10 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
         category,
         recentConditionsRef.current
       );
+
+      if (!treatment || !treatment.condition) {
+        return {} as FirstLineQuestion;
+      }
 
       // Add to recent conditions and maintain max size
       recentConditionsRef.current.add(treatment.condition);

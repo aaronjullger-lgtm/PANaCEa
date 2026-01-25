@@ -105,7 +105,9 @@ const PHASE_MODIFIERS: Record<CircadianPhase, number> = {
  * Parse HH:mm time string to hours since midnight
  */
 function parseTimeToHours(timeStr: string): number {
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const parts = timeStr.split(':').map(Number);
+  const hours = parts[0] ?? 0;
+  const minutes = parts[1] ?? 0;
   return hours + minutes / 60;
 }
 

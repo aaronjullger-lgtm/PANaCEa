@@ -52,7 +52,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
         .map((a: AttemptType) => a.timeSpentMs || 0)
         .filter((n: number) => n > 0);
       avgTimePerQuestion = timeValues.length
-        ? timeValues.reduce((sum, n) => sum + n, 0) / timeValues.length
+        ? timeValues.reduce((sum: number, n: number) => sum + n, 0) / timeValues.length
         : null;
 
       attempts.forEach((attempt: AttemptType) => {

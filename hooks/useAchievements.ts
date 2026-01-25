@@ -274,7 +274,7 @@ export function useAchievements() {
    */
   const getNextUnlock = useCallback((): string | null => {
     if (state.recentUnlocks.length > 0) {
-      return state.recentUnlocks[0];
+      return state.recentUnlocks[0] ?? null;
     }
     return null;
   }, [state.recentUnlocks]);

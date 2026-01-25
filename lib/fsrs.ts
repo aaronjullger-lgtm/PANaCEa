@@ -284,9 +284,12 @@ export class FSRS {
    * @returns Updated short-term stability
    */
   private next_short_term_stability(stability: number, rating: Rating): number {
-    const w17 = this.p.w[17];
-    const w18 = this.p.w[18];
-    const w19 = this.p.w[19];
+    const w17Val = this.p.w[17];
+    const w18Val = this.p.w[18];
+    const w19Val = this.p.w[19];
+    const w17 = w17Val ?? 0.5425;
+    const w18 = w18Val ?? 0.0912;
+    const w19 = w19Val ?? 0.0658;
 
     // FSRS v6 formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
     const sinc = Math.pow(stability, -w19) * Math.exp(w17 * (rating - 3 + w18));
@@ -303,7 +306,7 @@ export class FSRS {
    * FSRS v6: Uses exponential formula for initial difficulty
    */
   private init_ds(card: FSRSCard, rating: Rating): void {
-    card.stability = this.p.w[rating - 1];
+    card.stability = this.p.w[rating - 1] ?? 1;
     card.difficulty = this.init_difficulty(rating);
   }
 
@@ -315,7 +318,9 @@ export class FSRS {
    * @returns Initial difficulty value (constrained to 1-10)
    */
   private init_difficulty(rating: Rating): number {
-    return this.constrain_difficulty(this.p.w[4] - Math.exp((rating - 1) * this.p.w[5]) + 1);
+    const w4 = this.p.w[4] ?? 6.4133;
+    const w5 = this.p.w[5] ?? 0.8334;
+    return this.constrain_difficulty(w4 - Math.exp((rating - 1) * w5) + 1);
   }
 
   /**
@@ -363,16 +368,21 @@ export class FSRS {
    * Calculate new stability after successful recall
    */
   private next_recall_stability(d: number, s: number, r: number, rating: Rating): number {
-    const hard_penalty = rating === Rating.Hard ? this.p.w[15] : 1;
-    const easy_bonus = rating === Rating.Easy ? Math.max(1.08, this.p.w[16]) : 1;
+    const w8 = this.p.w[8] ?? 1.8722;
+    const w9 = this.p.w[9] ?? 0.1666;
+    const w10 = this.p.w[10] ?? 0.796;
+    const w15 = this.p.w[15] ?? 0.6014;
+    const w16 = this.p.w[16] ?? 1.8729;
+    const hard_penalty = rating === Rating.Hard ? w15 : 1;
+    const easy_bonus = rating === Rating.Easy ? Math.max(1.08, w16) : 1;
 
     return (
       s *
       (1 +
-        Math.exp(this.p.w[8]) *
+        Math.exp(w8) *
           (11 - d) *
-          Math.pow(s, -this.p.w[9]) *
-          (Math.exp((1 - r) * this.p.w[10]) - 1) *
+          Math.pow(s, -w9) *
+          (Math.exp((1 - r) * w10) - 1) *
           hard_penalty *
           easy_bonus)
     );
@@ -382,12 +392,11 @@ export class FSRS {
    * Calculate new stability after a lapse (forgetting)
    */
   private next_forget_stability(d: number, s: number, r: number): number {
-    return (
-      this.p.w[11] *
-      Math.pow(d, -this.p.w[12]) *
-      (Math.pow(s + 1, this.p.w[13]) - 1) *
-      Math.exp((1 - r) * this.p.w[14])
-    );
+    const w11 = this.p.w[11] ?? 1.4835;
+    const w12 = this.p.w[12] ?? 0.0614;
+    const w13 = this.p.w[13] ?? 0.2629;
+    const w14 = this.p.w[14] ?? 1.6483;
+    return w11 * Math.pow(d, -w12) * (Math.pow(s + 1, w13) - 1) * Math.exp((1 - r) * w14);
   }
 
   /**

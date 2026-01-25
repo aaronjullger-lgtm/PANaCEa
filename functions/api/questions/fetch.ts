@@ -37,7 +37,8 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
       where: historyWhere,
       select: { questionId: true },
     });
-    const seenQuestionIds = history.map((h) => h.questionId);
+    type HistoryItem = (typeof history)[0];
+    const seenQuestionIds = history.map((h: HistoryItem) => h.questionId);
 
     // Build query
     const where: any = {};

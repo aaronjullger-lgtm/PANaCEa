@@ -25,7 +25,7 @@ export async function checkPoolLevels(threshold: number = 50): Promise<PoolStatu
   try {
     // Query the staging questions grouped by organ system
     const stagingQuestions = await prisma.stagingQuestion.groupBy({
-      by: ['organSystem'],
+      by: ['system'],
       _count: {
         id: true,
       },
@@ -38,7 +38,7 @@ export async function checkPoolLevels(threshold: number = 50): Promise<PoolStatu
 
     // Query used questions (those that have been promoted)
     const usedQuestions = await prisma.stagingQuestion.groupBy({
-      by: ['organSystem'],
+      by: ['system'],
       _count: {
         id: true,
       },
@@ -50,18 +50,18 @@ export async function checkPoolLevels(threshold: number = 50): Promise<PoolStatu
     // Create a map of used counts
     const usedMap = new Map<string, number>();
     usedQuestions.forEach((row) => {
-      usedMap.set(row.organSystem, row._count.id);
+      usedMap.set(row.system, row._count?.id ?? 0);
     });
 
     // Build pool status for each system
     const poolStatuses: PoolStatus[] = stagingQuestions.map((row) => {
-      const total = row._count.id;
-      const used = usedMap.get(row.organSystem) || 0;
+      const total = row._count?.id ?? 0;
+      const used = usedMap.get(row.system) || 0;
       const unused = Math.max(0, total - used);
       const percentageUnused = total > 0 ? (unused / total) * 100 : 0;
 
       return {
-        system: row.organSystem,
+        system: row.system,
         total,
         unused,
         percentageUnused: Math.round(percentageUnused * 10) / 10,
@@ -94,7 +94,7 @@ export async function getPoolStatistics() {
     });
 
     const bySystem = await prisma.stagingQuestion.groupBy({
-      by: ['organSystem'],
+      by: ['system'],
       _count: {
         id: true,
       },
@@ -110,13 +110,13 @@ export async function getPoolStatistics() {
     return {
       total: totalQuestions,
       byStatus: Object.fromEntries(
-        byStatus.map((row) => [row.status, row._count.id])
+        byStatus.map((row) => [row.status, row._count?.id ?? 0])
       ),
       bySystem: Object.fromEntries(
-        bySystem.map((row) => [row.organSystem, row._count.id])
+        bySystem.map((row) => [row.system, row._count?.id ?? 0])
       ),
       byDifficulty: Object.fromEntries(
-        byDifficulty.map((row) => [row.difficulty || 'UNSPECIFIED', row._count.id])
+        byDifficulty.map((row) => [row.difficulty || 'UNSPECIFIED', row._count?.id ?? 0])
       ),
     };
   } catch (error) {

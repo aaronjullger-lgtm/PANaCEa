@@ -49,7 +49,7 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   }
 
   const options = question.options;
-  const correctOption = options[correctIndex];
+  const correctOption = options[correctIndex] ?? '';
 
   // RULE 1: No duplicate options
   const uniqueOptions = new Set(options.map((opt) => opt.trim().toLowerCase()));
@@ -60,7 +60,8 @@ export function validateDistractors(question: QuestionForValidation): Distractor
 
   // RULE 2: No empty options
   for (let i = 0; i < options.length; i++) {
-    if (!options[i] || options[i].trim().length === 0) {
+    const opt = options[i];
+    if (!opt || opt.trim().length === 0) {
       issues.push(`Option ${String.fromCharCode(65 + i)} is empty`);
       score -= 20;
     }
@@ -75,11 +76,14 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   for (let i = 0; i < options.length; i++) {
     if (i === correctIndex) continue;
 
-    const optLength = options[i].length;
+    const opt = options[i];
+    if (!opt) continue;
+    const optLength = opt.length;
     if (optLength < minLength || optLength > maxLength) {
       lengthViolations++;
+      const letterCode = String.fromCharCode(65 + i);
       warnings.push(
-        `Option ${String.fromCharCode(65 + i)} length (${optLength}) differs significantly from correct answer (${correctLength})`
+        `Option ${letterCode} length (${optLength}) differs significantly from correct answer (${correctLength})`
       );
     }
   }
@@ -133,8 +137,8 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   const allNumeric = numericOptions.every((n) => n !== null);
 
   if (allNumeric) {
-    const sorted = [...numericOptions].sort((a, b) => (a || 0) - (b || 0));
-    const correctValue = numericOptions[correctIndex];
+    const sorted = [...numericOptions].sort((a, b) => (a ?? 0) - (b ?? 0));
+    const correctValue = numericOptions[correctIndex] ?? 0;
     const sortedIndex = sorted.indexOf(correctValue);
 
     // If correct answer is always middle value, that's a pattern
@@ -149,10 +153,10 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   const questionEndsWithAn = /\ban$/i.test(question.question);
 
   if (questionEndsWithA || questionEndsWithAn) {
-    const startsWithVowel = (opt: string) => /^[aeiou]/i.test(opt.trim());
-    const vowelOptions = options.filter(startsWithVowel);
+    const startsWithVowel = (opt: string | undefined) => opt ? /^[aeiou]/i.test(opt.trim()) : false;
+    const vowelOptions = options.filter((opt): opt is string => opt !== undefined && startsWithVowel(opt));
 
-    if (vowelOptions.length === 1 && startsWithVowel(correctOption)) {
+    if (vowelOptions.length === 1 && correctOption && startsWithVowel(correctOption)) {
       issues.push('Grammatical article ("a"/"an") reveals correct answer');
       score -= 20;
       suggestions.push('Rephrase question to avoid using "a" or "an" at the end');
@@ -161,9 +165,9 @@ export function validateDistractors(question: QuestionForValidation): Distractor
 
   // RULE 8: Avoid overly specific vs. overly general distractors
   // Correct answer should not be the only specific or only general option
-  const hasNumbers = (opt: string) => /\d+/.test(opt);
-  const hasUnits = (opt: string) =>
-    /(mg|mcg|ml|units|days|hours|minutes|weeks|months|years)/i.test(opt);
+  const hasNumbers = (opt: string | undefined) => opt ? /\d+/.test(opt) : false;
+  const hasUnits = (opt: string | undefined) =>
+    opt ? /(mg|mcg|ml|units|days|hours|minutes|weeks|months|years)/i.test(opt) : false;
 
   const correctHasNumbers = hasNumbers(correctOption);
   const correctHasUnits = hasUnits(correctOption);

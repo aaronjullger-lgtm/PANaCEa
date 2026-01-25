@@ -66,8 +66,9 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
       _count: { id: true },
     });
 
+    type FlagCountItem = (typeof flagCounts)[0];
     const flagCountMap = new Map<string, number>(
-      flagCounts.map((f) => [f.questionId, f._count.id])
+      flagCounts.map((f: FlagCountItem) => [f.questionId, f._count.id])
     );
 
     // Get question details
@@ -77,7 +78,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
     });
 
     type QuestionData = (typeof questions)[number];
-    const questionMap = new Map<string, QuestionData>(questions.map((q) => [q.id, q]));
+    const questionMap = new Map<string, QuestionData>(questions.map((q: QuestionData) => [q.id, q]));
 
     // Combine all data
     const performanceData = rawStats.map((stat) => {

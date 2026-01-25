@@ -77,7 +77,8 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
     });
 
     // Calculate overdue days for each item
-    const enrichedItems = dueItems.map((item) => {
+    type DueItem = (typeof dueItems)[0];
+    const enrichedItems = dueItems.map((item: DueItem) => {
       const overdueDays = Math.floor(
         (now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24)
       );

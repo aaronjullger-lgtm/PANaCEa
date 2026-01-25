@@ -112,8 +112,11 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
+      // Type for questions from Prisma query
+      type QuestionItem = (typeof questions)[0];
+
       // Transform MedicalContent into Question format
-      const formattedQuestions = questions.map((q) => {
+      const formattedQuestions = questions.map((q: QuestionItem) => {
         const content = (q.content as any) || {};
         const options = content.questionOptions || [
           q.gold_standard_dx || q.condition,

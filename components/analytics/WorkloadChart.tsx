@@ -57,14 +57,14 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Daily Reviews:</span>
           <span className="font-mono text-[var(--color-text-primary)]">
-            {data.dailyReviews.toFixed(0)} cards
+            {data.reviews.toFixed(0)} cards
           </span>
         </div>
 
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Time Required:</span>
           <span className="font-mono text-[var(--color-text-primary)]">
-            {data.timeMinutes.toFixed(0)} min/day
+            {data.minutes.toFixed(0)} min/day
           </span>
         </div>
 
@@ -72,14 +72,14 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
           <span className="text-[var(--color-text-secondary)]">Sustainability:</span>
           <span
             className={`font-mono ${
-              data.sustainability >= 70
+              data.minutes <= 30
                 ? 'text-green-400'
-                : data.sustainability >= 40
+                : data.minutes <= 60
                   ? 'text-yellow-400'
                   : 'text-red-400'
             }`}
           >
-            {data.sustainability.toFixed(0)}%
+            {data.minutes <= 30 ? 'High' : data.minutes <= 60 ? 'Medium' : 'Low'}
           </span>
         </div>
       </div>
@@ -144,7 +144,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   }
 
   const cmrrPoint = chartData.find((d) => d.isCMRR);
-  const maxTime = Math.max(...chartData.map((d) => d.timeMinutes));
+  const maxTime = Math.max(...chartData.map((d) => d.minutes));
 
   return (
     <div className="w-full">
@@ -157,8 +157,9 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
                 ⭐ Recommended Retention: {(cmrrPoint.retention * 100).toFixed(0)}%
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
-                Optimal balance: {cmrrPoint.dailyReviews.toFixed(0)} reviews/day (
-                {cmrrPoint.timeMinutes.toFixed(0)} min) with {cmrrPoint.sustainability.toFixed(0)}%
+                Optimal balance: {cmrrPoint.reviews.toFixed(0)} reviews/day (
+                {cmrrPoint.minutes.toFixed(0)} min) -{' '}
+                {cmrrPoint.minutes <= 30 ? 'High' : cmrrPoint.minutes <= 60 ? 'Medium' : 'Low'}{' '}
                 sustainability
               </p>
             </div>
@@ -169,7 +170,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
                   For {availableTimeMinutes} min/day:
                 </p>
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Target {(recommended.retention * 100).toFixed(0)}%
+                  Target {(recommended.recommendedRetention * 100).toFixed(0)}%
                 </p>
               </div>
             )}
@@ -250,22 +251,26 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
           )}
 
           {/* Workload bars with color coding */}
-          <Bar yAxisId="left" dataKey="dailyReviews" name="Daily Reviews" radius={[4, 4, 0, 0]}>
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={
-                  entry.isCMRR
-                    ? '#3b82f6' // Blue for CMRR
-                    : entry.sustainability >= 70
-                      ? '#1e293b' // Stormy slate for sustainable
-                      : entry.sustainability >= 40
-                        ? '#f59e0b' // Amber for moderate
-                        : '#ef4444' // Red for unsustainable
-                }
-                opacity={entry.isCMRR ? 1 : 0.7}
-              />
-            ))}
+          <Bar yAxisId="left" dataKey="reviews" name="Daily Reviews" radius={[4, 4, 0, 0]}>
+            {chartData.map((entry, index) => {
+              // Derive sustainability from minutes (no sustainability property exists)
+              const sustainability = entry.minutes <= 30 ? 70 : entry.minutes <= 60 ? 40 : 10;
+              return (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    entry.isCMRR
+                      ? '#3b82f6' // Blue for CMRR
+                      : sustainability >= 70
+                        ? '#1e293b' // Stormy slate for sustainable
+                        : sustainability >= 40
+                          ? '#f59e0b' // Amber for moderate
+                          : '#ef4444' // Red for unsustainable
+                  }
+                  opacity={entry.isCMRR ? 1 : 0.7}
+                />
+              );
+            })}
           </Bar>
 
           {/* Time requirement line */}
@@ -273,7 +278,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
             <Line
               yAxisId="right"
               type="monotone"
-              dataKey="timeMinutes"
+              dataKey="minutes"
               name="Time Required"
               stroke="#f8fafc"
               strokeWidth={2}

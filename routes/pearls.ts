@@ -20,7 +20,7 @@ router.post(
         return res.status(503).json({ success: false, error: 'Database not configured' });
       }
 
-      const { createClinicalPearl } = await import('../services/clinicalPearlService');
+      const { createClinicalPearl } = await import('../services/domain/clinicalPearlService');
       const { questionId, explanation, metadata } = req.body;
       const pearl = await createClinicalPearl(questionId, explanation, metadata);
 
@@ -39,7 +39,7 @@ router.get('/daily', async (req: Request, res: Response) => {
       return res.json({ success: true, pearl: null });
     }
 
-    const { getDailyPearl } = await import('../services/clinicalPearlService');
+    const { getDailyPearl } = await import('../services/domain/clinicalPearlService');
     const { userId } = req.query;
     const pearl = await getDailyPearl(userId as string);
 
@@ -57,7 +57,7 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
       return res.json({ success: true, pearls: [] });
     }
 
-    const { getUserPearls } = await import('../services/clinicalPearlService');
+    const { getUserPearls } = await import('../services/domain/clinicalPearlService');
     const { userId } = req.params;
     const { limit = 20 } = req.query;
     const pearls = await getUserPearls(userId, Number(limit));
@@ -76,7 +76,7 @@ router.get('/user/:userId/favorites', async (req: Request, res: Response) => {
       return res.json({ success: true, pearls: [] });
     }
 
-    const { getUserFavoritePearls } = await import('../services/clinicalPearlService');
+    const { getUserFavoritePearls } = await import('../services/domain/clinicalPearlService');
     const { userId } = req.params;
     const pearls = await getUserFavoritePearls(userId);
 
@@ -97,7 +97,7 @@ router.post(
         return res.status(503).json({ success: false, error: 'Database not configured' });
       }
 
-      const { markPearlUseful } = await import('../services/clinicalPearlService');
+      const { markPearlUseful } = await import('../services/domain/clinicalPearlService');
       const { pearlId } = req.params;
       const { userId, notes } = req.body;
       await markPearlUseful(userId, pearlId, notes);
@@ -117,7 +117,7 @@ router.post('/search', async (req: Request, res: Response) => {
       return res.json({ success: true, pearls: [] });
     }
 
-    const { searchPearls } = await import('../services/clinicalPearlService');
+    const { searchPearls } = await import('../services/domain/clinicalPearlService');
     const pearls = await searchPearls(req.body);
 
     res.json({ success: true, pearls });
@@ -134,7 +134,7 @@ router.get('/stats', async (req: Request, res: Response) => {
       return res.json({ success: true, stats: {} });
     }
 
-    const { getPearlStats } = await import('../services/clinicalPearlService');
+    const { getPearlStats } = await import('../services/domain/clinicalPearlService');
     const stats = await getPearlStats();
 
     res.json({ success: true, stats });

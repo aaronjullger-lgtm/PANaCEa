@@ -183,7 +183,7 @@ export function calculateHoverMetrics(
   }
 
   // Calculate probabilities (normalized hover times)
-  const probabilities = optionIds.map((id) => hoverTimes[id] / totalTime);
+  const probabilities = optionIds.map((id) => (hoverTimes[id] ?? 0) / totalTime);
 
   // Shannon entropy
   const entropy = calculateShannonEntropy(probabilities);
@@ -269,6 +269,9 @@ function calculateVelocities(points: TrajectoryPoint[]): TrajectoryPoint[] {
       return { ...point, velocity: 0 };
     }
     const prev = points[i - 1];
+    if (!prev) {
+      return { ...point, velocity: 0 };
+    }
     const dt = point.t - prev.t;
     const dist = distance(prev, point);
     const velocity = dt > 0 ? dist / dt : 0;
@@ -320,6 +323,7 @@ function calculateAUC(trajectory: RawTrajectory): number {
   for (let i = 1; i < trajectory.points.length; i++) {
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
+    if (!p1 || !p2) continue;
 
     const dev1 = perpendicularDistance(p1, start, end);
     const dev2 = perpendicularDistance(p2, start, end);
@@ -379,6 +383,7 @@ function calculateJitterScore(trajectory: RawTrajectory): number {
     const p0 = trajectory.points[i - 2];
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
+    if (!p0 || !p1 || !p2) continue;
 
     const distToTarget = distance(p2, target);
     if (distToTarget > FINAL_APPROACH_DISTANCE) continue;
@@ -421,9 +426,14 @@ function calculateEfficiency(trajectory: RawTrajectory): number {
   const idealDist = distance(start, end);
 
   // Calculate actual path length
-  let pathLength = distance(start, trajectory.points[0]);
+  const firstPoint = trajectory.points[0];
+  let pathLength = firstPoint ? distance(start, firstPoint) : 0;
   for (let i = 1; i < trajectory.points.length; i++) {
-    pathLength += distance(trajectory.points[i - 1], trajectory.points[i]);
+    const prevPoint = trajectory.points[i - 1];
+    const currPoint = trajectory.points[i];
+    if (prevPoint && currPoint) {
+      pathLength += distance(prevPoint, currPoint);
+    }
   }
 
   return pathLength > 0 ? idealDist / pathLength : 1;
@@ -441,6 +451,7 @@ function countReversals(trajectory: RawTrajectory): number {
     const p0 = trajectory.points[i - 2];
     const p1 = trajectory.points[i - 1];
     const p2 = trajectory.points[i];
+    if (!p0 || !p1 || !p2) continue;
 
     const dx1 = p1.x - p0.x;
     const dy1 = p1.y - p0.y;
@@ -524,9 +535,14 @@ export function analyzeTrajectory(
   const movementTime = trajectory.endTime - trajectory.startTime;
 
   // Calculate path length
-  let pathLength = trajectory.points.length > 0 ? distance(start, trajectory.points[0]) : 0;
+  const firstPt = trajectory.points[0];
+  let pathLength = firstPt ? distance(start, firstPt) : 0;
   for (let i = 1; i < trajectory.points.length; i++) {
-    pathLength += distance(trajectory.points[i - 1], trajectory.points[i]);
+    const prevPt = trajectory.points[i - 1];
+    const currPt = trajectory.points[i];
+    if (prevPt && currPt) {
+      pathLength += distance(prevPt, currPt);
+    }
   }
 
   const mad = calculateMAD(trajectory);

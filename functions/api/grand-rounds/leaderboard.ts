@@ -52,8 +52,11 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
+      // Type for entries from Prisma query with user relation
+      type LeaderboardEntry = (typeof entries)[0];
+
       // Format leaderboard with rank
-      const leaderboard = entries.map((entry, index) => ({
+      const leaderboard = entries.map((entry: LeaderboardEntry, index: number) => ({
         rank: index + 1,
         userId: entry.userId,
         userName: entry.user

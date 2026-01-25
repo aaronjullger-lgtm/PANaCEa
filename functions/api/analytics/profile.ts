@@ -375,7 +375,7 @@ function computeInsights(
     }
   }
   const sortedMomentum = Object.entries(momentumCounts).sort(
-    (a: [string, number], b: [string, number]) => b[1] - a[1]
+    (a: [string, number], b: [string, number]) => (b[1] ?? 0) - (a[1] ?? 0)
   );
   const topMomentum = sortedMomentum[0];
   const momentumTrend = topMomentum?.[0] ?? 'steady';

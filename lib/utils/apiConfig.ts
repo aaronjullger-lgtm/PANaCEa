@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
   DDX_GENERATE: '/api/ddx/generate',
   SESSIONS: '/api/sessions',
   REVIEWS: '/api/reviews',
+  SYNC: '/api/user/sync',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;

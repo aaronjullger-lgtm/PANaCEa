@@ -139,12 +139,13 @@ export const onRequestGet = authenticatedEndpoint(
         savedQuestions: savedQuestions.length,
       });
 
+      type PerformanceRecordItem = (typeof performanceRecords)[0];
       return {
         data: {
           success: true,
           message: 'Data retrieved successfully',
           data: {
-            performanceRecords: performanceRecords.map((r) => ({
+            performanceRecords: performanceRecords.map((r: PerformanceRecordItem) => ({
               ...r,
               timestamp: Number(r.timestamp),
             })),
@@ -329,12 +330,13 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       savedQuestions: savedQuestions.length,
     });
 
+    type PerformanceRecordResult = (typeof performanceRecords)[0];
     return {
       data: {
         success: true,
         message: 'Data synced successfully',
         data: {
-          performanceRecords: performanceRecords.map((r) => ({
+          performanceRecords: performanceRecords.map((r: PerformanceRecordResult) => ({
             ...r,
             timestamp: Number(r.timestamp),
           })),

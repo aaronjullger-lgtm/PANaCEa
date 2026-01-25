@@ -83,8 +83,11 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
+      // Type for answers from Prisma query with question relation
+      type AnswerWithQuestion = (typeof answers)[0];
+
       // Update correctness for each answer
-      const updatePromises = answers.map(async (answer) => {
+      const updatePromises = answers.map(async (answer: AnswerWithQuestion) => {
         const isCorrect = answer.selectedAnswer === answer.question?.correctAnswer;
         return prisma!.examAnswer.update({
           where: { id: answer.id },

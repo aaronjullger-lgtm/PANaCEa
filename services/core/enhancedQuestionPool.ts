@@ -119,7 +119,7 @@ export async function getEnhancedQuestionBatch(
           const data = q.questionData as any;
           questionsBySystem.push({
             id: q.id,
-            system: q.system,
+            system: q.system ?? system,
             difficulty: q.difficulty,
             vignette: data.vignette,
             question: data.question,
@@ -296,7 +296,7 @@ export async function getEnhancedQuestion(
       return null;
     }
 
-    const q = questions[0];
+    const q = questions[0]!;
     const data = q.questionData as any;
 
     const converted = await convertPoolQuestion({
@@ -306,11 +306,11 @@ export async function getEnhancedQuestion(
       options: Array.isArray(data.options) ? data.options : [],
       correctAnswer: data.correctAnswer || data.correct_answer || 'A',
       explanation: data.explanation || data.rationale || '',
-      system: q.system,
+      system: q.system ?? 'unknown',
       difficulty: q.difficulty,
       tags: data.tags || [],
       source: 'pool',
-      conditionId: q.conditionId || undefined,
+      conditionId: q.conditionId ?? undefined,
     });
 
     // Resolve conditionId if needed
@@ -322,8 +322,8 @@ export async function getEnhancedQuestion(
       try {
         const resolved = await resolveConditionId(
           prisma,
-          converted.condition || data.tags?.[0] || q.system,
-          q.system,
+          converted.condition || data.tags?.[0] || (q.system ?? 'unknown'),
+          q.system ?? undefined,
           0.7
         );
 

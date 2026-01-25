@@ -45,16 +45,22 @@ export interface SystemMasteryProfile {
   system: string;
   /** Mastery level percentage (0-100) */
   masteryLevel: number;
+  /** FSRS-derived stability score */
+  stabilityScore: number;
+  /** Personal difficulty rating */
+  difficultyRating: number;
+  /** Days to 50% retention */
+  forgettingCurve: number;
+  /** Optimal review interval in days */
+  optimalReviewInterval: number;
   /** Total questions seen for this system */
   questionsSeen: number;
-  /** Recent accuracy (last 20 questions) */
-  recentAccuracy: number;
+  /** Last reviewed date */
+  lastReviewed: Date | null;
   /** Weak subtopics within system */
   weakSubtopics: string[];
   /** Strong subtopics within system */
   strongSubtopics: string[];
-  /** Trend: improving, stable, or declining */
-  trend: 'improving' | 'stable' | 'declining';
 }
 
 export interface QuestionTargeting {
@@ -166,14 +172,17 @@ export function generateQuestionTargeting(
     reason: `Low mastery (${sys.masteryLevel}%) - needs reinforcement`,
   }));
 
-  // If no weak systems, target systems with declining trends
+  // If no weak systems, target systems with low stability or short forgetting curves
+  // (indicates fragile memory that needs reinforcement)
   if (targetSystems.length === 0) {
-    const decliningSystem = systemMastery.find((s) => s.trend === 'declining');
-    if (decliningSystem) {
+    const needsAttentionSystem = systemMastery.find(
+      (s) => s.stabilityScore < 50 || s.forgettingCurve < 7
+    );
+    if (needsAttentionSystem) {
       targetSystems.push({
-        system: decliningSystem.system,
+        system: needsAttentionSystem.system,
         priority: 70,
-        reason: 'Performance declining - preventive review',
+        reason: 'Low stability - preventive review needed',
       });
     }
   }

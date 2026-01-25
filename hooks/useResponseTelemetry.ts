@@ -158,7 +158,11 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
     let longPauses = 0;
 
     for (let i = 1; i < interactions.current.length; i++) {
-      const gap = interactions.current[i].timestamp - interactions.current[i - 1].timestamp;
+      const current = interactions.current[i];
+      const previous = interactions.current[i - 1];
+      if (!current || !previous) continue;
+      
+      const gap = current.timestamp - previous.timestamp;
 
       if (gap >= 15000) {
         longPauses++;
@@ -189,6 +193,8 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
     for (let i = 1; i < mousePositions.current.length; i++) {
       const prev = mousePositions.current[i - 1];
       const curr = mousePositions.current[i];
+      if (!prev || !curr) continue;
+      
       const dx = curr.x - prev.x;
       const dy = curr.y - prev.y;
       totalDistance += Math.sqrt(dx * dx + dy * dy);
@@ -196,6 +202,10 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
 
     // Calculate optimal distance (straight line from start to first click)
     const start = mousePositions.current[0];
+    if (!start) {
+      return { efficiency: 1.0, totalDistance };
+    }
+    
     const end = firstClickPosition.current;
     const dx = end.x - start.x;
     const dy = end.y - start.y;

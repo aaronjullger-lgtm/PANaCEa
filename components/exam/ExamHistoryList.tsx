@@ -18,7 +18,6 @@ import {
   BarChart3,
   RefreshCcw,
 } from 'lucide-react';
-import { ExamService } from '@/services/domain';
 
 // =============================================================================
 // TYPES
@@ -81,6 +80,10 @@ function getScoreBgColor(score: number): string {
   if (score >= 400) return 'bg-amber-100 dark:bg-amber-900/30';
   return 'bg-red-100 dark:bg-red-900/30';
 }
+
+// Suppress unused variable warnings for helper functions used conditionally
+void formatTime;
+void Award;
 
 // =============================================================================
 // COMPONENT

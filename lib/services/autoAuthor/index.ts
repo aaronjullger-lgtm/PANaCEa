@@ -99,6 +99,8 @@ export async function autoAuthorMissingContent(
 
     for (let i = 0; i < conditionsToProcess.length; i++) {
       const condition = conditionsToProcess[i];
+      if (!condition) continue;
+      
       const progress = `[${i + 1}/${conditionsToProcess.length}]`;
 
       console.log(`\n${progress} ${condition.name} (${condition.system})`);

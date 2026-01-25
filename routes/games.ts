@@ -14,7 +14,7 @@ import {
   getDailyWordForUser,
   submitWordleGuess,
   WordleServiceError,
-} from '../services/wordleService';
+} from '../services/core/wordleService';
 import crypto from 'crypto';
 
 const router = Router();
@@ -25,7 +25,7 @@ const router = Router();
 
 router.get('/wordle/daily', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const payload = await getDailyWordForUser(req.auth.userId);
+    const payload = await getDailyWordForUser(req.auth!.userId);
     res.json(payload);
   } catch (error) {
     if (error instanceof WordleServiceError) {
@@ -43,7 +43,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { guess } = req.body;
-      const payload = await submitWordleGuess(req.auth.userId, guess);
+      const payload = await submitWordleGuess(req.auth!.userId, guess);
       res.json(payload);
     } catch (error) {
       if (error instanceof WordleServiceError) {
@@ -65,7 +65,7 @@ router.get('/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest,
       return res.status(503).json({ error: 'Database not configured' });
     }
 
-    const userId = req.auth.userId;
+    const userId = req.auth!.userId;
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } });
     if (!user) {
@@ -139,7 +139,7 @@ router.post(
         return res.status(503).json({ error: 'Database not configured' });
       }
 
-      const userId = req.auth.userId;
+      const userId = req.auth!.userId;
       const { challengeId, answers, timeSpentMs } = req.body;
 
       if (typeof answers !== 'object' || Array.isArray(answers)) {

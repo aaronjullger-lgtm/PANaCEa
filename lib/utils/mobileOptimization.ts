@@ -331,6 +331,7 @@ export function useGestures<T extends HTMLElement>(
 
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
+      if (!touch) return;
       touchState.current.startX = touch.clientX;
       touchState.current.startY = touch.clientY;
       touchState.current.startTime = Date.now();
@@ -367,6 +368,7 @@ export function useGestures<T extends HTMLElement>(
       }
 
       const touch = e.changedTouches[0];
+      if (!touch) return;
       const endX = touch.clientX;
       const endY = touch.clientY;
       const deltaX = endX - touchState.current.startX;
@@ -456,11 +458,14 @@ export function useSwipeNavigation(
     if (!enabled) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchStartX.current = e.touches[0].clientX;
+      const touch = e.touches[0];
+      if (touch) touchStartX.current = touch.clientX;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - touchStartX.current;
 
       if (Math.abs(deltaX) > threshold) {
         if (deltaX > 0) {
@@ -745,14 +750,17 @@ export function preventRubberBand(element: HTMLElement): () => void {
   let startY = 0;
 
   const handleTouchStart = (e: TouchEvent) => {
-    startY = e.touches[0].clientY;
+    const touch = e.touches[0];
+    if (touch) startY = touch.clientY;
   };
 
   const handleTouchMove = (e: TouchEvent) => {
     const scrollTop = element.scrollTop;
     const scrollHeight = element.scrollHeight;
     const offsetHeight = element.offsetHeight;
-    const currentY = e.touches[0].clientY;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const currentY = touch.clientY;
     const isAtTop = scrollTop <= 0 && currentY > startY;
     const isAtBottom = scrollTop + offsetHeight >= scrollHeight && currentY < startY;
 
@@ -826,7 +834,8 @@ export function usePullToRefresh(
 
     const handleTouchStart = (e: TouchEvent) => {
       if (window.scrollY === 0) {
-        startY.current = e.touches[0].clientY;
+        const touch = e.touches[0];
+        if (touch) startY.current = touch.clientY;
         setIsPulling(true);
       }
     };
@@ -834,7 +843,9 @@ export function usePullToRefresh(
     const handleTouchMove = (e: TouchEvent) => {
       if (!isPulling || isRefreshing) return;
 
-      const currentY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const currentY = touch.clientY;
       const distance = Math.max(0, (currentY - startY.current) * 0.5); // Dampen pull
 
       if (distance > 0 && window.scrollY === 0) {

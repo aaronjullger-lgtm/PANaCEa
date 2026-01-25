@@ -81,8 +81,8 @@ router.post('/query', requireAuth, async (req: AuthenticatedRequest, res: Respon
       return res.json({ success: true, questions: [] });
     }
 
-    const { getQuestionsWithNoRepeat } = await import('../services/noRepeatService');
-    const userId = req.auth.userId;
+    const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
+    const userId = req.auth!.userId;
 
     const result = await getQuestionsWithNoRepeat(userId, { system, difficulty }, limit);
 
@@ -156,7 +156,7 @@ router.post(
         return res.status(503).json({ success: false, error: 'Database not configured' });
       }
 
-      const { getQuestionsWithNoRepeat } = await import('../services/noRepeatService');
+      const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
       const { userId, filter, limit = 10 } = req.body;
       const result = await getQuestionsWithNoRepeat(userId, filter, limit);
 
@@ -178,7 +178,7 @@ router.post(
         return res.status(503).json({ success: false, error: 'Database not configured' });
       }
 
-      const { recordQuestionSeen } = await import('../services/noRepeatService');
+      const { recordQuestionSeen } = await import('../services/core/noRepeatService');
       const { userId, questionId, metadata } = req.body;
       await recordQuestionSeen(userId, questionId, metadata);
 
@@ -197,7 +197,7 @@ router.get('/repository/stats', async (req: Request, res: Response) => {
       return res.json({ success: true, stats: { totalQuestions: 0 } });
     }
 
-    const { getRepositoryStats } = await import('../services/noRepeatService');
+    const { getRepositoryStats } = await import('../services/core/noRepeatService');
     const stats = await getRepositoryStats();
 
     res.json({ success: true, stats });
@@ -214,7 +214,7 @@ router.get('/stats', async (req: Request, res: Response) => {
       return res.status(503).json({ error: 'Database not configured' });
     }
 
-    const { getRepositoryStats } = await import('../services/noRepeatService');
+    const { getRepositoryStats } = await import('../services/core/noRepeatService');
     const stats = await getRepositoryStats();
 
     res.json({
@@ -428,7 +428,7 @@ router.post(
       let newQuestion = null;
 
       try {
-        const { loadConditionData } = await import('../services/conditionDataLoader');
+        const { loadConditionData } = await import('../services/core/conditionDataLoader');
         const { generateSingleQuestion } = await import('../lib/questionGenerator');
 
         // Load condition data based on query text
@@ -525,7 +525,7 @@ router.post('/seeds', validateRequired(['seedData']), async (req: Request, res: 
       return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
-    const { createQuestionSeed } = await import('../services/questionSeedService');
+    const { createQuestionSeed } = await import('../services/core/questionSeedService');
     const seed = await createQuestionSeed(req.body.seedData);
 
     res.json({ success: true, seed });
@@ -541,7 +541,7 @@ router.get('/seeds/:id/assemble', async (req: Request, res: Response) => {
       return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
-    const { assembleQuestionFromSeed } = await import('../services/questionSeedService');
+    const { assembleQuestionFromSeed } = await import('../services/core/questionSeedService');
     const question = await assembleQuestionFromSeed(req.params.id);
 
     res.json({ success: true, question });
@@ -560,7 +560,7 @@ router.post(
         return res.status(503).json({ success: false, error: 'Database not configured' });
       }
 
-      const { assembleQuestionsFromSeeds } = await import('../services/questionSeedService');
+      const { assembleQuestionsFromSeeds } = await import('../services/core/questionSeedService');
       const { filter, count } = req.body;
       const questions = await assembleQuestionsFromSeeds(filter, count);
 
@@ -578,7 +578,7 @@ router.get('/seeds/stats', async (req: Request, res: Response) => {
       return res.json({ success: true, stats: {} });
     }
 
-    const { getSeedStats } = await import('../services/questionSeedService');
+    const { getSeedStats } = await import('../services/core/questionSeedService');
     const stats = await getSeedStats();
 
     res.json({ success: true, stats });

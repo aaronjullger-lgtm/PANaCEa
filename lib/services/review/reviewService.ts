@@ -98,7 +98,7 @@ export class ReviewService {
       return [];
     }
 
-    const originalQuestionIds = srsItems.map((item) => item.questionId);
+    const originalQuestionIds = srsItems.map((item: { questionId: string }) => item.questionId);
     const originalQuestions = await this.prisma.question.findMany({
       where: { id: { in: originalQuestionIds } },
       select: { id: true, conditionId: true, condition: true, system: true },
@@ -111,7 +111,7 @@ export class ReviewService {
     }
 
     const questionConditionMap = new Map<string, QuestionConditionInfo>(
-      originalQuestions.map((q) => [
+      originalQuestions.map((q: { id: string; conditionId: string | null; condition: string | null; system: string }) => [
         q.id,
         { conditionId: q.conditionId, condition: q.condition, system: q.system },
       ])
@@ -121,7 +121,7 @@ export class ReviewService {
       where: { userId: this.userId },
       select: { questionId: true },
     });
-    const seenIds = new Set(seenHistory.map((h) => h.questionId));
+    const seenIds = new Set(seenHistory.map((h: { questionId: string }) => h.questionId));
 
     const conditionGroups = new Map<string, (typeof srsItems)[0]>();
     for (const item of srsItems) {
@@ -217,7 +217,7 @@ export class ReviewService {
         continue;
       }
 
-      const fallbackQuestion = originalQuestions.find((q) => q.id === srsItem.questionId);
+      const fallbackQuestion = originalQuestions.find((q: { id: string }) => q.id === srsItem.questionId);
       if (fallbackQuestion) {
         const fullQuestion = (await this.prisma.question.findUnique({
           where: { id: fallbackQuestion.id },
@@ -266,7 +266,7 @@ export class ReviewService {
       take: limit,
     });
 
-    const questionIds = savedQuestions.map((sq) => sq.questionId);
+    const questionIds = savedQuestions.map((sq: { questionId: string }) => sq.questionId);
     const questions =
       questionIds.length > 0
         ? ((await this.prisma.question.findMany({
@@ -280,8 +280,8 @@ export class ReviewService {
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return savedQuestions
-      .filter((sq) => questionMap.has(sq.questionId))
-      .map((sq) => {
+      .filter((sq: { questionId: string }) => questionMap.has(sq.questionId))
+      .map((sq: { questionId: string }) => {
         const q = questionMap.get(sq.questionId)!;
         return {
           id: q.id,
@@ -317,14 +317,14 @@ export class ReviewService {
     // Get unique question IDs
     const seenIds = new Set<string>();
     const uniqueAttempts = recentMissed
-      .filter((a) => {
+      .filter((a: { questionId: string }) => {
         if (seenIds.has(a.questionId)) return false;
         seenIds.add(a.questionId);
         return true;
       })
       .slice(0, limit);
 
-    const questionIds = uniqueAttempts.map((a) => a.questionId);
+    const questionIds = uniqueAttempts.map((a: { questionId: string }) => a.questionId);
     const questions =
       questionIds.length > 0
         ? ((await this.prisma.question.findMany({
@@ -335,8 +335,8 @@ export class ReviewService {
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return uniqueAttempts
-      .filter((a) => questionMap.has(a.questionId))
-      .map((a) => {
+      .filter((a: { questionId: string }) => questionMap.has(a.questionId))
+      .map((a: { questionId: string }) => {
         const q = questionMap.get(a.questionId)!;
         return {
           id: q.id,

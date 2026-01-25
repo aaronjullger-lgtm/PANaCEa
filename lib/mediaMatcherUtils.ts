@@ -31,31 +31,39 @@ function levenshteinDistance(a: string, b: string): number {
   if (n === 0) return m;
 
   // Create distance matrix
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0) as number[]);
 
   // Initialize first column
   for (let i = 0; i <= m; i++) {
-    dp[i][0] = i;
+    const row = dp[i];
+    if (row) row[0] = i;
   }
 
   // Initialize first row
-  for (let j = 0; j <= n; j++) {
-    dp[0][j] = j;
+  const firstRow = dp[0];
+  if (firstRow) {
+    for (let j = 0; j <= n; j++) {
+      firstRow[j] = j;
+    }
   }
 
   // Fill in the rest of the matrix
   for (let i = 1; i <= m; i++) {
+    const currentRow = dp[i];
+    const prevRow = dp[i - 1];
+    if (!currentRow || !prevRow) continue;
+    
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1, // Deletion
-        dp[i][j - 1] + 1, // Insertion
-        dp[i - 1][j - 1] + cost // Substitution
-      );
+      const deletion = (prevRow[j] ?? Infinity) + 1;
+      const insertion = (currentRow[j - 1] ?? Infinity) + 1;
+      const substitution = (prevRow[j - 1] ?? Infinity) + cost;
+      currentRow[j] = Math.min(deletion, insertion, substitution);
     }
   }
 
-  return dp[m][n];
+  const lastRow = dp[m];
+  return lastRow?.[n] ?? Math.max(m, n);
 }
 
 /**

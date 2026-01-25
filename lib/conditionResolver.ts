@@ -25,31 +25,38 @@ interface ConditionMatch {
  * Calculate Levenshtein distance between two strings (edit distance)
  */
 function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = [];
+  // Initialize matrix with proper dimensions
+  const matrix: number[][] = Array.from({ length: b.length + 1 }, () =>
+    Array.from({ length: a.length + 1 }, () => 0)
+  );
 
+  // Initialize first column
   for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
+    matrix[i]![0] = i;
   }
 
+  // Initialize first row
   for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
+    matrix[0]![j] = j;
   }
 
+  // Fill in the rest of the matrix
   for (let i = 1; i <= b.length; i++) {
+    const currentRow = matrix[i]!;
+    const prevRow = matrix[i - 1]!;
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
+        currentRow[j] = prevRow[j - 1] ?? 0;
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1 // deletion
-        );
+        const substitution = (prevRow[j - 1] ?? 0) + 1;
+        const insertion = (currentRow[j - 1] ?? 0) + 1;
+        const deletion = (prevRow[j] ?? 0) + 1;
+        currentRow[j] = Math.min(substitution, insertion, deletion);
       }
     }
   }
 
-  return matrix[b.length][a.length];
+  return matrix[b.length]?.[a.length] ?? 0;
 }
 
 /**
@@ -150,6 +157,10 @@ export async function resolveConditionId(
 
     // Return best match if above threshold
     const bestMatch = matches[0];
+    if (!bestMatch) {
+      conditionCache.set(cacheKey, { result: null, timestamp: Date.now() });
+      return null;
+    }
     const result = bestMatch.confidence >= minConfidence ? bestMatch : null;
 
     // Cache result

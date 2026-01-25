@@ -58,67 +58,85 @@ export function parsePatientAge(age: number | string | null | undefined): Parsed
   // Already formatted pattern: "45-year-old", "3-month-old"
   const alreadyFormattedMatch = ageStr.match(/^(\d+)-?(year|month|week|day|hour)s?-old$/i);
   if (alreadyFormattedMatch) {
-    const value = parseInt(alreadyFormattedMatch[1], 10);
-    const unit = normalizeUnit(alreadyFormattedMatch[2]);
-    return buildParsedAge(value, unit);
+    const valueStr = alreadyFormattedMatch[1];
+    const unitStr = alreadyFormattedMatch[2];
+    if (valueStr && unitStr) {
+      const value = parseInt(valueStr, 10);
+      const unit = normalizeUnit(unitStr);
+      return buildParsedAge(value, unit);
+    }
   }
 
   // Pattern: "45 years", "3 months", "14 days", "6 weeks", "12 hours"
   const withUnitMatch = ageStr.match(/^(\d+)\s*(year|month|week|day|hour)s?$/i);
   if (withUnitMatch) {
-    const value = parseInt(withUnitMatch[1], 10);
-    const unit = normalizeUnit(withUnitMatch[2]);
-    return buildParsedAge(value, unit);
+    const valueStr = withUnitMatch[1];
+    const unitStr = withUnitMatch[2];
+    if (valueStr && unitStr) {
+      const value = parseInt(valueStr, 10);
+      const unit = normalizeUnit(unitStr);
+      return buildParsedAge(value, unit);
+    }
   }
 
   // Pattern: "45yo", "3mo", "14d", "6w", "12h"
   const abbreviatedMatch = ageStr.match(/^(\d+)\s*(yo|y|mo|m|wk|w|d|h)$/i);
   if (abbreviatedMatch) {
-    const value = parseInt(abbreviatedMatch[1], 10);
-    const abbrev = abbreviatedMatch[2].toLowerCase();
-    let unit: ParsedAge['unit'] = 'years';
+    const valueStr = abbreviatedMatch[1];
+    const abbrevStr = abbreviatedMatch[2];
+    if (valueStr && abbrevStr) {
+      const value = parseInt(valueStr, 10);
+      const abbrev = abbrevStr.toLowerCase();
+      let unit: ParsedAge['unit'] = 'years';
 
-    switch (abbrev) {
-      case 'yo':
-      case 'y':
-        unit = 'years';
-        break;
-      case 'mo':
-      case 'm':
-        unit = 'months';
-        break;
-      case 'wk':
-      case 'w':
-        unit = 'weeks';
-        break;
-      case 'd':
-        unit = 'days';
-        break;
-      case 'h':
-        unit = 'hours';
-        break;
+      switch (abbrev) {
+        case 'yo':
+        case 'y':
+          unit = 'years';
+          break;
+        case 'mo':
+        case 'm':
+          unit = 'months';
+          break;
+        case 'wk':
+        case 'w':
+          unit = 'weeks';
+          break;
+        case 'd':
+          unit = 'days';
+          break;
+        case 'h':
+          unit = 'hours';
+          break;
+      }
+
+      return buildParsedAge(value, unit);
     }
-
-    return buildParsedAge(value, unit);
   }
 
   // Plain number as string
   const plainNumberMatch = ageStr.match(/^(\d+)$/);
   if (plainNumberMatch) {
-    const value = parseInt(plainNumberMatch[1], 10);
-    return buildParsedAge(value, 'years');
+    const valueStr = plainNumberMatch[1];
+    if (valueStr) {
+      const value = parseInt(valueStr, 10);
+      return buildParsedAge(value, 'years');
+    }
   }
 
   // Fallback: try to extract any number
   const anyNumberMatch = ageStr.match(/(\d+)/);
   if (anyNumberMatch) {
-    const value = parseInt(anyNumberMatch[1], 10);
-    // Try to detect unit from context
-    if (ageStr.includes('month')) return buildParsedAge(value, 'months');
-    if (ageStr.includes('week')) return buildParsedAge(value, 'weeks');
-    if (ageStr.includes('day')) return buildParsedAge(value, 'days');
-    if (ageStr.includes('hour')) return buildParsedAge(value, 'hours');
-    return buildParsedAge(value, 'years');
+    const valueStr = anyNumberMatch[1];
+    if (valueStr) {
+      const value = parseInt(valueStr, 10);
+      // Try to detect unit from context
+      if (ageStr.includes('month')) return buildParsedAge(value, 'months');
+      if (ageStr.includes('week')) return buildParsedAge(value, 'weeks');
+      if (ageStr.includes('day')) return buildParsedAge(value, 'days');
+      if (ageStr.includes('hour')) return buildParsedAge(value, 'hours');
+      return buildParsedAge(value, 'years');
+    }
   }
 
   // Complete fallback

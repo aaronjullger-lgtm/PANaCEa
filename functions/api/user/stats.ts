@@ -253,7 +253,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     if (mostRecentDate && (mostRecentDate === today || mostRecentDate === yesterday)) {
       currentStreak = 1;
       for (let i = 1; i < sortedDates.length; i++) {
-        const prevDateStr = sortedDates[i - 1];
+        const prevIdx = i - 1;
+        const prevDateStr = sortedDates[prevIdx];
         const currDateStr = sortedDates[i];
         if (!prevDateStr || !currDateStr) break;
         const prevDate = new Date(prevDateStr);
@@ -318,8 +319,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     }
 
     const underStudiedSystems = Object.entries(systemStats)
-      .filter(([_sys, stats]: [string, (typeof systemStats)[string]]) => stats.total < 10)
-      .map(([system]: [string, (typeof systemStats)[string]]) => system);
+      .filter(([_sys, stats]: [string, (typeof systemStats)[string]]) => stats && stats.total < 10)
+      .map(([system, _stats]: [string, (typeof systemStats)[string]]) => system);
 
     if (underStudiedSystems.length > 0) {
       recommendations.push(`Try more questions in: ${underStudiedSystems.slice(0, 3).join(', ')}`);

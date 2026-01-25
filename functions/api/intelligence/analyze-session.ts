@@ -549,13 +549,11 @@ function determineNextSessionFocus(
     .sort(([, a], [, b]) => a.accuracy - b.accuracy);
 
   const weakestSystem = sortedSystems[0];
-  if (weakestSystem && weakestSystem[1]) {
+  if (weakestSystem) {
+    const systemName = weakestSystem[0];
     const systemData = weakestSystem[1];
-    if (systemData.accuracy < 0.7) {
-      const systemName = weakestSystem[0];
-      if (systemName) {
-        focus.push(`${systemName} system review`);
-      }
+    if (systemData && systemData.accuracy < 0.7 && systemName) {
+      focus.push(`${systemName} system review`);
     }
   }
 
@@ -640,15 +638,16 @@ export const onRequestPost = authenticatedEndpoint(
         errorClassifications.push(classification);
       }
 
-      // Calculate error distribution
-      const errorDistribution: Record<string, number> = {};
-      for (const err of errorClassifications) {
-        errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
-      }
+  // Calculate error distribution
+  const errorDistribution: Record<string, number> = {};
+  for (const err of errorClassifications) {
+    errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
+  }
 
-      // Find dominant error type
-      const dominantErrorType =
-        Object.entries(errorDistribution).sort(([, a], [, b]) => b - a)[0]?.[0] || 'none';
+  // Find dominant error type
+  const sortedErrors = Object.entries(errorDistribution).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0));
+  const topError = sortedErrors[0];
+  const dominantErrorType = topError?.[0] ?? 'none';
 
       // Calculate cognitive state
       const cognitiveState = calculateCognitiveState(attempts);

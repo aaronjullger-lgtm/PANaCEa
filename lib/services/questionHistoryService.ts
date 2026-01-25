@@ -157,7 +157,7 @@ export async function getQuestionHistory(questionId: string): Promise<VersionHis
       validTo: v.validTo || undefined,
     }));
 
-    const current = snapshots[snapshots.length - 1];
+    const current = snapshots[snapshots.length - 1]!;
 
     return {
       questionId,
@@ -376,13 +376,17 @@ export async function getQuestionAuditTrail(questionId: string): Promise<
 
     for (let i = 0; i < history.versions.length; i++) {
       const current = history.versions[i];
+      if (!current) continue;
+      
       let changeCount = 0;
 
       // Compare with previous version to count changes
       if (i > 0) {
         const previous = history.versions[i - 1];
-        const differences = findDifferences(previous.questionData, current.questionData);
-        changeCount = differences.length;
+        if (previous) {
+          const differences = findDifferences(previous.questionData, current.questionData);
+          changeCount = differences.length;
+        }
       }
 
       trail.push({

@@ -73,7 +73,9 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
         return x - Math.floor(x) - 0.5;
       });
 
-      const questionIds = shuffled.slice(0, 5).map((q) => q.id);
+      // Type for question pool items
+      type QuestionPoolItem = { id: string };
+      const questionIds = shuffled.slice(0, 5).map((q: QuestionPoolItem) => q.id);
 
       challenge = await prisma.grandRoundsChallenge.create({
         data: {
@@ -166,9 +168,12 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
       },
     });
 
+    // Type for questions from Prisma query
+    type QuestionData = (typeof questions)[0];
+
     // Ensure questions are in the same order as challenge.questionIds
     const orderedQuestions = (challenge.questionIds as string[])
-      .map((qid) => questions.find((q) => q.id === qid))
+      .map((qid: string) => questions.find((q: QuestionData) => q.id === qid))
       .filter(Boolean);
 
     log.info('Returning active challenge', {

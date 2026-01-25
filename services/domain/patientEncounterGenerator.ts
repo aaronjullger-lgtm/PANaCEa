@@ -25,7 +25,7 @@ async function getConditionContent(): Promise<Record<string, unknown>> {
   }
 
   conditionContentCache = await response.json();
-  return conditionContentCache;
+  return conditionContentCache ?? {};
 }
 
 interface ConditionData {
@@ -163,13 +163,15 @@ function extractChiefComplaint(conditionKey: string, data: ConditionData): strin
   // Try to extract from symptoms
   if (data.symptoms && data.symptoms.length > 0) {
     const primarySymptom = data.symptoms[0];
-    // Clean up the symptom text
-    const cleanSymptom = primarySymptom
-      .replace(/^\*\*.*?\*\*:?\s*/g, '')
-      .replace(/\*\*/g, '')
-      .split('.')[0];
-    if (cleanSymptom.length < 100) {
-      return cleanSymptom;
+    if (primarySymptom) {
+      // Clean up the symptom text
+      const cleanSymptom = primarySymptom
+        .replace(/^\*\*.*?\*\*:?\s*/g, '')
+        .replace(/\*\*/g, '')
+        .split('.')[0];
+      if (cleanSymptom && cleanSymptom.length < 100) {
+        return cleanSymptom;
+      }
     }
   }
 
@@ -318,18 +320,18 @@ function extractIdealWorkup(data: ConditionData): string[] {
 
   if (data.diagnostics?.labs) {
     workup.push(
-      ...data.diagnostics.labs.slice(0, 3).map((lab) => lab.replace(/\*\*/g, '').split(':')[0])
+      ...data.diagnostics.labs.slice(0, 3).map((lab) => lab.replace(/\*\*/g, '').split(':')[0]).filter((s): s is string => !!s)
     );
   }
 
   if (data.diagnostics?.imaging) {
     workup.push(
-      ...data.diagnostics.imaging.slice(0, 2).map((img) => img.replace(/\*\*/g, '').split(':')[0])
+      ...data.diagnostics.imaging.slice(0, 2).map((img) => img.replace(/\*\*/g, '').split(':')[0]).filter((s): s is string => !!s)
     );
   }
 
   if (data.treatment) {
-    workup.push(...data.treatment.slice(0, 2).map((tx) => tx.replace(/\*\*/g, '').split('.')[0]));
+    workup.push(...data.treatment.slice(0, 2).map((tx) => tx.replace(/\*\*/g, '').split('.')[0]).filter((s): s is string => !!s));
   }
 
   return workup.length > 0
@@ -536,13 +538,22 @@ function getSuitableConditionsFromContent(conditionContent: Record<string, unkno
 export async function generatePatientEncounterFromCondition(): Promise<PatientEncounterCase> {
   const conditionContent = await getConditionContent();
   const suitableConditions = await getSuitableConditionsFromContent(conditionContent);
+  
+  if (suitableConditions.length === 0) {
+    throw new Error('No suitable conditions found in database');
+  }
+  
   const conditionKey = suitableConditions[Math.floor(Math.random() * suitableConditions.length)];
-  const data = (conditionContent as Record<string, ConditionData>)[conditionKey];
+  if (!conditionKey) {
+    throw new Error('Failed to select a condition');
+  }
+  
+  const data = (conditionContent as Record<string, ConditionData>)[conditionKey] ?? {};
 
   const sex: 'M' | 'F' = Math.random() > 0.5 ? 'M' : 'F';
   const age = 25 + Math.floor(Math.random() * 50); // 25-75
 
-  const conditionName = conditionKey.split('__').pop()?.replace(/_/g, ' ') || 'unknown condition';
+  const conditionName = conditionKey.split('__').pop()?.replace(/_/g, ' ') ?? 'unknown condition';
 
   const encounterCase: PatientEncounterCase = {
     id: `gen-${Date.now()}-${Math.random().toString(36).substring(7)}`,

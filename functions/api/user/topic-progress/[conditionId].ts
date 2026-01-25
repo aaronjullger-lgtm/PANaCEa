@@ -83,7 +83,8 @@ export const onRequestGet = authenticatedEndpoint(
         };
       });
 
-      progressRecords.forEach((record) => {
+      type ProgressRecord = (typeof progressRecords)[0];
+      progressRecords.forEach((record: ProgressRecord) => {
         const mastery = Math.min(record.stability / 21, 1); // 21 days stability = 100% mastery approximation
         result[record.taskType] = {
           stability: record.stability,

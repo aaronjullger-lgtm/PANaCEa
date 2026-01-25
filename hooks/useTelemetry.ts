@@ -270,9 +270,15 @@ export function useTelemetry(
         const quartileDwell = now - quartileStartTime.current;
 
         setTelemetry((prev) => {
-          const newQuartileDwells = [...prev.quartileDwells] as [number, number, number, number];
+          const newQuartileDwells: [number, number, number, number] = [
+            prev.quartileDwells[0],
+            prev.quartileDwells[1],
+            prev.quartileDwells[2],
+            prev.quartileDwells[3],
+          ];
           if (prevQuartile >= 0 && prevQuartile < 4) {
-            newQuartileDwells[prevQuartile] += quartileDwell;
+            const idx = prevQuartile as 0 | 1 | 2 | 3;
+            newQuartileDwells[idx] = newQuartileDwells[idx] + quartileDwell;
           }
           return {
             ...prev,

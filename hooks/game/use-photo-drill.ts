@@ -110,7 +110,15 @@ export function generateRandomCase(
 ): PhotoCase {
   const pool =
     category && category !== 'random' ? CATEGORY_DIAGNOSES[category] : MASTER_CONDITION_LIST;
-  const correctDiagnosis = pool[Math.floor(Math.random() * pool.length)];
+  
+  // Ensure we have a valid pool with at least one diagnosis
+  if (pool.length === 0) {
+    throw new Error('No diagnoses available for category');
+  }
+  
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  const correctDiagnosis = pool[randomIndex] ?? MASTER_CONDITION_LIST[0] ?? 'Unknown Condition';
+  
   const distractors = pool
     .filter((d) => d !== correctDiagnosis)
     .sort(() => Math.random() - 0.5)
@@ -283,29 +291,35 @@ function levenshteinDistance(str1: string, str2: string): number {
   // Create a 2D array to store distances
   const matrix: number[][] = Array(len1 + 1)
     .fill(null)
-    .map(() => Array(len2 + 1).fill(0));
+    .map(() => Array(len2 + 1).fill(0) as number[]);
 
   // Initialize first column and row
   for (let i = 0; i <= len1; i++) {
-    matrix[i][0] = i;
+    const row = matrix[i];
+    if (row) row[0] = i;
   }
   for (let j = 0; j <= len2; j++) {
-    matrix[0][j] = j;
+    const row = matrix[0];
+    if (row) row[j] = j;
   }
 
   // Fill in the rest of the matrix
   for (let i = 1; i <= len1; i++) {
     for (let j = 1; j <= len2; j++) {
       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1, // deletion
-        matrix[i][j - 1] + 1, // insertion
-        matrix[i - 1][j - 1] + cost // substitution
-      );
+      const currentRow = matrix[i];
+      const prevRow = matrix[i - 1];
+      if (currentRow && prevRow) {
+        currentRow[j] = Math.min(
+          (prevRow[j] ?? 0) + 1, // deletion
+          (currentRow[j - 1] ?? 0) + 1, // insertion
+          (prevRow[j - 1] ?? 0) + cost // substitution
+        );
+      }
     }
   }
 
-  return matrix[len1][len2];
+  return matrix[len1]?.[len2] ?? 0;
 }
 
 /**

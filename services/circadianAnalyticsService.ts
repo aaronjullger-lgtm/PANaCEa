@@ -98,8 +98,13 @@ export function getCircadianInsights(
   }
 
   // Find best and worst performing hours
-  let bestHour = significantHours[0];
-  let worstHour = significantHours[0];
+  const firstHour = significantHours[0];
+  if (!firstHour) {
+    return null;
+  }
+  
+  let bestHour = firstHour;
+  let worstHour = firstHour;
   let totalAccuracy = 0;
   let hoursWithData = 0;
 

@@ -188,21 +188,27 @@ export function exportUserAnalytics(
     downloadFile(jsonContent, filename, 'application/json');
   } else {
     // CSV format - flatten performance records for tabular view
-    const flatRecords = performanceData.map((record) => ({
-      timestamp: new Date(record.timestamp).toISOString(),
-      date: new Date(record.timestamp).toISOString().split('T')[0],
-      system: record.system || '',
-      systemName: record.system
-        ? ABBREVIATION_TO_TOPIC_MAP[record.system as SystemCode] || record.system
-        : '',
-      subcategory: record.subcategory || '',
-      condition: record.condition || '',
-      conditionId: record.conditionId || '',
-      topic: record.topic || '',
-      isCorrect: record.isCorrect ? 'TRUE' : 'FALSE',
-      focus: record.focus || '',
-      difficulty: record.difficulty || '',
-    }));
+    const flatRecords = performanceData.map((record) => {
+      const systemCode = record.system ?? '';
+      const dateParts = new Date(record.timestamp).toISOString().split('T');
+      const datePart = dateParts[0] ?? '';
+      const systemName = systemCode
+        ? (ABBREVIATION_TO_TOPIC_MAP[systemCode as SystemCode] ?? systemCode)
+        : '';
+      return {
+        timestamp: new Date(record.timestamp).toISOString(),
+        date: datePart,
+        system: systemCode,
+        systemName,
+        subcategory: record.subcategory ?? '',
+        condition: record.condition ?? '',
+        conditionId: record.conditionId ?? '',
+        topic: record.topic ?? '',
+        isCorrect: record.isCorrect ? 'TRUE' : 'FALSE',
+        focus: record.focus ?? '',
+        difficulty: record.difficulty ?? '',
+      };
+    });
 
     const csvContent = arrayToCSV(flatRecords);
     const filename = generateFilename('panacea_analytics', 'csv');

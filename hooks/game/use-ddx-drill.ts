@@ -83,9 +83,9 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
 
   switch (questionType) {
     case 'mustNotMiss': {
-      const correctAnswer = ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)];
+      const correctAnswer = ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)] ?? '';
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
-      const options = shuffleArray([correctAnswer, ...distractors]);
+      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
 
       return {
         id: `${ddx.id}-mnm-${Date.now()}`,
@@ -102,9 +102,10 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     case 'mostCommon': {
       const mostCommon = ddx.mostCommon ?? [];
       if (mostCommon.length === 0) return null;
-      const correctAnswer = mostCommon[Math.floor(Math.random() * mostCommon.length)];
+      const correctAnswer = mostCommon[Math.floor(Math.random() * mostCommon.length)] ?? '';
+      if (!correctAnswer) return null;
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
-      const options = shuffleArray([correctAnswer, ...distractors]);
+      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
 
       return {
         id: `${ddx.id}-mc-${Date.now()}`,
@@ -124,15 +125,17 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
       if (pairs.length === 0) return null;
 
       const pairKey = pairs[Math.floor(Math.random() * pairs.length)];
+      if (!pairKey) return null;
       const pairFeatures = features[pairKey] ?? [];
       if (pairFeatures.length === 0) return null;
       const correctFeature = pairFeatures[Math.floor(Math.random() * pairFeatures.length)];
+      if (!correctFeature) return null;
 
       // Get distractors from other conditions' features
       const distractorFeatures = allDDx
         .filter((d: (typeof allDDx)[0]) => d.id !== ddx.id && d.distinguishingFeatures)
         .flatMap((d: (typeof allDDx)[0]) => Object.values(d.distinguishingFeatures ?? {}).flat())
-        .filter((f: string | undefined): f is string => f !== undefined && f !== correctFeature)
+        .filter((f): f is string => typeof f === 'string' && f !== '' && f !== correctFeature)
         .slice(0, 3);
 
       const options = shuffleArray([correctFeature, ...distractorFeatures.slice(0, 3)]);
@@ -152,7 +155,8 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     case 'redFlag': {
       const redFlags = ddx.redFlags ?? [];
       if (redFlags.length === 0) return null;
-      const correctAnswer = redFlags[Math.floor(Math.random() * redFlags.length)];
+      const correctAnswer = redFlags[Math.floor(Math.random() * redFlags.length)] ?? '';
+      if (!correctAnswer) return null;
 
       // Get distractors from reassuring features or other non-red-flag items
       const distractors = allDDx
@@ -164,7 +168,7 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         )
         .slice(0, 3);
 
-      const options = shuffleArray([correctAnswer, ...distractors]);
+      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
 
       return {
         id: `${ddx.id}-rf-${Date.now()}`,

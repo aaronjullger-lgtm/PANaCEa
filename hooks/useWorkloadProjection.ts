@@ -27,12 +27,14 @@ export interface WorkloadProjectionConfig {
 
 export interface WorkloadProjectionResult {
   simulations: WorkloadSimulation[];
-  recommended: WorkloadSimulation | null;
+  recommended: {
+    recommendedRetention: number;
+    explanation: string;
+  } | null;
   chartData: Array<{
     retention: number;
-    dailyReviews: number;
-    timeMinutes: number;
-    sustainability: number;
+    reviews: number;
+    minutes: number;
     isCMRR: boolean;
   }>;
   isLoading: boolean;
@@ -51,13 +53,16 @@ export function useWorkloadProjection(
   autoRun: boolean = true
 ): WorkloadProjectionResult & { runSimulation: () => void } {
   const [simulations, setSimulations] = useState<WorkloadSimulation[]>([]);
-  const [recommended, setRecommended] = useState<WorkloadSimulation | null>(null);
+  const [recommended, setRecommended] = useState<{
+    recommendedRetention: number;
+    explanation: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Memoize parameters to avoid unnecessary recalculations
   const fsrsParams = useMemo(
-    () => config.customParameters || defaultParameters,
+    () => config.customParameters || defaultParameters.w,
     [config.customParameters]
   );
 
@@ -69,14 +74,17 @@ export function useWorkloadProjection(
       // Run simulation for multiple retention levels
       const results = simulateRetentionWorkload({
         dailyNewCards: config.dailyNewCards,
-        currentCardCount: config.currentCardCount || 0,
-        fsrsParameters: fsrsParams,
+        fsrsParams: defaultParameters,
       });
 
       setSimulations(results);
 
       // Find recommended retention based on available time
-      const recommendedResult = calculateRecommendedRetention(results, config.availableTimeMinutes);
+      const recommendedResult = calculateRecommendedRetention(
+        config.availableTimeMinutes,
+        config.dailyNewCards,
+        defaultParameters
+      );
 
       setRecommended(recommendedResult);
     } catch (err) {
@@ -104,16 +112,19 @@ export function useWorkloadProjection(
   const chartData = useMemo(() => {
     if (simulations.length === 0) return [];
 
-    const data = generateWorkloadChart(simulations);
+    const data = generateWorkloadChart({
+      dailyNewCards: config.dailyNewCards,
+      fsrsParams: defaultParameters,
+    });
 
     // Find CMRR point (minimum workload/knowledge ratio)
     let cmrrRetention = 0.85; // Default fallback
     let minRatio = Infinity;
 
     for (const point of data) {
-      // Ratio = timeMinutes / (retention * 100)
+      // Ratio = minutes / (retention * 100)
       // Lower is better (less time per % retention)
-      const ratio = point.timeMinutes / (point.retention * 100);
+      const ratio = point.minutes / (point.retention * 100);
       if (ratio < minRatio) {
         minRatio = ratio;
         cmrrRetention = point.retention;
@@ -125,7 +136,7 @@ export function useWorkloadProjection(
       ...point,
       isCMRR: Math.abs(point.retention - cmrrRetention) < 0.01,
     }));
-  }, [simulations]);
+  }, [simulations, config.dailyNewCards]);
 
   return {
     simulations,
@@ -185,7 +196,8 @@ export function useParameterComparison(
     if (!defaultSim || !optimizedSim) return 0;
 
     const reduction =
-      (defaultSim.dailyReviews - optimizedSim.dailyReviews) / defaultSim.dailyReviews;
+      (defaultSim.projectedDailyReviews - optimizedSim.projectedDailyReviews) /
+      defaultSim.projectedDailyReviews;
     return reduction * 100;
   }, [defaultProjection.simulations, optimizedProjection.simulations, optimizedParameters]);
 
@@ -222,9 +234,9 @@ export function useWorkloadMonitor(
     return projection.simulations.find((s) => Math.abs(s.retention - targetRetention) < 0.01);
   }, [projection.simulations, targetRetention]);
 
-  const currentWorkload = currentSimulation?.dailyReviews || 0;
-  const timeMinutes = currentSimulation?.timeMinutes || 0;
-  const sustainability = currentSimulation?.sustainabilityScore || 100;
+  const currentWorkload = currentSimulation?.projectedDailyReviews ?? 0;
+  const timeMinutes = currentSimulation?.timeInvestmentMinutes ?? 0;
+  const sustainability = currentSimulation?.sustainabilityScore ?? 100;
 
   const isExcessive = timeMinutes > 120; // > 2 hours
   const isUnsustainable = sustainability < 30; // Critical threshold
@@ -235,11 +247,10 @@ export function useWorkloadMonitor(
   let recommendation = 'Your current retention target is sustainable.';
 
   if (isUnsustainable) {
-    const suggestedRetention = projection.recommended?.retention || 0.85;
+    const suggestedRetention = projection.recommended?.recommendedRetention ?? 0.85;
     recommendation =
       `⚠️ Your workload is unsustainable (${timeMinutes.toFixed(0)} min/day). ` +
-      `Consider lowering retention to ${(suggestedRetention * 100).toFixed(0)}% ` +
-      `to maintain ${projection.recommended?.timeMinutes.toFixed(0)} min/day.`;
+      `Consider lowering retention to ${(suggestedRetention * 100).toFixed(0)}%.`;
   } else if (isExcessive) {
     recommendation =
       `Your workload is high (${timeMinutes.toFixed(0)} min/day). ` +

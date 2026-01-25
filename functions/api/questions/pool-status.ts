@@ -58,7 +58,8 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
           where: { userId: user.id },
           select: { questionId: true },
         });
-        const seenIds = seenQuestions.map((h) => h.questionId);
+        type SeenItem = (typeof seenQuestions)[0];
+        const seenIds = seenQuestions.map((h: SeenItem) => h.questionId);
 
         if (seenIds.length > 0) {
           userSeen = await prisma.preGeneratedQuestion.count({
@@ -84,7 +85,8 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
         where: { userId: user.id },
         select: { questionId: true },
       });
-      const allSeenIds = allSeenHistory.map((h) => h.questionId);
+      type SeenHistoryItem = (typeof allSeenHistory)[0];
+      const allSeenIds = allSeenHistory.map((h: SeenHistoryItem) => h.questionId);
 
       if (allSeenIds.length > 0) {
         totalUserSeen = await prisma.preGeneratedQuestion.count({

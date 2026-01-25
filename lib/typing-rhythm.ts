@@ -210,18 +210,22 @@ export function extractPauses(events: KeystrokeEvent[]): PauseEvent[] {
   const keydowns = events.filter((e) => e.type === 'keydown' && !e.isDeletion);
 
   for (let i = 1; i < keydowns.length; i++) {
-    const duration = keydowns[i].timestamp - keydowns[i - 1].timestamp;
+    const curr = keydowns[i];
+    const prev = keydowns[i - 1];
+    if (!curr || !prev) continue;
+    
+    const duration = curr.timestamp - prev.timestamp;
 
     // Only track significant pauses (> physical threshold)
     if (duration > PAUSE_THRESHOLDS.PHYSICAL) {
       pauses.push({
         durationMs: duration,
         type: classifyPause(duration),
-        position: keydowns[i].position,
-        atWordBoundary: isWordBoundary(keydowns[i - 1].key),
-        atSentenceBoundary: isSentenceBoundary(keydowns[i - 1].key),
-        prevKey: keydowns[i - 1].key,
-        timestamp: keydowns[i].timestamp,
+        position: curr.position,
+        atWordBoundary: isWordBoundary(prev.key),
+        atSentenceBoundary: isSentenceBoundary(prev.key),
+        prevKey: prev.key,
+        timestamp: curr.timestamp,
       });
     }
   }
@@ -236,45 +240,57 @@ export function extractBursts(events: KeystrokeEvent[]): BurstSegment[] {
   const bursts: BurstSegment[] = [];
   const keydowns = events.filter((e) => e.type === 'keydown' && !e.isDeletion);
 
+  if (keydowns.length === 0) return bursts;
+  const firstKey = keydowns[0];
+  if (!firstKey) return bursts;
+
   let burstStart = 0;
-  let burstContent = keydowns[0]?.key || '';
+  let burstContent = firstKey.key;
   let burstIKIs: number[] = [];
 
   for (let i = 1; i < keydowns.length; i++) {
-    const iki = keydowns[i].timestamp - keydowns[i - 1].timestamp;
+    const curr = keydowns[i];
+    const prev = keydowns[i - 1];
+    if (!curr || !prev) continue;
+    
+    const iki = curr.timestamp - prev.timestamp;
 
     if (iki < BURST_IKI_THRESHOLD) {
       // Continue burst
-      burstContent += keydowns[i].key;
+      burstContent += curr.key;
       burstIKIs.push(iki);
     } else {
       // End of burst - save if long enough
-      if (burstContent.length >= MIN_BURST_LENGTH) {
+      const burstStartKey = keydowns[burstStart];
+      const prevKey = keydowns[i - 1];
+      if (burstContent.length >= MIN_BURST_LENGTH && burstStartKey && prevKey) {
         bursts.push({
-          startPosition: keydowns[burstStart].position,
-          endPosition: keydowns[i - 1].position,
+          startPosition: burstStartKey.position,
+          endPosition: prevKey.position,
           length: burstContent.length,
-          avgIKI: burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length || 0,
+          avgIKI: burstIKIs.length > 0 ? burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length : 0,
           content: burstContent,
-          startTimestamp: keydowns[burstStart].timestamp,
+          startTimestamp: burstStartKey.timestamp,
         });
       }
       // Start new potential burst
       burstStart = i;
-      burstContent = keydowns[i].key;
+      burstContent = curr.key;
       burstIKIs = [];
     }
   }
 
   // Check final burst
-  if (burstContent.length >= MIN_BURST_LENGTH) {
+  const burstStartKey = keydowns[burstStart];
+  const lastKey = keydowns[keydowns.length - 1];
+  if (burstContent.length >= MIN_BURST_LENGTH && burstStartKey && lastKey) {
     bursts.push({
-      startPosition: keydowns[burstStart].position,
-      endPosition: keydowns[keydowns.length - 1].position,
+      startPosition: burstStartKey.position,
+      endPosition: lastKey.position,
       length: burstContent.length,
-      avgIKI: burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length || 0,
+      avgIKI: burstIKIs.length > 0 ? burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length : 0,
       content: burstContent,
-      startTimestamp: keydowns[burstStart].timestamp,
+      startTimestamp: burstStartKey.timestamp,
     });
   }
 
@@ -289,7 +305,11 @@ function calculateIKIStats(events: KeystrokeEvent[]): { avg: number; stdDev: num
   const ikis: number[] = [];
 
   for (let i = 1; i < keydowns.length; i++) {
-    ikis.push(keydowns[i].timestamp - keydowns[i - 1].timestamp);
+    const curr = keydowns[i];
+    const prev = keydowns[i - 1];
+    if (curr && prev) {
+      ikis.push(curr.timestamp - prev.timestamp);
+    }
   }
 
   if (ikis.length === 0) return { avg: 0, stdDev: 0, cv: 0 };
@@ -408,7 +428,9 @@ export function analyzeTypingSession(events: KeystrokeEvent[]): TypingAnalysis {
   const finalLength = productions.length - deletions.length; // Simplified
 
   // Calculate session duration
-  const sessionDuration = events[events.length - 1].timestamp - events[0].timestamp;
+  const firstEvent = events[0];
+  const lastEvent = events[events.length - 1];
+  const sessionDuration = firstEvent && lastEvent ? lastEvent.timestamp - firstEvent.timestamp : 0;
   const cpm = sessionDuration > 0 ? (productions.length / sessionDuration) * 60000 : 0;
 
   // IKI statistics

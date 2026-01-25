@@ -293,8 +293,9 @@ export function computeGradient(
     const wPlus = [...w];
     const wMinus = [...w];
 
-    wPlus[i] += epsilon;
-    wMinus[i] -= epsilon;
+    const currentVal = wPlus[i] ?? 0;
+    wPlus[i] = currentVal + epsilon;
+    wMinus[i] = currentVal - epsilon;
 
     // Central difference: (f(x+h) - f(x-h)) / 2h
     const fPlus = computeBrierScore(wPlus, reviews);
@@ -400,22 +401,35 @@ export function lbfgsOptimize(
 
     // First loop (backward)
     for (let i = s.length - 1; i >= 0; i--) {
-      alpha[i] = rho[i] * dot(s[i], q);
-      q = subtract(q, scale(y[i], alpha[i]));
+      const sVec = s[i];
+      const yVec = y[i];
+      const rhoVal = rho[i];
+      if (!sVec || !yVec || rhoVal === undefined) continue;
+      alpha[i] = rhoVal * dot(sVec, q);
+      q = subtract(q, scale(yVec, alpha[i] ?? 0));
     }
 
     // Initial Hessian approximation (scaled identity)
     let gamma = 1;
     if (s.length > 0) {
       const lastIdx = s.length - 1;
-      gamma = dot(s[lastIdx], y[lastIdx]) / dot(y[lastIdx], y[lastIdx]);
+      const lastS = s[lastIdx];
+      const lastY = y[lastIdx];
+      if (lastS && lastY) {
+        const yDotY = dot(lastY, lastY);
+        gamma = yDotY > 0 ? dot(lastS, lastY) / yDotY : 1;
+      }
     }
     let r = scale(q, gamma);
 
     // Second loop (forward)
     for (let i = 0; i < s.length; i++) {
-      const beta = rho[i] * dot(y[i], r);
-      r = add(r, scale(s[i], alpha[i] - beta));
+      const sVec = s[i];
+      const yVec = y[i];
+      const rhoVal = rho[i];
+      if (!sVec || !yVec || rhoVal === undefined) continue;
+      const beta = rhoVal * dot(yVec, r);
+      r = add(r, scale(sVec, (alpha[i] ?? 0) - beta));
     }
 
     // Search direction (negative gradient direction)
@@ -501,8 +515,11 @@ export function convertSnapshots(
   const reviews: OptimizationReview[] = [];
 
   for (let i = 1; i < snapshots.length; i++) {
-    const prev = snapshots[i - 1];
+    const prevIdx = i - 1;
+    const prev = snapshots[prevIdx];
     const curr = snapshots[i];
+    
+    if (!prev || !curr) continue;
 
     const prevDate = new Date(prev.date);
     const currDate = new Date(curr.date);

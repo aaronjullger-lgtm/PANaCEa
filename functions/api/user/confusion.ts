@@ -132,7 +132,8 @@ export const onRequestGet = authenticatedEndpoint(ConfusionGetSchema, async (con
       take: limit,
     });
 
-    const payload = pairs.map((pair) => ({
+    type PairItem = (typeof pairs)[0];
+    const payload = pairs.map((pair: PairItem) => ({
       id: pair.id,
       count: pair.count,
       correctConditionId: pair.correctConditionId ?? pair.CorrectCondition?.id ?? null,

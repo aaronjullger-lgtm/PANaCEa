@@ -185,8 +185,22 @@ export function calculateDriftVector(cards: FSRSCardData[]): DriftVector {
   }
 
   const current = projections[0];
-  const day7 = projections[7] || projections[projections.length - 1];
-  const day14 = projections[14] || projections[projections.length - 1];
+  const lastProjection = projections[projections.length - 1];
+  const day7 = projections[7] ?? lastProjection;
+  const day14 = projections[14] ?? lastProjection;
+
+  // Handle case where current is undefined (shouldn't happen but TypeScript requires it)
+  if (!current || !day7 || !day14) {
+    return {
+      currentScore: SCORE_MIN,
+      projectedScoreDay7: SCORE_MIN,
+      projectedScoreDay14: SCORE_MIN,
+      dailyDecayRate: 0,
+      daysUntilDanger: 0,
+      urgency: 'critical',
+      projections,
+    };
+  }
 
   // Calculate decay rate
   const decayDay7 = current.predictedScore - day7.predictedScore;

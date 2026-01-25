@@ -17,6 +17,12 @@ interface CalibrationProgressProps {
  * progress toward this calibration threshold.
  *
  * Phase 3 Milestone 4: Epistemic Uncertainty UI
+ * 
+ * DESIGN TOKENS: This component uses semantic tokens from lib/design-tokens.ts
+ * - bg-data-pass (teal) for calibrated/success states
+ * - bg-data-provisional (amber) for early/warning states
+ * - bg-deep-plum-500 for progress (indigo replacement)
+ * - bg-steel-blue-500 for developing state (blue replacement)
  */
 export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
   current,
@@ -79,19 +85,19 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className={`absolute inset-y-0 left-0 rounded-full ${
               isCalibrated
-                ? 'bg-emerald-500'
+                ? 'bg-data-pass'
                 : progress > 66
-                  ? 'bg-indigo-500'
+                  ? 'bg-deep-plum-500'
                   : progress > 33
-                    ? 'bg-blue-500'
-                    : 'bg-amber-500'
+                    ? 'bg-steel-blue-500'
+                    : 'bg-data-provisional'
             }`}
           />
         </div>
         <span className="text-xs text-[var(--color-text-muted)]">
           {current}/{target}
         </span>
-        {isCalibrated && <Sparkles className="w-3 h-3 text-emerald-500" />}
+        {isCalibrated && <Sparkles className="w-3 h-3 text-data-pass" />}
       </div>
     );
   }
@@ -100,7 +106,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     <div
       className={`p-4 rounded-xl border-2 transition-colors ${
         isCalibrated
-          ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+          ? 'bg-data-pass/10 dark:bg-data-pass/5 border-data-pass/30 dark:border-data-pass/20'
           : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700'
       }`}
     >
@@ -108,18 +114,18 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
         <div
           className={`p-2 rounded-lg ${
             isCalibrated
-              ? 'bg-emerald-500/10'
+              ? 'bg-data-pass/10'
               : state === 'not_started'
                 ? 'bg-slate-500/10'
-                : 'bg-blue-500/10'
+                : 'bg-steel-blue-500/10'
           }`}
         >
           {isCalibrated ? (
-            <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Sparkles className="w-5 h-5 text-data-pass" />
           ) : state === 'early' ? (
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <AlertTriangle className="w-5 h-5 text-data-provisional" />
           ) : (
-            <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Brain className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400" />
           )}
         </div>
 
@@ -128,7 +134,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             <h4
               className={`font-semibold ${
                 isCalibrated
-                  ? 'text-emerald-900 dark:text-emerald-100'
+                  ? 'text-data-pass'
                   : 'text-[var(--color-text-primary)]'
               }`}
             >
@@ -147,12 +153,12 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
               transition={{ duration: 0.8, ease: 'easeOut' }}
               className={`absolute inset-y-0 left-0 rounded-full ${
                 isCalibrated
-                  ? 'bg-emerald-500'
+                  ? 'bg-data-pass'
                   : progress > 66
-                    ? 'bg-indigo-500'
+                    ? 'bg-deep-plum-500'
                     : progress > 33
-                      ? 'bg-blue-500'
-                      : 'bg-amber-500'
+                      ? 'bg-steel-blue-500'
+                      : 'bg-data-provisional'
               }`}
             />
             {/* Milestone markers */}
@@ -173,7 +179,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             <p
               className={`text-sm ${
                 isCalibrated
-                  ? 'text-emerald-700 dark:text-emerald-300'
+                  ? 'text-data-pass'
                   : 'text-[var(--color-text-muted)]'
               }`}
             >
@@ -187,13 +193,13 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       {!isCalibrated && showDetails && (
         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
           <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-            <span className={current >= 20 ? 'text-blue-600 dark:text-blue-400' : ''}>
+            <span className={current >= 20 ? 'text-steel-blue-600 dark:text-steel-blue-400' : ''}>
               20: Basic patterns
             </span>
-            <span className={current >= 40 ? 'text-indigo-600 dark:text-indigo-400' : ''}>
+            <span className={current >= 40 ? 'text-deep-plum-600 dark:text-deep-plum-400' : ''}>
               40: Good predictions
             </span>
-            <span className={current >= 60 ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+            <span className={current >= 60 ? 'text-data-pass' : ''}>
               60: Optimized
             </span>
           </div>

@@ -120,7 +120,8 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
         select: { id: true },
         take: 100,
       });
-      const questionIds = questionsForCondition.map((q) => q.id);
+      type QuestionIdItem = (typeof questionsForCondition)[0];
+      const questionIds = questionsForCondition.map((q: QuestionIdItem) => q.id);
 
       if (questionIds.length > 0) {
         srsItem = await prisma.sRSItem.findFirst({

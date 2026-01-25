@@ -254,7 +254,8 @@ export function calculateTargetDistribution(sessionSize: number = 20): Record<st
   if (total !== sessionSize) {
     const diff = sessionSize - total;
     // Add/remove from highest weighted system
-    distribution['Cardiovascular'] = (distribution['Cardiovascular'] || 0) + diff;
+    const currentCardio = distribution['Cardiovascular'] ?? 0;
+    distribution['Cardiovascular'] = currentCardio + diff;
   }
 
   return distribution;
@@ -290,8 +291,9 @@ export function validateSessionDistribution(
 
   // Check weight deviations
   for (const [system, targetCount] of Object.entries(target)) {
-    const actualCount = distribution[system] || 0;
-    const targetPercent = targetCount / sessionSize;
+    const actualCount = distribution[system] ?? 0;
+    const safeTargetCount = targetCount ?? 0;
+    const targetPercent = safeTargetCount / sessionSize;
     const actualPercent = actualCount / sessionSize;
     const deviation = Math.abs(targetPercent - actualPercent);
     totalDeviation += deviation;

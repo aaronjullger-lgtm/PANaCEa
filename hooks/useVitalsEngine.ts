@@ -30,7 +30,7 @@ const DEFAULT_VITALS: ParsedVitals = {
 function parseBp(value: any): { sbp: number; dbp: number } {
   if (typeof value === 'string') {
     const match = value.match(/(\d+)[^0-9]+(\d+)/);
-    if (match) {
+    if (match && match[1] && match[2]) {
       return { sbp: parseInt(match[1], 10), dbp: parseInt(match[2], 10) };
     }
   }
@@ -137,11 +137,11 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
     const deltas = getPathologyDeltas(pathology);
 
     setVitals((prev) => {
-      const lastHr = prev.hr[prev.hr.length - 1];
-      const lastSbp = prev.sbp[prev.sbp.length - 1];
-      const lastDbp = prev.dbp[prev.dbp.length - 1];
-      const lastRr = prev.rr[prev.rr.length - 1];
-      const lastO2 = prev.o2[prev.o2.length - 1];
+      const lastHr = prev.hr[prev.hr.length - 1] ?? DEFAULT_VITALS.hr;
+      const lastSbp = prev.sbp[prev.sbp.length - 1] ?? DEFAULT_VITALS.sbp;
+      const lastDbp = prev.dbp[prev.dbp.length - 1] ?? DEFAULT_VITALS.dbp;
+      const lastRr = prev.rr[prev.rr.length - 1] ?? DEFAULT_VITALS.rr;
+      const lastO2 = prev.o2[prev.o2.length - 1] ?? DEFAULT_VITALS.o2;
 
       const nextHr = clamp(
         lastHr + randomBetween(deltas.hr?.[0] ?? 0, deltas.hr?.[1] ?? 0),
@@ -178,11 +178,11 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
 
   const nudgeNoise = useCallback(() => {
     setVitals((prev) => {
-      const lastHr = prev.hr[prev.hr.length - 1];
-      const lastSbp = prev.sbp[prev.sbp.length - 1];
-      const lastDbp = prev.dbp[prev.dbp.length - 1];
-      const lastRr = prev.rr[prev.rr.length - 1];
-      const lastO2 = prev.o2[prev.o2.length - 1];
+      const lastHr = prev.hr[prev.hr.length - 1] ?? DEFAULT_VITALS.hr;
+      const lastSbp = prev.sbp[prev.sbp.length - 1] ?? DEFAULT_VITALS.sbp;
+      const lastDbp = prev.dbp[prev.dbp.length - 1] ?? DEFAULT_VITALS.dbp;
+      const lastRr = prev.rr[prev.rr.length - 1] ?? DEFAULT_VITALS.rr;
+      const lastO2 = prev.o2[prev.o2.length - 1] ?? DEFAULT_VITALS.o2;
 
       const nextHr = clamp(lastHr + randomBetween(-1, 1), 35, 180);
       const nextSbp = clamp(lastSbp + randomBetween(-1, 1), 70, 200);
@@ -218,11 +218,11 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
     const giveOxygen = /oxygen|o2|nasal cannula|non[-\s]?rebreather|mask/.test(text);
 
     setVitals((prev) => {
-      const lastHr = prev.hr[prev.hr.length - 1];
-      const lastSbp = prev.sbp[prev.sbp.length - 1];
-      const lastDbp = prev.dbp[prev.dbp.length - 1];
-      const lastRr = prev.rr[prev.rr.length - 1];
-      const lastO2 = prev.o2[prev.o2.length - 1];
+      const lastHr = prev.hr[prev.hr.length - 1] ?? DEFAULT_VITALS.hr;
+      const lastSbp = prev.sbp[prev.sbp.length - 1] ?? DEFAULT_VITALS.sbp;
+      const lastDbp = prev.dbp[prev.dbp.length - 1] ?? DEFAULT_VITALS.dbp;
+      const lastRr = prev.rr[prev.rr.length - 1] ?? DEFAULT_VITALS.rr;
+      const lastO2 = prev.o2[prev.o2.length - 1] ?? DEFAULT_VITALS.o2;
 
       const nextSbp = giveFluids ? lastSbp + 10 : lastSbp;
       const nextDbp = giveFluids ? lastDbp + 5 : lastDbp;
@@ -242,11 +242,11 @@ export function useVitalsEngine(initialVitals: any, pathology: string) {
 
   const currentVitals = useMemo(
     () => ({
-      hr: vitals.hr[vitals.hr.length - 1],
-      sbp: vitals.sbp[vitals.sbp.length - 1],
-      dbp: vitals.dbp[vitals.dbp.length - 1],
-      rr: vitals.rr[vitals.rr.length - 1],
-      o2: vitals.o2[vitals.o2.length - 1],
+      hr: vitals.hr[vitals.hr.length - 1] ?? DEFAULT_VITALS.hr,
+      sbp: vitals.sbp[vitals.sbp.length - 1] ?? DEFAULT_VITALS.sbp,
+      dbp: vitals.dbp[vitals.dbp.length - 1] ?? DEFAULT_VITALS.dbp,
+      rr: vitals.rr[vitals.rr.length - 1] ?? DEFAULT_VITALS.rr,
+      o2: vitals.o2[vitals.o2.length - 1] ?? DEFAULT_VITALS.o2,
     }),
     [vitals]
   );

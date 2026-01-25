@@ -44,7 +44,7 @@ export interface RetryMetadata {
 export class AppError extends Error {
   public readonly category: ErrorCategory;
   public readonly severity: ErrorSeverity;
-  public readonly retryMetadata: RetryMetadata;
+  public retryMetadata: RetryMetadata;
   public readonly context?: Record<string, unknown>;
   public readonly timestamp: string;
   public readonly errorId: string;

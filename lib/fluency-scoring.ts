@@ -333,9 +333,11 @@ export function analyzeSessionFluency(tracker: SessionFluencyTracker): {
 
   // Find dominant state by time spent
   const totalTime = Object.values(tracker.stateTime).reduce((a, b) => a + b, 0);
-  const dominantState = (Object.entries(tracker.stateTime) as [FluencyState, number][]).sort(
+  const sortedStates = (Object.entries(tracker.stateTime) as [FluencyState, number][]).sort(
     (a, b) => b[1] - a[1]
-  )[0][0];
+  );
+  const topState = sortedStates[0];
+  const dominantState: FluencyState = topState ? topState[0] : 'engaged';
 
   const flowPercentage = totalTime > 0 ? Math.round((tracker.stateTime.flow / totalTime) * 100) : 0;
 

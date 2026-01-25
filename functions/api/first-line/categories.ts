@@ -54,7 +54,9 @@ export const onRequestGet = publicEndpoint(CategoriesQuerySchema, async ({ env }
       orderBy: { category: 'asc' },
     });
 
-    const categoryList = categories.map((c) => c.category);
+    // Type for groupBy result
+    type CategoryGroup = { category: string };
+    const categoryList = categories.map((c: CategoryGroup) => c.category);
 
     log.info('First line categories fetched', { count: categoryList.length });
 

@@ -69,7 +69,12 @@ export function calculateStatistics(data: number[]): StatisticalSummary {
   const mean = data.reduce((sum, val) => sum + val, 0) / n;
 
   // Median
-  const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
+  const midLow = sorted[n / 2 - 1];
+  const midHigh = sorted[n / 2];
+  const midSingle = sorted[Math.floor(n / 2)];
+  const median = n % 2 === 0 && midLow !== undefined && midHigh !== undefined
+    ? (midLow + midHigh) / 2
+    : midSingle ?? 0;
 
   // Variance and Standard Deviation
   const squaredDiffs = data.map((val) => Math.pow(val - mean, 2));
@@ -77,8 +82,8 @@ export function calculateStatistics(data: number[]): StatisticalSummary {
   const standardDeviation = Math.sqrt(variance);
 
   // Min, Max, Range
-  const min = sorted[0];
-  const max = sorted[n - 1];
+  const min = sorted[0] ?? 0;
+  const max = sorted[n - 1] ?? 0;
   const range = max - min;
 
   return {
@@ -152,10 +157,20 @@ export function analyzeTrend(
   }
 
   // Convert timestamps to days from first data point
+  const firstDataPoint = dataPoints[0];
+  if (!firstDataPoint) {
+    return {
+      slope: 0,
+      direction: 'stable',
+      rSquared: 0,
+      predictedNext: 0,
+      velocityPerDay: 0,
+    };
+  }
   const firstTimestamp =
-    typeof dataPoints[0].timestamp === 'number'
-      ? dataPoints[0].timestamp
-      : dataPoints[0].timestamp.getTime();
+    typeof firstDataPoint.timestamp === 'number'
+      ? firstDataPoint.timestamp
+      : firstDataPoint.timestamp.getTime();
 
   const normalizedData = dataPoints.map((d) => ({
     x:
@@ -194,7 +209,8 @@ export function analyzeTrend(
   }
 
   // Predict next value (1 day after last data point)
-  const lastX = normalizedData[normalizedData.length - 1].x;
+  const lastNormalized = normalizedData[normalizedData.length - 1];
+  const lastX = lastNormalized?.x ?? 0;
   const predictedNext = slope * (lastX + 1) + intercept;
 
   return {
@@ -302,11 +318,15 @@ export function detectPlateau(
   // Calculate how long the plateau has been going
   let daysSincePlateau = 0;
   if (isPlateau && recentPoints.length >= 2) {
-    const firstPoint = recentPoints[0].timestamp;
-    const lastPoint = recentPoints[recentPoints.length - 1].timestamp;
-    const firstTs = typeof firstPoint === 'number' ? firstPoint : (firstPoint as Date).getTime();
-    const lastTs = typeof lastPoint === 'number' ? lastPoint : (lastPoint as Date).getTime();
-    daysSincePlateau = Math.round((lastTs - firstTs) / (1000 * 60 * 60 * 24));
+    const firstRecentPoint = recentPoints[0];
+    const lastRecentPoint = recentPoints[recentPoints.length - 1];
+    if (firstRecentPoint && lastRecentPoint) {
+      const firstPoint = firstRecentPoint.timestamp;
+      const lastPoint = lastRecentPoint.timestamp;
+      const firstTs = typeof firstPoint === 'number' ? firstPoint : (firstPoint as Date).getTime();
+      const lastTs = typeof lastPoint === 'number' ? lastPoint : (lastPoint as Date).getTime();
+      daysSincePlateau = Math.round((lastTs - firstTs) / (1000 * 60 * 60 * 24));
+    }
   }
 
   return {

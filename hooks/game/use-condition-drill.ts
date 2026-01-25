@@ -388,10 +388,11 @@ export function useConditionDrill(): UseConditionDrillReturn {
 
           // Generate Socratic hint
           const { getSocraticHint } = await import('@/services/core/CoachingService');
+          const correctOption = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
           const hint = await getSocraticHint(
             currentQuestion.question,
-            currentQuestion.options[currentQuestion.correctAnswerIndex],
-            selectedAnswer
+            correctOption,
+            selectedAnswer ?? ''
           );
           setSocraticHint(hint);
           setIsLoadingHint(false);
@@ -462,11 +463,13 @@ export function useConditionDrill(): UseConditionDrillReturn {
           setIsLoadingHint(true);
 
           import('@/services/core/CoachingService').then((module) => {
+            const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
+            const userAnswer = currentQuestion.options[answerIndex] ?? '';
             module
               .getSocraticHint(
                 currentQuestion.question,
-                currentQuestion.options[currentQuestion.correctAnswerIndex],
-                selectedAnswer
+                correctAnswer,
+                userAnswer
               )
               .then((hint) => {
                 setSocraticHint(hint);
@@ -518,8 +521,9 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const nextQuestion = useCallback(async () => {
     const newQuestions = await fetchQuestionsFromAPI(1);
 
-    if (newQuestions.length > 0) {
-      setQueue((prev) => [...prev, newQuestions[0]]);
+    if (newQuestions.length > 0 && newQuestions[0]) {
+      const newQuestion = newQuestions[0];
+      setQueue((prev) => [...prev, newQuestion]);
     }
 
     setCurrentIndex((prev) => prev + 1);

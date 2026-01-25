@@ -58,26 +58,26 @@ const QuickGlance: React.FC<QuickGlanceProps> = ({
 }) => (
   <div className="grid grid-cols-3 gap-4">
     {/* Readiness Score */}
-    <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 text-center">
-      <Gauge className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-      <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{readinessScore}%</div>
-      <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Exam Ready</div>
+    <div className="p-4 rounded-xl bg-gradient-to-br from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-950/30 dark:to-deep-plum-950/30 border border-steel-blue-200 dark:border-steel-blue-800 text-center">
+      <Gauge className="w-6 h-6 mx-auto mb-2 text-steel-blue-600 dark:text-steel-blue-400" />
+      <div className="text-3xl font-bold text-steel-blue-700 dark:text-steel-blue-300">{readinessScore}%</div>
+      <div className="text-xs text-steel-blue-600 dark:text-steel-blue-400 font-medium">Exam Ready</div>
     </div>
 
     {/* Recent Accuracy */}
-    <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border border-emerald-200 dark:border-emerald-800 text-center">
-      <Target className="w-6 h-6 mx-auto mb-2 text-emerald-600 dark:text-emerald-400" />
-      <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
+    <div className="p-4 rounded-xl bg-gradient-to-br from-sage-50 to-sage-100 dark:from-sage-950/30 dark:to-sage-900/30 border border-sage-200 dark:border-sage-800 text-center">
+      <Target className="w-6 h-6 mx-auto mb-2 text-data-pass" />
+      <div className="text-3xl font-bold text-sage-700 dark:text-sage-300">
         {recentAccuracy}%
       </div>
-      <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Last 50 Q's</div>
+      <div className="text-xs text-sage-600 dark:text-sage-400 font-medium">Last 50 Q's</div>
     </div>
 
     {/* Questions Due */}
-    <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800 text-center">
-      <Clock className="w-6 h-6 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
-      <div className="text-3xl font-bold text-amber-700 dark:text-amber-300">{questionsDue}</div>
-      <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">Due Today</div>
+    <div className="p-4 rounded-xl bg-gradient-to-br from-muted-amber-50 to-muted-amber-100 dark:from-muted-amber-950/30 dark:to-muted-amber-900/30 border border-muted-amber-200 dark:border-muted-amber-800 text-center">
+      <Clock className="w-6 h-6 mx-auto mb-2 text-data-provisional" />
+      <div className="text-3xl font-bold text-muted-amber-700 dark:text-muted-amber-300">{questionsDue}</div>
+      <div className="text-xs text-muted-amber-600 dark:text-muted-amber-400 font-medium">Due Today</div>
     </div>
   </div>
 );
@@ -102,22 +102,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   <div className="space-y-4">
     {/* Weakness Prescriber */}
     {weakestSystems.length > 0 && (
-      <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+      <div className="p-4 rounded-xl bg-dusty-rose-50 dark:bg-dusty-rose-950/20 border border-dusty-rose-200 dark:border-dusty-rose-800">
         <div className="flex items-center gap-2 mb-3">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-          <h3 className="font-semibold text-red-900 dark:text-red-100">Focus Areas</h3>
+          <AlertCircle className="w-5 h-5 text-data-fail" />
+          <h3 className="font-semibold text-dusty-rose-900 dark:text-dusty-rose-100">Focus Areas</h3>
         </div>
         <div className="space-y-2">
           {weakestSystems.map((sys, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-red-100 dark:border-red-900"
+              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-dusty-rose-100 dark:border-dusty-rose-900"
             >
               <span className="text-sm font-medium text-[var(--color-text-primary)]">
                 {sys.system}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                <span className="text-lg font-bold text-data-fail">
                   {sys.accuracy}%
                 </span>
                 <span className="text-xs text-[var(--color-text-muted)]">({sys.attempts} Q's)</span>
@@ -130,21 +130,21 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     {/* Strengths */}
     {strongestSystems.length > 0 && (
-      <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+      <div className="p-4 rounded-xl bg-sage-50 dark:bg-sage-950/20 border border-sage-200 dark:border-sage-800">
         <div className="flex items-center gap-2 mb-3">
-          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-          <h3 className="font-semibold text-green-900 dark:text-green-100">Strong Areas</h3>
+          <CheckCircle className="w-5 h-5 text-data-pass" />
+          <h3 className="font-semibold text-sage-900 dark:text-sage-100">Strong Areas</h3>
         </div>
         <div className="space-y-2">
           {strongestSystems.map((sys, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-green-100 dark:border-green-900"
+              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-sage-100 dark:border-sage-900"
             >
               <span className="text-sm font-medium text-[var(--color-text-primary)]">
                 {sys.system}
               </span>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+              <span className="text-lg font-bold text-data-pass">
                 {sys.accuracy}%
               </span>
             </div>
@@ -163,10 +163,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div
           className={`text-lg font-bold ${
             recentTrend === 'improving'
-              ? 'text-green-600'
+              ? 'text-data-pass'
               : recentTrend === 'declining'
-                ? 'text-red-600'
-                : 'text-yellow-600'
+                ? 'text-data-fail'
+                : 'text-data-provisional'
           }`}
         >
           {recentTrend === 'improving'
@@ -185,7 +185,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all"
+              className="h-full bg-steel-blue-500 rounded-full transition-all"
               style={{ width: `${Math.min(100, weeklyGoalProgress)}%` }}
             />
           </div>
@@ -219,38 +219,38 @@ const DeepDive: React.FC<DeepDiveProps> = ({
 }) => (
   <div className="space-y-4">
     {/* FSRS Metrics */}
-    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800">
+    <div className="p-4 rounded-xl bg-deep-plum-50 dark:bg-deep-plum-950/20 border border-deep-plum-200 dark:border-deep-plum-800">
       <div className="flex items-center gap-2 mb-3">
-        <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h3 className="font-semibold text-purple-900 dark:text-purple-100">
+        <Brain className="w-5 h-5 text-deep-plum-600 dark:text-deep-plum-400" />
+        <h3 className="font-semibold text-deep-plum-900 dark:text-deep-plum-100">
           Memory Science (FSRS)
         </h3>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-purple-100 dark:border-purple-900">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+          <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {avgStability.toFixed(1)}
           </div>
-          <div className="text-xs text-purple-700 dark:text-purple-300">Stability (days)</div>
+          <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Stability (days)</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-purple-100 dark:border-purple-900">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+          <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {avgDifficulty.toFixed(1)}
           </div>
-          <div className="text-xs text-purple-700 dark:text-purple-300">Difficulty</div>
+          <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Difficulty</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-purple-100 dark:border-purple-900">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+          <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {retentionRate}%
           </div>
-          <div className="text-xs text-purple-700 dark:text-purple-300">Retention</div>
+          <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Retention</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-purple-100 dark:border-purple-900">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+          <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {optimalReviewTime}
           </div>
-          <div className="text-xs text-purple-700 dark:text-purple-300">Best Time</div>
+          <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Best Time</div>
         </div>
       </div>
     </div>
@@ -261,29 +261,29 @@ const DeepDive: React.FC<DeepDiveProps> = ({
         Card Distribution
       </h4>
       <div className="grid grid-cols-4 gap-2">
-        <div className="text-center p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-          <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+        <div className="text-center p-2 rounded-lg bg-steel-blue-100 dark:bg-steel-blue-900/30">
+          <div className="text-lg font-bold text-steel-blue-700 dark:text-steel-blue-300">
             {learningState.new}
           </div>
-          <div className="text-[10px] text-blue-600 dark:text-blue-400">New</div>
+          <div className="text-[10px] text-steel-blue-600 dark:text-steel-blue-400">New</div>
         </div>
-        <div className="text-center p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-          <div className="text-lg font-bold text-orange-700 dark:text-orange-300">
+        <div className="text-center p-2 rounded-lg bg-muted-amber-100 dark:bg-muted-amber-900/30">
+          <div className="text-lg font-bold text-muted-amber-700 dark:text-muted-amber-300">
             {learningState.learning}
           </div>
-          <div className="text-[10px] text-orange-600 dark:text-orange-400">Learning</div>
+          <div className="text-[10px] text-muted-amber-600 dark:text-muted-amber-400">Learning</div>
         </div>
-        <div className="text-center p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-          <div className="text-lg font-bold text-green-700 dark:text-green-300">
+        <div className="text-center p-2 rounded-lg bg-sage-100 dark:bg-sage-900/30">
+          <div className="text-lg font-bold text-sage-700 dark:text-sage-300">
             {learningState.review}
           </div>
-          <div className="text-[10px] text-green-600 dark:text-green-400">Review</div>
+          <div className="text-[10px] text-sage-600 dark:text-sage-400">Review</div>
         </div>
-        <div className="text-center p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-          <div className="text-lg font-bold text-red-700 dark:text-red-300">
+        <div className="text-center p-2 rounded-lg bg-dusty-rose-100 dark:bg-dusty-rose-900/30">
+          <div className="text-lg font-bold text-dusty-rose-700 dark:text-dusty-rose-300">
             {learningState.relearning}
           </div>
-          <div className="text-[10px] text-red-600 dark:text-red-400">Relearn</div>
+          <div className="text-[10px] text-dusty-rose-600 dark:text-dusty-rose-400">Relearn</div>
         </div>
       </div>
     </div>

@@ -191,20 +191,20 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   };
 
   const getHourIcon = (hour: number) => {
-    if (hour >= 5 && hour < 12) return <Sunrise className="w-4 h-4 text-amber-500" />;
-    if (hour >= 12 && hour < 17) return <Sun className="w-4 h-4 text-yellow-500" />;
-    if (hour >= 17 && hour < 21) return <Sunset className="w-4 h-4 text-orange-500" />;
-    return <Moon className="w-4 h-4 text-indigo-500" />;
+    if (hour >= 5 && hour < 12) return <Sunrise className="w-4 h-4 text-muted-amber-500" />;
+    if (hour >= 12 && hour < 17) return <Sun className="w-4 h-4 text-muted-amber-400" />;
+    if (hour >= 17 && hour < 21) return <Sunset className="w-4 h-4 text-muted-amber-600" />;
+    return <Moon className="w-4 h-4 text-deep-plum-500" />;
   };
 
   const getReadinessGradient = (level: string | null): string => {
     switch (level) {
       case 'ready':
-        return 'from-emerald-500 to-green-400';
+        return 'from-data-pass to-sage-400';
       case 'almost_ready':
-        return 'from-blue-500 to-cyan-400';
+        return 'from-steel-blue-500 to-slate-teal-400';
       case 'progressing':
-        return 'from-amber-500 to-yellow-400';
+        return 'from-data-provisional to-muted-amber-400';
       default:
         return 'from-slate-400 to-slate-300';
     }
@@ -228,7 +228,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-10 h-10 text-blue-500 animate-spin" />
+          <RefreshCw className="w-10 h-10 text-steel-blue-500 animate-spin" />
           <p className="text-slate-500 dark:text-slate-400">Analyzing your learning data...</p>
         </div>
       </div>
@@ -239,11 +239,11 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <AlertTriangle className="w-12 h-12 text-amber-500" />
+        <AlertTriangle className="w-12 h-12 text-data-provisional" />
         <p className="text-slate-600 dark:text-slate-400">{error}</p>
         <button
           onClick={loadProfile}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-steel-blue-500 text-white rounded-lg hover:bg-steel-blue-600 transition-colors"
         >
           Try Again
         </button>
@@ -255,8 +255,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center">
-          <Brain className="w-10 h-10 text-blue-500" />
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-steel-blue-100 to-deep-plum-100 dark:from-steel-blue-900/50 dark:to-deep-plum-900/50 flex items-center justify-center">
+          <Brain className="w-10 h-10 text-steel-blue-500" />
         </div>
         <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300">
           No Learning Profile Yet
@@ -308,7 +308,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-blue-500 text-white shadow-md'
+                ? 'bg-steel-blue-500 text-white shadow-md'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
@@ -385,26 +385,26 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                icon={<Target className="w-5 h-5 text-blue-500" />}
+                icon={<Target className="w-5 h-5 text-steel-blue-500" />}
                 label="Lifetime Accuracy"
                 value={`${Math.round(profile.lifetimeAccuracy)}%`}
                 sublabel={`${profile.lifetimeCorrect.toLocaleString()} / ${profile.lifetimeQuestions.toLocaleString()}`}
                 trend={aggregateStats?.accuracyTrend}
               />
               <StatCard
-                icon={<Clock className="w-5 h-5 text-purple-500" />}
+                icon={<Clock className="w-5 h-5 text-deep-plum-500" />}
                 label="Total Study Time"
                 value={formatStudyTime(profile.lifetimeStudyTimeMs)}
                 sublabel="all sessions"
               />
               <StatCard
-                icon={<Flame className="w-5 h-5 text-orange-500" />}
+                icon={<Flame className="w-5 h-5 text-muted-amber-500" />}
                 label="Best Streak"
                 value={profile.bestEverStreak.toString()}
                 sublabel="consecutive correct"
               />
               <StatCard
-                icon={<Calendar className="w-5 h-5 text-emerald-500" />}
+                icon={<Calendar className="w-5 h-5 text-data-pass" />}
                 label="Study Streak"
                 value={`${profile.currentStreak} days`}
                 sublabel={profile.currentStreak > 7 ? '🔥 On fire!' : 'Keep it going!'}
@@ -415,7 +415,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {learningVelocity && (
               <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-500" />
+                  <Activity className="w-4 h-4 text-steel-blue-500" />
                   Learning Velocity
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
@@ -436,9 +436,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     <div
                       className={`flex items-center gap-1 text-lg font-semibold ${
                         learningVelocity.trend === 'accelerating'
-                          ? 'text-emerald-500'
+                          ? 'text-data-pass'
                           : learningVelocity.trend === 'decelerating'
-                            ? 'text-red-500'
+                            ? 'text-data-fail'
                             : 'text-slate-500'
                       }`}
                     >
@@ -474,14 +474,14 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Optimal Study Time */}
             {optimalTime && optimalTime.confidence > 0.5 && (
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl p-5 border border-indigo-100 dark:border-indigo-800">
+              <div className="bg-gradient-to-r from-deep-plum-100 to-deep-plum-50 dark:from-deep-plum-900/30 dark:to-deep-plum-800/30 rounded-xl p-5 border border-deep-plum-200 dark:border-deep-plum-800">
                 <div className="flex items-center gap-4">
                   {getHourIcon(optimalTime.hour)}
                   <div>
-                    <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                    <p className="text-sm text-deep-plum-600 dark:text-deep-plum-400 font-medium">
                       Optimal Study Time
                     </p>
-                    <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                    <p className="text-2xl font-bold text-deep-plum-700 dark:text-deep-plum-300">
                       {optimalTime.hour === 0
                         ? '12'
                         : optimalTime.hour > 12
@@ -491,8 +491,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="ml-auto text-right">
-                    <p className="text-xs text-indigo-500 dark:text-indigo-400">Confidence</p>
-                    <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-300">
+                    <p className="text-xs text-deep-plum-500 dark:text-deep-plum-400">Confidence</p>
+                    <p className="text-lg font-semibold text-deep-plum-600 dark:text-deep-plum-300">
                       {Math.round(optimalTime.confidence * 100)}%
                     </p>
                   </div>
@@ -521,7 +521,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 {/* Cognitive State Dashboard */}
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
                   <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-purple-500" />
+                    <Brain className="w-5 h-5 text-deep-plum-500" />
                     Current Mental State
                   </h3>
 
@@ -597,7 +597,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 {/* Test-Taking Patterns */}
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
                   <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
-                    <Timer className="w-5 h-5 text-blue-500" />
+                    <Timer className="w-5 h-5 text-steel-blue-500" />
                     Test-Taking Patterns
                   </h3>
 
@@ -760,7 +760,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {timeOfDayStats.length > 0 && (
               <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
                 <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-purple-500" />
+                  <Clock className="w-5 h-5 text-deep-plum-500" />
                   Performance by Time of Day
                 </h3>
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
@@ -779,10 +779,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       <p
                         className={`text-lg font-bold mt-1 ${
                           stat.accuracy >= 80
-                            ? 'text-emerald-500'
+                            ? 'text-data-pass'
                             : stat.accuracy >= 60
-                              ? 'text-amber-500'
-                              : 'text-red-500'
+                              ? 'text-data-provisional'
+                              : 'text-data-fail'
                         }`}
                       >
                         {Math.round(stat.accuracy)}%
@@ -807,8 +807,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* Learning Insights */}
             {profile.learningInsights.length > 0 && (
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
-                <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300 mb-4 flex items-center gap-2">
+              <div className="bg-gradient-to-br from-deep-plum-100 to-deep-plum-50 dark:from-deep-plum-900/30 dark:to-deep-plum-800/30 rounded-xl p-6 border border-deep-plum-200 dark:border-deep-plum-800">
+                <h3 className="text-lg font-semibold text-deep-plum-700 dark:text-deep-plum-300 mb-4 flex items-center gap-2">
                   <Lightbulb className="w-5 h-5" />
                   Learning Insights
                 </h3>
@@ -816,10 +816,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.learningInsights.map((insight, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 bg-white/60 dark:bg-purple-900/40 rounded-lg p-3"
+                      className="flex items-start gap-3 bg-white/60 dark:bg-deep-plum-900/40 rounded-lg p-3"
                     >
-                      <Sparkles className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-purple-700 dark:text-purple-200">{insight}</span>
+                      <Sparkles className="w-5 h-5 text-deep-plum-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-deep-plum-700 dark:text-deep-plum-200">{insight}</span>
                     </li>
                   ))}
                 </ul>
@@ -828,8 +828,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Recommendations */}
             {profile.recommendations.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-                <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4 flex items-center gap-2">
+              <div className="bg-steel-blue-50 dark:bg-steel-blue-900/20 rounded-xl p-6 border border-steel-blue-200 dark:border-steel-blue-800">
+                <h3 className="text-lg font-semibold text-steel-blue-700 dark:text-steel-blue-300 mb-4 flex items-center gap-2">
                   <Target className="w-5 h-5" />
                   Personalized Recommendations
                 </h3>
@@ -837,15 +837,15 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.recommendations.map((rec, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-3 bg-white dark:bg-blue-900/40 rounded-lg p-4 border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-600 transition-colors cursor-pointer group"
+                      className="flex items-start gap-3 bg-white dark:bg-steel-blue-900/40 rounded-lg p-4 border border-steel-blue-100 dark:border-steel-blue-800 hover:border-steel-blue-300 dark:hover:border-steel-blue-600 transition-colors cursor-pointer group"
                     >
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 dark:text-blue-300 font-semibold text-sm">
+                      <div className="w-8 h-8 rounded-full bg-steel-blue-100 dark:bg-steel-blue-800 flex items-center justify-center flex-shrink-0">
+                        <span className="text-steel-blue-600 dark:text-steel-blue-300 font-semibold text-sm">
                           {i + 1}
                         </span>
                       </div>
-                      <span className="text-blue-700 dark:text-blue-200 flex-1">{rec}</span>
-                      <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
+                      <span className="text-steel-blue-700 dark:text-steel-blue-200 flex-1">{rec}</span>
+                      <ChevronRight className="w-5 h-5 text-steel-blue-400 group-hover:translate-x-1 transition-transform" />
                     </div>
                   ))}
                 </div>
@@ -868,16 +868,16 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 </p>
               </button>
 
-              <button className="p-5 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 text-left hover:border-purple-400 transition-colors group">
+              <button className="p-5 bg-deep-plum-50 dark:bg-deep-plum-900/20 rounded-xl border border-deep-plum-200 dark:border-deep-plum-800 text-left hover:border-deep-plum-400 transition-colors group">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
-                    <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <div className="p-2 rounded-lg bg-deep-plum-100 dark:bg-deep-plum-800">
+                    <Brain className="w-5 h-5 text-deep-plum-600 dark:text-deep-plum-400" />
                   </div>
-                  <span className="font-semibold text-purple-700 dark:text-purple-300">
+                  <span className="font-semibold text-deep-plum-700 dark:text-deep-plum-300">
                     Flow Mode
                   </span>
                 </div>
-                <p className="text-sm text-purple-600 dark:text-purple-400">
+                <p className="text-sm text-deep-plum-600 dark:text-deep-plum-400">
                   Adaptive difficulty to maximize learning efficiency
                 </p>
               </button>
@@ -906,8 +906,8 @@ const StatCard: React.FC<{
       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
       {trend && (
         <span className="ml-auto">
-          {trend === 'improving' && <TrendingUp className="w-4 h-4 text-emerald-500" />}
-          {trend === 'declining' && <TrendingDown className="w-4 h-4 text-red-500" />}
+          {trend === 'improving' && <TrendingUp className="w-4 h-4 text-data-pass" />}
+          {trend === 'declining' && <TrendingDown className="w-4 h-4 text-data-fail" />}
         </span>
       )}
     </div>
@@ -927,13 +927,13 @@ const CognitiveGauge: React.FC<{
 }> = ({ label, value, icon, lowLabel, highLabel, isPositive = false, description }) => {
   const getColor = () => {
     if (isPositive) {
-      if (value >= 70) return 'text-emerald-500 bg-emerald-500';
-      if (value >= 40) return 'text-amber-500 bg-amber-500';
-      return 'text-red-500 bg-red-500';
+      if (value >= 70) return 'text-data-pass bg-data-pass';
+      if (value >= 40) return 'text-data-provisional bg-data-provisional';
+      return 'text-data-fail bg-data-fail';
     } else {
-      if (value <= 30) return 'text-emerald-500 bg-emerald-500';
-      if (value <= 60) return 'text-amber-500 bg-amber-500';
-      return 'text-red-500 bg-red-500';
+      if (value <= 30) return 'text-data-pass bg-data-pass';
+      if (value <= 60) return 'text-data-provisional bg-data-provisional';
+      return 'text-data-fail bg-data-fail';
     }
   };
 
@@ -973,10 +973,10 @@ const PatternInsight: React.FC<{
 }> = ({ label, value, description, quality }) => {
   const qualityStyles = {
     excellent:
-      'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-    good: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+      'bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300 border-sage-200 dark:border-sage-800',
+    good: 'bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300 border-steel-blue-200 dark:border-steel-blue-800',
     'needs-work':
-      'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      'bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 border-muted-amber-200 dark:border-muted-amber-800',
     info: 'bg-slate-100 dark:bg-slate-700/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   };
 
@@ -1001,7 +1001,7 @@ const RecentSessionsList: React.FC<{
 }> = ({ sessions, formatDate }) => (
   <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-      <BarChart3 className="w-4 h-4 text-blue-500" />
+      <BarChart3 className="w-4 h-4 text-steel-blue-500" />
       Recent Sessions
     </h3>
     <div className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -1021,17 +1021,17 @@ const RecentSessionsList: React.FC<{
               <p
                 className={`text-lg font-bold ${
                   session.accuracy >= 80
-                    ? 'text-emerald-500'
+                    ? 'text-data-pass'
                     : session.accuracy >= 60
-                      ? 'text-amber-500'
-                      : 'text-red-500'
+                      ? 'text-data-provisional'
+                      : 'text-data-fail'
                 }`}
               >
                 {Math.round(session.accuracy)}%
               </p>
               {session.bestStreak > 0 && (
                 <p className="text-xs text-slate-400 flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-orange-400" />
+                  <Flame className="w-3 h-3 text-muted-amber-500" />
                   {session.bestStreak} streak
                 </p>
               )}

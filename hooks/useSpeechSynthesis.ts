@@ -77,7 +77,8 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
       if (availableVoices.length > 0 && !currentVoice) {
         const englishVoice =
           availableVoices.find((v) => v.lang.startsWith('en') && v.localService) ||
-          availableVoices[0];
+          availableVoices[0] ||
+          null;
         setCurrentVoice(englishVoice);
       }
     };

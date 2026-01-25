@@ -555,28 +555,28 @@ export function calculatePersonalizedFSRS(
 
   // Adjust initial stability weights based on learning speed
   if (learningSpeed === 'fast') {
-    params.w[0] *= 1.2; // New card stability
-    params.w[1] *= 1.15;
-    params.w[2] *= 1.1;
-    params.w[3] *= 1.05;
+    if (params.w[0] !== undefined) params.w[0] *= 1.2; // New card stability
+    if (params.w[1] !== undefined) params.w[1] *= 1.15;
+    if (params.w[2] !== undefined) params.w[2] *= 1.1;
+    if (params.w[3] !== undefined) params.w[3] *= 1.05;
     improvements.push('Increased initial stability for fast learning pattern');
   } else if (learningSpeed === 'slow') {
-    params.w[0] *= 0.85;
-    params.w[1] *= 0.9;
-    params.w[2] *= 0.95;
+    if (params.w[0] !== undefined) params.w[0] *= 0.85;
+    if (params.w[1] !== undefined) params.w[1] *= 0.9;
+    if (params.w[2] !== undefined) params.w[2] *= 0.95;
     improvements.push('Decreased initial stability for more frequent early reviews');
   }
 
   // Adjust difficulty factor based on user's average performance
   if (avgDifficulty > 7) {
-    params.w[4] *= 1.1;
-    params.w[5] *= 0.9;
+    if (params.w[4] !== undefined) params.w[4] *= 1.1;
+    if (params.w[5] !== undefined) params.w[5] *= 0.9;
     improvements.push('Adjusted difficulty scaling for challenging material');
   }
 
   // Adjust forgetting stability based on measured forgetting rate
   if (forgettingRate > 30) {
-    params.w[11] *= 0.9; // Reduce forget stability
+    if (params.w[11] !== undefined) params.w[11] *= 0.9; // Reduce forget stability
     improvements.push('Reduced forget stability due to higher lapse rate');
   }
 
@@ -885,10 +885,10 @@ function generateInsights(
   }
 
   // System-specific insights
-  const weakestSystem = systems.reduce(
-    (a, b) => (a.masteryLevel < b.masteryLevel && a.questionsSeen >= 10 ? a : b),
-    systems[0]
-  );
+  const systemsWithData = systems.filter(s => s.questionsSeen >= 10);
+  const weakestSystem = systemsWithData.length > 0
+    ? systemsWithData.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b))
+    : null;
 
   if (weakestSystem && weakestSystem.masteryLevel < 50) {
     insights.push({
@@ -903,10 +903,9 @@ function generateInsights(
     });
   }
 
-  const strongestSystem = systems.reduce(
-    (a, b) => (a.masteryLevel > b.masteryLevel && a.questionsSeen >= 10 ? a : b),
-    systems[0]
-  );
+  const strongestSystem = systemsWithData.length > 0
+    ? systemsWithData.reduce((a, b) => (a.masteryLevel > b.masteryLevel ? a : b))
+    : null;
 
   if (strongestSystem && strongestSystem.masteryLevel > 85) {
     insights.push({

@@ -36,8 +36,11 @@ export function hasRole(userRole: UserRole, requiredRole: UserRole): boolean {
  * @param userRole - The user's role
  * @returns True if user is admin or superadmin
  */
-export function isAdmin(userRole: UserRole): boolean {
-  return hasRole(userRole, ROLES.ADMIN);
+export function isAdmin(userRole: UserRole | undefined): boolean {
+  if (!userRole) return false;
+  const adminRole = ROLES.ADMIN;
+  if (!adminRole) return false;
+  return hasRole(userRole, adminRole);
 }
 
 /**
@@ -88,7 +91,12 @@ export function getAssignableRoles(userRole: UserRole): UserRole[] {
 
   // Superadmins can assign user and admin roles
   // (cannot create other superadmins through UI for security)
-  return [ROLES.USER, ROLES.ADMIN];
+  const userRoleValue = ROLES.USER;
+  const adminRoleValue = ROLES.ADMIN;
+  const result: UserRole[] = [];
+  if (userRoleValue) result.push(userRoleValue);
+  if (adminRoleValue) result.push(adminRoleValue);
+  return result;
 }
 
 /**

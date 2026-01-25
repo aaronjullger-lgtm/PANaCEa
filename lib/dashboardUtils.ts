@@ -32,9 +32,13 @@ export function calculateStreaks(records: { isCorrect: boolean }[]): {
   let tempStreak = 0;
 
   for (let i = records.length - 1; i >= 0; i--) {
-    if (records[i].isCorrect) {
+    const record = records[i];
+    if (!record) continue;
+    
+    if (record.isCorrect) {
       tempStreak++;
-      if (i === records.length - 1 || (i < records.length - 1 && records[i + 1].isCorrect)) {
+      const nextRecord = records[i + 1];
+      if (i === records.length - 1 || (i < records.length - 1 && nextRecord?.isCorrect)) {
         currentStreak = tempStreak;
       }
       bestStreak = Math.max(bestStreak, tempStreak);

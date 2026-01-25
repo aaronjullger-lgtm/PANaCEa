@@ -64,11 +64,11 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     loadGuidelines();
   }, []);
 
-  const currentVignette = useMemo(() => {
+  const currentVignette = useMemo((): GuidelineCase | null => {
     if (!currentGuideline || currentVignetteIndex >= currentGuideline.vignettes.length) {
       return null;
     }
-    return currentGuideline.vignettes[currentVignetteIndex];
+    return currentGuideline.vignettes[currentVignetteIndex] ?? null;
   }, [currentGuideline, currentVignetteIndex]);
 
   const totalVignettes = currentGuideline?.vignettes.length ?? 0;

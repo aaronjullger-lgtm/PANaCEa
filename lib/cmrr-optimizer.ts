@@ -142,16 +142,19 @@ export function calculateOptimalRetention(input: CMRRInput): CMRROutput {
 
   // Select R based on available time
   let optimalR = DEFAULT_RETENTION;
+  const bestEfficiency = efficiencies[0];
 
-  if (timeConstraintFactor < 0.5) {
-    // Limited time: accept lower retention for manageable workload
-    optimalR = Math.max(MIN_RETENTION, efficiencies[0].r - 0.05);
-  } else if (timeConstraintFactor > 1.5) {
-    // Plenty of time: can afford higher retention
-    optimalR = Math.min(MAX_RETENTION, efficiencies[0].r + 0.03);
-  } else {
-    // Normal: use efficiency-optimal R
-    optimalR = efficiencies[0].r;
+  if (bestEfficiency) {
+    if (timeConstraintFactor < 0.5) {
+      // Limited time: accept lower retention for manageable workload
+      optimalR = Math.max(MIN_RETENTION, bestEfficiency.r - 0.05);
+    } else if (timeConstraintFactor > 1.5) {
+      // Plenty of time: can afford higher retention
+      optimalR = Math.min(MAX_RETENTION, bestEfficiency.r + 0.03);
+    } else {
+      // Normal: use efficiency-optimal R
+      optimalR = bestEfficiency.r;
+    }
   }
 
   // Apply exam urgency adjustment

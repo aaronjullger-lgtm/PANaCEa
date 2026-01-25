@@ -1114,7 +1114,10 @@ function applyVariation(value: string, direction: 'high' | 'low' | undefined): s
   const numMatch = value.match(/^([\d.]+)/);
   if (!numMatch) return value;
 
-  const num = parseFloat(numMatch[1]);
+  const matchedNum = numMatch[1];
+  if (!matchedNum) return value;
+
+  const num = parseFloat(matchedNum);
   if (isNaN(num)) return value;
 
   // Apply a small random variation (±10%)
@@ -1122,7 +1125,7 @@ function applyVariation(value: string, direction: 'high' | 'low' | undefined): s
   const newNum = Math.round(num * variation * 10) / 10;
 
   // Replace the number in the original string
-  return value.replace(numMatch[1], newNum.toString());
+  return value.replace(matchedNum, newNum.toString());
 }
 
 /**
@@ -1163,11 +1166,18 @@ function generateRandomLabCase(
 
   // Try to find a case with a diagnosis we haven't seen recently
   let attempts = 0;
-  let randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+  const firstCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+  if (!firstCase) {
+    throw new Error('No lab cases available after random selection');
+  }
+  let randomCase: LabCase = firstCase;
 
   if (recentDiagnoses && recentDiagnoses.size > 0) {
     while (recentDiagnoses.has(randomCase.correctDiagnosis) && attempts < 10) {
-      randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+      const nextCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+      if (nextCase) {
+        randomCase = nextCase;
+      }
       attempts++;
     }
   }
@@ -1433,7 +1443,10 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     recentDiagnosesRef.current.clear(); // Clear history on reset
     const newQueue: LabCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      newQueue.push(generateNewCase(selectedCategory));
+      const newCase = generateNewCase(selectedCategory);
+      if (newCase) {
+        newQueue.push(newCase);
+      }
     }
 
     setQueue(newQueue);

@@ -134,19 +134,22 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
 
     const systemCodes = Object.keys(SYSTEM_LABELS);
 
+    // Type for content items from the Prisma query
+    type ContentItem = (typeof content)[0];
+
     const systems: ClinicalBrowseResponse['systems'] = systemCodes
       .map((code) => {
         const conditionsByCategory: Record<string, any[]> = {};
 
         content
-          .filter((c: any) => {
+          .filter((c: ContentItem) => {
             if (c.system === code) return true;
             // Allow cross-tagged related systems
             return (
               Array.isArray((c as any).relatedSystems) && (c as any).relatedSystems.includes(code)
             );
           })
-          .forEach((c: any) => {
+          .forEach((c: ContentItem) => {
             const cat = c.subcategory || 'General';
             if (!conditionsByCategory[cat]) conditionsByCategory[cat] = [];
             conditionsByCategory[cat].push({
@@ -185,7 +188,7 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
           name: SYSTEM_LABELS[code] || code,
           categories,
           drugs: systemDrugs,
-          physiology: systemPhys.map((p) => ({
+          physiology: systemPhys.map((p: PhysResult) => ({
             id: p.id,
             name: p.name,
             category: p.category,

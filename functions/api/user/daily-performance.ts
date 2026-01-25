@@ -81,6 +81,7 @@ export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async 
       totalAttempts: attempts.length,
     });
 
+    type AttemptItem = (typeof attempts)[0];
     return {
       data: {
         period: `${days}d`,
@@ -89,7 +90,7 @@ export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async 
         dailyPerformance: dailyData,
         summary: {
           totalAttempts: attempts.length,
-          totalCorrect: attempts.filter((a) => a.wasCorrect).length,
+          totalCorrect: attempts.filter((a: AttemptItem) => a.wasCorrect).length,
           activeDays: dailyData.length,
           avgAttemptsPerActiveDay:
             dailyData.length > 0 ? Math.round(attempts.length / dailyData.length) : 0,
