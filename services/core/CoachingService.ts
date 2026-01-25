@@ -1,5 +1,5 @@
 import type { PerformanceRecord } from '@/types';
-import { callGeminiText } from './geminiService';
+import { callGeminiText } from '../ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
 
 /**
