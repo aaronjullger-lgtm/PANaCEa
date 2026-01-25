@@ -15,8 +15,9 @@
  * @see https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare
  */
 
-// Prisma 7: Import from generated client with Accelerate support
-import { PrismaClient } from '@prisma/client';
+// Prisma 7: Import from EDGE client for Cloudflare Workers (no Node.js binary)
+// The /edge import provides a lightweight JS/WASM wrapper instead of the ~15MB Rust binary
+import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 // Log which Prisma mode we're using for debugging
