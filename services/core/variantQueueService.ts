@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
-import { generateVariant } from '../lib/questionVariantGenerator';
-import { TASK_TYPES } from '../lib/taskTypes';
+import { generateVariant } from '@/lib/questionVariantGenerator';
+import { TASK_TYPES } from '@/lib/taskTypes';
 
 export class VariantQueueService {
   constructor(private prisma: PrismaClient) {}

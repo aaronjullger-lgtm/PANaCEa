@@ -8,3 +8,14 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Create authentication headers with Bearer token
+ * @param token - Authentication token
+ * @returns Headers object with Authorization header
+ */
+export function getAuthHeaders(token: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
