@@ -5,7 +5,26 @@
  * and duplicate detection for generated questions.
  */
 
-import { createHash } from 'crypto';
+// Browser-compatible hash function using simple string hashing
+// (SHA-256 via Web Crypto would be async, so we use a fast sync hash for deduplication)
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to hex and pad to ensure consistent length
+  const hex = Math.abs(hash).toString(16).padStart(8, '0');
+  // Double-hash for better distribution
+  let hash2 = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash2 = ((hash2 << 7) - hash2) + char;
+    hash2 = hash2 & hash2;
+  }
+  return hex + Math.abs(hash2).toString(16).padStart(8, '0');
+}
 
 // Types for quality assessment
 export interface QualityAssessment {
@@ -47,8 +66,8 @@ export function generateSemanticHash(question: QuestionData): string {
   // Create composite string for hashing
   const content = `${normalizedQuestion}|${normalizedVignette}|${normalizedAnswer}`;
 
-  // Generate SHA-256 hash truncated to 16 chars
-  return createHash('sha256').update(content).digest('hex').substring(0, 16);
+  // Generate hash using browser-compatible function
+  return simpleHash(content);
 }
 
 /**
