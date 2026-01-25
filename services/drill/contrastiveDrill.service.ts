@@ -18,10 +18,31 @@
  * @module services/drill/contrastiveDrill.service
  */
 
-import type { PrismaClient, ContrastiveSet, ContrastiveDrillAttempt } from '@prisma/client';
+// Client-safe type definitions - DO NOT import from @prisma/client
+// These types are defined inline to avoid bundling Prisma in client code
 
-// Type for any Prisma-like client (standard or edge)
-type PrismaLike = Pick<PrismaClient, 'contrastiveSet' | 'medicalContent' | 'confusionPair' | 'contrastiveDrillAttempt' | '$disconnect'>;
+/**
+ * Type for any Prisma-compatible client (standard or edge).
+ * Uses structural typing to avoid importing from @prisma/client.
+ */
+interface PrismaLike {
+  contrastiveSet: {
+    findMany: (args?: any) => Promise<any[]>;
+    findFirst: (args?: any) => Promise<any | null>;
+    create: (args: any) => Promise<any>;
+  };
+  medicalContent: {
+    findMany: (args?: any) => Promise<any[]>;
+  };
+  confusionPair: {
+    findMany: (args?: any) => Promise<any[]>;
+  };
+  contrastiveDrillAttempt: {
+    findMany: (args?: any) => Promise<any[]>;
+    create: (args: any) => Promise<any>;
+  };
+  $disconnect: () => Promise<void>;
+}
 
 export interface ContrastiveQuestion {
   id: string;

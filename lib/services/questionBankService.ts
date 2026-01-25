@@ -1,6 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Prisma } from '@prisma/client';
 import { prisma } from '../prisma';
+
+// Client-safe inline types to avoid bundling @prisma/client
+interface QuestionWhereInput {
+  system?: string;
+  difficulty?: string;
+}
+
+interface MedicalContentWhereInput {
+  status?: string;
+  system?: string;
+}
 import { loadConditionData } from '../../services/core/conditionDataLoader';
 import { generateSingleQuestion } from '../questionGenerator';
 
@@ -48,8 +58,8 @@ function mapToDTO(record: any): QuestionDTO {
   };
 }
 
-function buildWhere(params: GetQuestionsParams): Prisma.QuestionWhereInput {
-  const where: Prisma.QuestionWhereInput = {};
+function buildWhere(params: GetQuestionsParams): QuestionWhereInput {
+  const where: QuestionWhereInput = {};
   if (params.system) {
     where.system = params.system;
   }
@@ -75,7 +85,7 @@ function buildExplanationText(explanation: any): string {
 }
 
 async function getRandomPublishedConditionId(system?: string): Promise<string | null> {
-  const where: Prisma.MedicalContentWhereInput = {
+  const where: MedicalContentWhereInput = {
     status: 'published',
     ...(system ? { system } : {}),
   };

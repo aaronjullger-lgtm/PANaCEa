@@ -1,4 +1,16 @@
-import type { FirstLineTreatment } from '@prisma/client';
+// Client-safe type definition (matches Prisma FirstLineTreatment model)
+interface FirstLineTreatment {
+  id: string;
+  conditionId?: string | null;
+  condition?: string | null;
+  category?: string | null;
+  treatment?: string | null;
+  alternatives?: string[];
+  notes?: string | null;
+  source?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export const firstLineService = {
   getAll: async (category?: string): Promise<FirstLineTreatment[]> => {

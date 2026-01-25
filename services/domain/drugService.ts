@@ -7,7 +7,26 @@
  * Database contains 1000+ drugs with comprehensive clinical data.
  */
 
-import type { Drug } from '@prisma/client';
+// Client-safe type definition (matches Prisma Drug model)
+interface Drug {
+  id: string;
+  name: string;
+  genericName?: string | null;
+  brandNames?: string[];
+  drugClass?: string | null;
+  mechanism?: string | null;
+  indications?: string[];
+  contraindications?: string[];
+  sideEffects?: string[];
+  interactions?: string[];
+  dosing?: string | null;
+  monitoring?: string[];
+  blackBoxWarning?: string | null;
+  pregnancyCategory?: string | null;
+  clinicalPearl?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export const drugService = {
   /**

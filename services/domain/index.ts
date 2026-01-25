@@ -26,10 +26,11 @@ export {
 // EXAM SIMULATION & DISTRIBUTION
 // ============================================================================
 
-import * as examServiceModule from './examService';
+// REMOVED: examService - has runtime prisma import, server-only
+// import * as examServiceModule from './examService'; // IMPORT DISABLED: server-only
 import * as panceDistributionServiceModule from './panceDistributionService';
 
-export const examService = examServiceModule;
+// export const examService = examServiceModule; // SERVER-ONLY: use API
 export const panceDistribution = panceDistributionServiceModule;
 
 // Re-export commonly used functions from panceDistributionService
@@ -41,8 +42,8 @@ export {
   PANCE_SYSTEM_PERCENTAGES,
 } from './panceDistributionService';
 
-// Re-export exam utilities/types so consumers don't import directly
-export * from './examService';
+// REMOVED: Re-export exam utilities - server-only
+// export * from './examService'; // EXPORT DISABLED: server-only
 
 // ============================================================================
 // CLINICAL REFERENCE DATA
@@ -51,8 +52,7 @@ export * from './examService';
 import { drugService as drugServiceObj } from './drugService';
 import { labService as labServiceObj } from './labService';
 import * as labCaseServiceModule from './labCaseService';
-// REMOVED: clinicalPearlService - has runtime prisma import via lib/prisma, server-only
-import * as clinicalPearlServiceModule from './clinicalPearlService';
+// NOTE: clinicalPearlService is SERVER-ONLY (uses lib/prisma) - import directly in server code
 import { buzzwordService as buzzwordServiceObj } from './buzzwordService';
 import { firstLineService as firstLineServiceObj } from './firstLineService';
 import { guidelineService as guidelineServiceObj } from './guidelineService';
@@ -63,7 +63,6 @@ import * as confusionServiceModule from './confusionService';
 export const drugService = drugServiceObj;
 export const labService = labServiceObj;
 export const labCaseService = labCaseServiceModule;
-// export const clinicalPearlService = clinicalPearlServiceModule; // SERVER-ONLY: use API
 export const buzzwordService = buzzwordServiceObj;
 export const firstLineService = firstLineServiceObj;
 export const guidelineService = guidelineServiceObj;
@@ -188,18 +187,18 @@ export {
 // ============================================================================
 
 // REMOVED: mediaStorageService - has runtime prisma import, server-only
-import * as mediaStorageServiceModule from './mediaStorageService';
+// import * as mediaStorageServiceModule from './mediaStorageService'; // IMPORT DISABLED: server-only
 // export const mediaStorage = mediaStorageServiceModule; // SERVER-ONLY: use API
 
 // REMOVED: mediaApprovalService - has runtime prisma import, server-only
-import * as mediaApprovalServiceModule from './mediaApprovalService';
+// import * as mediaApprovalServiceModule from './mediaApprovalService'; // IMPORT DISABLED: server-only
 // export const mediaApproval = mediaApprovalServiceModule; // SERVER-ONLY: use API
 
 import * as imageQualityServiceModule from './imageQualityService';
 export const imageQuality = imageQualityServiceModule;
 
 // REMOVED: educationalResourceService - has runtime prisma import, server-only
-import * as educationalResourceServiceModule from './educationalResourceService';
+// import * as educationalResourceServiceModule from './educationalResourceService'; // IMPORT DISABLED: server-only
 // export const educationalResources = educationalResourceServiceModule; // SERVER-ONLY: use API
 
 // ============================================================================

@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { firstLineService } from '@/services/domain';
-import type { FirstLineTreatment } from '@prisma/client';
+import type { FirstLineTreatmentDTO } from '@/types/question-bank';
+
+// Use client-safe DTO type instead of Prisma type
+type FirstLineTreatment = FirstLineTreatmentDTO;
 
 export type FirstLineDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 

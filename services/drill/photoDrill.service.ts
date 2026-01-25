@@ -9,10 +9,25 @@
  * @module services/drill/photoDrill.service
  */
 
-import type { PrismaClient, MediaAsset, Condition, MedicalContent } from '@prisma/client';
+// Client-safe type definitions - DO NOT import from @prisma/client
+// These types are defined inline to avoid bundling Prisma in client code
 
-// Type alias for any Prisma-compatible client (standard or edge)
-type PrismaLike = Pick<PrismaClient, 'mediaAsset' | 'medicalContent' | 'questionAttempt' | '$disconnect'>;
+/**
+ * Type for any Prisma-compatible client (standard or edge).
+ * Uses structural typing to avoid importing from @prisma/client.
+ */
+interface PrismaLike {
+  mediaAsset: {
+    findMany: (args?: any) => Promise<any[]>;
+  };
+  medicalContent: {
+    findMany: (args?: any) => Promise<any[]>;
+  };
+  questionAttempt: {
+    findMany: (args?: any) => Promise<any[]>;
+  };
+  $disconnect: () => Promise<void>;
+}
 
 export interface PhotoDrillQuestion {
   id: string;

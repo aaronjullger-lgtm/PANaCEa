@@ -12,38 +12,40 @@
 // QUESTION SERVICES - Primary question management
 // ============================================================================
 
-import * as questionServiceModule from './questionService';
+// REMOVED: questionService - re-exports from AI services that have @prisma/client
+// import * as questionServiceModule from './questionService';
 import * as attemptServiceModule from './attemptService';
 // REMOVED: questionPoolService - has runtime prisma import, server-only
 import * as questionQualityServiceModule from './questionQualityService';
 // REMOVED: questionSeedService - has runtime prisma import, server-only
 // REMOVED: stagingQuestionService - has runtime prisma import, server-only
-import * as variantQueueServiceModule from './variantQueueService';
+// REMOVED: variantQueueService - has @prisma/client import, server-only
 
-export const questionService = questionServiceModule;
+// REMOVED: questionService - re-exports from AI services that have @prisma/client
+// export const questionService = questionServiceModule;
 export const attemptService = attemptServiceModule;
 // export const questionPoolService = questionPoolServiceModule; // SERVER-ONLY: use API
 export const questionQualityService = questionQualityServiceModule;
 // export const questionSeedService = questionSeedServiceModule; // SERVER-ONLY: use API
 // export const stagingQuestionService = stagingQuestionServiceModule; // SERVER-ONLY: use API
-export const variantQueueService = variantQueueServiceModule;
+// export const variantQueueService = variantQueueServiceModule; // SERVER-ONLY: use API
 
-// Named exports for common operations (tree-shakeable)
-export {
-  getQuestion,
-  getQuestionBatch,
-  getOptimalQuestions,
-  getEnhancedQuestion,
-  getIntelligentQuestions,
-  getWeakAreaQuestions,
-  getReviewQuestions,
-  calculateAdaptiveState,
-  selectOptimalQuestions,
-  convertPoolQuestion,
-  fetchPearlsForQuestion,
-  SYSTEM_CODE_MAP,
-  SYSTEM_NAME_TO_CODE,
-} from './questionService';
+// REMOVED: Named exports from questionService - pulls in @prisma/client via AI service re-exports
+// export {
+//   getQuestion,
+//   getQuestionBatch,
+//   getOptimalQuestions,
+//   getEnhancedQuestion,
+//   getIntelligentQuestions,
+//   getWeakAreaQuestions,
+//   getReviewQuestions,
+//   calculateAdaptiveState,
+//   selectOptimalQuestions,
+//   convertPoolQuestion,
+//   fetchPearlsForQuestion,
+//   SYSTEM_CODE_MAP,
+//   SYSTEM_NAME_TO_CODE,
+// } from './questionService';
 
 export { recordQuestionAttempt, getUserStats } from './attemptService';
 
@@ -54,9 +56,7 @@ export { recordQuestionAttempt, getUserStats } from './attemptService';
 import * as mainSessionServiceModule from './mainSessionService';
 import * as customSessionServiceModule from './customSessionService';
 import * as sessionServiceModule from './sessionService';
-// REMOVED: noRepeatService - has runtime prisma import, server-only
-// REMOVED: poolMonitorService - has runtime prisma import, server-only
-import * as poolMonitorServiceModule from './poolMonitorService';
+// NOTE: poolMonitorService is SERVER-ONLY (uses PrismaClient) - import directly in server code
 
 export const sessionService = mainSessionServiceModule;
 export const customSessionService = customSessionServiceModule;

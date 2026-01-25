@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { type ConditionQuestionType } from '@/types/drill-modes';
-import type { QuestionDTO } from '@/lib/services/questionBankService';
+import type { QuestionDTO } from '@/types/question-bank';
 import {
   initSessionTracker,
   shouldShowMetacognition,

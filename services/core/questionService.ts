@@ -55,11 +55,12 @@ export {
 } from '../ai/adaptiveQuestionEngine';
 
 // Enhanced question pool (Sprint A & B integration)
-export {
-  getEnhancedQuestionBatch,
-  getEnhancedQuestion as getEnhancedQuestionV2,
-  getEnhancedPoolStatus,
-} from './enhancedQuestionPool';
+// DISABLED: Server-only module with @prisma/client - use dynamic imports
+// export {
+//   getEnhancedQuestionBatch,
+//   getEnhancedQuestion as getEnhancedQuestionV2,
+//   getEnhancedPoolStatus,
+// } from './enhancedQuestionPool';
 
 // ============================================================================
 // Shared Types

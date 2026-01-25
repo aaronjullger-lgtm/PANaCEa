@@ -9,7 +9,15 @@
  * - Score calculation and reporting
  */
 
-import type { Question, Condition } from '@prisma/client';
+// Use local Question type from src/types instead of @prisma/client
+import type { Question } from '@/src/types';
+
+// Client-safe Condition type definition (minimal fields needed)
+interface ConditionSummary {
+  id: string;
+  name: string;
+  system?: string | null;
+}
 
 // =============================================================================
 // TYPES
@@ -73,7 +81,7 @@ export type ExamStatus = 'in_progress' | 'paused' | 'completed' | 'abandoned' | 
 export interface ExamQuestion extends Question {
   blockNumber: number;
   questionNumber: number;
-  condition?: Condition;
+  conditionData?: ConditionSummary;
 }
 
 export interface ScoreReport {

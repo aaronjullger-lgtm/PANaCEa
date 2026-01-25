@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useShortcut } from '../src/context/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 
-// Core services
-import { getQuestion, fetchPearlsForQuestion } from '@/services/core';
+// Core services - using client-safe API wrappers
+import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
 import {
   fetchSessionQuestions,
   recordSessionAnswer,
@@ -389,9 +389,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsGeneratingQuestion(true);
     try {
-      // Use questionService for single question fetch (pool + Gemini fallback)
+      // Use client-safe API wrapper for single question fetch (pool + Gemini fallback)
       // The mainSessionService is used for batch fetches and analytics
-      const newQuestion = await getQuestion(sessionSettings, growthAreas, getToken);
+      const newQuestion = await getQuestionClient(sessionSettings, growthAreas, getToken);
 
       if (newQuestion) {
         // keep both queues in sync
@@ -543,7 +543,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion.pearls && currentQuestion.conditionId) {
       try {
         const token = await getToken();
-        const pearls = await fetchPearlsForQuestion(currentQuestion.conditionId, token);
+        const pearls = await fetchPearlsClient(currentQuestion.conditionId, token);
         if (pearls.length > 0) {
           // Update the current question with loaded pearls
           setCurrentQuestion((prev) => (prev ? { ...prev, pearls } : null));

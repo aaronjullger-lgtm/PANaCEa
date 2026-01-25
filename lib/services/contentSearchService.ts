@@ -5,7 +5,24 @@
  */
 
 import { prisma } from '../../lib/prisma';
-import type { Condition, Drug } from '@prisma/client';
+
+// Client-safe interfaces (structural typing, no Prisma import)
+interface ConditionLike {
+  id: string;
+  name: string;
+  displayName: string | null;
+  aliases: string[];
+  system: string;
+}
+
+interface DrugLike {
+  id: string;
+  genericName: string;
+  brandName: string | null;
+  aliases: string[];
+  drugClass: string[];
+  displayName?: string | null;
+}
 
 export interface SearchResult {
   id: string;
@@ -23,7 +40,7 @@ export interface SearchResult {
 }
 
 interface RankedResult {
-  item: Condition | Drug;
+  item: ConditionLike | DrugLike;
   type: 'condition' | 'drug';
   score: number;
   matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword';
@@ -131,7 +148,7 @@ function scoreAliasMatch(
 /**
  * Rank and score a condition result
  */
-function rankCondition(condition: Condition, query: string): RankedResult {
+function rankCondition(condition: ConditionLike, query: string): RankedResult {
   const normalizedQuery = query.toLowerCase().trim();
   let bestScore = 0;
   let matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword' = 'fuzzy';
@@ -178,7 +195,7 @@ function rankCondition(condition: Condition, query: string): RankedResult {
 /**
  * Rank and score a drug result
  */
-function rankDrug(drug: Drug, query: string): RankedResult {
+function rankDrug(drug: DrugLike, query: string): RankedResult {
   const normalizedQuery = query.toLowerCase().trim();
   let bestScore = 0;
   let matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword' = 'fuzzy';
@@ -238,7 +255,7 @@ function rankDrug(drug: Drug, query: string): RankedResult {
  */
 function formatSearchResult(ranked: RankedResult): SearchResult {
   if (ranked.type === 'condition') {
-    const condition = ranked.item as Condition;
+    const condition = ranked.item as ConditionLike;
     const title = condition.displayName || condition.name;
     const snippet = `${condition.system}${
       ranked.matchedAlias ? ` • matches "${ranked.matchedAlias}"` : ''
@@ -257,7 +274,7 @@ function formatSearchResult(ranked: RankedResult): SearchResult {
       },
     };
   } else {
-    const drug = ranked.item as Drug;
+    const drug = ranked.item as DrugLike;
     const title = drug.genericName;
     const drugClassDisplay =
       drug.drugClass && drug.drugClass.length > 0 ? drug.drugClass[0] : 'Drug';

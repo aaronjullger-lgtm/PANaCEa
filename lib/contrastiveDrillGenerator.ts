@@ -1,4 +1,8 @@
-import { ContrastiveSet } from '@prisma/client';
+// Client-safe ContrastiveSet interface (structural typing, no Prisma import)
+interface ContrastiveSetLike {
+  symptom: string;
+  distinguishers: Record<string, string[]> | unknown;
+}
 
 export interface GeneratedContrastiveQuestion {
   vignette: string;
@@ -7,7 +11,7 @@ export interface GeneratedContrastiveQuestion {
 }
 
 export function buildContrastivePrompt(
-  set: ContrastiveSet,
+  set: ContrastiveSetLike,
   targetCondition: string,
   otherConditions: string[]
 ): string {

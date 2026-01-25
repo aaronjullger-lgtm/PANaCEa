@@ -56,11 +56,11 @@ export {
 // Do NOT export here to prevent bundling Node.js modules into browser
 
 // REMOVED: batchGeneratorService - has runtime prisma import, server-only
-import * as batchGeneratorServiceModule from './batchGeneratorService';
+// import * as batchGeneratorServiceModule from './batchGeneratorService'; // IMPORT DISABLED: server-only
 // export const batchGenerator = batchGeneratorServiceModule; // SERVER-ONLY: use API
 
 // REMOVED: contextAwareOrchestrator - has runtime prisma import, server-only
-import * as contextAwareOrchestratorModule from './contextAwareOrchestrator';
+// import * as contextAwareOrchestratorModule from './contextAwareOrchestrator'; // IMPORT DISABLED: server-only
 // export const contextOrchestrator = contextAwareOrchestratorModule; // SERVER-ONLY: use API
 
 import * as studyGuideGeneratorModule from './StudyGuideGenerator';
