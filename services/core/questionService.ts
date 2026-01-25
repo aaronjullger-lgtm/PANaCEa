@@ -36,7 +36,7 @@ export {
   generateEnhancedQuestion,
   getSystemConditionStats,
   systemHasSufficientContent,
-} from '../enhancedQuestionService';
+} from '../ai/enhancedQuestionService';
 
 // Intelligent selection (analytics-driven)
 export {
@@ -45,14 +45,14 @@ export {
   getReviewQuestions,
   getFlowStateQuestions,
   enhanceSessionSettings,
-} from '../intelligentQuestionService';
+} from '../ai/intelligentQuestionService';
 
 // Adaptive algorithms
 export {
   calculateAdaptiveState,
   selectOptimalQuestions,
   generateSessionPlan,
-} from '../adaptiveQuestionEngine';
+} from '../ai/adaptiveQuestionEngine';
 
 // Enhanced question pool (Sprint A & B integration)
 export {
