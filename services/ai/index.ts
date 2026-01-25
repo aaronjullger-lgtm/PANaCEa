@@ -106,13 +106,8 @@ export const semanticSearch = semanticSearchServiceModule;
 // PATIENT SIMULATION SERVICES
 // ============================================================================
 
-import * as patientSimulatorServiceModule from './patientSimulatorService';
-import * as conditionServiceModule from './conditionService';
-
-export const patientSimulator = patientSimulatorServiceModule;
-export const conditionService = conditionServiceModule;
-
-// Named exports from patient simulator service
+// Note: Patient simulator functions are in geminiService.ts
+// Named exports from gemini service (patient simulator functions)
 export {
   chatWithPatientSimulator,
   evaluateDiagnosis,
@@ -120,13 +115,13 @@ export {
   orderDiagnosticTest,
   evaluateTreatmentPlan,
   generateAfterActionReport,
-} from './patientSimulatorService';
+} from './geminiService';
 
-// Named exports from condition service
+// Re-export condition service functions (from ../conditionService.ts)
 export {
   getConditionsBySystem,
   getAllConditions,
-} from './conditionService';
+} from '../conditionService';
 
 // Export CoachingService functions and types
 export {

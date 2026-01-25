@@ -18,7 +18,7 @@ import {
   normalizeConditionContent,
 } from '@/lib/loadConditions';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
-import { getConditionsBySystem, getAllConditions } from '@/services/ai';
+import { getConditionsBySystem, getAllConditions } from '../conditionService';
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
