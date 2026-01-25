@@ -549,8 +549,14 @@ function determineNextSessionFocus(
     .sort(([, a], [, b]) => a.accuracy - b.accuracy);
 
   const weakestSystem = sortedSystems[0];
-  if (weakestSystem && weakestSystem[1]?.accuracy !== undefined && weakestSystem[1].accuracy < 0.7) {
-    focus.push(`${weakestSystem[0]} system review`);
+  if (weakestSystem && weakestSystem[1]) {
+    const systemData = weakestSystem[1];
+    if (systemData.accuracy < 0.7) {
+      const systemName = weakestSystem[0];
+      if (systemName) {
+        focus.push(`${systemName} system review`);
+      }
+    }
   }
 
   // Prioritize concepts with knowledge gaps
@@ -719,17 +725,20 @@ export const onRequestPost = authenticatedEndpoint(
             e.errorType === ERROR_TYPES.KNOWLEDGE_GAP ||
             e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
         )
-        .map((e) => ({
-          conceptId: e.conceptId,
-          conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          system:
-            attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId)?.system ||
-            'unknown',
-          gapType: e.errorType,
-          severity: e.confidence > 70 ? 'significant' : 'moderate',
-          blocksCount: 0, // Would calculate from concept graph
-          suggestedResources: [e.remediation],
-        }));
+        .map((e) => {
+          const matchingAttempt = attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId);
+          const system = matchingAttempt?.system ?? 'unknown';
+          
+          return {
+            conceptId: e.conceptId,
+            conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+            system,
+            gapType: e.errorType,
+            severity: e.confidence > 70 ? 'significant' : 'moderate',
+            blocksCount: 0, // Would calculate from concept graph
+            suggestedResources: [e.remediation],
+          };
+        });
 
       // Calculate learning metrics
       const learningEfficiency = Math.round(
