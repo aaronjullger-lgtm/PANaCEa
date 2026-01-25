@@ -73,6 +73,7 @@ export {
   recordTimeOfDayAttempt,
   calculatePersonalizedFSRS,
   getSystemFSRSAdjustments,
+  generateComprehensiveAnalytics,
 } from '../advancedUserAnalyticsEngine';
 
 // Named exports from circadian analytics
