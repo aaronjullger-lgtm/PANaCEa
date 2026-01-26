@@ -174,9 +174,9 @@ const MenuView: React.FC<MenuViewProps> = ({
     const correct360 = last360.filter((q) => q.isCorrect).length;
     const overallScore = last360.length > 0 ? (correct360 / last360.length) * 100 : 0;
 
-    // Heatmap: ONLY PANCE-level ALL-topics sessions
+    // Heatmap: ALL-topics sessions (all questions are PANCE-level)
     const panceAllRecords = performanceData.filter(
-      (r) => r.focus === 'all' && r.difficulty === 'same' && r.system && r.system !== 'OTHER'
+      (r) => r.focus === 'all' && r.system && r.system !== 'OTHER'
     ) as (PerformanceRecord & { system: SystemCode })[];
 
     const uniqueSystems = Array.from(new Set(panceAllRecords.map((r) => r.system))) as SystemCode[];
@@ -392,7 +392,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   const handleTopicSessionStart = (topicAbbr: string) => {
     onConfirmSession({
       focus: 'topic',
-      difficulty: 'same',
       topic: topicAbbr,
     });
   };
@@ -401,7 +400,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   const handleStartFocusSession = (system: SystemCode) => {
     onConfirmSession({
       focus: 'topic',
-      difficulty: 'same',
       topic: system,
     });
   };
@@ -457,7 +455,6 @@ const MenuView: React.FC<MenuViewProps> = ({
             if (!system) return;
             onConfirmSession({
               focus: 'topic',
-              difficulty: 'same',
               topic: system,
               subcategoryName: subcategory,
             });
@@ -472,7 +469,6 @@ const MenuView: React.FC<MenuViewProps> = ({
           onDrillCondition={(meta) => {
             onConfirmSession({
               focus: 'topic',
-              difficulty: 'same',
               topic: meta.system,
               conditionName: meta.condition,
             });
@@ -989,7 +985,6 @@ const MenuView: React.FC<MenuViewProps> = ({
             // For now, this demonstrates the flow
             onConfirmSession({
               focus: 'review',
-              difficulty: 'same',
             });
           }}
         />

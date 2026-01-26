@@ -48,14 +48,12 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
 }) => {
   const [customSettings, setCustomSettings] = useState<Partial<SessionSettings>>({
     focus: 'all',
-    difficulty: 'same',
   });
   const [isCustomizing, setIsCustomizing] = useState(false);
 
   const handlePresetStart = (preset: StudyPreset) => {
     onStart({
       count: preset.settings.count,
-      difficulty: preset.settings.difficulty,
       focus: preset.settings.focus,
       systems: preset.settings.systems,
     });

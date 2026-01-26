@@ -211,8 +211,8 @@ export default defineConfig(({ mode }) => {
     define: {
       // Global shim for CJS modules
       global: 'window',
-      // Process shim for browser compatibility (some libs check process.env)
-      'process.env': JSON.stringify({}),
+      // Process.env shims for browser compatibility (full process polyfill is in polyfills/cjs-shim.ts)
+      'process.env.NODE_ENV': JSON.stringify(mode),
     },
     resolve: {
       dedupe: ['lucide-react', 'react', 'react-dom'],

@@ -392,7 +392,6 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
     // Create session settings for pharmacology drill
     const sessionSettings: SessionSettings = {
       focus: 'topic',
-      difficulty: 'same',
       topic: 'Pharmacology',
     };
 

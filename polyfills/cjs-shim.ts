@@ -7,3 +7,18 @@ if (typeof (globalThis as any).exports === 'undefined') {
 if (typeof (globalThis as any).module === 'undefined') {
   (globalThis as any).module = { exports: (globalThis as any).exports };
 }
+
+// Process polyfill for browser compatibility
+// Some Node.js libraries check `process.env` or `typeof process` at runtime
+if (typeof (globalThis as any).process === 'undefined') {
+  (globalThis as any).process = {
+    env: {
+      NODE_ENV: import.meta.env?.MODE || 'production',
+    },
+    cwd: () => '/',
+    browser: true,
+    version: '',
+    versions: {},
+    platform: 'browser',
+  };
+}

@@ -491,7 +491,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         if (onNavigateToSimulation) {
           onNavigateToSimulation();
         } else {
-          onStartSession({ focus: 'all', difficulty: 'same' });
+          onStartSession({ focus: 'all' });
         }
       } else {
         onNavigateToDrillMode(mode.id);
@@ -556,9 +556,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.005 }}
           onClick={() =>
-            onNavigateToSimulation
-              ? onNavigateToSimulation()
-              : onStartSession({ focus: 'review', difficulty: 'same' })
+          onNavigateToSimulation
+            ? onNavigateToSimulation()
+            : onStartSession({ focus: 'review' })
           }
           className="w-full mb-6 p-4 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 rounded-xl flex items-center justify-between group"
         >
@@ -903,9 +903,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   {growthAreas.map((area) => (
                     <button
                       key={area}
-                      onClick={() =>
-                        onStartSession({ focus: 'topic', difficulty: 'same', topic: area })
-                      }
+                    onClick={() =>
+                      onStartSession({ focus: 'topic', topic: area })
+                    }
                       className="px-4 py-2 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 text-muted-amber rounded-lg hover:bg-data-provisional/20 dark:hover:bg-data-provisional/10 transition-colors"
                     >
                       {area}

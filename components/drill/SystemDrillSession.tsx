@@ -384,7 +384,6 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     // Create session settings for system drill
     const sessionSettings: SessionSettings = {
       focus: 'all',
-      difficulty: 'same',
     };
 
     return (

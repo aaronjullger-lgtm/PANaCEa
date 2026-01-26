@@ -23,8 +23,6 @@ export interface DrillSetupProps {
   title: string;
   /** Description */
   description: string;
-  /** Default difficulty */
-  defaultDifficulty?: 'easier' | 'same' | 'harder';
   /** Whether to show system filter */
   showSystemFilter?: boolean;
   /** Whether to show question count selector */
@@ -41,7 +39,6 @@ export interface DrillSetupProps {
 
 export interface DrillConfiguration {
   system?: SystemCode;
-  difficulty: 'easier' | 'same' | 'harder';
   questionCount: number;
   /** All available conditions for the selected system */
   availableConditions: ConditionMetadata[];
@@ -69,7 +66,6 @@ const SYSTEM_NAMES: Record<SystemCode, string> = {
 export function DrillSetup({
   title,
   description,
-  defaultDifficulty = 'same',
   showSystemFilter = true,
   showQuestionCount = true,
   defaultQuestionCount = 10,
@@ -82,8 +78,6 @@ export function DrillSetup({
   const [error, setError] = useState<string | null>(null);
 
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | undefined>(undefined);
-  // Difficulty is fixed at PANCE-level for standardized practice
-  const difficulty: 'easier' | 'same' | 'harder' = 'same';
   const [questionCount, setQuestionCount] = useState(defaultQuestionCount);
   const [isStarting, setIsStarting] = useState(false);
 
@@ -140,7 +134,6 @@ export function DrillSetup({
 
     const config: DrillConfiguration = {
       system: selectedSystem,
-      difficulty,
       questionCount,
       availableConditions: filteredConditions,
     };
