@@ -10,47 +10,50 @@ import { publicEndpoint } from '../_shared/middleware';
 import { ContentService } from '../../../lib/services/content/contentService';
 import { z } from 'zod';
 
+// Schema for query params - flat structure since source is 'query'
 const ConditionsListSchema = z.object({
-  query: z.object({
-    system: z.string().optional(),
-    includeContent: z.enum(['true', 'false']).optional(),
-  }),
+  system: z.string().optional(),
+  includeContent: z.enum(['true', 'false']).optional(),
 });
 
-export const onRequestGet = publicEndpoint(ConditionsListSchema, async ({ env, validated }) => {
-  const contentService = new ContentService(env.DATABASE_URL);
+export const onRequestGet = publicEndpoint(
+  ConditionsListSchema,
+  async ({ env, validated }) => {
+    const contentService = new ContentService(env.DATABASE_URL);
 
-  try {
-    const { system, includeContent } = validated.query;
-    const shouldIncludeContent = includeContent === 'true';
+    try {
+      const { system, includeContent } = validated;
+      const shouldIncludeContent = includeContent === 'true';
 
-    // Use ContentService to fetch conditions
-    const conditions = await contentService.getAllConditions({
-      system: system,
-      includeContent: shouldIncludeContent,
-    });
+      // Use ContentService to fetch conditions
+      const conditions = await contentService.getAllConditions({
+        system: system,
+        includeContent: shouldIncludeContent,
+      });
 
-    // Group by system for frontend convenience
-    const bySystem: Record<string, typeof conditions> = {};
-    for (const condition of conditions) {
-      if (!bySystem[condition.system]) {
-        bySystem[condition.system] = [];
+      // Group by system for frontend convenience
+      const bySystem: Record<string, typeof conditions> = {};
+      for (const condition of conditions) {
+        if (!bySystem[condition.system]) {
+          bySystem[condition.system] = [];
+        }
+        const systemArray = bySystem[condition.system];
+        if (systemArray) {
+          systemArray.push(condition);
+        }
       }
-      const systemArray = bySystem[condition.system];
-      if (systemArray) {
-        systemArray.push(condition);
-      }
+
+      return {
+        data: {
+          conditions,
+          bySystem,
+          total: conditions.length,
+          systems: Object.keys(bySystem),
+        },
+      };
+    } finally {
+      await contentService.disconnect();
     }
-
-    return {
-      data: {
-        conditions,
-        bySystem,
-        total: conditions.length,
-        systems: Object.keys(bySystem),
-      },
-    };
-  } finally {
-    await contentService.disconnect();
-  }
-});
+  },
+  { source: 'query' }
+);

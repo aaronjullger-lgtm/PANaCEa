@@ -87,14 +87,13 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
 const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
 
+// Schema for query params - flat structure since source is 'query'
 const PoolGetSchema = z.object({
-  query: z.object({
-    system: z.string().optional(),
-    category: z.string().optional(),
-    difficulty: z.string().optional(),
-    count: z.string().optional(),
-    mode: z.string().optional(),
-  }),
+  system: z.string().optional(),
+  category: z.string().optional(),
+  difficulty: z.string().optional(),
+  count: z.string().optional(),
+  mode: z.string().optional(),
 });
 
 const PoolPostSchema = z.object({
@@ -119,10 +118,12 @@ const PoolPostSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/questions/pool');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  PoolGetSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/questions/pool');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
@@ -138,13 +139,13 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
     }
 
     const userId = user.id;
-    const system = validated.query?.system || null;
-    const category = validated.query?.category || null;
-    const difficulty = validated.query?.difficulty || null;
-    const count = validated.query?.count
-      ? parseInt(validated.query.count, 10)
+    const system = validated.system || null;
+    const category = validated.category || null;
+    const difficulty = validated.difficulty || null;
+    const count = validated.count
+      ? parseInt(validated.count, 10)
       : DEFAULT_FETCH_COUNT;
-    const mode = validated.query?.mode || null;
+    const mode = validated.mode || null;
 
     // ADMIN CURATION MODE
     if (mode === 'curation') {
@@ -251,7 +252,9 @@ export const onRequestGet = authenticatedEndpoint(PoolGetSchema, async (context)
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+  },
+  { source: 'query' }
+);
 
 export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (context) => {
   const { env, auth, validated } = context;
