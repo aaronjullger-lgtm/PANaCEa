@@ -149,7 +149,8 @@ type View =
   | 'command_center_page'
   | 'reference_library';
 
-const INITIAL_QUEUE_SIZE = 3;
+// Batch fetch 10 questions initially to prevent session ending early
+const INITIAL_QUEUE_SIZE = 10;
 
 // ---- helpers: localStorage ----
 function safeParse<T>(raw: string | null, fallback: T): T {

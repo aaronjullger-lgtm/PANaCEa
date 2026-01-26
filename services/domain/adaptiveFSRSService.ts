@@ -376,8 +376,11 @@ export class AdaptiveFSRS {
     this.updateCognitiveState();
 
     const priorities: AdaptiveReviewPriority[] = cards.map((item) => {
+      const lastReviewDate = item.card.last_review instanceof Date 
+        ? item.card.last_review 
+        : new Date(item.card.last_review);
       const dueDate = new Date(
-        item.card.last_review.getTime() + item.card.scheduled_days * 86400000
+        lastReviewDate.getTime() + item.card.scheduled_days * 86400000
       );
       const daysOverdue = (now.getTime() - dueDate.getTime()) / 86400000;
 

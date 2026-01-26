@@ -210,7 +210,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className="space-y-6">
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-950/20 dark:to-deep-plum-950/20 border border-steel-blue-200 dark:border-steel-blue-800">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-900/40 dark:to-deep-plum-900/40 border border-steel-blue-200 dark:border-steel-blue-700">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400 mt-0.5" />
             <div>
@@ -500,7 +500,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="mt-3 p-3 bg-deep-plum-50 dark:bg-deep-plum-950/20 rounded-lg border border-deep-plum-200 dark:border-deep-plum-800">
+                <div className="mt-3 p-3 bg-deep-plum-50 dark:bg-deep-plum-900/40 rounded-lg border border-deep-plum-200 dark:border-deep-plum-700">
                   <p className="text-xs text-deep-plum-900 dark:text-deep-plum-100">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.

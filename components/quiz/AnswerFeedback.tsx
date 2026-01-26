@@ -19,9 +19,9 @@ interface AnswerFeedbackProps {
 // Subtle ring pulse for correct answers
 const SuccessRing: React.FC = () => (
   <motion.div
-    initial={{ scale: 0.8, opacity: 0.8 }}
-    animate={{ scale: 2.5, opacity: 0 }}
-    transition={{ duration: 0.6, ease: 'easeOut' }}
+    initial={{ scale: 0.8, opacity: 0.6 }}
+    animate={{ scale: 2, opacity: 0 }}
+    transition={{ duration: 0.4, ease: 'easeOut' }}
     className="absolute inset-0 rounded-full border-2 border-emerald-400"
   />
 );
@@ -82,7 +82,8 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
 }) => {
   useEffect(() => {
     if (showFeedback && onAnimationComplete) {
-      const timer = setTimeout(onAnimationComplete, 600);
+      // Reduced from 600ms to 400ms for snappier feel
+      const timer = setTimeout(onAnimationComplete, 400);
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -101,9 +102,9 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{
               type: 'spring',
-              damping: 20,
-              stiffness: 300,
-              duration: 0.3,
+              damping: 25,
+              stiffness: 400,
+              duration: 0.2,
             }}
             className="relative"
           >

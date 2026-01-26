@@ -107,6 +107,14 @@ export const v5CompatibleParameters: FSRSParameters = {
 const S_MIN = 0.01;
 
 /**
+ * Ensure a value is a Date object (handles ISO strings from DB/JSON)
+ */
+function ensureDate(value: Date | string | null | undefined): Date {
+  if (!value) return new Date();
+  return value instanceof Date ? value : new Date(value);
+}
+
+/**
  * Compute decay and factor from w[20] for retrievability calculation
  * Official ts-fsrs formula
  */
@@ -179,7 +187,8 @@ export class FSRS {
     if (card.state === FSRSState.New) {
       newCard.elapsed_days = 0;
     } else {
-      newCard.elapsed_days = (now.getTime() - card.last_review.getTime()) / 86400000;
+      const lastReviewDate = ensureDate(card.last_review);
+      newCard.elapsed_days = (now.getTime() - lastReviewDate.getTime()) / 86400000;
     }
 
     newCard.last_review = now;
