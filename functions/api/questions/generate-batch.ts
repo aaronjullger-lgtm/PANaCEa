@@ -9,13 +9,12 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+// Flattened schema for body parsing (no nested 'body' object)
 const GenerateBatchSchema = z.object({
-  body: z.object({
-    system: z.string().optional(),
-    category: z.string().optional(),
-    difficulty: z.string().optional(),
-    count: z.number().int().min(1).max(50).optional(),
-  }),
+  system: z.string().optional(),
+  category: z.string().optional(),
+  difficulty: z.string().optional(),
+  count: z.number().int().min(1).max(50).optional(),
 });
 
 const DEFAULT_BATCH_SIZE = 10;
@@ -46,7 +45,7 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { system, category, difficulty, count } = validated.body;
+    const { system, category, difficulty, count } = validated;
 
     const selectedSystem = system || SYSTEMS[Math.floor(Math.random() * SYSTEMS.length)];
     const selectedCategory = category || 'general';

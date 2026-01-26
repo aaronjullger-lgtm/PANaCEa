@@ -24,3 +24,9 @@ VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"
 VITE_API_URL = "https://studypanacea.com"
 VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
+
+# CRITICAL: Add this secret via Cloudflare Dashboard
+# Cloudflare Dashboard > Workers & Pages > studypanacea > Settings > Environment Variables
+# Name: CLERK_SECRET_KEY
+# Value: sk_live_... (your actual Clerk secret key)
+# Note: Secret keys should NEVER be committed to version control
