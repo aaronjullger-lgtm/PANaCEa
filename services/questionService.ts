@@ -36,10 +36,22 @@ interface PoolQuestion {
 /**
  * Convert pool question format to app Question format
  */
-function convertPoolQuestion(poolQ: PoolQuestion): Question {
+function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
+  // Validate options exist
+  if (!poolQ.options || poolQ.options.length === 0) {
+    console.warn('[QuestionService] Skipping question with no options:', poolQ.id);
+    return null;
+  }
+
+  // Validate question text exists
+  if (!poolQ.question) {
+    console.warn('[QuestionService] Skipping question with no question text:', poolQ.id);
+    return null;
+  }
+
   // Convert correctAnswer letter (A, B, C, D) to index
   const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  let correctIndex = letterToIndex[poolQ.correctAnswer.charAt(0).toUpperCase()] ?? 0;
+  let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
 
   // If correctAnswer is not a letter, try to find it in options
   if (correctIndex === undefined) {
@@ -221,8 +233,13 @@ async function fetchFromPool(
     poolStatus: PoolStatus;
   };
 
+  // Convert questions and filter out any that failed validation
+  const validQuestions = data.questions
+    .map(convertPoolQuestion)
+    .filter((q): q is Question => q !== null);
+
   return {
-    questions: data.questions.map(convertPoolQuestion),
+    questions: validQuestions,
     poolStatus: data.poolStatus,
   };
 }

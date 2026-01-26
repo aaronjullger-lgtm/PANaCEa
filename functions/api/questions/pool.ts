@@ -378,6 +378,19 @@ async function getFromPreGeneratedPool(
     const optionsData = data.options || data.answers || data.choices;
     const optionsArr: string[] = Array.isArray(optionsData) ? optionsData : [];
 
+    // Skip questions with missing or empty options
+    if (optionsArr.length === 0) {
+      console.warn(`[Pool] Skipping question ${q.id} - no options found in questionData:`, 
+        Object.keys(data));
+      continue;
+    }
+
+    // Skip questions with missing question text
+    if (!data.question) {
+      console.warn(`[Pool] Skipping question ${q.id} - no question text found`);
+      continue;
+    }
+
     // Handle both correctAnswer (letter "A") and correctAnswerIndex (number 0) formats
     let correctAnswer = data.correctAnswer;
     if (!correctAnswer && typeof data.correctAnswerIndex === 'number') {
