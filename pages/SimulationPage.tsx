@@ -67,7 +67,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         focus = 'all';
     }
 
-    onStartSession({ focus, difficulty });
+    onStartSession({ focus });
   };
 
   const getFocusDescription = () => {
@@ -259,41 +259,6 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
             <p className="text-sm text-[var(--color-text-muted)]">{getFocusDescription()}</p>
-          </div>
-        </motion.div>
-
-        {/* Difficulty Settings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 mb-6"
-        >
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
-            Difficulty Adjustment
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { id: 'easier' as const, label: 'Easier', desc: 'Build confidence' },
-              { id: 'same' as const, label: 'Adaptive', desc: 'Match your level' },
-              { id: 'harder' as const, label: 'Harder', desc: 'Challenge yourself' },
-            ].map((option) => (
-              <button
-                key={option.id}
-                onClick={() => setDifficulty(option.id)}
-                className={`p-4 rounded-xl border-2 transition-all text-center ${
-                  difficulty === option.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'
-                }`}
-              >
-                <div className="font-semibold text-[var(--color-text-primary)] mb-1">
-                  {option.label}
-                </div>
-                <div className="text-sm text-[var(--color-text-muted)]">{option.desc}</div>
-              </button>
-            ))}
           </div>
         </motion.div>
 
