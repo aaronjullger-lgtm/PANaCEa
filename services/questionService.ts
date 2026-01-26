@@ -234,12 +234,17 @@ async function triggerBackgroundGeneration(
   system?: string,
   category?: string,
   difficulty?: string,
-  count = 20
+  count = 20,
+  token?: string | null
 ): Promise<void> {
   try {
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     await fetch('/api/questions/generate-batch', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ system, category, difficulty, count }),
     });
     console.log('[QuestionService] Background generation triggered');
@@ -263,7 +268,7 @@ async function checkAndReplenishPool(
   if (now - lastPoolCheck < POOL_CHECK_INTERVAL && cachedPoolStatus) {
     if (cachedPoolStatus.needsGeneration) {
       // Still needs generation, trigger it
-      triggerBackgroundGeneration(system, category, difficulty);
+      triggerBackgroundGeneration(system, category, difficulty, 20, token);
     }
     return;
   }
@@ -293,7 +298,7 @@ async function checkAndReplenishPool(
       };
 
       if (cachedPoolStatus.needsGeneration) {
-        triggerBackgroundGeneration(system, category, difficulty);
+        triggerBackgroundGeneration(system, category, difficulty, 20, token);
       }
     }
   } catch (error) {
@@ -352,7 +357,7 @@ export async function getQuestion(
     // Update cached status and trigger generation if needed
     cachedPoolStatus = poolStatus;
     if (poolStatus.needsGeneration) {
-      triggerBackgroundGeneration(system, undefined, poolDifficulty);
+      triggerBackgroundGeneration(system, undefined, poolDifficulty, 20, token);
     }
 
     if (questions.length > 0) {
@@ -453,7 +458,7 @@ export async function getQuestionBatch(
 
     cachedPoolStatus = poolStatus;
     if (poolStatus.needsGeneration) {
-      triggerBackgroundGeneration(system, undefined, poolDifficulty);
+      triggerBackgroundGeneration(system, undefined, poolDifficulty, 20, token);
     }
 
     // If we got all requested questions from pool, return them
