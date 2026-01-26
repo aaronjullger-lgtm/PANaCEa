@@ -26,7 +26,7 @@ export const onRequestGet = publicEndpoint(
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      // Fetch all drugs with cache strategy
+      // Fetch all drugs
       const drugs = await prisma.drug.findMany({
         select: {
           id: true,
@@ -40,8 +40,8 @@ export const onRequestGet = publicEndpoint(
           isHighYield: true,
           interactions: true,
           dosing: true,
-          monitoring: true,
-          pearls: true,
+          monitoringParams: true,
+          clinicalPearls: true,
         },
         orderBy: { genericName: 'asc' },
       });

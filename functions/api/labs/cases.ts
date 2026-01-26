@@ -2,11 +2,12 @@
  * Lab Cases Reference API
  * GET /api/labs/cases - Fetch all lab cases
  *
- * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
+ * Security: Public endpoint - lab cases are educational reference content
+ * similar to conditions and drugs. Authentication not required.
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -29,9 +30,9 @@ const LabCasesQuerySchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = publicEndpoint(
   LabCasesQuerySchema,
-  async ({ env, validated, auth }) => {
+  async ({ env, validated }) => {
     const log = createEndpointLogger('/api/labs/cases');
     let prisma: EdgePrismaClient | null = null;
 
@@ -42,7 +43,6 @@ export const onRequestGet = authenticatedEndpoint(
       const { difficulty, category } = validated;
 
       log.info('Fetching lab cases', {
-        userId: auth.userId,
         difficulty: difficulty || 'all',
         category: category || 'all',
       });
