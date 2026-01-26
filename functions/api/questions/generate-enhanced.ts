@@ -229,7 +229,14 @@ Generate a JSON object with this exact structure (no markdown, no backticks):
   "question": "A single clear question stem asking what was specified in the task focus.",
   "options": ["A. First option", "B. Second option", "C. Third option", "D. Fourth option"],
   "correctAnswerIndex": 0,
-  "rationale": "Explanation of why the correct answer is correct and why each distractor is incorrect. Use <b> for key terms.",
+  "rationale": {
+    "whyCorrect": "1-2 sentences explaining why the correct answer is definitively correct. Bold **key terms**.",
+    "whyIncorrectA": "If A is wrong: 1 sentence why this is incorrect for this case.",
+    "whyIncorrectB": "If B is wrong: 1 sentence why this is incorrect for this case.",
+    "whyIncorrectC": "If C is wrong: 1 sentence why this is incorrect for this case.",
+    "whyIncorrectD": "If D is wrong: 1 sentence why this is incorrect for this case.",
+    "clinicalPearl": "One high-yield clinical pearl or key takeaway for this topic."
+  },
   "pearls": ["Pearl 1 about this condition", "Pearl 2 - high-yield fact", "Pearl 3 - clinical tip"]
 }
 
@@ -238,8 +245,8 @@ CRITICAL RULES:
 2. All 4 options must be plausible for this clinical picture
 3. The correct answer must be definitively correct based on the provided context
 4. Distractors should represent common misconceptions or related conditions
-5. The rationale must explain why each option is correct or incorrect
-6. Include 2-3 high-yield clinical pearls
+5. The rationale MUST be a structured object with separate whyCorrect, whyIncorrectA/B/C/D fields (skip the one that is correct), and clinicalPearl
+6. Include 2-3 high-yield clinical pearls in the pearls array
 7. Do NOT include any markdown formatting or code blocks
 8. Return ONLY the JSON object`;
     };

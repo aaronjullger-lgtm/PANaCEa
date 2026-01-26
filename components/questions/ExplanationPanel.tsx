@@ -21,6 +21,9 @@ import {
   GraduationCap,
   CheckCircle,
   XCircle,
+  Target,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import {
   compressExplanation,
@@ -76,9 +79,28 @@ function getAdaptiveHint(
   return null;
 }
 
+/**
+ * Structured rationale format from AI generation
+ */
+export interface StructuredRationale {
+  whyCorrect: string;
+  whyIncorrectA?: string;
+  whyIncorrectB?: string;
+  whyIncorrectC?: string;
+  whyIncorrectD?: string;
+  clinicalPearl?: string;
+}
+
+/**
+ * Type guard to check if rationale is structured
+ */
+function isStructuredRationale(rationale: string | StructuredRationale): rationale is StructuredRationale {
+  return typeof rationale === 'object' && rationale !== null && 'whyCorrect' in rationale;
+}
+
 export interface ExplanationPanelProps {
-  /** The full rationale text from the question */
-  rationale: string;
+  /** The full rationale - either string (legacy) or structured object (new) */
+  rationale: string | StructuredRationale;
   /** The condition name/ID for the question */
   condition: string;
   /** The condition ID/slug for navigation */
@@ -129,8 +151,26 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   const [showWrongAnswers, setShowWrongAnswers] = useState(false);
   const [userReaction, setUserReaction] = useState<'helpful' | 'not_helpful' | null>(null);
 
+  // Determine if we have structured rationale (new format) or legacy string
+  const structured = useMemo(() => isStructuredRationale(rationale), [rationale]);
+
+  // For legacy support: convert rationale to string if needed
+  const rationaleText = useMemo(() => {
+    if (isStructuredRationale(rationale)) {
+      // Combine structured fields into a single string for legacy functions
+      const parts = [rationale.whyCorrect];
+      if (rationale.whyIncorrectA) parts.push(rationale.whyIncorrectA);
+      if (rationale.whyIncorrectB) parts.push(rationale.whyIncorrectB);
+      if (rationale.whyIncorrectC) parts.push(rationale.whyIncorrectC);
+      if (rationale.whyIncorrectD) parts.push(rationale.whyIncorrectD);
+      if (rationale.clinicalPearl) parts.push(rationale.clinicalPearl);
+      return parts.join(' ');
+    }
+    return rationale;
+  }, [rationale]);
+
   // Calculate reading time
-  const readingTimeMinutes = useMemo(() => calculateReadingTime(rationale), [rationale]);
+  const readingTimeMinutes = useMemo(() => calculateReadingTime(rationaleText), [rationaleText]);
 
   // Get adaptive hint if user answered incorrectly
   const adaptiveHint = useMemo(
@@ -138,9 +178,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     [isCorrect, userAnswer, correctAnswer]
   );
 
-  // Compute compressed content
-  const coreRationale = useMemo(() => compressExplanation(rationale), [rationale]);
-  const buzzwords = useMemo(() => extractBuzzwords(rationale), [rationale]);
+  // Compute compressed content (only used for legacy string rationale)
+  const coreRationale = useMemo(() => structured ? [] : compressExplanation(rationaleText), [structured, rationaleText]);
+  const buzzwords = useMemo(() => extractBuzzwords(rationaleText), [rationaleText]);
   const mnemonic = useMemo(() => generateMnemonicIfAvailable(condition), [condition]);
   const differentials = useMemo(
     () => buildDifferentialList(condition, confusionPairs),
@@ -262,24 +302,106 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             <p className="text-sm text-steel-blue-800 dark:text-steel-blue-300">{adaptiveHint}</p>
           </motion.div>
         )}
-        {/* Core Rationale Section */}
-        <motion.section variants={itemVariants}>
-          <h3 className="font-bold text-base mb-3 text-[var(--color-text-primary)] flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />
-            Core Rationale
-          </h3>
-          <ul className="space-y-2 pl-1">
-            {coreRationale.map((point, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
-              >
-                <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">-</span>
-                <span>{renderFormattedText(point)}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.section>
+
+        {/* STRUCTURED RATIONALE (New Format) */}
+        {structured && isStructuredRationale(rationale) && (
+          <>
+            {/* Why Correct Section */}
+            <motion.section variants={itemVariants}>
+              <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+                <Target className="w-4 h-4 text-sage-600 dark:text-sage-400" />
+                Why This Is Correct
+              </h3>
+              <div className="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
+                <p className="text-[var(--color-text-secondary)] leading-relaxed">
+                  {renderFormattedText(rationale.whyCorrect)}
+                </p>
+              </div>
+            </motion.section>
+
+            {/* Why Incorrect Section */}
+            <motion.section variants={itemVariants}>
+              <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-dusty-rose-500" />
+                Why Other Options Are Wrong
+              </h3>
+              <div className="space-y-2">
+                {options.map((option, index) => {
+                  if (index === correctAnswerIndex) return null;
+                  const letter = ['A', 'B', 'C', 'D'][index];
+                  const key = `whyIncorrect${letter}` as keyof StructuredRationale;
+                  const whyIncorrect = rationale[key];
+                  if (!whyIncorrect || typeof whyIncorrect !== 'string') return null;
+                  
+                  const isUserChoice = index === userAnswerIndex;
+                  
+                  return (
+                    <div
+                      key={`option-${letter}`}
+                      className={`px-4 py-2 rounded-lg border ${
+                        isUserChoice
+                          ? 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700'
+                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className={`font-semibold text-sm ${isUserChoice ? 'text-dusty-rose-600 dark:text-dusty-rose-400' : 'text-[var(--color-text-muted)]'}`}>
+                          {letter}.
+                        </span>
+                        <div className="flex-1">
+                          <span className="text-sm text-[var(--color-text-secondary)]">
+                            {renderFormattedText(whyIncorrect)}
+                          </span>
+                          {isUserChoice && (
+                            <span className="ml-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 font-medium">
+                              (Your answer)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.section>
+
+            {/* Clinical Pearl Section */}
+            {rationale.clinicalPearl && (
+              <motion.section variants={itemVariants}>
+                <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-muted-amber-500" />
+                  Clinical Pearl
+                </h3>
+                <div className="bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3">
+                  <p className="text-[var(--color-text-secondary)] leading-relaxed">
+                    {renderFormattedText(rationale.clinicalPearl)}
+                  </p>
+                </div>
+              </motion.section>
+            )}
+          </>
+        )}
+
+        {/* LEGACY RATIONALE (String Format) */}
+        {!structured && (
+          <motion.section variants={itemVariants}>
+            <h3 className="font-bold text-base mb-3 text-[var(--color-text-primary)] flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />
+              Core Rationale
+            </h3>
+            <ul className="space-y-2 pl-1">
+              {coreRationale.map((point, index) => (
+                <li
+                  key={index}
+                  className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
+                >
+                  <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">-</span>
+                  <span>{renderFormattedText(point)}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
 
         {/* Buzzwords / Key Clues Section */}
         <motion.section variants={itemVariants}>
@@ -329,8 +451,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           </motion.section>
         )}
 
-        {/* Why Other Answers Were Wrong - Collapsible */}
-        {!isCorrect && (
+        {/* Why Other Answers Were Wrong - Collapsible (Legacy only, structured shows inline) */}
+        {!isCorrect && !structured && (
           <motion.section variants={itemVariants}>
             <button
               type="button"

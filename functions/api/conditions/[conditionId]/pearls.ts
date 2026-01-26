@@ -17,14 +17,16 @@ export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ConditionPearlsSchema,
-  async ({ env, validated, params }) => {
+  async ({ env, validated }) => {
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       
-      // Use params.conditionId from URL path (the schema validates the shape)
-      const conditionId = params.conditionId as string;
+      // Use validated.conditionId from params schema validation
+      const conditionId = validated.conditionId;
+      
+      console.log('[pearls] Fetching pearls for conditionId:', conditionId);
 
       // Try to find by ID first, then by slug/identifier
       let medicalContent = await prisma.medicalContent.findUnique({
@@ -47,6 +49,7 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       if (!medicalContent) {
+        console.log('[pearls] No medical content found for:', conditionId);
         return { data: { pearls: [] } };
       }
 
@@ -56,9 +59,10 @@ export const onRequestGet = authenticatedEndpoint(
         ? (content.clinicalPearls as string[])
         : [];
 
+      console.log('[pearls] Found', pearls.length, 'pearls');
       return { data: { pearls } };
     } catch (error) {
-      console.error('Error fetching pearls:', error);
+      console.error('[pearls] Error fetching pearls:', error);
       return { status: 500, error: 'Failed to fetch clinical pearls' };
     } finally {
       await safePrismaDisconnect(prisma);

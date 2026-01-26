@@ -165,8 +165,9 @@ export const onRequestGet = authenticatedEndpoint(
         },
       };
     } catch (error) {
-      log.error('Sync GET failed', error);
-      return { status: 500, error: 'Internal server error' };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log.error('Sync GET failed', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+      return { status: 500, error: `Sync GET failed: ${errorMessage}` };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -373,8 +374,9 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       },
     };
   } catch (error) {
-    log.error('Sync POST failed', error);
-    return { status: 500, error: 'Internal server error' };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log.error('Sync POST failed', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+    return { status: 500, error: `Sync POST failed: ${errorMessage}` };
   } finally {
     await safePrismaDisconnect(prisma);
   }
