@@ -333,7 +333,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
               data,
             });
           } else {
-            await tx.savedQuestion.create({ data });
+            await tx.savedQuestion.create({ data: { id: crypto.randomUUID(), ...data } });
           }
         }
       }
