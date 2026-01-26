@@ -10,6 +10,7 @@ import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './components/LandingPage';
 import { LoadingProgress } from './components/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
+import { initializeSession } from './services/core';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
@@ -412,6 +413,9 @@ const App: React.FC = () => {
     setIsModalOpen(false);
     setSessionSettings(settings);
     setError(null);
+    
+    // Initialize session state and reset momentum tracking
+    initializeSession();
 
     // DUE + FLAGGED are finite; no background stream. Other modes:
     // - Only ALL + SAME should be endless (handled in QuizView via replenishQueue)
