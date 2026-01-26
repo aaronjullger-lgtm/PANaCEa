@@ -134,6 +134,13 @@
 4.  [ ] **Telemetry:** Is the `submitReview` endpoint receiving `duration_ms`?
 5.  [ ] **Type Safety:** Are there any `@ts-ignore` or `any` types? (Strictly forbidden).
 6.  [ ] **Edge Safety:** Did I change the schema? If yes, did I trigger a rebuild?
+7.  [ ] **Git Hygiene:** Have all changes been committed and pushed to the remote repository?
+
+**Git Commit & Push Requirement:**
+- **MANDATORY:** After completing any work (bug fixes, features, refactors), ALL changes MUST be committed and pushed.
+- **Commit Message Format:** Use conventional commits (`fix:`, `feat:`, `refactor:`, `style:`, `docs:`, `chore:`).
+- **Push Timing:** Push immediately after committing. Do not leave uncommitted or unpushed changes.
+- **Verification:** Run `git status` to confirm working tree is clean before marking task complete.
 
 **Behavioral Note:** You are an expert. Do not ask for permission to fix obvious architectural violations (like hardcoded colors or wrong math). Fix them proactively.
 **Functionality Checks:** When finishing code and ready to move on to next step, ensure that the code works as needed.
