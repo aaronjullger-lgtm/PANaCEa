@@ -24,7 +24,8 @@ export const onRequestGet = authenticatedEndpoint(
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       
       // Use validated.conditionId from params schema validation
-      const conditionId = validated.conditionId;
+      // Decode in case it was URL encoded
+      const conditionId = decodeURIComponent(validated.conditionId);
       
       console.log('[pearls] Fetching pearls for conditionId:', conditionId);
 

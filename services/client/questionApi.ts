@@ -108,7 +108,9 @@ export async function fetchPearlsClient(
       return [];
     }
 
-    const response = await fetch(`/api/conditions/${conditionId}/pearls`, {
+    // URL encode the conditionId to handle special characters
+    const encodedConditionId = encodeURIComponent(conditionId);
+    const response = await fetch(`/api/conditions/${encodedConditionId}/pearls`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
