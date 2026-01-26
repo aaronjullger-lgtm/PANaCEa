@@ -239,7 +239,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
     if (examinedRegions.includes(region)) {
       return findingsMap[region] ? '#f97316' : '#22c55e'; // orange if finding, green if normal
     }
-    if (highlightedRegions.includes(region)) return '#fbbf24'; // amber-400
+    // No visual hints for suggested regions - make it harder/more realistic
     return '#cbd5e1'; // slate-300
   };
 

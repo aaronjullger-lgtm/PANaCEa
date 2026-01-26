@@ -50,11 +50,11 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
     if (!challenge) {
       // Create new challenge with 5 random questions
-      // Get a pool of intermediate/advanced questions
-      const questionPool = await prisma.question.findMany({
+      // Get a pool of intermediate/advanced questions from PreGeneratedQuestion
+      // (Question table doesn't have isActive field)
+      const questionPool = await prisma.preGeneratedQuestion.findMany({
         where: {
-          difficulty: { in: ['intermediate', 'advanced'] },
-          isActive: true,
+          difficulty: { in: ['intermediate', 'advanced', 'medium', 'hard'] },
         },
         select: { id: true },
         take: 100,
@@ -151,7 +151,7 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
     }
 
     // Fetch questions WITHOUT correct answers (SECURITY: Never send correct answers to client)
-    const questions = await prisma.question.findMany({
+    const questions = await prisma.preGeneratedQuestion.findMany({
       where: {
         id: { in: challenge.questionIds as string[] },
       },
@@ -162,7 +162,7 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
         options: true,
         system: true,
         difficulty: true,
-        topic: true,
+        conditionName: true,
         tags: true,
         // CRITICAL: correctAnswer is EXCLUDED
       },
@@ -172,8 +172,22 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
     type QuestionData = (typeof questions)[0];
 
     // Ensure questions are in the same order as challenge.questionIds
+    // Map to expected shape (topic -> conditionName)
     const orderedQuestions = (challenge.questionIds as string[])
-      .map((qid: string) => questions.find((q: QuestionData) => q.id === qid))
+      .map((qid: string) => {
+        const q = questions.find((q: QuestionData) => q.id === qid);
+        if (!q) return null;
+        return {
+          id: q.id,
+          vignette: q.vignette,
+          question: q.question,
+          options: q.options,
+          system: q.system,
+          difficulty: q.difficulty,
+          topic: q.conditionName,
+          tags: q.tags,
+        };
+      })
       .filter(Boolean);
 
     log.info('Returning active challenge', {

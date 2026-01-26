@@ -271,7 +271,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (languageMode === 'english') return text;
     const translated = translateToSpanish(text);
     if (languageMode === 'spanish') return translated;
-    return `${text}\n\n[ES] ${translated}`;
+    // Side-by-side mode: show both with subtle divider (no [ES] prefix)
+    return `${text}\n\n—\n${translated}`;
   };
 
   const generateTrendData = (currentValueStr: string): number[] | null => {

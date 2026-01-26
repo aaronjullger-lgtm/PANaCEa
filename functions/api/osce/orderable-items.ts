@@ -39,7 +39,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Standard workup for chest pain / ACS',
     items: ['cbc', 'bmp', 'troponin', 'bnp', 'ecg', 'cxr'],
     relatedChiefComplaints: ['chest pain', 'dyspnea', 'shortness of breath', 'syncope'],
-    icon: '❤️',
   },
   {
     id: 'heart-failure',
@@ -47,7 +46,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'CHF evaluation and staging',
     items: ['cbc', 'bmp', 'bnp', 'troponin', 'lfts', 'tsh', 'ecg', 'cxr', 'echo'],
     relatedChiefComplaints: ['dyspnea', 'edema', 'orthopnea', 'weight gain', 'fatigue'],
-    icon: '💔',
   },
   {
     id: 'syncope-workup',
@@ -55,7 +53,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Loss of consciousness evaluation',
     items: ['cbc', 'bmp', 'glucose', 'troponin', 'ecg', 'orthostatic-vitals', 'ct-head'],
     relatedChiefComplaints: ['syncope', 'fainting', 'passed out', 'loss of consciousness', 'dizzy'],
-    icon: '😵',
   },
   {
     id: 'afib-workup',
@@ -63,7 +60,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'New AFib evaluation',
     items: ['cbc', 'bmp', 'tsh', 'magnesium', 'ecg', 'cxr', 'echo'],
     relatedChiefComplaints: ['palpitations', 'irregular heartbeat', 'racing heart', 'afib'],
-    icon: '💓',
   },
   {
     id: 'pe-workup',
@@ -71,7 +67,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Workup for suspected pulmonary embolism',
     items: ['cbc', 'bmp', 'd-dimer', 'troponin', 'bnp', 'cxr', 'ct-pe', 'ecg'],
     relatedChiefComplaints: ['dyspnea', 'pleuritic chest pain', 'hemoptysis', 'leg swelling'],
-    icon: '🫁',
   },
   {
     id: 'copd-exacerbation',
@@ -79,7 +74,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Acute COPD exacerbation workup',
     items: ['cbc', 'bmp', 'abg', 'procalcitonin', 'cxr', 'ecg', 'sputum-culture'],
     relatedChiefComplaints: ['copd', 'wheezing', 'dyspnea', 'cough', 'sputum'],
-    icon: '🌬️',
   },
   {
     id: 'pneumonia-workup',
@@ -96,7 +90,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'urinary-pneumococcal',
     ],
     relatedChiefComplaints: ['fever', 'cough', 'productive cough', 'dyspnea', 'chest pain'],
-    icon: '🤧',
   },
   {
     id: 'sepsis-panel',
@@ -113,7 +106,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'cxr',
     ],
     relatedChiefComplaints: ['fever', 'altered mental status', 'hypotension', 'infection'],
-    icon: '🦠',
   },
   {
     id: 'meningitis-workup',
@@ -127,7 +119,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'photophobia',
       'altered mental status',
     ],
-    icon: '🧫',
   },
   {
     id: 'uti-workup',
@@ -135,7 +126,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Urinary tract infection evaluation',
     items: ['urinalysis', 'urine-culture', 'bmp'],
     relatedChiefComplaints: ['dysuria', 'frequency', 'urgency', 'flank pain', 'hematuria'],
-    icon: '🚽',
   },
   {
     id: 'dka-panel',
@@ -143,7 +133,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Standard workup for diabetic ketoacidosis',
     items: ['cbc', 'bmp', 'abg', 'serum-ketones', 'urinalysis', 'hba1c', 'lipase'],
     relatedChiefComplaints: ['diabetic', 'hyperglycemia', 'vomiting', 'altered mental status'],
-    icon: '💉',
   },
   {
     id: 'thyroid-storm',
@@ -157,7 +146,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'heat intolerance',
       'agitation',
     ],
-    icon: '🦋',
   },
   {
     id: 'adrenal-crisis',
@@ -165,7 +153,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Adrenal insufficiency evaluation',
     items: ['cbc', 'bmp', 'cortisol', 'acth', 'glucose', 'tsh'],
     relatedChiefComplaints: ['hypotension', 'fatigue', 'weakness', 'nausea', 'abdominal pain'],
-    icon: '⚡',
   },
   {
     id: 'stroke-panel',
@@ -179,7 +166,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'speech difficulty',
       'vision changes',
     ],
-    icon: '🧠',
   },
   {
     id: 'seizure-workup',
@@ -203,7 +189,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'postictal',
       'loss of consciousness',
     ],
-    icon: '⚡',
   },
   {
     id: 'headache-workup',
@@ -217,7 +202,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'neck pain',
       'photophobia',
     ],
-    icon: '🤕',
   },
   {
     id: 'abdominal-pain',
@@ -225,7 +209,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Basic abdominal pain evaluation',
     items: ['cbc', 'bmp', 'lipase', 'lfts', 'urinalysis', 'pregnancy-test', 'ct-abd-pelvis'],
     relatedChiefComplaints: ['abdominal pain', 'nausea', 'vomiting', 'diarrhea'],
-    icon: '🤢',
   },
   {
     id: 'gi-bleed',
@@ -239,7 +222,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'bloody stool',
       'coffee ground emesis',
     ],
-    icon: '🩸',
   },
   {
     id: 'pancreatitis',
@@ -253,7 +235,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'vomiting',
       'back pain',
     ],
-    icon: '🔥',
   },
   {
     id: 'appendicitis',
@@ -267,7 +248,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'nausea',
       'anorexia',
     ],
-    icon: '📍',
   },
   {
     id: 'aki-workup',
@@ -289,7 +269,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
       'edema',
       'elevated creatinine',
     ],
-    icon: '🫘',
   },
   {
     id: 'kidney-stone',
@@ -297,7 +276,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Kidney stone evaluation',
     items: ['cbc', 'bmp', 'urinalysis', 'ct-kub'],
     relatedChiefComplaints: ['flank pain', 'colicky pain', 'hematuria', 'back pain'],
-    icon: '💎',
   },
   {
     id: 'anemia-workup',
@@ -305,7 +283,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'New anemia evaluation',
     items: ['cbc', 'reticulocyte', 'iron-studies', 'b12', 'folate', 'peripheral-smear', 'lfts'],
     relatedChiefComplaints: ['fatigue', 'weakness', 'pallor', 'dyspnea', 'dizziness'],
-    icon: '🩸',
   },
   {
     id: 'dvt-workup',
@@ -313,7 +290,6 @@ const ORDER_BUNDLES: OrderBundleResponse[] = [
     description: 'Deep vein thrombosis evaluation',
     items: ['cbc', 'bmp', 'd-dimer', 'pt-inr', 'venous-doppler'],
     relatedChiefComplaints: ['leg swelling', 'leg pain', 'calf pain', 'unilateral edema'],
-    icon: '🦵',
   },
 ];
 
@@ -348,22 +324,22 @@ function estimateTurnaround(category: string, name: string, modality?: string): 
 }
 
 const OrderableItemsSchema = z.object({
-  query: z.object({
-    category: z.string().optional(),
-    search: z.string().optional(),
-    bundles: z.string().optional(),
-  }),
+  category: z.string().optional(),
+  search: z.string().optional(),
+  bundles: z.string().optional(),
 });
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(OrderableItemsSchema, async (context) => {
-  const { env, validated } = context;
-  const logger = createEndpointLogger('/api/osce/orderable-items');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = publicEndpoint(
+  OrderableItemsSchema,
+  async (context) => {
+    const { env, validated } = context;
+    const logger = createEndpointLogger('/api/osce/orderable-items');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const { category, search, bundles } = validated.query || {};
+    try {
+      const { category, search, bundles } = validated || {};
 
     if (bundles === 'true') {
       return { data: { bundles: ORDER_BUNDLES } };
@@ -547,4 +523,6 @@ export const onRequestGet = publicEndpoint(OrderableItemsSchema, async (context)
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+  },
+  { source: 'query' }
+);

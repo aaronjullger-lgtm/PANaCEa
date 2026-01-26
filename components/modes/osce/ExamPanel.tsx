@@ -274,12 +274,6 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
               <p className="text-slate-500 dark:text-slate-400 text-sm">
                 Select a body region to examine
               </p>
-              {suggestedRegions.length > 0 && (
-                <p className="text-xs text-amber-500 mt-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Suggested areas highlighted in yellow
-                </p>
-              )}
             </div>
           )}
         </div>
