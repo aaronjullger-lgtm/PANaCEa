@@ -8,10 +8,11 @@ const dataCache = new Map<string, any>();
  * Database-First: PostgreSQL is the ONLY source of truth.
  * No static fallbacks - errors propagate to UI for proper handling.
  *
+ * @param getToken - Optional function to get auth token (from Clerk's useAuth hook)
  * @returns Promise resolving to the drug data
  * @throws Error if database is unavailable
  */
-export async function loadDrugData(): Promise<any> {
+export async function loadDrugData(getToken?: () => Promise<string | null>): Promise<any> {
   const cacheKey = 'drugData';
 
   // Return from cache if already loaded
@@ -20,7 +21,20 @@ export async function loadDrugData(): Promise<any> {
   }
 
   const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
-  const response = await fetch(apiUrl);
+
+  // Build headers with auth token if available
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (getToken) {
+    const token = await getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  const response = await fetch(apiUrl, { headers });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -36,10 +50,11 @@ export async function loadDrugData(): Promise<any> {
  * Lazily load condition content when needed.
  * Uses database API endpoint exclusively - no static fallback.
  *
+ * @param getToken - Optional function to get auth token (from Clerk's useAuth hook)
  * @returns Promise resolving to the condition content, or empty object if database is unavailable
  * @note Returns empty object on error to prevent app crashes. Logs errors to console.
  */
-export async function loadConditionContent(): Promise<any> {
+export async function loadConditionContent(getToken?: () => Promise<string | null>): Promise<any> {
   const cacheKey = 'conditionContent';
 
   // Return from cache if already loaded
@@ -50,8 +65,20 @@ export async function loadConditionContent(): Promise<any> {
   // Use the database API endpoint (same approach as lib/loadConditions.ts)
   const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
+  // Build headers with auth token if available
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (getToken) {
+    const token = await getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, { headers });
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {

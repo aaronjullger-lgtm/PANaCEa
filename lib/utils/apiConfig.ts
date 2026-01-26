@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
   SESSIONS: '/api/sessions',
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
+  RECOMMENDATIONS: '/api/recommendations',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;

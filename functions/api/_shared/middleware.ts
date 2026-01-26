@@ -63,10 +63,11 @@ export type HandlerResponse = Response | { status?: number; data?: any; error?: 
 
 /**
  * Middleware function type
+ * Note: next() accepts an optional enriched context to pass to the next middleware
  */
 export type Middleware<TContext = CloudflareContext> = (
   context: TContext,
-  next: () => Promise<HandlerResponse>
+  next: (ctx?: any) => Promise<HandlerResponse>
 ) => Promise<HandlerResponse>;
 
 /**
@@ -208,9 +209,9 @@ export function withAuth(options: { optional?: boolean } = {}): Middleware<Authe
       return { status: 401, error: 'Authentication required' };
     }
 
-    // Add auth to context
+    // Add auth to context and pass it to the next middleware
     const authContext = { ...context, auth } as AuthenticatedContext;
-    return next();
+    return next(authContext);
   };
 }
 
@@ -310,7 +311,7 @@ export function withValidation<T>(
 
       // At this point, TypeScript knows result.success is true, so result.data exists
       const validatedContext = { ...context, validated: result.data } as ValidatedContext<T>;
-      return next();
+      return next(validatedContext);
     } catch (error) {
       if (error instanceof SyntaxError) {
         return { status: 400, error: 'Invalid JSON in request body' };
