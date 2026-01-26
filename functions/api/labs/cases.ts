@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -29,9 +29,9 @@ const LabCasesQuerySchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(
+export const onRequestGet = authenticatedEndpoint(
   LabCasesQuerySchema,
-  async ({ env, validated, request }) => {
+  async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/labs/cases');
     let prisma: EdgePrismaClient | null = null;
 
@@ -42,6 +42,7 @@ export const onRequestGet = publicEndpoint(
       const { difficulty, category } = validated;
 
       log.info('Fetching lab cases', {
+        userId: auth.userId,
         difficulty: difficulty || 'all',
         category: category || 'all',
       });
