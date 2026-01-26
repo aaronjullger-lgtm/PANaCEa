@@ -211,8 +211,19 @@ export default defineConfig(({ mode }) => {
     define: {
       // Global shim for CJS modules
       global: 'window',
-      // Process.env shims for browser compatibility (full process polyfill is in polyfills/cjs-shim.ts)
+      // Process shims for browser compatibility
+      // Note: Using 'typeof process' pattern to avoid breaking code that checks for process existence
       'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.VITEST': 'undefined',
+      'process.env.VITEST_WORKER_ID': 'undefined',
+      'process.env.API_BASE_URL': 'undefined',
+      'process.env.DATABASE_URL': 'undefined',
+      'process.env.GEMINI_API_KEY': 'undefined',
+      // Fallback for any other process.env access
+      'process.env': '{}',
+      // Define process object for typeof checks
+      'process.browser': 'true',
+      'process.version': '""',
     },
     resolve: {
       dedupe: ['lucide-react', 'react', 'react-dom'],
@@ -234,8 +245,14 @@ export default defineConfig(({ mode }) => {
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
           interop: 'compat',
-          // Safety net polyfill for CommonJS remnants
-          intro: 'var global = global || window; var exports = exports || {};',
+          // Safety net polyfill for CommonJS remnants and Node.js globals
+          intro: `
+var global = global || window;
+var exports = exports || {};
+if (typeof process === 'undefined') {
+  var process = { env: { NODE_ENV: '${mode}' }, browser: true, version: '', cwd: function() { return '/'; } };
+}
+`,
         },
         // Ensure lucide-react is treated as side-effect-free for optimal tree-shaking
         treeshake: {

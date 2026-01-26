@@ -132,13 +132,14 @@ import * as osceServiceModule from './osceService';
 import * as osceScoringEngineModule from './osceScoringEngine';
 import * as patientEncounterGeneratorModule from './patientEncounterGenerator';
 import * as patientPersonalityEngineModule from './patientPersonalityEngine';
-import * as scenarioServiceModule from './scenarioService';
+// REMOVED: scenarioService - imports Prisma Edge client, server-only
+// import * as scenarioServiceModule from './scenarioService'; // IMPORT DISABLED: server-only
 
 export const osceService = osceServiceModule;
 export const osceScoring = osceScoringEngineModule;
 export const patientEncounter = patientEncounterGeneratorModule;
 export const patientPersonality = patientPersonalityEngineModule;
-export const scenarioService = scenarioServiceModule;
+// export const scenarioService = scenarioServiceModule; // SERVER-ONLY: use API
 
 // Named exports from OSCE service
 export {
