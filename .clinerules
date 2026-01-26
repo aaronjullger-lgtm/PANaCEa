@@ -243,3 +243,171 @@
 > **IF** you modify `server.ts`,
 > **THEN** Check for `DATABASE_URL`.
 > **ACTION:** Ensure the code fails gracefully if `process.env.DATABASE_URL` is missing, logging a clear text error rather than crashing with a stack trace. This prevents the specific "Database connection errors" listed in Troubleshooting.
+
+---
+
+# 🔗 SYSTEM 6: API CONTRACT INTEGRITY
+**Mandate:** Frontend API calls and backend endpoints must be in perfect sync.
+
+## API Endpoint Rules
+
+### Rule 1: Single Source of Truth for Endpoints
+- **ALL** frontend API calls MUST use `getApiEndpoint(API_ENDPOINTS.X)` from `lib/utils/apiConfig.ts`.
+- ❌ **FORBIDDEN:** Hardcoded strings like `fetch('/api/user/sync')`.
+- ✅ **REQUIRED:** `fetch(getApiEndpoint(API_ENDPOINTS.SYNC))`.
+
+### Rule 2: Endpoint-to-Function Mapping
+When creating or modifying API endpoints, verify the path matches:
+| Frontend Constant | Expected Backend Path |
+|------------------|----------------------|
+| `API_ENDPOINTS.SYNC` | `functions/api/sync.ts` |
+| `API_ENDPOINTS.QUESTIONS` | `functions/api/questions.ts` |
+| `API_ENDPOINTS.DRUGS` | `functions/api/drugs/index.ts` |
+
+**The "Path Mismatch" Bug:** If the frontend calls `/api/user/sync` but the function exists at `/api/sync`, the request will 404 and return HTML, causing "Unexpected token '<'" errors.
+
+### Rule 3: New Endpoint Checklist
+When adding a new API endpoint:
+1. [ ] Create `functions/api/[route].ts` with `onRequestGet` or `onRequestPost` export.
+2. [ ] Add the path to `API_ENDPOINTS` in `lib/utils/apiConfig.ts`.
+3. [ ] Use the constant in all frontend calls (never hardcode).
+4. [ ] Test locally with `npm run dev:wrangler` before deploying.
+
+### Rule 4: Response Format Consistency
+- **ALL** API responses MUST return JSON with proper `Content-Type: application/json`.
+- **ALL** error responses MUST be JSON: `{ error: string, code?: string }`.
+- ❌ **NEVER** return HTML from API routes (causes JSON parse failures).
+
+---
+
+# 🔒 SYSTEM 7: PRISMA EDGE CLIENT RULES
+**Mandate:** Prisma in Cloudflare Functions requires specific handling.
+
+### Rule 1: Edge-Only Import
+- **ALWAYS** use `@prisma/client/edge` in Cloudflare Functions.
+- ❌ **FORBIDDEN:** `import { PrismaClient } from '@prisma/client'` in `functions/` directory.
+- ✅ **REQUIRED:** `import { PrismaClient } from '@prisma/client/edge'`.
+
+### Rule 2: Use the Shared Client Factory
+- All Functions MUST use `createEdgePrismaClient(env.DATABASE_URL)` from `functions/api/_shared/prisma-edge.ts`.
+- Always disconnect in `finally` block to prevent connection pool exhaustion.
+
+### Rule 3: Browser Bundle Prevention
+- The `vite.config.ts` externalizes Prisma packages to prevent them from being bundled into the client.
+- **If you see "PrismaClient is unable to be run in the browser":** Check that Prisma imports aren't leaking into frontend code.
+
+---
+
+# 🛑 SYSTEM 8: ERROR HANDLING & RESILIENCE
+**Mandate:** Graceful degradation over hard crashes.
+
+### Rule 1: JSON Response Validation
+Before parsing any API response as JSON:
+```typescript
+// ✅ REQUIRED pattern
+const response = await fetch(url);
+const contentType = response.headers.get('content-type');
+if (!contentType?.includes('application/json')) {
+  throw new Error(`Expected JSON but got ${contentType}`);
+}
+const data = await response.json();
+```
+
+### Rule 2: "Unexpected Token '<'" Prevention
+This error means HTML was returned instead of JSON. Causes:
+- 404 page (endpoint doesn't exist)
+- 500 error with HTML error page
+- Auth redirect returning login page
+
+**Fix:** Always check `response.ok` and content-type before parsing.
+
+### Rule 3: Null/Undefined Guards
+- Use optional chaining (`?.`) for nested property access.
+- Provide fallback values with nullish coalescing (`??`).
+- Never call methods on potentially undefined values.
+
+---
+
+# 📦 SYSTEM 9: IMPORT & MODULE PATTERNS
+**Mandate:** Consistent, predictable imports across the codebase.
+
+### Rule 1: Absolute Import Aliases
+- `@/` → Repository root
+- `@src/` → `src/` directory
+- ❌ **AVOID:** Deep relative imports like `../../../lib/utils`.
+- ✅ **PREFER:** `@/lib/utils`.
+
+### Rule 2: Named Exports
+- Prefer named exports over default exports for better tree-shaking.
+- Exception: Page components may use default exports for React lazy loading.
+
+### Rule 3: No Circular Dependencies
+- Services should not import from components.
+- Components import from services, not vice versa.
+- If you see "Cannot access X before initialization," you have a circular import.
+
+---
+
+# 🧪 SYSTEM 10: TESTING & VALIDATION
+**Mandate:** Test before commit, verify before deploy.
+
+### Rule 1: TypeScript Compilation
+- Run `npm run typecheck` after changes to verify no type errors.
+- Current baseline: ~900 errors (working to reduce). Do not introduce new errors.
+
+### Rule 2: Unit Tests
+- Run `vitest` for unit tests.
+- Tests must pass before committing.
+
+### Rule 3: Local Function Testing
+- Use `npm run dev:wrangler` to test Cloudflare Functions locally.
+- This simulates the production Edge Runtime environment.
+
+### Rule 4: Health Check
+- Run `npm run health-check` to validate content integrity.
+
+---
+
+# ⚠️ COMMON PITFALLS & SOLUTIONS
+
+| Symptom | Cause | Solution |
+|---------|-------|----------|
+| "Unexpected token '<'" | API returned HTML instead of JSON | Check endpoint path matches, verify function exists |
+| "PrismaClient is unable to run in browser" | Prisma bundled into client code | Check vite.config.ts externals, verify imports |
+| "Cannot find module '@prisma/client/edge'" | Missing edge client generation | Run `npx prisma generate` |
+| Empty content/conditions | Database not seeded or connection failed | Check DATABASE_URL, run migrations |
+| "onRequest* is not defined" | Function not exported correctly | Add `export async function onRequestGet/Post` |
+| Auth redirect loop | Clerk misconfiguration | Verify CLERK_SECRET_KEY in environment |
+| 500 errors on Functions | Unhandled exception in Edge Runtime | Wrap in try/catch, check logs in Cloudflare dashboard |
+
+---
+
+# 🔄 CLOUDFLARE FUNCTIONS EXPORT PATTERN
+**Every function file MUST follow this structure:**
+
+```typescript
+// functions/api/[route].ts
+import { createEdgePrismaClient } from './_shared/prisma-edge';
+
+interface Env {
+  DATABASE_URL: string;
+  // other bindings...
+}
+
+export async function onRequestGet(context: { env: Env; request: Request }) {
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  try {
+    // Handle GET request
+    return new Response(JSON.stringify({ data }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+```
