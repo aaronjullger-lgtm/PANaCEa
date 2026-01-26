@@ -107,6 +107,77 @@ const GlassPanel: React.FC<{
 };
 
 /**
+ * Format rationale text into structured paragraphs
+ * Handles common patterns: numbered lists, sentence breaks, key points
+ */
+function formatRationale(text: string): string[] {
+  if (!text || typeof text !== 'string') return [];
+  
+  // If already has HTML structure, extract paragraphs
+  if (text.includes('<p>') || text.includes('<li>')) {
+    // Extract text content, split by closing tags
+    const stripped = text
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    return stripped.split(/\n\n+/).filter(p => p.trim().length > 0);
+  }
+  
+  // Split by common delimiters
+  const paragraphs: string[] = [];
+  
+  // Check for numbered points (1. 2. 3. or 1) 2) 3))
+  if (/\d+[\.\)]\s/.test(text)) {
+    const points = text.split(/(?=\d+[\.\)]\s)/);
+    for (const point of points) {
+      const trimmed = point.trim();
+      if (trimmed.length > 0) {
+        paragraphs.push(trimmed);
+      }
+    }
+    return paragraphs;
+  }
+  
+  // Check for bullet-like patterns (• - *)
+  if (/^[\•\-\*]\s/m.test(text)) {
+    const points = text.split(/(?=[\•\-\*]\s)/);
+    for (const point of points) {
+      const trimmed = point.trim();
+      if (trimmed.length > 0) {
+        paragraphs.push(trimmed);
+      }
+    }
+    return paragraphs;
+  }
+  
+  // Split by double newlines first
+  if (text.includes('\n\n')) {
+    return text.split(/\n\n+/).filter(p => p.trim().length > 0);
+  }
+  
+  // Split long text by sentences (aim for ~2-3 sentences per paragraph)
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  if (sentences.length > 3) {
+    let current: string[] = [];
+    for (const sentence of sentences) {
+      current.push(sentence);
+      if (current.length >= 2 || current.join(' ').length > 200) {
+        paragraphs.push(current.join(' '));
+        current = [];
+      }
+    }
+    if (current.length > 0) {
+      paragraphs.push(current.join(' '));
+    }
+    return paragraphs;
+  }
+  
+  // Return as single paragraph if short
+  return [text.trim()];
+}
+
+/**
  * Section header with icon
  */
 const SectionHeader: React.FC<{
@@ -424,10 +495,15 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {rationale && rationale !== explanation && (
           <section className="mb-6">
             <SectionHeader icon={<BookOpen className="w-5 h-5" />} title="Additional Rationale" />
-            <div
-              className="text-[var(--color-text-secondary)] leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: rationale }}
-            />
+            <div className="space-y-3">
+              {formatRationale(rationale).map((paragraph, index) => (
+                <p
+                  key={index}
+                  className="text-[var(--color-text-secondary)] leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: paragraph }}
+                />
+              ))}
+            </div>
           </section>
         )}
 

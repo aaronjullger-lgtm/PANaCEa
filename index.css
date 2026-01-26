@@ -93,11 +93,10 @@ body,
   /* Glass button - our themed PANaCEa button */
   .btn-glass {
     @apply px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-md
-           bg-[#E6A495] text-[#8B4513] 
-           hover:bg-[#d99282] hover:shadow-lg
+           bg-[var(--color-accent)] text-white 
+           hover:bg-[var(--color-accent-hover)] hover:shadow-lg
            active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           dark:text-white dark:hover:bg-[#cc8471];
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Pill Selection Controls - Medical Theme with High Contrast */

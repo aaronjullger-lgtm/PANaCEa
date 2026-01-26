@@ -18,32 +18,28 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const BehaviorMetricsPostSchema = z.object({
-  body: z.object({
-    questionId: z.string().min(1),
-    questionType: z.string().optional(),
-    timeToFirstClick: z.number().min(0),
-    dwellTime: z.number().min(0),
-    totalResponseTime: z.number().min(0),
-    answerChanges: z.number().int().min(0).optional(),
-    optionHovers: z.number().int().min(0).optional(),
-    scrollDepth: z.number().min(0).max(100).optional(),
-    hesitationEvents: z.number().int().min(0).optional(),
-    backtrackCount: z.number().int().min(0).optional(),
-    wasCorrect: z.boolean(),
-    confidenceLevel: z.number().min(0).max(1).optional(),
-    derivedRating: z.number().min(1).max(4).optional(),
-    ratingConfidence: z.number().min(0).max(1).optional(),
-    trajectoryData: z.any().optional(),
-    typingRhythm: z.any().optional(),
-  }),
+  questionId: z.string().min(1),
+  questionType: z.string().optional(),
+  timeToFirstClick: z.number().min(0),
+  dwellTime: z.number().min(0),
+  totalResponseTime: z.number().min(0),
+  answerChanges: z.number().int().min(0).optional(),
+  optionHovers: z.number().int().min(0).optional(),
+  scrollDepth: z.number().min(0).max(100).optional(),
+  hesitationEvents: z.number().int().min(0).optional(),
+  backtrackCount: z.number().int().min(0).optional(),
+  wasCorrect: z.boolean(),
+  confidenceLevel: z.number().min(0).max(1).optional(),
+  derivedRating: z.number().min(1).max(4).optional(),
+  ratingConfidence: z.number().min(0).max(1).optional(),
+  trajectoryData: z.any().optional(),
+  typingRhythm: z.any().optional(),
 });
 
 const BehaviorMetricsGetSchema = z.object({
-  query: z.object({
-    limit: z.string().optional(),
-    offset: z.string().optional(),
-    questionId: z.string().optional(),
-  }),
+  limit: z.string().optional(),
+  offset: z.string().optional(),
+  questionId: z.string().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -58,7 +54,7 @@ export const onRequestPost = authenticatedEndpoint(BehaviorMetricsPostSchema, as
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const payload = validated.body;
+    const payload = validated;
 
     // Get current hour for timeOfDay
     const now = new Date();
@@ -125,7 +121,9 @@ export const onRequestPost = authenticatedEndpoint(BehaviorMetricsPostSchema, as
 /**
  * Get behavior metrics for a user
  */
-export const onRequestGet = authenticatedEndpoint(BehaviorMetricsGetSchema, async (context) => {
+export const onRequestGet = authenticatedEndpoint(
+  BehaviorMetricsGetSchema,
+  async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/user/behavior-metrics');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
@@ -134,9 +132,9 @@ export const onRequestGet = authenticatedEndpoint(BehaviorMetricsGetSchema, asyn
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Parse query parameters
-    const limit = Math.min(parseInt(validated.query?.limit || '100'), 500);
-    const offset = parseInt(validated.query?.offset || '0');
-    const questionId = validated.query?.questionId;
+    const limit = Math.min(parseInt(validated.limit || '100'), 500);
+    const offset = parseInt(validated.offset || '0');
+    const questionId = validated.questionId;
 
     // Build query
     const where: any = { userId: auth.userId };
@@ -181,4 +179,6 @@ export const onRequestGet = authenticatedEndpoint(BehaviorMetricsGetSchema, asyn
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+  },
+  { source: 'query' }
+);

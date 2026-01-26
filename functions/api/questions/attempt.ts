@@ -10,19 +10,17 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const AttemptSchema = z.object({
-  body: z.object({
-    questionId: z.string().min(1),
-    isCorrect: z.boolean().optional(),
-    wasCorrect: z.boolean().optional(),
-    system: z.string().optional(),
-    conditionId: z.string().optional(),
-    questionType: z.string().optional(),
-    mode: z.string().optional().default('session'),
-    timeSpent: z.number().optional(),
-    timeSpentMs: z.number().optional(),
-    answerChangedCount: z.number().optional(),
-    isRankedAttempt: z.boolean().optional().default(false),
-  }),
+  questionId: z.string().min(1),
+  isCorrect: z.boolean().optional(),
+  wasCorrect: z.boolean().optional(),
+  system: z.string().optional(),
+  conditionId: z.string().optional(),
+  questionType: z.string().optional(),
+  mode: z.string().optional().default('session'),
+  timeSpent: z.number().optional(),
+  timeSpentMs: z.number().optional(),
+  answerChangedCount: z.number().optional(),
+  isRankedAttempt: z.boolean().optional().default(false),
 });
 
 export const onRequestOptions = withCors();
@@ -55,7 +53,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       timeSpentMs,
       answerChangedCount,
       isRankedAttempt = false,
-    } = validated.body;
+    } = validated;
 
     // Support both isCorrect and wasCorrect field names
     const correctness = isCorrect ?? wasCorrect;

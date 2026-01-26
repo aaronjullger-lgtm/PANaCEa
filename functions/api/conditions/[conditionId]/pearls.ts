@@ -2,6 +2,7 @@
  * API Endpoint: /api/conditions/:conditionId/pearls
  *
  * Fetch clinical pearls for a specific condition from MedicalContent
+ * Supports both UUID and slug formats for conditionId
  */
 
 import { authenticatedEndpoint } from '../../_shared/middleware';
@@ -9,24 +10,37 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
 import { z } from 'zod';
 
 const ConditionPearlsSchema = z.object({
-  params: z.object({
-    conditionId: z.string().uuid('Invalid condition ID format'),
-  }),
+  conditionId: z.string().min(1, 'Condition ID is required'),
 });
 
 export const onRequestGet = authenticatedEndpoint(
   ConditionPearlsSchema,
-  async ({ env, validated }) => {
+  async ({ env, validated, params }) => {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const { conditionId } = validated.params;
+      // Use params.conditionId from URL path (the schema validates the shape)
+      const conditionId = params.conditionId as string;
 
-      // Fetch medical content for this condition (using id field)
-      const medicalContent = await prisma.medicalContent.findUnique({
+      // Try to find by ID first, then by slug/identifier
+      let medicalContent = await prisma.medicalContent.findUnique({
         where: { id: conditionId },
         select: { content: true },
       });
+
+      // If not found by ID, try by slug/conditionId field
+      if (!medicalContent) {
+        medicalContent = await prisma.medicalContent.findFirst({
+          where: {
+            OR: [
+              { conditionId: conditionId },
+              { conditionId: conditionId.toLowerCase() },
+              { conditionId: conditionId.replace(/-/g, ' ') },
+            ],
+          },
+          select: { content: true },
+        });
+      }
 
       if (!medicalContent) {
         return { data: { pearls: [] } };
@@ -42,5 +56,6 @@ export const onRequestGet = authenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'params' }
 );
