@@ -1035,9 +1035,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }, [isAnswered, currentQuestion, performanceData]);
 
   const getBarColor = (score: number): string => {
-    if (score < 50) return 'bg-red-500';
-    if (score < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (score < 50) return 'bg-dusty-rose-500';
+    if (score < 80) return 'bg-muted-amber-500';
+    return 'bg-sage-500';
   };
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
@@ -1119,8 +1119,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Toggle session stats (S)"
               className={`p-1.5 rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300'
+                  ? 'bg-steel-blue-100 text-steel-blue-700 border-steel-blue-300'
+                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-steel-blue-50 hover:text-steel-blue-600 hover:border-steel-blue-300'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1141,7 +1141,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title={isFlagged ? 'Unflag for review' : 'Flag for review'}
               className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
-                  ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                  ? 'bg-muted-amber-100 text-muted-amber-700 border-muted-amber-300'
                   : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-white hover:border-[var(--color-accent)]'
               }`}
             >

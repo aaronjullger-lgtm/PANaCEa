@@ -278,16 +278,16 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-4"
+            className="bg-muted-amber-50 dark:bg-muted-amber-900/30 border border-muted-amber-200 dark:border-muted-amber-800 rounded-xl p-4 flex items-center gap-4"
           >
-            <Coffee className="w-6 h-6 text-amber-500 flex-shrink-0" />
+            <Coffee className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-amber-800 dark:text-amber-200">Time for a Break?</p>
-              <p className="text-sm text-amber-600 dark:text-amber-300">{breakSuggestion.reason}</p>
+              <p className="font-medium text-muted-amber-800 dark:text-muted-amber-200">Time for a Break?</p>
+              <p className="text-sm text-muted-amber-600 dark:text-muted-amber-300">{breakSuggestion.reason}</p>
             </div>
             <button
               onClick={() => setBreakSuggestion({ suggest: false })}
-              className="px-3 py-1 text-sm text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg"
+              className="px-3 py-1 text-sm text-muted-amber-600 hover:bg-muted-amber-100 dark:hover:bg-muted-amber-900/50 rounded-lg"
             >
               Dismiss
             </button>
@@ -459,7 +459,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <div className="flex items-center gap-2 text-sm">
                       <Award
-                        className={`w-5 h-5 ${learningVelocity.personalBestRatio >= 1 ? 'text-amber-500' : 'text-slate-400'}`}
+                        className={`w-5 h-5 ${learningVelocity.personalBestRatio >= 1 ? 'text-muted-amber-500' : 'text-slate-400'}`}
                       />
                       <span className="text-slate-600 dark:text-slate-300">
                         {learningVelocity.personalBestRatio >= 1
@@ -706,8 +706,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* Strengths */}
             {profile.strongestSystems.length > 0 && (
-              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800">
-                <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-300 mb-4 flex items-center gap-2">
+              <div className="bg-sage-50 dark:bg-sage-900/20 rounded-xl p-6 border border-sage-200 dark:border-sage-800">
+                <h3 className="text-lg font-semibold text-sage-700 dark:text-sage-300 mb-4 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
                   Your Strongest Systems
                 </h3>
@@ -715,13 +715,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.strongestSystems.map((system, i) => (
                     <div
                       key={system}
-                      className="bg-white dark:bg-emerald-900/30 rounded-lg p-4 border border-emerald-200 dark:border-emerald-700"
+                      className="bg-white dark:bg-sage-900/30 rounded-lg p-4 border border-sage-200 dark:border-sage-700"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xl">
                           {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '✓'}
                         </span>
-                        <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                        <span className="font-medium text-sage-700 dark:text-sage-300">
                           {system}
                         </span>
                       </div>
@@ -733,8 +733,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Weaknesses */}
             {profile.weakestSystems.length > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-800">
-                <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-300 mb-4 flex items-center gap-2">
+              <div className="bg-muted-amber-50 dark:bg-muted-amber-900/20 rounded-xl p-6 border border-muted-amber-200 dark:border-muted-amber-800">
+                <h3 className="text-lg font-semibold text-muted-amber-700 dark:text-muted-amber-300 mb-4 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
                   Systems Needing Focus
                 </h3>
@@ -742,13 +742,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.weakestSystems.map((system) => (
                     <div
                       key={system}
-                      className="bg-white dark:bg-amber-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-700 group hover:border-amber-400 transition-colors cursor-pointer"
+                      className="bg-white dark:bg-muted-amber-900/30 rounded-lg p-4 border border-muted-amber-200 dark:border-muted-amber-700 group hover:border-muted-amber-400 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-amber-700 dark:text-amber-300">
+                        <span className="font-medium text-muted-amber-700 dark:text-muted-amber-300">
                           {system}
                         </span>
-                        <ChevronRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 text-muted-amber-400 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   ))}
@@ -854,16 +854,16 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="grid md:grid-cols-2 gap-4">
-              <button className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 text-left hover:border-emerald-400 transition-colors group">
+              <button className="p-5 bg-sage-50 dark:bg-sage-900/20 rounded-xl border border-sage-200 dark:border-sage-800 text-left hover:border-sage-400 transition-colors group">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-800">
-                    <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="p-2 rounded-lg bg-sage-100 dark:bg-sage-800">
+                    <Zap className="w-5 h-5 text-sage-600 dark:text-sage-400" />
                   </div>
-                  <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                  <span className="font-semibold text-sage-700 dark:text-sage-300">
                     Quick Practice
                   </span>
                 </div>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                <p className="text-sm text-sage-600 dark:text-sage-400">
                   AI-selected questions targeting your weak areas
                 </p>
               </button>

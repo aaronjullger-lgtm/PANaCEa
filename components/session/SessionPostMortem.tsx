@@ -82,10 +82,10 @@ const STATUS_EMOJI: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  critical: 'text-red-500',
-  at_risk: 'text-amber-500',
-  stable: 'text-green-500',
-  mastered: 'text-sky-500',
+  critical: 'text-dusty-rose-500',
+  at_risk: 'text-muted-amber-500',
+  stable: 'text-sage-500',
+  mastered: 'text-steel-blue-400',
 };
 
 // =============================================================================
@@ -109,7 +109,7 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         transition={{ delay: 0.2 }}
         className={cn(
           'text-5xl font-black',
-          isPositive ? 'text-green-500' : isNeutral ? 'text-slate-400' : 'text-amber-500'
+          isPositive ? 'text-sage-500' : isNeutral ? 'text-slate-400' : 'text-muted-amber-500'
         )}
       >
         {isPositive ? '+' : ''}
@@ -150,10 +150,10 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 text-center"
+        className="bg-steel-blue-50 dark:bg-steel-blue-900/30 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stabilized}</div>
-        <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">Cards Stabilized</div>
+        <div className="text-3xl font-bold text-steel-blue-600 dark:text-steel-blue-400">{stabilized}</div>
+        <div className="text-xs text-steel-blue-700 dark:text-steel-blue-300 mt-1">Cards Stabilized</div>
         <div className="text-lg mt-1">⬆️</div>
       </motion.div>
 
@@ -161,12 +161,12 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="bg-purple-50 dark:bg-purple-900/30 rounded-xl p-4 text-center"
+        className="bg-deep-plum-50 dark:bg-deep-plum-900/30 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-3xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
           -{decayPrevented.toFixed(1)}%
         </div>
-        <div className="text-xs text-purple-700 dark:text-purple-300 mt-1">Decay Prevented</div>
+        <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300 mt-1">Decay Prevented</div>
         <div className="text-lg mt-1">🛡️</div>
       </motion.div>
 
@@ -174,12 +174,12 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="bg-emerald-50 dark:bg-emerald-900/30 rounded-xl p-4 text-center"
+        className="bg-sage-50 dark:bg-sage-900/30 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+        <div className="text-3xl font-bold text-sage-600 dark:text-sage-400">
           +{bufferDays}
         </div>
-        <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">Days Buffer</div>
+        <div className="text-xs text-sage-700 dark:text-sage-300 mt-1">Days Buffer</div>
         <div className="text-lg mt-1">📅</div>
       </motion.div>
     </div>
@@ -222,7 +222,7 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
               <span
                 className={cn(
                   'font-bold tabular-nums',
-                  sys.accuracyDelta > 0 ? 'text-green-500' : 'text-red-500'
+                  sys.accuracyDelta > 0 ? 'text-sage-500' : 'text-dusty-rose-500'
                 )}
               >
                 ({sys.accuracyDelta > 0 ? '+' : ''}
@@ -252,7 +252,7 @@ function TrajectoryUpdate({
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8 }}
-      className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800/50 dark:to-blue-900/30 rounded-xl p-4"
+      className="bg-gradient-to-r from-slate-50 to-steel-blue-50 dark:from-slate-800/50 dark:to-steel-blue-900/30 rounded-xl p-4"
     >
       <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-2">
         📈 Trajectory Update
@@ -260,17 +260,17 @@ function TrajectoryUpdate({
       <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
         <div>
           <span className="text-slate-500">Before:</span>{' '}
-          <span className="text-red-500">Score projected to drop to {before} in 7 days</span>
+          <span className="text-dusty-rose-500">Score projected to drop to {before} in 7 days</span>
         </div>
         <div>
           <span className="text-slate-500">After:</span>{' '}
-          <span className={improved ? 'text-green-500' : 'text-amber-500'}>
+          <span className={improved ? 'text-sage-500' : 'text-muted-amber-500'}>
             Score projected to drop to {after} in 7 days
           </span>
         </div>
       </div>
       {bufferDays > 0 && (
-        <div className="mt-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+        <div className="mt-3 text-sm font-medium text-sage-600 dark:text-sage-400">
           ✅ You just bought yourself {bufferDays} extra day{bufferDays !== 1 ? 's' : ''} of buffer!
         </div>
       )}
@@ -288,7 +288,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
       transition={{ delay: 0.9, type: 'spring', stiffness: 200 }}
       className="text-center"
     >
-      <div className="inline-flex items-center gap-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-full">
+      <div className="inline-flex items-center gap-2 bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-700 dark:text-muted-amber-300 px-4 py-2 rounded-full">
         <span className="text-xl">🔥</span>
         <span className="font-bold">{streak}-Day Study Streak!</span>
       </div>
@@ -314,7 +314,7 @@ function AchievementBadge({ achievement }: { achievement: string }) {
       transition={{ delay: 1.0, type: 'spring' }}
       className="text-center"
     >
-      <div className="inline-flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-4 py-2 rounded-full">
+      <div className="inline-flex items-center gap-2 bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-700 dark:text-muted-amber-300 px-4 py-2 rounded-full">
         <span className="text-xl">🏆</span>
         <span className="font-bold">{achievement}</span>
       </div>
@@ -348,7 +348,7 @@ export function SessionPostMortem({
       )}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white text-center">
+      <div className="bg-gradient-to-r from-steel-blue-500 to-deep-plum-600 p-6 text-white text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -386,10 +386,10 @@ export function SessionPostMortem({
             className={cn(
               'h-full rounded-full',
               data.accuracy >= 80
-                ? 'bg-green-500'
+                ? 'bg-sage-500'
                 : data.accuracy >= 60
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
+                  ? 'bg-muted-amber-500'
+                  : 'bg-dusty-rose-500'
             )}
           />
         </motion.div>
@@ -436,7 +436,7 @@ export function SessionPostMortem({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.2 }}
           onClick={onContinue}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+          className="flex-1 bg-steel-blue-600 hover:bg-steel-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
         >
           Continue Streak
         </motion.button>

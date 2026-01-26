@@ -150,13 +150,13 @@ const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         <div>
           <CardHeader
             icon={Trophy}
-            iconColor="text-amber-500"
+            iconColor="text-muted-amber"
             title="Grand Rounds"
             subtitle="Same questions for everyone. Compare your score!"
             badge={{
               text: `Daily Challenge • ${dateStr}`,
               color:
-                'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                'bg-muted-amber/10 text-muted-amber border border-muted-amber/20',
             }}
           />
         </div>
@@ -182,12 +182,12 @@ const CoreAdaptiveHero: React.FC<{
         <div className="flex-1">
           <CardHeader
             icon={Brain}
-            iconColor="text-blue-400"
+            iconColor="text-action-blue"
             title="Core PANCE Simulation"
             subtitle="AI-powered adaptive questions that target your knowledge gaps"
             badge={{
               text: `${examLabel} Prep`,
-              color: 'bg-blue-500/10 text-blue-400 border border-blue-400/20',
+              color: 'bg-action-blue/10 text-action-blue border border-action-blue/20',
             }}
           />
 
@@ -197,13 +197,13 @@ const CoreAdaptiveHero: React.FC<{
                 icon: Target,
                 label: 'accuracy',
                 value: `${accuracy}%`,
-                color: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-400',
+                color: 'bg-sage-500/10 border-sage-400/20 text-sage-400',
               },
               {
                 icon: CheckCircle,
                 label: 'today',
                 value: questionsToday,
-                color: 'bg-blue-500/10 border-blue-400/20 text-blue-400',
+                color: 'bg-action-blue/10 border-action-blue/20 text-action-blue',
               },
             ]}
           />
@@ -233,12 +233,12 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         <div className="flex-1">
           <CardHeader
             icon={MessageSquare}
-            iconColor="text-teal-500"
+            iconColor="text-steel-blue-500"
             title="Virtual OSCE"
             subtitle="Full interactive patient encounters with AI-powered evaluation and real-time feedback"
             badge={{
               text: 'Interactive',
-              color: 'text-teal-400',
+              color: 'text-steel-blue-400',
             }}
           />
           <div className="flex items-center gap-4 mt-3">
@@ -277,15 +277,15 @@ const QuickStatsBar: React.FC<{
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       {[
-        { label: 'Day Streak', value: streak, icon: Flame, color: 'text-orange-500' },
+        { label: 'Day Streak', value: streak, icon: Flame, color: 'text-muted-amber' },
         {
           label: 'Due for Review',
           value: dueCount,
           icon: AlertCircle,
-          color: dueCount > 0 ? 'text-amber-500' : 'text-slate-400',
+          color: dueCount > 0 ? 'text-muted-amber' : 'text-[var(--color-text-muted)]',
         },
-        { label: 'Accuracy', value: `${accuracy}%`, icon: Target, color: 'text-emerald-500' },
-        { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-blue-500' },
+        { label: 'Accuracy', value: `${accuracy}%`, icon: Target, color: 'text-sage-500' },
+        { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
       ].map((stat, i) => (
         <motion.div
           key={stat.label}
@@ -560,22 +560,22 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               ? onNavigateToSimulation()
               : onStartSession({ focus: 'review', difficulty: 'same' })
           }
-          className="w-full mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl flex items-center justify-between group"
+          className="w-full mb-6 p-4 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 rounded-xl flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40">
-              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <div className="p-2 rounded-lg bg-data-provisional/20 dark:bg-data-provisional/10">
+              <AlertCircle className="w-5 h-5 text-muted-amber" />
             </div>
             <div className="text-left">
-              <div className="font-semibold text-amber-900 dark:text-amber-100">
+              <div className="font-semibold text-[var(--color-text-primary)]">
                 {stats.dueCount} questions due for review
               </div>
-              <div className="text-sm text-amber-700 dark:text-amber-400">
+              <div className="text-sm text-muted-amber">
                 Strengthen retention with spaced repetition
               </div>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform" />
+          <ChevronRight className="w-5 h-5 text-muted-amber group-hover:translate-x-1 transition-transform" />
         </motion.button>
       )}
 
@@ -587,12 +587,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 p-5 mb-6"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-deep-plum-500/10 to-deep-plum-400/10 border border-deep-plum-500/30 p-5 mb-6"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-indigo-500/20">
-                <GraduationCap className="w-6 h-6 text-indigo-500" />
+              <div className="p-3 rounded-xl bg-deep-plum-500/20">
+                <GraduationCap className="w-6 h-6 text-deep-plum-500" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
@@ -608,7 +608,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onNavigateToDrillMode('panre_la')}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-white font-medium rounded-lg transition-colors"
             >
               Start Practice
               <ChevronRight className="w-4 h-4" />
@@ -629,7 +629,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-blue-600 text-white dark:bg-blue-500 dark:text-white shadow-lg'
+                ? 'bg-action-blue text-white shadow-lg'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
             }`}
           >
@@ -738,8 +738,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
-                      <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    <div className="p-3 rounded-xl bg-steel-blue-100 dark:bg-steel-blue-900/30">
+                      <BookOpen className="w-6 h-6 text-steel-blue-600 dark:text-steel-blue-400" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-[var(--color-text-primary)]">
@@ -749,16 +749,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300">
                           300+ Anatomy
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300">
                           200+ Labs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-deep-plum-100 dark:bg-deep-plum-900/40 text-deep-plum-700 dark:text-deep-plum-300">
                           1000+ Drugs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-700 dark:text-dusty-rose-300">
                           50+ ECG
                         </span>
                       </div>
@@ -782,7 +782,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             {/* Research-Backed User-Friendly Stats */}
             <section>
               <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-500" />
+                <BarChart3 className="w-5 h-5 text-action-blue" />
                 Your Learning Analytics
               </h3>
               <UserFriendlyStatsDisplay />
@@ -799,7 +799,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                     showAdvancedAnalytics
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-action-blue text-white'
                       : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
                   }`}
                 >
@@ -896,7 +896,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             {growthAreas.length > 0 && (
               <section>
                 <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-amber-500" />
+                  <AlertCircle className="w-5 h-5 text-muted-amber" />
                   Priority Focus Areas
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -906,7 +906,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       onClick={() =>
                         onStartSession({ focus: 'topic', difficulty: 'same', topic: area })
                       }
-                      className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                      className="px-4 py-2 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 text-muted-amber rounded-lg hover:bg-data-provisional/20 dark:hover:bg-data-provisional/10 transition-colors"
                     >
                       {area}
                     </button>

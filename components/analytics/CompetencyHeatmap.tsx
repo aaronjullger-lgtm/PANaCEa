@@ -410,27 +410,27 @@ const SAMPLE_DATA: SystemMetrics[] = [
 // ============================================================================
 
 const getAccuracyColor = (accuracy: number): string => {
-  if (accuracy >= 80) return 'bg-emerald-500';
-  if (accuracy >= 70) return 'bg-blue-500';
-  if (accuracy >= 60) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (accuracy >= 80) return 'bg-sage-500';
+  if (accuracy >= 70) return 'bg-steel-blue-500';
+  if (accuracy >= 60) return 'bg-muted-amber-500';
+  return 'bg-dusty-rose-500';
 };
 
 const getAccuracyColorText = (accuracy: number): string => {
-  if (accuracy >= 80) return 'text-emerald-600 dark:text-emerald-400';
-  if (accuracy >= 70) return 'text-blue-600 dark:text-blue-400';
-  if (accuracy >= 60) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
+  if (accuracy >= 80) return 'text-sage-600 dark:text-sage-400';
+  if (accuracy >= 70) return 'text-steel-blue-600 dark:text-steel-blue-400';
+  if (accuracy >= 60) return 'text-muted-amber-600 dark:text-muted-amber-400';
+  return 'text-dusty-rose-600 dark:text-dusty-rose-400';
 };
 
 const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
   switch (level) {
     case 'expert':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      return 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-400';
     case 'proficient':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      return 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-400';
     case 'developing':
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      return 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-400';
     case 'novice':
       return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
   }
@@ -439,11 +439,11 @@ const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
 const getSrsStatusIcon = (status: ConditionMetrics['srsStatus']) => {
   switch (status) {
     case 'mastered':
-      return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      return <CheckCircle className="w-4 h-4 text-sage-500" />;
     case 'learning':
-      return <BookOpen className="w-4 h-4 text-blue-500" />;
+      return <BookOpen className="w-4 h-4 text-steel-blue-500" />;
     case 'due':
-      return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+      return <AlertTriangle className="w-4 h-4 text-muted-amber-500" />;
   }
 };
 
@@ -559,9 +559,9 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
             <span
               className={`text-xs font-medium flex items-center gap-0.5 ${
                 trend === 'up'
-                  ? 'text-emerald-600'
+                  ? 'text-sage-600'
                   : trend === 'down'
-                    ? 'text-red-600'
+                    ? 'text-dusty-rose-600'
                     : 'text-slate-500'
               }`}
             >
@@ -651,7 +651,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
         onClick={onPractice}
         className={`ml-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
           condition.srsStatus === 'due'
-            ? 'bg-amber-500 hover:bg-amber-600 text-white'
+            ? 'bg-muted-amber-500 hover:bg-muted-amber-600 text-white'
             : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300'
         }`}
       >
@@ -740,13 +740,13 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
           </div>
           <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
             <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Strong Areas</div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="text-2xl font-bold text-sage-600 dark:text-sage-400">
               {summaryStats.strongAreas}
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
             <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Needs Work</div>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <div className="text-2xl font-bold text-muted-amber-600 dark:text-muted-amber-400">
               {summaryStats.weakAreas}
             </div>
           </div>
@@ -816,7 +816,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
                 <p>No category breakdown available for this system yet.</p>
                 <button
                   onClick={() => handlePractice('system', selectedSystem.code)}
-                  className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="mt-4 px-6 py-2 bg-steel-blue-500 hover:bg-steel-blue-600 text-white rounded-lg transition-colors"
                 >
                   Practice {selectedSystem.name}
                 </button>

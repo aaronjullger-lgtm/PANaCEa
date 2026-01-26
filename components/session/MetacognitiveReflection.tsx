@@ -135,13 +135,13 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
         className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl">
+        <div className="bg-gradient-to-r from-deep-plum-600 to-deep-plum-500 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Brain className="w-8 h-8 text-white" />
               <div>
                 <h2 className="text-xl font-bold text-white">Session Reflection</h2>
-                <p className="text-indigo-200 text-sm">
+                <p className="text-deep-plum-200 text-sm">
                   Take a moment to reflect on your performance
                 </p>
               </div>
@@ -182,7 +182,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
 
                   return (
                     <>
-                      <div className="flex items-center gap-3 text-indigo-400">
+                      <div className="flex items-center gap-3 text-deep-plum-400">
                         <Icon className="w-6 h-6" />
                         <h3 className="text-lg font-semibold">{prompt.title}</h3>
                       </div>
@@ -202,7 +202,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                             max="5"
                             value={confidenceRating}
                             onChange={(e) => setConfidenceRating(parseInt(e.target.value))}
-                            className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                            className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-deep-plum-500"
                           />
                           <div className="flex justify-between text-xs text-slate-500">
                             {['1', '2', '3', '4', '5'].map((num) => (
@@ -210,7 +210,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                                 key={num}
                                 className={
                                   confidenceRating === parseInt(num)
-                                    ? 'text-indigo-400 font-bold'
+                                    ? 'text-deep-plum-400 font-bold'
                                     : ''
                                 }
                               >
@@ -222,7 +222,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                           {/* Confidence Comparison */}
                           <div className="mt-6 p-4 bg-slate-700/50 rounded-lg">
                             <p className="text-slate-300 text-sm">
-                              <span className="font-semibold text-indigo-400">
+                              <span className="font-semibold text-deep-plum-400">
                                 Calibration Check:
                               </span>{' '}
                               You were{' '}
@@ -233,17 +233,17 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                                   : 'moderately'}{' '}
                               confident and scored {score}%.
                               {Math.abs(confidenceRating * 20 - score) <= 20 ? (
-                                <span className="text-green-400">
+                                <span className="text-sage-400">
                                   {' '}
                                   Your confidence was well-calibrated! ✓
                                 </span>
                               ) : confidenceRating * 20 > score ? (
-                                <span className="text-amber-400">
+                                <span className="text-muted-amber-400">
                                   {' '}
                                   Consider being more cautious in your self-assessment.
                                 </span>
                               ) : (
-                                <span className="text-blue-400">
+                                <span className="text-steel-blue-400">
                                   {' '}
                                   You may be underestimating your abilities!
                                 </span>
@@ -263,7 +263,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                             }
                             placeholder={prompt.placeholder}
                             className="w-full h-32 bg-slate-700 text-white rounded-xl p-4 resize-none
-                              border-2 border-transparent focus:border-indigo-500 focus:outline-none
+                              border-2 border-transparent focus:border-deep-plum-500 focus:outline-none
                               placeholder:text-slate-500"
                           />
                           <p className="text-slate-500 text-sm">💡 {prompt.hint}</p>
@@ -280,7 +280,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-4"
               >
-                <div className="flex items-center gap-3 text-indigo-400">
+                <div className="flex items-center gap-3 text-deep-plum-400">
                   <CheckCircle className="w-6 h-6" />
                   <h3 className="text-lg font-semibold">Topics to Review</h3>
                 </div>
@@ -297,7 +297,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                         onClick={() => handleTopicToggle(topic)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                           topicsToReview.includes(topic)
-                            ? 'bg-indigo-500 text-white'
+                            ? 'bg-deep-plum-500 text-white'
                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                         }`}
                       >
@@ -322,12 +322,12 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             Skip reflection
           </button>
 
-          <button
+            <button
             onClick={handleNext}
             disabled={!canProceed()}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
               canProceed()
-                ? 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                ? 'bg-deep-plum-500 hover:bg-deep-plum-600 text-white'
                 : 'bg-slate-700 text-slate-500 cursor-not-allowed'
             }`}
           >

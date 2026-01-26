@@ -210,14 +210,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className="space-y-6">
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-950/20 dark:to-deep-plum-950/20 border border-steel-blue-200 dark:border-steel-blue-800">
           <div className="flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <Sparkles className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+              <h4 className="font-semibold text-steel-blue-900 dark:text-steel-blue-100 mb-1">
                 PANCE Readiness Overview
               </h4>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+              <p className="text-sm text-steel-blue-700 dark:text-steel-blue-300">
                 Track your progress across all organ systems. Focus on your weakest areas for
                 maximum improvement.
               </p>
@@ -256,7 +256,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-blue-500/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-steel-blue-500/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
@@ -265,7 +265,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {readinessScore}%
                 </div>
-                <TrendingUp className="w-5 h-5 text-emerald-500" />
+                <TrendingUp className="w-5 h-5 text-sage-500" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
                 Based on accuracy (
@@ -276,7 +276,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-emerald-500/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-sage-500/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
@@ -285,14 +285,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {trendData.at(-1)?.accuracy ?? 0}%
                 </div>
-                <Activity className="w-5 h-5 text-blue-500" />
+                <Activity className="w-5 h-5 text-steel-blue-500" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
                 Last {trendData.length} session{trendData.length !== 1 ? 's' : ''}
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-amber-500/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-muted-amber/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -317,12 +317,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Weakest Subject Areas - Student Priority */}
           {weakestAreas.length > 0 && (
-            <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-800">
+            <div className="p-5 rounded-xl bg-muted-amber-50 dark:bg-muted-amber-950/20 border-2 border-muted-amber-200 dark:border-muted-amber-800">
               <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
-                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <div className="p-2 rounded-lg bg-muted-amber-500/10">
+                  <AlertCircle className="w-5 h-5 text-muted-amber-600 dark:text-muted-amber-400" />
                 </div>
-                <h3 className="font-bold text-amber-900 dark:text-amber-100">
+                <h3 className="font-bold text-muted-amber-900 dark:text-muted-amber-100">
                   Focus Areas - Highest Impact
                 </h3>
               </div>
@@ -330,13 +330,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 {weakestAreas.map((area) => (
                   <div
                     key={area.system}
-                    className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800"
+                    className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-muted-amber-200 dark:border-muted-amber-800"
                   >
                     <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
                       {area.system}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                      <span className="text-2xl font-bold text-muted-amber-600 dark:text-muted-amber-400">
                         {area.accuracy}%
                       </span>
                       <span className="text-xs text-[var(--color-text-muted)]">
@@ -373,8 +373,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <Radar
                       name="Accuracy"
                       dataKey="accuracy"
-                      stroke="#6366f1"
-                      fill="#6366f1"
+                      stroke="var(--color-steel-blue-500)"
+                      fill="var(--color-steel-blue-500)"
                       fillOpacity={0.35}
                     />
                   </RadarChart>
@@ -413,7 +413,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       yAxisId="left"
                       type="monotone"
                       dataKey="accuracy"
-                      stroke="#10b981"
+                      stroke="var(--color-sage-500)"
                       strokeWidth={2}
                       dot={false}
                       name="Accuracy (%)"
@@ -422,7 +422,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       yAxisId="right"
                       type="monotone"
                       dataKey="pace"
-                      stroke="#6366f1"
+                      stroke="var(--color-steel-blue-500)"
                       strokeWidth={2}
                       dot={false}
                       name="Pace (s)"
@@ -441,13 +441,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3 h-3 border-2 border-deep-plum-500 border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
                 </div>
               )}
             </div>
             {stabilityError ? (
-              <p className="text-sm text-amber-600 dark:text-amber-400">
+              <p className="text-sm text-muted-amber-600 dark:text-muted-amber-400">
                 Error loading stability data: {stabilityError}
               </p>
             ) : stabilityLoading ? (
@@ -493,15 +493,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <Line
                       type="monotone"
                       dataKey="avgStability"
-                      stroke="#8b5cf6"
+                      stroke="var(--color-deep-plum-500)"
                       strokeWidth={3}
-                      dot={{ fill: '#8b5cf6', r: 4 }}
+                      dot={{ fill: 'var(--color-deep-plum-500)', r: 4 }}
                       name="avgStability"
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <p className="text-xs text-purple-900 dark:text-purple-100">
+                <div className="mt-3 p-3 bg-deep-plum-50 dark:bg-deep-plum-950/20 rounded-lg border border-deep-plum-200 dark:border-deep-plum-800">
+                  <p className="text-xs text-deep-plum-900 dark:text-deep-plum-100">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
@@ -569,11 +569,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       ];
                     }}
                   />
-                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds">
+                  <Bar dataKey="seconds" fill="var(--color-muted-amber)" radius={[6, 6, 0, 0]} name="Avg seconds">
                     {timeData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill="#f59e0b"
+                        fill="var(--color-muted-amber)"
                         fillOpacity={entry.count >= MIN_SYSTEM_REVIEWS ? 1 : 0.3}
                       />
                     ))}

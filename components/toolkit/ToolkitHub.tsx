@@ -236,15 +236,15 @@ function useCalculatorPreferences(): CalculatorPreferences {
 const getCategoryColor = (category: Calculator['category']): string => {
   switch (category) {
     case 'risk':
-      return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
+      return 'text-muted-amber-600 bg-muted-amber-50 dark:bg-muted-amber-900/20';
     case 'diagnosis':
-      return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+      return 'text-steel-blue-600 bg-steel-blue-50 dark:bg-steel-blue-900/20';
     case 'dosing':
-      return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20';
+      return 'text-deep-plum-600 bg-deep-plum-50 dark:bg-deep-plum-900/20';
     case 'lab':
-      return 'text-teal-600 bg-teal-50 dark:bg-teal-900/20';
+      return 'text-sage-600 bg-sage-50 dark:bg-sage-900/20';
     case 'guidelines':
-      return 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20';
+      return 'text-deep-plum-600 bg-deep-plum-50 dark:bg-deep-plum-900/20';
   }
 };
 
@@ -840,7 +840,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <Beaker className="w-8 h-8 text-emerald-600" />
+                      <Beaker className="w-8 h-8 text-sage-600" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Lab Normal Values
                       </h3>
@@ -881,7 +881,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
 
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <Dna className="w-8 h-8 text-blue-600" />
+                      <Dna className="w-8 h-8 text-steel-blue-600" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Anatomy & Physiology
                       </h3>

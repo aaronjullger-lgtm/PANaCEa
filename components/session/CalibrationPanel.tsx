@@ -52,13 +52,13 @@ function CalibrationIcon({ state }: { state: string }) {
 
   switch (state) {
     case 'well_calibrated':
-      return <CheckCircle className={`${iconClass} text-green-500`} />;
+      return <CheckCircle className={`${iconClass} text-sage-500`} />;
     case 'overconfident':
-      return <TrendingUp className={`${iconClass} text-amber-500`} />;
+      return <TrendingUp className={`${iconClass} text-muted-amber-500`} />;
     case 'underconfident':
-      return <TrendingDown className={`${iconClass} text-blue-500`} />;
+      return <TrendingDown className={`${iconClass} text-steel-blue-500`} />;
     case 'fluctuating':
-      return <AlertTriangle className={`${iconClass} text-amber-500`} />;
+      return <AlertTriangle className={`${iconClass} text-muted-amber-500`} />;
     default:
       return <HelpCircle className={`${iconClass} text-slate-400`} />;
   }
@@ -76,31 +76,31 @@ function getStateColors(state: string): {
   switch (state) {
     case 'well_calibrated':
       return {
-        bg: 'bg-green-50 dark:bg-green-900/20',
-        border: 'border-green-200 dark:border-green-800',
-        text: 'text-green-700 dark:text-green-300',
-        badge: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
+        bg: 'bg-sage-50 dark:bg-sage-900/20',
+        border: 'border-sage-200 dark:border-sage-800',
+        text: 'text-sage-700 dark:text-sage-300',
+        badge: 'bg-sage-100 text-sage-800 dark:bg-sage-800 dark:text-sage-200',
       };
     case 'overconfident':
       return {
-        bg: 'bg-amber-50 dark:bg-amber-900/20',
-        border: 'border-amber-200 dark:border-amber-800',
-        text: 'text-amber-700 dark:text-amber-300',
-        badge: 'bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-200',
+        bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
+        border: 'border-muted-amber-200 dark:border-muted-amber-800',
+        text: 'text-muted-amber-700 dark:text-muted-amber-300',
+        badge: 'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
       };
     case 'underconfident':
       return {
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        border: 'border-blue-200 dark:border-blue-800',
-        text: 'text-blue-700 dark:text-blue-300',
-        badge: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+        bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
+        border: 'border-steel-blue-200 dark:border-steel-blue-800',
+        text: 'text-steel-blue-700 dark:text-steel-blue-300',
+        badge: 'bg-steel-blue-100 text-steel-blue-800 dark:bg-steel-blue-800 dark:text-steel-blue-200',
       };
     case 'fluctuating':
       return {
-        bg: 'bg-amber-50 dark:bg-amber-900/20',
-        border: 'border-amber-200 dark:border-amber-800',
-        text: 'text-amber-700 dark:text-amber-300',
-        badge: 'bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-200',
+        bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
+        border: 'border-muted-amber-200 dark:border-muted-amber-800',
+        text: 'text-muted-amber-700 dark:text-muted-amber-300',
+        badge: 'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
       };
     default:
       return {
@@ -143,10 +143,10 @@ function BrierScoreGauge({ score }: { score: number }) {
             fill="none"
             className={
               quality >= 60
-                ? 'stroke-green-500'
+                ? 'stroke-sage-500'
                 : quality >= 40
-                  ? 'stroke-amber-500'
-                  : 'stroke-red-500'
+                  ? 'stroke-muted-amber-500'
+                  : 'stroke-dusty-rose-500'
             }
             strokeWidth="3"
             strokeLinecap="round"
@@ -201,10 +201,10 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
                     <div
                       className={`w-2 rounded-t transition-all ${
                         calibrationError > 0.1
-                          ? 'bg-amber-500'
+                          ? 'bg-muted-amber-500'
                           : calibrationError < -0.1
-                            ? 'bg-blue-500'
-                            : 'bg-green-500'
+                            ? 'bg-steel-blue-500'
+                            : 'bg-sage-500'
                       }`}
                       style={{ height: `${height}%` }}
                       title={`Actual: ${Math.round(bin.actualAccuracy * 100)}%`}
@@ -224,7 +224,7 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
           Expected
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-green-500 rounded" />
+          <div className="w-2 h-2 bg-sage-500 rounded" />
           Actual
         </span>
       </div>
@@ -253,7 +253,7 @@ function InsufficientDataState({
       </p>
       <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
         <motion.div
-          className="bg-indigo-500 h-2 rounded-full"
+          className="bg-deep-plum-500 h-2 rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${progress.percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -357,14 +357,14 @@ export function CalibrationPanel({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+              className="flex items-start gap-2 p-3 rounded-lg bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border border-dusty-rose-200 dark:border-dusty-rose-800"
             >
-              <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-dusty-rose-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                <p className="text-sm font-medium text-dusty-rose-700 dark:text-dusty-rose-300">
                   Illusion of Competence Detected
                 </p>
-                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                <p className="text-xs text-dusty-rose-600 dark:text-dusty-rose-400 mt-0.5">
                   Fast responses are often incorrect. Consider slowing down to engage more deeply.
                 </p>
               </div>
@@ -384,11 +384,11 @@ export function CalibrationPanel({
           <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
             <div className="flex items-center gap-1">
               {summary.overconfidenceBias > 0 ? (
-                <TrendingUp className="w-4 h-4 text-amber-500" />
+                <TrendingUp className="w-4 h-4 text-muted-amber-500" />
               ) : summary.overconfidenceBias < 0 ? (
-                <TrendingDown className="w-4 h-4 text-blue-500" />
+                <TrendingDown className="w-4 h-4 text-steel-blue-500" />
               ) : (
-                <Target className="w-4 h-4 text-green-500" />
+                <Target className="w-4 h-4 text-sage-500" />
               )}
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
                 {summary.overconfidenceBias > 0 ? '+' : ''}
@@ -421,9 +421,9 @@ export function CalibrationPanel({
         )}
 
         {/* Recommendation */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
-          <Info className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-indigo-700 dark:text-indigo-300">{summary.recommendation}</p>
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-deep-plum-50 dark:bg-deep-plum-900/20 border border-deep-plum-200 dark:border-deep-plum-800">
+          <Info className="w-4 h-4 text-deep-plum-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-deep-plum-700 dark:text-deep-plum-300">{summary.recommendation}</p>
         </div>
 
         {/* Explainer */}

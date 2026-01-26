@@ -61,15 +61,15 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
     const baseClasses = 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-105';
     
     if (!selectedAnswer) {
-      return `${baseClasses} border-slate-300 hover:border-blue-500 hover:bg-blue-50`;
+      return `${baseClasses} border-slate-300 hover:border-steel-blue-500 hover:bg-steel-blue-50`;
     }
 
     if (option === question.correctAnswer) {
-      return `${baseClasses} border-green-500 bg-green-50`;
+      return `${baseClasses} border-sage-500 bg-sage-50`;
     }
 
     if (option === selectedAnswer && !isCorrect) {
-      return `${baseClasses} border-red-500 bg-red-50`;
+      return `${baseClasses} border-dusty-rose-500 bg-dusty-rose-50`;
     }
 
     return `${baseClasses} border-slate-200 opacity-50`;
@@ -80,7 +80,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Camera className="w-5 h-5 text-blue-600" />
+          <Camera className="w-5 h-5 text-steel-blue-600" />
           <span className="text-sm font-medium text-slate-600">
             {question.modality === 'dermatology' ? 'Dermatology' : 'Radiology'} Drill
           </span>
@@ -115,7 +115,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
         {/* Loading Indicator */}
         {!imageLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-steel-blue-500 border-t-transparent" />
           </div>
         )}
 
@@ -127,7 +127,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className={`absolute inset-0 flex items-center justify-center ${
-                isCorrect ? 'bg-green-500' : 'bg-red-500'
+                isCorrect ? 'bg-sage-500' : 'bg-dusty-rose-500'
               } bg-opacity-90`}
             >
               {isCorrect ? (
@@ -161,14 +161,14 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
               {selectedAnswer === option && (
                 <>
                   {isCorrect ? (
-                    <Check className="w-5 h-5 text-green-600" />
+                    <Check className="w-5 h-5 text-sage-600" />
                   ) : (
-                    <X className="w-5 h-5 text-red-600" />
+                    <X className="w-5 h-5 text-dusty-rose-600" />
                   )}
                 </>
               )}
               {selectedAnswer && option === question.correctAnswer && selectedAnswer !== option && (
-                <Check className="w-5 h-5 text-green-600" />
+                <Check className="w-5 h-5 text-sage-600" />
               )}
             </div>
           </motion.button>

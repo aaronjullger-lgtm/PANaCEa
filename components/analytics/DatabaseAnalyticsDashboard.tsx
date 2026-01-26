@@ -45,9 +45,9 @@ function TrendIcon({
 }) {
   switch (trend) {
     case 'improving':
-      return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+      return <TrendingUp className="w-4 h-4 text-sage-500" />;
     case 'declining':
-      return <TrendingDown className="w-4 h-4 text-red-500" />;
+      return <TrendingDown className="w-4 h-4 text-data-fail" />;
     default:
       return <Minus className="w-4 h-4 text-slate-400" />;
   }
@@ -59,9 +59,9 @@ function getTrendColor(
 ): string {
   switch (trend) {
     case 'improving':
-      return 'text-emerald-500';
+      return 'text-sage-500';
     case 'declining':
-      return 'text-red-500';
+      return 'text-data-fail';
     default:
       return 'text-slate-400';
   }
@@ -120,10 +120,10 @@ function SystemRow({
     ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
   const accuracyColor =
     stats.accuracy >= 80
-      ? 'text-emerald-500'
+      ? 'text-sage-500'
       : stats.accuracy >= 60
-        ? 'text-amber-500'
-        : 'text-red-500';
+        ? 'text-muted-amber'
+        : 'text-data-fail';
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0">
@@ -159,15 +159,15 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
   if (error && !stats) {
     return (
-      <div className="p-6 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
-        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+      <div className="p-6 rounded-xl border border-dusty-rose-200 bg-dusty-rose-50 dark:bg-dusty-rose-900/20 dark:border-dusty-rose-800">
+        <div className="flex items-center gap-2 text-dusty-rose-600 dark:text-dusty-rose-400">
           <AlertCircle className="w-5 h-5" />
           <span className="font-medium">Unable to load analytics</span>
         </div>
-        <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p className="mt-2 text-sm text-data-fail">{error}</p>
         <button
           onClick={() => refetch()}
-          className="mt-3 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+          className="mt-3 px-4 py-2 rounded-lg bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-600 dark:text-dusty-rose-400 text-sm font-medium hover:bg-dusty-rose-200 dark:hover:bg-dusty-rose-900/60 transition-colors"
         >
           Try Again
         </button>
@@ -326,8 +326,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Recommendations */}
           {stats.recommendations.length > 0 && (
-            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm mb-3">
+            <div className="p-4 rounded-xl border border-steel-blue-200 bg-steel-blue-50 dark:bg-steel-blue-900/20 dark:border-steel-blue-800">
+              <div className="flex items-center gap-2 text-steel-blue-600 dark:text-steel-blue-400 text-sm mb-3">
                 <Target className="w-4 h-4" />
                 Study Recommendations
               </div>
@@ -337,7 +337,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                     key={index}
                     className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
                   >
-                    <span className="text-blue-500">•</span>
+                    <span className="text-steel-blue-500">•</span>
                     {rec}
                   </li>
                 ))}
@@ -367,8 +367,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Weak Areas */}
           {stats.weakAreas.length > 0 && (
-            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm mb-3">
+            <div className="p-4 rounded-xl border border-muted-amber/30 bg-data-provisional/10 dark:bg-data-provisional/5 dark:border-muted-amber/20">
+              <div className="flex items-center gap-2 text-muted-amber text-sm mb-3">
                 <AlertCircle className="w-4 h-4" />
                 Focus Areas (Need Improvement)
               </div>
@@ -381,7 +381,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                       ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-red-500 font-bold">{area.accuracy}%</span>
+                      <span className="text-data-fail font-bold">{area.accuracy}%</span>
                       <span className="text-xs text-[var(--color-text-muted)]">
                         ({area.attempts} attempts)
                       </span>
@@ -394,8 +394,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Strong Areas */}
           {stats.strongAreas.length > 0 && (
-            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800">
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm mb-3">
+            <div className="p-4 rounded-xl border border-sage-200 bg-sage-50 dark:bg-sage-900/20 dark:border-sage-800">
+              <div className="flex items-center gap-2 text-sage-600 dark:text-sage-400 text-sm mb-3">
                 <Award className="w-4 h-4" />
                 Strong Areas
               </div>
@@ -408,7 +408,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                       ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-500 font-bold">{area.accuracy}%</span>
+                      <span className="text-sage-500 font-bold">{area.accuracy}%</span>
                       <span className="text-xs text-[var(--color-text-muted)]">
                         ({area.attempts} attempts)
                       </span>

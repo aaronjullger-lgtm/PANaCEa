@@ -231,13 +231,13 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       {/* Result Header */}
       <div
         className={`px-5 py-3 border-b border-[var(--color-border)] ${
-          isCorrect ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
+          isCorrect ? 'bg-sage-50 dark:bg-sage-900/20' : 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20'
         }`}
       >
         <div className="flex items-center justify-between">
           <span
             className={`font-bold text-lg flex items-center gap-2 ${
-              isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+              isCorrect ? 'text-sage-700 dark:text-sage-400' : 'text-dusty-rose-700 dark:text-dusty-rose-400'
             }`}
           >
             {isCorrect ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
@@ -257,9 +257,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {adaptiveHint && (
           <motion.div
             variants={itemVariants}
-            className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+            className="bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg p-3"
           >
-            <p className="text-sm text-blue-800 dark:text-blue-300">{adaptiveHint}</p>
+            <p className="text-sm text-steel-blue-800 dark:text-steel-blue-300">{adaptiveHint}</p>
           </motion.div>
         )}
         {/* Core Rationale Section */}
@@ -284,10 +284,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Buzzwords / Key Clues Section */}
         <motion.section variants={itemVariants}>
           <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <Lightbulb className="w-4 h-4 text-muted-amber-500" />
             Buzzwords / Key Clues
           </h3>
-          <p className="text-[var(--color-text-secondary)] bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+          <p className="text-[var(--color-text-secondary)] bg-muted-amber-50 dark:bg-muted-amber-900/20 px-3 py-2 rounded-lg border border-muted-amber-200 dark:border-muted-amber-800">
             {renderFormattedText(buzzwords)}
           </p>
         </motion.section>
@@ -295,14 +295,14 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Memory Hook / Mnemonic Section */}
         <motion.section variants={itemVariants}>
           <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-purple-500" />
+            <GraduationCap className="w-4 h-4 text-deep-plum-500" />
             Memory Hook / Mnemonic
           </h3>
           <p
             className={`px-3 py-2 rounded-lg border ${
               mnemonic === '[Mnemonic not available]'
                 ? 'text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-                : 'text-[var(--color-text-secondary)] bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                : 'text-[var(--color-text-secondary)] bg-deep-plum-50 dark:bg-deep-plum-900/20 border-deep-plum-200 dark:border-deep-plum-800'
             }`}
           >
             {mnemonic}
@@ -321,7 +321,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   key={index}
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
-                  <span className="text-blue-500 mt-1.5 flex-shrink-0 font-bold">›</span>
+                  <span className="text-steel-blue-500 mt-1.5 flex-shrink-0 font-bold">›</span>
                   <span>{renderFormattedText(diff)}</span>
                 </li>
               ))}
@@ -365,21 +365,21 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                         key={index}
                         className={`px-3 py-2 rounded-lg border ${
                           isUserChoice
-                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            ? 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-200 dark:border-dusty-rose-800'
                             : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
                         }`}
                       >
                         <span
                           className={`font-medium ${
                             isUserChoice
-                              ? 'text-red-700 dark:text-red-400'
+                              ? 'text-dusty-rose-700 dark:text-dusty-rose-400'
                               : 'text-[var(--color-text-secondary)]'
                           }`}
                         >
                           {index + 1}. {option}
                         </span>
                         {isUserChoice && (
-                          <span className="ml-2 text-xs text-red-600 dark:text-red-400">
+                          <span className="ml-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400">
                             (Your answer)
                           </span>
                         )}
@@ -388,11 +388,11 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   })}
 
                   {/* Highlight correct answer */}
-                  <div className="px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                    <span className="font-medium text-green-700 dark:text-green-400">
+                  <div className="px-3 py-2 rounded-lg bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800">
+                    <span className="font-medium text-sage-700 dark:text-sage-400">
                       {correctAnswerIndex + 1}. {correctAnswer}
                     </span>
-                    <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                    <span className="ml-2 text-xs text-sage-600 dark:text-sage-400">
                       (Correct answer)
                     </span>
                   </div>
@@ -447,10 +447,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               disabled={userReaction !== null}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 userReaction === 'helpful'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700'
+                  ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 border border-sage-300 dark:border-sage-700'
                   : userReaction !== null
                     ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                    : 'bg-[var(--color-bg-secondary)] hover:bg-green-50 dark:hover:bg-green-900/20 text-[var(--color-text-secondary)] hover:text-green-700 dark:hover:text-green-400 border border-[var(--color-border)]'
+                    : 'bg-[var(--color-bg-secondary)] hover:bg-sage-50 dark:hover:bg-sage-900/20 text-[var(--color-text-secondary)] hover:text-sage-700 dark:hover:text-sage-400 border border-[var(--color-border)]'
               }`}
             >
               <ThumbsUp className="w-4 h-4" />
@@ -462,10 +462,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               disabled={userReaction !== null}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 userReaction === 'not_helpful'
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-700'
+                  ? 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30 text-dusty-rose-700 dark:text-dusty-rose-400 border border-dusty-rose-300 dark:border-dusty-rose-700'
                   : userReaction !== null
                     ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                    : 'bg-[var(--color-bg-secondary)] hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--color-text-secondary)] hover:text-red-700 dark:hover:text-red-400 border border-[var(--color-border)]'
+                    : 'bg-[var(--color-bg-secondary)] hover:bg-dusty-rose-50 dark:hover:bg-dusty-rose-900/20 text-[var(--color-text-secondary)] hover:text-dusty-rose-700 dark:hover:text-dusty-rose-400 border border-[var(--color-border)]'
               }`}
             >
               <ThumbsDown className="w-4 h-4" />

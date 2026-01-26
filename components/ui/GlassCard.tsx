@@ -28,29 +28,29 @@ interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
 
 const variantStyles: Record<CardVariant, { bg: string; border: string; glow: string }> = {
   primary: {
-    bg: 'bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-purple-500/10',
-    border: 'border-blue-500/20 hover:border-blue-500/40',
-    glow: 'bg-blue-500/10',
+    bg: 'bg-gradient-to-br from-action-blue/10 via-deep-plum-400/5 to-deep-plum-300/10',
+    border: 'border-action-blue/20 hover:border-action-blue/40',
+    glow: 'bg-action-blue/10',
   },
   success: {
-    bg: 'bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-teal-500/10',
-    border: 'border-emerald-500/20 hover:border-emerald-500/40',
-    glow: 'bg-emerald-500/10',
+    bg: 'bg-gradient-to-br from-sage-500/10 via-sage-400/5 to-sage-600/10',
+    border: 'border-sage-500/20 hover:border-sage-500/40',
+    glow: 'bg-sage-500/10',
   },
   warning: {
-    bg: 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10',
-    border: 'border-amber-500/20 hover:border-amber-500/40',
-    glow: 'bg-amber-500/10',
+    bg: 'bg-gradient-to-br from-muted-amber/10 via-muted-amber/5 to-muted-amber/10',
+    border: 'border-muted-amber/20 hover:border-muted-amber/40',
+    glow: 'bg-muted-amber/10',
   },
   info: {
-    bg: 'bg-gradient-to-br from-cyan-500/10 via-teal-500/5 to-blue-500/10',
-    border: 'border-cyan-500/20 hover:border-cyan-500/40',
-    glow: 'bg-cyan-500/10',
+    bg: 'bg-gradient-to-br from-steel-blue-400/10 via-steel-blue-500/5 to-action-blue/10',
+    border: 'border-steel-blue-400/20 hover:border-steel-blue-400/40',
+    glow: 'bg-steel-blue-400/10',
   },
   neutral: {
     bg: 'bg-[var(--color-bg-secondary)]',
     border: 'border-[var(--color-border)] hover:border-[var(--color-accent)]',
-    glow: 'bg-slate-500/5',
+    glow: 'bg-[var(--color-border)]/50',
   },
 };
 
@@ -107,7 +107,7 @@ interface CardHeaderProps {
 
 export const CardHeader: React.FC<CardHeaderProps> = ({
   icon: Icon,
-  iconColor = 'text-blue-500',
+  iconColor = 'text-action-blue',
   title,
   subtitle,
   badge,
@@ -124,7 +124,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
           <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
           {badge && (
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-action-blue/10 text-action-blue border border-action-blue/20'}`}
             >
               {badge.text}
             </span>
@@ -156,7 +156,7 @@ export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
       {stats.map((stat, index) => (
         <div
           key={index}
-          className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-blue-500/10 border-blue-400/20'}`}
+          className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-action-blue/10 border-action-blue/20'}`}
         >
           <stat.icon className="w-4 h-4" />
           <span className="text-sm font-medium">

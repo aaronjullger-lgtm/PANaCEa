@@ -280,7 +280,7 @@ export default function LongitudinalProgressDashboard({
     <div className={`rounded-lg p-6 ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}>
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp
-          className={`w-6 h-6 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`}
+          className={`w-6 h-6 ${theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'}`}
         />
         <h3 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
           Longitudinal Progress
@@ -289,14 +289,14 @@ export default function LongitudinalProgressDashboard({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-blue-50' : 'bg-blue-900/20'}`}>
+        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-steel-blue-50' : 'bg-steel-blue-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">
             <Target
-              className={`w-4 h-4 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`}
+              className={`w-4 h-4 ${theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'}`}
             />
             <span
               className={`text-xs font-medium ${
-                theme === 'light' ? 'text-blue-900' : 'text-blue-100'
+                theme === 'light' ? 'text-steel-blue-900' : 'text-steel-blue-100'
               }`}
             >
               Current Mastery
@@ -304,27 +304,27 @@ export default function LongitudinalProgressDashboard({
           </div>
           <p
             className={`text-2xl font-bold ${
-              theme === 'light' ? 'text-blue-600' : 'text-blue-400'
+              theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'
             }`}
           >
             {currentMastery}
           </p>
         </div>
 
-        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-green-50' : 'bg-green-900/20'}`}>
+        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-sage-50' : 'bg-sage-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className={`w-4 h-4 ${
                 improvement >= 0
                   ? theme === 'light'
-                    ? 'text-green-600'
-                    : 'text-green-400'
-                  : 'text-red-500'
+                    ? 'text-sage-600'
+                    : 'text-sage-400'
+                  : 'text-dusty-rose-500'
               }`}
             />
             <span
               className={`text-xs font-medium ${
-                theme === 'light' ? 'text-green-900' : 'text-green-100'
+                theme === 'light' ? 'text-sage-900' : 'text-sage-100'
               }`}
             >
               Improvement
@@ -334,9 +334,9 @@ export default function LongitudinalProgressDashboard({
             className={`text-2xl font-bold ${
               improvement >= 0
                 ? theme === 'light'
-                  ? 'text-green-600'
-                  : 'text-green-400'
-                : 'text-red-500'
+                  ? 'text-sage-600'
+                  : 'text-sage-400'
+                : 'text-dusty-rose-500'
             }`}
           >
             {improvement >= 0 ? '+' : ''}
@@ -345,15 +345,15 @@ export default function LongitudinalProgressDashboard({
         </div>
 
         <div
-          className={`rounded-lg p-4 ${theme === 'light' ? 'bg-purple-50' : 'bg-purple-900/20'}`}
+          className={`rounded-lg p-4 ${theme === 'light' ? 'bg-deep-plum-50' : 'bg-deep-plum-900/20'}`}
         >
           <div className="flex items-center gap-2 mb-2">
             <Award
-              className={`w-4 h-4 ${theme === 'light' ? 'text-purple-600' : 'text-purple-400'}`}
+              className={`w-4 h-4 ${theme === 'light' ? 'text-deep-plum-600' : 'text-deep-plum-400'}`}
             />
             <span
               className={`text-xs font-medium ${
-                theme === 'light' ? 'text-purple-900' : 'text-purple-100'
+                theme === 'light' ? 'text-deep-plum-900' : 'text-deep-plum-100'
               }`}
             >
               Total Questions
@@ -361,7 +361,7 @@ export default function LongitudinalProgressDashboard({
           </div>
           <p
             className={`text-2xl font-bold ${
-              theme === 'light' ? 'text-purple-600' : 'text-purple-400'
+              theme === 'light' ? 'text-deep-plum-600' : 'text-deep-plum-400'
             }`}
           >
             {totalQuestions}
@@ -408,7 +408,7 @@ export default function LongitudinalProgressDashboard({
                   initial={{ width: 0 }}
                   animate={{ width: `${(phase.masteryScore / maxScore) * 100}%` }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-end pr-2"
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-steel-blue-500 to-deep-plum-500 rounded-full flex items-center justify-end pr-2"
                 >
                   <span className="text-xs font-bold text-white">{phase.masteryScore}</span>
                 </motion.div>
@@ -422,14 +422,14 @@ export default function LongitudinalProgressDashboard({
       <div
         className={`p-4 rounded-lg ${
           theme === 'light'
-            ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
-            : 'bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800'
+            ? 'bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 border border-steel-blue-200'
+            : 'bg-gradient-to-r from-steel-blue-900/20 to-deep-plum-900/20 border border-steel-blue-800'
         }`}
       >
         <div className="flex items-start gap-2">
           <Info
             className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-              theme === 'light' ? 'text-blue-600' : 'text-blue-400'
+              theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'
             }`}
           />
           <div>

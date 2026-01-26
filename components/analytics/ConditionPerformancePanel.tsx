@@ -23,15 +23,15 @@ interface ConditionPerformancePanelProps {
 }
 
 const getAccuracyColor = (accuracy: number) => {
-  if (accuracy >= 80) return 'text-green-600 dark:text-green-400';
-  if (accuracy >= 60) return 'text-yellow-600 dark:text-yellow-400';
-  return 'text-red-600 dark:text-red-400';
+  if (accuracy >= 80) return 'text-sage-600 dark:text-sage-400';
+  if (accuracy >= 60) return 'text-muted-amber-600 dark:text-muted-amber-400';
+  return 'text-dusty-rose-600 dark:text-dusty-rose-400';
 };
 
 const getAccuracyBg = (accuracy: number) => {
-  if (accuracy >= 80) return 'bg-green-100 dark:bg-green-900/30';
-  if (accuracy >= 60) return 'bg-yellow-100 dark:bg-yellow-900/30';
-  return 'bg-red-100 dark:bg-red-900/30';
+  if (accuracy >= 80) return 'bg-sage-100 dark:bg-sage-900/30';
+  if (accuracy >= 60) return 'bg-muted-amber-100 dark:bg-muted-amber-900/30';
+  return 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30';
 };
 
 // Format condition ID into display name
@@ -69,12 +69,12 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
     <div className="space-y-6">
       {/* Weak Conditions Alert */}
       {weakConditions.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+        <div className="bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border border-dusty-rose-200 dark:border-dusty-rose-800 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-dusty-rose-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-red-800 dark:text-red-300">Focus Areas Identified</h4>
-              <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+              <h4 className="font-medium text-dusty-rose-800 dark:text-dusty-rose-300">Focus Areas Identified</h4>
+              <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-400 mt-1">
                 These conditions need extra attention (accuracy below 60%):
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
@@ -82,7 +82,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
                   <button
                     key={c.conditionId}
                     onClick={() => onSelectCondition?.(c.conditionId)}
-                    className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs font-medium bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-800 dark:text-dusty-rose-300 rounded-lg hover:bg-dusty-rose-200 dark:hover:bg-dusty-rose-900/60 transition-colors flex items-center gap-1"
                   >
                     {formatConditionName(c.conditionId)}
                     <span className="opacity-75">({c.accuracy}%)</span>
@@ -98,9 +98,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Lowest Accuracy */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-slate-200 dark:border-slate-700">
+          <div className="px-4 py-3 bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-b border-slate-200 dark:border-slate-700">
             <h4 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-red-500" />
+              <TrendingDown className="w-4 h-4 text-dusty-rose-500" />
               Needs Improvement
             </h4>
           </div>
@@ -137,9 +137,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
 
         {/* Highest Accuracy */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="px-4 py-3 bg-green-50 dark:bg-green-900/20 border-b border-slate-200 dark:border-slate-700">
+          <div className="px-4 py-3 bg-sage-50 dark:bg-sage-900/20 border-b border-slate-200 dark:border-slate-700">
             <h4 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <TrendingUp className="w-4 h-4 text-sage-500" />
               Strong Performance
             </h4>
           </div>
@@ -179,7 +179,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
         <div className="flex items-center justify-between mb-4">
           <h4 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
-            <Target className="w-4 h-4 text-blue-500" />
+            <Target className="w-4 h-4 text-steel-blue-500" />
             All Conditions ({conditionStats.length})
           </h4>
         </div>

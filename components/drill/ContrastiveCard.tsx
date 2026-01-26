@@ -60,7 +60,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssign
         flex items-center gap-2 p-3 rounded-lg border-2 bg-white cursor-move
         transition-all duration-200
         ${isDragging ? 'opacity-50 rotate-2' : ''}
-        ${isAssigned ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400'}
+        ${isAssigned ? 'border-steel-blue-500 bg-steel-blue-50' : 'border-slate-300 hover:border-steel-blue-400'}
       `}
     >
       <GripVertical className="w-4 h-4 text-slate-400" />
@@ -172,7 +172,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
     if (!isSubmitted) return '';
 
     const isCorrect = assigned === feature.belongsTo;
-    return isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50';
+    return isCorrect ? 'border-sage-500 bg-sage-50' : 'border-dusty-rose-500 bg-dusty-rose-50';
   };
 
   return (
@@ -188,8 +188,8 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
       </div>
 
       {/* Presenting Symptom */}
-      <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 mb-6 text-center">
-        <span className="text-sm font-medium text-blue-800">Presenting Symptom:</span>
+      <div className="bg-steel-blue-50 border-2 border-steel-blue-300 rounded-xl p-4 mb-6 text-center">
+        <span className="text-sm font-medium text-steel-blue-800">Presenting Symptom:</span>
         <p className="text-lg font-semibold text-slate-800 mt-1">{question.symptom}</p>
       </div>
 
@@ -229,7 +229,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           {/* Condition 1 Drop Zone */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-4 h-4 rounded-full bg-purple-500" />
+              <div className="w-4 h-4 rounded-full bg-deep-plum-500" />
               <h3 className="text-lg font-semibold text-slate-700">
                 {question.conditions[0]?.name}
               </h3>
@@ -240,7 +240,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[200px] p-4 rounded-xl border-2 border-purple-300 bg-purple-50 space-y-2"
+                className="min-h-[200px] p-4 rounded-xl border-2 border-deep-plum-300 bg-deep-plum-50 space-y-2"
                 data-zone="condition1"
               >
                 {condition1Features.map((feature) => (
@@ -265,7 +265,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           {/* Condition 2 Drop Zone */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-4 h-4 rounded-full bg-orange-500" />
+              <div className="w-4 h-4 rounded-full bg-muted-amber-500" />
               <h3 className="text-lg font-semibold text-slate-700">
                 {question.conditions[1]?.name}
               </h3>
@@ -276,7 +276,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[200px] p-4 rounded-xl border-2 border-orange-300 bg-orange-50 space-y-2"
+                className="min-h-[200px] p-4 rounded-xl border-2 border-muted-amber-300 bg-muted-amber-50 space-y-2"
                 data-zone="condition2"
               >
                 {condition2Features.map((feature) => (
@@ -296,7 +296,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
 
         <DragOverlay>
           {activeId ? (
-            <div className="p-3 rounded-lg border-2 border-blue-500 bg-white shadow-xl">
+            <div className="p-3 rounded-lg border-2 border-steel-blue-500 bg-white shadow-xl">
               <span className="text-sm font-medium">
                 {[...unassignedFeatures, ...condition1Features, ...condition2Features].find(
                   (f) => f.id === activeId
@@ -317,7 +317,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
             transition-all duration-300 transform
             ${
               canSubmit
-                ? 'bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95'
+                ? 'bg-steel-blue-600 hover:bg-steel-blue-700 hover:scale-105 active:scale-95'
                 : 'bg-slate-300 cursor-not-allowed'
             }
           `}
@@ -334,7 +334,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               exit={{ opacity: 0 }}
               className={`
                 flex items-center gap-3 px-6 py-3 rounded-xl text-white font-semibold
-                ${result.correct === result.total ? 'bg-green-600' : 'bg-orange-600'}
+                ${result.correct === result.total ? 'bg-sage-600' : 'bg-muted-amber-600'}
               `}
             >
               {result.correct === result.total ? (
