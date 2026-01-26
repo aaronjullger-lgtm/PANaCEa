@@ -107,27 +107,70 @@ const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
 };
 
 /**
- * Get a weighted random system based on PANCE blueprint distribution
+ * Select questions from a pool following PANCE distribution percentages
+ * Takes a shuffled pool and picks questions to match PANCE blueprint ratios
  */
-function getWeightedRandomSystem(availableSystems: string[]): string {
-  // Filter to only available systems
-  const systemsWithWeight = availableSystems
-    .map(s => ({ system: s, weight: PANCE_SYSTEM_PERCENTAGES[s] || 1 }))
-    .filter(s => s.weight > 0);
+function selectByPanceDistribution<T extends { system: string | null }>(
+  pool: T[],
+  count: number
+): T[] {
+  if (pool.length === 0) return [];
+  if (pool.length <= count) return pool;
   
-  if (systemsWithWeight.length === 0) {
-    return availableSystems[Math.floor(Math.random() * availableSystems.length)];
+  // Group questions by system
+  const bySystem: Record<string, T[]> = {};
+  for (const q of pool) {
+    const sys = q.system || 'General';
+    bySystem[sys] ??= [];
+    bySystem[sys].push(q);
   }
   
-  const totalWeight = systemsWithWeight.reduce((sum, s) => sum + s.weight, 0);
-  let random = Math.random() * totalWeight;
+  // Calculate target counts based on PANCE percentages
+  const totalPercent = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
+  const targets: { system: string; target: number; available: number }[] = [];
   
-  for (const { system, weight } of systemsWithWeight) {
-    random -= weight;
-    if (random <= 0) return system;
+  for (const [sys, questions] of Object.entries(bySystem)) {
+    const pancePercent = PANCE_SYSTEM_PERCENTAGES[sys] || 3; // Default 3% for unknown
+    const target = Math.round((pancePercent / totalPercent) * count);
+    targets.push({ system: sys, target, available: questions.length });
   }
   
-  return systemsWithWeight[0].system;
+  // Sort by PANCE weight (highest first) for priority selection
+  targets.sort((a, b) => {
+    const weightA = PANCE_SYSTEM_PERCENTAGES[a.system] || 0;
+    const weightB = PANCE_SYSTEM_PERCENTAGES[b.system] || 0;
+    return weightB - weightA;
+  });
+  
+  // Select questions, respecting targets but filling with what's available
+  const selected: T[] = [];
+  const systemIndices: Record<string, number> = {};
+  
+  // First pass: try to meet targets
+  for (const { system, target, available } of targets) {
+    systemIndices[system] = 0;
+    const toTake = Math.min(target, available, count - selected.length);
+    for (let i = 0; i < toTake; i++) {
+      selected.push(bySystem[system][systemIndices[system]++]);
+    }
+  }
+  
+  // Second pass: if we need more, cycle through systems by PANCE weight
+  while (selected.length < count) {
+    let added = false;
+    for (const { system } of targets) {
+      if (selected.length >= count) break;
+      const idx = systemIndices[system];
+      if (idx < bySystem[system].length) {
+        selected.push(bySystem[system][systemIndices[system]++]);
+        added = true;
+      }
+    }
+    if (!added) break; // No more questions available
+  }
+  
+  // Final shuffle to interleave systems (avoid all CV, then all PULM, etc.)
+  return fisherYatesShuffle(selected);
 }
 
 /**
@@ -394,125 +437,42 @@ async function getFromPreGeneratedPool(
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
 
-  // If a specific system is requested, use the old direct fetch approach
-  if (system) {
-    if (cachedQuestions && cachedQuestions.length > 0) {
-      preGenQuestions = cachedQuestions;
-      remaining = cachedQuestions.length;
-    } else {
-      const where: Record<string, unknown> = { system };
-      if (difficulty) where.difficulty = difficulty;
-      if (category) where.questionType = category;
+  // Fetch more questions than needed for PANCE-weighted selection
+  const fetchMultiplier = system ? 5 : 20; // Fetch 20x when no system filter for better distribution
+  const fetchCount = count * fetchMultiplier;
 
-      const fetchCount = count * 5;
-      const dbResults = await prisma.preGeneratedQuestion.findMany({
-        where,
-        take: fetchCount,
-        orderBy: { generatedAt: 'asc' },
-      });
-      preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
-      remaining = await prisma.preGeneratedQuestion.count({ where });
-    }
+  if (cachedQuestions && cachedQuestions.length > 0) {
+    preGenQuestions = cachedQuestions;
+    remaining = cachedQuestions.length;
   } else {
-    // PANCE-weighted distribution: fetch questions from multiple systems proportionally
-    // First, get counts per system to know what's available
-    const systemCounts = await prisma.preGeneratedQuestion.groupBy({
-      by: ['system'],
-      _count: { id: true },
-      where: difficulty ? { difficulty } : {},
+    const where: Record<string, unknown> = {};
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+    if (category) where.questionType = category;
+
+    const dbResults = await prisma.preGeneratedQuestion.findMany({
+      where,
+      take: fetchCount,
+      orderBy: { generatedAt: 'asc' },
     });
-    
-    const availableSystems = systemCounts
-      .filter((s: { system: string | null }) => s.system !== null)
-      .map((s: { system: string | null; _count: { id: number } }) => ({
-        system: s.system as string,
-        count: s._count.id,
-      }));
-    
-    // Calculate how many questions to fetch from each system based on PANCE weights
-    const systemTargets: Record<string, number> = {};
-    const totalPanceWeight = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
-    
-    for (const { system: sys, count: available } of availableSystems) {
-      const panceWeight = PANCE_SYSTEM_PERCENTAGES[sys] || 2; // Default 2% for unknown systems
-      const targetRatio = panceWeight / totalPanceWeight;
-      // Target count based on PANCE distribution, but cap at available
-      const targetCount = Math.ceil(count * targetRatio * 3); // Fetch 3x for filtering
-      systemTargets[sys] = Math.min(targetCount, available, count * 2);
-    }
-    
-    // Fetch questions from each system
-    preGenQuestions = [];
-    for (const [sys, targetCount] of Object.entries(systemTargets)) {
-      if (targetCount <= 0) continue;
-      
-      const where: Record<string, unknown> = { system: sys };
-      if (difficulty) where.difficulty = difficulty;
-      if (category) where.questionType = category;
-      
-      // Use random ordering to avoid clustering
-      const dbResults = await prisma.preGeneratedQuestion.findMany({
-        where,
-        take: targetCount,
-        // Use a pseudo-random order by mixing generation time with random offset
-        orderBy: [
-          { generatedAt: Math.random() > 0.5 ? 'asc' : 'desc' },
-        ],
-      });
-      
-      preGenQuestions.push(...dbResults.map(mapToPreGeneratedQuestion));
-    }
-    
-    remaining = systemCounts.reduce(
-      (sum: number, s: { _count: { id: number } }) => sum + s._count.id, 
-      0
-    );
+    preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
+    remaining = await prisma.preGeneratedQuestion.count({ where });
   }
 
   // Filter out seen questions
   const unseenQuestions = preGenQuestions.filter((q) => !seenIds.has(q.id));
   
-  // PANCE-weighted selection: instead of pure shuffle, select questions
-  // using weighted random selection to maintain PANCE distribution
-  const selectedQuestions: PreGeneratedQuestionRecord[] = [];
-  const questionsBySystem: Record<string, PreGeneratedQuestionRecord[]> = {};
+  // Shuffle all questions first
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
   
-  // Group questions by system
-  for (const q of unseenQuestions) {
-    const sys = q.system || 'General';
-    questionsBySystem[sys] ??= [];
-    questionsBySystem[sys].push(q);
-  }
+  let selectedQuestions: PreGeneratedQuestionRecord[];
   
-  // Shuffle each system's questions
-  for (const sys of Object.keys(questionsBySystem)) {
-    questionsBySystem[sys] = fisherYatesShuffle(questionsBySystem[sys]);
-  }
-  
-  // Select questions using PANCE-weighted distribution
-  const availableSystemsList = Object.keys(questionsBySystem);
-  while (selectedQuestions.length < count && availableSystemsList.length > 0) {
-    // Pick a system based on PANCE weights
-    const chosenSystem = getWeightedRandomSystem(availableSystemsList);
-    const systemQuestions = questionsBySystem[chosenSystem];
-    
-    if (systemQuestions && systemQuestions.length > 0) {
-      // Take one question from this system
-      const question = systemQuestions.shift();
-      if (question) {
-        selectedQuestions.push(question);
-      }
-      
-      // Remove system from available list if exhausted
-      if (systemQuestions.length === 0) {
-        const idx = availableSystemsList.indexOf(chosenSystem);
-        if (idx > -1) availableSystemsList.splice(idx, 1);
-      }
-    } else {
-      // Remove empty system
-      const idx = availableSystemsList.indexOf(chosenSystem);
-      if (idx > -1) availableSystemsList.splice(idx, 1);
-    }
+  if (system) {
+    // If specific system requested, just take from shuffled pool
+    selectedQuestions = shuffledQuestions.slice(0, count);
+  } else {
+    // PANCE-weighted selection from the shuffled pool
+    selectedQuestions = selectByPanceDistribution(shuffledQuestions, count);
   }
 
   const questions: PoolQuestionOutput[] = [];
@@ -595,126 +555,42 @@ async function getFromMainTable(
 ): Promise<PoolQuestionOutput[]> {
   const { count, system, category, difficulty } = options;
   
-  let questions: MainQuestionRecord[];
+  // Fetch more questions than needed for PANCE-weighted selection
+  const fetchMultiplier = system ? 5 : 20;
+  const fetchCount = count * fetchMultiplier;
   
-  // If a specific system is requested, fetch only from that system
-  if (system) {
-    const where: Record<string, unknown> = { system };
-    if (difficulty) where.difficulty = difficulty;
-    if (category) where.tags = { array_contains: category };
+  const where: Record<string, unknown> = {};
+  if (system) where.system = system;
+  if (difficulty) where.difficulty = difficulty;
+  if (category) where.tags = { array_contains: category };
 
-    const fetchCount = count * 5;
-    questions = await prisma.question.findMany({
-      where,
-      take: fetchCount,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        vignette: true,
-        question: true,
-        options: true,
-        correctAnswer: true,
-        explanation: true,
-        system: true,
-        difficulty: true,
-        tags: true,
-      },
-    });
-  } else {
-    // PANCE-weighted distribution: fetch from multiple systems proportionally
-    const systemCounts = await prisma.question.groupBy({
-      by: ['system'],
-      _count: { id: true },
-      where: difficulty ? { difficulty } : {},
-    });
-    
-    const availableSystems = systemCounts
-      .filter((s: { system: string | null }) => s.system !== null)
-      .map((s: { system: string | null; _count: { id: number } }) => ({
-        system: s.system as string,
-        count: s._count.id,
-      }));
-    
-    // Calculate how many questions to fetch from each system
-    const systemTargets: Record<string, number> = {};
-    const totalPanceWeight = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
-    
-    for (const { system: sys, count: available } of availableSystems) {
-      const panceWeight = PANCE_SYSTEM_PERCENTAGES[sys] || 2;
-      const targetRatio = panceWeight / totalPanceWeight;
-      const targetCount = Math.ceil(count * targetRatio * 3);
-      systemTargets[sys] = Math.min(targetCount, available, count * 2);
-    }
-    
-    // Fetch questions from each system
-    questions = [];
-    for (const [sys, targetCount] of Object.entries(systemTargets)) {
-      if (targetCount <= 0) continue;
-      
-      const where: Record<string, unknown> = { system: sys };
-      if (difficulty) where.difficulty = difficulty;
-      if (category) where.tags = { array_contains: category };
-      
-      const dbResults = await prisma.question.findMany({
-        where,
-        take: targetCount,
-        orderBy: [
-          { createdAt: Math.random() > 0.5 ? 'asc' : 'desc' },
-        ],
-        select: {
-          id: true,
-          vignette: true,
-          question: true,
-          options: true,
-          correctAnswer: true,
-          explanation: true,
-          system: true,
-          difficulty: true,
-          tags: true,
-        },
-      });
-      
-      questions.push(...dbResults);
-    }
-  }
+  const questions = await prisma.question.findMany({
+    where,
+    take: fetchCount,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      vignette: true,
+      question: true,
+      options: true,
+      correctAnswer: true,
+      explanation: true,
+      system: true,
+      difficulty: true,
+      tags: true,
+    },
+  });
 
   // Filter out seen questions
   const unseenQuestions = questions.filter((q: MainQuestionRecord) => !seenIds.has(q.id));
   
-  // PANCE-weighted selection
-  const questionsBySystem: Record<string, MainQuestionRecord[]> = {};
-  for (const q of unseenQuestions) {
-    const sys = q.system || 'General';
-    questionsBySystem[sys] ??= [];
-    questionsBySystem[sys].push(q);
-  }
+  // Shuffle all questions first
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
   
-  // Shuffle each system's questions
-  for (const sys of Object.keys(questionsBySystem)) {
-    questionsBySystem[sys] = fisherYatesShuffle(questionsBySystem[sys]);
-  }
-  
-  // Select using PANCE-weighted distribution
-  const selectedQuestions: MainQuestionRecord[] = [];
-  const availableSystemsList = Object.keys(questionsBySystem);
-  
-  while (selectedQuestions.length < count && availableSystemsList.length > 0) {
-    const chosenSystem = getWeightedRandomSystem(availableSystemsList);
-    const systemQuestions = questionsBySystem[chosenSystem];
-    
-    if (systemQuestions && systemQuestions.length > 0) {
-      const question = systemQuestions.shift();
-      if (question) selectedQuestions.push(question);
-      
-      if (systemQuestions.length === 0) {
-        const idx = availableSystemsList.indexOf(chosenSystem);
-        if (idx > -1) availableSystemsList.splice(idx, 1);
-      }
-    } else {
-      const idx = availableSystemsList.indexOf(chosenSystem);
-      if (idx > -1) availableSystemsList.splice(idx, 1);
-    }
-  }
+  // Select questions - use PANCE distribution if no specific system
+  const selectedQuestions = system 
+    ? shuffledQuestions.slice(0, count)
+    : selectByPanceDistribution(shuffledQuestions, count);
 
   const result: PoolQuestionOutput[] = [];
   const toRecord: string[] = [];
