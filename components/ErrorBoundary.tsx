@@ -159,9 +159,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: 'spring' }}
-                className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4"
+                className="w-16 h-16 bg-slate-600/20 rounded-full flex items-center justify-center mb-4"
               >
-                <AlertTriangle className="w-8 h-8 text-red-500" />
+                <AlertTriangle className="w-8 h-8 text-slate-500" />
               </motion.div>
 
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">

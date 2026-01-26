@@ -68,11 +68,11 @@ const StatCard: React.FC<StatCardProps> = ({
   color = 'blue',
 }) => {
   const colorClasses = {
-    blue: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    green: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-    amber: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    red: 'bg-red-500/10 text-red-500 border-red-500/20',
-    purple: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+    blue: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
+    green: 'bg-slate-400/10 text-slate-200 border-slate-400/20',
+    amber: 'bg-slate-600/10 text-slate-400 border-slate-600/20',
+    red: 'bg-slate-700/10 text-slate-500 border-slate-700/20',
+    purple: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
   };
 
   return (
@@ -87,9 +87,9 @@ const StatCard: React.FC<StatCardProps> = ({
           <div
             className={`flex items-center gap-1 text-xs font-medium ${
               trend === 'up'
-                ? 'text-emerald-500'
+                ? 'text-slate-300'
                 : trend === 'down'
-                  ? 'text-red-500'
+                  ? 'text-slate-500'
                   : 'text-[var(--color-text-muted)]'
             }`}
           >
@@ -233,10 +233,10 @@ const SystemStrengthBar: React.FC<{
   isStrength: boolean;
 }> = ({ system, mastery, trend, isStrength }) => {
   const getBarColor = (m: number) => {
-    if (m >= 80) return 'bg-emerald-500';
-    if (m >= 60) return 'bg-blue-500';
-    if (m >= 40) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (m >= 80) return 'bg-slate-300';
+    if (m >= 60) return 'bg-slate-400';
+    if (m >= 40) return 'bg-slate-500';
+    return 'bg-slate-600';
   };
 
   return (
@@ -258,9 +258,9 @@ const SystemStrengthBar: React.FC<{
       <div
         className={`w-4 ${
           trend === 'improving'
-            ? 'text-emerald-500'
+            ? 'text-slate-300'
             : trend === 'declining'
-              ? 'text-red-500'
+              ? 'text-slate-500'
               : 'text-[var(--color-text-muted)]'
         }`}
       >
@@ -321,7 +321,7 @@ const RecommendationCard: React.FC<{
           <p className="font-medium text-[var(--color-text-primary)] text-sm">
             {recommendation.recommendation}
           </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+          <p className="text-xs text-slate-300 dark:text-slate-300 mt-1">
             {recommendation.expectedImpact}
           </p>
         </div>
@@ -399,7 +399,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
+        <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
         <span className="ml-2 text-[var(--color-text-muted)]">Analyzing your learning data...</span>
       </div>
     );
@@ -519,7 +519,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Quick Stats Row */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Clock className="w-5 h-5 mx-auto text-blue-500 mb-2" />
+                <Clock className="w-5 h-5 mx-auto text-slate-400 mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.avgTimePerQuestion}s
                 </p>
@@ -527,7 +527,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               </div>
 
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Timer className="w-5 h-5 mx-auto text-amber-500 mb-2" />
+                <Timer className="w-5 h-5 mx-auto text-slate-400 mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.totalStudyHours}h
                 </p>
@@ -535,7 +535,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               </div>
 
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Zap className="w-5 h-5 mx-auto text-purple-500 mb-2" />
+                <Zap className="w-5 h-5 mx-auto text-slate-400 mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.questionsPerHour}
                 </p>
@@ -581,7 +581,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                     </span>
                   </div>
                   <div
-                    className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'} text-sm flex items-center gap-2`}
+                    className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-slate-400/10 text-slate-300 dark:text-slate-300' : 'bg-slate-500/10 text-slate-400 dark:text-slate-400'} text-sm flex items-center gap-2`}
                   >
                     <Lightbulb className="w-4 h-4 flex-shrink-0" />
                     {stats.shouldTrustFirstInstinct
@@ -617,7 +617,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       {stats.fatiguePoint} questions
                     </span>
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm flex items-center gap-2">
+                  <div className="p-3 rounded-lg bg-slate-500/10 text-slate-300 dark:text-slate-300 text-sm flex items-center gap-2">
                     <Coffee className="w-4 h-4" />
                     Take a break every {stats.optimalBreakFrequency} questions
                   </div>
@@ -660,7 +660,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {readiness.priorityAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-slate-600/10 text-slate-500 dark:text-slate-400 rounded-full text-sm font-medium"
                     >
                       {area}
                     </span>
@@ -680,7 +680,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {readiness.strengths.map((strength) => (
                     <span
                       key={strength}
-                      className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-slate-400/10 text-slate-300 dark:text-slate-300 rounded-full text-sm font-medium"
                     >
                       {strength}
                     </span>
@@ -690,10 +690,10 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             )}
 
             {/* Days to Ready */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-5">
+            <div className="bg-gradient-to-r from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-xl p-5">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-500/20 rounded-xl">
-                  <Calendar className="w-6 h-6 text-blue-500" />
+                <div className="p-3 bg-slate-500/20 rounded-xl">
+                  <Calendar className="w-6 h-6 text-slate-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -723,7 +723,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Strengths */}
             {systems.strengths.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-4 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Your Strengths ({systems.strengths.length})
                 </h3>
@@ -744,7 +744,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Weaknesses */}
             {systems.weaknesses.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   Areas to Improve ({systems.weaknesses.length})
                 </h3>
@@ -765,7 +765,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Improving */}
             {systems.improving.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
                   Rapidly Improving ({systems.improving.length})
                 </h3>
@@ -786,7 +786,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Declining */}
             {systems.declining.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-2">
                   <TrendingDown className="w-4 h-4" />
                   Needs Review ({systems.declining.length})
                 </h3>

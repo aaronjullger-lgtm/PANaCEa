@@ -46,25 +46,25 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
     (new Date(data.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
-  // Color coding based on retrievability
+  // Color coding based on retrievability - using slate palette for consistency
   const getRetrievabilityColor = (r: number) => {
-    if (r >= 0.9) return 'text-green-400';
-    if (r >= 0.7) return 'text-yellow-400';
-    if (r >= 0.5) return 'text-orange-400';
-    return 'text-red-400';
+    if (r >= 0.9) return 'text-slate-200';
+    if (r >= 0.7) return 'text-slate-300';
+    if (r >= 0.5) return 'text-slate-400';
+    return 'text-slate-500';
   };
 
-  // Get state badge color
+  // Get state badge color - using slate palette for consistency
   const getStateBadge = () => {
     switch (data.state) {
       case 'new':
-        return { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'New' };
+        return { bg: 'bg-slate-600/20', text: 'text-slate-300', label: 'New' };
       case 'learning':
-        return { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'Learning' };
+        return { bg: 'bg-slate-500/20', text: 'text-slate-300', label: 'Learning' };
       case 'review':
-        return { bg: 'bg-green-500/20', text: 'text-green-400', label: 'Review' };
+        return { bg: 'bg-slate-400/20', text: 'text-slate-200', label: 'Review' };
       case 'relearning':
-        return { bg: 'bg-orange-500/20', text: 'text-orange-400', label: 'Relearning' };
+        return { bg: 'bg-slate-700/30', text: 'text-slate-400', label: 'Relearning' };
     }
   };
 
@@ -156,7 +156,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
       <div className="grid grid-cols-3 divide-x divide-slate-700">
         {/* Stability */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-indigo-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
             <TrendingUp className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Stability</span>
           </div>
@@ -165,7 +165,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
             <span className="text-sm font-normal text-slate-400">d</span>
           </p>
           {stabilityTrend !== 0 && (
-            <p className={`text-xs ${stabilityTrend > 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <p className={`text-xs ${stabilityTrend > 0 ? 'text-slate-300' : 'text-slate-500'}`}>
               {stabilityTrend > 0 ? '+' : ''}
               {stabilityTrend.toFixed(1)}d from last
             </p>
@@ -174,7 +174,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
         {/* Difficulty */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-purple-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
             <Target className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Difficulty</span>
           </div>
@@ -186,10 +186,10 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
             <div
               className={`h-full rounded-full ${
                 data.difficulty <= 3
-                  ? 'bg-green-500'
+                  ? 'bg-slate-400'
                   : data.difficulty <= 6
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                    ? 'bg-slate-500'
+                    : 'bg-slate-600'
               }`}
               style={{ width: `${data.difficulty * 10}%` }}
             />
@@ -198,7 +198,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
         {/* Retrievability */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-cyan-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
             <Brain className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Recall</span>
           </div>
@@ -231,7 +231,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex-1 bg-indigo-500/30 rounded-t transition-all hover:bg-indigo-500/50"
+                  className="flex-1 bg-slate-500/30 rounded-t transition-all hover:bg-slate-400/50"
                   style={{ height: `${Math.max(height, 10)}%` }}
                   title={`${point.date}: ${point.stability.toFixed(1)}d`}
                 />

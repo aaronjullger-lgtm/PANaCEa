@@ -97,10 +97,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => `${v} questions`,
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-blue-200 dark:bg-blue-900/50',
-      'bg-blue-400 dark:bg-blue-700',
-      'bg-blue-600 dark:bg-blue-600',
-      'bg-blue-800 dark:bg-blue-500',
+      'bg-slate-200 dark:bg-slate-700/50',
+      'bg-slate-400 dark:bg-slate-600',
+      'bg-slate-500 dark:bg-slate-500',
+      'bg-slate-600 dark:bg-slate-400',
     ],
   },
   performance: {
@@ -112,10 +112,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => `${v}%`,
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-red-300 dark:bg-red-900/50',
-      'bg-yellow-300 dark:bg-yellow-700',
-      'bg-emerald-400 dark:bg-emerald-600',
-      'bg-emerald-600 dark:bg-emerald-500',
+      'bg-slate-600 dark:bg-slate-700/50',
+      'bg-slate-500 dark:bg-slate-600',
+      'bg-slate-400 dark:bg-slate-500',
+      'bg-slate-300 dark:bg-slate-400',
     ],
   },
   dueForecast: {
@@ -127,10 +127,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => `${v} due`,
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-purple-200 dark:bg-purple-900/50',
-      'bg-purple-400 dark:bg-purple-700',
-      'bg-purple-600 dark:bg-purple-600',
-      'bg-purple-800 dark:bg-purple-500',
+      'bg-slate-200 dark:bg-slate-700/50',
+      'bg-slate-400 dark:bg-slate-600',
+      'bg-slate-500 dark:bg-slate-500',
+      'bg-slate-600 dark:bg-slate-400',
     ],
   },
   streaks: {
@@ -142,10 +142,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => (v > 0 ? `${v} day streak` : 'No streak'),
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-orange-200 dark:bg-orange-900/50',
-      'bg-orange-400 dark:bg-orange-700',
-      'bg-orange-600 dark:bg-orange-600',
-      'bg-orange-700 dark:bg-orange-500',
+      'bg-slate-200 dark:bg-slate-700/50',
+      'bg-slate-400 dark:bg-slate-600',
+      'bg-slate-500 dark:bg-slate-500',
+      'bg-slate-600 dark:bg-slate-400',
     ],
   },
   mastery: {
@@ -172,10 +172,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => `${v}% avg mastery`,
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-cyan-200 dark:bg-cyan-900/50',
-      'bg-cyan-400 dark:bg-cyan-700',
-      'bg-cyan-600 dark:bg-cyan-600',
-      'bg-cyan-700 dark:bg-cyan-500',
+      'bg-slate-200 dark:bg-slate-700/50',
+      'bg-slate-400 dark:bg-slate-600',
+      'bg-slate-500 dark:bg-slate-500',
+      'bg-slate-600 dark:bg-slate-400',
     ],
   },
   studyTime: {
@@ -187,10 +187,10 @@ const VIEW_MODES: Record<
     formatValue: (v) => (v >= 60 ? `${Math.floor(v / 60)}h ${v % 60}m` : `${v}m`),
     colorScale: [
       'bg-slate-100 dark:bg-slate-800',
-      'bg-indigo-200 dark:bg-indigo-900/50',
-      'bg-indigo-400 dark:bg-indigo-700',
-      'bg-indigo-600 dark:bg-indigo-600',
-      'bg-indigo-800 dark:bg-indigo-500',
+      'bg-slate-200 dark:bg-slate-700/50',
+      'bg-slate-400 dark:bg-slate-600',
+      'bg-slate-500 dark:bg-slate-500',
+      'bg-slate-600 dark:bg-slate-400',
     ],
   },
 };
@@ -307,7 +307,7 @@ const DayCell: React.FC<DayCellProps> = ({
 
       {/* Indicator dot for streak view */}
       {viewMode === 'streaks' && data?.streakActive && (
-        <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" />
+        <span className="absolute -top-1 -right-1 w-2 h-2 bg-slate-400 rounded-full" />
       )}
     </motion.button>
   );
@@ -665,7 +665,7 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
           <div className="text-xs text-[var(--color-text-muted)]">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-emerald-500">
+          <div className="text-2xl font-bold text-slate-300">
             {Math.round(
               performanceData.length > 0
                 ? (performanceData.filter((r) => r.isCorrect).length / performanceData.length) * 100
