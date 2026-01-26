@@ -14,17 +14,20 @@
 
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { config } from 'dotenv';
 
 // Load environment variables
 config();
 
 /**
- * Creates a PrismaClient instance with Prisma Accelerate support
- * Required for Prisma 7 since url/directUrl were removed from schema.prisma
+ * Creates a PrismaClient instance with proper configuration for Prisma 7
+ * Uses DIRECT_DATABASE_URL for scripts that need direct database access
  */
 function createPrismaClient() {
-  const databaseUrl = process.env.DATABASE_URL;
+  // Prefer DIRECT_DATABASE_URL for scripts (bypasses connection pooling like PgBouncer)
+  const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 
   if (!databaseUrl) {
     throw new Error(
@@ -35,15 +38,21 @@ function createPrismaClient() {
 
   const isAccelerateUrl = databaseUrl.startsWith('prisma://');
 
-  // Use PrismaClient with proper constructor options for Prisma 7
-  const PrismaClientAny = PrismaClient as any;
-  const client = new PrismaClientAny({
-    // For Accelerate URLs, use accelerateUrl
-    // For direct PostgreSQL URLs, use datasourceUrl
-    ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
-  });
+  // For Prisma 7 with Accelerate: use accelerateUrl in constructor
+  if (isAccelerateUrl) {
+    const client = new PrismaClient({
+      accelerateUrl: databaseUrl,
+    });
+    return client.$extends(withAccelerate());
+  }
 
-  return client.$extends(withAccelerate());
+  // For direct PostgreSQL: use adapter-pg for Node.js scripts
+  // Prisma 7 requires an adapter when schema doesn't have datasource URL
+  const pool = new pg.Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
+  const client = new PrismaClient({ adapter });
+
+  return client;
 }
 
 // Export singleton instance

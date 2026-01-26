@@ -12,14 +12,11 @@
  * Usage: npx tsx scripts/seed-question-pool.ts
  */
 
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
-import dotenv from 'dotenv';
+import { prisma, disconnect } from './_shared/db';
 
-dotenv.config();
-
-const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const SYSTEMS = [
@@ -337,4 +334,4 @@ async function seedPool() {
 // Run the seeding
 seedPool()
   .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .finally(() => disconnect());

@@ -335,8 +335,8 @@ export async function getQuestion(
   };
 
   const system = focus !== 'all' ? systemMap[focus.toLowerCase()] : undefined;
-  // Fixed at PANCE-level (medium) difficulty for standardized practice
-  const poolDifficulty = 'medium';
+  // Fixed at PANCE-level difficulty for standardized practice
+  const poolDifficulty = 'PANCE-level';
 
   let dbQuestion: Question | null = null;
 
@@ -441,8 +441,8 @@ export async function getQuestionBatch(
   };
 
   const system = focus !== 'all' ? systemMap[focus.toLowerCase()] : undefined;
-  // Fixed at PANCE-level (medium) difficulty for standardized practice
-  const poolDifficulty = 'medium';
+  // Fixed at PANCE-level difficulty for standardized practice
+  const poolDifficulty = 'PANCE-level';
 
   try {
     // Get auth token if available

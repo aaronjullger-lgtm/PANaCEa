@@ -30,7 +30,6 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   examLabel = 'PANCE',
 }) => {
   const [selectedFocus, setSelectedFocus] = useState<FocusOption>('all');
-  const [difficulty, setDifficulty] = useState<'same' | 'easier' | 'harder'>('same');
 
   // Calculate real stats from performance data
   const stats = useMemo(() => {
