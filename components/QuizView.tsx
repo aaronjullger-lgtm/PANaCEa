@@ -72,7 +72,6 @@ import {
   optimisticUpdateStats,
   optimisticUpdateSystemStats,
   createOptimisticPerformanceRecord,
-  showOptimisticFeedback,
 } from '../lib/utils/optimisticUI';
 
 // Hooks
@@ -375,7 +374,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- REPLENISH QUEUE (BATCH FETCH - 10 QUESTIONS AT A TIME) ----
   const BATCH_SIZE = 10;
-  const LOW_QUEUE_THRESHOLD = 5;
+  const LOW_QUEUE_THRESHOLD = 7; // Trigger earlier to prevent running out
 
   const replenishQueue = useCallback(async () => {
     // Do NOT show the global loader here – this is background work
@@ -547,8 +546,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       console.warn('Implicit metrics submission failed:', err);
     });
 
-    // Sprint 4: Show optimistic feedback INSTANTLY (no server wait)
-    showOptimisticFeedback(isCorrect);
+    // Note: Removed showOptimisticFeedback() call - user feedback on correctness
+    // is already shown via the answer button color change and rationale panel
 
     // Load pearls from medical content if not already loaded
     if (!currentQuestion.pearls && currentQuestion.conditionId) {
@@ -1048,12 +1047,20 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
-    // In continuous mode, if we're actively generating, show loading screen
-    if (shouldEndlesslyReplenish && isGeneratingQuestion) {
+    // In continuous mode, show loading while waiting for questions
+    // This handles both active generation AND the brief gap before generation starts
+    if (shouldEndlesslyReplenish) {
+      // Trigger replenishment if not already generating
+      if (!isGeneratingQuestion) {
+        void replenishQueue();
+      }
       return (
         <div className="bg-[var(--color-bg-primary)] min-h-screen px-4 sm:px-6 py-10">
           <div className="max-w-5xl mx-auto space-y-4">
             <ClinicalSkeleton />
+            <p className="text-center text-sm text-[var(--color-text-muted)] animate-pulse">
+              Loading next question...
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
               <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
@@ -1065,7 +1072,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       );
     }
 
-    // Otherwise, show session complete (for finite modes or when truly done)
+    // Finite modes (review, reviewFlagged) - show session complete
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
         <h2 className="text-2xl font-bold mb-2">Session Complete</h2>

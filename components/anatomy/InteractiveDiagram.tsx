@@ -90,7 +90,8 @@ export function InteractiveDiagram({
   // State
   const [zoom, setZoom] = useState(initialZoom);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [showLabels, setShowLabels] = useState(initialShowLabels);
+  // In quiz mode, hide labels by default to prevent giving away answers
+  const [showLabels, setShowLabels] = useState(mode === 'quiz' ? false : initialShowLabels);
   const [selectedLabel, setSelectedLabel] = useState<AnatomyLabel | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
   const [activeLayer, setActiveLayer] = useState<string>('all');

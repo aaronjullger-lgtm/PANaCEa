@@ -210,7 +210,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className="space-y-6">
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-900/40 dark:to-deep-plum-900/40 border border-steel-blue-200 dark:border-steel-blue-700">
+        <div className="p-4 rounded-xl bg-surface-card dark:bg-slate-800/60 border border-steel-blue-200 dark:border-steel-blue-700/50">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400 mt-0.5" />
             <div>
