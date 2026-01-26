@@ -288,7 +288,8 @@ export const questionQualityQuerySchema = z.object({
  * Session analytics recording (comprehensive behavioral data)
  */
 export const sessionAnalyticsSchema = z.object({
-  sessionId: z.string().uuid().optional(),
+  // Accept any string format for sessionId (some clients use `session-timestamp-random` format)
+  sessionId: z.string().min(1).optional(),
   startedAt: z.string().datetime(),
   endedAt: z.string().datetime(),
 

@@ -9,14 +9,12 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const QuestionFetchSchema = z.object({
-  body: z.object({
-    userId: z.string(),
-    system: z.string().optional(),
-    conditionId: z.string().optional(),
-    difficulty: z.string().optional(),
-    questionType: z.string().optional(),
-    limit: z.number().optional(),
-  }),
+  userId: z.string(),
+  system: z.string().optional(),
+  conditionId: z.string().optional(),
+  difficulty: z.string().optional(),
+  questionType: z.string().optional(),
+  limit: z.number().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -27,7 +25,7 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = validated.body;
+    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = validated;
 
     // Get seen question IDs
     const historyWhere: { userId: string; questionType?: string } = { userId };

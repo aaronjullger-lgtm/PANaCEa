@@ -27,7 +27,8 @@ const SessionCreateSchema = z.object({
 });
 
 const SessionUpdateSchema = z.object({
-  sessionId: z.string().uuid(),
+  // Accept any string format for sessionId (some clients use `session-timestamp-random` format)
+  sessionId: z.string().min(1),
   action: z.enum(['end', 'update']).optional(),
   questionsAnswered: z.number().int().min(0).optional(),
   correctAnswers: z.number().int().min(0).optional(),

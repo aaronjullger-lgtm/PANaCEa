@@ -18,12 +18,10 @@ import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
 
 const GenerateQuestionSchema = z.object({
-  body: z.object({
-    queryText: z.string().min(1),
-    questionType: z.string().min(1),
-    system: z.string().optional(),
-    difficulty: z.string().optional(),
-  }),
+  queryText: z.string().min(1),
+  questionType: z.string().min(1),
+  system: z.string().optional(),
+  difficulty: z.string().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -34,7 +32,7 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const { queryText, questionType, system, difficulty } = validated.body;
+    const { queryText, questionType, system, difficulty } = validated;
 
     // Validate database configuration
     if (!env.DATABASE_URL) {

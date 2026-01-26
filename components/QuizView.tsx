@@ -43,22 +43,16 @@ import AnswerChoice from './quiz/AnswerChoice';
 import ErrorTagger from './quiz/ErrorTagger';
 import Loader from './Loader';
 import WellnessCheckModal from './wellness/WellnessCheckModal';
-import { SRSFeedbackBadge } from './quiz/SRSFeedbackBadge';
 
-// Sprint 4: Enhanced session components
+// Sprint 4: Enhanced session components (streamlined - removed janky popups)
 import {
   SessionStatsOverlay,
   AnswerFeedback,
   SessionEndSummary,
   useAnswerFeedback,
   QuestionTimer,
-  QuickStatsMiniBar,
-  SessionInsightsPanel,
   MomentumBadge,
   StreakBadge,
-  SmartPauseIndicator,
-  EncouragementToast,
-  CognitiveStateIndicator,
 } from './quiz';
 import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 
@@ -382,21 +376,35 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
 
-  // ---- REPLENISH QUEUE (ALL / GROWTH / TOPIC) ----
+  // ---- REPLENISH QUEUE (BATCH FETCH - 10 QUESTIONS AT A TIME) ----
+  const BATCH_SIZE = 10;
+  const LOW_QUEUE_THRESHOLD = 5;
+
   const replenishQueue = useCallback(async () => {
     // Do NOT show the global loader here – this is background work
     if (!shouldEndlesslyReplenish) return;
+    if (isGeneratingQuestion) return; // Prevent concurrent fetches
 
     setIsGeneratingQuestion(true);
     try {
-      // Use client-safe API wrapper for single question fetch (pool + Gemini fallback)
-      // The mainSessionService is used for batch fetches and analytics
-      const newQuestion = await getQuestionClient(sessionSettings, growthAreas, getToken);
+      // Fetch multiple questions in parallel for better throughput
+      const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
+        getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
+          console.warn('Single question fetch failed:', err);
+          return null;
+        })
+      );
 
-      if (newQuestion) {
-        // keep both queues in sync
-        setParentQueue((prev) => [...prev, newQuestion]);
-        setQueue((prev) => [...prev, newQuestion]);
+      const results = await Promise.all(fetchPromises);
+      const newQuestions = results.filter((q): q is Question => q !== null);
+
+      if (newQuestions.length > 0) {
+        // Keep both queues in sync with batch update
+        setParentQueue((prev) => [...prev, ...newQuestions]);
+        setQueue((prev) => [...prev, ...newQuestions]);
+        console.log(`[QuizView] Replenished ${newQuestions.length} questions`);
+      } else {
+        console.warn('[QuizView] No questions returned from batch fetch');
       }
     } catch (err: unknown) {
       console.error('Failed to replenish queue:', err);
@@ -407,7 +415,15 @@ const QuizView: React.FC<QuizViewProps> = ({
     } finally {
       setIsGeneratingQuestion(false);
     }
-  }, [shouldEndlesslyReplenish, sessionSettings, growthAreas, setParentQueue, setError]);
+  }, [shouldEndlesslyReplenish, sessionSettings, growthAreas, setParentQueue, setError, getToken, isGeneratingQuestion]);
+
+  // Proactive replenishment - trigger when queue drops below threshold
+  useEffect(() => {
+    if (shouldEndlesslyReplenish && queue.length < LOW_QUEUE_THRESHOLD && !isGeneratingQuestion) {
+      console.log(`[QuizView] Queue low (${queue.length}), triggering replenishment`);
+      void replenishQueue();
+    }
+  }, [queue.length, shouldEndlesslyReplenish, isGeneratingQuestion, replenishQueue]);
 
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
@@ -436,7 +452,8 @@ const QuizView: React.FC<QuizViewProps> = ({
 
         setParentQueue(newQueue);
 
-        // Finite sessions: REVIEW / REVIEW FLAGGED - show summary instead of direct end
+        // Finite sessions ONLY: REVIEW / REVIEW FLAGGED - show summary when done
+        // For continuous sessions, NEVER auto-end - the proactive replenishment effect handles it
         if (!shouldEndlesslyReplenish && newQueue.length === 0) {
           handleEndSession();
         }
@@ -444,10 +461,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         return newQueue;
       });
 
-      // Endless sessions: ALL + SAME, ALL + other difficulties, topic, growth
-      if (shouldEndlesslyReplenish) {
-        void replenishQueue();
-      }
+      // Note: Replenishment is handled by the proactive effect when queue < LOW_QUEUE_THRESHOLD
     } catch (error) {
       console.error('Error advancing to next question:', error);
       setError('Failed to load next question. Please try again.');
@@ -1256,16 +1270,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       {/* FEEDBACK / RATIONALE */}
       {isAnswered && (
         <div className="mt-6 animate-fade-in space-y-4">
-          {/* SRS Feedback Badge */}
-          {srsResult && (
-            <div className="flex justify-center mb-4">
-              <SRSFeedbackBadge
-                result={srsResult}
-                isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex}
-              />
-            </div>
-          )}
-
           {topicStats && (
             <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
               <div className="flex justify-between items-center mb-1 text-sm">
@@ -1386,36 +1390,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         </div>
       )}
 
-      {/* Sprint 4: Quick Stats Mini-bar (when full overlay is closed) */}
-      {!showStatsOverlay && performanceData.length > 0 && (
-        <div className="mt-6">
-          <QuickStatsMiniBar
-            performanceData={performanceData}
-            currentQuestionNumber={questionNumber}
-            sessionStartTime={sessionStartTime.current}
-          />
-        </div>
-      )}
-
-      {/* Sprint 4: Session Insights Panel (behavioral analytics) */}
-      {performanceData.length >= 3 && (
-        <div className="mt-4">
-          <SessionInsightsPanel refreshKey={behavioralRefreshKey} />
-        </div>
-      )}
-
-      {/* Sprint 4: Smart Pause Indicator */}
-      {performanceData.length >= 5 && <SmartPauseIndicator refreshKey={behavioralRefreshKey} />}
-
-      {/* Advanced Analytics: Cognitive State Indicator */}
-      {performanceData.length >= 3 && cognitiveState && (
-        <div className="fixed bottom-4 right-4 z-40">
-          <CognitiveStateIndicator cognitiveState={cognitiveState} compact />
-        </div>
-      )}
-
-      {/* Sprint 4: Encouragement Toast */}
-      <EncouragementToast refreshKey={behavioralRefreshKey} />
+      {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
 
       {/* Wellness Check Modal */}
       <WellnessCheckModal

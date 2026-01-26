@@ -142,6 +142,18 @@ const SRS_VERSION = 'v1';
 // ============================================================================
 
 /**
+ * Ensure a value is a Date object (handles string/Date from JSON parsing)
+ * This fixes the "getTime is not a function" error when dates come from localStorage
+ */
+function ensureDate(value: Date | string | null | undefined): Date {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+  // Handle string dates from JSON parsing
+  const parsed = new Date(value);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+/**
  * Load SRS items from localStorage
  */
 function loadSRSItems(): Map<string, SRSItem> {
@@ -275,7 +287,7 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
     if (item.userId !== userId) continue;
 
     const overdueDays = Math.floor(
-      (now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+      (now.getTime() - ensureDate(item.dueDate).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Calculate priority based on overdue days and difficulty
@@ -364,7 +376,7 @@ export function getDueCards(
       results.push(item);
     } else {
       // Standard mode: only return items due for review
-      if (item.dueDate <= now) {
+      if (ensureDate(item.dueDate) <= now) {
         results.push(item);
       }
     }
@@ -376,7 +388,7 @@ export function getDueCards(
     results.sort((a, b) => b.difficulty - a.difficulty);
   } else {
     // Sort by due date (most overdue first)
-    results.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    results.sort((a, b) => ensureDate(a.dueDate).getTime() - ensureDate(b.dueDate).getTime());
   }
 
   return results;
@@ -412,12 +424,12 @@ export async function updateReviewOutcome(
       difficulty: item.fsrsDifficulty || 0,
       state: item.fsrsState || FSRSState.New,
       elapsed_days: item.fsrsLastReview
-        ? (new Date().getTime() - new Date(item.fsrsLastReview).getTime()) / 86400000
+        ? (new Date().getTime() - ensureDate(item.fsrsLastReview).getTime()) / 86400000
         : 0,
       scheduled_days: item.interval,
       reps: item.repetition,
       lapses: 0,
-      last_review: item.fsrsLastReview || new Date(),
+      last_review: ensureDate(item.fsrsLastReview),
     };
 
     const { card: newCard } = userFsrs.next(card, new Date(), rating);
@@ -547,12 +559,12 @@ export async function updateReviewOutcome(
     difficulty: item.fsrsDifficulty ?? 0,
     state: item.fsrsState ?? FSRSState.New,
     elapsed_days:
-      (now.getTime() - (item.fsrsLastReview || item.lastReviewed).getTime()) /
+      (now.getTime() - ensureDate(item.fsrsLastReview || item.lastReviewed).getTime()) /
       (1000 * 60 * 60 * 24),
     scheduled_days: item.interval,
     reps: item.repetition,
     lapses: 0,
-    last_review: item.fsrsLastReview || item.lastReviewed,
+    last_review: ensureDate(item.fsrsLastReview || item.lastReviewed),
   };
 
   const scheduled = userFsrs.next(fsrsCard, now, rating);

@@ -99,22 +99,20 @@ const PoolGetSchema = z.object({
 });
 
 const PoolPostSchema = z.object({
-  body: z.object({
-    question: z.object({
-      id: z.string(),
-      question: z.string(),
-      options: z.array(z.string()),
-      correctAnswer: z.string(),
-      explanation: z.string(),
-      system: z.string().optional(),
-      conditionId: z.string().optional(),
-      medicalContentId: z.string().optional(),
-      difficulty: z.string().optional(),
-      vignette: z.string().optional(),
-      conditionName: z.string().optional(),
-      subcategory: z.string().optional(),
-      tags: z.array(z.string()).optional(),
-    }),
+  question: z.object({
+    id: z.string(),
+    question: z.string(),
+    options: z.array(z.string()),
+    correctAnswer: z.string(),
+    explanation: z.string(),
+    system: z.string().optional(),
+    conditionId: z.string().optional(),
+    medicalContentId: z.string().optional(),
+    difficulty: z.string().optional(),
+    vignette: z.string().optional(),
+    conditionName: z.string().optional(),
+    subcategory: z.string().optional(),
+    tags: z.array(z.string()).optional(),
   }),
 });
 
@@ -264,7 +262,7 @@ export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (contex
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const q = validated.body.question;
+    const q = validated.question;
 
     await prisma.preGeneratedQuestion.create({
       data: {
