@@ -39,6 +39,7 @@ export {
   calculateDistributionDrift,
   resetSessionDistribution,
   recordQuestion,
+  normalizeSystemCode,
   PANCE_SYSTEM_PERCENTAGES,
 } from './panceDistributionService';
 

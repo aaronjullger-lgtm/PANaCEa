@@ -21,6 +21,7 @@ import {
 import {
   getSessionSummary,
   calculateDistributionDrift,
+  normalizeSystemCode,
   PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
@@ -79,16 +80,41 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
     return Math.round((correct / recent.length) * 100);
   }, [performanceData]);
 
-  // Get system bars for distribution chart
+  // Get system bars for distribution chart - calculated directly from performanceData
+  // This ensures single source of truth (no sessionStorage sync issues)
   const systemBars: SystemBar[] = useMemo(() => {
-    if (!summary) return [];
+    // Initialize counts for all PANCE systems
+    const systemCounts: Record<string, number> = {};
+    Object.keys(PANCE_SYSTEM_PERCENTAGES).forEach((s) => (systemCounts[s] = 0));
 
-    return summary.systemBreakdown.map((s) => ({
-      ...s,
-      isOver: s.percent > s.target + 5,
-      isUnder: s.percent < s.target - 5,
-    }));
-  }, [summary]);
+    // Count occurrences per system from performanceData
+    performanceData.forEach((p) => {
+      const normalized = normalizeSystemCode(p.topic);
+      if (normalized && systemCounts[normalized] !== undefined) {
+        systemCounts[normalized]++;
+      }
+    });
+
+    const total = performanceData.length;
+
+    // Build bars with percentage calculations
+    return Object.entries(systemCounts)
+      .map(([system, count]) => {
+        const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+        const target = PANCE_SYSTEM_PERCENTAGES[system] || 0;
+        return {
+          system,
+          name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
+          count,
+          percent,
+          target,
+          isOver: percent > target + 5,
+          isUnder: percent < target - 5 && count > 0,
+        };
+      })
+      .filter((bar) => bar.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }, [performanceData]);
 
   if (!isVisible) return null;
 
