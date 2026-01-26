@@ -116,8 +116,9 @@ export function Sparkline({
   const inRange = referenceRange
     ? lastValue >= referenceRange[0] && lastValue <= referenceRange[1]
     : true;
-  const semanticColorClass = inRange ? 'text-green-500' : 'text-red-500';
-  const effectiveColor = color || (inRange ? '#16a34a' : '#ef4444');
+  // Use design system colors: data-pass (teal) and data-fail (red)
+  const semanticColorClass = inRange ? 'text-data-pass' : 'text-data-fail';
+  const effectiveColor = color || (inRange ? '#14b8a6' : '#ef4444'); // data-pass / data-fail
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>

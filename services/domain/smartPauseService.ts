@@ -252,13 +252,13 @@ export function getQuickEncouragement(): string | null {
 
   // 3 in a row correct
   if (last3Correct === 3) {
-    const messages = ['🔥 On a roll!', '✨ Great focus!', '💪 Keep it up!', '🎯 Locked in!'];
+    const messages = ['On a roll!', 'Great focus!', 'Keep it up!', 'Locked in!'];
     return messages[Math.floor(Math.random() * messages.length)];
   }
 
   // After recovering from a miss
   if (!results[results.length - 2]?.correct && results[results.length - 1]?.correct) {
-    const messages = ['↗️ Back on track!', '👍 Nice recovery!', '💡 Learning in action!'];
+    const messages = ['Back on track!', 'Nice recovery!', 'Learning in action!'];
     return messages[Math.floor(Math.random() * messages.length)];
   }
 

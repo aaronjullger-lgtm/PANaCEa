@@ -882,7 +882,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         </span>
                       </div>
                       <div
-                        className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}
+                        className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-data-pass' : 'text-data-provisional'}`}
                       >
                         {stats.recentTrend >= 0 ? '+' : ''}
                         {stats.recentTrend}%
@@ -1027,10 +1027,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             <div
                               className={`h-full rounded-full ${
                                 sys.accuracy >= 80
-                                  ? 'bg-green-500'
+                                  ? 'bg-data-pass'
                                   : sys.accuracy >= 60
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
+                                    ? 'bg-data-provisional'
+                                    : 'bg-data-fail'
                               }`}
                               style={{ width: `${sys.accuracy}%` }}
                             />
@@ -1126,7 +1126,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         performanceData.length === 0
                           ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
                           : exportStatus === 'csv'
-                            ? 'bg-green-500/20 text-green-500'
+                            ? 'bg-data-pass/20 text-data-pass'
                             : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
                       }`}
                     >
@@ -1144,7 +1144,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         performanceData.length === 0
                           ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
                           : exportStatus === 'json'
-                            ? 'bg-green-500/20 text-green-500'
+                            ? 'bg-data-pass/20 text-data-pass'
                             : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
                       }`}
                     >
@@ -1429,8 +1429,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {enabledMiniModes.size} mini modes enabled
                   </div>
 
-                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p className="text-xs text-green-900 dark:text-green-300">
+                  <div className="mt-3 p-3 bg-data-pass/10 border border-data-pass/30 rounded-lg">
+                    <p className="text-xs text-data-pass">
                       Your main adaptive PANCE question system is always available regardless of
                       these settings.
                     </p>

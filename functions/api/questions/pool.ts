@@ -480,11 +480,28 @@ async function getFromMainTable(
   const toRecord: string[] = [];
 
   for (const q of selectedQuestions) {
+    // Convert options from object format {A: "text", B: "text"} to array format ["text", "text"]
+    let optionsArray: string[] = [];
+    if (Array.isArray(q.options)) {
+      optionsArray = q.options;
+    } else if (typeof q.options === 'object' && q.options !== null) {
+      // Object format: { A: "Option A", B: "Option B", ... }
+      const optionsObj = q.options as Record<string, string>;
+      const sortedKeys = Object.keys(optionsObj).sort((a, b) => a.localeCompare(b)); // A, B, C, D, E
+      optionsArray = sortedKeys.map(key => optionsObj[key]);
+    }
+    
+    // Skip questions with no valid options
+    if (optionsArray.length === 0) {
+      console.warn(`[Pool] Skipping main question ${q.id} - no valid options`);
+      continue;
+    }
+
     result.push({
       id: q.id,
       vignette: q.vignette ?? undefined,
       question: q.question,
-      options: Array.isArray(q.options) ? q.options : [],
+      options: optionsArray,
       correctAnswer: q.correctAnswer,
       explanation: q.explanation ?? undefined,
       system: q.system ?? 'General',

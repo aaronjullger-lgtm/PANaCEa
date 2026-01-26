@@ -152,19 +152,19 @@ export function DDxRankingStep({
     onSubmit(ranking);
   };
 
-  // Get item styling based on result
+  // Get item styling based on result - using design system colors
   const getItemStyle = (item: DifferentialItem, index: number) => {
     if (!isSubmitted) {
       return 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700';
     }
 
     if (item.id === correctAnswerId) {
-      return 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-600';
+      return 'bg-data-pass/10 border-data-pass';
     }
 
     // Wrong answers at top are more problematic
     if (index < result!.correctPosition) {
-      return 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700';
+      return 'bg-data-fail/10 border-data-fail';
     }
 
     return 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700';
@@ -264,12 +264,12 @@ export function DDxRankingStep({
                 {isSubmitted && (
                   <div className="flex-shrink-0">
                     {item.id === correctAnswerId ? (
-                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center gap-1 text-data-pass">
                         <Check className="h-5 w-5" />
                         <span className="text-xs font-medium">Correct</span>
                       </div>
                     ) : index < result!.correctPosition ? (
-                      <div className="flex items-center gap-1 text-red-500">
+                      <div className="flex items-center gap-1 text-data-fail">
                         <AlertTriangle className="h-4 w-4" />
                       </div>
                     ) : null}
@@ -312,10 +312,10 @@ export function DDxRankingStep({
             mt-6 p-4 rounded-xl border-2
             ${
               result.score >= 80
-                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400'
+                ? 'bg-data-pass/10 border-data-pass'
                 : result.score >= 60
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400'
-                  : 'bg-red-50 dark:bg-red-900/20 border-red-400'
+                  ? 'bg-data-provisional/10 border-data-provisional'
+                  : 'bg-data-fail/10 border-data-fail'
             }
           `}
         >
@@ -325,10 +325,10 @@ export function DDxRankingStep({
               flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg
               ${
                 result.score >= 80
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-data-pass text-white'
                   : result.score >= 60
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-red-500 text-white'
+                    ? 'bg-data-provisional text-white'
+                    : 'bg-data-fail text-white'
               }
             `}
             >
@@ -340,10 +340,10 @@ export function DDxRankingStep({
                 font-semibold mb-1
                 ${
                   result.score >= 80
-                    ? 'text-emerald-700 dark:text-emerald-300'
+                    ? 'text-data-pass'
                     : result.score >= 60
-                      ? 'text-amber-700 dark:text-amber-300'
-                      : 'text-red-700 dark:text-red-300'
+                      ? 'text-data-provisional'
+                      : 'text-data-fail'
                 }
               `}
               >

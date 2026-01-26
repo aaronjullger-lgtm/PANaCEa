@@ -86,9 +86,10 @@ const GlassPanel: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ isCorrect, children, className = '' }) => {
+  // Use design system colors: data-pass (teal) and data-fail (red)
   const highlightClass = isCorrect
-    ? 'bg-green-500/20 border-green-500/30'
-    : 'bg-red-500/20 border-red-500/30';
+    ? 'bg-data-pass/20 border-data-pass/30'
+    : 'bg-data-fail/20 border-data-fail/30';
 
   return (
     <div

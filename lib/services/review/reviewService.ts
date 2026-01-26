@@ -1,5 +1,6 @@
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
+import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
 
 // JsonValue type for Prisma JSON fields
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -409,7 +410,7 @@ export class ReviewService {
       return {
         id: q.id,
         question: q.vignette,
-        options: q.options as string[],
+        options: normalizeOptionsToArray(q.options),
         correctAnswerIndex: q.correctAnswerIndex,
         rationale: q.rationale,
         system: q.system,

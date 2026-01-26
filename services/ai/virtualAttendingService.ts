@@ -143,10 +143,10 @@ function generateCorrectFeedback(
       `Well done! This shows mastery of the key concepts in ${topic}.`,
     ],
     comedian: [
-      `Ding ding ding! 🎉 Someone's been studying!`,
+      `Ding ding ding! Someone's been studying!`,
       `Look at you, Dr. Smartypants! That's correct!`,
       `Nailed it! Your brain is on fire today (in a good way, not meningitis).`,
-      `Boom! Correct! High five! 🖐️ (Don't leave me hanging)`,
+      `Boom! Correct! High five! (Don't leave me hanging)`,
     ],
     'drill-sergeant': [
       `CORRECT! But don't get cocky, soldier!`,
@@ -189,10 +189,10 @@ function generateIncorrectFeedback(
       `Let me clarify. ${keyLearning || `The pathophysiology of ${condition || topic} explains why...`}`,
     ],
     comedian: [
-      `Oopsie daisy! 😅 ${keyLearning || `Remember: ${topic} is like... well, not that!`}`,
+      `Oopsie daisy! ${keyLearning || `Remember: ${topic} is like... well, not that!`}`,
       `Nope! But hey, we all have off days. ${keyLearning || `Just remember ${topic} for next time.`}`,
-      `Wrong answer, right spirit! 💪 ${keyLearning || `${condition || topic} is tricky, but you'll nail it.`}`,
-      `Swing and a miss! ⚾ ${keyLearning || `Think of ${topic} like... the opposite of what you picked.`}`,
+      `Wrong answer, right spirit! ${keyLearning || `${condition || topic} is tricky, but you'll nail it.`}`,
+      `Swing and a miss! ${keyLearning || `Think of ${topic} like... the opposite of what you picked.`}`,
     ],
     'drill-sergeant': [
       `NEGATIVE! ${keyLearning || `You failed to secure ${topic}!`} Drop and give me 10 more questions!`,

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../prisma';
+import { normalizeOptionsToArray } from '../utils/questionDataNormalizer';
 
 // Client-safe inline types to avoid bundling @prisma/client
 interface QuestionWhereInput {
@@ -45,7 +46,7 @@ function mapToDTO(record: any): QuestionDTO {
     id: record.id,
     vignette: record.vignette,
     question: record.question,
-    options: Array.isArray(record.options) ? record.options : [],
+    options: normalizeOptionsToArray(record.options),
     correctAnswer: record.correctAnswer,
     explanation:
       typeof record.explanation === 'string'

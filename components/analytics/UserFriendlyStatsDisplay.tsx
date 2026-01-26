@@ -543,87 +543,105 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               </div>
             </div>
 
-            {/* Top Insights */}
-            <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-              <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
-                <Lightbulb className="w-4 h-4" />
-                Key Insights for You
-              </h3>
-              <div className="space-y-3">
-                {stats.topInsights.map((insight, i) => (
-                  <InsightCard key={i} insight={insight} index={i} />
-                ))}
-              </div>
-            </div>
-
-            {/* Behavioral Patterns */}
-            <div className="grid md:grid-cols-2 gap-4">
+            {/* Top Insights - only show if we have data-backed insights */}
+            {stats.topInsights.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
                 <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
-                  <Brain className="w-4 h-4" />
-                  Test-Taking Pattern
+                  <Lightbulb className="w-4 h-4" />
+                  Key Insights
                 </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">
-                      First Instinct Accuracy
-                    </span>
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      {stats.firstInstinctAccuracy}%
-                    </span>
+                <div className="space-y-3">
+                  {stats.topInsights.map((insight, i) => (
+                    <InsightCard key={i} insight={insight} index={i} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Behavioral Patterns - only show if we have enough data */}
+            {stats.hasEnoughDataForInsights ? (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
+                    <Brain className="w-4 h-4" />
+                    Test-Taking Pattern
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--color-text-secondary)]">
+                        First Instinct Accuracy
+                      </span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {stats.firstInstinctAccuracy !== null ? `${stats.firstInstinctAccuracy}%` : '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--color-text-secondary)]">
+                        Answer Changes Help
+                      </span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {stats.answerChangeHelpfulness !== null ? `${stats.answerChangeHelpfulness}%` : '—'}
+                      </span>
+                    </div>
+                    {stats.shouldTrustFirstInstinct !== null && (
+                      <div
+                        className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-slate-400/10 text-slate-300' : 'bg-slate-500/10 text-slate-400'} text-sm flex items-center gap-2`}
+                      >
+                        <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                        {stats.shouldTrustFirstInstinct
+                          ? 'Trust your gut - your first answers are usually correct'
+                          : 'Take your time - reconsidering helps your score'}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">
-                      Answer Changes Help
-                    </span>
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      {stats.answerChangeHelpfulness}%
-                    </span>
-                  </div>
-                  <div
-                    className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-slate-400/10 text-slate-300 dark:text-slate-300' : 'bg-slate-500/10 text-slate-400 dark:text-slate-400'} text-sm flex items-center gap-2`}
-                  >
-                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
-                    {stats.shouldTrustFirstInstinct
-                      ? 'Trust your gut - your first answers are usually correct'
-                      : 'Take your time - reconsidering helps your score'}
+                </div>
+
+                <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Optimal Study Time
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--color-text-secondary)]">
+                        Peak Performance
+                      </span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {stats.bestStudyTime ?? '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--color-text-secondary)]">
+                        Fatigue Point
+                      </span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {stats.fatiguePoint !== null ? `${stats.fatiguePoint} questions` : '—'}
+                      </span>
+                    </div>
+                    {stats.optimalBreakFrequency !== null && (
+                      <div className="p-3 rounded-lg bg-slate-500/10 text-slate-300 text-sm flex items-center gap-2">
+                        <Coffee className="w-4 h-4" />
+                        Take a break every {stats.optimalBreakFrequency} questions
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-
-              <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
-                  {stats.bestStudyTime.includes('AM') || parseInt(stats.bestStudyTime) < 12 ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                  Optimal Study Time
+            ) : (
+              <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 text-center">
+                <Brain className="w-8 h-8 mx-auto text-[var(--color-text-muted)] mb-3" />
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                  Building Your Profile
                 </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">
-                      Peak Performance
-                    </span>
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      {stats.bestStudyTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--color-text-secondary)]">
-                      Fatigue Point
-                    </span>
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      {stats.fatiguePoint} questions
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-500/10 text-slate-300 dark:text-slate-300 text-sm flex items-center gap-2">
-                    <Coffee className="w-4 h-4" />
-                    Take a break every {stats.optimalBreakFrequency} questions
-                  </div>
-                </div>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Complete at least 50 questions to unlock personalized insights about your
+                  test-taking patterns, optimal study times, and break recommendations.
+                </p>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-2">
+                  {stats.totalQuestionsLifetime} / 50 questions completed
+                </p>
               </div>
-            </div>
+            )}
           </motion.div>
         )}
 

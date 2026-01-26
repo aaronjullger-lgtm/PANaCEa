@@ -125,7 +125,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 dark:text-red-400 mb-2">Failed to load dashboard data</p>
+          <p className="text-data-fail mb-2">Failed to load dashboard data</p>
           <button
             onClick={() => window.location.reload()}
             className="text-sm text-blue-600 hover:underline"
@@ -258,8 +258,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               className="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-md w-full text-left"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <div className="p-2 bg-data-pass/10 rounded-lg">
+                  <Sparkles className="w-5 h-5 text-data-pass" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Medical Wordle

@@ -119,9 +119,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
   }, [performanceData, systemCode]);
 
   const getBarColor = (score: number) => {
-    if (score < 50) return 'bg-red-500';
-    if (score < 80) return 'bg-yellow-500';
-    return 'bg-green-600';
+    if (score < 50) return 'bg-data-fail';
+    if (score < 80) return 'bg-data-provisional';
+    return 'bg-data-pass';
   };
 
   const displayedSystemScore = systemTotals.total > 0 ? systemTotals.score : topicStats.score;

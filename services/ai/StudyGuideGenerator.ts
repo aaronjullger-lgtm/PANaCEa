@@ -138,10 +138,10 @@ function generateMarkdownContent(studyGuide: StudyGuide): string {
 
   // Study Recommendations
   sections.forEach((section) => {
-    const priorityEmoji =
-      section.priority === 'high' ? '🔴' : section.priority === 'medium' ? '🟡' : '🟢';
+    const priorityLabel =
+      section.priority === 'high' ? '[HIGH]' : section.priority === 'medium' ? '[MEDIUM]' : '[LOW]';
 
-    markdown += `## ${priorityEmoji} ${section.title}\n\n`;
+    markdown += `## ${priorityLabel} ${section.title}\n\n`;
     markdown += `${section.content}\n\n`;
   });
 

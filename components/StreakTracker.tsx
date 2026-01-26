@@ -179,7 +179,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
-          <p className="text-sm text-green-700 dark:text-green-300 text-center flex items-center justify-center gap-2">
+          <p className="text-sm text-data-pass text-center flex items-center justify-center gap-2">
             <CheckCircle className="w-4 h-4" />
             Studied today - Streak active!
           </p>

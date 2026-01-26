@@ -88,20 +88,21 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           const isCorrect = lastResult?.correctCondition === condition;
           const isWrongSelection = hasAnswered && isSelected && !lastResult?.isCorrect;
 
+          // Use design system colors: data-pass, data-fail, and accent
           let bgClass = 'bg-white hover:bg-slate-50';
           let borderClass = 'border-slate-200';
 
           if (hasAnswered) {
             if (isCorrect) {
-              bgClass = 'bg-green-50';
-              borderClass = 'border-green-500';
+              bgClass = 'bg-data-pass/10';
+              borderClass = 'border-data-pass';
             } else if (isWrongSelection) {
-              bgClass = 'bg-red-50';
-              borderClass = 'border-red-500';
+              bgClass = 'bg-data-fail/10';
+              borderClass = 'border-data-fail';
             }
           } else if (isSelected) {
-            bgClass = 'bg-blue-50';
-            borderClass = 'border-blue-500';
+            bgClass = 'bg-[var(--color-accent)]/10';
+            borderClass = 'border-[var(--color-accent)]';
           }
 
           return (

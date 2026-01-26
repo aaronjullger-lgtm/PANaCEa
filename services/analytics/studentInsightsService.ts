@@ -83,9 +83,9 @@ export function formatInsightMessage(insights: StudentInsights): string {
   }
 
   const { accuracy, trend, trendChange } = insights.summary;
-  const trendEmoji = trend === 'improving' ? '📈' : trend === 'declining' ? '📉' : '➡️';
+  const trendLabel = trend === 'improving' ? 'Improving' : trend === 'declining' ? 'Declining' : 'Stable';
 
-  let message = `${trendEmoji} Your accuracy is ${accuracy}% `;
+  let message = `[${trendLabel}] Your accuracy is ${accuracy}% `;
 
   if (trend !== 'stable') {
     message += `(${trendChange > 0 ? '+' : ''}${trendChange}% ${trend})`;
@@ -124,25 +124,25 @@ export function getAchievementLevel(accuracy: number): {
   if (accuracy >= 90) {
     return {
       level: 'Master',
-      emoji: '🏆',
+      emoji: '',
       message: "Outstanding performance! You're exam-ready!",
     };
   } else if (accuracy >= 80) {
     return {
       level: 'Expert',
-      emoji: '⭐',
+      emoji: '',
       message: 'Great work! Keep pushing to master level!',
     };
   } else if (accuracy >= 70) {
     return {
       level: 'Proficient',
-      emoji: '💪',
+      emoji: '',
       message: 'Good progress! Focus on weak areas to improve.',
     };
   } else if (accuracy >= 60) {
     return {
       level: 'Developing',
-      emoji: '📚',
+      emoji: '',
       message: 'Keep studying! Review fundamentals and practice more.',
     };
   } else {

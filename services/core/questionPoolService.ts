@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { normalizeOptionsToArray } from '@/lib/utils/questionDataNormalizer';
 
 // Thresholds for question pool management
 const POOL_LOW_THRESHOLD = 20; // When to trigger background generation
@@ -232,12 +233,19 @@ async function getFromMainTable(
   for (const q of questions) {
     if (availableQuestions.length >= count) break;
     if (seenIds.has(q.id)) continue;
+    
+    // Normalize options from object or array format
+    const normalizedOptions = normalizeOptionsToArray(q.options);
+    if (normalizedOptions.length === 0) {
+      console.warn(`[QuestionPoolService] Skipping question ${q.id} - no valid options`);
+      continue;
+    }
 
     availableQuestions.push({
       id: q.id,
       vignette: q.vignette || undefined,
       question: q.question,
-      options: Array.isArray(q.options) ? (q.options as string[]) : [],
+      options: normalizedOptions,
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
       system: q.system,

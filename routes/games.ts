@@ -15,6 +15,7 @@ import {
   submitWordleGuess,
   WordleServiceError,
 } from '../services/core/wordleService';
+import { normalizeOptionsToArray } from '../lib/utils/questionDataNormalizer';
 import crypto from 'crypto';
 
 const router = Router();
@@ -118,10 +119,16 @@ router.get('/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest,
       },
     });
 
+    // Normalize options for each question
+    const normalizedQuestions = questions.map((q) => ({
+      ...q,
+      options: normalizeOptionsToArray(q.options),
+    }));
+
     return res.json({
       status: 'active',
       challengeId: challenge.id,
-      questions,
+      questions: normalizedQuestions,
     });
   } catch (error) {
     console.error('Error fetching Grand Rounds challenge:', error);

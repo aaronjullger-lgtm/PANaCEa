@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
+import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
 import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
 import {
@@ -430,7 +431,11 @@ export class SessionService {
       if (questions.length >= count) break;
       if (seenIds.has(q.id)) continue;
 
-      const options = Array.isArray(q.options) ? (q.options as string[]) : [];
+      const options = normalizeOptionsToArray(q.options);
+      if (options.length === 0) {
+        console.warn(`[SessionService] Skipping question ${q.id} - no valid options`);
+        continue;
+      }
       const correctIndex = options.findIndex((opt) => opt === q.correctAnswer);
 
       questions.push({

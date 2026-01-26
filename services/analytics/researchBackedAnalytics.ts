@@ -161,15 +161,18 @@ export interface UserFriendlyStats {
   passProbability: number;
   readinessLevel: 'not_ready' | 'building' | 'progressing' | 'almost_ready' | 'ready';
 
-  // Behavioral insights
-  firstInstinctAccuracy: number;
-  shouldTrustFirstInstinct: boolean;
-  answerChangeHelpfulness: number; // % of changes that helped
+  // Behavioral insights (null if insufficient data)
+  firstInstinctAccuracy: number | null;
+  shouldTrustFirstInstinct: boolean | null;
+  answerChangeHelpfulness: number | null; // % of changes that helped
 
-  // Cognitive patterns
-  bestStudyTime: string;
-  fatiguePoint: number; // questions until fatigue
-  optimalBreakFrequency: number;
+  // Cognitive patterns (null if insufficient data)
+  bestStudyTime: string | null;
+  fatiguePoint: number | null; // questions until fatigue
+  optimalBreakFrequency: number | null;
+
+  // Flag indicating if there's enough data for personalized insights
+  hasEnoughDataForInsights: boolean;
 
   // Top 3 actionable insights
   topInsights: string[];
@@ -829,55 +832,72 @@ export async function generateUserFriendlyStats(): Promise<UserFriendlyStats> {
       : 0;
   const questionsPerHour = totalStudyHours > 0 ? Math.round(totalQuestions / totalStudyHours) : 0;
 
-  // Optimal session length from fatigue analysis
-  const cogProfile = await analyzeCognitiveLoad();
-  const optimalSessionLength = cogProfile.fatigueOnsetRate;
+  // Minimum data threshold for personalized behavioral/circadian insights
+  const MIN_DATA_FOR_INSIGHTS = 50;
+  const hasEnoughDataForInsights = totalQuestions >= MIN_DATA_FOR_INSIGHTS;
+
+  // Optimal session length from fatigue analysis (only if enough data)
+  const cogProfile = hasEnoughDataForInsights ? await analyzeCognitiveLoad() : null;
+  const optimalSessionLength = cogProfile?.fatigueOnsetRate ?? 20;
 
   // Test readiness
   const readiness = await assessTestReadiness();
 
-  // Behavioral insights
-  const withAnswerChanges = attempts.filter((a) => a.answerChanges > 0);
-  const helpfulChanges = withAnswerChanges.filter(
-    (a) =>
-      a.firstAnswer !== null &&
-      a.firstAnswer !== a.correctAnswer &&
-      a.finalAnswer === a.correctAnswer
-  ).length;
-  const harmfulChanges = withAnswerChanges.filter(
-    (a) =>
-      a.firstAnswer !== null &&
-      a.firstAnswer === a.correctAnswer &&
-      a.finalAnswer !== a.correctAnswer
-  ).length;
+  // Behavioral insights (only calculate if enough data)
+  let firstInstinctAccuracy: number | null = null;
+  let shouldTrustFirstInstinct: boolean | null = null;
+  let answerChangeHelpfulness: number | null = null;
 
-  const firstInstinctCorrect = attempts.filter((a) => a.firstAnswer === a.correctAnswer).length;
-  const firstInstinctAccuracy =
-    attempts.length > 0 ? Math.round((firstInstinctCorrect / attempts.length) * 100) : 0;
+  if (hasEnoughDataForInsights) {
+    const withAnswerChanges = attempts.filter((a) => a.answerChanges > 0);
+    const helpfulChanges = withAnswerChanges.filter(
+      (a) =>
+        a.firstAnswer !== null &&
+        a.firstAnswer !== a.correctAnswer &&
+        a.finalAnswer === a.correctAnswer
+    ).length;
+    const harmfulChanges = withAnswerChanges.filter(
+      (a) =>
+        a.firstAnswer !== null &&
+        a.firstAnswer === a.correctAnswer &&
+        a.finalAnswer !== a.correctAnswer
+    ).length;
 
-  const answerChangeHelpfulness =
-    withAnswerChanges.length > 0
-      ? Math.round((helpfulChanges / (helpfulChanges + harmfulChanges)) * 100) || 50
-      : 50;
+    const firstInstinctCorrect = attempts.filter((a) => a.firstAnswer === a.correctAnswer).length;
+    firstInstinctAccuracy =
+      attempts.length > 0 ? Math.round((firstInstinctCorrect / attempts.length) * 100) : null;
 
-  const shouldTrustFirstInstinct = firstInstinctAccuracy > last7DaysAccuracy - 5;
+    answerChangeHelpfulness =
+      withAnswerChanges.length > 5
+        ? Math.round((helpfulChanges / (helpfulChanges + harmfulChanges)) * 100) || null
+        : null;
 
-  // Circadian
-  const circadian = await analyzeCircadianPatterns();
-  const bestStudyTime = `${circadian.peakLearningHour}:00 - ${(circadian.peakLearningHour + 2) % 24}:00`;
+    shouldTrustFirstInstinct = firstInstinctAccuracy !== null 
+      ? firstInstinctAccuracy > last7DaysAccuracy - 5 
+      : null;
+  }
 
-  // Break frequency
-  const optimalBreakFrequency = Math.round(cogProfile.fatigueOnsetRate * 0.8);
+  // Circadian patterns (only if enough data)
+  let bestStudyTime: string | null = null;
+  let optimalBreakFrequency: number | null = null;
 
-  // Top insights
-  const topInsights = generateTopInsights(
-    accuracyTrend,
-    accuracyChange,
-    shouldTrustFirstInstinct,
-    readiness,
-    cogProfile,
-    circadian
-  );
+  if (hasEnoughDataForInsights) {
+    const circadian = await analyzeCircadianPatterns();
+    bestStudyTime = `${circadian.peakLearningHour}:00 - ${(circadian.peakLearningHour + 2) % 24}:00`;
+    optimalBreakFrequency = cogProfile ? Math.round(cogProfile.fatigueOnsetRate * 0.8) : null;
+  }
+
+  // Top insights (only real, data-backed insights)
+  const topInsights = hasEnoughDataForInsights
+    ? generateTopInsights(
+        accuracyTrend,
+        accuracyChange,
+        shouldTrustFirstInstinct,
+        readiness,
+        cogProfile,
+        await analyzeCircadianPatterns()
+      )
+    : [];
 
   return {
     totalQuestionsLifetime: totalQuestions,
@@ -907,8 +927,9 @@ export async function generateUserFriendlyStats(): Promise<UserFriendlyStats> {
     shouldTrustFirstInstinct,
     answerChangeHelpfulness,
     bestStudyTime,
-    fatiguePoint: cogProfile.fatigueOnsetRate,
+    fatiguePoint: cogProfile?.fatigueOnsetRate ?? null,
     optimalBreakFrequency,
+    hasEnoughDataForInsights,
     topInsights,
   };
 }
@@ -1102,39 +1123,43 @@ function generateSystemRecommendations(
 function generateTopInsights(
   accuracyTrend: string,
   accuracyChange: number,
-  shouldTrustFirstInstinct: boolean,
+  shouldTrustFirstInstinct: boolean | null,
   readiness: TestReadinessAssessment,
-  cognitive: CognitiveLoadProfile,
+  cognitive: CognitiveLoadProfile | null,
   circadian: CircadianProfile
 ): string[] {
   const insights: string[] = [];
 
-  if (accuracyTrend === 'improving') {
-    insights.push(`📈 Your accuracy improved ${accuracyChange}% this week - great progress!`);
-  } else if (accuracyTrend === 'declining') {
+  // Only add insights backed by actual data
+  if (accuracyTrend === 'improving' && accuracyChange > 0) {
+    insights.push(`Your accuracy improved ${accuracyChange}% this week - great progress!`);
+  } else if (accuracyTrend === 'declining' && accuracyChange < 0) {
     insights.push(
-      `📉 Your accuracy dropped ${Math.abs(accuracyChange)}% - consider reviewing your weak areas`
+      `Your accuracy dropped ${Math.abs(accuracyChange)}% - consider reviewing your weak areas`
     );
   }
 
-  if (shouldTrustFirstInstinct) {
-    insights.push(`💡 Trust your first instinct - changing answers hurts your score`);
-  } else {
-    insights.push(`🤔 Take time to reconsider - your answer changes often help`);
+  if (shouldTrustFirstInstinct === true) {
+    insights.push(`Trust your first instinct - changing answers hurts your score`);
+  } else if (shouldTrustFirstInstinct === false) {
+    insights.push(`Take time to reconsider - your answer changes often help`);
   }
 
   if (readiness.passProbability >= 80) {
-    insights.push(`✅ You're ready! ${readiness.passProbability}% chance of passing PANCE`);
+    insights.push(`You're ready! ${readiness.passProbability}% chance of passing PANCE`);
   } else if (readiness.recommendedStudyDays > 0) {
-    insights.push(`📚 ${readiness.recommendedStudyDays} more study days recommended before exam`);
+    insights.push(`${readiness.recommendedStudyDays} more study days recommended before exam`);
   }
 
-  insights.push(
-    `⏰ Your peak study time is ${circadian.peakLearningHour}:00 - ${(circadian.peakLearningHour + 2) % 24}:00`
-  );
-  insights.push(
-    `😴 Take breaks every ${cognitive.fatigueOnsetRate} questions to maintain performance`
-  );
+  // Only add time-based insights if we have enough data
+  if (cognitive && circadian) {
+    insights.push(
+      `Your peak study time is ${circadian.peakLearningHour}:00 - ${(circadian.peakLearningHour + 2) % 24}:00`
+    );
+    insights.push(
+      `Take breaks every ${cognitive.fatigueOnsetRate} questions to maintain performance`
+    );
+  }
 
   return insights.slice(0, 3);
 }

@@ -65,7 +65,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
             exit="exit"
             transition={{ duration: 0.15 }}
             className={`absolute inset-0 z-0 pointer-events-none ${
-              isCorrect ? 'bg-emerald-500/20' : 'bg-red-500/20'
+              isCorrect ? 'bg-data-pass/20' : 'bg-data-fail/20'
             }`}
           />
         )}
@@ -221,10 +221,10 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   if (isAnswered) {
     if (isCorrect === true) {
       buttonClasses +=
-        ' bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400';
+        ' bg-data-pass/10 border-data-pass text-data-pass';
     } else if (isSelected) {
       buttonClasses +=
-        ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
+        ' bg-data-fail/10 border-data-fail text-data-fail';
     } else {
       buttonClasses +=
         ' bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-muted)] opacity-60';
@@ -249,10 +249,10 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
         </span>
         <span className="flex-1">{text}</span>
         {isAnswered && isCorrect === true && (
-          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <CheckCircle className="w-5 h-5 text-data-pass flex-shrink-0" />
         )}
         {isAnswered && isSelected && isCorrect === false && (
-          <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+          <XCircle className="w-5 h-5 text-data-fail flex-shrink-0" />
         )}
       </div>
     </motion.button>
@@ -296,15 +296,15 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
       transition={{ duration: 0.2 }}
       className={`p-3 sm:p-4 ${
         isCorrect
-          ? 'bg-emerald-500/10 border-t-2 border-emerald-500'
-          : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
+          ? 'bg-data-pass/10 border-t-2 border-data-pass'
+          : 'bg-data-fail/10 border-t-2 border-data-fail'
       }`}
     >
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex-1">
             <div
-              className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+              className={`text-lg font-bold ${isCorrect ? 'text-data-pass' : 'text-data-fail'}`}
             >
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
