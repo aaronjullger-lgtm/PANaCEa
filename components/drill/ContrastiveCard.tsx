@@ -57,14 +57,14 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssign
       {...attributes}
       {...listeners}
       className={`
-        flex items-center gap-2 p-3 rounded-lg border-2 bg-white cursor-move
+        flex items-center gap-2 p-3 rounded-lg border-2 bg-white dark:bg-slate-800 cursor-move
         transition-all duration-200
         ${isDragging ? 'opacity-50 rotate-2' : ''}
-        ${isAssigned ? 'border-steel-blue-500 bg-steel-blue-50' : 'border-slate-300 hover:border-steel-blue-400'}
+        ${isAssigned ? 'border-steel-blue-500 bg-steel-blue-50 dark:bg-steel-blue-900/30' : 'border-slate-300 dark:border-slate-600 hover:border-steel-blue-400'}
       `}
     >
       <GripVertical className="w-4 h-4 text-slate-400" />
-      <span className="text-sm font-medium text-slate-800">{feature.text}</span>
+      <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{feature.text}</span>
     </div>
   );
 };
@@ -176,21 +176,21 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+    <div className="w-full max-w-6xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
       {/* Header */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
           DDx Compare: Distinguish These Conditions
         </h2>
-        <p className="text-slate-600">
+        <p className="text-slate-600 dark:text-slate-300">
           Drag each feature to the condition it belongs to
         </p>
       </div>
 
       {/* Presenting Symptom */}
-      <div className="bg-steel-blue-50 border-2 border-steel-blue-300 rounded-xl p-4 mb-6 text-center">
-        <span className="text-sm font-medium text-steel-blue-800">Presenting Symptom:</span>
-        <p className="text-lg font-semibold text-slate-800 mt-1">{question.symptom}</p>
+      <div className="bg-steel-blue-50 dark:bg-steel-blue-900/30 border-2 border-steel-blue-300 dark:border-steel-blue-700 rounded-xl p-4 mb-6 text-center">
+        <span className="text-sm font-medium text-steel-blue-800 dark:text-steel-blue-300">Presenting Symptom:</span>
+        <p className="text-lg font-semibold text-slate-800 dark:text-slate-100 mt-1">{question.symptom}</p>
       </div>
 
       <DndContext
@@ -202,7 +202,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Unassigned Features Pool */}
           <div className="md:col-span-3">
-            <h3 className="text-lg font-semibold text-slate-700 mb-3">
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">
               Distinguishing Features ({unassignedFeatures.length} remaining)
             </h3>
             <SortableContext
@@ -211,7 +211,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[100px] p-4 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 space-y-2"
+                className="min-h-[100px] p-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 space-y-2"
                 data-zone="unassigned"
               >
                 {unassignedFeatures.map((feature) => (
@@ -230,7 +230,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full bg-deep-plum-500" />
-              <h3 className="text-lg font-semibold text-slate-700">
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
                 {question.conditions[0]?.name}
               </h3>
             </div>
@@ -240,7 +240,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[200px] p-4 rounded-xl border-2 border-deep-plum-300 bg-deep-plum-50 space-y-2"
+                className="min-h-[200px] p-4 rounded-xl border-2 border-deep-plum-300 dark:border-deep-plum-700 bg-deep-plum-50 dark:bg-deep-plum-900/30 space-y-2"
                 data-zone="condition1"
               >
                 {condition1Features.map((feature) => (
@@ -266,7 +266,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full bg-muted-amber-500" />
-              <h3 className="text-lg font-semibold text-slate-700">
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
                 {question.conditions[1]?.name}
               </h3>
             </div>
@@ -276,7 +276,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[200px] p-4 rounded-xl border-2 border-muted-amber-300 bg-muted-amber-50 space-y-2"
+                className="min-h-[200px] p-4 rounded-xl border-2 border-muted-amber-300 dark:border-muted-amber-700 bg-muted-amber-50 dark:bg-muted-amber-900/30 space-y-2"
                 data-zone="condition2"
               >
                 {condition2Features.map((feature) => (
@@ -296,8 +296,8 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
 
         <DragOverlay>
           {activeId ? (
-            <div className="p-3 rounded-lg border-2 border-steel-blue-500 bg-white shadow-xl">
-              <span className="text-sm font-medium">
+            <div className="p-3 rounded-lg border-2 border-steel-blue-500 bg-white dark:bg-slate-800 shadow-xl">
+              <span className="text-sm font-medium dark:text-slate-100">
                 {[...unassignedFeatures, ...condition1Features, ...condition2Features].find(
                   (f) => f.id === activeId
                 )?.text}
@@ -354,7 +354,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
       </div>
 
       {/* Metadata */}
-      <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between text-sm text-slate-500">
+      <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
         <span>Difficulty: {question.difficulty}</span>
         {question.system && <span>System: {question.system}</span>}
       </div>

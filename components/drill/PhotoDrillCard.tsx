@@ -76,16 +76,16 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Camera className="w-5 h-5 text-steel-blue-600" />
-          <span className="text-sm font-medium text-slate-600">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
             {question.modality === 'dermatology' ? 'Dermatology' : 'Radiology'} Drill
           </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <Zap className="w-4 h-4" />
           <span>Rapid Fire</span>
         </div>
@@ -141,7 +141,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       </div>
 
       {/* Question */}
-      <h2 className="text-xl font-semibold text-slate-800 mb-4 text-center">
+      <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4 text-center">
         What is the diagnosis?
       </h2>
 
@@ -157,7 +157,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
             className={getOptionClassName(option)}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-slate-800">{option}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">{option}</span>
               {selectedAnswer === option && (
                 <>
                   {isCorrect ? (
@@ -176,7 +176,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       </div>
 
       {/* Metadata */}
-      <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-sm text-slate-500">
+      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
         <span>Difficulty: {question.difficulty}</span>
         {question.system && <span>System: {question.system}</span>}
       </div>

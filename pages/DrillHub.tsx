@@ -311,7 +311,7 @@ export default function DrillHub(): JSX.Element {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1.5, opacity: 0 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-white rounded-2xl"
+                    className="absolute inset-0 bg-white dark:bg-slate-600 rounded-2xl"
                   />
                 )}
               </AnimatePresence>

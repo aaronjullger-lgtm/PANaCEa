@@ -77,8 +77,8 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
       </div>
 
       {/* Vignette Card */}
-      <div className="bg-white shadow rounded-xl p-6 border border-slate-100">
-        <p className="text-lg leading-relaxed text-slate-800">{currentQuestion?.vignette}</p>
+      <div className="bg-white dark:bg-slate-800 shadow rounded-xl p-6 border border-slate-100 dark:border-slate-700">
+        <p className="text-lg leading-relaxed text-slate-800 dark:text-slate-100">{currentQuestion?.vignette}</p>
       </div>
 
       {/* Options */}
@@ -89,8 +89,8 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           const isWrongSelection = hasAnswered && isSelected && !lastResult?.isCorrect;
 
           // Use design system colors: data-pass, data-fail, and accent
-          let bgClass = 'bg-white hover:bg-slate-50';
-          let borderClass = 'border-slate-200';
+          let bgClass = 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700';
+          let borderClass = 'border-slate-200 dark:border-slate-600';
 
           if (hasAnswered) {
             if (isCorrect) {

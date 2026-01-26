@@ -6,6 +6,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'sonner';
 import Loader from './components/Loader';
 import ThemeToggleButton from './components/ThemeToggleButton';
+import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './components/LandingPage';
 import { LoadingProgress } from './components/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
@@ -179,6 +180,9 @@ const App: React.FC = () => {
   // Check authentication status
   const { isSignedIn, isLoaded: authLoaded } = useUser();
   const { getToken } = useAuth();
+
+  // Theme state for passing to child components
+  const [theme, setTheme] = useTheme();
 
   const [view, setView] = useState<View>('command_center');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -651,6 +655,8 @@ const App: React.FC = () => {
               isSyncing={isSyncing}
               lastSyncTime={lastSyncTime}
               syncError={syncError}
+              theme={theme}
+              onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             />
           </Suspense>
 

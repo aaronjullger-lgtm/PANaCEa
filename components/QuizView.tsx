@@ -1157,7 +1157,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
                   ? 'bg-muted-amber-100 text-muted-amber-700 border-muted-amber-300'
-                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-white hover:border-[var(--color-accent)]'
+                  : 'bg-[var(--color-card-bg)] text-slate-600 dark:text-slate-400 border-[var(--color-border)] hover:bg-white dark:hover:bg-slate-700 hover:border-[var(--color-accent)]'
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -1179,7 +1179,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 });
               }}
               title="Clear highlights"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-white hover:border-[var(--color-accent)] transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:border-[var(--color-accent)] transition-colors"
             >
               <ClearHighlightIcon className="w-5 h-5" />
             </button>
@@ -1188,7 +1188,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <div className="flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-card-bg)]">
               <button
                 onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-l-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white dark:hover:bg-slate-700 rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
                 A-
@@ -1196,7 +1196,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <div className="w-px h-4 bg-[#D0C7BF]"></div>
               <button
                 onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-r-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white dark:hover:bg-slate-700 rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
                 A+
