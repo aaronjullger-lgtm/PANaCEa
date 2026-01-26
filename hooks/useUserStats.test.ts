@@ -119,7 +119,6 @@ describe('useUserStats', () => {
             topic: 'Server Topic',
             isCorrect: false,
             focus: 'all',
-            difficulty: 'same',
           },
         ],
         srsItems: [{ questionId: 'q1', userId: 'test-user-123' }],

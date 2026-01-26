@@ -37,7 +37,6 @@ describe('Anki Export Service', () => {
       topic: 'CV',
       isCorrect: false,
       focus: 'all',
-      difficulty: 'same',
     },
     {
       timestamp: Date.now() - 86400000, // Yesterday
@@ -48,7 +47,6 @@ describe('Anki Export Service', () => {
       topic: 'CV',
       isCorrect: false,
       focus: 'all',
-      difficulty: 'same',
     },
   ];
 
@@ -67,7 +65,6 @@ describe('Anki Export Service', () => {
           topic: 'CV',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -88,7 +85,6 @@ describe('Anki Export Service', () => {
         topic: 'Different Topic',
         isCorrect: false,
         focus: 'all',
-        difficulty: 'same',
       };
 
       const missedQuestions: Question[] = [
@@ -263,7 +259,6 @@ describe('Anki Export Service', () => {
           topic: 'CV',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
