@@ -44,7 +44,6 @@ export const onRequestGet = publicEndpoint(
           pearls: true,
         },
         orderBy: { genericName: 'asc' },
-        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
       });
 
       logger.info('All drugs fetched', { count: drugs.length });
