@@ -60,7 +60,6 @@ export interface PerformanceRecord {
 
   // Meta (so we can filter to PANCE-level ALL sessions)
   focus: SessionSettings['focus']; // 'all' | 'growth' | ...
-  difficulty: SessionSettings['difficulty']; // 'easier' | 'same' | 'harder'
 
   // Deep Insight metrics (optional for backward compatibility)
   timeSpentMs?: number; // Time spent on question in milliseconds
@@ -91,7 +90,6 @@ export interface SessionSettings {
     | 'unseen'
     | 'incorrect'
     | 'bookmarked';
-  difficulty: 'easier' | 'same' | 'harder';
   topic?: string;
   count?: number;
   systems?: string[];

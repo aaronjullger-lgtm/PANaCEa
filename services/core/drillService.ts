@@ -49,7 +49,6 @@ export async function submitDrillResult(
     topic: drillType,
     isCorrect,
     focus: null,
-    difficulty: 'same',
   };
 
   // Update local storage for immediate UI reflection

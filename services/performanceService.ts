@@ -91,7 +91,6 @@ export function recordQuestionOutcome(
     topic: question.topic,
     isCorrect,
     focus: settings.focus,
-    difficulty: settings.difficulty,
   };
 
   const all = loadAllRecords();
@@ -133,11 +132,10 @@ export interface SystemStats {
 export function getHierarchicalStats(): SystemStats[] {
   const all = loadAllRecords();
 
-  // Only count PANCE-level, ALL-topics sessions:
+  // Only count ALL-topics sessions (all questions are now PANCE-level by default):
   //  - focus === "all"
-  //  - difficulty === "same" (your “PANCE-level” choice)
   const filtered = all.filter(
-    (r) => r.focus === 'all' && r.difficulty === 'same' && r.system && r.system !== 'OTHER'
+    (r) => r.focus === 'all' && r.system && r.system !== 'OTHER'
   );
 
   // system → subcategory → condition → aggregate

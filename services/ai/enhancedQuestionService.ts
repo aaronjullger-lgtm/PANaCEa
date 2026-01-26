@@ -52,7 +52,6 @@ interface EnhancedQuestionContext {
     anatomy?: Array<{ name: string; clinicalSignificance?: string }>;
   };
   task: string;
-  difficulty: 'easier' | 'same' | 'harder';
 }
 
 /**
@@ -122,7 +121,7 @@ async function fetchLinkedEntities(
  * Build rich context string for question generation
  */
 function buildEnhancedContext(context: EnhancedQuestionContext): string {
-  const { condition, linkedEntities, task, difficulty } = context;
+  const { condition, linkedEntities, task } = context;
   const content = condition.content || {};
 
   let contextStr = `## Condition: ${condition.name}
@@ -203,7 +202,7 @@ ${content.clinical_pearls.join('\n')}
   contextStr += `
 ## Question Requirements
 - Task Focus: ${task}
-- Difficulty: ${difficulty === 'easier' ? 'Easier than PANCE' : difficulty === 'harder' ? 'Harder than PANCE' : 'Standard PANCE level'}
+- All questions must be at standard PANCE level
 `;
 
   return contextStr;
@@ -250,7 +249,6 @@ export async function generateEnhancedQuestion(
       condition,
       linkedEntities,
       task,
-      difficulty: settings.difficulty || 'same',
     };
 
     // Generate question via API with enhanced context
@@ -263,7 +261,6 @@ export async function generateEnhancedQuestion(
         conditionName: condition.name,
         system: targetSystem,
         task,
-        difficulty: settings.difficulty || 'same',
       }),
     });
 

@@ -110,10 +110,6 @@ export async function fetchSessionQuestions(
     params.set('system', system);
   }
 
-  if (settings.difficulty && settings.difficulty !== 'same') {
-    params.set('difficulty', settings.difficulty === 'easier' ? 'easy' : 'hard');
-  }
-
   if (settings.focus === 'review') {
     params.set('mode', 'review');
   } else if (settings.focus === 'growth') {

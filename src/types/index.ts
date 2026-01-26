@@ -100,7 +100,6 @@ export interface SessionSettings {
     | 'unseen'
     | 'incorrect'
     | 'bookmarked';
-  difficulty: 'same'; // Always PANCE-level, no easy/hard modes
   topic?: string;
   count?: number;
   systems?: string[];

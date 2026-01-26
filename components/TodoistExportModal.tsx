@@ -29,8 +29,8 @@ interface ExportOptions {
 }
 
 const TODOIST_CONFIG: TodoistOAuthConfig = {
-  clientId: process.env.REACT_APP_TODOIST_CLIENT_ID || '',
-  clientSecret: process.env.REACT_APP_TODOIST_CLIENT_SECRET || '',
+  clientId: import.meta.env.VITE_TODOIST_CLIENT_ID || '',
+  clientSecret: import.meta.env.VITE_TODOIST_CLIENT_SECRET || '',
   redirectUri: `${window.location.origin}/todoist-callback`,
 };
 

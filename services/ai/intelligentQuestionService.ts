@@ -610,13 +610,6 @@ export function enhanceSessionSettings(
 
   const enhanced = { ...baseSettings, intelligentEnhancements: enhancements };
 
-  // Adapt difficulty based on fatigue
-  // Note: SessionSettings.difficulty uses 'easier' | 'same' | 'harder' (relative difficulty)
-  if (cognitive.fatigueLevel > 60 && baseSettings.difficulty !== 'easier') {
-    enhanced.difficulty = baseSettings.difficulty === 'harder' ? 'same' : 'easier';
-    enhancements.push(`Reduced difficulty due to fatigue (${Math.round(cognitive.fatigueLevel)}%)`);
-  }
-
   // Suggest focus area
   if (baseSettings.focus === 'all' && systemMastery.length > 0) {
     const weakest = systemMastery
