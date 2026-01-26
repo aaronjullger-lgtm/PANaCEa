@@ -152,10 +152,13 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = await response.json();
-      dataCache.set(cacheKey, data);
-      console.log(`✓ Loaded ${Array.isArray(data) ? data.length : 0} lab cases from database`);
-      return data;
+      const responseData = await response.json();
+      // Handle wrapped response format { success: true, data: [...] }
+      const data = responseData?.data ?? responseData;
+      const cases = Array.isArray(data) ? data : [];
+      dataCache.set(cacheKey, cases);
+      console.log(`✓ Loaded ${cases.length} lab cases from database`);
+      return cases;
     }
 
     // Log warning for non-JSON responses
