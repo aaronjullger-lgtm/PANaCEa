@@ -108,7 +108,8 @@ const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
 
 /**
  * Select questions from a pool following PANCE distribution percentages
- * Takes a shuffled pool and picks questions to match PANCE blueprint ratios
+ * Uses weighted random selection to properly handle fractional allocations
+ * Over 360 questions, this will match PANCE blueprint distribution
  */
 function selectByPanceDistribution<T extends { system: string | null }>(
   pool: T[],
@@ -125,51 +126,63 @@ function selectByPanceDistribution<T extends { system: string | null }>(
     bySystem[sys].push(q);
   }
   
-  // Calculate target counts based on PANCE percentages
+  // Shuffle each system's questions for randomness within system
+  for (const sys of Object.keys(bySystem)) {
+    bySystem[sys] = fisherYatesShuffle(bySystem[sys]);
+  }
+  
+  // Build weighted selection array based on PANCE percentages
+  // Each system gets weight proportional to its PANCE percentage
+  const systemWeights: { system: string; weight: number; index: number }[] = [];
   const totalPercent = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
-  const targets: { system: string; target: number; available: number }[] = [];
   
-  for (const [sys, questions] of Object.entries(bySystem)) {
+  for (const sys of Object.keys(bySystem)) {
     const pancePercent = PANCE_SYSTEM_PERCENTAGES[sys] || 3; // Default 3% for unknown
-    const target = Math.round((pancePercent / totalPercent) * count);
-    targets.push({ system: sys, target, available: questions.length });
+    systemWeights.push({ 
+      system: sys, 
+      weight: pancePercent / totalPercent,
+      index: 0 // Track how many we've taken from this system
+    });
   }
   
-  // Sort by PANCE weight (highest first) for priority selection
-  targets.sort((a, b) => {
-    const weightA = PANCE_SYSTEM_PERCENTAGES[a.system] || 0;
-    const weightB = PANCE_SYSTEM_PERCENTAGES[b.system] || 0;
-    return weightB - weightA;
-  });
-  
-  // Select questions, respecting targets but filling with what's available
+  // Select questions using weighted random selection
   const selected: T[] = [];
-  const systemIndices: Record<string, number> = {};
   
-  // First pass: try to meet targets
-  for (const { system, target, available } of targets) {
-    systemIndices[system] = 0;
-    const toTake = Math.min(target, available, count - selected.length);
-    for (let i = 0; i < toTake; i++) {
-      selected.push(bySystem[system][systemIndices[system]++]);
-    }
-  }
-  
-  // Second pass: if we need more, cycle through systems by PANCE weight
   while (selected.length < count) {
-    let added = false;
-    for (const { system } of targets) {
-      if (selected.length >= count) break;
-      const idx = systemIndices[system];
-      if (idx < bySystem[system].length) {
-        selected.push(bySystem[system][systemIndices[system]++]);
-        added = true;
+    // Filter to systems that still have questions available
+    const available = systemWeights.filter(
+      sw => sw.index < bySystem[sw.system].length
+    );
+    
+    if (available.length === 0) break;
+    
+    // Calculate total weight of available systems
+    const totalWeight = available.reduce((sum, sw) => sum + sw.weight, 0);
+    
+    // Weighted random selection
+    let random = Math.random() * totalWeight;
+    let chosen: typeof available[0] | null = null;
+    
+    for (const sw of available) {
+      random -= sw.weight;
+      if (random <= 0) {
+        chosen = sw;
+        break;
       }
     }
-    if (!added) break; // No more questions available
+    
+    // Fallback to first available if rounding issues
+    if (!chosen) chosen = available[0];
+    
+    // Add question from chosen system
+    const question = bySystem[chosen.system][chosen.index];
+    if (question) {
+      selected.push(question);
+      chosen.index++;
+    }
   }
   
-  // Final shuffle to interleave systems (avoid all CV, then all PULM, etc.)
+  // Final shuffle to interleave (weighted selection already varied, but this ensures no patterns)
   return fisherYatesShuffle(selected);
 }
 
