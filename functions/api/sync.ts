@@ -257,7 +257,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
             dueDate: new Date(item.dueDate),
             lastReviewed: new Date(item.lastReviewed),
             quality: item.quality,
-            difficulty: item.difficulty,
+            difficulty: item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
             stabilityScore: item.stabilityScore,
             ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
           };
