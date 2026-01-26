@@ -23,13 +23,9 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 // Validation schemas
 const GoalListSchema = z.object({
-  query: z
-    .object({
-      status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
-      goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
-      limit: z.string().regex(/^\d+$/).optional(),
-    })
-    .optional(),
+  status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
+  goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
+  limit: z.string().regex(/^\d+$/).optional(),
 });
 
 const GoalCreateSchema = z.object({
@@ -81,9 +77,9 @@ export const onRequestGet = authenticatedEndpoint(GoalListSchema, async (context
     logger.addContext({ userId: auth.userId });
 
     // Parse query params
-    const status = validated.query?.status;
-    const goalType = validated.query?.goalType;
-    const limit = validated.query?.limit ? parseInt(validated.query.limit) : 50;
+    const status = validated.status;
+    const goalType = validated.goalType;
+    const limit = validated.limit ? parseInt(validated.limit) : 50;
 
     // Build where clause
     const where: any = { userId: auth.userId };
@@ -117,7 +113,7 @@ export const onRequestGet = authenticatedEndpoint(GoalListSchema, async (context
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });
 
 /**
  * POST - Create a new goal

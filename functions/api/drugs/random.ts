@@ -11,12 +11,10 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const RandomDrugsSchema = z.object({
-  query: z.object({
-    count: z
-      .string()
-      .optional()
-      .transform((val) => (val ? parseInt(val, 10) : 10)),
-  }),
+  count: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10)),
 });
 
 export const onRequestOptions = withCors();
@@ -27,7 +25,7 @@ export const onRequestGet = publicEndpoint(RandomDrugsSchema, async (context) =>
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const count = Math.min(validated.query.count || 10, 50); // Cap at 50
+    const count = Math.min(validated.count || 10, 50); // Cap at 50
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -35,7 +33,7 @@ export const onRequestGet = publicEndpoint(RandomDrugsSchema, async (context) =>
     const drugs = await prisma.$queryRaw`SELECT * FROM "Drug" ORDER BY RANDOM() LIMIT ${count}`;
 
     logger.info('Random drugs fetched', {
-      requestedCount: validated.query.count,
+      requestedCount: validated.count,
       actualCount: Array.isArray(drugs) ? drugs.length : 0,
     });
 
@@ -43,10 +41,10 @@ export const onRequestGet = publicEndpoint(RandomDrugsSchema, async (context) =>
   } catch (error) {
     logger.error('Random drugs error', {
       error: error instanceof Error ? error.message : String(error),
-      count: validated.query.count,
+      count: validated.count,
     });
     throw new Error('Failed to fetch random drugs');
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

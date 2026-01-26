@@ -16,18 +16,14 @@ import { isAdmin, type UserRole } from '../_shared/rbac';
 
 // Query schema for GET requests
 const GetQuerySchema = z.object({
-  query: z
-    .object({
-      validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
-      system: z.string().optional(),
-      minQualityScore: z.string().optional(),
-      maxFlagRate: z.string().optional(),
-      limit: z.string().optional(),
-      offset: z.string().optional(),
-      sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).optional(),
-      sortOrder: z.enum(['asc', 'desc']).optional(),
-    })
-    .optional(),
+  validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
+  system: z.string().optional(),
+  minQualityScore: z.string().optional(),
+  maxFlagRate: z.string().optional(),
+  limit: z.string().optional(),
+  offset: z.string().optional(),
+  sortBy: z.enum(['qualityScore', 'flagRate', 'generatedAt', 'timesServed']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
 // Validation schema for POST requests
@@ -73,18 +69,18 @@ export const onRequestGet = authenticatedEndpoint(GetQuerySchema, async (context
     }
 
     // Parse query parameters with defaults
-    const validationStatus = validated.query?.validationStatus || 'pending';
-    const system = validated.query?.system;
-    const minQualityScore = validated.query?.minQualityScore
-      ? parseFloat(validated.query.minQualityScore)
+    const validationStatus = validated.validationStatus || 'pending';
+    const system = validated.system;
+    const minQualityScore = validated.minQualityScore
+      ? parseFloat(validated.minQualityScore)
       : undefined;
-    const maxFlagRate = validated.query?.maxFlagRate
-      ? parseFloat(validated.query.maxFlagRate)
+    const maxFlagRate = validated.maxFlagRate
+      ? parseFloat(validated.maxFlagRate)
       : undefined;
-    const limit = validated.query?.limit ? parseInt(validated.query.limit) : 50;
-    const offset = validated.query?.offset ? parseInt(validated.query.offset) : 0;
-    const sortBy = validated.query?.sortBy || 'generatedAt';
-    const sortOrder = validated.query?.sortOrder || 'desc';
+    const limit = validated.limit ? parseInt(validated.limit) : 50;
+    const offset = validated.offset ? parseInt(validated.offset) : 0;
+    const sortBy = validated.sortBy || 'generatedAt';
+    const sortOrder = validated.sortOrder || 'desc';
 
     // Build where clause
     const where: any = {
@@ -173,7 +169,7 @@ export const onRequestGet = authenticatedEndpoint(GetQuerySchema, async (context
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });
 
 /**
  * POST - Update question validation status

@@ -26,9 +26,7 @@ export interface DdxProblem {
 }
 
 const GenerateDdxSchema = z.object({
-  query: z.object({
-    topic: z.string().min(1).max(100).optional().default('Cardiology'),
-  }),
+  topic: z.string().min(1).max(100).optional().default('Cardiology'),
 });
 
 async function generateDdxProblem(prisma: any, topic: string): Promise<DdxProblem> {
@@ -130,7 +128,7 @@ export const onRequestGet = authenticatedEndpoint(GenerateDdxSchema, async (cont
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const topic = validated.query.topic;
+    const topic = validated.topic;
 
     logger.info('Generating DDx problem', {
       userId: auth.userId,
@@ -153,10 +151,10 @@ export const onRequestGet = authenticatedEndpoint(GenerateDdxSchema, async (cont
     logger.error('Error generating DDx problem', {
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
-      topic: validated.query.topic,
+      topic: validated.topic,
     });
     throw new Error('Failed to generate DDx problem');
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

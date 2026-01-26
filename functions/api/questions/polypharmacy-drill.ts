@@ -204,10 +204,8 @@ function getCommonIndication(drugClasses: string[]): string {
 }
 
 const PolypharmacyDrillSchema = z.object({
-  query: z.object({
-    count: z.string().optional(),
-    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
-  }),
+  count: z.string().optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
 });
 
 /**
@@ -225,8 +223,8 @@ export const onRequestGet = authenticatedEndpoint(PolypharmacyDrillSchema, async
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const count = Math.min(parseInt(validated.query.count || '1', 10), 5); // Max 5 cases
-    const difficulty = (validated.query.difficulty || 'medium') as 'easy' | 'medium' | 'hard';
+    const count = Math.min(parseInt(validated.count || '1', 10), 5); // Max 5 cases
+    const difficulty = (validated.difficulty || 'medium') as 'easy' | 'medium' | 'hard';
 
     // Query drug registry for case generation
     const drugs = await prisma.drug.findMany({
@@ -276,4 +274,4 @@ export const onRequestGet = authenticatedEndpoint(PolypharmacyDrillSchema, async
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

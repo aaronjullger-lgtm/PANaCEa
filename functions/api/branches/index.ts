@@ -17,9 +17,7 @@ import { z } from 'zod';
 
 // Schema for GET request (query params)
 const ListBranchesSchema = z.object({
-  query: z.object({
-    includeArchived: z.enum(['true', 'false']).optional(),
-  }),
+  includeArchived: z.enum(['true', 'false']).optional(),
 });
 
 // Schema for POST request (body)
@@ -48,7 +46,7 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-      const includeArchived = validated.query.includeArchived === 'true';
+      const includeArchived = validated.includeArchived === 'true';
 
       log.info('Listing branches', { includeArchived });
 
