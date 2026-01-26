@@ -528,7 +528,14 @@ const App: React.FC = () => {
   }, []);
 
   // Navigate to simulation page - memoized
-  const handleNavigateToSimulation = useCallback(() => {
+  const [simulationInitialFocus, setSimulationInitialFocus] = useState<'all' | 'growth' | 'flagged' | 'due'>('all');
+  
+  const handleNavigateToSimulation = useCallback((settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => {
+    if (settings?.initialFocus) {
+      setSimulationInitialFocus(settings.initialFocus);
+    } else {
+      setSimulationInitialFocus('all');
+    }
     setView('simulation_page');
   }, []);
 
@@ -1216,6 +1223,7 @@ const App: React.FC = () => {
                           flaggedQuestions={flaggedQuestions}
                           growthAreas={growthAreas}
                           examLabel={examLabel ?? 'PANCE'}
+                          initialFocus={simulationInitialFocus}
                         />
                       </Suspense>
                     </WithGeminiErrorBoundary>

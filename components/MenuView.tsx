@@ -109,7 +109,7 @@ interface MenuViewProps {
   /** Callback for navigating to gap analysis dashboard */
   onNavigateToGapAnalysis?: () => void;
   /** Callback for navigating to simulation page */
-  onNavigateToSimulation?: () => void;
+  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;

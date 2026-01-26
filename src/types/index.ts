@@ -95,6 +95,7 @@ export interface SessionSettings {
     | 'all'
     | 'growth'
     | 'review'
+    | 'due'
     | 'topic'
     | 'reviewFlagged'
     | 'unseen'

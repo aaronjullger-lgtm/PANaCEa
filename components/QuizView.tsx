@@ -355,6 +355,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [queue]);
 
   // ---- SHOULD WE REPLENISH ENDLESSLY? ----
+  // 'review' and 'reviewFlagged' are finite (show specific questions)
+  // 'due' is continuous - generates variant questions for concepts needing SRS review
   const shouldEndlesslyReplenish =
     sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
 

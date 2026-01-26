@@ -87,7 +87,7 @@ interface CommandCenterHubProps {
   onNavigateToGapAnalysis: () => void;
   onNavigateToClinicalProfile?: () => void;
   onNavigateToIntegrations?: () => void;
-  onNavigateToSimulation?: () => void;
+  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
   onNavigateToReference?: () => void;
 }
 
@@ -557,7 +557,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           whileHover={{ scale: 1.005 }}
           onClick={() =>
           onNavigateToSimulation
-            ? onNavigateToSimulation()
+            ? onNavigateToSimulation({ initialFocus: 'due' })
             : onStartSession({ focus: 'review' })
           }
           className="w-full mb-6 p-4 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 rounded-xl flex items-center justify-between group"

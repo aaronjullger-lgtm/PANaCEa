@@ -17,6 +17,7 @@ interface SimulationPageProps {
   flaggedQuestions: Question[];
   growthAreas: string[];
   examLabel?: string;
+  initialFocus?: FocusOption;
 }
 
 type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
@@ -28,8 +29,9 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   flaggedQuestions,
   growthAreas,
   examLabel = 'PANCE',
+  initialFocus = 'all',
 }) => {
-  const [selectedFocus, setSelectedFocus] = useState<FocusOption>('all');
+  const [selectedFocus, setSelectedFocus] = useState<FocusOption>(initialFocus);
 
   // Calculate real stats from performance data
   const stats = useMemo(() => {
@@ -58,10 +60,10 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         focus = 'growth';
         break;
       case 'flagged':
-        focus = 'review';
+        focus = 'reviewFlagged';
         break;
       case 'due':
-        focus = 'review';
+        focus = 'due';
         break;
       default:
         focus = 'all';
