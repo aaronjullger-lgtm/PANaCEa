@@ -25,6 +25,8 @@ interface QuestionDataJson {
   answers?: string[];
   choices?: string[];
   correctAnswer?: string;
+  correctAnswerIndex?: number;
+  correctIndex?: number;
   explanation?: string;
   conditionName?: string;
   system?: string;
@@ -376,12 +378,23 @@ async function getFromPreGeneratedPool(
     const optionsData = data.options || data.answers || data.choices;
     const optionsArr: string[] = Array.isArray(optionsData) ? optionsData : [];
 
+    // Handle both correctAnswer (letter "A") and correctAnswerIndex (number 0) formats
+    let correctAnswer = data.correctAnswer;
+    if (!correctAnswer && typeof data.correctAnswerIndex === 'number') {
+      const letters = ['A', 'B', 'C', 'D'];
+      correctAnswer = letters[data.correctAnswerIndex] || 'A';
+    }
+    if (!correctAnswer && typeof data.correctIndex === 'number') {
+      const letters = ['A', 'B', 'C', 'D'];
+      correctAnswer = letters[data.correctIndex] || 'A';
+    }
+
     questions.push({
       id: q.id,
       vignette: data.vignette,
       question: data.question,
       options: optionsArr,
-      correctAnswer: data.correctAnswer,
+      correctAnswer: correctAnswer || 'A',
       explanation: data.explanation,
       system: q.system || 'General',
       difficulty: q.difficulty || 'medium',
