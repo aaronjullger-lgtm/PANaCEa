@@ -52,7 +52,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: yesterday.getTime(),
@@ -63,7 +62,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: twoDaysAgo.getTime(),
@@ -74,7 +72,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -101,7 +98,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: threeDaysAgo.getTime(),
@@ -112,7 +108,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -141,7 +136,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         });
       }
 
@@ -158,7 +152,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         });
       }
 
@@ -182,7 +175,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: today.getTime() + 1000,
@@ -193,7 +185,6 @@ describe('Widget Service', () => {
           topic: 'Test',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 

@@ -194,8 +194,9 @@ export {
 // import * as mediaApprovalServiceModule from './mediaApprovalService'; // IMPORT DISABLED: server-only
 // export const mediaApproval = mediaApprovalServiceModule; // SERVER-ONLY: use API
 
-import * as imageQualityServiceModule from './imageQualityService';
-export const imageQuality = imageQualityServiceModule;
+// REMOVED: imageQualityService - imports 'sharp' which is Node.js-only
+// import * as imageQualityServiceModule from './imageQualityService'; // IMPORT DISABLED: server-only (uses sharp)
+// export const imageQuality = imageQualityServiceModule; // SERVER-ONLY: use API
 
 // REMOVED: educationalResourceService - has runtime prisma import, server-only
 // import * as educationalResourceServiceModule from './educationalResourceService'; // IMPORT DISABLED: server-only

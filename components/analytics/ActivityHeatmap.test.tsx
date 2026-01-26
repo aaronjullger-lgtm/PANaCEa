@@ -18,7 +18,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Cardiovascular',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
         timeSpentMs: 45000,
       },
       {
@@ -30,7 +29,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Cardiovascular',
         isCorrect: false,
         focus: 'all',
-        difficulty: 'same',
         timeSpentMs: 60000,
       },
       {
@@ -42,7 +40,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Pulmonary',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
         timeSpentMs: 30000,
       },
     ];
@@ -79,7 +76,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Test',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
       },
       {
         timestamp: new Date('2024-12-01T11:00:00').getTime(),
@@ -90,7 +86,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Test',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
       },
       {
         timestamp: new Date('2024-12-01T12:00:00').getTime(),
@@ -101,7 +96,6 @@ describe('ActivityHeatmap', () => {
         topic: 'Test',
         isCorrect: false,
         focus: 'all',
-        difficulty: 'same',
       },
     ];
 

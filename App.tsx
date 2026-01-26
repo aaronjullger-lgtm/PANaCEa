@@ -277,9 +277,9 @@ const App: React.FC = () => {
   }, []);
 
   // ---- derived: "growth areas" and heatmap data ----
-  // Heatmap must ONLY use PANCE-level all-topics sessions
+  // Heatmap uses all-topics sessions (all questions are PANCE-level)
   const heatmapPerformance = useMemo(
-    () => performanceData.filter((r) => r.focus === 'all' && r.difficulty === 'same'),
+    () => performanceData.filter((r) => r.focus === 'all'),
     [performanceData]
   );
 
@@ -451,7 +451,6 @@ const App: React.FC = () => {
 
     handleConfirmSession({
       focus: sessionFocus,
-      difficulty: 'same',
     });
   };
 

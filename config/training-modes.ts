@@ -114,7 +114,6 @@ export interface StudyPreset {
   iconName: string;
   settings: {
     count: number;
-    difficulty: 'same' | 'easier' | 'harder';
     focus: 'all' | 'unseen' | 'incorrect' | 'bookmarked';
     systems?: string[];
     durationMinutes: number;
@@ -129,7 +128,6 @@ export const STUDY_PRESETS: StudyPreset[] = [
     iconName: 'Zap',
     settings: {
       count: 10,
-      difficulty: 'same',
       focus: 'incorrect',
       durationMinutes: 10,
     },
@@ -141,7 +139,6 @@ export const STUDY_PRESETS: StudyPreset[] = [
     iconName: 'HeartPulse',
     settings: {
       count: 25,
-      difficulty: 'same',
       focus: 'all',
       systems: ['Cardiovascular'],
       durationMinutes: 30,
@@ -154,7 +151,6 @@ export const STUDY_PRESETS: StudyPreset[] = [
     iconName: 'TrendingDown',
     settings: {
       count: 20,
-      difficulty: 'harder',
       focus: 'incorrect',
       durationMinutes: 25,
     },
@@ -166,7 +162,6 @@ export const STUDY_PRESETS: StudyPreset[] = [
     iconName: 'Sparkles',
     settings: {
       count: 50,
-      difficulty: 'same',
       focus: 'unseen',
       durationMinutes: 60,
     },

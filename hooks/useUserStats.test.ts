@@ -59,7 +59,6 @@ describe('useUserStats', () => {
           topic: 'Test Topic',
           isCorrect: true,
           focus: 'all' as const,
-          difficulty: 'same' as const,
         },
       ];
 
@@ -213,7 +212,6 @@ describe('useUserStats', () => {
           topic: 'Test Topic',
           isCorrect: true,
           focus: 'all' as const,
-          difficulty: 'same' as const,
         },
       ];
 

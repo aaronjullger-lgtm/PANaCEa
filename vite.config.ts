@@ -229,7 +229,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         // NOTE: Prisma packages are now handled by prismaExcludePlugin
         // which stubs them out instead of externalizing (which leaves bare imports)
-        external: [],
+        // sharp is a Node.js-only image processing library - must never be bundled for browser
+        external: ['sharp'],
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
           interop: 'compat',

@@ -22,7 +22,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now() - 10 * 24 * 60 * 60 * 1000, // 10 days ago
@@ -33,7 +32,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now() - 15 * 24 * 60 * 60 * 1000, // 15 days ago
@@ -44,7 +42,6 @@ describe('Analytics Features', () => {
           topic: 'Pulmonology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now() - 20 * 24 * 60 * 60 * 1000, // 20 days ago
@@ -55,7 +52,6 @@ describe('Analytics Features', () => {
           topic: 'Pulmonology',
           isCorrect: true, // Correct answer
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -85,7 +81,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now() - 40 * 24 * 60 * 60 * 1000, // 40 days ago (outside 30 day window)
@@ -96,7 +91,6 @@ describe('Analytics Features', () => {
           topic: 'Pulmonology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -117,7 +111,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -150,7 +143,6 @@ describe('Analytics Features', () => {
           topic: 'Other',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -173,7 +165,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           timeSpentMs: 90000, // 90 seconds
         },
         {
@@ -185,7 +176,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           timeSpentMs: 60000, // 60 seconds
         },
         {
@@ -197,7 +187,6 @@ describe('Analytics Features', () => {
           topic: 'Pulmonology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           timeSpentMs: 15000, // 15 seconds
         },
       ];
@@ -226,7 +215,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           // No timeSpentMs
         },
       ];
@@ -291,7 +279,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         // Week 2
         {
@@ -303,7 +290,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         // Week 3 (current)
         {
@@ -315,7 +301,6 @@ describe('Analytics Features', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 

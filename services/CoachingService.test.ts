@@ -30,7 +30,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           timeSpentMs: 30000,
         },
         {
@@ -42,7 +41,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
           timeSpentMs: 60000,
         },
       ];
@@ -62,7 +60,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           finalAnswerWasChanged: true,
         },
         {
@@ -74,7 +71,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
           finalAnswerWasChanged: false,
         },
         {
@@ -86,7 +82,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           finalAnswerWasChanged: true,
         },
         {
@@ -98,7 +93,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           finalAnswerWasChanged: false,
         },
       ];
@@ -118,7 +112,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now(),
@@ -129,7 +122,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now(),
@@ -140,7 +132,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
         },
         {
           timestamp: Date.now(),
@@ -151,7 +142,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
@@ -170,7 +160,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           questionWordCount: 50, // Short
         },
         {
@@ -182,7 +171,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           questionWordCount: 150, // Long
         },
         {
@@ -194,7 +182,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: false,
           focus: 'all',
-          difficulty: 'same',
           questionWordCount: 200, // Long
         },
       ];
@@ -219,7 +206,6 @@ describe('CoachingService', () => {
         topic: 'Cardiology',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
       });
 
       const prescription = generateStudyPrescription(mockData);
@@ -242,7 +228,6 @@ describe('CoachingService', () => {
             topic: 'Cardiology',
             isCorrect: true,
             focus: 'topic' as any,
-            difficulty: 'same' as any,
             questionWordCount: 20,
           })),
         // Long questions - low accuracy
@@ -257,7 +242,6 @@ describe('CoachingService', () => {
             topic: 'Cardiology',
             isCorrect: false,
             focus: 'all',
-            difficulty: 'same',
             questionWordCount: 150,
           })),
       ];
@@ -284,7 +268,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology',
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
           finalAnswerWasChanged: true, // Everyone changes their answer
         }));
 
@@ -311,7 +294,6 @@ describe('CoachingService', () => {
             topic: 'Cardiology',
             isCorrect: true,
             focus: 'all' as any,
-            difficulty: 'same' as any,
           })),
         // Low performance at other times
         ...Array(5)
@@ -325,7 +307,6 @@ describe('CoachingService', () => {
             topic: 'Cardiology',
             isCorrect: false,
             focus: 'all',
-            difficulty: 'same',
           })),
       ];
 
@@ -345,7 +326,6 @@ describe('CoachingService', () => {
         topic: 'Cardiology',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
       });
 
       const largeDataset: PerformanceRecord[] = Array(50).fill({
@@ -357,7 +337,6 @@ describe('CoachingService', () => {
         topic: 'Cardiology',
         isCorrect: true,
         focus: 'all',
-        difficulty: 'same',
       });
 
       const smallPrescription = generateStudyPrescription(smallDataset);
@@ -403,7 +382,6 @@ describe('CoachingService', () => {
           topic: 'Cardiology', // Not pneumonia or COPD
           isCorrect: true,
           focus: 'all',
-          difficulty: 'same',
         },
       ];
 
