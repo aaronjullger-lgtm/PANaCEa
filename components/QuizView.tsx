@@ -47,9 +47,7 @@ import WellnessCheckModal from './wellness/WellnessCheckModal';
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
 import {
   SessionStatsOverlay,
-  AnswerFeedback,
   SessionEndSummary,
-  useAnswerFeedback,
   QuestionTimer,
   MomentumBadge,
   StreakBadge,
@@ -336,7 +334,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showSessionEndSummary, setShowSessionEndSummary] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [showTimer, setShowTimer] = useState(true);
-  const answerFeedback = useAnswerFeedback();
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
 
   const noteUpdateTimeout = useRef<number | null>(null);
@@ -676,13 +673,9 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Trigger sensory feedback (haptic + optional sound)
     if (isCorrect) {
       feedback.correct();
-      // Sprint 4: Trigger answer feedback animation and update streak
-      answerFeedback.triggerCorrect(currentStreak + 1);
       setCurrentStreak((prev) => prev + 1);
     } else {
       feedback.incorrect();
-      // Sprint 4: Trigger incorrect animation and reset streak
-      answerFeedback.triggerIncorrect();
       setCurrentStreak(0);
     }
 
@@ -843,7 +836,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     questionStartTime,
     performanceData,
     getToken,
-    answerFeedback,
     currentStreak,
     answerChangeCount,
     eliminatedAnswers,
@@ -1418,13 +1410,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           userFirstName={user?.firstName || undefined}
         />
       )}
-
-      {/* Sprint 4: Answer Feedback Animation */}
-      <AnswerFeedback
-        isCorrect={answerFeedback.isCorrect}
-        showFeedback={answerFeedback.showFeedback}
-        streak={currentStreak}
-      />
 
       {/* Sprint 4: Session Stats Overlay */}
       <SessionStatsOverlay
