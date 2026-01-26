@@ -298,9 +298,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Loading state
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-amber-500 mx-auto" />
+          <Loader2 className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
           <p className="text-xl text-[var(--color-text-muted)]">Loading Grand Rounds...</p>
         </div>
       </div>
@@ -310,7 +310,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Error state
   if (viewState === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
           <h2 className="text-2xl font-bold">Error</h2>
@@ -320,7 +320,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div className="flex gap-3">
             <button
               onClick={fetchTodaysChallenge}
-              className="flex-1 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors"
+              className="flex-1 px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-white rounded-lg font-semibold transition-colors"
             >
               Retry
             </button>
@@ -341,7 +341,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     const isTopPercentile = completedStats.percentile >= 90;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -354,11 +354,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="inline-block"
               >
-                <Crown className="w-16 h-16 text-amber-500 mx-auto" />
+                <Crown className="w-16 h-16 text-muted-amber-500 mx-auto" />
               </motion.div>
             )}
 
-            <h2 className="text-3xl font-bold text-amber-500">Challenge Complete!</h2>
+            <h2 className="text-3xl font-bold text-muted-amber-500">Challenge Complete!</h2>
             <p className="text-[var(--color-text-muted)]">
               You've already completed today's Grand Rounds challenge.
             </p>
@@ -366,24 +366,24 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-amber-500">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-amber-500">
+              <div className="text-4xl font-bold text-muted-amber-500">
                 {completedStats.correctCount}/{completedStats.totalQuestions}
               </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-amber-500">{completedStats.percentile}%</div>
+              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.percentile}%</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-amber-500">#{completedStats.ranking}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">#{completedStats.ranking}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
             </div>
           </div>
@@ -393,7 +393,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <Calendar className="w-5 h-5" />
               <span>Next Challenge In:</span>
             </div>
-            <div className="text-2xl font-bold text-amber-500">{nextChallengeCountdown}</div>
+            <div className="text-2xl font-bold text-muted-amber-500">{nextChallengeCountdown}</div>
           </div>
 
           <button
@@ -410,7 +410,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Landing state - Start challenge
   if (viewState === 'landing' && challengeData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -420,12 +420,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <motion.div
               animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] }}
               transition={{ repeat: Infinity, duration: 3 }}
-              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
+              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-muted-amber-500/20 to-muted-amber-600/20 rounded-full"
             >
-              <Trophy className="w-12 h-12 text-amber-500" />
+              <Trophy className="w-12 h-12 text-muted-amber-500" />
             </motion.div>
 
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 bg-clip-text text-transparent">
               Grand Rounds Daily Challenge
             </h1>
 
@@ -436,7 +436,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
-              <Target className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <Target className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
               <div>
                 <div className="font-semibold">5 Questions</div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -446,7 +446,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
-              <Clock className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <Clock className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
               <div>
                 <div className="font-semibold">20 Minutes</div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -456,7 +456,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
-              <Users className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <Users className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
               <div>
                 <div className="font-semibold">Global Leaderboard</div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -466,11 +466,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+          <div className="bg-muted-amber-500/10 border border-muted-amber-500/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-muted-amber-500 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-[var(--color-text-muted)]">
-                <strong className="text-amber-500">One Attempt Per Day:</strong> You can only
+                <strong className="text-muted-amber-500">One Attempt Per Day:</strong> You can only
                 complete this challenge once. New challenges available daily at midnight UTC.
               </div>
             </div>
@@ -485,7 +485,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </button>
             <button
               onClick={handleStart}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
             >
               <Play className="w-5 h-5" />
               Start Challenge
@@ -503,9 +503,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     // Guard: If currentQuestion is undefined, show loading
     if (!currentQuestion) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
           <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin text-amber-500 mx-auto" />
+            <Loader2 className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
             <p className="text-xl text-[var(--color-text-muted)]">Loading question...</p>
           </div>
         </div>
@@ -517,14 +517,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     const timeRemainingPercent = (timeRemaining / TOTAL_TIME_MS) * 100;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] p-6">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header with timer */}
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-amber-500">
+                <div className="w-12 h-12 bg-muted-amber-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-muted-amber-500">
                     {currentQuestionIndex + 1}/{challengeData.questions.length}
                   </span>
                 </div>
@@ -536,10 +536,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
               <div className="flex items-center gap-2">
                 <Timer
-                  className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}
+                  className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
                 />
                 <span
-                  className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}
+                  className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
                 >
                   {formatTime(timeRemaining)}
                 </span>
@@ -552,13 +552,13 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
-                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
+                  className="h-full bg-gradient-to-r from-muted-amber-500 to-muted-amber-600"
                 />
               </div>
               <div className="h-1 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-100 ${
-                    timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-amber-500'
+                    timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-muted-amber-500'
                   }`}
                   style={{ width: `${timeRemainingPercent}%` }}
                 />
@@ -594,15 +594,15 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                     onClick={() => handleAnswerSelect(index)}
                     className={`w-full p-4 rounded-lg text-left transition-all border-2 ${
                       selectedAnswer === index
-                        ? 'bg-amber-500/20 border-amber-500'
-                        : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-amber-500/50'
+                        ? 'bg-muted-amber-500/20 border-muted-amber-500'
+                        : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-muted-amber-500/50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
                           selectedAnswer === index
-                            ? 'bg-amber-500 text-white'
+                            ? 'bg-muted-amber-500 text-white'
                             : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                         }`}
                       >
@@ -621,7 +621,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   className={`px-8 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                     selectedAnswer === null || isSubmitting
                       ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                      : 'bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white'
                   }`}
                 >
                   {isSubmitting ? (
@@ -654,7 +654,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     const isTopPercentile = completedStats.percentile >= 90;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -667,13 +667,13 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ type: 'spring', bounce: 0.5 }}
             >
               {isTopPercentile ? (
-                <Crown className="w-20 h-20 text-amber-500 mx-auto" />
+                <Crown className="w-20 h-20 text-muted-amber-500 mx-auto" />
               ) : (
-                <Trophy className="w-20 h-20 text-amber-500 mx-auto" />
+                <Trophy className="w-20 h-20 text-muted-amber-500 mx-auto" />
               )}
             </motion.div>
 
-            <h2 className="text-3xl font-bold text-amber-500">
+            <h2 className="text-3xl font-bold text-muted-amber-500">
               {isTopPercentile ? 'Outstanding Performance!' : 'Challenge Complete!'}
             </h2>
             <p className="text-[var(--color-text-muted)]">
@@ -690,7 +690,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.1 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-amber-500">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </motion.div>
 
@@ -700,7 +700,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.2 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-amber-500">
+              <div className="text-4xl font-bold text-muted-amber-500">
                 {completedStats.correctCount}/{completedStats.totalQuestions}
               </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
@@ -712,7 +712,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.3 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-amber-500">{completedStats.percentile}%</div>
+              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.percentile}%</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
             </motion.div>
 
@@ -722,7 +722,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.4 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-amber-500">#{completedStats.ranking}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">#{completedStats.ranking}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
             </motion.div>
           </div>
@@ -737,12 +737,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <Calendar className="w-5 h-5" />
               <span>Next Challenge In:</span>
             </div>
-            <div className="text-2xl font-bold text-amber-500">{nextChallengeCountdown}</div>
+            <div className="text-2xl font-bold text-muted-amber-500">{nextChallengeCountdown}</div>
           </motion.div>
 
           <button
             onClick={onExit}
-            className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-semibold transition-all"
+            className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white rounded-lg font-semibold transition-all"
           >
             Back to Menu
           </button>

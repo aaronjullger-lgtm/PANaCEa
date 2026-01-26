@@ -259,7 +259,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {userPercentile !== undefined && (
                     <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
                       <TrendingUp
-                        className={`w-5 h-5 ${userPercentile >= 50 ? 'text-emerald-400' : 'text-amber-400'}`}
+                        className={`w-5 h-5 ${userPercentile >= 50 ? 'text-emerald-400' : 'text-muted-amber-400'}`}
                       />
                       <div>
                         <div className="text-sm font-medium text-white">
