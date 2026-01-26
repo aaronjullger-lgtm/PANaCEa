@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -16,11 +16,11 @@ const DrugAllSchema = z.object({});
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = publicEndpoint(
   DrugAllSchema,
   async (context) => {
-    const { env, auth } = context;
-    const logger = createEndpointLogger('/api/drugs/all', auth.userId);
+    const { env } = context;
+    const logger = createEndpointLogger('/api/drugs/all');
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
     try {
