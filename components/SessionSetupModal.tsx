@@ -19,7 +19,7 @@ interface SessionSetupModalProps {
 }
 
 type Focus = SessionSettings['focus'];
-type Difficulty = SessionSettings['difficulty'];
+// Note: Difficulty was removed from SessionSettings - all questions are PANCE-level
 
 const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => void }) => {
   const Icon = iconMap[preset.iconName as keyof typeof iconMap] || Sparkles;

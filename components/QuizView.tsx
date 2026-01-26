@@ -711,7 +711,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
       isCorrect,
       focus: sessionSettings.focus,
-      difficulty: sessionSettings.difficulty,
+      // Note: Difficulty removed - all questions are PANCE-level
       questionWordCount,
       timeSpentMs: timeToAnswer,
     });
