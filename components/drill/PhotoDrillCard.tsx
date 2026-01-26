@@ -92,7 +92,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       </div>
 
       {/* Image Display */}
-      <div className="relative aspect-video mb-6 rounded-xl overflow-hidden bg-slate-100">
+      <div className="relative aspect-video mb-6 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
         {/* BlurHash or Thumbnail Preview */}
         {!imageLoaded && question.thumbnailUrl && (
           <img

@@ -255,7 +255,7 @@ export function InteractiveDiagram({
             <button
               onClick={() => setShowLabels(!showLabels)}
               className={`p-2 rounded-lg ${
-                showLabels ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'
+                showLabels ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
               title={showLabels ? 'Hide Labels' : 'Show Labels'}
             >
@@ -274,7 +274,7 @@ export function InteractiveDiagram({
 
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
           >
             {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
           </button>

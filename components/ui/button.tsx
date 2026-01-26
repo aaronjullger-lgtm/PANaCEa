@@ -16,8 +16,8 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     default: 'bg-blue-600 text-white hover:bg-blue-700',
-    outline: 'border border-slate-300 text-slate-700 hover:bg-slate-100',
-    ghost: 'text-slate-700 hover:bg-slate-100',
+    outline: 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700',
+    ghost: 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700',
   };
 
   return (

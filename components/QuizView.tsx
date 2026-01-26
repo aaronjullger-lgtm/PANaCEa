@@ -1334,7 +1334,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             )}
 
             {alternateRationale && !isExplainerLoading && (
-              <div className="mt-4 pt-4 border-t border-slate-200 animate-fade-in">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 animate-fade-in">
                 <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
                   Alternate Explanation
                 </h4>
@@ -1346,7 +1346,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
             {/* Clinical Pearls Section */}
             {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                   Key Pearls: {currentQuestion.condition}
                 </h3>
@@ -1358,13 +1358,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               </div>
             )}
 
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
               <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">My Notes</h3>
               <textarea
                 value={localNote}
                 onChange={handleNoteChange}
                 placeholder="Type your notes here... They will be saved automatically."
-                className="w-full p-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
                 rows={3}
               />
             </div>

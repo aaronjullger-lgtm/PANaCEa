@@ -554,7 +554,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         {/* Daily Recommended badge */}
         {isDailyRecommended && !isDisabled && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-white text-slate-900 px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-slate-200">
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-slate-200 dark:border-slate-600">
             <TrendingUp className="w-3 h-3" />
             Daily Pick
           </div>
