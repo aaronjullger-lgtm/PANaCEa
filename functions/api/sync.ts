@@ -275,11 +275,28 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       // 3. Upsert SavedQuestions with Conflict Resolution
       if (payload.savedQuestions?.length) {
         for (const item of payload.savedQuestions) {
+          // Map from Question object format to SavedQuestion format
+          // Client sends: { id, question, options, correctAnswerIndex, ... }
+          // Database expects: { questionId, questionText, correctAnswer, ... }
+          const questionId = item.questionId || item.id || crypto.randomUUID();
+          const questionText = item.questionText || item.question || '';
+          const correctAnswer = item.correctAnswer || 
+            (item.options && item.correctAnswerIndex !== undefined 
+              ? item.options[item.correctAnswerIndex] 
+              : '');
+          const explanation = item.explanation || item.rationale || '';
+          const topic = item.topic || item.condition || '';
+
+          // Skip if we don't have minimum required data
+          if (!questionText) {
+            continue;
+          }
+
           const existing = await tx.savedQuestion.findUnique({
             where: {
               userId_questionId_type: {
                 userId: internalUserId,
-                questionId: item.questionId,
+                questionId: questionId,
                 type: item.type,
               },
             },
@@ -296,11 +313,11 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
           const data = {
             userId: internalUserId,
-            questionId: item.questionId,
-            questionText: item.questionText,
-            correctAnswer: item.correctAnswer,
-            explanation: item.explanation,
-            topic: item.topic,
+            questionId: questionId,
+            questionText: questionText,
+            correctAnswer: correctAnswer,
+            explanation: explanation,
+            topic: topic,
             system: item.system,
             type: item.type,
             userNote: item.userNote,
