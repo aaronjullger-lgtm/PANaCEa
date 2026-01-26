@@ -28,22 +28,23 @@ interface SystemComparisonProps {
 // Constants
 // ============================================================================
 
+// Using "Stormy Slate" semantic design tokens for organ system colors
 const SYSTEM_COLORS: Record<string, string> = {
-  CV: 'bg-red-500',
-  PULM: 'bg-sky-500',
-  GI: 'bg-amber-500',
-  NEURO: 'bg-purple-500',
-  MSK: 'bg-orange-500',
-  DERM: 'bg-pink-500',
-  HEME: 'bg-rose-500',
-  ENDO: 'bg-teal-500',
-  HEENT: 'bg-indigo-500',
-  RENAL: 'bg-blue-500',
-  REPRO: 'bg-fuchsia-500',
-  PSYCH: 'bg-violet-500',
-  ID: 'bg-emerald-500',
-  GU: 'bg-cyan-500',
-  PRO: 'bg-slate-500',
+  CV: 'bg-data-fail',           // Cardiovascular - critical system (11% blueprint)
+  PULM: 'bg-action-blue-500',   // Pulmonary - primary system (9% blueprint)
+  GI: 'bg-data-provisional',    // GI - developing focus
+  NEURO: 'bg-slate-violet-500', // Neurology
+  MSK: 'bg-muted-amber-500',    // Musculoskeletal - needs work indicator
+  DERM: 'bg-slate-pink-500',    // Dermatology
+  HEME: 'bg-slate-rose-500',    // Hematology
+  ENDO: 'bg-slate-teal-500',    // Endocrine
+  HEENT: 'bg-slate-indigo-500', // Head & Neck
+  RENAL: 'bg-action-blue-600',  // Renal
+  REPRO: 'bg-slate-fuchsia-500',// Reproductive
+  PSYCH: 'bg-slate-violet-600', // Psychiatry
+  ID: 'bg-data-pass',           // Infectious Disease - mastered indicator
+  GU: 'bg-slate-cyan-500',      // Genitourinary
+  PRO: 'bg-slate-500',          // Professional Practice
 };
 
 const SYSTEM_NAMES: Record<string, string> = {
@@ -128,7 +129,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
             {lowestSystem.changeFromLastPeriod !== undefined && (
               <span
                 className={`ml-auto flex items-center gap-0.5 text-xs font-medium ${
-                  lowestSystem.changeFromLastPeriod > 0 ? 'text-green-500' : 'text-red-500'
+                  lowestSystem.changeFromLastPeriod > 0 ? 'text-data-pass' : 'text-data-fail'
                 }`}
               >
                 {lowestSystem.changeFromLastPeriod > 0 ? (
@@ -168,9 +169,9 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
                       <span
                         className={`flex items-center gap-0.5 text-xs ${
                           item.changeFromLastPeriod > 0
-                            ? 'text-green-500'
+                            ? 'text-data-pass'
                             : item.changeFromLastPeriod < 0
-                              ? 'text-red-500'
+                              ? 'text-data-fail'
                               : 'text-slate-500'
                         }`}
                       >

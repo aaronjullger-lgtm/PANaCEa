@@ -44,6 +44,9 @@ lerna-debug.log*
 /playwright/.auth/user.json
 playwright/*.json
 
+# Cline authentication token (sensitive - never commit)
+.cline_auth_token
+
 # MCP Server configurations and API keys
 **/cline_mcp_settings.json
 **/mcp-settings.json

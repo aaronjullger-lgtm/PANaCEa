@@ -76,50 +76,52 @@ const SYSTEM_ICONS: Record<string, React.ReactNode> = {
 };
 
 const getMasteryLevel = (accuracy: number): { level: string; color: string; bgColor: string } => {
+  // Using "Stormy Slate" semantic design tokens
   if (accuracy >= 90)
     return {
       level: 'Mastered',
-      color: 'text-emerald-700 dark:text-emerald-300',
-      bgColor: 'bg-emerald-500',
+      color: 'text-data-pass dark:text-data-pass',
+      bgColor: 'bg-data-pass',
     };
   if (accuracy >= 80)
     return {
       level: 'Proficient',
-      color: 'text-teal-700 dark:text-teal-300',
-      bgColor: 'bg-teal-500',
+      color: 'text-slate-teal-600 dark:text-slate-teal-400',
+      bgColor: 'bg-slate-teal-500',
     };
   if (accuracy >= 70)
     return {
       level: 'Competent',
-      color: 'text-blue-700 dark:text-blue-300',
-      bgColor: 'bg-blue-500',
+      color: 'text-action-blue-600 dark:text-action-blue-400',
+      bgColor: 'bg-action-blue-500',
     };
   if (accuracy >= 60)
     return {
       level: 'Developing',
-      color: 'text-amber-700 dark:text-amber-300',
-      bgColor: 'bg-amber-500',
+      color: 'text-data-provisional dark:text-data-provisional',
+      bgColor: 'bg-data-provisional',
     };
   if (accuracy >= 50)
     return {
       level: 'Needs Work',
-      color: 'text-orange-700 dark:text-orange-300',
-      bgColor: 'bg-orange-500',
+      color: 'text-muted-amber-600 dark:text-muted-amber-400',
+      bgColor: 'bg-muted-amber-500',
     };
   return {
     level: 'Critical',
-    color: 'text-red-700 dark:text-red-300',
-    bgColor: 'bg-red-500',
+    color: 'text-data-fail dark:text-data-fail',
+    bgColor: 'bg-data-fail',
   };
 };
 
 const getHeatColor = (accuracy: number): string => {
-  if (accuracy >= 90) return 'bg-emerald-500/80 dark:bg-emerald-600/80';
-  if (accuracy >= 80) return 'bg-teal-500/80 dark:bg-teal-600/80';
-  if (accuracy >= 70) return 'bg-blue-500/80 dark:bg-blue-600/80';
-  if (accuracy >= 60) return 'bg-amber-500/80 dark:bg-amber-600/80';
-  if (accuracy >= 50) return 'bg-orange-500/80 dark:bg-orange-600/80';
-  return 'bg-red-500/80 dark:bg-red-600/80';
+  // Using "Stormy Slate" semantic design tokens
+  if (accuracy >= 90) return 'bg-data-pass/80 dark:bg-data-pass/70';
+  if (accuracy >= 80) return 'bg-slate-teal-500/80 dark:bg-slate-teal-600/80';
+  if (accuracy >= 70) return 'bg-action-blue-500/80 dark:bg-action-blue-600/80';
+  if (accuracy >= 60) return 'bg-data-provisional/80 dark:bg-data-provisional/70';
+  if (accuracy >= 50) return 'bg-muted-amber-500/80 dark:bg-muted-amber-600/80';
+  return 'bg-data-fail/80 dark:bg-data-fail/70';
 };
 
 // =============================================================================
@@ -269,27 +271,27 @@ export function SystemMasteryMap({
       {showLegend && (
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-emerald-500" />
+            <div className="w-3 h-3 rounded bg-data-pass" />
             <span>≥90% Mastered</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-teal-500" />
+            <div className="w-3 h-3 rounded bg-slate-teal-500" />
             <span>≥80% Proficient</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-blue-500" />
+            <div className="w-3 h-3 rounded bg-action-blue-500" />
             <span>≥70% Competent</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-amber-500" />
+            <div className="w-3 h-3 rounded bg-data-provisional" />
             <span>≥60% Developing</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-orange-500" />
+            <div className="w-3 h-3 rounded bg-muted-amber-500" />
             <span>≥50% Needs Work</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-red-500" />
+            <div className="w-3 h-3 rounded bg-data-fail" />
             <span>&lt;50% Critical</span>
           </div>
         </div>
@@ -297,9 +299,9 @@ export function SystemMasteryMap({
 
       {/* Critical systems alert */}
       {overallStats.criticalSystems > 0 && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-          <p className="text-sm text-red-700 dark:text-red-300">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-data-fail/10 dark:bg-data-fail/20 border border-data-fail/30 dark:border-data-fail/40">
+          <AlertTriangle className="h-5 w-5 text-data-fail dark:text-data-fail" />
+          <p className="text-sm text-data-fail dark:text-data-fail/90">
             {overallStats.criticalSystems} system{overallStats.criticalSystems > 1 ? 's' : ''} below
             60% - prioritize these areas
           </p>
@@ -371,14 +373,14 @@ export function SystemMasteryMap({
                   <div className="flex items-center gap-1">
                     {selectedSystem.trend === 'improving' && (
                       <>
-                        <TrendingUp className="h-5 w-5 text-emerald-500" />
-                        <span className="text-emerald-600 font-medium">Improving</span>
+                        <TrendingUp className="h-5 w-5 text-data-pass" />
+                        <span className="text-data-pass font-medium">Improving</span>
                       </>
                     )}
                     {selectedSystem.trend === 'declining' && (
                       <>
-                        <TrendingDown className="h-5 w-5 text-red-500" />
-                        <span className="text-red-600 font-medium">Declining</span>
+                        <TrendingDown className="h-5 w-5 text-data-fail" />
+                        <span className="text-data-fail font-medium">Declining</span>
                       </>
                     )}
                     {selectedSystem.trend === 'stable' && (
@@ -419,7 +421,7 @@ export function SystemMasteryMap({
                     {selectedSystem.weakTopics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-2 py-0.5 text-xs rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                        className="px-2 py-0.5 text-xs rounded bg-data-fail/10 dark:bg-data-fail/20 text-data-fail dark:text-data-fail/90"
                       >
                         {topic}
                       </span>
@@ -437,7 +439,7 @@ export function SystemMasteryMap({
                     {selectedSystem.strongTopics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-2 py-0.5 text-xs rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
+                        className="px-2 py-0.5 text-xs rounded bg-data-pass/10 dark:bg-data-pass/20 text-data-pass dark:text-data-pass/90"
                       >
                         {topic}
                       </span>

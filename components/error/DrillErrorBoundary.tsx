@@ -108,8 +108,8 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center"
     >
-      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-6">
-        <AlertTriangle className="w-8 h-8 text-red-500" />
+      <div className="w-16 h-16 bg-data-fail/10 dark:bg-data-fail/20 rounded-full flex items-center justify-center mb-6">
+        <AlertTriangle className="w-8 h-8 text-data-fail" />
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -123,7 +123,7 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
       <div className="flex gap-3">
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-action-blue-600 text-white rounded-lg hover:bg-action-blue-700 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again
@@ -131,7 +131,7 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
 
         <button
           onClick={onReturnHome}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-clinical-slate-200 dark:bg-clinical-slate-700 text-clinical-slate-700 dark:text-clinical-slate-200 rounded-lg hover:bg-clinical-slate-300 dark:hover:bg-clinical-slate-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Return Home
@@ -140,8 +140,8 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
 
       {error && process.env.NODE_ENV === 'development' && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-slate-500 cursor-pointer">Technical Details</summary>
-          <pre className="mt-2 p-3 bg-slate-100 dark:bg-slate-800 rounded text-xs overflow-auto">
+          <summary className="text-sm text-clinical-slate-500 cursor-pointer">Technical Details</summary>
+          <pre className="mt-2 p-3 bg-clinical-slate-100 dark:bg-clinical-slate-800 rounded text-xs overflow-auto">
             {error.message}
           </pre>
         </details>
@@ -172,8 +172,8 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center"
     >
-      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6">
-        <WifiOff className="w-8 h-8 text-amber-500" />
+      <div className="w-16 h-16 bg-data-provisional/10 dark:bg-data-provisional/20 rounded-full flex items-center justify-center mb-6">
+        <WifiOff className="w-8 h-8 text-data-provisional" />
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">You're Offline</h2>
@@ -183,17 +183,17 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
       </p>
 
       {isOnline && (
-        <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-2 rounded-lg mb-4">
+        <div className="bg-data-pass/10 dark:bg-data-pass/20 text-data-pass px-4 py-2 rounded-lg mb-4">
           Connection restored! Click retry to continue.
         </div>
       )}
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 max-w-md">
-        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-medium mb-2">
+      <div className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-lg p-4 mb-6 max-w-md">
+        <div className="flex items-center gap-2 text-action-blue-700 dark:text-action-blue-300 font-medium mb-2">
           <BookOpen className="w-4 h-4" />
           Offline Mode Available
         </div>
-        <p className="text-sm text-blue-600 dark:text-blue-400">
+        <p className="text-sm text-action-blue-600 dark:text-action-blue-400">
           You can continue studying with previously cached questions. Your progress will sync when
           you reconnect.
         </p>
@@ -205,8 +205,8 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
           disabled={!isOnline}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
             isOnline
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-slate-300 dark:bg-slate-600 text-slate-500 cursor-not-allowed'
+              ? 'bg-action-blue-600 text-white hover:bg-action-blue-700'
+              : 'bg-clinical-slate-300 dark:bg-clinical-slate-600 text-clinical-slate-500 cursor-not-allowed'
           }`}
         >
           <RefreshCw className="w-4 h-4" />
@@ -215,7 +215,7 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
 
         <button
           onClick={onReturnHome}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-clinical-slate-200 dark:bg-clinical-slate-700 text-clinical-slate-700 dark:text-clinical-slate-200 rounded-lg hover:bg-clinical-slate-300 dark:hover:bg-clinical-slate-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Return Home
@@ -232,8 +232,8 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center"
     >
-      <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-6">
-        <DollarSign className="w-8 h-8 text-purple-500" />
+      <div className="w-16 h-16 bg-deep-plum-100 dark:bg-deep-plum-900/30 rounded-full flex items-center justify-center mb-6">
+        <DollarSign className="w-8 h-8 text-deep-plum-500" />
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -245,12 +245,12 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
         period.
       </p>
 
-      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mb-6 max-w-md">
-        <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-medium mb-2">
+      <div className="bg-deep-plum-50 dark:bg-deep-plum-900/20 rounded-lg p-4 mb-6 max-w-md">
+        <div className="flex items-center gap-2 text-deep-plum-700 dark:text-deep-plum-300 font-medium mb-2">
           <Clock className="w-4 h-4" />
           What You Can Do
         </div>
-        <ul className="text-sm text-purple-600 dark:text-purple-400 text-left space-y-1">
+        <ul className="text-sm text-deep-plum-600 dark:text-deep-plum-400 text-left space-y-1">
           <li>• Review your analytics dashboard</li>
           <li>• Study condition reference pages</li>
           <li>• Take a well-deserved break</li>
@@ -260,7 +260,7 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
 
       <button
         onClick={onReturnHome}
-        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-deep-plum-600 text-white rounded-lg hover:bg-deep-plum-700 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Go to Dashboard
@@ -276,8 +276,8 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center"
     >
-      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-        <AlertTriangle className="w-8 h-8 text-slate-500" />
+      <div className="w-16 h-16 bg-clinical-slate-100 dark:bg-clinical-slate-800 rounded-full flex items-center justify-center mb-6">
+        <AlertTriangle className="w-8 h-8 text-clinical-slate-500" />
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -291,7 +291,7 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
       <div className="flex gap-3">
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-action-blue-600 text-white rounded-lg hover:bg-action-blue-700 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again
@@ -299,7 +299,7 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
 
         <button
           onClick={onReturnHome}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-clinical-slate-200 dark:bg-clinical-slate-700 text-clinical-slate-700 dark:text-clinical-slate-200 rounded-lg hover:bg-clinical-slate-300 dark:hover:bg-clinical-slate-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Return Home
@@ -308,8 +308,8 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
 
       {error && process.env.NODE_ENV === 'development' && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-slate-500 cursor-pointer">Technical Details</summary>
-          <pre className="mt-2 p-3 bg-slate-100 dark:bg-slate-800 rounded text-xs overflow-auto">
+          <summary className="text-sm text-clinical-slate-500 cursor-pointer">Technical Details</summary>
+          <pre className="mt-2 p-3 bg-clinical-slate-100 dark:bg-clinical-slate-800 rounded text-xs overflow-auto">
             {error.message}
             {'\n\n'}
             {error.stack}
