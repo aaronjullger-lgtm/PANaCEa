@@ -28,7 +28,7 @@ const SyncPerformanceRecordSchema = z.object({
   topic: z.string().max(200),
   system: z.string().max(50).nullable().optional(),
   focus: z.string().max(100),
-  difficulty: z.string().max(50),
+  difficulty: z.string().max(50).optional().default('medium'),
   isCorrect: z.boolean(),
   timestamp: z.number(),
   questionWordCount: z.number().int().nullable().optional(),
@@ -45,23 +45,33 @@ const SyncSRSItemSchema = z.object({
   dueDate: z.string(),
   lastReviewed: z.string(),
   quality: z.number().int().min(0).max(5),
-  difficulty: z.string().max(50).optional(),
+  difficulty: z.union([z.string(), z.number()]).optional().transform(val => 
+    val !== undefined ? String(val) : undefined
+  ),
   stabilityScore: z.number().optional(),
   updatedAt: z.string().optional(),
 });
 
 const SyncSavedQuestionSchema = z.object({
-  questionId: z.string().max(100),
-  questionText: z.string().max(5000),
-  correctAnswer: z.string().max(500),
+  questionId: z.string().max(100).optional(),
+  questionText: z.string().max(5000).optional(),
+  correctAnswer: z.string().max(500).optional(),
   explanation: z.string().max(10000).optional(),
-  topic: z.string().max(200),
+  topic: z.string().max(200).optional(),
   system: z.string().max(50).optional(),
   type: z.enum(['saved', 'flagged', 'missed']),
   userNote: z.string().max(2000).optional(),
   repetitionLevel: z.number().int().optional(),
   nextReviewDate: z.string().optional(),
   updatedAt: z.string().optional(),
+  // Allow additional fields from client
+  id: z.string().optional(),
+  question: z.string().optional(),
+  options: z.array(z.string()).optional(),
+  correctAnswerIndex: z.number().optional(),
+  rationale: z.string().optional(),
+  condition: z.string().optional(),
+  conditionId: z.string().optional(),
 });
 
 const PostSyncSchema = z.object({
