@@ -128,25 +128,25 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 relative">
+      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 relative">
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-slate-500 hover:text-slate-800"
+          className="absolute top-3 right-3 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <h2 className="text-xl font-bold text-[#3D1B0E] mb-2 text-center">{systemLabel}</h2>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2 text-center">{systemLabel}</h2>
 
         {/* System score */}
         <div className="text-center mb-4">
-          <div className="text-4xl font-bold text-slate-900">
+          <div className="text-4xl font-bold text-[var(--color-text-primary)]">
             {displayedSystemScore.toFixed(0)}%
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Based on {systemTotals.total || topicStats.total} questions (
             {systemTotals.correct || topicStats.correct}/{systemTotals.total || topicStats.total})
           </p>
@@ -154,9 +154,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
         {/* Subcategories */}
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">Subcategory mastery</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Subcategory mastery</h3>
           {subcategoryStats.length === 0 ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               No detailed data yet for this system. Answer a few more questions and come back.
             </p>
           ) : (
@@ -169,17 +169,17 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                   }
                   className={`w-full text-left p-2 rounded-md border ${
                     activeSubcategory === sub.name
-                      ? 'border-[#3D1B0E] bg-[#f4ece9]'
-                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                      : 'border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700'
                   } transition-colors`}
                 >
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="font-semibold text-slate-700">{sub.name}</span>
-                    <span className="text-slate-600">
+                    <span className="font-semibold text-[var(--color-text-secondary)]">{sub.name}</span>
+                    <span className="text-[var(--color-text-muted)]">
                       {sub.score.toFixed(0)}% ({sub.correct}/{sub.total})
                     </span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                  <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5">
                     <div
                       className={`h-1.5 rounded-full ${getBarColor(sub.score)}`}
                       style={{ width: `${sub.score}%` }}
@@ -193,22 +193,22 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
         {/* Conditions under selected subcategory */}
         {activeSubcategory && (
-          <div className="mt-4 border-t border-slate-200 pt-3">
-            <h3 className="text-sm font-semibold text-slate-700 mb-2">
+          <div className="mt-4 border-t border-slate-200 dark:border-slate-600 pt-3">
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
               Conditions in <span className="underline">{activeSubcategory}</span>
             </h3>
             <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
               {conditionStats
                 .filter((c) => c.subcategory === activeSubcategory)
                 .map((c) => (
-                  <div key={c.key} className="p-2 bg-slate-50 rounded-md border border-slate-200">
+                  <div key={c.key} className="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
                     <div className="flex justify-between items-center text-xs mb-1">
-                      <span className="font-medium text-slate-700">{c.name}</span>
-                      <span className="text-slate-600">
+                      <span className="font-medium text-[var(--color-text-secondary)]">{c.name}</span>
+                      <span className="text-[var(--color-text-muted)]">
                         {c.score.toFixed(0)}% ({c.correct}/{c.total})
                       </span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5">
+                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full ${getBarColor(c.score)}`}
                         style={{ width: `${c.score}%` }}
@@ -223,7 +223,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
         {/* Start session */}
         <button
           onClick={() => onStartSession(systemCode)}
-          className="w-full mt-5 px-4 py-3 bg-[#3D1B0E] text-white font-semibold rounded-lg hover:bg-[#2b130a] transition-colors"
+          className="w-full mt-5 px-4 py-3 bg-[var(--color-accent)] text-white font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
         >
           Start Session on {systemLabel}
         </button>
