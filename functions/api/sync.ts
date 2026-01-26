@@ -268,7 +268,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
               data,
             });
           } else {
-            await tx.sRSItem.create({ data });
+            await tx.sRSItem.create({ data: { id: crypto.randomUUID(), ...data } });
           }
         }
       }

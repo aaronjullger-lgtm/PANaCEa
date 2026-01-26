@@ -54,11 +54,13 @@ export const onRequestGet = authenticatedEndpoint(
         return { data: { pearls: [] } };
       }
 
-      // Extract pearls from content JSONB field
-      const content = medicalContent.content as Record<string, unknown>;
-      const pearls = Array.isArray(content.clinicalPearls)
+      // Extract pearls from content JSONB field (handle null content)
+      const content = medicalContent.content as Record<string, unknown> | null;
+      const pearls = content && Array.isArray(content.clinicalPearls)
         ? (content.clinicalPearls as string[])
-        : [];
+        : (content && Array.isArray(content.pearls))
+          ? (content.pearls as string[])
+          : [];
 
       console.log('[pearls] Found', pearls.length, 'pearls');
       return { data: { pearls } };

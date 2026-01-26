@@ -135,8 +135,12 @@ export const onRequestGet = authenticatedEndpoint(
           return { status: 404, error: 'Medical content not found' };
         }
 
-        const content = medicalContent.content as Record<string, any>;
-        const pearls = Array.isArray(content?.pearls) ? content.pearls : [];
+        const content = medicalContent.content as Record<string, any> | null;
+        const pearls = Array.isArray(content?.pearls) 
+          ? content.pearls 
+          : Array.isArray(content?.clinicalPearls)
+            ? content.clinicalPearls
+            : [];
 
         return {
           conditionId,
@@ -166,8 +170,12 @@ export const onRequestGet = authenticatedEndpoint(
         const allPearls: Array<{ conditionId: string; conditionName: string; pearl: string }> = [];
 
         for (const condition of conditions) {
-          const content = condition.content as Record<string, any>;
-          const pearls = Array.isArray(content?.pearls) ? content.pearls : [];
+          const content = condition.content as Record<string, any> | null;
+          const pearls = Array.isArray(content?.pearls) 
+            ? content.pearls 
+            : Array.isArray(content?.clinicalPearls)
+              ? content.clinicalPearls
+              : [];
 
           for (const pearl of pearls) {
             allPearls.push({

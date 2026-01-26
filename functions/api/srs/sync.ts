@@ -82,6 +82,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context
           // Create new item
           await prisma.sRSItem.create({
             data: {
+              id: crypto.randomUUID(),
               userId,
               questionId: item.questionId,
               interval: item.interval,
