@@ -11,9 +11,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const StabilityTrendSchema = z.object({
-  query: z.object({
-    days: z.string().optional(),
-  }),
+  days: z.string().optional(),
 });
 
 export interface StabilityTrendDataPoint {
@@ -33,23 +31,25 @@ interface ReviewSnapshot {
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/user/stability-trend');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  StabilityTrendSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/user/stability-trend');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const days = parseInt(validated.query?.days || '30', 10);
+    try {
+      const days = parseInt(validated.days || '30', 10);
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
 
-    if (!user) {
-      return {
-        data: { data: [], message: 'User not found. Please complete some questions first!' },
-      };
+      if (!user) {
+        return {
+          data: { data: [], message: 'User not found. Please complete some questions first!' },
+        };
     }
 
     const cutoffDate = new Date();
@@ -153,4 +153,6 @@ export const onRequestGet = authenticatedEndpoint(StabilityTrendSchema, async (c
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+  },
+  { source: 'query' }
+);

@@ -7,7 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, TrendingUp, Minus, TrendingDown, Snowflake, Zap, Coffee } from 'lucide-react';
+import { Flame, TrendingUp, Equal, TrendingDown, Snowflake, Zap, Coffee } from 'lucide-react';
 import {
   calculateMomentum,
   detectFatigueSignals,
@@ -47,7 +47,7 @@ const levelConfig: Record<
     label: 'Rising',
   },
   steady: {
-    icon: Minus,
+    icon: Equal,
     color: 'text-slate-500',
     bgColor: 'bg-slate-100 dark:bg-slate-800',
     borderColor: 'border-slate-200 dark:border-slate-700',

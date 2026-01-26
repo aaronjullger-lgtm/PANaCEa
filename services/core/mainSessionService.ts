@@ -10,6 +10,7 @@
 
 import type { Question, SessionSettings } from '@/types';
 import { getQuestionBatch } from './questionService';
+import { resetMomentum } from '@/services/session';
 
 // Session analytics from API
 interface SessionAnalytics {
@@ -53,6 +54,9 @@ let lastPoolStatus: PoolStatus | null = null;
  * Initialize a new session
  */
 export function initializeSession(): SessionState {
+  // Reset momentum tracking from previous session
+  resetMomentum();
+  
   currentSession = {
     sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     startTime: Date.now(),

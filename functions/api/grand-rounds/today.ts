@@ -50,11 +50,11 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
     if (!challenge) {
       // Create new challenge with 5 random questions
-      // Get a pool of intermediate/advanced questions from PreGeneratedQuestion
-      // (Question table doesn't have isActive field)
+      // Get a pool of questions from PreGeneratedQuestion
+      // Accept PANCE-level (standard), intermediate, advanced, medium, hard
       const questionPool = await prisma.preGeneratedQuestion.findMany({
         where: {
-          difficulty: { in: ['intermediate', 'advanced', 'medium', 'hard'] },
+          difficulty: { in: ['PANCE-level', 'intermediate', 'advanced', 'medium', 'hard'] },
         },
         select: { id: true },
         take: 100,
