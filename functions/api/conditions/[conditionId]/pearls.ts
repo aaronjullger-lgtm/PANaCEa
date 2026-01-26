@@ -5,7 +5,7 @@
  * Supports both UUID and slug formats for conditionId
  */
 
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -13,12 +13,16 @@ const ConditionPearlsSchema = z.object({
   conditionId: z.string().min(1, 'Condition ID is required'),
 });
 
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   ConditionPearlsSchema,
   async ({ env, validated, params }) => {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
     try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      
       // Use params.conditionId from URL path (the schema validates the shape)
       const conditionId = params.conditionId as string;
 
@@ -35,7 +39,7 @@ export const onRequestGet = authenticatedEndpoint(
             OR: [
               { conditionId: conditionId },
               { conditionId: conditionId.toLowerCase() },
-              { conditionId: conditionId.replace(/-/g, ' ') },
+              { conditionId: conditionId.replaceAll('-', ' ') },
             ],
           },
           select: { content: true },
@@ -53,6 +57,9 @@ export const onRequestGet = authenticatedEndpoint(
         : [];
 
       return { data: { pearls } };
+    } catch (error) {
+      console.error('Error fetching pearls:', error);
+      return { status: 500, error: 'Failed to fetch clinical pearls' };
     } finally {
       await safePrismaDisconnect(prisma);
     }
