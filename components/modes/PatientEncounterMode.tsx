@@ -743,26 +743,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </ul>
               </div>
 
-              <div className="bg-dusty-plum-50 dark:bg-dusty-plum-950/20 rounded-2xl p-6 border border-dusty-plum-200 dark:border-dusty-plum-800">
+              <div className="bg-deep-plum-50 dark:bg-deep-plum-950/20 rounded-2xl p-6 border border-deep-plum-200 dark:border-deep-plum-800">
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-dusty-plum-600 dark:text-dusty-plum-400" />
+                  <Award className="w-5 h-5 text-deep-plum-600 dark:text-deep-plum-400" />
                   How You're Evaluated
                 </h3>
                 <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                   <li className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    <Activity className="w-4 h-4 text-deep-plum-500 flex-shrink-0" />
                     Efficiency: Minimal unnecessary questions
                   </li>
                   <li className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    <Activity className="w-4 h-4 text-deep-plum-500 flex-shrink-0" />
                     Thoroughness: Covering key clinical domains
                   </li>
                   <li className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    <Activity className="w-4 h-4 text-deep-plum-500 flex-shrink-0" />
                     Diagnostic accuracy: Correct final diagnosis
                   </li>
                   <li className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    <Activity className="w-4 h-4 text-deep-plum-500 flex-shrink-0" />
                     Treatment appropriateness: Evidence-based plan
                   </li>
                 </ul>
@@ -1101,96 +1101,104 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         </p>
                       </div>
 
-                      <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)] space-y-3">
+                      <div className="rounded-lg p-4 border border-slate-200 dark:border-slate-700 space-y-3 bg-slate-50 dark:bg-slate-800">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                            EMR MONITOR
+                          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
+                            EMR Monitor
                           </p>
-                          <span className="text-[10px] uppercase tracking-wide text-[var(--color-accent)]">
+                          <span className="text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Live
                           </span>
                         </div>
 
                         <div className="grid sm:grid-cols-2 gap-3">
-                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">
-                                Blood Pressure
-                              </span>
+                          {/* Blood Pressure Card */}
+                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                              Blood Pressure
+                            </span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp ?? 0, [90, 140])}`}
+                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.sbp ?? 0, [90, 140])}`}
                               >
-                                {Math.round(currentVitals.sbp ?? 0)}/
-                                {Math.round(currentVitals.dbp ?? 0)} mmHg
+                                {Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}
                               </span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">mmHg</span>
                             </div>
                             <Sparkline
                               data={vitalsHistory.sbp}
                               width={180}
-                              height={48}
+                              height={40}
                               referenceRange={[90, 140]}
                               showDots={false}
                               fillArea
                             />
                           </div>
 
-                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">
-                                Heart Rate
-                              </span>
+                          {/* Heart Rate Card */}
+                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                              Heart Rate
+                            </span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr ?? 0, [60, 100])}`}
+                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.hr ?? 0, [60, 100])}`}
                               >
-                                {Math.round(currentVitals.hr ?? 0)} bpm
+                                {Math.round(currentVitals.hr ?? 0)}
                               </span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">bpm</span>
                             </div>
                             <Sparkline
                               data={vitalsHistory.hr}
                               width={180}
-                              height={48}
+                              height={40}
                               referenceRange={[60, 100]}
                               showDots={false}
                               fillArea
                             />
                           </div>
 
-                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">
-                                Respiratory Rate
-                              </span>
+                          {/* Respiratory Rate Card */}
+                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                              Respiratory Rate
+                            </span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr ?? 0, [12, 20])}`}
+                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.rr ?? 0, [12, 20])}`}
                               >
-                                {Math.round(currentVitals.rr ?? 0)} /min
+                                {Math.round(currentVitals.rr ?? 0)}
                               </span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">/min</span>
                             </div>
                             <Sparkline
                               data={vitalsHistory.rr}
                               width={180}
-                              height={48}
+                              height={40}
                               referenceRange={[12, 20]}
                               showDots={false}
                               fillArea
                             />
                           </div>
 
-                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] text-[var(--color-text-secondary)]">
-                                O₂ Saturation
-                              </span>
+                          {/* O₂ Saturation Card */}
+                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                              O₂ Saturation
+                            </span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
                               <span
-                                className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2 ?? 0, [94, 100])}`}
+                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.o2 ?? 0, [94, 100])}`}
                               >
-                                {Math.round(currentVitals.o2 ?? 0)}%
+                                {Math.round(currentVitals.o2 ?? 0)}
                               </span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">%</span>
                             </div>
                             <Sparkline
                               data={vitalsHistory.o2}
                               width={180}
-                              height={48}
+                              height={40}
                               referenceRange={[94, 100]}
                               showDots={false}
                               fillArea

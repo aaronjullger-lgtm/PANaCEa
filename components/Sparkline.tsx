@@ -51,13 +51,26 @@ export function Sparkline({
   formatValue = (v) => v.toFixed(1),
   referenceRange,
 }: SparklineProps) {
-  if (!data || data.length === 0) {
-    return null;
+  // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
+  const sanitizedData = (data ?? [])
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v));
+
+  // Return loading skeleton if no valid data
+  if (sanitizedData.length === 0) {
+    return (
+      <div
+        className={`inline-flex items-center ${className}`}
+        style={{ width, height }}
+      >
+        <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
   }
 
   // Calculate min and max if not provided
-  const min = minProp !== undefined ? minProp : Math.min(...data);
-  const max = maxProp !== undefined ? maxProp : Math.max(...data);
+  const min = minProp !== undefined ? minProp : Math.min(...sanitizedData);
+  const max = maxProp !== undefined ? maxProp : Math.max(...sanitizedData);
 
   // Prevent division by zero
   const range = max - min || 1;
@@ -67,10 +80,15 @@ export function Sparkline({
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
 
-  const points = data.map((value, index) => {
-    const x = padding + (index / (data.length - 1)) * chartWidth;
+  const points = sanitizedData.map((value, index) => {
+    const x = padding + (index / (sanitizedData.length - 1 || 1)) * chartWidth;
     const y = padding + chartHeight - ((value - min) / range) * chartHeight;
-    return { x, y, value };
+    // Defensive: clamp values to prevent SVG rendering issues
+    return {
+      x: Number.isFinite(x) ? x : padding,
+      y: Number.isFinite(y) ? y : padding,
+      value,
+    };
   });
 
   // Generate SVG path
@@ -112,7 +130,7 @@ export function Sparkline({
       ? `${pathData} L ${lastPoint.x},${height - padding} L ${padding},${height - padding} Z`
       : '';
 
-  const lastValue = data[data.length - 1] ?? 0;
+  const lastValue = sanitizedData[sanitizedData.length - 1] ?? 0;
   const inRange = referenceRange
     ? lastValue >= referenceRange[0] && lastValue <= referenceRange[1]
     : true;
@@ -167,7 +185,7 @@ export function Sparkline({
       </svg>
 
       {/* Last value label */}
-      {showLastValue && data.length > 0 && (
+      {showLastValue && sanitizedData.length > 0 && (
         <span
           className={`text-sm font-medium ${semanticColorClass}`}
           style={{ color: effectiveColor }}
@@ -203,22 +221,39 @@ export function SparklineBar({
   className = '',
   barGap = 1,
 }: SparklineBarProps) {
-  if (!data || data.length === 0) {
-    return null;
+  // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
+  const sanitizedData = (data ?? [])
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v));
+
+  if (sanitizedData.length === 0) {
+    return (
+      <div
+        className={`sparkline-bar ${className}`}
+        style={{ width, height }}
+      >
+        <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
   }
 
   const min = minProp !== undefined ? minProp : 0;
-  const max = maxProp !== undefined ? maxProp : Math.max(...data);
+  const max = maxProp !== undefined ? maxProp : Math.max(...sanitizedData);
   const range = max - min || 1;
 
-  const barWidth = (width - (data.length - 1) * barGap) / data.length;
+  const barWidth = (width - (sanitizedData.length - 1) * barGap) / sanitizedData.length;
 
   return (
     <svg width={width} height={height} className={`sparkline-bar ${className}`}>
-      {data.map((value, index) => {
-        const barHeight = ((value - min) / range) * height;
+      {sanitizedData.map((value, index) => {
+        const barHeight = Math.max(0, ((value - min) / range) * height);
         const x = index * (barWidth + barGap);
         const y = height - barHeight;
+
+        // Defensive: ensure all values are finite
+        if (!Number.isFinite(barHeight) || !Number.isFinite(x) || !Number.isFinite(y)) {
+          return null;
+        }
 
         return (
           <rect key={index} x={x} y={y} width={barWidth} height={barHeight} fill={color} rx={1} />
