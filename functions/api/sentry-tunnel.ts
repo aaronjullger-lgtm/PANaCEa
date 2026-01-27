@@ -28,21 +28,29 @@ export async function onRequestPost(context: any) {
     // Get the raw envelope body
     const envelopeBody = await request.text();
 
-    if (!envelopeBody) {
+    if (!envelopeBody || envelopeBody.trim() === '') {
+      console.warn('[Sentry Tunnel] Empty envelope body received');
       return new Response(JSON.stringify({ error: 'Empty envelope body' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
     // Sentry envelopes are newline-delimited JSON
     // First line is the header containing the DSN
-    const pieces = envelopeBody.split('\n');
+    const pieces = envelopeBody.split('\n').filter((line: string) => line.trim() !== '');
 
     if (pieces.length === 0) {
+      console.warn('[Sentry Tunnel] Invalid envelope format - no lines');
       return new Response(JSON.stringify({ error: 'Invalid envelope format' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
@@ -51,42 +59,56 @@ export async function onRequestPost(context: any) {
     try {
       header = JSON.parse(pieces[0]);
     } catch (e) {
+      console.warn('[Sentry Tunnel] Failed to parse envelope header:', pieces[0]?.substring(0, 100));
       return new Response(JSON.stringify({ error: 'Failed to parse envelope header' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
     // Extract and validate DSN
     const dsn = header.dsn;
     if (!dsn) {
-      return new Response(JSON.stringify({ error: 'No DSN in envelope header' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Some Sentry envelopes (like session replays) may not have DSN in header
+      // In that case, forward to default project
+      console.log('[Sentry Tunnel] No DSN in header, using default project');
     }
 
-    // Parse DSN URL to extract project ID
-    let dsnUrl: URL;
-    try {
-      dsnUrl = new URL(dsn);
-    } catch (e) {
-      return new Response(JSON.stringify({ error: 'Invalid DSN format' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    let projectId = SENTRY_PROJECT_ID;
+    
+    if (dsn) {
+      // Parse DSN URL to extract project ID
+      let dsnUrl: URL;
+      try {
+        dsnUrl = new URL(dsn);
+      } catch (e) {
+        console.warn('[Sentry Tunnel] Invalid DSN format:', dsn?.substring(0, 50));
+        return new Response(JSON.stringify({ error: 'Invalid DSN format' }), {
+          status: 400,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
 
-    // Extract project ID from DSN path (e.g., /4510664018231296)
-    const projectId = dsnUrl.pathname.replace(/^\//, '');
+      // Extract project ID from DSN path (e.g., /4510664018231296)
+      projectId = dsnUrl.pathname.replace(/^\//, '');
 
-    // Security: Only allow our project
-    if (projectId !== SENTRY_PROJECT_ID) {
-      console.warn(`[Sentry Tunnel] Rejected envelope with wrong project ID: ${projectId}`);
-      return new Response(JSON.stringify({ error: 'Invalid project ID' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Security: Only allow our project
+      if (projectId !== SENTRY_PROJECT_ID) {
+        console.warn(`[Sentry Tunnel] Rejected envelope with wrong project ID: ${projectId}`);
+        return new Response(JSON.stringify({ error: 'Invalid project ID' }), {
+          status: 403,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
     }
 
     // Construct Sentry ingest URL

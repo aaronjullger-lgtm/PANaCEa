@@ -85,6 +85,21 @@ const PostSyncSchema = z.object({
 // HELPERS
 // ============================================================================
 
+// Batch size for Accelerate payload limits (~5MB limit)
+// Using small batches to stay well under the limit
+const BATCH_SIZE = 50;
+
+/**
+ * Process array in batches to avoid Accelerate payload limits
+ */
+function chunk<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
 /**
  * Resolve Clerk ID to Internal DB ID
  */
@@ -200,53 +215,62 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     // Resolve user ID
     const internalUserId = await resolveUserId(prisma, context.auth.userId);
 
-    // Process data in a transaction
-    await prisma.$transaction(async (tx: any) => {
-      // 1. Insert PerformanceRecords
-      if (payload.performanceRecords?.length) {
-        for (const record of payload.performanceRecords) {
-          const recordId = record.id || crypto.randomUUID();
-          await tx.performanceRecord.upsert({
-            where: { id: recordId },
-            create: {
-              id: recordId,
-              userId: internalUserId,
-              topic: record.topic,
-              system: record.system || null,
-              focus: record.focus,
-              difficulty: record.difficulty,
-              isCorrect: record.isCorrect,
-              timestamp: BigInt(record.timestamp),
-              questionWordCount: record.questionWordCount || null,
-              errorTag: record.errorTag || null,
-              subcategoryName: record.subcategoryName || null,
-              conditionName: record.conditionName || null,
-            },
-            update: {},
-          });
-        }
-      }
+    // Process data in BATCHED transactions to avoid Accelerate payload limits
+    // Each batch is its own transaction for reliability
 
-      // 2. Upsert SRSItems with Conflict Resolution
-      if (payload.srsItems?.length) {
-        for (const item of payload.srsItems) {
-          const existing = await tx.sRSItem.findUnique({
-            where: {
-              userId_questionId: {
+    // 1. Insert PerformanceRecords in batches
+    if (payload.performanceRecords?.length) {
+      const batches = chunk(payload.performanceRecords, BATCH_SIZE);
+      for (const batch of batches) {
+        await prisma.$transaction(async (tx: any) => {
+          for (const record of batch) {
+            const recordId = record.id || crypto.randomUUID();
+            await tx.performanceRecord.upsert({
+              where: { id: recordId },
+              create: {
+                id: recordId,
                 userId: internalUserId,
-                questionId: item.questionId,
+                topic: record.topic,
+                system: record.system || null,
+                focus: record.focus,
+                difficulty: record.difficulty,
+                isCorrect: record.isCorrect,
+                timestamp: BigInt(record.timestamp),
+                questionWordCount: record.questionWordCount || null,
+                errorTag: record.errorTag || null,
+                subcategoryName: record.subcategoryName || null,
+                conditionName: record.conditionName || null,
               },
-            },
-          });
-
-          // Last Write Wins based on updatedAt
-          if (
-            existing &&
-            item.updatedAt &&
-            new Date(existing.updatedAt) > new Date(item.updatedAt)
-          ) {
-            continue;
+              update: {},
+            });
           }
+        });
+      }
+    }
+
+    // 2. Upsert SRSItems in batches with Conflict Resolution
+    if (payload.srsItems?.length) {
+      const batches = chunk(payload.srsItems, BATCH_SIZE);
+      for (const batch of batches) {
+        await prisma.$transaction(async (tx: any) => {
+          for (const item of batch) {
+            const existing = await tx.sRSItem.findUnique({
+              where: {
+                userId_questionId: {
+                  userId: internalUserId,
+                  questionId: item.questionId,
+                },
+              },
+            });
+
+            // Last Write Wins based on updatedAt
+            if (
+              existing &&
+              item.updatedAt &&
+              new Date(existing.updatedAt) > new Date(item.updatedAt)
+            ) {
+              continue;
+            }
 
           const data = {
             userId: internalUserId,
@@ -271,11 +295,16 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
             await tx.sRSItem.create({ data: { id: crypto.randomUUID(), ...data } });
           }
         }
+        });
       }
+    }
 
-      // 3. Upsert SavedQuestions with Conflict Resolution
-      if (payload.savedQuestions?.length) {
-        for (const item of payload.savedQuestions) {
+    // 3. Upsert SavedQuestions in batches with Conflict Resolution
+    if (payload.savedQuestions?.length) {
+      const batches = chunk(payload.savedQuestions, BATCH_SIZE);
+      for (const batch of batches) {
+        await prisma.$transaction(async (tx: any) => {
+          for (const item of batch) {
           // Map from Question object format to SavedQuestion format
           // Client sends: { id, question, options, correctAnswerIndex, ... }
           // Database expects: { questionId, questionText, correctAnswer, ... }
@@ -336,8 +365,9 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
             await tx.savedQuestion.create({ data: { id: crypto.randomUUID(), ...data } });
           }
         }
+        });
       }
-    });
+    }
 
     // Fetch updated data
     const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
