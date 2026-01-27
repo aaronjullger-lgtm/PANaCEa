@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   getFromCache,
@@ -467,9 +467,10 @@ async function getFromPreGeneratedPool(
       where,
       take: fetchCount,
       orderBy: { generatedAt: 'asc' },
+      ...CACHE_STRATEGY.QUESTIONS, // 5min cache for question pool
     });
     preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
-    remaining = await prisma.preGeneratedQuestion.count({ where });
+    remaining = await prisma.preGeneratedQuestion.count({ where, ...CACHE_STRATEGY.AGGREGATE });
   }
 
   // Filter out seen questions

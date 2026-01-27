@@ -6,7 +6,7 @@
  */
 
 import { publicEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
 // Flattened schema for query params
@@ -30,6 +30,7 @@ export const onRequestGet = publicEndpoint(
           condition: { equals: conditionName, mode: 'insensitive' },
           status: 'published',
         },
+        ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
       });
 
       // Fallback: try searching by conditionId
@@ -39,6 +40,7 @@ export const onRequestGet = publicEndpoint(
             conditionId: conditionName,
             status: 'published',
           },
+          ...CACHE_STRATEGY.STATIC, // 1h cache
         });
       }
 

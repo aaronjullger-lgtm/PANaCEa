@@ -1,4 +1,4 @@
-import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
+import { createEdgePrismaClient, CACHE_STRATEGY } from '../../../functions/api/_shared/prisma-edge';
 import { MedicalContentSchema, type MedicalContentData, type ConditionMeta } from './types';
 
 export class ContentService {
@@ -22,6 +22,7 @@ export class ContentService {
           },
         },
       },
+      ...CACHE_STRATEGY.STATIC, // 1h cache - condition metadata rarely changes
     });
 
     if (!condition) return null;
@@ -43,6 +44,7 @@ export class ContentService {
   async getConditionContent(conditionId: string): Promise<MedicalContentData | null> {
     const content = await this.prisma.medicalContent.findUnique({
       where: { conditionId },
+      ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
     });
 
     if (!content || !content.content) return null;
@@ -63,6 +65,7 @@ export class ContentService {
   async getConditionsContent(conditionIds: string[]): Promise<Map<string, MedicalContentData>> {
     const contents = await this.prisma.medicalContent.findMany({
       where: { conditionId: { in: conditionIds } },
+      ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
     });
 
     const resultMap = new Map<string, MedicalContentData>();
@@ -103,6 +106,7 @@ export class ContentService {
           select: { status: true },
         },
       },
+      ...CACHE_STRATEGY.STATIC, // 1h cache - system conditions rarely change
     });
 
     return conditions.map((c) => ({
@@ -150,6 +154,7 @@ export class ContentService {
         updatedAt: true,
       },
       orderBy: [{ system: 'asc' }, { subcategory: 'asc' }, { name: 'asc' }],
+      ...CACHE_STRATEGY.STATIC, // 1h cache - conditions list rarely changes
     });
 
     return conditions;
