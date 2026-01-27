@@ -47,10 +47,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
   try {
     const { system, category, difficulty, count } = validated;
 
-    const selectedSystem = system || SYSTEMS[Math.floor(Math.random() * SYSTEMS.length)];
-    const selectedCategory = category || 'general';
-    const selectedDifficulty = difficulty || 'medium';
-    const requestedCount = Math.min(count || DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE);
+    const selectedSystem = system ?? SYSTEMS[Math.floor(Math.random() * SYSTEMS.length)];
+    const selectedCategory = category ?? 'general';
+    const selectedDifficulty: string = difficulty ?? 'medium';
+    const requestedCount = Math.min(count ?? DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE);
 
     // Check API key
     if (!env.GEMINI_API_KEY) {

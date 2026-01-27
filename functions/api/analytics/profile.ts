@@ -394,14 +394,20 @@ function computeInsights(
   if (recentSessions.length >= 5) {
     const daysBetweenSessions: number[] = [];
     for (let i = 1; i < Math.min(recentSessions.length, 10); i++) {
-      const diff =
-        new Date(recentSessions[i - 1].startedAt).getTime() -
-        new Date(recentSessions[i].startedAt).getTime();
-      daysBetweenSessions.push(diff / (1000 * 60 * 60 * 24));
+      const prevSession = recentSessions[i - 1];
+      const currSession = recentSessions[i];
+      if (prevSession && currSession) {
+        const diff =
+          new Date(prevSession.startedAt).getTime() -
+          new Date(currSession.startedAt).getTime();
+        daysBetweenSessions.push(diff / (1000 * 60 * 60 * 24));
+      }
     }
 
     const avgDaysBetween =
-      daysBetweenSessions.reduce((s: number, d: number) => s + d, 0) / daysBetweenSessions.length;
+      daysBetweenSessions.length > 0
+        ? daysBetweenSessions.reduce((s: number, d: number) => s + d, 0) / daysBetweenSessions.length
+        : 0;
     studyConsistency = avgDaysBetween <= 2 ? 'consistent' : 'sporadic';
   }
 

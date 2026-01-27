@@ -615,8 +615,10 @@ export const onRequestPost = authenticatedEndpoint(
         }
       }
       for (const system of Object.keys(accuracyBySystem)) {
-        accuracyBySystem[system].accuracy =
-          accuracyBySystem[system].correct / accuracyBySystem[system].total;
+        const systemStats = accuracyBySystem[system];
+        if (systemStats) {
+          systemStats.accuracy = systemStats.correct / systemStats.total;
+        }
       }
 
       // Build difficulty curve
@@ -679,10 +681,9 @@ export const onRequestPost = authenticatedEndpoint(
       const conceptAttempts: Record<string, SessionAttempt[]> = {};
       for (const attempt of attempts) {
         if (attempt.conditionId) {
-          if (!conceptAttempts[attempt.conditionId]) {
-            conceptAttempts[attempt.conditionId] = [];
-          }
-          conceptAttempts[attempt.conditionId].push(attempt);
+          const conditionAttempts = conceptAttempts[attempt.conditionId] ?? [];
+          conditionAttempts.push(attempt);
+          conceptAttempts[attempt.conditionId] = conditionAttempts;
         }
       }
 
