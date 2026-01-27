@@ -112,8 +112,19 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const isDevelopment = mode === 'development';
   const isProduction = mode === 'production';
+  const useMockMode = env.VITE_USE_MOCK === 'true';
+
+  // Log mock mode status during build
+  if (useMockMode) {
+    console.log('🎭 MOCK MODE ENABLED - Build will use MockSessionService');
+  }
 
   return {
+    // Define environment variables for client-side code
+    define: {
+      // Make VITE_USE_MOCK available to client code
+      'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK || 'false'),
+    },
     server: {
       port: 3000,
       host: '0.0.0.0',

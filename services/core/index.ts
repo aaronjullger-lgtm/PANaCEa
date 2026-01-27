@@ -4,9 +4,30 @@
  * This barrel file consolidates core educational services.
  * Import from here instead of individual files for cleaner imports.
  *
+ * MOCK MODE:
+ * Set VITE_USE_MOCK=true in .env to use MockSessionService for development
+ * without a live database connection.
+ *
  * @example
  * import { questionService, sessionService, attemptService } from '@/services/core';
  */
+
+// ============================================================================
+// MOCK MODE SUPPORT
+// ============================================================================
+
+import * as mockSessionServiceModule from './mockSessionService';
+
+/**
+ * Check if mock mode is enabled via environment variable
+ */
+export const isMockMode = (): boolean => {
+  return import.meta.env.VITE_USE_MOCK === 'true';
+};
+
+// Export mock service for direct access when needed
+export const mockSessionService = mockSessionServiceModule;
+export { isMockModeEnabled, getRandomMockPatient, getAllMockPatients } from './mockSessionService';
 
 // ============================================================================
 // QUESTION SERVICES - Primary question management
