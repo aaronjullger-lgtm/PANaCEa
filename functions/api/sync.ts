@@ -89,6 +89,58 @@ const PostSyncSchema = z.object({
 // Using small batches to stay well under the limit
 const BATCH_SIZE = 50;
 
+// Retry configuration for transient Accelerate failures
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 500;
+
+/**
+ * Check if an error is a transient Accelerate connection error that can be retried
+ */
+function isTransientAccelerateError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return (
+    message.includes('unable to connect to the accelerate api') ||
+    message.includes('network') ||
+    message.includes('dns') ||
+    message.includes('timeout') ||
+    message.includes('econnreset') ||
+    message.includes('econnrefused') ||
+    message.includes('socket hang up')
+  );
+}
+
+/**
+ * Execute a database operation with retry logic for transient failures
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  log: ReturnType<typeof createEndpointLogger>
+): Promise<T> {
+  let lastError: unknown;
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      
+      if (!isTransientAccelerateError(error) || attempt === MAX_RETRIES) {
+        throw error;
+      }
+      
+      const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      log.warn(`${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
 /**
  * Process array in batches to avoid Accelerate payload limits
  */
@@ -212,8 +264,12 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
   try {
     prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-    // Resolve user ID
-    const internalUserId = await resolveUserId(prisma, context.auth.userId);
+    // Resolve user ID with retry for transient failures
+    const internalUserId = await withRetry(
+      () => resolveUserId(prisma!, context.auth.userId),
+      'resolveUserId',
+      log
+    );
 
     // Process data in BATCHED transactions to avoid Accelerate payload limits
     // Each batch is its own transaction for reliability
@@ -221,56 +277,63 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     // 1. Insert PerformanceRecords in batches
     if (payload.performanceRecords?.length) {
       const batches = chunk(payload.performanceRecords, BATCH_SIZE);
-      for (const batch of batches) {
-        await prisma.$transaction(async (tx: any) => {
-          for (const record of batch) {
-            const recordId = record.id || crypto.randomUUID();
-            await tx.performanceRecord.upsert({
-              where: { id: recordId },
-              create: {
-                id: recordId,
-                userId: internalUserId,
-                topic: record.topic,
-                system: record.system || null,
-                focus: record.focus,
-                difficulty: record.difficulty,
-                isCorrect: record.isCorrect,
-                timestamp: BigInt(record.timestamp),
-                questionWordCount: record.questionWordCount || null,
-                errorTag: record.errorTag || null,
-                subcategoryName: record.subcategoryName || null,
-                conditionName: record.conditionName || null,
-              },
-              update: {},
-            });
-          }
-        });
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        await withRetry(
+          () => prisma!.$transaction(async (tx: any) => {
+            for (const record of batch) {
+              const recordId = record.id || crypto.randomUUID();
+              await tx.performanceRecord.upsert({
+                where: { id: recordId },
+                create: {
+                  id: recordId,
+                  userId: internalUserId,
+                  topic: record.topic,
+                  system: record.system || null,
+                  focus: record.focus,
+                  difficulty: record.difficulty,
+                  isCorrect: record.isCorrect,
+                  timestamp: BigInt(record.timestamp),
+                  questionWordCount: record.questionWordCount || null,
+                  errorTag: record.errorTag || null,
+                  subcategoryName: record.subcategoryName || null,
+                  conditionName: record.conditionName || null,
+                },
+                update: {},
+              });
+            }
+          }),
+          `performanceRecords batch ${i + 1}/${batches.length}`,
+          log
+        );
       }
     }
 
     // 2. Upsert SRSItems in batches with Conflict Resolution
     if (payload.srsItems?.length) {
       const batches = chunk(payload.srsItems, BATCH_SIZE);
-      for (const batch of batches) {
-        await prisma.$transaction(async (tx: any) => {
-          for (const item of batch) {
-            const existing = await tx.sRSItem.findUnique({
-              where: {
-                userId_questionId: {
-                  userId: internalUserId,
-                  questionId: item.questionId,
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        await withRetry(
+          () => prisma!.$transaction(async (tx: any) => {
+            for (const item of batch) {
+              const existing = await tx.sRSItem.findUnique({
+                where: {
+                  userId_questionId: {
+                    userId: internalUserId,
+                    questionId: item.questionId,
+                  },
                 },
-              },
-            });
+              });
 
-            // Last Write Wins based on updatedAt
-            if (
-              existing &&
-              item.updatedAt &&
-              new Date(existing.updatedAt) > new Date(item.updatedAt)
-            ) {
-              continue;
-            }
+              // Last Write Wins based on updatedAt
+              if (
+                existing &&
+                item.updatedAt &&
+                new Date(existing.updatedAt) > new Date(item.updatedAt)
+              ) {
+                return; // Skip this item in the transaction
+              }
 
           const data = {
             userId: internalUserId,
@@ -294,93 +357,105 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
           } else {
             await tx.sRSItem.create({ data: { id: crypto.randomUUID(), ...data } });
           }
-        }
-        });
+            }
+          }),
+          `srsItems batch ${i + 1}/${batches.length}`,
+          log
+        );
       }
     }
 
     // 3. Upsert SavedQuestions in batches with Conflict Resolution
     if (payload.savedQuestions?.length) {
       const batches = chunk(payload.savedQuestions, BATCH_SIZE);
-      for (const batch of batches) {
-        await prisma.$transaction(async (tx: any) => {
-          for (const item of batch) {
-          // Map from Question object format to SavedQuestion format
-          // Client sends: { id, question, options, correctAnswerIndex, ... }
-          // Database expects: { questionId, questionText, correctAnswer, ... }
-          const questionId = item.questionId || item.id || crypto.randomUUID();
-          const questionText = item.questionText || item.question || '';
-          const correctAnswer = item.correctAnswer || 
-            (item.options && item.correctAnswerIndex !== undefined 
-              ? item.options[item.correctAnswerIndex] 
-              : '');
-          const explanation = item.explanation || item.rationale || '';
-          const topic = item.topic || item.condition || '';
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        await withRetry(
+          () => prisma!.$transaction(async (tx: any) => {
+            for (const item of batch) {
+              // Map from Question object format to SavedQuestion format
+              // Client sends: { id, question, options, correctAnswerIndex, ... }
+              // Database expects: { questionId, questionText, correctAnswer, ... }
+              const questionId = item.questionId || item.id || crypto.randomUUID();
+              const questionText = item.questionText || item.question || '';
+              const correctAnswer = item.correctAnswer || 
+                (item.options && item.correctAnswerIndex !== undefined 
+                  ? item.options[item.correctAnswerIndex] 
+                  : '');
+              const explanation = item.explanation || item.rationale || '';
+              const topic = item.topic || item.condition || '';
 
-          // Skip if we don't have minimum required data
-          if (!questionText) {
-            continue;
-          }
+              // Skip if we don't have minimum required data
+              if (!questionText) {
+                continue;
+              }
 
-          const existing = await tx.savedQuestion.findUnique({
-            where: {
-              userId_questionId_type: {
+              const existing = await tx.savedQuestion.findUnique({
+                where: {
+                  userId_questionId_type: {
+                    userId: internalUserId,
+                    questionId: questionId,
+                    type: item.type,
+                  },
+                },
+              });
+
+              // Last Write Wins based on updatedAt
+              if (
+                existing &&
+                item.updatedAt &&
+                new Date(existing.updatedAt) > new Date(item.updatedAt)
+              ) {
+                continue;
+              }
+
+              const data = {
                 userId: internalUserId,
                 questionId: questionId,
+                questionText: questionText,
+                correctAnswer: correctAnswer,
+                explanation: explanation,
+                topic: topic,
+                system: item.system,
                 type: item.type,
-              },
-            },
-          });
+                userNote: item.userNote,
+                repetitionLevel: item.repetitionLevel,
+                nextReviewDate: item.nextReviewDate,
+                ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+              };
 
-          // Last Write Wins based on updatedAt
-          if (
-            existing &&
-            item.updatedAt &&
-            new Date(existing.updatedAt) > new Date(item.updatedAt)
-          ) {
-            continue;
-          }
-
-          const data = {
-            userId: internalUserId,
-            questionId: questionId,
-            questionText: questionText,
-            correctAnswer: correctAnswer,
-            explanation: explanation,
-            topic: topic,
-            system: item.system,
-            type: item.type,
-            userNote: item.userNote,
-            repetitionLevel: item.repetitionLevel,
-            nextReviewDate: item.nextReviewDate,
-            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-          };
-
-          if (existing) {
-            await tx.savedQuestion.update({
-              where: { id: existing.id },
-              data,
-            });
-          } else {
-            await tx.savedQuestion.create({ data: { id: crypto.randomUUID(), ...data } });
-          }
-        }
-        });
+              if (existing) {
+                await tx.savedQuestion.update({
+                  where: { id: existing.id },
+                  data,
+                });
+              } else {
+                await tx.savedQuestion.create({ data: { id: crypto.randomUUID(), ...data } });
+              }
+            }
+          }),
+          `savedQuestions batch ${i + 1}/${batches.length}`,
+          log
+        );
       }
     }
 
-    // Fetch updated data
-    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
-      prisma.performanceRecord.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.sRSItem.findMany({
-        where: { userId: internalUserId },
-      }),
-      prisma.savedQuestion.findMany({
-        where: { userId: internalUserId },
-      }),
-    ]);
+    // Fetch updated data with retry
+    const [performanceRecords, srsItems, savedQuestions] = await withRetry(
+      () => Promise.all([
+        prisma!.performanceRecord.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma!.sRSItem.findMany({
+          where: { userId: internalUserId },
+        }),
+        prisma!.savedQuestion.findMany({
+          where: { userId: internalUserId },
+        }),
+      ]),
+      'fetchUpdatedData',
+      log
+    );
 
     log.info('Sync completed', {
       performanceRecords: performanceRecords.length,
