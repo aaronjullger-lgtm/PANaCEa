@@ -61,7 +61,7 @@ export async function getPhotoDrillBatch(
 ): Promise<PhotoDrillQuestion[]> {
   const {
     prisma,
-    system,
+    system: _system, // Reserved for future system-based filtering
     modality,
     difficulty = 'medium',
     count = 10,
@@ -213,8 +213,8 @@ async function generateDistractors(
       return fallbackDistractors.map((d) => d.condition);
     }
 
-    // Shuffle and take 3
-    const shuffled = potentialDistractors.sort(() => 0.5 - Math.random());
+    // Shuffle and take 3 (use toSorted to avoid mutating original array)
+    const shuffled = [...potentialDistractors].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 3).map((d) => d.condition);
   } catch (error) {
     console.error('Error generating distractors:', error);
