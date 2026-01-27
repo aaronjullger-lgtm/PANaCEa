@@ -172,9 +172,82 @@ export default defineConfig(({ mode }) => {
           // Clean old caches on activation
           cleanupOutdatedCaches: true,
           // New cache namespace - "compat" strategy with interop mode
-          cacheId: 'panacea-v10-compat',
-          // Use network-first for JS chunks to avoid stale cache issues
+          cacheId: 'panacea-v11-offline-first',
+          // Runtime caching strategies for offline-first experience
           runtimeCaching: [
+            // =================================================================
+            // SPRINT 7: OFFLINE-FIRST - Aggressive Question Pool Caching
+            // =================================================================
+            {
+              // Question pool JSONs - Cache aggressively for offline study
+              urlPattern: /\/api\/questions\/(pool|fetch|session)/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'questions-pool-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+                // Background sync for failed requests
+                backgroundSync: {
+                  name: 'questions-queue',
+                  options: {
+                    maxRetentionTime: 24 * 60, // Retry for 24 hours
+                  },
+                },
+              },
+            },
+            {
+              // Staging Lake / Question seeds - Cache first for offline
+              urlPattern: /\/api\/questions\/seeds/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'staging-lake-cache',
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              // Clinical pearls - Cache for offline review
+              urlPattern: /\/api\/(pearls|conditions\/.*\/pearls)/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'pearls-cache',
+                expiration: {
+                  maxEntries: 500,
+                  maxAgeSeconds: 60 * 60 * 24 * 14, // 14 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              // Condition data - Essential for offline study
+              urlPattern: /\/api\/conditions/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'conditions-cache',
+                expiration: {
+                  maxEntries: 500,
+                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            // =================================================================
+            // END SPRINT 7 CHANGES
+            // =================================================================
             {
               // Vendor chunks should use network-first to avoid stale cache
               urlPattern: /^.*\/assets\/vendor.*\.js$/,
@@ -195,6 +268,18 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'data-cache',
                 expiration: {
                   maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                },
+              },
+            },
+            {
+              // Images and media - Cache first
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'image-cache',
+                expiration: {
+                  maxEntries: 100,
                   maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
                 },
               },

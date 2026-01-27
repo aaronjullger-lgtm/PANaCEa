@@ -1,0 +1,18 @@
+/**
+ * Pearl Components Styles
+ * Sprint 8: My Pearls Dashboard
+ */
+
+/* Flashcard flip animation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.flashcard-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
