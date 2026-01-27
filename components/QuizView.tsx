@@ -54,6 +54,9 @@ import {
 } from './quiz';
 import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 
+// Sprint 10: Trust badges for question source indication
+import { TrustBadge } from './TrustBadge';
+
 // Icons
 import { CloseIcon } from './icons/CloseIcon';
 import { FlagIcon } from './icons/FlagIcon';
@@ -1274,6 +1277,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
           >
+            {/* Sprint 10: Trust Badge for question source */}
+            <div className="flex items-center gap-2 mb-2">
+              <TrustBadge source={currentQuestion.source} size="sm" />
+            </div>
             <QuestionDisplay text={currentQuestion.question} />
           </motion.div>
         </AnimatePresence>

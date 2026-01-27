@@ -40,6 +40,8 @@ export interface Question {
   /** Optional tags for organization */
   tags?: string[];
   lastReviewedAt?: string; // ISO timestamp
+  /** Source of the question (pool, database, ai_fallback) */
+  source?: string;
 }
 
 /** Error taxonomy for meta-cognition - helps users understand why they miss questions */
