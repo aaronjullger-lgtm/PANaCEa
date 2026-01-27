@@ -30,7 +30,9 @@ import {
   Search,
   TrendingUp,
   ChevronRight,
+  Target,
 } from 'lucide-react';
+import { DashboardActionCard } from './DashboardActionCard';
 import {
   MODE_REGISTRY,
   TrainingModeConfig,
@@ -667,76 +669,50 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           />
         </div>
 
-        {/* Core PANCE Simulation - Primary Action (Stormy Slate Theme) */}
+        {/* Core PANCE Simulation - Unified Premium Card */}
         {coreMode && !searchQuery && (
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-600">
-                    <Brain className="w-7 h-7 text-slate-100" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-white">Core PANCE Simulation</h2>
-                    <p className="text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
-                      {getFocusDescription()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5">{renderFocusToggle()}</div>
-              </div>
-
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={handleCoreStart}
-                  className="w-full md:w-auto px-8 py-3.5 bg-action-blue-600 text-white font-semibold rounded-xl hover:bg-action-blue-700 hover:shadow-xl transition-all shadow-lg"
-                >
-                  Start Session
-                </button>
-              </div>
-            </div>
-          </div>
+          <DashboardActionCard
+            title="Core PANCE Simulation"
+            subtitle="Comprehensive Board Prep"
+            description={getFocusDescription()}
+            icon={Brain}
+            stats={[
+              { label: 'Questions', value: '120+', icon: Target },
+              { label: 'Mode', value: coreFocus === 'all' ? 'All Topics' : coreFocus === 'growth' ? 'Growth Areas' : coreFocus === 'flagged' ? 'Flagged' : 'Due Today' },
+              { label: 'Algorithm', value: 'FSRS', icon: TrendingUp },
+            ]}
+            buttonText="Start Session"
+            onAction={handleCoreStart}
+            variant="default"
+          />
         )}
 
-        {/* Grand Rounds - Secondary Daily Challenge (Stormy Slate Theme) */}
+        {/* Grand Rounds - Unified Premium Card */}
         {!searchQuery &&
           (() => {
             const grandRoundsMode = MODE_REGISTRY.find((m) => m.id === 'grand_rounds');
             if (!grandRoundsMode) return null;
 
             return (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-6 shadow-lg">
-                <div className="flex flex-col md:flex-row gap-6 items-center">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-700/60 flex items-center justify-center shadow-sm border border-slate-600">
-                        <Trophy className="w-6 h-6 text-slate-200" />
-                      </div>
-                      <div className="flex-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          Grand Rounds
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-slate-700 text-slate-200 rounded-full border border-slate-600">
-                            Daily Challenge
-                          </span>
-                        </h2>
-                        <p className="text-slate-400 text-sm mt-1">
-                          Same questions for everyone today - compete with your peers
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDrillClick(grandRoundsMode)}
-                    className="px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:border-white transition-all border border-slate-600"
-                  >
-                    Start Challenge
-                  </button>
-                </div>
-              </div>
+              <DashboardActionCard
+                title="Grand Rounds"
+                subtitle="Daily Competitive Challenge"
+                description="Same questions for everyone today - compete with your peers on the leaderboard."
+                icon={Trophy}
+                stats={[
+                  { label: "Today's Set", value: 20 },
+                  { label: 'Your Rank', value: '-', icon: Trophy },
+                  { label: 'Top Score', value: '92%', icon: Target },
+                ]}
+                buttonText="Start Daily Challenge"
+                onAction={() => handleDrillClick(grandRoundsMode)}
+                variant="daily"
+                badge={
+                  <span className="px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
+                    Daily
+                  </span>
+                }
+              />
             );
           })()}
 
