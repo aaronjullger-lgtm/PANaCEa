@@ -259,7 +259,7 @@ export function AchievementBadges({
         {filteredAchievements.map((achievement, index) => {
           const isUnlocked = !!achievement.unlockedAt;
           const progress = Math.min(100, (achievement.progress / achievement.requirement) * 100);
-          const tierColors = TIER_COLORS[achievement.tier];
+          const tierColors = TIER_COLORS[achievement.tier] ?? TIER_COLORS.bronze;
           const IconComponent = ACHIEVEMENT_ICONS[achievement.icon] ?? Trophy;
 
           return (
@@ -329,7 +329,7 @@ export function AchievementBadges({
                   shadow-sm
                 `}
                 >
-                  {achievement.tier[0].toUpperCase()}
+                  {(achievement.tier[0] ?? 'B').toUpperCase()}
                 </div>
               )}
 

@@ -611,7 +611,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
 
     // Precompute date strings and week threshold once
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
     // Single pass through performanceData for multiple aggregations
@@ -635,7 +635,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       if (r.isCorrect) totalCorrect++;
 
       // Date parsing (cache result)
-      const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
+      const recordDate = new Date(r.timestamp).toISOString().split('T')[0] ?? '';
       uniqueDays.add(recordDate);
 
       // Today's stats
@@ -677,7 +677,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const systemBreakdown = Array.from(systemMap.entries())
       .map(([system, data]) => ({
         system,
-        label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] ?? system,
+        label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
         correct: data.correct,
         total: data.total,
         accuracy: calculateAccuracy(data.correct, data.total),

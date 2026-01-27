@@ -142,7 +142,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     // Calculate subcategory stats
     const subcategoryStatsMap = new Map<string, SubcategoryStats>();
     subcategoryMap.forEach((conditions, key) => {
-      const [system, subcategory] = key.split('|');
+      const [system, subcategory = 'General'] = key.split('|');
       const conditionArray = Array.from(conditions.values());
 
       const totalQ = conditionArray.reduce((sum, c) => sum + c.totalQuestions, 0);

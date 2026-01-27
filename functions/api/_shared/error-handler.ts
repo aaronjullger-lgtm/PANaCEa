@@ -5,7 +5,13 @@
  * across all CloudFlare Pages Functions endpoints.
  */
 
-import { PagesFunction, EventContext } from '@cloudflare/workers-types';
+// Use generic types to avoid Cloudflare vs Web API Response conflicts
+type GenericPagesFunction = (context: any) => Response | Promise<Response>;
+type GenericEventContext = {
+  request: Request;
+  env: any;
+  params?: Record<string, string>;
+};
 
 export interface ErrorContext {
   endpoint: string;
@@ -210,13 +216,13 @@ function parseStackTrace(
  * Higher-order function to wrap CloudFlare Functions with error handling
  */
 export function withErrorHandler(
-  handler: PagesFunction,
+  handler: GenericPagesFunction,
   options?: {
     endpoint?: string;
     logErrors?: boolean;
   }
-): PagesFunction {
-  return async (context: EventContext<any, any, any>) => {
+): GenericPagesFunction {
+  return async (context: GenericEventContext): Promise<Response> => {
     const { request, env } = context;
     const endpoint = options?.endpoint || new URL(request.url).pathname;
     const requestId = crypto.randomUUID();

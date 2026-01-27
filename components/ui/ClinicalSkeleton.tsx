@@ -32,7 +32,7 @@ const pulseAnimation = {
     repeat: Infinity,
     repeatType: 'reverse' as const,
     duration: 1.2,
-    ease: 'easeInOut',
+    ease: 'easeInOut' as const,
   },
 };
 
