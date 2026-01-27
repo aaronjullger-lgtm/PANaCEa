@@ -281,12 +281,24 @@ export class SessionService {
       const optionsData = data.options || data.answers || data.choices;
       const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
 
+      // Handle both correctAnswerIndex (number) and correctAnswer (letter) formats
+      let correctAnswerIndex: number;
+      if (typeof data.correctAnswerIndex === 'number') {
+        correctAnswerIndex = data.correctAnswerIndex;
+      } else if (typeof data.correctAnswer === 'string') {
+        // Convert letter ("A", "B", "C", "D") to index (0, 1, 2, 3)
+        const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+        correctAnswerIndex = letterToIndex[data.correctAnswer.toUpperCase()] ?? 0;
+      } else {
+        correctAnswerIndex = 0;
+      }
+
       questions.push({
         id: q.id,
         question: (data.question || data.vignette || '') as string,
         vignette: data.vignette as string | undefined,
         options,
-        correctAnswerIndex: (data.correctAnswerIndex ?? 0) as number,
+        correctAnswerIndex,
         rationale: (data.rationale || data.explanation || '') as string,
         system: q.system || 'General',
         subcategory: data.subcategory as string | undefined,

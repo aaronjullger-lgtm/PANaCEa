@@ -79,8 +79,15 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       };
     }
 
+    // Normalize questions and convert correctAnswer letter to correctAnswerIndex
+    const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+    const normalizedQuestions = generatedQuestions.map((q) => ({
+      ...q,
+      correctAnswerIndex: letterToIndex[q.correctAnswer?.toUpperCase()] ?? 0,
+    }));
+
     // Seed questions into PreGeneratedQuestion table
-    const records = generatedQuestions.map((q, idx) => ({
+    const records = normalizedQuestions.map((q, idx) => ({
       id: `pregen-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`,
       questionType: selectedCategory,
       system: selectedSystem,
