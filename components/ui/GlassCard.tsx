@@ -63,16 +63,20 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const styles = variantStyles[variant];
-  const hoverStyles = hoverable ? 'hover:shadow-lg transition-all duration-300' : '';
+  const hoverStyles = hoverable
+    ? 'hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300'
+    : '';
   const paddingStyles = noPadding ? '' : 'p-6';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`
         relative overflow-hidden rounded-2xl
         ${styles.bg}
+        backdrop-blur-sm
         border ${styles.border}
         ${paddingStyles}
         ${hoverStyles}
@@ -80,10 +84,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       `}
       {...props}
     >
-      {/* Subtle background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none">
-        <div className={styles.glow} />
-      </div>
+      {/* Subtle background glow - only for non-neutral variants */}
+      {variant !== 'neutral' && (
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none">
+          <div className={`w-full h-full ${styles.glow}`} />
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10">{children}</div>
@@ -153,9 +159,9 @@ interface CardStatsProps {
 export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
   return (
     <div className="flex flex-wrap items-center gap-3 mt-4">
-      {stats.map((stat, index) => (
+      {stats.map((stat) => (
         <div
-          key={index}
+          key={`${stat.label}-${stat.value}`}
           className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-action-blue/10 border-action-blue/20'}`}
         >
           <stat.icon className="w-4 h-4" />

@@ -35,15 +35,15 @@ interface PrimaryButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'>
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25',
+    'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40',
   secondary:
-    'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 shadow-sm',
+    'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-sm',
   success:
-    'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25',
+    'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
   warning:
-    'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25',
+    'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40',
   danger:
-    'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/25',
+    'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40',
   ghost:
     'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300',
 };
@@ -66,14 +66,21 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthStyles = fullWidth ? 'w-full' : '';
 
+  const getIconSize = (buttonSize: ButtonSize): string => {
+    if (buttonSize === 'sm') return 'w-4 h-4';
+    if (buttonSize === 'lg') return 'w-6 h-6';
+    return 'w-5 h-5';
+  };
+
   return (
     <motion.button
-      whileHover={disabled ? {} : { scale: 1.02, y: -1 }}
+      whileHover={disabled ? {} : { scale: 1.02, y: -2 }}
       whileTap={disabled ? {} : { scale: 0.98 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       disabled={disabled}
       className={`
         ${baseStyles}
@@ -85,13 +92,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       `}
       {...props}
     >
-      {Icon && (
-        <Icon className={size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5'} />
-      )}
+      {Icon && <Icon className={getIconSize(size)} />}
       <span>{children}</span>
-      {IconRight && (
-        <IconRight className={size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5'} />
-      )}
+      {IconRight && <IconRight className={getIconSize(size)} />}
     </motion.button>
   );
 };
