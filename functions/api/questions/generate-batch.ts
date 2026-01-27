@@ -169,42 +169,67 @@ async function generateQuestionsWithGemini(
     hard: 'complex cases, atypical presentations, differential diagnosis challenges',
   };
 
-  const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions for the ${system} (${systemDescriptions[system] || system}) system.
+  const prompt = `You are a board-certified physician and medical education expert writing PANCE-style questions modeled after Kaplan Medical's gold-standard question bank.
 
+Generate ${count} PANCE-style multiple choice questions for: ${system} (${systemDescriptions[system] || system})
 Category: ${category}
 Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
 
-Requirements:
-1. Each question should have a brief clinical vignette (2-4 sentences) presenting a realistic patient scenario
-2. The question stem should be clear and test clinical decision-making
-3. Provide exactly 4 answer options (A, B, C, D)
-4. Include one correct answer and three plausible distractors
-5. The explanation should be educational and explain why the correct answer is right and why others are wrong
-6. Questions should be appropriate for PA certification exam preparation
+=== CRITICAL FORMATTING RULES (Kaplan Style) ===
 
-Return ONLY a JSON array with this exact structure (no markdown, no code blocks):
+1. VIGNETTE STRUCTURE (3-5 sentences):
+   - Start with demographics: "A [age]-year-old [sex] [relevant history] presents to [setting]..."
+   - Include CHIEF COMPLAINT with duration: "...with a [X]-day history of [symptoms]"
+   - Add PERTINENT POSITIVES: specific clinical findings that point toward diagnosis
+   - Add PERTINENT NEGATIVES: findings that rule out key differentials
+   - Include relevant VITAL SIGNS or LAB VALUES when clinically important
+
+2. QUESTION STEM - Use SECOND-ORDER THINKING:
+   - AVOID: "What is the diagnosis?" (first-order recall)
+   - PREFER: "What is the most appropriate next step in management?"
+   - PREFER: "Which mechanism best explains this patient's presentation?"
+   - PREFER: "Which finding would most likely be seen on [imaging/lab]?"
+   - PREFER: "What is the most likely underlying pathophysiology?"
+
+3. ANSWER OPTIONS:
+   - DO NOT prefix with "A.", "B.", etc. - just the option text
+   - Make distractors PLAUSIBLE - they should represent common misconceptions or similar conditions
+   - Correct answer should not be obviously longer or more detailed
+   - Avoid "all of the above" or "none of the above"
+
+4. CLINICAL DESCRIPTIONS (Describe, Don't Diagnose):
+   - WRONG: "A patient with pneumonia presents..."
+   - RIGHT: "A patient presents with fever, productive cough, and right lower lobe crackles..."
+   - Let the clinical picture speak - don't give away the diagnosis in the vignette
+
+5. EXPLANATION (Educational Value):
+   - Explain WHY the correct answer is right with pathophysiology
+   - Briefly explain why EACH distractor is wrong
+   - Include a memorable clinical pearl or teaching point
+
+Return ONLY a JSON array (no markdown, no code blocks):
 [
   {
-    "vignette": "Brief clinical scenario...",
-    "question": "What is the most appropriate next step?",
-    "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
+    "vignette": "A 58-year-old woman with a history of hypertension and type 2 diabetes presents to the emergency department with sudden onset of crushing substernal chest pain radiating to her left arm. She appears diaphoretic and anxious. Vital signs show BP 160/95 mmHg, HR 110 bpm, RR 22/min. ECG shows ST-segment elevation in leads V1-V4.",
+    "question": "What is the most appropriate initial management for this patient?",
+    "options": ["Immediate cardiac catheterization with PCI", "Administer morphine and nitroglycerin", "Start thrombolytic therapy", "Obtain serial troponins and observe"],
     "correctAnswer": "A",
-    "explanation": "Detailed explanation...",
+    "explanation": "This patient presents with an acute STEMI (ST-elevation myocardial infarction) as evidenced by the classic presentation of chest pain, diaphoresis, and ST-elevation in the anterior leads. The most appropriate initial management is immediate percutaneous coronary intervention (PCI) within 90 minutes of presentation (door-to-balloon time). While morphine and nitroglycerin (B) may provide symptomatic relief, they do not address the underlying coronary occlusion. Thrombolytics (C) are second-line when PCI is not available within 120 minutes. Serial troponins and observation (D) would be appropriate for NSTEMI or unstable angina, not STEMI.",
     "tags": ["${system}", "${category}"]
   }
 ]`;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
+            temperature: 0.8,
+            maxOutputTokens: 16384,
           },
         }),
       }

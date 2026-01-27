@@ -268,12 +268,16 @@ export class SessionService {
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
       where,
       take: count * 3,
-      orderBy: { generatedAt: 'asc' },
+      // Random selection using Prisma's database-level ordering
+      // Note: For true randomization, we fetch more and shuffle in-memory
     });
+
+    // Shuffle the pool questions for random selection
+    const shuffledPool = [...poolQuestions].sort(() => Math.random() - 0.5);
 
     const questions: EnrichedQuestion[] = [];
 
-    for (const q of poolQuestions) {
+    for (const q of shuffledPool) {
       if (questions.length >= count) break;
       if (seenIds.has(q.id)) continue;
 

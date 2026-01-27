@@ -201,7 +201,7 @@ export const onRequestPost = authenticatedEndpoint(GenerationRequestSchema, asyn
     const difficultyInstruction =
       DIFFICULTY_INSTRUCTIONS[difficulty] || DIFFICULTY_INSTRUCTIONS['same'];
 
-    // Build base generation prompt
+    // Build base generation prompt with Kaplan-style guidelines
     const buildGenerationPrompt = (previousIssues?: string[]) => {
       let issueWarning = '';
       if (previousIssues && previousIssues.length > 0) {
@@ -212,7 +212,7 @@ ${previousIssues.map((issue) => `- ${issue}`).join('\n')}
 Please regenerate with extra attention to medical accuracy.\n`;
       }
 
-      return `You are a PANCE exam question writer creating a high-quality multiple-choice question.
+      return `You are a board-certified physician and PANCE exam question writer creating questions modeled after Kaplan Medical's gold-standard question bank.
 
 ## Condition Information
 ${conditionContext}
@@ -222,33 +222,51 @@ ${taskInstruction}
 
 ${difficultyInstruction}
 
+## KAPLAN-STYLE FORMATTING RULES
+
+### VIGNETTE (3-5 sentences):
+- Start: "A [age]-year-old [sex] with [relevant PMH] presents to [setting] with [chief complaint] for [duration]..."
+- Include PERTINENT POSITIVES: findings that point toward the diagnosis
+- Include PERTINENT NEGATIVES: findings that rule out differentials
+- Add relevant vitals/labs when clinically important
+- DESCRIBE symptoms clinically - don't state the diagnosis in the vignette
+
+### QUESTION STEM (Second-Order Thinking):
+- AVOID first-order recall like "What is the diagnosis?"
+- PREFER: "What is the most appropriate next step in management?"
+- PREFER: "Which mechanism best explains this presentation?"
+- PREFER: "What finding would most likely be seen on [test]?"
+
+### ANSWER OPTIONS:
+- DO NOT prefix with "A.", "B.", etc. - just write the option text directly
+- Make ALL distractors clinically plausible
+- Distractors should represent common mistakes or similar conditions
+- Correct answer should not be obviously longer/more detailed
+
 ## Output Format
 Generate a JSON object with this exact structure (no markdown, no backticks):
 {
-  "vignette": "A clinical scenario with patient demographics, chief complaint, relevant history, and findings. 2-4 sentences.",
-  "question": "A single clear question stem asking what was specified in the task focus.",
-  "options": ["A. First option", "B. Second option", "C. Third option", "D. Fourth option"],
+  "vignette": "A 45-year-old man with hypertension and type 2 diabetes presents to the emergency department with acute onset of crushing substernal chest pain radiating to his left arm for the past 30 minutes. He is diaphoretic and appears anxious. Vital signs show BP 160/100 mmHg, HR 110 bpm. ECG reveals ST-segment elevation in leads V2-V4.",
+  "question": "What is the most appropriate initial intervention for this patient?",
+  "options": ["Emergent cardiac catheterization", "Sublingual nitroglycerin", "IV thrombolytic therapy", "Serial troponins every 6 hours"],
   "correctAnswerIndex": 0,
   "rationale": {
-    "whyCorrect": "1-2 sentences explaining why the correct answer is definitively correct. Bold **key terms**.",
-    "whyIncorrectA": "If A is wrong: 1 sentence why this is incorrect for this case.",
-    "whyIncorrectB": "If B is wrong: 1 sentence why this is incorrect for this case.",
-    "whyIncorrectC": "If C is wrong: 1 sentence why this is incorrect for this case.",
-    "whyIncorrectD": "If D is wrong: 1 sentence why this is incorrect for this case.",
-    "clinicalPearl": "One high-yield clinical pearl or key takeaway for this topic."
+    "whyCorrect": "This patient has an acute **STEMI** with classic presentation. Primary **PCI** within 90 minutes is the gold standard for revascularization.",
+    "whyIncorrectB": "Nitroglycerin provides symptomatic relief but does not address the coronary occlusion.",
+    "whyIncorrectC": "Thrombolytics are second-line when PCI is unavailable within 120 minutes.",
+    "whyIncorrectD": "Serial troponins are appropriate for NSTEMI workup, not acute STEMI requiring immediate intervention.",
+    "clinicalPearl": "Door-to-balloon time goal is <90 minutes for STEMI. Every 30-minute delay increases mortality by 7.5%."
   },
-  "pearls": ["Pearl 1 about this condition", "Pearl 2 - high-yield fact", "Pearl 3 - clinical tip"]
+  "pearls": ["STEMI requires emergent reperfusion - PCI preferred over thrombolytics", "Classic STEMI triad: chest pain, diaphoresis, ST-elevation", "ECG changes in V1-V4 indicate anterior/LAD territory"]
 }
 
 CRITICAL RULES:
-1. The vignette MUST be a realistic clinical scenario with age, gender, and relevant details
+1. The vignette MUST describe clinical findings without stating the diagnosis
 2. All 4 options must be plausible for this clinical picture
-3. The correct answer must be definitively correct based on the provided context
-4. Distractors should represent common misconceptions or related conditions
-5. The rationale MUST be a structured object with separate whyCorrect, whyIncorrectA/B/C/D fields (skip the one that is correct), and clinicalPearl
-6. Include 2-3 high-yield clinical pearls in the pearls array
-7. Do NOT include any markdown formatting or code blocks
-8. Return ONLY the JSON object`;
+3. Options should NOT have letter prefixes (A., B., etc.)
+4. The rationale MUST explain why each wrong answer is incorrect
+5. Include 2-3 high-yield clinical pearls
+6. Return ONLY the JSON object - no markdown formatting`;
     };
 
     // ========================================================================

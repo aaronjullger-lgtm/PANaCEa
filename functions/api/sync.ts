@@ -58,9 +58,9 @@ const SyncSavedQuestionSchema = z.object({
   correctAnswer: z.string().max(500).optional(),
   explanation: z.string().max(10000).optional(),
   topic: z.string().max(200).optional(),
-  system: z.string().max(50).optional(),
+  system: z.string().max(50).nullable().optional(),
   type: z.enum(['saved', 'flagged', 'missed']),
-  userNote: z.string().max(2000).optional(),
+  userNote: z.string().max(2000).nullable().optional(),
   repetitionLevel: z.number().int().optional(),
   nextReviewDate: z.string().optional(),
   updatedAt: z.string().optional(),
@@ -71,7 +71,7 @@ const SyncSavedQuestionSchema = z.object({
   correctAnswerIndex: z.number().optional(),
   rationale: z.string().optional(),
   condition: z.string().optional(),
-  conditionId: z.string().optional(),
+  conditionId: z.string().nullable().optional(),
 });
 
 const PostSyncSchema = z.object({
