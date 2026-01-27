@@ -142,14 +142,20 @@ export class ReviewService {
       const srsItem = conditionGroups.get(conditionId)!;
       const originalInfo = questionConditionMap.get(srsItem.questionId);
 
-      const freshFromPool = await this.prisma.preGeneratedQuestion.findFirst({
+      // Fetch multiple candidates and randomly select one for variety
+      const poolCandidates = await this.prisma.preGeneratedQuestion.findMany({
         where: {
           conditionId,
           id: { notIn: Array.from(seenIds) },
           ...(system ? { system } : {}),
         },
-        orderBy: { generatedAt: 'asc' },
+        take: 5, // Get up to 5 candidates
       });
+      
+      // Randomly select one from the candidates
+      const freshFromPool = poolCandidates.length > 0 
+        ? poolCandidates[Math.floor(Math.random() * poolCandidates.length)]
+        : null;
 
       if (freshFromPool) {
         const data = freshFromPool.questionData as Record<string, unknown>;
@@ -182,14 +188,19 @@ export class ReviewService {
         continue;
       }
 
-      const freshFromMain = (await this.prisma.question.findFirst({
+      // Also randomize main question selection for variety
+      const mainCandidates = (await this.prisma.question.findMany({
         where: {
           conditionId,
           id: { notIn: Array.from(seenIds) },
           ...(system ? { system } : {}),
         },
-        orderBy: { createdAt: 'asc' },
-      })) as DBQuestion | null;
+        take: 5,
+      })) as DBQuestion[];
+      
+      const freshFromMain = mainCandidates.length > 0
+        ? mainCandidates[Math.floor(Math.random() * mainCandidates.length)]
+        : null;
 
       if (freshFromMain) {
         const daysOverdue = Math.max(
