@@ -94,7 +94,15 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
     });
 
     if (!user) {
-      return { data: { error: 'User not found' }, status: 404 };
+      logger.warn('User not found', { clerkId: auth.userId });
+      return {
+        data: {
+          success: false,
+          error: 'User not found',
+          data: { userTotalAttempts: 0, overallPercentile: 0, systems: [] },
+        },
+        status: 404,
+      };
     }
 
     // Get user's question attempts grouped by system
@@ -103,12 +111,15 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
       select: { isCorrect: true, system: true },
     });
 
+    // Return empty state for new users (not an error)
     if (attempts.length === 0) {
+      logger.info('New user with no attempts', { userId: user.id });
       return {
         data: {
           success: true,
           data: { userTotalAttempts: 0, overallPercentile: 0, systems: [] },
         },
+        status: 200,
       };
     }
 
@@ -116,7 +127,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
     const userStats: Record<string, { correct: number; total: number }> = {};
     for (const attempt of attempts) {
       const system = attempt.system || 'UNKNOWN';
-      if (!userStats[system]) userStats[system] = { correct: 0, total: 0 };
+      userStats[system] ??= { correct: 0, total: 0 };
       userStats[system].total++;
       if (attempt.isCorrect) userStats[system].correct++;
     }
@@ -164,14 +175,14 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
       const cohortP90 = Math.round(benchmark.p90);
       const cohortDelta = accuracy - cohortAverage;
       const topPerformerGap = Math.max(0, cohortP90 - accuracy);
-      const yieldScore = topPerformerGap * (cohortDelta < 0 ? 1.5 : 1.0);
+      const yieldScore = topPerformerGap * (cohortDelta < 0 ? 1.5 : 1);
 
-      let status: SystemData['status'] = 'average';
+      let status: SystemData['status'];
       if (isInsufficientData) status = 'weakness';
       else if (accuracy >= cohortP90 - 5) status = 'strength';
-      else if (accuracy >= cohortAverage) status = 'average';
       else if (accuracy >= cohortAverage - 10) status = 'weakness';
-      else status = 'critical';
+      else if (accuracy < cohortAverage - 10) status = 'critical';
+      else status = 'average';
 
       systems.push({
         name: SYSTEM_DISPLAY_NAMES[system] || system,
@@ -207,9 +218,19 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
   } catch (error) {
     logger.error('Error calculating performance deltas', {
       error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
       userId: auth.userId,
     });
-    throw new Error('Internal server error');
+    
+    // Return safe defaults instead of crashing
+    return {
+      data: {
+        success: false,
+        error: 'Failed to calculate performance deltas',
+        data: { userTotalAttempts: 0, overallPercentile: 0, systems: [] },
+      },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

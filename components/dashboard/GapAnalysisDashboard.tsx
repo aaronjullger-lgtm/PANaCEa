@@ -8,13 +8,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Line,
   Scatter,
   Cell,
   ReferenceLine,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { TrendingUp, AlertCircle, Trophy, Target, ArrowRight } from 'lucide-react';
+import { ErrorBoundary } from '../error/ErrorBoundary';
 
 // ============================================================================
 // Types
@@ -138,7 +138,7 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
 // ============================================================================
 
 const CustomTooltip = ({ active, payload }: any) => {
-  if (!active || !payload || !payload.length) return null;
+  if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;
   return (
@@ -183,45 +183,66 @@ export const GapAnalysisDashboard: React.FC = () => {
   const [data, setData] = useState<PerformanceDeltasResponse['data'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) {
+        setError('Please sign in to view your analytics.');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/analytics/performance-deltas', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('No performance data found. Complete some questions to see your analytics!');
+        } else if (response.status === 500) {
+          setError('Server error loading your data. Please try again in a moment.');
+        } else {
+          setError(`Failed to load data (${response.status}). Please try refreshing.`);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      const result: PerformanceDeltasResponse = await response.json();
+      
+      if (!result || typeof result !== 'object') {
+        throw new Error('Invalid response format');
+      }
+
+      if (result.success && result.data) {
+        setData(result.data);
+      } else if (!result.success && result.data) {
+        // Server returned safe defaults (500 error with fallback data)
+        setData(result.data);
+        setError('Some data may be unavailable. Showing cached results.');
+      } else {
+        throw new Error('Invalid response structure');
+      }
+    } catch (err) {
+      console.error('Error fetching performance deltas:', err);
+      // Prevent unhandled promise rejection - always set error state
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Unable to load analytics: ${errorMessage}. Please try again.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const token = await getToken();
-        if (!token) {
-          throw new Error('Authentication required');
-        }
-
-        const response = await fetch('/api/analytics/performance-deltas', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
-
-        const result: PerformanceDeltasResponse = await response.json();
-        if (result.success && result.data) {
-          setData(result.data);
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (err) {
-        console.error('Error fetching performance deltas:', err);
-        // User-friendly error message
-        setError('Unable to load your performance data. Please try refreshing the page.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
-  }, [getToken]);
+  }, [getToken, retryCount]);
 
   const handleStudyClick = (systemName: string) => {
     navigate(`/quiz?system=${encodeURIComponent(systemName)}`);
@@ -243,21 +264,31 @@ export const GapAnalysisDashboard: React.FC = () => {
   }
 
   // Error state
-  if (error || !data) {
+  if (error && !data) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-            Unable to Load Analysis
-          </h3>
-          <p className="text-slate-600 dark:text-slate-400 mb-4">{error || 'No data available'}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-          >
-            Retry
-          </button>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Unable to Load Analysis
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setRetryCount(retryCount + 1)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 font-semibold rounded-lg transition-colors"
+              >
+                Go Home
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -405,9 +436,9 @@ export const GapAnalysisDashboard: React.FC = () => {
                 <Tooltip content={<CustomTooltip />} />
 
                 {/* The Dumbbell Lines (Ranges) */}
-                {chartData.map((entry, index) => (
+                {chartData.map((entry) => (
                   <ReferenceLine
-                    key={`line-${index}`}
+                    key={`line-${entry.name}`}
                     segment={[
                       { x: entry.accuracy, y: entry.name },
                       { x: entry.cohortP90, y: entry.name },
@@ -423,8 +454,8 @@ export const GapAnalysisDashboard: React.FC = () => {
 
                 {/* User Accuracy Markers (Large Circle) */}
                 <Scatter dataKey="accuracy" fill="#3b82f6">
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-user-${index}`} fill="#3b82f6" />
+                  {chartData.map((entry) => (
+                    <Cell key={`cell-user-${entry.name}`} fill="#3b82f6" />
                   ))}
                 </Scatter>
 
@@ -464,4 +495,11 @@ export const GapAnalysisDashboard: React.FC = () => {
   );
 };
 
-export default GapAnalysisDashboard;
+// Wrap with ErrorBoundary to prevent full-page crashes
+export default function GapAnalysisDashboardWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <GapAnalysisDashboard />
+    </ErrorBoundary>
+  );
+}

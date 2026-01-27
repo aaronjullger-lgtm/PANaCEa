@@ -33,48 +33,56 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
 
     // If stats are missing, derive from question attempts
     if (!currentStats) {
-      const attempts = await prisma.questionAttempt.findMany({
-        where: { userId },
-        select: {
-          wasCorrect: true,
-          system: true,
-          timeSpentMs: true,
-          createdAt: true,
-        },
-      });
+      try {
+        const attempts = await prisma.questionAttempt.findMany({
+          where: { userId },
+          select: {
+            wasCorrect: true,
+            system: true,
+            timeSpentMs: true,
+            createdAt: true,
+          },
+        });
 
-      type AttemptType = (typeof attempts)[0];
+        type AttemptType = (typeof attempts)[0];
 
-      totalQuestions = attempts.length;
-      correctAnswers = attempts.filter((a: AttemptType) => a.wasCorrect).length;
+        totalQuestions = attempts.length;
+        correctAnswers = attempts.filter((a: AttemptType) => a.wasCorrect).length;
 
-      const timeValues = attempts
-        .map((a: AttemptType) => a.timeSpentMs || 0)
-        .filter((n: number) => n > 0);
-      avgTimePerQuestion = timeValues.length
-        ? timeValues.reduce((sum: number, n: number) => sum + n, 0) / timeValues.length
-        : null;
+        const timeValues = attempts
+          .map((a: AttemptType) => a.timeSpentMs || 0)
+          .filter((n: number) => n > 0);
+        avgTimePerQuestion = timeValues.length
+          ? timeValues.reduce((sum: number, n: number) => sum + n, 0) / timeValues.length
+          : null;
 
-      attempts.forEach((attempt: AttemptType) => {
-        if (attempt.system) {
-          systemStats = updateSystemStats(
-            systemStats,
-            attempt.system,
-            attempt.wasCorrect,
-            attempt.timeSpentMs
-          );
-        }
-      });
+        attempts.forEach((attempt: AttemptType) => {
+          if (attempt.system) {
+            systemStats = updateSystemStats(
+              systemStats,
+              attempt.system,
+              attempt.wasCorrect,
+              attempt.timeSpentMs
+            );
+          }
+        });
+      } catch (dbError) {
+        logger.error('Failed to fetch question attempts', {
+          error: dbError instanceof Error ? dbError.message : String(dbError),
+          userId,
+        });
+        // Continue with empty stats rather than failing
+      }
     }
 
     const derived = calculateProfile({
-      systemStats,
-      totalQuestions,
-      correctAnswers,
+      systemStats: systemStats || {},
+      totalQuestions: totalQuestions || 0,
+      correctAnswers: correctAnswers || 0,
     });
 
     const peakStudyHours =
-      currentStats?.peakStudyHours && currentStats.peakStudyHours.length
+      currentStats?.peakStudyHours?.length
         ? currentStats.peakStudyHours
         : await (async () => {
             try {
@@ -133,12 +141,12 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
       },
     });
 
-    const systemBreakdown = Object.entries(systemStats).map(([system, stats]: [string, any]) => ({
+    const systemBreakdown = Object.entries(systemStats || {}).map(([system, stats]: [string, any]) => ({
       system,
-      total: stats.total,
-      correct: stats.correct,
-      accuracy: stats.accuracy ?? (stats.total ? stats.correct / stats.total : 0),
-      avgTimeMs: stats.avgTimeMs,
+      total: stats?.total ?? 0,
+      correct: stats?.correct ?? 0,
+      accuracy: stats?.accuracy ?? (stats?.total ? stats.correct / stats.total : 0),
+      avgTimeMs: stats?.avgTimeMs ?? null,
     }));
 
     logger.info('Generated clinical profile', {
@@ -178,7 +186,30 @@ export const onRequestGet = authenticatedEndpoint(ClinicalProfileSchema, async (
       name: error instanceof Error ? error.name : typeof error,
       userId,
     });
-    throw new Error(`Failed to load clinical profile: ${errorMessage}`);
+    
+    // Return safe defaults instead of crashing
+    return {
+      data: {
+        overall: {
+          accuracy: 0,
+          totalQuestions: 0,
+          avgTimeMs: null,
+        },
+        systemBreakdown: [],
+        strengths: [],
+        weaknesses: [],
+        patterns: {
+          rushedSystems: [],
+          overthinkingSystems: [],
+        },
+        diagnosisBias: [],
+        studyPatterns: {
+          peakHours: [],
+          avgSessionLength: null,
+        },
+      },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }
