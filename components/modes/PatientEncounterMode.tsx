@@ -945,17 +945,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
                       ${
                         isCompleted
-                          ? 'bg-data-pass border-data-pass text-white'
+                          ? 'bg-slate-700 border-slate-700 text-white'
                           : isCurrent
-                            ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
-                            : 'bg-transparent border-slate-300 text-slate-400'
+                            ? 'bg-slate-500 border-slate-500 text-white'
+                            : 'bg-transparent border-slate-700 text-slate-500'
                       }`}
                     >
                       {idx + 1}
                     </div>
                     {idx < phases.length - 1 && (
                       <div
-                        className={`w-8 h-0.5 ${isCompleted ? 'bg-data-pass' : 'bg-slate-300'}`}
+                        className={`w-8 h-0.5 ${isCompleted ? 'bg-slate-700' : 'bg-slate-700'}`}
                       />
                     )}
                   </div>
@@ -964,33 +964,33 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             {/* Mobile Phase Indicator */}
-            <div className="md:hidden flex items-center gap-2 bg-[var(--color-bg-tertiary)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
-              <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
-              <span className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
+            <div className="md:hidden flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 {phase}
               </span>
             </div>
 
             <div className="flex items-center gap-4">
               {/* Enhanced OSCE Panel Toggles */}
-              <div className="hidden md:flex items-center gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1 border border-[var(--color-border)]">
+              <div className="hidden md:flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-800">
                 <button
                   onClick={() => setShowRapportMeter(!showRapportMeter)}
-                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30 text-dusty-rose-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
                   title="Toggle Rapport Meter"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowExamPanel(!showExamPanel)}
-                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-action-blue-100 dark:bg-action-blue-900/30 text-action-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
                   title="Toggle Physical Exam Panel"
                 >
                   <StethoscopeIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowOrderPanel(!showOrderPanel)}
-                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-deep-plum-100 dark:bg-deep-plum-900/30 text-deep-plum-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
                   title="Toggle Order Panel"
                 >
                   <ClipboardList className="w-4 h-4" />
@@ -998,9 +998,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
               {/* Clinical Fidelity Badge */}
               {isFidelityModeActive && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-800 dark:text-muted-amber-300 rounded-full border border-muted-amber-300 dark:border-muted-amber-700">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="text-xs font-semibold">Fidelity Mode</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5">
+                  <Shield className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Fidelity</span>
                 </div>
               )}
               <button
@@ -1088,121 +1088,121 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       transition={{ duration: 0.2 }}
                       className="px-4 pb-4 md:px-6 md:pb-6 space-y-3"
                     >
-                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
-                        <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">
-                          CHIEF COMPLAINT
+                      <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                          Chief Complaint
                         </p>
-                        <p className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap">
+                        <p className="text-lg font-semibold text-white whitespace-pre-wrap">
                           {currentCase?.chiefComplaint ? (
                             getTranslatedText(currentCase.chiefComplaint)
                           ) : (
-                            <span className="inline-block w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>
+                            <span className="inline-block w-32 h-4 bg-slate-800 rounded animate-pulse"></span>
                           )}
                         </p>
                       </div>
 
-                      <div className="rounded-lg p-4 border border-slate-200 dark:border-slate-700 space-y-3 bg-slate-50 dark:bg-slate-800">
+                      <div className="rounded-lg p-4 border border-slate-800 space-y-3 bg-slate-950">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                             EMR Monitor
                           </p>
-                          <span className="text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse" />
                             Live
                           </span>
                         </div>
 
                         <div className="grid sm:grid-cols-2 gap-3">
                           {/* Blood Pressure Card */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">
                               Blood Pressure
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span
-                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.sbp ?? 0, [90, 140])}`}
-                              >
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
                                 {Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}
                               </span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500">mmHg</span>
+                              <span className="text-sm font-mono text-slate-400">mmHg</span>
                             </div>
-                            <Sparkline
-                              data={vitalsHistory.sbp}
-                              width={180}
-                              height={40}
-                              referenceRange={[90, 140]}
-                              showDots={false}
-                              fillArea
-                            />
+                            <div className="mt-3">
+                              <Sparkline
+                                data={vitalsHistory.sbp}
+                                width={180}
+                                height={40}
+                                referenceRange={[90, 140]}
+                                showDots={false}
+                                fillArea
+                              />
+                            </div>
                           </div>
 
                           {/* Heart Rate Card */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">
                               Heart Rate
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span
-                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.hr ?? 0, [60, 100])}`}
-                              >
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
                                 {Math.round(currentVitals.hr ?? 0)}
                               </span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500">bpm</span>
+                              <span className="text-sm font-mono text-slate-400">bpm</span>
                             </div>
-                            <Sparkline
-                              data={vitalsHistory.hr}
-                              width={180}
-                              height={40}
-                              referenceRange={[60, 100]}
-                              showDots={false}
-                              fillArea
-                            />
+                            <div className="mt-3">
+                              <Sparkline
+                                data={vitalsHistory.hr}
+                                width={180}
+                                height={40}
+                                referenceRange={[60, 100]}
+                                showDots={false}
+                                fillArea
+                              />
+                            </div>
                           </div>
 
                           {/* Respiratory Rate Card */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">
                               Respiratory Rate
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span
-                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.rr ?? 0, [12, 20])}`}
-                              >
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
                                 {Math.round(currentVitals.rr ?? 0)}
                               </span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500">/min</span>
+                              <span className="text-sm font-mono text-slate-400">/min</span>
                             </div>
-                            <Sparkline
-                              data={vitalsHistory.rr}
-                              width={180}
-                              height={40}
-                              referenceRange={[12, 20]}
-                              showDots={false}
-                              fillArea
-                            />
+                            <div className="mt-3">
+                              <Sparkline
+                                data={vitalsHistory.rr}
+                                width={180}
+                                height={40}
+                                referenceRange={[12, 20]}
+                                showDots={false}
+                                fillArea
+                              />
+                            </div>
                           </div>
 
                           {/* O₂ Saturation Card */}
-                          <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                          <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">
                               O₂ Saturation
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span
-                                className={`text-2xl font-bold tabular-nums ${getSemanticVitalClass(currentVitals.o2 ?? 0, [94, 100])}`}
-                              >
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
                                 {Math.round(currentVitals.o2 ?? 0)}
                               </span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500">%</span>
+                              <span className="text-sm font-mono text-slate-400">%</span>
                             </div>
-                            <Sparkline
-                              data={vitalsHistory.o2}
-                              width={180}
-                              height={40}
-                              referenceRange={[94, 100]}
-                              showDots={false}
-                              fillArea
-                            />
+                            <div className="mt-3">
+                              <Sparkline
+                                data={vitalsHistory.o2}
+                                width={180}
+                                height={40}
+                                referenceRange={[94, 100]}
+                                showDots={false}
+                                fillArea
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1426,11 +1426,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
 
                   {treatmentFeedback && (
-                    <div className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-lg p-4 border border-action-blue-100 dark:border-action-blue-800">
-                      <p className="text-sm font-semibold text-action-blue-700 dark:text-action-blue-300 mb-2">
-                        Treatment Feedback:
+                    <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                        Treatment Feedback
                       </p>
-                      <p className="text-sm text-[var(--color-text-secondary)]">
+                      <p className="text-sm text-slate-400">
                         {treatmentFeedback.feedback}
                       </p>
                     </div>
@@ -1526,15 +1526,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {physicalFindings.map((f, idx) => (
                     <div
                       key={`phys-${idx}`}
-                      className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-lg p-4 space-y-2 border border-action-blue-100 dark:border-action-blue-800"
+                      className="bg-slate-900 rounded-lg p-4 space-y-2 border border-slate-800"
                     >
-                      <div className="flex items-center gap-2 text-xs font-bold text-action-blue-500 uppercase">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <Stethoscope className="w-3 h-3" /> Physical Exam
                       </div>
-                      <p className="text-[var(--color-text-primary)] font-semibold">
+                      <p className="text-white font-semibold">
                         Exam: {f.maneuver}
                       </p>
-                      <p className="text-[var(--color-text-secondary)] text-sm pl-4 border-l-2 border-action-blue-300 whitespace-pre-wrap">
+                      <p className="text-slate-400 text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap">
                         Finding: {f.finding}
                       </p>
                     </div>
@@ -1547,37 +1547,37 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     return (
                       <div
                         key={`diag-${idx}`}
-                        className="bg-deep-plum-50 dark:bg-deep-plum-900/20 rounded-lg p-4 space-y-2 border border-deep-plum-100 dark:border-deep-plum-800"
+                        className="bg-slate-900 rounded-lg p-4 space-y-2 border border-slate-800"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-bold text-deep-plum-500 uppercase">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                             <Activity className="w-3 h-3" /> Diagnostics
                           </div>
                           {trendData && !clinicalFidelity.rawLabValues && (
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-deep-plum-400 uppercase font-semibold">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
                                 Trend
                               </span>
                               <Sparkline
                                 data={trendData}
                                 width={60}
                                 height={20}
-                                color="var(--deep-plum-500)"
+                                color="#64748b"
                                 strokeWidth={2}
                                 showDots={false}
                               />
                             </div>
                           )}
                         </div>
-                        <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">
+                        <p className="text-white font-semibold">
                           Order: {r.testName}
                         </p>
-                        <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
+                        <p className="text-white text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap font-mono">
                           Result: {r.result}
                         </p>
                         {/* Hide interpretation in Clinical Fidelity mode - makes user interpret raw values */}
                         {!clinicalFidelity.rawLabValues && r.interpretation && (
-                          <p className="text-[#64748b] dark:text-[#94a3b8] text-xs pl-4 border-l-2 border-purple-200 italic">
+                          <p className="text-slate-400 text-xs pl-4 border-l-2 border-slate-700 italic">
                             Interpretation: {r.interpretation}
                           </p>
                         )}
@@ -1587,14 +1587,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                   {/* Diagnosis Log */}
                   {diagnosisFeedback && (
-                    <div className="bg-sage-50 dark:bg-sage-900/20 rounded-lg p-4 space-y-2 border border-sage-100 dark:border-sage-800">
-                      <div className="flex items-center gap-2 text-xs font-bold text-data-pass uppercase">
+                    <div className="bg-slate-900 rounded-lg p-4 space-y-2 border border-slate-800">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <CheckCircle className="w-3 h-3" /> Diagnosis
                       </div>
-                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">
+                      <p className="text-white font-semibold">
                         Dx: {userDiagnosis}
                       </p>
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-sage-300 whitespace-pre-wrap">
+                      <p className="text-slate-400 text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap">
                         {diagnosisFeedback.feedback}
                       </p>
                     </div>
@@ -1846,8 +1846,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-action-blue-100 dark:bg-action-blue-900/30 flex items-center justify-center">
-                <User className="w-6 h-6 text-action-blue-600 dark:text-action-blue-400" />
+              <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
+                <User className="w-6 h-6 text-slate-400" />
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-[var(--color-accent)]">
@@ -1872,18 +1872,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-sage-50 dark:bg-sage-900/20 rounded-xl p-6 border border-sage-200 dark:border-sage-800"
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
               >
-                <h3 className="text-lg font-semibold mb-4 text-sage-700 dark:text-sage-300 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" /> Strengths
+                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-slate-500" /> Strengths
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.strengths.map((strength, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2 text-sm text-sage-900 dark:text-sage-100"
+                      className="flex items-start gap-2 text-sm text-slate-300"
                     >
-                      <span className="text-data-pass mt-0.5">•</span>
+                      <span className="text-slate-500 mt-0.5">•</span>
                       <span>{strength}</span>
                     </li>
                   ))}
@@ -1896,18 +1896,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-muted-amber-50 dark:bg-muted-amber-900/20 rounded-xl p-6 border border-muted-amber-200 dark:border-muted-amber-800"
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
               >
-                <h3 className="text-lg font-semibold mb-4 text-muted-amber-700 dark:text-muted-amber-300 flex items-center gap-2">
-                  <ArrowRight className="w-5 h-5" /> Areas for Improvement
+                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                  <ArrowRight className="w-5 h-5 text-slate-500" /> Areas for Improvement
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.areasForImprovement.map((area, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2 text-sm text-muted-amber-900 dark:text-muted-amber-100"
+                      className="flex items-start gap-2 text-sm text-slate-300"
                     >
-                      <span className="text-data-provisional mt-0.5">•</span>
+                      <span className="text-slate-500 mt-0.5">•</span>
                       <span>{area}</span>
                     </li>
                   ))}
@@ -1922,21 +1922,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-dusty-rose-50 dark:bg-dusty-rose-900/20 rounded-xl p-6 border border-dusty-rose-200 dark:border-dusty-rose-800"
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-lg font-semibold mb-4 text-dusty-rose-700 dark:text-dusty-rose-300 flex items-center gap-2">
-                <XCircle className="w-5 h-5" /> Missed Critical Cues
+              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-slate-500" /> Missed Critical Cues
               </h3>
-              <p className="text-sm text-dusty-rose-900 dark:text-dusty-rose-100 mb-3">
+              <p className="text-sm text-slate-400 mb-3">
                 The patient mentioned these important details that you didn't follow up on:
               </p>
               <ul className="space-y-2">
                 {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
                   <li
                     key={idx}
-                    className="flex items-start gap-2 text-sm text-dusty-rose-900 dark:text-dusty-rose-100 bg-dusty-rose-100 dark:bg-dusty-rose-900/30 rounded p-3 border border-dusty-rose-200 dark:border-dusty-rose-800"
+                    className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
                   >
-                    <span className="text-data-fail font-bold mt-0.5">!</span>
+                    <span className="text-slate-500 font-bold mt-0.5">!</span>
                     <span>{cue}</span>
                   </li>
                 ))}
@@ -1950,23 +1950,24 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-deep-plum-50 dark:bg-deep-plum-900/20 rounded-xl p-6 border border-deep-plum-200 dark:border-deep-plum-800"
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-lg font-semibold mb-4 text-deep-plum-700 dark:text-deep-plum-300 flex items-center gap-2">
-                <Activity className="w-5 h-5" /> Differential Diagnoses to Consider
+              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-slate-500" /> Differential Diagnoses to Consider
               </h3>
-              <p className="text-sm text-deep-plum-900 dark:text-deep-plum-100 mb-3">
+              <p className="text-sm text-slate-400 mb-3">
                 Based on the presentation, you should have considered:
               </p>
               <div className="grid sm:grid-cols-2 gap-2">
                 {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
                   <div
                     key={idx}
-                    className="bg-deep-plum-100 dark:bg-deep-plum-900/30 rounded-lg p-3 border border-deep-plum-200 dark:border-deep-plum-800"
+                    className="bg-slate-950 rounded-lg p-3 border border-slate-800"
                   >
-                    <span className="font-semibold text-deep-plum-900 dark:text-deep-plum-100">{dx}</span>
+                    <span className="font-semibold text-slate-300">{dx}</span>
                   </div>
                 ))}
+              </div>
               </div>
             </motion.div>
           )}
