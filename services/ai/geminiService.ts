@@ -750,15 +750,15 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
   switch (difficulty) {
     case 'easier':
       detailedDifficultyInstruction =
-        "Generate an 'Easier' question. This question should be easier than a standard PANCE question and must test the foundational characteristics of a common, core topic. Focus on 'classic' textbook presentations and first-order knowledge to help me build competence.";
+        "Generate an 'Easier' question. Use a classic, textbook presentation with clear physical exam findings. The diagnosis should be identifiable from the described findings, but you must still DESCRIBE findings rather than naming them. Include 1-2 'normal' findings to practice filtering. Focus on first-line treatment or most likely diagnosis.";
       break;
     case 'same':
       detailedDifficultyInstruction =
-        "Generate a 'PANCE-level' question. This question must be on-par with the difficulty of a real PANCE question. It should be a clinical vignette with plausible distractors that tests second-order thinking (e.g., diagnosis, management, or next diagnostic step).";
+        "Generate a 'PANCE-level' question. This must test SECOND-ORDER thinking: the student must first synthesize the clinical description to identify the condition, THEN answer a question about management, mechanism, or complications. Include a subtle red herring finding. Vitals may hint at acuity without explicitly stating 'unstable.'";
       break;
     case 'harder':
       detailedDifficultyInstruction =
-        "Generate a 'Harder' question that is more difficult than a standard PANCE question. You can do this by using a complex patient (multiple comorbidities), testing a less common 'zebra' condition, or asking a multi-step reasoning question (e.g., 'What is the mechanism of action of the second-line treatment for this complex patient?').";
+        "Generate a 'Harder' question. Use an atypical presentation, a complex patient with comorbidities, or a less common variant of a common condition. The question should require THIRD-ORDER thinking: identify the condition from subtle clues, consider how a comorbidity affects treatment, then select the appropriate modified management.";
       break;
   }
 
@@ -933,12 +933,37 @@ Generate one new, unique, PANCE-style multiple-choice question for the topic "${
 Difficulty:
 ${detailedDifficultyInstruction}
 
+=== CRITICAL: "DESCRIBE, DON'T DIAGNOSE" RULE ===
+You are STRICTLY FORBIDDEN from stating the diagnosis in the vignette or using classic "buzzwords" that give away the answer. You must DESCRIBE clinical findings as they would appear to a provider seeing the patient for the first time.
+
+BUZZWORD POLICY (Mixed Mode):
+- For 70% of questions: Strictly describe the clinical finding without naming it.
+  - BAD: "Patient has a butterfly rash."
+  - GOOD: "Physical exam reveals an erythematous, maculopapular eruption over the malar eminences, sparing the nasolabial folds."
+  - BAD: "Chest X-ray confirms a pneumothorax."
+  - GOOD: "Chest radiography demonstrates a visceral pleural line with absence of lung markings in the right periphery."
+- For 30% of questions: You MAY include a classic buzzword, but the question must ask for a SECOND-ORDER fact (treatment, mechanism, complication) NOT the diagnosis.
+  - Example: Give "Kayser-Fleischer rings" but ask for the treatment of Wilson's Disease, not the diagnosis.
+
+IMAGING-AS-TEXT RULE:
+Since users cannot see images, provide the "Radiologist's Report" or "Pathology Read" as descriptive text.
+- BAD: "X-ray shows pneumonia." or "Imaging was normal."
+- GOOD: "Plain radiographs reveal preserved joint space, no osteophytes, and normal bony alignment."
+- GOOD: "Chest radiography demonstrates a focal consolidation in the right lower lobe with associated air bronchograms."
+
+VIGNETTE STRUCTURE (follow this order):
+1. Patient Demographics & Chief Complaint: Age, gender, complaint, duration.
+2. History of Present Illness: Character of symptoms, modifying factors, relevant negatives.
+3. Vitals: Realistic numbers. Include at least one "distractor" normal vital OR use abnormal vitals without explicitly labeling the clinical state.
+4. Physical Exam: Focused findings described ANATOMICALLY, not by diagnosis name.
+5. Diagnostics: The descriptive REPORT of findings (labs, imaging), not the interpretation.
+
 Core Instructions (question quality matters):
-1. Vignette with Subtle Red Herring: The question MUST contain a realistic patient case/vignette and include one subtle "red herring" detail that is not relevant to the final diagnosis.
-2. Second-Order Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}") and tests second-order thinking (diagnosis, next best step, mechanism, complication, or most appropriate test).
-3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes) and be clearly wrong once the vignette is understood correctly.
+1. Vignette with Subtle Red Herring: Include one detail that could mislead toward a wrong diagnosis but is actually a distractor.
+2. Second-Order Task-Focused Question: The vignette must end with a clear question testing "${taskTopic}" that requires SYNTHESIS, not just recall.
+3. Plausible, Crafted Distractors: Three distractors must be highly plausible (common misconceptions, similar diagnoses, or treatments for related conditions).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
-5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
+5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls focusing on diagnosis, classic presentation, red flags, and first-line management.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks. Do NOT use <b> or <i> tags in the question.
@@ -1024,10 +1049,31 @@ ${userContextInstruction}
 
 Generate one new, unique, PANCE-style multiple-choice question.
 
+=== CRITICAL: "DESCRIBE, DON'T DIAGNOSE" RULE ===
+You are STRICTLY FORBIDDEN from stating the diagnosis in the vignette or using classic "buzzwords" that give away the answer. You must DESCRIBE clinical findings as they would appear to a provider seeing the patient for the first time.
+
+BUZZWORD POLICY (Mixed Mode):
+- For 70% of questions: Strictly describe the clinical finding without naming it.
+  - BAD: "Patient has target lesions." → GOOD: "Erythematous papules with a dusky, vesicular center and surrounding pale ring."
+  - BAD: "EKG shows atrial fibrillation." → GOOD: "EKG demonstrates irregularly irregular rhythm with absent P waves."
+- For 30% of questions: You MAY include a classic buzzword, but ask for treatment/mechanism/complication, NOT the diagnosis.
+
+IMAGING-AS-TEXT RULE:
+Provide the "Radiologist's Report" as descriptive text, not interpretation.
+- BAD: "CT shows appendicitis."
+- GOOD: "CT abdomen demonstrates a dilated, fluid-filled tubular structure in the right lower quadrant with surrounding fat stranding."
+
+VIGNETTE STRUCTURE:
+1. Patient Demographics & Chief Complaint
+2. History of Present Illness (character, modifying factors, relevant negatives)
+3. Vitals (in table format - include realistic numbers)
+4. Physical Exam (anatomical descriptions, not diagnosis names)
+5. Diagnostics (descriptive REPORT, not interpretation)
+
 Core Instructions:
 1. Vignette with subtle red herring.
-2. Second-order question (diagnosis, next best step, mechanism, etc.).
-3. Highly plausible distractors.
+2. Second-order question (diagnosis, next best step, mechanism, etc.) requiring SYNTHESIS.
+3. Highly plausible distractors that test common misconceptions.
 4. Use "\\n" inside the question string for paragraph breaks.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
