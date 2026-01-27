@@ -30,6 +30,23 @@ import {
   Layers,
   LucideIcon,
   User,
+  FileImage,
+  Shield,
+  Droplets,
+  GitCompare,
+  FileCheck,
+  Siren,
+  Hash,
+  Heart,
+  Wind,
+  Eye,
+  MessageSquare,
+  Image,
+  Scan,
+  FlaskConical,
+  Headphones,
+  FolderTree,
+  Sparkles,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings } from '../types';
 import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
