@@ -85,9 +85,10 @@ const PostSyncSchema = z.object({
 // HELPERS
 // ============================================================================
 
-// Batch size for Accelerate payload limits (~5MB limit)
-// Using small batches to stay well under the limit
-const BATCH_SIZE = 50;
+// Batch size - MUST stay under Cloudflare's 50 subrequest limit
+// Each batch makes ~3-5 queries (createMany, findMany for conflicts, etc.)
+// So we process fewer items but use bulk operations
+const BATCH_SIZE = 25;
 
 // Retry configuration for transient Accelerate failures
 const MAX_RETRIES = 3;
@@ -272,175 +273,170 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     );
 
     // Process data in BATCHED transactions to avoid Accelerate payload limits
-    // Each batch is its own transaction for reliability
+    // CRITICAL: Must stay under Cloudflare's 50 subrequest limit per request
+    // Using bulk operations (createMany, updateMany) instead of per-item queries
 
-    // 1. Insert PerformanceRecords in batches
+    // 1. Insert PerformanceRecords using createMany with skipDuplicates
+    // This is efficient because performance records are insert-only (no updates needed)
     if (payload.performanceRecords?.length) {
-      const batches = chunk(payload.performanceRecords, BATCH_SIZE);
-      for (let i = 0; i < batches.length; i++) {
-        const batch = batches[i];
+      const recordsToInsert = payload.performanceRecords.map(record => ({
+        id: record.id || crypto.randomUUID(),
+        userId: internalUserId,
+        topic: record.topic,
+        system: record.system || null,
+        focus: record.focus,
+        difficulty: record.difficulty,
+        isCorrect: record.isCorrect,
+        timestamp: BigInt(record.timestamp),
+        questionWordCount: record.questionWordCount || null,
+        errorTag: record.errorTag || null,
+        subcategoryName: record.subcategoryName || null,
+        conditionName: record.conditionName || null,
+      }));
+
+      // Process in chunks to avoid payload size limits
+      const batches = chunk(recordsToInsert, BATCH_SIZE);
+      for (const batch of batches) {
         await withRetry(
-          () => prisma!.$transaction(async (tx: any) => {
-            for (const record of batch) {
-              const recordId = record.id || crypto.randomUUID();
-              await tx.performanceRecord.upsert({
-                where: { id: recordId },
-                create: {
-                  id: recordId,
-                  userId: internalUserId,
-                  topic: record.topic,
-                  system: record.system || null,
-                  focus: record.focus,
-                  difficulty: record.difficulty,
-                  isCorrect: record.isCorrect,
-                  timestamp: BigInt(record.timestamp),
-                  questionWordCount: record.questionWordCount || null,
-                  errorTag: record.errorTag || null,
-                  subcategoryName: record.subcategoryName || null,
-                  conditionName: record.conditionName || null,
-                },
-                update: {},
-              });
-            }
+          () => prisma!.performanceRecord.createMany({
+            data: batch,
+            skipDuplicates: true, // Ignore records that already exist
           }),
-          `performanceRecords batch ${i + 1}/${batches.length}`,
+          'performanceRecords createMany',
           log
         );
       }
     }
 
-    // 2. Upsert SRSItems in batches with Conflict Resolution
+    // 2. SRSItems - Use a simplified approach: delete + insert for the user's items
+    // This avoids per-item conflict resolution queries
     if (payload.srsItems?.length) {
-      const batches = chunk(payload.srsItems, BATCH_SIZE);
-      for (let i = 0; i < batches.length; i++) {
-        const batch = batches[i];
-        await withRetry(
-          () => prisma!.$transaction(async (tx: any) => {
-            for (const item of batch) {
-              const existing = await tx.sRSItem.findUnique({
-                where: {
-                  userId_questionId: {
-                    userId: internalUserId,
-                    questionId: item.questionId,
-                  },
-                },
-              });
-
-              // Last Write Wins based on updatedAt
-              if (
-                existing &&
-                item.updatedAt &&
-                new Date(existing.updatedAt) > new Date(item.updatedAt)
-              ) {
-                return; // Skip this item in the transaction
-              }
-
-          const data = {
+      // Get all question IDs being synced
+      const questionIds = payload.srsItems.map(item => item.questionId);
+      
+      // Delete existing records for these question IDs (single query)
+      await withRetry(
+        () => prisma!.sRSItem.deleteMany({
+          where: {
             userId: internalUserId,
-            questionId: item.questionId,
-            interval: item.interval,
-            repetition: item.repetition,
-            easiness: item.easiness,
-            dueDate: new Date(item.dueDate),
-            lastReviewed: new Date(item.lastReviewed),
-            quality: item.quality,
-            difficulty: item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
-            stabilityScore: item.stabilityScore,
-            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-          };
+            questionId: { in: questionIds },
+          },
+        }),
+        'srsItems deleteMany',
+        log
+      );
 
-          if (existing) {
-            await tx.sRSItem.update({
-              where: { id: existing.id },
-              data,
-            });
-          } else {
-            await tx.sRSItem.create({ data: { id: crypto.randomUUID(), ...data } });
-          }
-            }
-          }),
-          `srsItems batch ${i + 1}/${batches.length}`,
-          log
-        );
-      }
-    }
+      // Insert all items fresh (single createMany per batch)
+      const itemsToInsert = payload.srsItems.map(item => ({
+        id: crypto.randomUUID(),
+        userId: internalUserId,
+        questionId: item.questionId,
+        interval: item.interval,
+        repetition: item.repetition,
+        easiness: item.easiness,
+        dueDate: new Date(item.dueDate),
+        lastReviewed: new Date(item.lastReviewed),
+        quality: item.quality,
+        difficulty: item.difficulty !== undefined ? Number.parseFloat(String(item.difficulty)) : null,
+        stabilityScore: item.stabilityScore ?? null,
+        updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
+      }));
 
-    // 3. Upsert SavedQuestions in batches with Conflict Resolution
-    if (payload.savedQuestions?.length) {
-      const batches = chunk(payload.savedQuestions, BATCH_SIZE);
-      for (let i = 0; i < batches.length; i++) {
-        const batch = batches[i];
+      const batches = chunk(itemsToInsert, BATCH_SIZE);
+      for (const batch of batches) {
         await withRetry(
-          () => prisma!.$transaction(async (tx: any) => {
-            for (const item of batch) {
-              // Map from Question object format to SavedQuestion format
-              // Client sends: { id, question, options, correctAnswerIndex, ... }
-              // Database expects: { questionId, questionText, correctAnswer, ... }
-              const questionId = item.questionId || item.id || crypto.randomUUID();
-              const questionText = item.questionText || item.question || '';
-              const correctAnswer = item.correctAnswer || 
-                (item.options && item.correctAnswerIndex !== undefined 
-                  ? item.options[item.correctAnswerIndex] 
-                  : '');
-              const explanation = item.explanation || item.rationale || '';
-              const topic = item.topic || item.condition || '';
-
-              // Skip if we don't have minimum required data
-              if (!questionText) {
-                continue;
-              }
-
-              const existing = await tx.savedQuestion.findUnique({
-                where: {
-                  userId_questionId_type: {
-                    userId: internalUserId,
-                    questionId: questionId,
-                    type: item.type,
-                  },
-                },
-              });
-
-              // Last Write Wins based on updatedAt
-              if (
-                existing &&
-                item.updatedAt &&
-                new Date(existing.updatedAt) > new Date(item.updatedAt)
-              ) {
-                continue;
-              }
-
-              const data = {
-                userId: internalUserId,
-                questionId: questionId,
-                questionText: questionText,
-                correctAnswer: correctAnswer,
-                explanation: explanation,
-                topic: topic,
-                system: item.system,
-                type: item.type,
-                userNote: item.userNote,
-                repetitionLevel: item.repetitionLevel,
-                nextReviewDate: item.nextReviewDate,
-                ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
-              };
-
-              if (existing) {
-                await tx.savedQuestion.update({
-                  where: { id: existing.id },
-                  data,
-                });
-              } else {
-                await tx.savedQuestion.create({ data: { id: crypto.randomUUID(), ...data } });
-              }
-            }
+          () => prisma!.sRSItem.createMany({
+            data: batch,
+            skipDuplicates: true,
           }),
-          `savedQuestions batch ${i + 1}/${batches.length}`,
+          'srsItems createMany',
           log
         );
       }
     }
 
-    // Fetch updated data with retry
+    // 3. SavedQuestions - Same approach: delete + insert
+    if (payload.savedQuestions?.length) {
+      // Build the composite keys for deletion
+      const keysToDelete = payload.savedQuestions
+        .filter(item => {
+          const questionText = item.questionText || item.question || '';
+          return questionText.length > 0; // Only process items with content
+        })
+        .map(item => ({
+          questionId: item.questionId || item.id || '',
+          type: item.type,
+        }))
+        .filter(k => k.questionId); // Filter out empty IDs
+
+      if (keysToDelete.length > 0) {
+        // Delete existing records for these question IDs and types
+        // Prisma doesn't support deleteMany with composite keys, so we use OR conditions
+        const deleteConditions = keysToDelete.map(k => ({
+          userId: internalUserId,
+          questionId: k.questionId,
+          type: k.type,
+        }));
+
+        await withRetry(
+          () => prisma!.savedQuestion.deleteMany({
+            where: {
+              OR: deleteConditions,
+            },
+          }),
+          'savedQuestions deleteMany',
+          log
+        );
+      }
+
+      // Insert all items fresh
+      const itemsToInsert = payload.savedQuestions
+        .map(item => {
+          const questionId = item.questionId || item.id || crypto.randomUUID();
+          const questionText = item.questionText || item.question || '';
+          const correctAnswer = item.correctAnswer || 
+            (item.options && item.correctAnswerIndex !== undefined 
+              ? item.options[item.correctAnswerIndex] 
+              : '');
+          const explanation = item.explanation || item.rationale || '';
+          const topic = item.topic || item.condition || '';
+
+          if (!questionText) return null;
+
+          return {
+            id: crypto.randomUUID(),
+            userId: internalUserId,
+            questionId,
+            questionText,
+            correctAnswer,
+            explanation,
+            topic,
+            system: item.system ?? null,
+            type: item.type,
+            userNote: item.userNote ?? null,
+            repetitionLevel: item.repetitionLevel ?? null,
+            nextReviewDate: item.nextReviewDate ?? null,
+            updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+      if (itemsToInsert.length > 0) {
+        const batches = chunk(itemsToInsert, BATCH_SIZE);
+        for (const batch of batches) {
+          await withRetry(
+            () => prisma!.savedQuestion.createMany({
+              data: batch,
+              skipDuplicates: true,
+            }),
+            'savedQuestions createMany',
+            log
+          );
+        }
+      }
+    }
+
+    // Fetch updated data with retry (3 queries in parallel)
     const [performanceRecords, srsItems, savedQuestions] = await withRetry(
       () => Promise.all([
         prisma!.performanceRecord.findMany({
