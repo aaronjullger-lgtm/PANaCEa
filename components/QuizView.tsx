@@ -1058,16 +1058,69 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       }
       return (
         <div className="bg-[var(--color-bg-primary)] min-h-screen px-4 sm:px-6 py-10">
-          <div className="max-w-5xl mx-auto space-y-4">
-            <ClinicalSkeleton />
-            <p className="text-center text-sm text-[var(--color-text-muted)] animate-pulse">
-              Loading next question...
-            </p>
+          <div className="max-w-5xl mx-auto">
+            {/* Enhanced loading header */}
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full border-4 border-[var(--color-accent)]/20 border-t-[var(--color-accent)] animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg">🩺</span>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                  Preparing Your Question
+                </h2>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Building a clinical scenario...
+                </p>
+              </div>
+            </div>
+
+            {/* Vignette skeleton with realistic structure */}
+            <div className="bg-[var(--color-card-bg)] rounded-xl border border-[var(--color-border)] p-6 mb-6 space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]/50 animate-pulse" />
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[95%] animate-pulse" />
+                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[88%] animate-pulse" style={{ animationDelay: '0.1s' }} />
+                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[92%] animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[60%] animate-pulse" style={{ animationDelay: '0.3s' }} />
+              </div>
+              <div className="pt-4 border-t border-[var(--color-border)]">
+                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[75%] animate-pulse" />
+              </div>
+            </div>
+
+            {/* Answer options skeleton */}
             <div className="grid gap-3 sm:grid-cols-2">
-              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
-              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
-              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
-              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
+              {['A', 'B', 'C', 'D'].map((letter, i) => (
+                <div
+                  key={letter}
+                  className="bg-[var(--color-card-bg)] rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-3"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 font-medium">
+                    {letter}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[85%] animate-pulse" />
+                    <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[65%] animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Progress hint */}
+            <div className="flex items-center justify-center gap-2 mt-8 text-sm text-[var(--color-text-muted)]">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0s' }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0.4s' }} />
+              </div>
+              <span>Curating high-yield content</span>
             </div>
           </div>
         </div>
