@@ -100,7 +100,7 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
     );
   }
 
-  const isAccelerateUrl = databaseUrl.startsWith('prisma://');
+  const isAccelerateUrl = databaseUrl.startsWith('prisma://') || databaseUrl.startsWith('prisma+postgres://');
   const isPostgresUrl =
     databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://');
 
@@ -118,7 +118,7 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
     console.error('[Prisma Edge] Invalid DATABASE_URL format:', databaseUrl.split('://')[0]);
     throw new Error(
       'DATABASE_URL must be either:\n' +
-        '  1. Prisma Accelerate: prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY\n' +
+        '  1. Prisma Accelerate: prisma://... or prisma+postgres://...\n' +
         '  2. Direct PostgreSQL: postgresql://user:pass@host/db\n' +
         '  Current format: ' +
         databaseUrl.split('://')[0] +
