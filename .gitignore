@@ -126,3 +126,40 @@ data/conditionDrillData.ts
 data/highYieldConditions.ts
 data/labCasesData.ts
 data/photoManifest.ts
+
+# Build and deployment artifacts
+.wrangler/
+.cloudflare/
+.vercel/
+.netlify/
+.turbo/
+*.tgz
+*.tar.gz
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+prisma/*.db
+prisma/*.db-journal
+
+# Sentry
+.sentryclirc
+
+# Test artifacts
+test-results/
+junit*.xml
+coverage*.json
+
+# Local development overrides
+*.local
+*.local.*
+docker-compose.override.yml
+
+# Session and state files
+*.session
+*.state
+.wrangler/state/
+
+# Debug logs
+debug*.log
+*.debug.log
+heapdump-*.heapsnapshot

@@ -7,6 +7,7 @@
  * - Added IP-based rate limiting fallback
  * - Replaced console.error with secure logging
  * - Added proper error handling with redacted logs
+ * - Early environment validation (fail-fast)
  */
 
 import { z } from 'zod';
@@ -16,6 +17,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
+import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 
 const GenerateQuestionSchema = z.object({
   queryText: z.string().min(1),
@@ -31,14 +33,19 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
   const logger = createEndpointLogger('/api/questions/generate');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
+  // Validate required environment variables early (fail-fast)
+  try {
+    validateFunctionEnv(env, 'FULL_STACK');
+  } catch (error) {
+    if (error instanceof MissingEnvError) {
+      logger.error('Missing environment variables', { missing: error.missingVars });
+      return error.toResponse();
+    }
+    throw error;
+  }
+
   try {
     const { queryText, questionType, system, difficulty } = validated;
-
-    // Validate database configuration
-    if (!env.DATABASE_URL) {
-      logger.error('Database not configured');
-      throw new Error('Service configuration error');
-    }
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 

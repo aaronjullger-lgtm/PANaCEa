@@ -8,6 +8,7 @@
 
 import { z } from 'zod';
 import { publicEndpoint, withCors } from '../_shared/middleware';
+import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 
 interface Env {
   GEMINI_API_KEY: string;
@@ -30,17 +31,19 @@ export const onRequestOptions = withCors();
  */
 export const onRequestPost = publicEndpoint(GeminiRequestSchema, async (context) => {
   const { env, validated } = context as { env: Env; validated: z.infer<typeof GeminiRequestSchema> };
-  const { modelName, prompt, temperature, maxTokens, systemInstruction } = validated;
-
-  // Validate API key
-  const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.error('[Gemini] API key not configured');
-    return {
-      status: 500,
-      error: 'Gemini API key not configured. Please contact support.',
-    };
+  
+  // Validate required environment variables early (fail-fast)
+  try {
+    validateFunctionEnv(env, 'GEMINI');
+  } catch (error) {
+    if (error instanceof MissingEnvError) {
+      return error.toResponse();
+    }
+    throw error;
   }
+  
+  const { modelName, prompt, temperature, maxTokens, systemInstruction } = validated;
+  const apiKey = env.GEMINI_API_KEY;
 
   try {
     // Construct Gemini API URL
