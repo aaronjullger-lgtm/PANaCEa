@@ -1968,7 +1968,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
                 ))}
               </div>
-              </div>
             </motion.div>
           )}
 
