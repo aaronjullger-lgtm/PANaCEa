@@ -65,6 +65,7 @@
     "optimize-params": "tsx ./scripts/optimize-params.ts",
     "seed:registry": "tsx ./scripts/seedDatabaseFromRegistry.ts",
     "seed:question-pool": "tsx ./scripts/seed-question-pool.ts",
+    "regenerate:pool-v2": "tsx ./scripts/regenerate-pool-v2.ts",
     "sync:all-registries": "tsx ./scripts/syncAllRegistries.ts",
     "automation:hourly": "tsx ./scripts/automation/hourlyTasks.ts",
     "automation:daily": "tsx ./scripts/automation/dailyTasks.ts",
