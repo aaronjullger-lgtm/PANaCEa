@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PrimaryButton } from '../ui/PrimaryButton';
 import {
   Upload,
   FileText,
@@ -140,17 +141,20 @@ export default function SyllabusDecompiler({
   };
 
   return (
-    <div className={`rounded-xl p-6 ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}>
+    <div
+      className="rounded-xl p-6 bg-[var(--color-bg-primary)]"
+      data-theme={theme}
+    >
       <div className="flex items-center gap-2 mb-4">
         <Sparkles
-          className={`w-6 h-6 ${theme === 'light' ? 'text-purple-600' : 'text-purple-400'}`}
+          className="w-6 h-6 text-[var(--color-accent)]"
         />
-        <h3 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
           AI Syllabus Decompiler
         </h3>
       </div>
 
-      <p className={`text-sm mb-6 ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+      <p className="text-sm mb-6 text-[var(--color-text-muted)]">
         Upload your school's syllabus and let AI automatically identify key topics and prioritize
         questions for hyper-personalized review.
       </p>
@@ -162,12 +166,8 @@ export default function SyllabusDecompiler({
           onDragLeave={handleDragLeave}
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
             isDragging
-              ? theme === 'light'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-blue-400 bg-blue-900/20'
-              : theme === 'light'
-                ? 'border-gray-300 hover:border-blue-400'
-                : 'border-gray-600 hover:border-blue-500'
+              ? 'border-[var(--color-accent)] bg-[var(--color-bg-secondary)]'
+              : 'border-[var(--color-border)] hover:border-[var(--color-accent)]'
           }`}
         >
           <input
@@ -179,17 +179,13 @@ export default function SyllabusDecompiler({
           />
 
           <label htmlFor="syllabus-upload" className="cursor-pointer flex flex-col items-center">
-            <Upload
-              className={`w-12 h-12 mb-3 ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`}
-            />
+            <Upload className="w-12 h-12 mb-3 text-[var(--color-text-muted)]" />
             <p
-              className={`text-sm font-medium mb-1 ${
-                theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-              }`}
+              className="text-sm font-medium mb-1 text-[var(--color-text-secondary)]"
             >
               Click to upload or drag and drop
             </p>
-            <p className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-500'}`}>
+            <p className="text-xs text-[var(--color-text-muted)]">
               PDF, Word, or Text files (Max 10MB)
             </p>
           </label>
@@ -198,9 +194,7 @@ export default function SyllabusDecompiler({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`mt-4 p-3 rounded-lg ${
-                theme === 'light' ? 'bg-red-50 text-red-700' : 'bg-red-900/20 text-red-400'
-              }`}
+              className="mt-4 p-3 rounded-lg bg-data-fail/10 text-data-fail"
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
@@ -210,48 +204,34 @@ export default function SyllabusDecompiler({
           )}
         </div>
       ) : uploadState === 'uploading' || uploadState === 'processing' ? (
-        <div
-          className={`rounded-lg p-8 text-center ${
-            theme === 'light' ? 'bg-blue-50' : 'bg-blue-900/20'
-          }`}
-        >
+        <div className="rounded-lg p-8 text-center bg-[var(--color-bg-secondary)]">
           <Loader2
-            className={`w-12 h-12 mx-auto mb-3 animate-spin ${
-              theme === 'light' ? 'text-blue-600' : 'text-blue-400'
-            }`}
+            className="w-12 h-12 mx-auto mb-3 animate-spin text-[var(--color-accent)]"
           />
           <p
-            className={`text-sm font-medium mb-1 ${
-              theme === 'light' ? 'text-blue-900' : 'text-blue-100'
-            }`}
+            className="text-sm font-medium mb-1 text-[var(--color-text-primary)]"
           >
             {uploadState === 'uploading' ? 'Uploading...' : 'Analyzing syllabus...'}
           </p>
-          <p className={`text-xs ${theme === 'light' ? 'text-blue-700' : 'text-blue-300'}`}>
+          <p className="text-xs text-[var(--color-text-muted)]">
             {fileName}
           </p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Success State */}
-          <div
-            className={`rounded-lg p-6 mb-4 ${
-              theme === 'light'
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-green-900/20 border border-green-800'
-            }`}
-          >
+          <div className="rounded-lg p-6 mb-4 bg-data-pass/10 border border-data-pass/30">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle
-                className={`w-5 h-5 ${theme === 'light' ? 'text-green-600' : 'text-green-400'}`}
+                className="w-5 h-5 text-data-pass"
               />
               <p
-                className={`font-medium ${theme === 'light' ? 'text-green-900' : 'text-green-100'}`}
+                className="font-medium text-data-pass"
               >
                 Syllabus Analyzed Successfully!
               </p>
             </div>
-            <p className={`text-sm ${theme === 'light' ? 'text-green-700' : 'text-green-300'}`}>
+            <p className="text-sm text-data-pass">
               Found {extractedTags.length} key topics in {fileName}
             </p>
           </div>
@@ -264,23 +244,21 @@ export default function SyllabusDecompiler({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`rounded-lg p-4 ${theme === 'light' ? 'bg-gray-50' : 'bg-gray-800'}`}
+                className="rounded-lg p-4 bg-[var(--color-bg-secondary)]"
               >
                 <div className="flex items-start justify-between mb-2">
                   <h4
-                    className={`font-semibold ${
-                      theme === 'light' ? 'text-gray-900' : 'text-white'
-                    }`}
+                    className="font-semibold text-[var(--color-text-primary)]"
                   >
                     {tag.topic}
                   </h4>
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       tag.priority === 'high'
-                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        ? 'bg-data-fail/15 text-data-fail'
                         : tag.priority === 'medium'
-                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          ? 'bg-data-provisional/15 text-data-provisional'
+                          : 'bg-data-neutral/15 text-data-neutral'
                     }`}
                   >
                     {tag.priority}
@@ -288,9 +266,7 @@ export default function SyllabusDecompiler({
                 </div>
                 {tag.examSection && (
                   <p
-                    className={`text-xs mb-2 ${
-                      theme === 'light' ? 'text-gray-600' : 'text-gray-400'
-                    }`}
+                    className="text-xs mb-2 text-[var(--color-text-muted)]"
                   >
                     Exam Section: {tag.examSection}
                   </p>
@@ -299,11 +275,7 @@ export default function SyllabusDecompiler({
                   {tag.keywords.map((keyword, i) => (
                     <span
                       key={i}
-                      className={`text-xs px-2 py-1 rounded ${
-                        theme === 'light'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-blue-900/30 text-blue-300'
-                      }`}
+                      className="text-xs px-2 py-1 rounded bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]"
                     >
                       {keyword}
                     </span>
@@ -315,27 +287,23 @@ export default function SyllabusDecompiler({
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <button
+            <PrimaryButton
+              variant="primary"
+              size="sm"
               onClick={handleDownloadTags}
-              className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                theme === 'light'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+              icon={Download}
+              className="flex-1"
             >
-              <Download className="w-4 h-4" />
               Download Tags
-            </button>
-            <button
+            </PrimaryButton>
+            <PrimaryButton
+              variant="ghost"
+              size="sm"
               onClick={handleReset}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                theme === 'light'
-                  ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              icon={X}
             >
-              <X className="w-4 h-4" />
-            </button>
+              Reset
+            </PrimaryButton>
           </div>
         </motion.div>
       )}

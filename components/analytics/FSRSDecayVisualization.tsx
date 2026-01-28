@@ -11,6 +11,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PrimaryButton } from '../ui/PrimaryButton';
 import {
   Brain,
   Clock,
@@ -89,6 +90,12 @@ const DecayCurve: React.FC<{
   const currentX = Math.min(1, daysSinceReview / maxDays) * width;
   const currentR = calculateRetrievability(stability, daysSinceReview);
   const currentY = height - currentR * height;
+  const currentColor =
+    currentR >= 0.7
+      ? 'var(--color-data-pass)'
+      : currentR >= 0.5
+        ? 'var(--color-data-provisional)'
+        : 'var(--color-data-fail)';
 
   // Threshold line at 70%
   const thresholdY = height - 0.7 * height;
@@ -118,9 +125,9 @@ const DecayCurve: React.FC<{
       {/* Gradient definition */}
       <defs>
         <linearGradient id="decay-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#22c55e" />
-          <stop offset="50%" stopColor="#eab308" />
-          <stop offset="100%" stopColor="#ef4444" />
+          <stop offset="0%" stopColor="var(--color-data-pass)" />
+          <stop offset="50%" stopColor="var(--color-data-provisional)" />
+          <stop offset="100%" stopColor="var(--color-data-fail)" />
         </linearGradient>
       </defs>
 
@@ -129,8 +136,8 @@ const DecayCurve: React.FC<{
         cx={currentX}
         cy={currentY}
         r="5"
-        fill={currentR >= 0.7 ? '#22c55e' : currentR >= 0.5 ? '#eab308' : '#ef4444'}
-        stroke="white"
+        fill={currentColor}
+        stroke="var(--color-bg-primary)"
         strokeWidth="2"
       />
 
@@ -162,21 +169,21 @@ const CardDecayCard: React.FC<{
   const daysUntilForgotten = card.stability * (Math.pow(0.7, -1) - 1) - daysSinceReview;
 
   const urgencyColors = {
-    safe: 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20',
-    warning: 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20',
-    critical: 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20',
+    safe: 'border-data-pass/30 bg-data-pass/10',
+    warning: 'border-data-provisional/30 bg-data-provisional/10',
+    critical: 'border-data-fail/30 bg-data-fail/10',
   };
 
   const urgencyText = {
     safe: {
       icon: CheckCircle,
-      color: 'text-green-600 dark:text-green-400',
+      color: 'text-data-pass',
       label: 'Memory Stable',
     },
-    warning: { icon: Clock, color: 'text-yellow-600 dark:text-yellow-400', label: 'Review Soon' },
+    warning: { icon: Clock, color: 'text-data-provisional', label: 'Review Soon' },
     critical: {
       icon: AlertTriangle,
-      color: 'text-red-600 dark:text-red-400',
+      color: 'text-data-fail',
       label: 'Forgetting!',
     },
   };
@@ -217,26 +224,26 @@ const CardDecayCard: React.FC<{
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 text-center mb-3">
-        <div className="p-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
+        <div className="p-2 bg-[var(--color-bg-secondary)]/60 rounded-lg">
           <div className="text-sm font-bold text-[var(--color-text-primary)]">
             {card.stability.toFixed(1)}d
           </div>
           <div className="text-[10px] text-[var(--color-text-muted)]">Stability</div>
         </div>
-        <div className="p-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
+        <div className="p-2 bg-[var(--color-bg-secondary)]/60 rounded-lg">
           <div className="text-sm font-bold text-[var(--color-text-primary)]">
             {card.difficulty.toFixed(1)}
           </div>
           <div className="text-[10px] text-[var(--color-text-muted)]">Difficulty</div>
         </div>
-        <div className="p-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
+        <div className="p-2 bg-[var(--color-bg-secondary)]/60 rounded-lg">
           <div
             className={`text-sm font-bold ${
               daysUntilForgotten > 3
-                ? 'text-green-600'
+                ? 'text-data-pass'
                 : daysUntilForgotten > 1
-                  ? 'text-yellow-600'
-                  : 'text-red-600'
+                  ? 'text-data-provisional'
+                  : 'text-data-fail'
             }`}
           >
             {daysUntilForgotten > 0 ? formatTimeUntilForgotten(daysUntilForgotten) : 'Now!'}
@@ -247,17 +254,15 @@ const CardDecayCard: React.FC<{
 
       {/* Review Button */}
       {urgency !== 'safe' && onReviewNow && (
-        <button
+        <PrimaryButton
           onClick={onReviewNow}
-          className={`w-full py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-            urgency === 'critical'
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-          }`}
+          variant={urgency === 'critical' ? 'danger' : 'warning'}
+          size="sm"
+          fullWidth
+          iconRight={ChevronRight}
         >
           Review Now
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        </PrimaryButton>
       )}
     </motion.div>
   );
@@ -271,14 +276,14 @@ const PredictiveAlert: React.FC<{
 }> = ({ criticalCount, warningCount, nextCriticalIn }) => {
   if (criticalCount === 0 && warningCount === 0) {
     return (
-      <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+      <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
         <div className="flex items-center gap-3">
-          <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <CheckCircle className="w-6 h-6 text-data-pass" />
           <div>
-            <h3 className="font-semibold text-green-900 dark:text-green-100">
+            <h3 className="font-semibold text-[var(--color-text-primary)]">
               Memory Looking Good! 🎉
             </h3>
-            <p className="text-sm text-green-700 dark:text-green-300">
+            <p className="text-sm text-[var(--color-text-muted)]">
               All your cards are stable.{' '}
               {nextCriticalIn && `Next review needed in ${nextCriticalIn}.`}
             </p>
@@ -289,21 +294,21 @@ const PredictiveAlert: React.FC<{
   }
 
   return (
-    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+    <div className="p-4 rounded-xl bg-data-provisional/10 border border-data-provisional/30">
       <div className="flex items-center gap-3">
-        <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+        <AlertTriangle className="w-6 h-6 text-data-provisional" />
         <div>
-          <h3 className="font-semibold text-amber-900 dark:text-amber-100">
+          <h3 className="font-semibold text-[var(--color-text-primary)]">
             ⚠️ Memory Decay Alert
           </h3>
-          <p className="text-sm text-amber-700 dark:text-amber-300">
+          <p className="text-sm text-[var(--color-text-muted)]">
             {criticalCount > 0 && (
-              <span className="text-red-600 dark:text-red-400 font-medium">
+              <span className="text-data-fail font-medium">
                 {criticalCount} card{criticalCount > 1 ? 's' : ''} critically fading!{' '}
               </span>
             )}
             {warningCount > 0 && (
-              <span className="text-yellow-600 dark:text-yellow-400">
+              <span className="text-data-provisional">
                 {warningCount} card{warningCount > 1 ? 's need' : ' needs'} review soon.
               </span>
             )}
@@ -393,7 +398,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="font-semibold text-[var(--color-text-primary)]">Memory Decay Curves</h3>
         </div>
         <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors group">
@@ -443,7 +448,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
       )}
 
       {/* Explanation */}
-      <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs text-[var(--color-text-muted)]">
+      <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg text-xs text-[var(--color-text-muted)]">
         <strong>Understanding Memory Decay:</strong>
         <p className="mt-1">
           The curve shows how your memory fades over time. Review before dropping below 70% to
