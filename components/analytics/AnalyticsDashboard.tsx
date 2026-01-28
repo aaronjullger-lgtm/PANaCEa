@@ -32,6 +32,7 @@ import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import chartTheme from '@/lib/chartTheme';
 
@@ -186,6 +187,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   }, [radarData]);
 
   const hasData = performanceData.length > 0;
+  const handleStartSession = () => {
+    window.location.assign('/study/main-session');
+  };
 
   // Loading state skeleton
   if (isLoading) {
@@ -210,14 +214,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className="space-y-6">
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-surface-card dark:bg-slate-800/60 border border-steel-blue-200 dark:border-steel-blue-700/50">
+        <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
           <div className="flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400 mt-0.5" />
+            <Sparkles className="w-5 h-5 text-[var(--color-accent)] mt-0.5" />
             <div>
-              <h4 className="font-semibold text-steel-blue-900 dark:text-steel-blue-100 mb-1">
+              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
                 PANCE Readiness Overview
               </h4>
-              <p className="text-sm text-steel-blue-700 dark:text-steel-blue-300">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Track your progress across all organ systems. Focus on your weakest areas for
                 maximum improvement.
               </p>
@@ -228,25 +232,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-secondary dark:bg-slate-800/50 rounded-xl border border-slate-700/50">
-          <div className="mb-4 p-4 rounded-full bg-slate-700/30">
-            <BarChart3 className="w-12 h-12 text-slate-400" />
+        <div className="flex flex-col items-center justify-center py-12 px-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
+          <div className="mb-4 p-4 rounded-full bg-[var(--color-bg-tertiary)]">
+            <BarChart3 className="w-12 h-12 text-[var(--color-text-muted)]" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Start Building Your Profile</h3>
-          <p className="text-sm text-slate-400 text-center max-w-md mb-6">
+          <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            Start Building Your Profile
+          </h3>
+          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-md mb-6">
             Complete your first 20-question session to unlock personalized analytics, track your
             progress across organ systems, and identify your focus areas.
           </p>
-          <a
-            href="/study/main-session"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 
-                       text-slate-900 font-semibold rounded-xl transition-all duration-200
-                       shadow-lg shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5"
-          >
-            <Play className="w-5 h-5" />
+          <PrimaryButton size="md" icon={Play} onClick={handleStartSession}>
             Start Calibration Session
-          </a>
-          <p className="text-xs text-slate-500 mt-3">
+          </PrimaryButton>
+          <p className="text-xs text-[var(--color-text-muted)] mt-3">
             ~15 minutes • Interleaved across 3+ organ systems
           </p>
         </div>
@@ -265,7 +265,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {readinessScore}%
                 </div>
-                <TrendingUp className="w-5 h-5 text-sage-500" />
+                <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
                 Based on accuracy (
@@ -285,7 +285,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {trendData.at(-1)?.accuracy ?? 0}%
                 </div>
-                <Activity className="w-5 h-5 text-steel-blue-500" />
+                <Activity className="w-5 h-5 text-[var(--color-accent)]" />
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">
                 Last {trendData.length} session{trendData.length !== 1 ? 's' : ''}
@@ -330,7 +330,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 {weakestAreas.map((area) => (
                   <div
                     key={area.system}
-                    className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-muted-amber-200 dark:border-muted-amber-800"
+                    className="p-3 rounded-lg bg-[var(--color-bg-primary)] border border-muted-amber-200 dark:border-muted-amber-800"
                   >
                     <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
                       {area.system}
@@ -360,7 +360,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <RadarChart data={radarData} outerRadius={120}>
-                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarGrid stroke="var(--color-border)" />
                     <PolarAngleAxis
                       dataKey="system"
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
@@ -393,7 +393,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis
                       dataKey="label"
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
@@ -441,13 +441,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-deep-plum-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
                 </div>
               )}
             </div>
             {stabilityError ? (
-              <p className="text-sm text-muted-amber-600 dark:text-muted-amber-400">
+              <p className="text-sm text-data-provisional">
                 Error loading stability data: {stabilityError}
               </p>
             ) : stabilityLoading ? (
@@ -500,8 +500,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="mt-3 p-3 bg-deep-plum-50 dark:bg-deep-plum-900/40 rounded-lg border border-deep-plum-200 dark:border-deep-plum-700">
-                  <p className="text-xs text-deep-plum-900 dark:text-deep-plum-100">
+                <div className="mt-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
@@ -546,7 +546,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={timeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis
                     dataKey="system"
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
@@ -569,7 +569,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       ];
                     }}
                   />
-                  <Bar dataKey="seconds" fill="var(--color-muted-amber)" radius={[6, 6, 0, 0]} name="Avg seconds">
+                  <Bar
+                    dataKey="seconds"
+                    fill="var(--color-muted-amber)"
+                    radius={[6, 6, 0, 0]}
+                    name="Avg seconds"
+                  >
                     {timeData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}

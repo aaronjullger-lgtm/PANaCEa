@@ -263,11 +263,7 @@ export default function LongitudinalProgressDashboard({
 
   if (phases.length === 0) {
     return (
-      <div
-        className={`rounded-lg p-6 text-center ${
-          theme === 'light' ? 'bg-gray-50 text-gray-500' : 'bg-gray-800 text-gray-400'
-        }`}
-      >
+      <div className="rounded-lg p-6 text-center bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
         <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p className="text-sm">
           Start your journey! Your longitudinal progress will appear here as you study.
@@ -277,55 +273,43 @@ export default function LongitudinalProgressDashboard({
   }
 
   return (
-    <div className={`rounded-lg p-6 ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}>
+    <div className="rounded-lg p-6 bg-[var(--color-bg-primary)]">
       <div className="flex items-center gap-2 mb-6">
-        <TrendingUp
-          className={`w-6 h-6 ${theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'}`}
-        />
-        <h3 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+        <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
           Longitudinal Progress
         </h3>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-steel-blue-50' : 'bg-steel-blue-900/20'}`}>
+        <div className="rounded-lg p-4 bg-steel-blue-50 dark:bg-steel-blue-900/20">
           <div className="flex items-center gap-2 mb-2">
-            <Target
-              className={`w-4 h-4 ${theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'}`}
-            />
+            <Target className="w-4 h-4 text-steel-blue-600 dark:text-steel-blue-400" />
             <span
-              className={`text-xs font-medium ${
-                theme === 'light' ? 'text-steel-blue-900' : 'text-steel-blue-100'
-              }`}
+              className="text-xs font-medium text-steel-blue-900 dark:text-steel-blue-100"
             >
               Current Mastery
             </span>
           </div>
           <p
-            className={`text-2xl font-bold ${
-              theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'
-            }`}
+            className="text-2xl font-bold text-steel-blue-600 dark:text-steel-blue-400"
           >
             {currentMastery}
           </p>
         </div>
 
-        <div className={`rounded-lg p-4 ${theme === 'light' ? 'bg-sage-50' : 'bg-sage-900/20'}`}>
+        <div className="rounded-lg p-4 bg-sage-50 dark:bg-sage-900/20">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className={`w-4 h-4 ${
                 improvement >= 0
-                  ? theme === 'light'
-                    ? 'text-sage-600'
-                    : 'text-sage-400'
+                  ? 'text-sage-600 dark:text-sage-400'
                   : 'text-dusty-rose-500'
               }`}
             />
             <span
-              className={`text-xs font-medium ${
-                theme === 'light' ? 'text-sage-900' : 'text-sage-100'
-              }`}
+              className="text-xs font-medium text-sage-900 dark:text-sage-100"
             >
               Improvement
             </span>
@@ -333,9 +317,7 @@ export default function LongitudinalProgressDashboard({
           <p
             className={`text-2xl font-bold ${
               improvement >= 0
-                ? theme === 'light'
-                  ? 'text-sage-600'
-                  : 'text-sage-400'
+                ? 'text-sage-600 dark:text-sage-400'
                 : 'text-dusty-rose-500'
             }`}
           >
@@ -344,25 +326,17 @@ export default function LongitudinalProgressDashboard({
           </p>
         </div>
 
-        <div
-          className={`rounded-lg p-4 ${theme === 'light' ? 'bg-deep-plum-50' : 'bg-deep-plum-900/20'}`}
-        >
+        <div className="rounded-lg p-4 bg-deep-plum-50 dark:bg-deep-plum-900/20">
           <div className="flex items-center gap-2 mb-2">
-            <Award
-              className={`w-4 h-4 ${theme === 'light' ? 'text-deep-plum-600' : 'text-deep-plum-400'}`}
-            />
+            <Award className="w-4 h-4 text-deep-plum-600 dark:text-deep-plum-400" />
             <span
-              className={`text-xs font-medium ${
-                theme === 'light' ? 'text-deep-plum-900' : 'text-deep-plum-100'
-              }`}
+              className="text-xs font-medium text-deep-plum-900 dark:text-deep-plum-100"
             >
               Total Questions
             </span>
           </div>
           <p
-            className={`text-2xl font-bold ${
-              theme === 'light' ? 'text-deep-plum-600' : 'text-deep-plum-400'
-            }`}
+            className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400"
           >
             {totalQuestions}
           </p>
@@ -371,11 +345,7 @@ export default function LongitudinalProgressDashboard({
 
       {/* Progress Timeline Chart */}
       <div className="mb-6">
-        <h4
-          className={`text-sm font-semibold mb-4 ${
-            theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-          }`}
-        >
+        <h4 className="text-sm font-semibold mb-4 text-[var(--color-text-secondary)]">
           Mastery Score Over Time
         </h4>
         <div className="space-y-3">
@@ -385,32 +355,26 @@ export default function LongitudinalProgressDashboard({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`rounded-lg p-3 ${
-                theme === 'light' ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-800 hover:bg-gray-700'
-              } transition-colors`}
+              className="rounded-lg p-3 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
             >
               <div className="flex items-center justify-between mb-2">
-                <span
-                  className={`text-sm font-medium ${
-                    theme === 'light' ? 'text-gray-900' : 'text-white'
-                  }`}
-                >
+                <span className="text-sm font-medium text-[var(--color-text-primary)]">
                   {phase.phase}
                 </span>
-                <span
-                  className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}
-                >
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {phase.questions} questions • {phase.accuracy}% accuracy
                 </span>
               </div>
-              <div className="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="relative h-8 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${(phase.masteryScore / maxScore) * 100}%` }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
                   className="absolute inset-y-0 left-0 bg-gradient-to-r from-steel-blue-500 to-deep-plum-500 rounded-full flex items-center justify-end pr-2"
                 >
-                  <span className="text-xs font-bold text-white">{phase.masteryScore}</span>
+                  <span className="text-xs font-bold text-[var(--color-text-inverse)]">
+                    {phase.masteryScore}
+                  </span>
                 </motion.div>
               </div>
             </motion.div>
@@ -419,26 +383,14 @@ export default function LongitudinalProgressDashboard({
       </div>
 
       {/* Motivational Message */}
-      <div
-        className={`p-4 rounded-lg ${
-          theme === 'light'
-            ? 'bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 border border-steel-blue-200'
-            : 'bg-gradient-to-r from-steel-blue-900/20 to-deep-plum-900/20 border border-steel-blue-800'
-        }`}
-      >
+      <div className="p-4 rounded-lg bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 border border-steel-blue-200">
         <div className="flex items-start gap-2">
-          <Info
-            className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-              theme === 'light' ? 'text-steel-blue-600' : 'text-steel-blue-400'
-            }`}
-          />
+          <Info className="w-5 h-5 mt-0.5 flex-shrink-0 text-steel-blue-600" />
           <div>
-            <h4
-              className={`font-semibold mb-1 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}
-            >
+            <h4 className="font-semibold mb-1 text-[var(--color-text-primary)]">
               Keep Building Your Foundation
             </h4>
-            <p className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+            <p className="text-sm text-[var(--color-text-muted)]">
               The effort you put in months ago is still contributing to your overall PANCE
               readiness.
               {userYearInProgram === 'Clinical Year' &&
