@@ -108,30 +108,48 @@ const SrsDashboard = () => {
     };
   }, [srsData]);
 
-  if (isLoading) return <div>Loading SRS Analytics...</div>;
+  if (isLoading) {
+    return <div className="text-[var(--color-text-muted)]">Loading SRS Analytics...</div>;
+  }
 
   return (
-    <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-lg">
-      <h2 className="text-2xl font-bold mb-6">Spaced Repetition (SRS) Analytics</h2>
+    <div className="p-6 bg-[var(--color-bg-secondary)] rounded-lg">
+      <h2 className="text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
+        Spaced Repetition (SRS) Analytics
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="p-4 bg-white dark:bg-slate-800 rounded-xl shadow">
-          <h3 className="text-sm font-medium text-slate-500">Projected Retention</h3>
-          <p className="text-3xl font-bold">{analytics.retentionRate.toFixed(1)}%</p>
+        <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl shadow">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)]">
+            Projected Retention
+          </h3>
+          <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+            {analytics.retentionRate.toFixed(1)}%
+          </p>
         </div>
-        <div className="p-4 bg-white dark:bg-slate-800 rounded-xl shadow">
-          <h3 className="text-sm font-medium text-slate-500">Average Stability (Days)</h3>
-          <p className="text-3xl font-bold">{analytics.avgStability.toFixed(1)}</p>
+        <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl shadow">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)]">
+            Average Stability (Days)
+          </h3>
+          <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+            {analytics.avgStability.toFixed(1)}
+          </p>
         </div>
-        <div className="p-4 bg-white dark:bg-slate-800 rounded-xl shadow">
-          <h3 className="text-sm font-medium text-slate-500">Reviews Due Today</h3>
-          <p className="text-3xl font-bold">{analytics.upcomingReviews}</p>
+        <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl shadow">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)]">
+            Reviews Due Today
+          </h3>
+          <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+            {analytics.upcomingReviews}
+          </p>
         </div>
       </div>
       <div>
-        <h3 className="text-lg font-bold mb-4">Memory Stability Distribution</h3>
+        <h3 className="text-lg font-bold mb-4 text-[var(--color-text-primary)]">
+          Memory Stability Distribution
+        </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={analytics.stabilityDistribution}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
@@ -143,7 +161,9 @@ const SrsDashboard = () => {
 
       {/* FSRS Insight Card - Per-Topic Drilldown */}
       <div className="mt-6">
-        <h3 className="text-lg font-bold mb-4">Topic Deep Dive</h3>
+        <h3 className="text-lg font-bold mb-4 text-[var(--color-text-primary)]">
+          Topic Deep Dive
+        </h3>
         <FSRSInsightCard
           data={{
             conceptName: 'Cardiovascular',

@@ -111,7 +111,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {weakestSystems.map((sys, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-dusty-rose-100 dark:border-dusty-rose-900"
+              className="flex items-center justify-between p-2 bg-[var(--color-bg-primary)] rounded-lg border border-dusty-rose-100 dark:border-dusty-rose-900"
             >
               <span className="text-sm font-medium text-[var(--color-text-primary)]">
                 {sys.system}
@@ -139,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {strongestSystems.map((sys, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-sage-100 dark:border-sage-900"
+              className="flex items-center justify-between p-2 bg-[var(--color-bg-primary)] rounded-lg border border-sage-100 dark:border-sage-900"
             >
               <span className="text-sm font-medium text-[var(--color-text-primary)]">
                 {sys.system}
@@ -185,7 +185,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-steel-blue-500 rounded-full transition-all"
+              className="h-full bg-[var(--color-accent)] rounded-full transition-all"
               style={{ width: `${Math.min(100, weeklyGoalProgress)}%` }}
             />
           </div>
@@ -228,25 +228,25 @@ const DeepDive: React.FC<DeepDiveProps> = ({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+        <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
           <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {avgStability.toFixed(1)}
           </div>
           <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Stability (days)</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+        <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
           <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {avgDifficulty.toFixed(1)}
           </div>
           <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Difficulty</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+        <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
           <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {retentionRate}%
           </div>
           <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300">Retention</div>
         </div>
-        <div className="text-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
+        <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-deep-plum-100 dark:border-deep-plum-900">
           <div className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
             {optimalReviewTime}
           </div>
@@ -289,7 +289,7 @@ const DeepDive: React.FC<DeepDiveProps> = ({
     </div>
 
     {/* Explanation */}
-    <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs text-[var(--color-text-muted)]">
+    <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg text-xs text-[var(--color-text-muted)]">
       <strong>What do these mean?</strong>
       <ul className="mt-1 space-y-1">
         <li>

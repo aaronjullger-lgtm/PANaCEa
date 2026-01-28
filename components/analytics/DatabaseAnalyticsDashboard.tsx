@@ -26,6 +26,7 @@ import { useDatabaseStats, DatabaseStats } from '../../hooks/useDatabaseStats';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import ConditionPerformancePanel from './ConditionPerformancePanel';
 import PerformanceTrendChart from './PerformanceTrendChart';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 // Helper to format time in seconds
 function formatTime(ms: number | null): string {
@@ -49,7 +50,7 @@ function TrendIcon({
     case 'declining':
       return <TrendingDown className="w-4 h-4 text-data-fail" />;
     default:
-      return <Minus className="w-4 h-4 text-slate-400" />;
+      return <Minus className="w-4 h-4 text-[var(--color-text-muted)]" />;
   }
 }
 
@@ -63,7 +64,7 @@ function getTrendColor(
     case 'declining':
       return 'text-data-fail';
     default:
-      return 'text-slate-400';
+      return 'text-[var(--color-text-muted)]';
   }
 }
 
@@ -73,10 +74,10 @@ function StatsSkeleton() {
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 h-24" />
+          <div key={i} className="p-4 rounded-xl bg-[var(--color-bg-secondary)] h-24" />
         ))}
       </div>
-      <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 h-48" />
+      <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] h-48" />
     </div>
   );
 }
@@ -164,13 +165,12 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           <AlertCircle className="w-5 h-5" />
           <span className="font-medium">Unable to load analytics</span>
         </div>
-        <p className="mt-2 text-sm text-data-fail">{error}</p>
-        <button
-          onClick={() => refetch()}
-          className="mt-3 px-4 py-2 rounded-lg bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-600 dark:text-dusty-rose-400 text-sm font-medium hover:bg-dusty-rose-200 dark:hover:bg-dusty-rose-900/60 transition-colors"
-        >
-          Try Again
-        </button>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{error}</p>
+        <div className="mt-3">
+          <PrimaryButton size="sm" variant="warning" onClick={() => refetch()}>
+            Try Again
+          </PrimaryButton>
+        </div>
       </div>
     );
   }

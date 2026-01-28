@@ -48,6 +48,7 @@ import {
   Sunset,
 } from 'lucide-react';
 import { fetchLearningProfile } from '@/services/analytics';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
   getCognitiveState,
   getLearningVelocity,
@@ -206,7 +207,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
       case 'progressing':
         return 'from-data-provisional to-muted-amber-400';
       default:
-        return 'from-slate-400 to-slate-300';
+        return 'from-[var(--color-border)] to-[var(--color-border)]';
     }
   };
 
@@ -228,8 +229,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-10 h-10 text-steel-blue-500 animate-spin" />
-          <p className="text-slate-500 dark:text-slate-400">Analyzing your learning data...</p>
+          <RefreshCw className="w-10 h-10 text-[var(--color-accent)] animate-spin" />
+          <p className="text-[var(--color-text-muted)]">Analyzing your learning data...</p>
         </div>
       </div>
     );
@@ -240,13 +241,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <AlertTriangle className="w-12 h-12 text-data-provisional" />
-        <p className="text-slate-600 dark:text-slate-400">{error}</p>
-        <button
-          onClick={loadProfile}
-          className="px-4 py-2 bg-steel-blue-500 text-white rounded-lg hover:bg-steel-blue-600 transition-colors"
-        >
+        <p className="text-[var(--color-text-muted)]">{error}</p>
+        <PrimaryButton size="sm" onClick={loadProfile}>
           Try Again
-        </button>
+        </PrimaryButton>
       </div>
     );
   }
