@@ -211,7 +211,7 @@ const CoreAdaptiveHero: React.FC<{
 
         <div className="flex items-center">
           <PrimaryButton
-            variant="secondary"
+            variant="primary"
             size="lg"
             icon={Play}
             iconRight={ChevronRight}
@@ -622,26 +622,34 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-1 px-1">
-        {[
-          { id: 'training' as const, label: 'Training Modes', icon: Zap },
-          { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
-          { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-action-blue text-white shadow-lg'
-                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+      {/* Study Tools Section Header - Sticky */}
+      <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)] backdrop-blur-sm border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Study Tools</h2>
+          <p className="text-sm text-[var(--color-text-muted)]">Choose your training mode or explore clinical resources</p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+          {[
+            { id: 'training' as const, label: 'Training Modes', icon: Zap },
+            { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
+            { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-action-blue text-white shadow-lg'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
