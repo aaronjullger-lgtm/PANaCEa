@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from './ui/GlassCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { RecommendationFeed } from './dashboard/RecommendationFeed';
+import { StatMetricCard } from './dashboard/StatMetricCard';
 import { useUser } from '@clerk/clerk-react';
 import {
   Zap,
@@ -279,34 +280,27 @@ const QuickStatsBar: React.FC<{
   questionsToday: number;
 }> = ({ streak, dueCount, accuracy, questionsToday }) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      {[
-        { label: 'Day Streak', value: streak, icon: Flame, color: 'text-muted-amber' },
-        {
-          label: 'Due for Review',
-          value: dueCount,
-          icon: AlertCircle,
-          color: dueCount > 0 ? 'text-muted-amber' : 'text-[var(--color-text-muted)]',
-        },
-        { label: 'Accuracy', value: `${accuracy}%`, icon: Target, color: 'text-sage-500' },
-        { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
-      ].map((stat, i) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05, duration: 0.3, ease: 'easeOut' }}
-          className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)]/60 transition-colors"
-        >
-          <div className="p-2 rounded-lg bg-[var(--color-bg-primary)]">
-            <stat.icon className={`w-5 h-5 ${stat.color}`} />
-          </div>
-          <div>
-            <div className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</div>
-            <div className="text-xs text-[var(--color-text-muted)]">{stat.label}</div>
-          </div>
-        </motion.div>
-      ))}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <StatMetricCard
+        value={streak}
+        label="Day Streak"
+        icon={Flame}
+      />
+      <StatMetricCard
+        value={dueCount}
+        label="Due for Review"
+        icon={AlertCircle}
+      />
+      <StatMetricCard
+        value={`${accuracy}%`}
+        label="Accuracy"
+        icon={Target}
+      />
+      <StatMetricCard
+        value={questionsToday}
+        label="Today"
+        icon={CheckCircle}
+      />
     </div>
   );
 };
