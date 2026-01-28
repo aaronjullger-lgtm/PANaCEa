@@ -48,27 +48,22 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     not_started: {
       title: 'Begin Calibration',
       description: 'Complete questions to train your personalized learning algorithm.',
-      color: 'slate',
     },
     early: {
       title: 'Early Calibration',
       description: 'The algorithm is learning your patterns. Predictions are approximate.',
-      color: 'amber',
     },
     developing: {
       title: 'Calibrating...',
       description: 'Memory predictions are improving. Keep reviewing consistently.',
-      color: 'blue',
     },
     refining: {
       title: 'Almost Calibrated',
       description: 'Nearly optimal predictions. A few more reviews to fine-tune.',
-      color: 'indigo',
     },
     calibrated: {
       title: 'Fully Calibrated',
       description: 'FSRS is optimized for your learning patterns.',
-      color: 'emerald',
     },
   };
 
@@ -78,7 +73,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
   if (compact) {
     return (
       <div className="inline-flex items-center gap-2">
-        <div className="relative w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="relative w-24 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -106,8 +101,8 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     <div
       className={`p-4 rounded-xl border-2 transition-colors ${
         isCalibrated
-          ? 'bg-data-pass/10 dark:bg-data-pass/5 border-data-pass/30 dark:border-data-pass/20'
-          : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700'
+          ? 'bg-data-pass/10 border-data-pass/30'
+          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -116,7 +111,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             isCalibrated
               ? 'bg-data-pass/10'
               : state === 'not_started'
-                ? 'bg-slate-500/10'
+                ? 'bg-[var(--color-bg-tertiary)]'
                 : 'bg-steel-blue-500/10'
           }`}
         >
@@ -146,7 +141,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="relative w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
+          <div className="relative w-full h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden mb-2">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -167,7 +162,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
                 <div
                   key={milestone}
                   className={`w-0.5 h-full ${
-                    current >= milestone ? 'bg-white/50' : 'bg-slate-400/30 dark:bg-slate-500/30'
+                    current >= milestone
+                      ? 'bg-[var(--color-border)]/70'
+                      : 'bg-[var(--color-border)]/40'
                   }`}
                   style={{ marginLeft: `${(milestone / target) * 100}%` }}
                 />
@@ -191,7 +188,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
 
       {/* Calibration milestones (only show when not calibrated) */}
       {!isCalibrated && showDetails && (
-        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+        <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
           <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
             <span className={current >= 20 ? 'text-steel-blue-600 dark:text-steel-blue-400' : ''}>
               20: Basic patterns
