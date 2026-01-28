@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PrimaryButton } from '../ui/PrimaryButton';
 import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
@@ -281,44 +282,48 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                 <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
               )}
 
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Lightbulb className="w-6 h-6" />
+              <div className="flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    <Lightbulb className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-[var(--color-text-primary)] line-clamp-1">
+                      {rec.topic}
+                    </h4>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2">
+                      {rec.reason}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-[var(--color-text-primary)] line-clamp-1">
-                    {rec.topic}
-                  </h4>
-                  <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2">
-                    {rec.reason}
-                  </p>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <PrimaryButton
+                    variant="primary"
+                    size="md"
+                    onClick={() => handleStart(rec)}
+                    iconRight={ArrowRight}
+                    className="text-sm"
+                  >
+                    Start
+                  </PrimaryButton>
+
+                  <button
+                    onClick={() => handleAction(rec.id, 'dismiss')}
+                    className="h-10 w-10 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4 mx-auto" />
+                  </button>
+
+                  <button
+                    onClick={() => handleAction(rec.id, 'complete')}
+                    className="h-10 w-10 rounded-full text-[var(--color-text-muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                    title="Mark as Done"
+                  >
+                    <Check className="w-4 h-4 mx-auto" />
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  onClick={() => handleStart(rec)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-semibold text-sm hover:opacity-90 transition-opacity"
-                >
-                  Start
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => handleAction(rec.id, 'dismiss')}
-                  className="p-2 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-                  title="Dismiss"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => handleAction(rec.id, 'complete')}
-                  className="p-2 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 transition-colors"
-                  title="Mark as Done"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
               </div>
             </motion.div>
           ))}

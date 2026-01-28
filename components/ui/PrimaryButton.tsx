@@ -35,13 +35,13 @@ interface PrimaryButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'>
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40',
+    'bg-blue-600 hover:bg-blue-700 text-white shadow-none',
   secondary:
     'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-sm',
   success:
     'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
   warning:
-    'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40',
+    'bg-amber-500 hover:bg-amber-600 text-white shadow-none',
   danger:
     'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40',
   ghost:
@@ -49,9 +49,9 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-4 py-2 text-sm',
-  md: 'px-6 py-3 text-base',
-  lg: 'px-8 py-4 text-lg',
+  sm: 'h-9 px-4 text-sm',
+  md: 'h-10 px-5 text-sm',
+  lg: 'h-12 px-6 text-base',
 };
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -66,7 +66,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
+    'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthStyles = fullWidth ? 'w-full' : '';
 
