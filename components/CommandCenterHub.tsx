@@ -177,8 +177,8 @@ const CoreAdaptiveHero: React.FC<{
   return (
     <GlassCard variant="primary" hoverable className="mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-        <div className="flex-1">
-          <div className="flex items-start gap-4 mb-4">
+        <div className="flex-1 flex flex-col justify-between">
+          <div className="flex items-start gap-4">
             <div className="p-3 rounded-xl bg-action-blue/20 backdrop-blur-sm">
               <Brain className="w-7 h-7 text-action-blue" />
             </div>
@@ -197,7 +197,7 @@ const CoreAdaptiveHero: React.FC<{
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border bg-sage-500/10 border-sage-400/20 text-sage-400">
               <Target className="w-4 h-4" />
               <span className="text-sm font-medium">{accuracy}% accuracy</span>
@@ -623,14 +623,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       )}
 
       {/* Study Tools Section Header - Sticky */}
-      <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)] backdrop-blur-sm border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+      <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-gray-200 dark:border-slate-700 -mx-4 px-4 pb-4 mb-6">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Study Tools</h2>
           <p className="text-sm text-[var(--color-text-muted)]">Choose your training mode or explore clinical resources</p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+        {/* Tab Navigation - Underline Style */}
+        <div className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-gray-200 dark:border-slate-800">
           {[
             { id: 'training' as const, label: 'Training Modes', icon: Zap },
             { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
@@ -639,10 +639,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
                 activeTab === tab.id
-                  ? 'bg-action-blue text-white shadow-lg'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                  ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               <tab.icon className="w-4 h-4" />

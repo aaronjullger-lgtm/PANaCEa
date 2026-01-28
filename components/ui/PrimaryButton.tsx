@@ -39,11 +39,11 @@ const variantStyles: Record<ButtonVariant, string> = {
   secondary:
     'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-sm',
   success:
-    'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
+    'bg-emerald-600 hover:bg-emerald-700 text-white shadow-none',
   warning:
     'bg-amber-500 hover:bg-amber-600 text-white shadow-none',
   danger:
-    'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40',
+    'bg-red-600 hover:bg-red-700 text-white shadow-none',
   ghost:
     'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300',
 };
@@ -66,7 +66,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
+    'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2';
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthStyles = fullWidth ? 'w-full' : '';
 

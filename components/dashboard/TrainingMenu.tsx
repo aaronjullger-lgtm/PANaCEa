@@ -678,12 +678,13 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             icon={Brain}
             stats={[
               { label: 'Questions', value: '120+', icon: Target },
-              { label: 'Mode', value: coreFocus === 'all' ? 'All Topics' : coreFocus === 'growth' ? 'Growth Areas' : coreFocus === 'flagged' ? 'Flagged' : 'Due Today' },
+              { label: 'Mode', value: focus === 'all' ? 'All Topics' : focus === 'growth' ? 'Growth Areas' : focus === 'flagged' ? 'Flagged' : 'Due Today' },
               { label: 'Algorithm', value: 'FSRS', icon: TrendingUp },
             ]}
             buttonText="Start Session"
             onAction={handleCoreStart}
             variant="default"
+            buttonVariant="primary"
           />
         )}
 
@@ -707,6 +708,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 buttonText="Start Daily Challenge"
                 onAction={() => handleDrillClick(grandRoundsMode)}
                 variant="daily"
+                buttonVariant="warning"
                 badge={
                   <span className="px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
                     Daily

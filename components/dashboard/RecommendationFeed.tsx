@@ -298,19 +298,9 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <PrimaryButton
-                    variant="primary"
-                    size="md"
-                    onClick={() => handleStart(rec)}
-                    iconRight={ArrowRight}
-                    className="text-sm"
-                  >
-                    Start
-                  </PrimaryButton>
-
                   <button
                     onClick={() => handleAction(rec.id, 'dismiss')}
-                    className="h-10 w-10 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                     title="Dismiss"
                   >
                     <X className="w-4 h-4 mx-auto" />
@@ -318,11 +308,21 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
                   <button
                     onClick={() => handleAction(rec.id, 'complete')}
-                    className="h-10 w-10 rounded-full text-[var(--color-text-muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                     title="Mark as Done"
                   >
                     <Check className="w-4 h-4 mx-auto" />
                   </button>
+
+                  <PrimaryButton
+                    variant="primary"
+                    size="md"
+                    onClick={() => handleStart(rec)}
+                    iconRight={ArrowRight}
+                    className="text-sm w-auto"
+                  >
+                    Start
+                  </PrimaryButton>
                 </div>
               </div>
             </motion.div>
