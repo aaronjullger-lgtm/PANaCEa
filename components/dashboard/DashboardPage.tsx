@@ -20,6 +20,7 @@ import AlgorithmStatusWidget from './AlgorithmStatusWidget';
 import { ClinicalSkeleton } from '../ui/ClinicalSkeleton';
 import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
+import { StatMetricCard } from './StatMetricCard';
 
 // ============================================================================
 // Types
@@ -47,51 +48,8 @@ const fetcher = async (url: string) => {
 };
 
 // ============================================================================
-// Quick Stat Card Component - Enhanced Design
+// Stats now use unified StatMetricCard component (imported above)
 // ============================================================================
-
-interface QuickStatProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  trend?: { value: number; isPositive: boolean };
-  accentColor: string;
-  delay?: number;
-}
-
-const QuickStat: React.FC<QuickStatProps> = ({ icon, label, value, trend, accentColor, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-    className="group relative bg-[var(--color-bg-primary)] dark:bg-slate-900/80 backdrop-blur-sm border border-[var(--color-border)] dark:border-slate-700/50 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-300"
-  >
-    {/* Gradient accent line */}
-    <div className={`absolute top-0 left-6 right-6 h-0.5 ${accentColor} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`} />
-    
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-xl ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-slate-100 dark:bg-slate-800/60`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-[var(--color-text-secondary)] dark:text-slate-400 mb-0.5">{label}</p>
-          <p className="text-2xl font-bold text-[var(--color-text-primary)] dark:text-white tracking-tight">{value}</p>
-        </div>
-      </div>
-      {trend && (
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-          trend.isPositive 
-            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
-            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          <TrendingUp className={`w-3 h-3 ${!trend.isPositive && 'rotate-180'}`} />
-          {trend.value}%
-        </div>
-      )}
-    </div>
-  </motion.div>
-);
 
 // ============================================================================
 // Section Header Component
@@ -220,30 +178,26 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </div>
         </motion.div>
 
-        {/* ===== QUICK STATS ROW - Enhanced with trends ===== */}
+        {/* ===== QUICK STATS ROW - Premium Unified Cards ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <QuickStat
-            icon={<Flame className="w-5 h-5 text-orange-500" />}
-            label="Day Streak"
+          <StatMetricCard
             value={mockStreak}
-            trend={{ value: 14, isPositive: true }}
-            accentColor="bg-gradient-to-r from-orange-400 to-amber-500"
-            delay={0}
+            label="Day Streak"
+            icon={Flame}
+            trend="+14%"
+            trendPositive={true}
           />
-          <QuickStat
-            icon={<BookOpen className="w-5 h-5 text-blue-500" />}
-            label="Cards Learned"
+          <StatMetricCard
             value={mockCardsLearned}
-            accentColor="bg-gradient-to-r from-blue-400 to-cyan-500"
-            delay={0.1}
+            label="Cards Learned"
+            icon={BookOpen}
           />
-          <QuickStat
-            icon={<Award className="w-5 h-5 text-emerald-500" />}
-            label="PANCE Predictor"
+          <StatMetricCard
             value={`${mockPANCEPredictor}%`}
-            trend={{ value: 3, isPositive: true }}
-            accentColor="bg-gradient-to-r from-emerald-400 to-teal-500"
-            delay={0.2}
+            label="PANCE Predictor"
+            icon={Award}
+            trend="+3%"
+            trendPositive={true}
           />
         </div>
 
