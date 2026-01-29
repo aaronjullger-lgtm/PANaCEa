@@ -163,9 +163,9 @@ export function DrillSetup({
   if (error) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-red-200 dark:border-red-800 rounded-xl p-6">
+        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-[var(--color-data-fail)]/30 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-6 h-6 text-red-500" />
+            <AlertCircle className="w-6 h-6 text-[var(--color-data-fail)]" />
             <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
               Error Loading Drill
             </h2>
@@ -250,14 +250,14 @@ export function DrillSetup({
           )}
 
           {/* Difficulty fixed at PANCE-level for standardized practice */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+          <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-accent)]/30">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-blue-500" />
-              <span className="font-bold text-blue-700 dark:text-blue-300">
+              <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
+              <span className="font-bold text-[var(--color-accent)]">
                 PANCE-Level Questions
               </span>
             </div>
-            <p className="text-sm text-blue-600 dark:text-blue-400">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               All questions are calibrated to match real PANCE exam difficulty for optimal
               preparation.
             </p>
