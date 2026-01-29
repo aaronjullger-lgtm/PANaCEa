@@ -60,12 +60,12 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  physiology: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-  anatomy: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
-  lab: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-  procedure: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-  ecg: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300',
-  finding: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+  physiology: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+  anatomy: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]',
+  lab: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+  procedure: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+  ecg: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+  finding: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]',
 };
 
 export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
@@ -158,8 +158,8 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
       transition={{ duration: 0.2 }}
       className={`${
         isCorrect
-          ? 'bg-emerald-500/10 border-t-2 border-emerald-500'
-          : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
+          ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]'
+          : 'bg-[var(--color-data-fail)]/10 border-t-2 border-[var(--color-data-fail)]'
       }`}
     >
       <div className="max-w-4xl mx-auto p-3 sm:p-4">
@@ -168,12 +168,12 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               {isCorrect ? (
-                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" />
               ) : (
-                <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                <XCircle className="w-5 h-5 text-[var(--color-data-fail)]" />
               )}
               <span
-                className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+                className={`text-lg font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
               >
                 {isCorrect ? 'Correct!' : 'Incorrect'}
               </span>
@@ -191,7 +191,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
             onClick={onNext}
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/80 text-[var(--color-text-primary)]'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
@@ -210,13 +210,13 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {keyFindings && keyFindings.length > 0 && (
           <div className="text-sm bg-[var(--color-bg-secondary)] rounded-lg p-4 mt-2 border border-[var(--color-border)]">
             <h4 className="font-semibold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
-              <TestTube className="w-4 h-4 text-emerald-500" />
+              <TestTube className="w-4 h-4 text-[var(--color-data-pass)]" />
               Key Findings
             </h4>
             <ul className="space-y-1">
               {keyFindings.map((finding, idx) => (
                 <li key={idx} className="text-[var(--color-text-secondary)] flex items-start gap-2">
-                  <span className="text-emerald-500 mt-1">•</span>
+                  <span className="text-[var(--color-data-pass)] mt-1">•</span>
                   <span>{finding}</span>
                 </li>
               ))}
@@ -226,7 +226,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
         {/* Pearl */}
         {pearl && (
-          <div className="text-sm text-amber-900 dark:text-amber-300/90 bg-amber-100 dark:bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-300 dark:border-amber-700/30 flex items-start gap-2">
+          <div className="text-sm text-[var(--color-text-primary)] bg-[var(--color-accent)]/10 rounded-lg p-3 mt-2 border border-[var(--color-accent)]/30 flex items-start gap-2">
             <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
               <span className="font-medium">Pearl: </span>
@@ -243,7 +243,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
               className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors text-sm"
             >
               <span className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
-                <BookOpen className="w-4 h-4 text-blue-500" />
+                <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />
                 Deep Dive - Related Reference Material
               </span>
               {showDeepDive ? (
@@ -302,7 +302,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                         .slice(0, 3)
                                         .map((point: string, i: number) => (
                                           <li key={i} className="flex items-start gap-2">
-                                            <span className="text-blue-500 mt-1">•</span>
+                                            <span className="text-[var(--color-accent)] mt-1">•</span>
                                             <span>{point}</span>
                                           </li>
                                         ))}
@@ -313,12 +313,12 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                 {/* Clinical Pearls */}
                                 {relatedData.clinicalPearls &&
                                   relatedData.clinicalPearls.length > 0 && (
-                                    <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                                      <h5 className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1">
+                                    <div className="mt-3 p-2 bg-[var(--color-accent)]/10 rounded-lg">
+                                      <h5 className="text-xs font-medium text-[var(--color-text-primary)] mb-1 flex items-center gap-1">
                                         <Lightbulb className="w-3 h-3" />
                                         Clinical Pearls
                                       </h5>
-                                      <ul className="text-sm text-amber-900 dark:text-amber-300 space-y-1">
+                                      <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                                         {relatedData.clinicalPearls
                                           .slice(0, 2)
                                           .map((pearl: string, i: number) => (
@@ -330,11 +330,11 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
                                 {/* Key Equations (for physiology) */}
                                 {relatedData.keyEquations && (
-                                  <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <h5 className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
+                                  <div className="mt-3 p-2 bg-[var(--color-accent)]/10 rounded-lg">
+                                    <h5 className="text-xs font-medium text-[var(--color-text-primary)] mb-1">
                                       Key Equations
                                     </h5>
-                                    <div className="text-sm text-blue-900 dark:text-blue-300 font-mono">
+                                    <div className="text-sm text-[var(--color-text-secondary)] font-mono">
                                       {Array.isArray(relatedData.keyEquations)
                                         ? relatedData.keyEquations
                                             .slice(0, 2)
@@ -355,12 +355,12 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
                                 {/* Mnemonics */}
                                 {relatedData.mnemonics && relatedData.mnemonics.length > 0 && (
-                                  <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                    <h5 className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1 flex items-center gap-1">
+                                  <div className="mt-3 p-2 bg-[var(--color-data-provisional)]/10 rounded-lg">
+                                    <h5 className="text-xs font-medium text-[var(--color-text-primary)] mb-1 flex items-center gap-1">
                                       <Brain className="w-3 h-3" />
                                       Memory Tip
                                     </h5>
-                                    <p className="text-sm text-purple-900 dark:text-purple-300 font-medium">
+                                    <p className="text-sm text-[var(--color-text-secondary)] font-medium">
                                       {relatedData.mnemonics[0]}
                                     </p>
                                   </div>
@@ -371,7 +371,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                     onClick={() =>
                                       onDeepDive(category || 'physiology', relatedData.id)
                                     }
-                                    className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                    className="mt-3 text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1"
                                   >
                                     View full reference
                                     <ExternalLink className="w-3 h-3" />
@@ -394,7 +394,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                 <button
                                   key={ref.id}
                                   onClick={() => onDeepDive?.(ref.type, ref.id)}
-                                  className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-left"
+                                  className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors text-left"
                                 >
                                   <div className={`p-1.5 rounded ${TYPE_COLORS[ref.type]}`}>
                                     <Icon className="w-4 h-4" />
