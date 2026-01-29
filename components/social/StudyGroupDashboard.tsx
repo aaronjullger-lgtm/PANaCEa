@@ -187,7 +187,7 @@ export default function StudyGroupDashboard() {
           onClick={() => setActiveTab('groups')}
           className={`pb-2 px-4 font-medium transition-colors ${
             activeTab === 'groups'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
               : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
           }`}
         >
@@ -197,7 +197,7 @@ export default function StudyGroupDashboard() {
           onClick={() => setActiveTab('leaderboard')}
           className={`pb-2 px-4 font-medium transition-colors ${
             activeTab === 'leaderboard'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
               : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
           }`}
         >
@@ -217,10 +217,10 @@ export default function StudyGroupDashboard() {
               {/* Create Group Card */}
               <div
                 onClick={() => setShowCreateModal(true)}
-                className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-blue-500 transition-colors group"
+                className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
               >
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800/80 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
                 <h3 className="font-semibold text-lg mb-1">Create a Group</h3>
                 <p className="text-sm text-slate-500">Start a new study circle</p>
@@ -245,7 +245,7 @@ export default function StudyGroupDashboard() {
             {/* Loading State */}
             {isLoadingGroups ? (
               <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
                 <p className="text-slate-600 dark:text-slate-400 font-medium">
                   Loading study groups...
                 </p>
@@ -437,7 +437,7 @@ export default function StudyGroupDashboard() {
                           {entry.user.school || 'PA Student'}
                         </div>
                       </div>
-                      <div className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                      <div className="font-mono font-semibold text-[var(--color-accent)]">
                         {entry.score} pts
                       </div>
                     </div>
