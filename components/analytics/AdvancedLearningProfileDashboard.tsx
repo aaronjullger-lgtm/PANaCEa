@@ -201,7 +201,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   const getReadinessGradient = (level: string | null): string => {
     switch (level) {
       case 'ready':
-        return 'from-data-pass to-sage-400';
+        return 'from-data-pass to-data-pass';
       case 'almost_ready':
         return 'from-[var(--color-accent)] to-[var(--color-accent-hover)]';
       case 'progressing':
