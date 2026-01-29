@@ -106,7 +106,7 @@ export function VersionHistoryViewer({
           {selectedVersions.length === 2 && (
             <button
               onClick={handleCompare}
-              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
               Compare v{selectedVersions[0]} ↔ v{selectedVersions[1]}
