@@ -82,8 +82,8 @@ const PresetButton: React.FC<PresetButtonProps> = ({ preset, isSelected, onClick
       flex flex-col items-start p-3 rounded-lg border transition-all
       ${
         isSelected
-          ? 'border-action-primary bg-action-muted text-text-primary'
-          : 'border-surface-border bg-surface-card hover:border-action-secondary text-text-secondary'
+          ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-text-primary)]'
+          : 'border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent)]/60 text-[var(--color-text-secondary)]'
       }
     `}
   >
@@ -98,21 +98,21 @@ const MetricCard: React.FC<{
   subtext?: string;
   trend?: 'up' | 'down' | 'neutral';
 }> = ({ label, value, subtext, trend }) => (
-  <div className="bg-surface-card rounded-lg p-4 border border-surface-border">
-    <div className="text-xs text-text-tertiary uppercase tracking-wide mb-1">{label}</div>
+  <div className="bg-[var(--color-bg-card)] rounded-lg p-4 border border-[var(--color-border)]">
+    <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide mb-1">{label}</div>
     <div className="flex items-baseline gap-2">
-      <span className="text-2xl font-semibold text-text-primary">{value}</span>
+      <span className="text-2xl font-semibold text-[var(--color-text-primary)]">{value}</span>
       {trend && (
         <span
           className={`text-sm ${
-            trend === 'up' ? 'text-success' : trend === 'down' ? 'text-error' : 'text-text-tertiary'
+            trend === 'up' ? 'text-[var(--color-data-pass)]' : trend === 'down' ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-text-tertiary)]'
           }`}
         >
           {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
         </span>
       )}
     </div>
-    {subtext && <div className="text-xs text-text-tertiary mt-1">{subtext}</div>}
+    {subtext && <div className="text-xs text-[var(--color-text-tertiary)] mt-1">{subtext}</div>}
   </div>
 );
 
@@ -127,7 +127,7 @@ const EfficiencyGauge: React.FC<{
     <div className="flex flex-col items-center">
       <div className="relative w-32 h-16 overflow-hidden">
         {/* Background arc */}
-        <div className="absolute inset-0 border-8 border-surface-border rounded-t-full" />
+        <div className="absolute inset-0 border-8 border-[var(--color-border)] rounded-t-full" />
         {/* Colored segments */}
         <div
           className="absolute inset-0 border-8 rounded-t-full"
@@ -146,14 +146,14 @@ const EfficiencyGauge: React.FC<{
         />
         {/* Needle */}
         <div
-          className="absolute bottom-0 left-1/2 w-1 h-14 bg-text-primary rounded-full origin-bottom transition-transform duration-500"
+          className="absolute bottom-0 left-1/2 w-1 h-54 bg-[var(--color-text-primary)] rounded-full origin-bottom transition-transform duration-500"
           style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
         />
         {/* Center dot */}
-        <div className="absolute bottom-0 left-1/2 w-3 h-3 bg-text-primary rounded-full -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute bottom-0 left-1/2 w-3 h-3 bg-[var(--color-text-primary)] rounded-full -translate-x-1/2 translate-y-1/2" />
       </div>
-      <div className="text-sm text-text-secondary mt-2">{label}</div>
-      <div className="text-lg font-semibold text-text-primary">{percentage.toFixed(0)}%</div>
+      <div className="text-sm text-[var(--color-text-secondary)] mt-2">{label}</div>
+      <div className="text-lg font-semibold text-[var(--color-text-primary)]">{percentage.toFixed(0)}%</div>
     </div>
   );
 };
@@ -254,44 +254,44 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
     : null;
 
   return (
-    <div className={`bg-surface-primary rounded-xl p-6 ${className}`}>
+    <div className={`bg-[var(--color-bg-primary)] rounded-xl p-6 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary">Study Planner</h2>
-          <p className="text-sm text-text-secondary mt-1">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Study Planner</h2>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Optimize your retention vs workload balance
           </p>
         </div>
         {daysUntilExam !== null && (
           <div className="text-right">
-            <div className="text-2xl font-bold text-action-primary">{daysUntilExam}</div>
-            <div className="text-xs text-text-tertiary">days until exam</div>
+            <div className="text-2xl font-bold text-[var(--color-accent)]">{daysUntilExam}</div>
+            <div className="text-xs text-[var(--color-text-tertiary)]">days until exam</div>
           </div>
         )}
       </div>
 
       {/* Confidence indicator */}
       {cmrrResult.confidenceLevel !== 'high' && (
-        <div className="mb-4 p-3 rounded-lg text-sm bg-action-muted text-action-primary border border-surface-border">
+        <div className="mb-4 p-3 rounded-lg text-sm bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-border)]">
           {cmrrResult.recommendation}
         </div>
       )}
 
       {/* Main slider section */}
-      <div className="bg-surface-card rounded-lg p-5 border border-surface-border mb-6">
+      <div className="bg-[var(--color-bg-card)] rounded-lg p-5 border border-[var(--color-border)] mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-sm text-text-secondary">Target Retention</div>
-            <div className="text-3xl font-bold text-text-primary">
+            <div className="text-sm text-[var(--color-text-secondary)]">Target Retention</div>
+            <div className="text-3xl font-bold text-[var(--color-text-primary)]">
               {Math.round(selectedRetention * 100)}%
             </div>
-            <div className="text-sm text-text-tertiary">{retentionToLabel(selectedRetention)}</div>
+            <div className="text-sm text-[var(--color-text-tertiary)]">{retentionToLabel(selectedRetention)}</div>
           </div>
 
           <button
             onClick={handleUseOptimal}
-            className="px-4 py-2 bg-action-primary/20 text-action-primary rounded-lg text-sm font-medium hover:bg-action-primary/30 transition-colors"
+            className="px-4 py-2 bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-lg text-sm font-medium hover:bg-[var(--color-accent)]/30 transition-colors"
           >
             Use Optimal ({Math.round(cmrrResult.optimalRetention * 100)}%)
           </button>
@@ -300,11 +300,11 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
         {/* Slider */}
         <div className="relative mt-6 mb-2">
           {/* Track background */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-red-500/30 via-yellow-500/30 to-green-500/30" />
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-[var(--color-data-fail)]/30 via-[var(--color-data-provisional)]/30 to-[var(--color-data-pass)]/30" />
 
           {/* Optimal marker */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-action-primary rounded-full"
+            className="absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-[var(--color-accent)] rounded-full"
             style={{
               left: `${((cmrrResult.optimalRetention - 0.8) / 0.17) * 100}%`,
             }}
@@ -325,24 +325,24 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
               [&::-webkit-slider-thumb]:w-5
               [&::-webkit-slider-thumb]:h-5
               [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-text-primary
+              [&::-webkit-slider-thumb]:bg-[var(--color-text-primary)]
               [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-surface-primary
+              [&::-webkit-slider-thumb]:border-[var(--color-bg-primary)]
               [&::-webkit-slider-thumb]:shadow-lg
               [&::-webkit-slider-thumb]:cursor-pointer
               [&::-moz-range-thumb]:w-5
               [&::-moz-range-thumb]:h-5
               [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-text-primary
+              [&::-moz-range-thumb]:bg-[var(--color-text-primary)]
               [&::-moz-range-thumb]:border-2
-              [&::-moz-range-thumb]:border-surface-primary
+              [&::-moz-range-thumb]:border-[var(--color-bg-primary)]
               [&::-moz-range-thumb]:cursor-pointer
             "
           />
         </div>
 
         {/* Slider labels */}
-        <div className="flex justify-between text-xs text-text-tertiary mt-1">
+        <div className="flex justify-between text-xs text-[var(--color-text-tertiary)] mt-1">
           <span>80% (Efficiency)</span>
           <span>97% (Maximum)</span>
         </div>
@@ -386,10 +386,10 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
       </div>
 
       {/* Presets toggle */}
-      <div className="border-t border-surface-border pt-4">
+      <div className="border-t border-[var(--color-border)] pt-4">
         <button
           onClick={() => setShowPresets(!showPresets)}
-          className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           <span>{showPresets ? '▼' : '▶'}</span>
           <span>Quick Presets</span>
@@ -421,9 +421,9 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
 
       {/* Advanced options */}
       {showAdvanced && (
-        <div className="border-t border-surface-border pt-4 mt-4">
-          <h3 className="text-sm font-medium text-text-secondary mb-3">Advanced Details</h3>
-          <div className="text-xs text-text-tertiary space-y-1 font-mono bg-surface-card p-3 rounded-lg">
+        <div className="border-t border-[var(--color-border)] pt-4 mt-4">
+          <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Advanced Details</h3>
+          <div className="text-xs text-[var(--color-text-tertiary)] space-y-1 font-mono bg-[var(--color-bg-card)] p-3 rounded-lg">
             <div>Optimal R: {cmrrResult.optimalRetention.toFixed(3)}</div>
             <div>Efficiency Ratio: {cmrrResult.efficiencyRatio}</div>
             <div>Confidence: {cmrrResult.confidenceLevel}</div>
