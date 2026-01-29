@@ -973,24 +973,24 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             <div className="flex items-center gap-4">
               {/* Enhanced OSCE Panel Toggles */}
-              <div className="hidden md:flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-800">
+              <div className="hidden md:flex items-center gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1 border border-[var(--color-border)]">
                 <button
                   onClick={() => setShowRapportMeter(!showRapportMeter)}
-                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
+                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Rapport Meter"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowExamPanel(!showExamPanel)}
-                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
+                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Physical Exam Panel"
                 >
                   <StethoscopeIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowOrderPanel(!showOrderPanel)}
-                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-slate-800 text-slate-300' : 'text-slate-500 hover:text-slate-400'}`}
+                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Order Panel"
                 >
                   <ClipboardList className="w-4 h-4" />
@@ -1286,21 +1286,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     />
                 <button
                   onClick={() => setShowRapportMeter(!showRapportMeter)}
-                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30 text-dusty-rose-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Rapport Meter"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowExamPanel(!showExamPanel)}
-                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-action-blue-100 dark:bg-action-blue-900/30 text-action-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Physical Exam Panel"
                 >
                   <StethoscopeIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowOrderPanel(!showOrderPanel)}
-                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-deep-plum-100 dark:bg-deep-plum-900/30 text-deep-plum-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Order Panel"
                 >
                   <ClipboardList className="w-4 h-4" />

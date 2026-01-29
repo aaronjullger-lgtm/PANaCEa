@@ -280,7 +280,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
           <BarChart2 className="w-5 h-5" /> Recommendation
         </h4>
         <p className="text-white/90 mb-4">{getRecommendation(proficiencyData)}</p>
-        <button className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+        <button className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg font-semibold hover:bg-[var(--color-accent-hover)] transition-colors">
           Review {topic} Now
         </button>
       </motion.div>
