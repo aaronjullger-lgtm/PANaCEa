@@ -201,13 +201,13 @@ const CATEGORY_INFO: Record<
     title: 'Clinical Diagnosis Modes',
     description: 'Interpretation-based: OSCE, Hydro, Labs, ECG, Radiology, Code Blue, DDx Compare',
     icon: Stethoscope,
-    gradient: 'from-blue-500 to-indigo-600',
+    gradient: 'from-[var(--color-accent)] to-[var(--color-accent)]/80',
   },
   'quick-fire': {
     title: 'Quick-Fire Drills',
     description: 'Rapid recall: Buzzwords, Bug-Drug, Derm, First-Line, Daily Term',
     icon: Zap,
-    gradient: 'from-orange-500 to-pink-600',
+    gradient: 'from-[var(--color-data-provisional)] to-[var(--color-accent)]',
   },
 };
 
@@ -228,13 +228,13 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty) {
       case 'beginner':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        return 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]';
       case 'intermediate':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+        return 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]';
       case 'advanced':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+        return 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]';
       default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+        return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]';
     }
   };
 
@@ -444,13 +444,13 @@ const DrillCard: React.FC<DrillCardProps> = ({ drill, onSelect, getDifficultyCol
           className={`p-3 rounded-lg ${
             drill.available
               ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
           }`}
         >
           <Icon className="w-6 h-6" />
         </div>
         {!drill.available && (
-          <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <span className="text-xs font-semibold px-2 py-1 rounded bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
             Coming Soon
           </span>
         )}
