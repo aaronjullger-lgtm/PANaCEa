@@ -176,19 +176,19 @@ export default function StudyGroupDashboard() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Social Learning</h1>
-        <p className="text-slate-600 dark:text-slate-400">
+        <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Social Learning</h1>
+        <p className="text-[var(--color-text-secondary)]">
           Collaborate with peers and track your progress.
         </p>
       </header>
 
-      <div className="flex space-x-4 mb-6 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex space-x-4 mb-6 border-b border-[var(--color-border)]">
         <button
           onClick={() => setActiveTab('groups')}
           className={`pb-2 px-4 font-medium transition-colors ${
             activeTab === 'groups'
               ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           Study Groups
@@ -198,7 +198,7 @@ export default function StudyGroupDashboard() {
           className={`pb-2 px-4 font-medium transition-colors ${
             activeTab === 'leaderboard'
               ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           Leaderboard
@@ -217,25 +217,25 @@ export default function StudyGroupDashboard() {
               {/* Create Group Card */}
               <div
                 onClick={() => setShowCreateModal(true)}
-                className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
+                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
               >
-                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800/80 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Plus className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1">Create a Group</h3>
-                <p className="text-sm text-slate-500">Start a new study circle</p>
+                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">Create a Group</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">Start a new study circle</p>
               </div>
 
               {/* Join Group Card */}
               <div
                 onClick={() => setShowJoinModal(true)}
-                className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-emerald-500 transition-colors group"
+                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
               >
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Users className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1">Join a Group</h3>
-                <p className="text-sm text-slate-500">Enter a code to join</p>
+                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">Join a Group</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">Enter a code to join</p>
               </div>
             </div>
 
@@ -244,9 +244,9 @@ export default function StudyGroupDashboard() {
 
             {/* Loading State */}
             {isLoadingGroups ? (
-              <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
                 <Loader2 className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
-                <p className="text-slate-600 dark:text-slate-400 font-medium">
+                <p className="text-[var(--color-text-secondary)] font-medium">
                   Loading study groups...
                 </p>
               </div>
@@ -298,7 +298,7 @@ export default function StudyGroupDashboard() {
               </div>
             ) : groups.length === 0 ? (
               /* Empty State */
-              <div className="text-center py-8 text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+              <div className="text-center py-8 text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] rounded-xl border border-dashed border-[var(--color-border)]">
                 You haven't joined any groups yet.
               </div>
             ) : (
@@ -307,19 +307,19 @@ export default function StudyGroupDashboard() {
                 {groups.map((group) => (
                   <div
                     key={group.id}
-                    className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center"
+                    className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)] flex justify-between items-center"
                   >
                     <div>
-                      <h4 className="font-semibold text-lg">{group.name}</h4>
-                      <p className="text-sm text-slate-500">
+                      <h4 className="font-semibold text-lg text-[var(--color-text-primary)]">{group.name}</h4>
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         {group.memberCount} members • {group.role === 'admin' ? 'Admin' : 'Member'}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-md">
-                      <span className="text-xs font-mono text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-2 bg-[var(--color-bg-secondary)] px-3 py-1 rounded-md">
+                      <span className="text-xs font-mono text-[var(--color-text-secondary)]">
                         {group.code}
                       </span>
-                      <Copy className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <Copy className="w-3 h-3 text-[var(--color-text-muted)] cursor-pointer hover:text-[var(--color-text-primary)]" />
                     </div>
                   </div>
                 ))}
@@ -333,13 +333,13 @@ export default function StudyGroupDashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" />
+            <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">
+              <div className="p-4 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex justify-between items-center">
+                <h3 className="font-semibold flex items-center gap-2 text-[var(--color-text-primary)]">
+                  <Trophy className="w-5 h-5 text-[var(--color-accent)]" />
                   Global Rankings
                 </h3>
-                <select className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm px-2 py-1">
+                <select className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-md text-sm px-2 py-1 text-[var(--color-text-primary)]">
                   <option>This Week</option>
                   <option>All Time</option>
                 </select>
@@ -348,8 +348,8 @@ export default function StudyGroupDashboard() {
               {/* Loading State */}
               {isLoadingLeaderboard ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <Loader2 className="w-10 h-10 animate-spin text-amber-600 dark:text-amber-400 mb-4" />
-                  <p className="text-slate-600 dark:text-slate-400 font-medium">
+                  <Loader2 className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
+                  <p className="text-[var(--color-text-secondary)] font-medium">
                     Loading leaderboard...
                   </p>
                 </div>
@@ -405,35 +405,35 @@ export default function StudyGroupDashboard() {
                 </div>
               ) : leaderboard.length === 0 ? (
                 /* Empty State */
-                <div className="p-8 text-center text-slate-500">
+                <div className="p-8 text-center text-[var(--color-text-muted)]">
                   No leaderboard data available yet.
                 </div>
               ) : (
                 /* Success State - Leaderboard List */
-                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                <div className="divide-y divide-[var(--color-border)]">
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.id}
-                      className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="p-4 flex items-center gap-4 hover:bg-[var(--color-bg-secondary)] transition-colors"
                     >
                       <div
                         className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${
                           index === 0
-                            ? 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                             : index === 1
                               ? 'bg-slate-200 text-slate-700'
                               : index === 2
-                                ? 'bg-amber-100 text-amber-800'
+                                ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                                 : 'text-slate-500'
                         }`}
                       >
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium">
+                        <div className="font-medium text-[var(--color-text-primary)]">
                           {entry.user.firstName} {entry.user.lastName?.charAt(0)}.
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {entry.user.school || 'PA Student'}
                         </div>
                       </div>
@@ -452,26 +452,26 @@ export default function StudyGroupDashboard() {
       {/* Create Group Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Create Study Group</h3>
+          <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Create Study Group</h3>
             <form onSubmit={handleCreateGroup}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Group Name</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Group Name</label>
                 <input
                   type="text"
                   required
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"
+                  className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
                   placeholder="e.g. Class of 2025 Study Group"
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">Description (Optional)</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Description (Optional)</label>
                 <textarea
                   value={groupDesc}
                   onChange={(e) => setGroupDesc(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"
+                  className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
                   placeholder="What is this group for?"
                   rows={3}
                 />
@@ -485,14 +485,14 @@ export default function StudyGroupDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="px-4 py-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-white rounded-lg disabled:opacity-50 transition-all"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Group'}
                 </button>
@@ -505,17 +505,17 @@ export default function StudyGroupDashboard() {
       {/* Join Group Modal */}
       {showJoinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Join Study Group</h3>
+          <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Join Study Group</h3>
             <form onSubmit={handleJoinGroup}>
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">Group Code</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Group Code</label>
                 <input
                   type="text"
                   required
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent font-mono uppercase"
+                  className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-mono uppercase"
                   placeholder="e.g. X7Y9Z2"
                 />
               </div>
@@ -528,14 +528,14 @@ export default function StudyGroupDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowJoinModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="px-4 py-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-white rounded-lg disabled:opacity-50 transition-all"
                 >
                   {isSubmitting ? 'Joining...' : 'Join Group'}
                 </button>
