@@ -493,9 +493,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <Line
                       type="monotone"
                       dataKey="avgStability"
-                      stroke="var(--color-deep-plum-500)"
+                      stroke="var(--color-accent)"
                       strokeWidth={3}
-                      dot={{ fill: 'var(--color-deep-plum-500)', r: 4 }}
+                      dot={{ fill: 'var(--color-accent)', r: 4 }}
                       name="avgStability"
                     />
                   </LineChart>
