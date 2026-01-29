@@ -305,7 +305,7 @@ export function SystemMasteryMap({
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-[var(--color-data-fail)]" />
-            <span><50% Critical</span>
+            <span>{'<'}50% Critical</span>
           </div>
         </div>
       )}

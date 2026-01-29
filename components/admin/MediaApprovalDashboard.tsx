@@ -211,7 +211,7 @@ export function MediaApprovalDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419] p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6">
       {/* Error Banner */}
       {error && (
         <div className="max-w-7xl mx-auto mb-4">
@@ -242,7 +242,7 @@ export function MediaApprovalDashboard() {
             <button
               onClick={loadPendingMedia}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-[#364154] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -261,7 +261,7 @@ export function MediaApprovalDashboard() {
       {/* Stats */}
       {stats && (
         <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending</p>
@@ -271,7 +271,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approved</p>
@@ -281,7 +281,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected</p>
@@ -291,7 +291,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approval Rate</p>
@@ -313,7 +313,7 @@ export function MediaApprovalDashboard() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === category
                   ? 'bg-[var(--color-accent)] text-white'
-                  : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -325,7 +325,7 @@ export function MediaApprovalDashboard() {
       {/* Media Grid */}
       <div className="max-w-7xl mx-auto">
         {pendingMedia.length === 0 ? (
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-12 text-center">
             <Check className="w-16 h-16 text-[var(--color-data-pass)] mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               All caught up!
@@ -339,7 +339,7 @@ export function MediaApprovalDashboard() {
             {pendingMedia.map((media) => (
               <div
                 key={media.id}
-                className="bg-white dark:bg-[#1F283A] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 {/* Image Preview */}
                 <div
@@ -419,7 +419,7 @@ export function MediaApprovalDashboard() {
       {/* Detail Modal */}
       {selectedMedia && !showRejectionModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Media Details</h2>
@@ -538,7 +538,7 @@ export function MediaApprovalDashboard() {
       {/* Rejection Modal */}
       {showRejectionModal && selectedMedia && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Reject Media</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Please provide a reason for rejection:
@@ -546,7 +546,7 @@ export function MediaApprovalDashboard() {
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white mb-4"
+              className="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white mb-4"
               placeholder="e.g., Poor image quality, not clinically relevant, duplicate..."
             />
             <div className="flex gap-3">
@@ -667,7 +667,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-lg w-full p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg max-w-lg w-full p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Upload Medical Image</h2>
           <button
@@ -741,7 +741,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
           >
             <option value="ecg">ECG</option>
             <option value="derm">Dermatology</option>
@@ -761,7 +761,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             value={correctDiagnosis}
             onChange={(e) => setCorrectDiagnosis(e.target.value)}
             placeholder="e.g., Atrial Fibrillation"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
           />
         </div>
 
@@ -775,7 +775,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             value={distractors}
             onChange={(e) => setDistractors(e.target.value)}
             placeholder="e.g., Sinus Tachycardia, Atrial Flutter, SVT"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
           />
         </div>
 
@@ -789,7 +789,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description of the image..."
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
           />
         </div>
 
