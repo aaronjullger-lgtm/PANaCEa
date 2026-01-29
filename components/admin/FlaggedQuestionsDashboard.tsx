@@ -61,20 +61,20 @@ const FLAG_TYPE_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_CONFIG = {
-  critical: { label: 'Critical', color: 'text-red-600', bgColor: 'bg-red-100' },
-  high: { label: 'High', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-  medium: { label: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-  low: { label: 'Low', color: 'text-green-600', bgColor: 'bg-green-100' },
+  critical: { label: 'Critical', color: 'text-[var(--color-data-fail)]', bgColor: 'bg-[var(--color-bg-error)]' },
+  high: { label: 'High', color: 'text-[var(--color-data-provisional)]', bgColor: 'bg-[var(--color-data-provisional)]/10' },
+  medium: { label: 'Medium', color: 'text-[var(--color-data-provisional)]', bgColor: 'bg-[var(--color-data-provisional)]/10' },
+  low: { label: 'Low', color: 'text-[var(--color-data-pass)]', bgColor: 'bg-[var(--color-data-pass)]/10' },
 } as const;
 
 type PriorityKey = keyof typeof PRIORITY_CONFIG;
 const isPriorityKey = (key: string): key is PriorityKey => key in PRIORITY_CONFIG;
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'text-yellow-600', icon: Clock },
-  in_review: { label: 'In Review', color: 'text-blue-600', icon: RefreshCw },
-  fixed: { label: 'Fixed', color: 'text-green-600', icon: CheckCircle2 },
-  dismissed: { label: 'Dismissed', color: 'text-slate-500', icon: XCircle },
+  pending: { label: 'Pending', color: 'text-[var(--color-data-provisional)]', icon: Clock },
+  in_review: { label: 'In Review', color: 'text-[var(--color-accent)]', icon: RefreshCw },
+  fixed: { label: 'Fixed', color: 'text-[var(--color-data-pass)]', icon: CheckCircle2 },
+  dismissed: { label: 'Dismissed', color: 'text-[var(--color-text-muted)]', icon: XCircle },
 } as const;
 
 type StatusKey = keyof typeof STATUS_CONFIG;
@@ -229,8 +229,8 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-100 rounded-xl">
-            <Flag className="w-6 h-6 text-red-600" />
+          <div className="p-2 bg-[var(--color-bg-error)] rounded-xl">
+            <Flag className="w-6 h-6 text-[var(--color-data-fail)]" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white">Flagged Questions</h2>
@@ -242,7 +242,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         <button
           onClick={fetchFlags}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -252,45 +252,45 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+          <div className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-yellow-600" />
-              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+              <Clock className="w-5 h-5 text-[var(--color-data-provisional)]" />
+              <span className="text-sm font-medium text-[var(--color-data-provisional)]">
                 Pending
               </span>
             </div>
-            <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-300 mt-1">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.pending}
             </p>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+          <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+              <RefreshCw className="w-5 h-5 text-[var(--color-accent)]" />
+              <span className="text-sm font-medium text-[var(--color-accent)]">
                 In Review
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-800 dark:text-blue-300 mt-1">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.inReview}
             </p>
           </div>
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+          <div className="bg-[var(--color-data-pass)]/10 rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">Fixed</span>
+              <CheckCircle2 className="w-5 h-5 text-[var(--color-data-pass)]" />
+              <span className="text-sm font-medium text-[var(--color-data-pass)]">Fixed</span>
             </div>
-            <p className="text-2xl font-bold text-green-800 dark:text-green-300 mt-1">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.fixed}
             </p>
           </div>
-          <div className="bg-slate-50 dark:bg-slate-900/20 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-slate-500" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              <XCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
+              <span className="text-sm font-medium text-[var(--color-text-muted)]">
                 Dismissed
               </span>
             </div>
-            <p className="text-2xl font-bold text-slate-700 dark:text-slate-300 mt-1">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.dismissed}
             </p>
           </div>
@@ -329,16 +329,16 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <span className="text-red-700 dark:text-red-400">{error}</span>
+        <div className="bg-[var(--color-bg-error)] border border-[var(--color-border-error)] rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
+          <span className="text-[var(--color-data-fail)]">{error}</span>
         </div>
       )}
 
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
+          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
         </div>
       )}
 
@@ -347,7 +347,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         <div className="space-y-4">
           {flags.length === 0 ? (
             <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <CheckCircle2 className="w-12 h-12 text-[var(--color-data-pass)] mx-auto mb-3" />
               <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
                 No flagged questions
               </p>
@@ -436,7 +436,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                               </p>
                               {flag.correctAnswer && (
                                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                                  <span className="text-xs font-medium text-green-600">
+                                  <span className="text-xs font-medium text-[var(--color-data-pass)]">
                                     Correct Answer:{' '}
                                   </span>
                                   <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -447,12 +447,12 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                             </div>
 
                             {/* User's Report */}
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-yellow-700 dark:text-yellow-400 mb-2 flex items-center gap-2">
+                            <div className="bg-[var(--color-data-provisional)]/10 rounded-lg p-4">
+                              <h4 className="text-sm font-medium text-[var(--color-data-provisional)] mb-2 flex items-center gap-2">
                                 <MessageSquare className="w-4 h-4" />
                                 User's Report
                               </h4>
-                              <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                              <p className="text-sm text-[var(--color-data-provisional)]">
                                 {flag.description}
                               </p>
                             </div>
@@ -504,7 +504,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                   <button
                                     onClick={() => resolveFlag(flag.id)}
                                     disabled={resolving === flag.id || !resolutionNote.trim()}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                                   >
                                     {resolving === flag.id ? (
                                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -517,17 +517,17 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                               </div>
                             ) : (
                               <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                                  <p className="text-sm text-green-700 dark:text-green-400">
+                                <div className="bg-[var(--color-data-pass)]/10 rounded-lg p-3">
+                                  <p className="text-sm text-[var(--color-data-pass)]">
                                     <strong>Resolved by:</strong> {flag.reviewedBy}
                                   </p>
                                   {flag.reviewedAt && (
-                                    <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                                    <p className="text-xs text-[var(--color-data-pass)] mt-1">
                                       {formatDate(flag.reviewedAt)}
                                     </p>
                                   )}
                                   {flag.resolutionNote && (
-                                    <p className="text-sm text-green-800 dark:text-green-300 mt-2">
+                                    <p className="text-sm text-[var(--color-data-pass)] mt-2">
                                       {flag.resolutionNote}
                                     </p>
                                   )}
