@@ -126,11 +126,11 @@ export const LearningProfileDashboard: React.FC = () => {
   const getReadinessColor = (level: string | null): string => {
     switch (level) {
       case 'ready':
-        return 'text-data-pass';
+        return 'text-[var(--color-data-pass)]';
       case 'almost_ready':
-        return 'text-steel-blue-500';
+        return 'text-[var(--color-accent)]';
       case 'progressing':
-        return 'text-data-provisional';
+        return 'text-[var(--color-data-provisional)]';
       default:
         return 'text-[var(--color-text-muted)]';
     }
@@ -160,7 +160,7 @@ export const LearningProfileDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <AlertTriangle className="w-12 h-12 text-data-provisional" />
+        <AlertTriangle className="w-12 h-12 text-[var(--color-data-provisional)]" />
         <p className="text-[var(--color-text-muted)]">{error}</p>
         <button
           onClick={loadProfile}
@@ -213,15 +213,15 @@ export const LearningProfileDashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-steel-blue-50 to-deep-plum-50 dark:from-steel-blue-900/30 dark:to-deep-plum-900/30 rounded-2xl p-6 border border-steel-blue-100 dark:border-steel-blue-800"
+          className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-2xl p-6 border border-[var(--color-border)]"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-steel-blue-600 dark:text-steel-blue-400 mb-1">
+              <p className="text-sm font-medium text-[var(--color-accent)] mb-1">
                 Estimated PANCE Score
               </p>
               <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-bold text-steel-blue-700 dark:text-steel-blue-300">
+                <span className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {profile.estimatedScore}
                 </span>
                 <span className="text-sm text-[var(--color-text-muted)]">/800</span>
@@ -251,12 +251,12 @@ export const LearningProfileDashboard: React.FC = () => {
                   strokeWidth="8"
                   fill="none"
                   strokeDasharray={`${(profile.estimatedScore / 800) * 251} 251`}
-                  className="text-steel-blue-500"
+                  className="text-[var(--color-accent)]"
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-semibold text-steel-blue-600 dark:text-steel-blue-400">
+                <span className="text-lg font-semibold text-[var(--color-accent)]">
                   {Math.round((profile.estimatedScore / 800) * 100)}%
                 </span>
               </div>
@@ -268,24 +268,24 @@ export const LearningProfileDashboard: React.FC = () => {
       {/* Lifetime Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          icon={<Target className="w-5 h-5 text-steel-blue-500" />}
+          icon={<Target className="w-5 h-5 text-[var(--color-accent)]" />}
           label="Lifetime Accuracy"
           value={`${Math.round(profile.lifetimeAccuracy)}%`}
           sublabel={`${profile.lifetimeCorrect.toLocaleString()}/${profile.lifetimeQuestions.toLocaleString()}`}
         />
         <StatCard
-          icon={<Clock className="w-5 h-5 text-deep-plum-500" />}
+          icon={<Clock className="w-5 h-5 text-[var(--color-accent)]" />}
           label="Study Time"
           value={formatStudyTime(profile.lifetimeStudyTimeMs)}
         />
         <StatCard
-          icon={<Flame className="w-5 h-5 text-muted-amber-500" />}
+          icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
           label="Best Streak"
           value={profile.bestEverStreak.toString()}
           sublabel="consecutive correct"
         />
         <StatCard
-          icon={<Calendar className="w-5 h-5 text-data-pass" />}
+          icon={<Calendar className="w-5 h-5 text-[var(--color-data-pass)]" />}
           label="Day Streak"
           value={profile.currentStreak.toString()}
           sublabel="days"
@@ -313,9 +313,9 @@ export const LearningProfileDashboard: React.FC = () => {
               <p
                 className={`text-lg font-semibold flex items-center gap-1 ${
                   aggregateStats.accuracyTrend === 'improving'
-                    ? 'text-data-pass'
+                    ? 'text-[var(--color-data-pass)]'
                     : aggregateStats.accuracyTrend === 'declining'
-                      ? 'text-data-fail'
+                      ? 'text-[var(--color-data-fail)]'
                       : 'text-[var(--color-text-muted)]'
                 }`}
               >
@@ -424,8 +424,8 @@ export const LearningProfileDashboard: React.FC = () => {
       {(profile.strongestSystems.length > 0 || profile.weakestSystems.length > 0) && (
         <div className="grid md:grid-cols-2 gap-4">
           {profile.strongestSystems.length > 0 && (
-            <div className="bg-sage-50 dark:bg-sage-900/20 rounded-xl p-4 border border-sage-200 dark:border-sage-800">
-              <h3 className="text-sm font-medium text-sage-700 dark:text-sage-400 mb-3 flex items-center gap-2">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+              <h3 className="text-sm font-medium text-[var(--color-data-pass)] mb-3 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
                 Strong Systems
               </h3>
@@ -433,7 +433,7 @@ export const LearningProfileDashboard: React.FC = () => {
                 {profile.strongestSystems.map((system) => (
                   <span
                     key={system}
-                    className="px-3 py-1 bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300 rounded-full text-sm"
+                    className="px-3 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-data-pass)] rounded-full text-sm"
                   >
                     {system}
                   </span>
@@ -443,8 +443,8 @@ export const LearningProfileDashboard: React.FC = () => {
           )}
 
           {profile.weakestSystems.length > 0 && (
-            <div className="bg-muted-amber-50 dark:bg-muted-amber-900/20 rounded-xl p-4 border border-muted-amber-200 dark:border-muted-amber-800">
-              <h3 className="text-sm font-medium text-muted-amber-700 dark:text-muted-amber-400 mb-3 flex items-center gap-2">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+              <h3 className="text-sm font-medium text-[var(--color-data-provisional)] mb-3 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Focus Areas
               </h3>
@@ -452,7 +452,7 @@ export const LearningProfileDashboard: React.FC = () => {
                 {profile.weakestSystems.map((system) => (
                   <span
                     key={system}
-                    className="px-3 py-1 bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 rounded-full text-sm"
+                    className="px-3 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-data-provisional)] rounded-full text-sm"
                   >
                     {system}
                   </span>
@@ -465,8 +465,8 @@ export const LearningProfileDashboard: React.FC = () => {
 
       {/* Recommendations */}
       {profile.recommendations.length > 0 && (
-        <div className="bg-steel-blue-50 dark:bg-steel-blue-900/20 rounded-xl p-4 border border-steel-blue-200 dark:border-steel-blue-800">
-          <h3 className="text-sm font-medium text-steel-blue-700 dark:text-steel-blue-400 mb-3 flex items-center gap-2">
+        <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <h3 className="text-sm font-medium text-[var(--color-accent)] mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4" />
             Personalized Recommendations
           </h3>
@@ -474,7 +474,7 @@ export const LearningProfileDashboard: React.FC = () => {
             {profile.recommendations.map((rec, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-steel-blue-600 dark:text-steel-blue-300"
+                className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
               >
                 <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>{rec}</span>
@@ -507,17 +507,17 @@ export const LearningProfileDashboard: React.FC = () => {
                     <p
                       className={`text-lg font-semibold ${
                         session.accuracy >= 80
-                          ? 'text-data-pass'
+                          ? 'text-[var(--color-data-pass)]'
                           : session.accuracy >= 60
-                            ? 'text-data-provisional'
-                            : 'text-data-fail'
+                            ? 'text-[var(--color-data-provisional)]'
+                            : 'text-[var(--color-data-fail)]'
                       }`}
                     >
                       {Math.round(session.accuracy)}%
                     </p>
                     {session.bestStreak > 0 && (
                       <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-muted-amber-400" />
+                        <Flame className="w-3 h-3 text-[var(--color-data-provisional)]" />
                         {session.bestStreak} streak
                       </p>
                     )}
@@ -556,10 +556,10 @@ const PatternItem: React.FC<{
   color: 'green' | 'amber' | 'red' | 'blue';
 }> = ({ label, value, description, color }) => {
   const colorClasses = {
-    green: 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400',
-    amber: 'bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-700 dark:text-muted-amber-400',
-    red: 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30 text-dusty-rose-700 dark:text-dusty-rose-400',
-    blue: 'bg-steel-blue-100 dark:bg-steel-blue-900/30 text-steel-blue-700 dark:text-steel-blue-400',
+    green: 'bg-[var(--color-bg-tertiary)] text-[var(--color-data-pass)]',
+    amber: 'bg-[var(--color-bg-tertiary)] text-[var(--color-data-provisional)]',
+    red: 'bg-[var(--color-bg-tertiary)] text-[var(--color-data-fail)]',
+    blue: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]',
   };
 
   return (
