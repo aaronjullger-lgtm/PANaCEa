@@ -46,7 +46,7 @@ function TrendIcon({
 }) {
   switch (trend) {
     case 'improving':
-      return <TrendingUp className="w-4 h-4 text-sage-500" />;
+      return <TrendingUp className="w-4 h-4 text-data-pass" />;
     case 'declining':
       return <TrendingDown className="w-4 h-4 text-data-fail" />;
     default:
@@ -60,7 +60,7 @@ function getTrendColor(
 ): string {
   switch (trend) {
     case 'improving':
-      return 'text-sage-500';
+      return 'text-data-pass';
     case 'declining':
       return 'text-data-fail';
     default:
@@ -120,8 +120,8 @@ function SystemRow({
   const fullName =
     ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
   const accuracyColor =
-    stats.accuracy >= 80
-      ? 'text-sage-500'
+      stats.accuracy >= 80
+      ? 'text-data-pass'
       : stats.accuracy >= 60
         ? 'text-muted-amber'
         : 'text-data-fail';
@@ -160,8 +160,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
   if (error && !stats) {
     return (
-      <div className="p-6 rounded-xl border border-dusty-rose-200 bg-dusty-rose-50 dark:bg-dusty-rose-900/20 dark:border-dusty-rose-800">
-        <div className="flex items-center gap-2 text-dusty-rose-600 dark:text-dusty-rose-400">
+      <div className="p-6 rounded-xl bg-data-fail/10 border border-data-fail/30">
+        <div className="flex items-center gap-2 text-data-fail">
           <AlertCircle className="w-5 h-5" />
           <span className="font-medium">Unable to load analytics</span>
         </div>
@@ -326,8 +326,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Recommendations */}
           {stats.recommendations.length > 0 && (
-            <div className="p-4 rounded-xl border border-steel-blue-200 bg-steel-blue-50 dark:bg-steel-blue-900/20 dark:border-steel-blue-800">
-              <div className="flex items-center gap-2 text-steel-blue-600 dark:text-steel-blue-400 text-sm mb-3">
+            <div className="p-4 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
+              <div className="flex items-center gap-2 text-[var(--color-accent)] text-sm mb-3">
                 <Target className="w-4 h-4" />
                 Study Recommendations
               </div>
@@ -337,7 +337,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                     key={index}
                     className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
                   >
-                    <span className="text-steel-blue-500">•</span>
+                    <span className="text-[var(--color-accent)]">•</span>
                     {rec}
                   </li>
                 ))}
@@ -394,8 +394,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Strong Areas */}
           {stats.strongAreas.length > 0 && (
-            <div className="p-4 rounded-xl border border-sage-200 bg-sage-50 dark:bg-sage-900/20 dark:border-sage-800">
-              <div className="flex items-center gap-2 text-sage-600 dark:text-sage-400 text-sm mb-3">
+            <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
+              <div className="flex items-center gap-2 text-data-pass text-sm mb-3">
                 <Award className="w-4 h-4" />
                 Strong Areas
               </div>
@@ -408,7 +408,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                       ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sage-500 font-bold">{area.accuracy}%</span>
+                      <span className="text-data-pass font-bold">{area.accuracy}%</span>
                       <span className="text-xs text-[var(--color-text-muted)]">
                         ({area.attempts} attempts)
                       </span>

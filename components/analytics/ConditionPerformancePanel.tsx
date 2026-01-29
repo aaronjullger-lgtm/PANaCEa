@@ -23,15 +23,15 @@ interface ConditionPerformancePanelProps {
 }
 
 const getAccuracyColor = (accuracy: number) => {
-  if (accuracy >= 80) return 'text-sage-600 dark:text-sage-400';
-  if (accuracy >= 60) return 'text-muted-amber-600 dark:text-muted-amber-400';
-  return 'text-dusty-rose-600 dark:text-dusty-rose-400';
+  if (accuracy >= 80) return 'text-data-pass';
+  if (accuracy >= 60) return 'text-data-provisional';
+  return 'text-data-fail';
 };
 
 const getAccuracyBg = (accuracy: number) => {
-  if (accuracy >= 80) return 'bg-sage-100 dark:bg-sage-900/30';
-  if (accuracy >= 60) return 'bg-muted-amber-100 dark:bg-muted-amber-900/30';
-  return 'bg-dusty-rose-100 dark:bg-dusty-rose-900/30';
+  if (accuracy >= 80) return 'bg-data-pass/10';
+  if (accuracy >= 60) return 'bg-data-provisional/10';
+  return 'bg-data-fail/10';
 };
 
 // Format condition ID into display name
@@ -69,14 +69,14 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
     <div className="space-y-6">
       {/* Weak Conditions Alert */}
       {weakConditions.length > 0 && (
-        <div className="bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border border-dusty-rose-200 dark:border-dusty-rose-800 rounded-xl p-4">
+        <div className="bg-data-fail/10 border border-data-fail/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-dusty-rose-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-data-fail flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-dusty-rose-800 dark:text-dusty-rose-300">
+              <h4 className="font-medium text-data-fail">
                 Focus Areas Identified
               </h4>
-              <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-400 mt-1">
+              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                 These conditions need extra attention (accuracy below 60%):
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
@@ -84,7 +84,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
                   <button
                     key={c.conditionId}
                     onClick={() => onSelectCondition?.(c.conditionId)}
-                    className="px-3 py-1.5 text-xs font-medium bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-800 dark:text-dusty-rose-300 rounded-lg hover:bg-dusty-rose-200 dark:hover:bg-dusty-rose-900/60 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs font-medium bg-data-fail/20 text-data-fail rounded-lg hover:bg-data-fail/30 transition-colors flex items-center gap-1"
                   >
                     {formatConditionName(c.conditionId)}
                     <span className="opacity-75">({c.accuracy}%)</span>
@@ -100,9 +100,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Lowest Accuracy */}
         <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-          <div className="px-4 py-3 bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-b border-[var(--color-border)]">
+          <div className="px-4 py-3 bg-data-fail/10 border-b border-[var(--color-border)]">
             <h4 className="font-medium text-[var(--color-text-primary)] flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-dusty-rose-500" />
+              <TrendingDown className="w-4 h-4 text-data-fail" />
               Needs Improvement
             </h4>
           </div>
@@ -139,9 +139,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
 
         {/* Highest Accuracy */}
         <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-          <div className="px-4 py-3 bg-sage-50 dark:bg-sage-900/20 border-b border-[var(--color-border)]">
+          <div className="px-4 py-3 bg-data-pass/10 border-b border-[var(--color-border)]">
             <h4 className="font-medium text-[var(--color-text-primary)] flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-sage-500" />
+              <TrendingUp className="w-4 h-4 text-data-pass" />
               Strong Performance
             </h4>
           </div>
