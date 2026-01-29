@@ -64,10 +64,10 @@ interface QualityStats {
 }
 
 const STATUS_COLORS = {
-  approved: 'bg-green-500',
-  pending: 'bg-yellow-500',
-  needs_revision: 'bg-orange-500',
-  rejected: 'bg-red-500',
+  approved: 'bg-[var(--color-data-pass)]',
+  pending: 'bg-[var(--color-data-provisional)]',
+  needs_revision: 'bg-[var(--color-data-provisional)]',
+  rejected: 'bg-[var(--color-data-fail)]',
 };
 
 const STATUS_ICONS = {
@@ -124,13 +124,13 @@ export function QuestionQualityDashboard() {
     return (
       <div className="p-6 space-y-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+          <div className="h-8 bg-[var(--color-bg-secondary)] rounded w-1/3" />
           <div className="grid grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+              <div key={i} className="h-24 bg-[var(--color-bg-secondary)] rounded-xl" />
             ))}
           </div>
-          <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+          <div className="h-64 bg-[var(--color-bg-secondary)] rounded-xl" />
         </div>
       </div>
     );
@@ -139,11 +139,11 @@ export function QuestionQualityDashboard() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-red-700 dark:text-red-300">{error}</p>
+        <div className="bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-xl p-4">
+          <p className="text-[var(--color-data-fail)]">{error}</p>
           <button
             onClick={fetchStats}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
+            className="mt-2 text-sm text-[var(--color-data-fail)] hover:text-[var(--color-data-fail)]/80 flex items-center gap-1"
           >
             <RefreshCw className="w-4 h-4" /> Retry
           </button>
@@ -165,7 +165,7 @@ export function QuestionQualityDashboard() {
         </h1>
         <button
           onClick={fetchStats}
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
         >
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
@@ -177,7 +177,7 @@ export function QuestionQualityDashboard() {
         <select
           value={systemFilter}
           onChange={(e) => setSystemFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-600"
+          className="px-3 py-2 border rounded-lg dark:bg-[var(--color-bg-secondary)] dark:border-[var(--color-border)]"
         >
           <option value="">All Systems</option>
           {stats.systemCoverage.map((s) => (
@@ -189,7 +189,7 @@ export function QuestionQualityDashboard() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-600"
+          className="px-3 py-2 border rounded-lg dark:bg-[var(--color-bg-secondary)] dark:border-[var(--color-border)]"
         >
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
@@ -263,17 +263,17 @@ export function QuestionQualityDashboard() {
                   <Icon
                     className={`w-5 h-5 ${
                       item.status === 'approved'
-                        ? 'text-green-500'
+                        ? 'text-[var(--color-data-pass)]'
                         : item.status === 'rejected'
-                          ? 'text-red-500'
+                          ? 'text-[var(--color-data-fail)]'
                           : item.status === 'needs_revision'
-                            ? 'text-orange-500'
-                            : 'text-yellow-500'
+                            ? 'text-[var(--color-data-provisional)]'
+                            : 'text-[var(--color-data-provisional)]'
                     }`}
                   />
                   <span className="flex-1 capitalize">{item.status.replace('_', ' ')}</span>
                   <span className="font-mono text-sm">{item.count}</span>
-                  <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div className="w-24 bg-[var(--color-bg-secondary)] rounded-full h-2 overflow-hidden">
                     <motion.div
                       className={STATUS_COLORS[item.status as keyof typeof STATUS_COLORS]}
                       initial={{ width: 0 }}
@@ -294,16 +294,16 @@ export function QuestionQualityDashboard() {
             {Object.entries(stats.qualityDistribution).map(([tier, count]) => {
               const percentage = qualityTotal > 0 ? (count / qualityTotal) * 100 : 0;
               const colors = {
-                excellent: 'bg-green-500',
-                good: 'bg-blue-500',
-                fair: 'bg-yellow-500',
-                poor: 'bg-red-500',
+                excellent: 'bg-[var(--color-data-pass)]',
+                good: 'bg-[var(--color-accent)]',
+                fair: 'bg-[var(--color-data-provisional)]',
+                poor: 'bg-[var(--color-data-fail)]',
               };
 
               return (
                 <div key={tier} className="flex items-center gap-3">
                   <span className="w-20 capitalize text-sm">{tier}</span>
-                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                  <div className="flex-1 bg-[var(--color-bg-secondary)] rounded-full h-4 overflow-hidden">
                     <motion.div
                       className={colors[tier as keyof typeof colors]}
                       initial={{ width: 0 }}
@@ -359,21 +359,21 @@ export function QuestionQualityDashboard() {
         {/* Top Flagged Questions */}
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Flag className="w-5 h-5 text-red-500" />
+            <Flag className="w-5 h-5 text-[var(--color-data-fail)]" />
             Top Flagged Questions
           </h2>
           {stats.topFlagged.length === 0 ? (
-            <p className="text-slate-500 text-sm">No flagged questions</p>
+            <p className="text-[var(--color-text-muted)] text-sm">No flagged questions</p>
           ) : (
             <div className="space-y-2">
               {stats.topFlagged.map((q) => (
                 <div
                   key={q.id}
-                  className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"
+                  className="flex items-center gap-3 p-2 bg-[var(--color-bg-secondary)] rounded-lg"
                 >
                   <span className="text-xs font-mono truncate flex-1">{q.id.slice(0, 8)}...</span>
-                  <span className="text-xs text-slate-500">{q.system}</span>
-                  <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded">
+                  <span className="text-xs text-[var(--color-text-muted)]">{q.system}</span>
+                  <span className="text-xs bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] px-2 py-0.5 rounded">
                     {q.flagCount} flags
                   </span>
                 </div>
@@ -398,10 +398,10 @@ function StatCard({
   color: 'blue' | 'green' | 'yellow' | 'red';
 }) {
   const colorClasses = {
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-    green: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-    yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
-    red: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+    blue: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    green: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+    yellow: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+    red: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   };
 
   return (
