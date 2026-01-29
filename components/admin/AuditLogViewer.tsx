@@ -66,19 +66,19 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
   const getChangeTypeColor = (changeType: ChangeType) => {
     switch (changeType) {
       case 'create':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30';
       case 'update':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
       case 'delete':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30';
       case 'publish':
       case 'approve':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30';
       case 'unpublish':
       case 'reject':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-[var(--color-bg-tertiary)]/20 text-[var(--color-text-muted)] border-[var(--color-border)]';
     }
   };
 
