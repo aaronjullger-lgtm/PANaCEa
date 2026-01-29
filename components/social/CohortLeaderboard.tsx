@@ -47,21 +47,21 @@ export interface CohortLeaderboardProps {
 
 const RANK_COLORS = {
   1: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-    border: 'border-yellow-400',
-    text: 'text-yellow-700 dark:text-yellow-400',
+    bg: 'bg-[var(--color-bg-tertiary)]',
+    border: 'border-[var(--color-data-provisional)]',
+    text: 'text-[var(--color-data-provisional)]',
     icon: Crown,
   },
   2: {
-    bg: 'bg-slate-100 dark:bg-slate-700/30',
-    border: 'border-slate-400',
-    text: 'text-slate-600 dark:text-slate-300',
+    bg: 'bg-[var(--color-bg-secondary)]',
+    border: 'border-[var(--color-border)]',
+    text: 'text-[var(--color-text-secondary)]',
     icon: Medal,
   },
   3: {
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    border: 'border-amber-400',
-    text: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-[var(--color-bg-tertiary)]',
+    border: 'border-[var(--color-data-provisional)]',
+    text: 'text-[var(--color-data-provisional)]',
     icon: Award,
   },
 };
@@ -112,19 +112,19 @@ export function CohortLeaderboard({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+        <div className="h-6 w-32 bg-[var(--color-bg-secondary)] rounded animate-pulse" />
         <div className="flex justify-center gap-4 items-end">
           {[80, 100, 60].map((h, i) => (
             <div
               key={i}
-              className="w-20 rounded-t-xl bg-slate-200 dark:bg-slate-700 animate-pulse"
+              className="w-20 rounded-t-xl bg-[var(--color-bg-secondary)] animate-pulse"
               style={{ height: h }}
             />
           ))}
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div key={i} className="h-16 rounded-xl bg-[var(--color-bg-secondary)] animate-pulse" />
           ))}
         </div>
       </div>
@@ -134,11 +134,11 @@ export function CohortLeaderboard({
   if (entries.length === 0) {
     return (
       <div className="text-center py-12">
-        <Users className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-        <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <Users className="h-12 w-12 mx-auto text-[var(--color-text-muted)] mb-4" />
+        <h3 className="text-lg font-medium text-[var(--color-text-secondary)] mb-2">
           No Activity Yet
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Be the first to study and claim the top spot!
         </p>
       </div>
@@ -150,12 +150,12 @@ export function CohortLeaderboard({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-[var(--color-data-provisional)]" />
             {groupName ? `${groupName} Leaderboard` : 'Leaderboard'}
           </h3>
           {currentUserRank && (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               You're #{currentUserRank} of {entries.length}
             </p>
           )}
@@ -163,7 +163,7 @@ export function CohortLeaderboard({
 
         {/* Time frame selector */}
         {onTimeFrameChange && (
-          <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+          <div className="flex gap-1 bg-[var(--color-bg-secondary)] p-1 rounded-lg">
             {TIME_FRAMES.map((tf) => (
               <button
                 key={tf.value}
@@ -172,8 +172,8 @@ export function CohortLeaderboard({
                   px-3 py-1 text-xs font-medium rounded-md transition-colors
                   ${
                     timeFrame === tf.value
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                   }
                 `}
               >
@@ -245,10 +245,10 @@ export function CohortLeaderboard({
                 relative rounded-xl border-2 transition-all cursor-pointer
                 ${
                   isCurrentUser
-                    ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600'
+                    ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
                     : rankConfig
                       ? `${rankConfig.bg} ${rankConfig.border}`
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                      : 'bg-[var(--color-bg-primary)] border-[var(--color-border)]'
                 }
                 ${isExpanded ? 'ring-2 ring-[var(--color-accent)]' : ''}
               `}
@@ -267,7 +267,7 @@ export function CohortLeaderboard({
                   ${
                     rankConfig
                       ? `${rankConfig.bg} ${rankConfig.text}`
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                   }
                 `}
                 >
@@ -290,7 +290,7 @@ export function CohortLeaderboard({
                     ) : (
                       <div
                         className={`
-                        rounded-full bg-slate-200 dark:bg-slate-600
+                        rounded-full bg-[var(--color-bg-secondary)]
                         flex items-center justify-center
                         ${compact ? 'h-6 w-6 text-xs' : 'h-8 w-8 text-sm'}
                       `}
@@ -300,12 +300,12 @@ export function CohortLeaderboard({
                     )}
                     <div className="truncate">
                       <span
-                        className={`font-medium text-slate-900 dark:text-white ${compact ? 'text-sm' : ''}`}
+                        className={`font-medium text-[var(--color-text-primary)] ${compact ? 'text-sm' : ''}`}
                       >
                         {entry.displayName}
                       </span>
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">
+                        <span className="ml-2 text-xs text-[var(--color-accent)]">
                           (You)
                         </span>
                       )}
@@ -315,16 +315,16 @@ export function CohortLeaderboard({
 
                 {/* Stats */}
                 <div className="flex items-center gap-4">
-                  {/* Trend */}
-                  <div
-                    className={`flex items-center gap-1 ${
-                      entry.trend === 'up'
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : entry.trend === 'down'
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-slate-400'
-                    }`}
-                  >
+                {/* Trend */}
+                <div
+                  className={`flex items-center gap-1 ${
+                    entry.trend === 'up'
+                      ? 'text-[var(--color-data-pass)]'
+                      : entry.trend === 'down'
+                        ? 'text-[var(--color-data-fail)]'
+                        : 'text-[var(--color-text-muted)]'
+                  }`}
+                >
                     {entry.trend === 'up' && <ChevronUp className="h-4 w-4" />}
                     {entry.trend === 'down' && <ChevronDown className="h-4 w-4" />}
                     {entry.trend === 'stable' && <Minus className="h-4 w-4" />}
@@ -332,7 +332,7 @@ export function CohortLeaderboard({
 
                   {/* Streak */}
                   {entry.streak > 0 && !compact && (
-                    <div className="flex items-center gap-1 text-orange-500">
+                    <div className="flex items-center gap-1 text-[var(--color-data-provisional)]">
                       <Flame className="h-4 w-4" />
                       <span className="text-sm font-medium">{entry.streak}</span>
                     </div>
@@ -341,11 +341,11 @@ export function CohortLeaderboard({
                   {/* Score */}
                   <div className="text-right">
                     <p
-                      className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-lg'}`}
+                      className={`font-bold text-[var(--color-text-primary)] ${compact ? 'text-sm' : 'text-lg'}`}
                     >
                       {entry.score.toLocaleString()}
                     </p>
-                    {!compact && <p className="text-xs text-slate-500">pts</p>}
+                    {!compact && <p className="text-xs text-[var(--color-text-muted)]">pts</p>}
                   </div>
                 </div>
               </div>
@@ -359,23 +359,23 @@ export function CohortLeaderboard({
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 pb-4 pt-0 border-t border-slate-200 dark:border-slate-700">
+                    <div className="px-4 pb-4 pt-0 border-t border-[var(--color-border)]">
                       <div className="grid grid-cols-3 gap-4 mt-3">
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                             {entry.questionsAnswered}
                           </p>
-                          <p className="text-xs text-slate-500">Questions</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Questions</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                             {Math.round(entry.accuracy)}%
                           </p>
-                          <p className="text-xs text-slate-500">Accuracy</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-orange-500">{entry.streak}</p>
-                          <p className="text-xs text-slate-500">Day Streak</p>
+                          <p className="text-2xl font-bold text-[var(--color-data-provisional)]">{entry.streak}</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Day Streak</p>
                         </div>
                       </div>
                     </div>
@@ -426,7 +426,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
             transition={{ delay: 0.5, type: 'spring' }}
             className="absolute -top-4 left-1/2 -translate-x-1/2"
           >
-            <Crown className="h-6 w-6 text-yellow-500 fill-yellow-400" />
+            <Crown className="h-6 w-6 text-[var(--color-data-provisional)] fill-[var(--color-data-provisional)]" />
           </motion.div>
         )}
 
@@ -437,7 +437,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
             className={`
               rounded-full border-4 ${config.border}
               ${position === 1 ? 'h-16 w-16' : 'h-12 w-12'}
-              ${isCurrentUser ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
+              ${isCurrentUser ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}
             `}
           />
         ) : (
@@ -446,7 +446,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
             rounded-full flex items-center justify-center font-bold
             ${config.bg} ${config.text} border-4 ${config.border}
             ${position === 1 ? 'h-16 w-16 text-xl' : 'h-12 w-12 text-lg'}
-            ${isCurrentUser ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
+            ${isCurrentUser ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}
           `}
           >
             {(entry.displayName[0] ?? '?').toUpperCase()}
@@ -457,7 +457,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
       {/* Name */}
       <p
         className={`
-        font-medium text-slate-900 dark:text-white truncate max-w-[80px]
+        font-medium text-[var(--color-text-primary)] truncate max-w-[80px]
         ${position === 1 ? 'text-sm' : 'text-xs'}
       `}
       >
