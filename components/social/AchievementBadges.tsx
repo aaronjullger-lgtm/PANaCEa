@@ -89,39 +89,39 @@ const ACHIEVEMENT_ICONS = {
 
 const TIER_COLORS = {
   bronze: {
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    border: 'border-amber-300 dark:border-amber-700',
-    text: 'text-amber-700 dark:text-amber-300',
-    ring: 'ring-amber-400',
-    gradient: 'from-amber-200 to-amber-400',
+    bg: 'bg-[var(--color-bg-secondary)]',
+    border: 'border-[var(--color-data-provisional)]',
+    text: 'text-[var(--color-data-provisional)]',
+    ring: 'ring-[var(--color-data-provisional)]',
+    gradient: 'from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
   },
   silver: {
-    bg: 'bg-slate-100 dark:bg-slate-700/30',
-    border: 'border-slate-300 dark:border-slate-500',
-    text: 'text-slate-600 dark:text-slate-300',
-    ring: 'ring-slate-400',
-    gradient: 'from-slate-200 to-slate-400',
+    bg: 'bg-[var(--color-bg-secondary)]',
+    border: 'border-[var(--color-border)]',
+    text: 'text-[var(--color-text-secondary)]',
+    ring: 'ring-[var(--color-accent)]',
+    gradient: 'from-[var(--color-text-muted)] to-[var(--color-text-secondary)]',
   },
   gold: {
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    border: 'border-amber-400 dark:border-amber-700',
-    text: 'text-amber-700 dark:text-amber-300',
-    ring: 'ring-amber-500',
-    gradient: 'from-amber-200 to-amber-500',
+    bg: 'bg-[var(--color-bg-secondary)]',
+    border: 'border-[var(--color-data-provisional)]',
+    text: 'text-[var(--color-data-provisional)]',
+    ring: 'ring-[var(--color-data-provisional)]',
+    gradient: 'from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
   },
   platinum: {
-    bg: 'bg-slate-200 dark:bg-slate-700/50',
-    border: 'border-slate-400 dark:border-slate-500',
-    text: 'text-slate-700 dark:text-slate-200',
-    ring: 'ring-slate-400',
-    gradient: 'from-slate-300 to-slate-500',
+    bg: 'bg-[var(--color-bg-tertiary)]',
+    border: 'border-[var(--color-border)]',
+    text: 'text-[var(--color-text-primary)]',
+    ring: 'ring-[var(--color-accent)]',
+    gradient: 'from-[var(--color-text-secondary)] to-[var(--color-text-primary)]',
   },
   diamond: {
-    bg: 'bg-slate-800/50 dark:bg-slate-700/50',
-    border: 'border-slate-600 dark:border-slate-500',
+    bg: 'bg-[var(--color-bg-tertiary)]',
+    border: 'border-[var(--color-border)]',
     text: 'text-[var(--color-accent)]',
     ring: 'ring-[var(--color-accent)]',
-    gradient: 'from-blue-600 to-indigo-600',
+    gradient: 'from-[var(--color-accent)] to-[var(--color-accent)]',
   },
 };
 
@@ -200,12 +200,12 @@ export function AchievementBadges({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+        <div className="h-6 w-32 bg-[var(--color-bg-secondary)] rounded animate-pulse" />
         <div className={`grid ${compact ? 'grid-cols-6' : 'grid-cols-4'} gap-3`}>
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-square rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse"
+              className="aspect-square rounded-xl bg-[var(--color-bg-secondary)] animate-pulse"
             />
           ))}
         </div>
@@ -219,8 +219,8 @@ export function AchievementBadges({
       {!compact && (
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Achievements</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Achievements</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
               {stats.unlocked}/{stats.total} unlocked • {stats.totalXp.toLocaleString()} XP earned
             </p>
           </div>
@@ -229,7 +229,7 @@ export function AchievementBadges({
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+            className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)]"
           >
             <option value="all">All</option>
             <option value="unlocked">Unlocked</option>
@@ -244,12 +244,12 @@ export function AchievementBadges({
 
       {/* Progress bar */}
       {!compact && (
-        <div className="relative h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="relative h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${stats.percentage}%` }}
             transition={{ duration: 0.5 }}
-            className="absolute h-full bg-gradient-to-r from-blue-600 to-indigo-600"
+            className="absolute h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]"
           />
         </div>
       )}
@@ -278,7 +278,7 @@ export function AchievementBadges({
                 ${
                   isUnlocked
                     ? `${tierColors.bg} ${tierColors.border} border-2`
-                    : 'bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700'
+                    : 'bg-[var(--color-bg-secondary)] border-2 border-[var(--color-border)]'
                 }
               `}
             >
@@ -292,7 +292,7 @@ export function AchievementBadges({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="4"
-                    className="text-slate-500/30"
+                    className="text-[var(--color-text-muted)]/30"
                   />
                   <circle
                     cx="50"
@@ -314,7 +314,7 @@ export function AchievementBadges({
                     className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} ${tierColors.text}`}
                   />
                 ) : (
-                  <Lock className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} text-slate-400`} />
+                  <Lock className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} text-[var(--color-text-muted)]`} />
                 )}
               </div>
 
@@ -371,7 +371,7 @@ export function AchievementBadges({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden"
+              className="w-full max-w-sm bg-[var(--color-bg-primary)] rounded-2xl shadow-xl overflow-hidden"
             >
               {/* Header with gradient */}
               <div
@@ -407,7 +407,7 @@ export function AchievementBadges({
               {/* Content */}
               <div className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <h4 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {selectedAchievement.name}
                   </h4>
                   <span
@@ -421,20 +421,20 @@ export function AchievementBadges({
                   </span>
                 </div>
 
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                <p className="text-sm text-[var(--color-text-secondary)] mb-4">
                   {selectedAchievement.description}
                 </p>
 
                 {/* Progress */}
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-500">Progress</span>
-                    <span className="text-slate-900 dark:text-white font-medium">
+                    <span className="text-[var(--color-text-muted)]">Progress</span>
+                    <span className="text-[var(--color-text-primary)] font-medium">
                       {selectedAchievement.progress.toLocaleString()}/
                       {selectedAchievement.requirement.toLocaleString()}
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                     <div
                       className={`h-full bg-gradient-to-r ${TIER_COLORS[selectedAchievement.tier].gradient}`}
                       style={{
@@ -445,8 +445,8 @@ export function AchievementBadges({
                 </div>
 
                 {/* XP Reward */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">XP Reward</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--color-bg-secondary)]">
+                  <span className="text-sm text-[var(--color-text-secondary)]">XP Reward</span>
                   <span className="text-lg font-bold text-[var(--color-accent)]">
                     +{selectedAchievement.xpReward.toLocaleString()} XP
                   </span>
@@ -454,7 +454,7 @@ export function AchievementBadges({
 
                 {/* Unlocked date */}
                 {selectedAchievement.unlockedAt && (
-                  <p className="text-center text-xs text-slate-500 mt-4">
+                  <p className="text-center text-xs text-[var(--color-text-muted)] mt-4">
                     Unlocked on {new Date(selectedAchievement.unlockedAt).toLocaleDateString()}
                   </p>
                 )}
