@@ -252,11 +252,11 @@ export default function StudyGroupDashboard() {
               </div>
             ) : groupsError ? (
               /* Error State */
-              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
+              <div className="bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)] rounded-xl p-6">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-[var(--color-data-fail)]/20 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg
-                      className="w-5 h-5 text-red-600 dark:text-red-400"
+                      className="w-5 h-5 text-[var(--color-data-fail)]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -270,13 +270,13 @@ export default function StudyGroupDashboard() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-red-800 dark:text-red-300 font-semibold text-lg mb-1">
+                    <h4 className="text-[var(--color-data-fail)] font-semibold text-lg mb-1">
                       Failed to Load Groups
                     </h4>
-                    <p className="text-red-700 dark:text-red-400 text-sm mb-4">{groupsError}</p>
+                    <p className="text-[var(--color-data-fail)] text-sm mb-4">{groupsError}</p>
                     <button
                       onClick={fetchGroups}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium rounded-lg transition-all"
                     >
                       <svg
                         className="w-4 h-4"
@@ -356,11 +356,11 @@ export default function StudyGroupDashboard() {
               ) : leaderboardError ? (
                 /* Error State */
                 <div className="p-6">
-                  <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-6">
+                  <div className="bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)] rounded-lg p-6">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-[var(--color-data-fail)]/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <svg
-                          className="w-5 h-5 text-red-600 dark:text-red-400"
+                          className="w-5 h-5 text-[var(--color-data-fail)]"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -374,15 +374,15 @@ export default function StudyGroupDashboard() {
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-red-800 dark:text-red-300 font-semibold text-lg mb-1">
+                        <h4 className="text-[var(--color-data-fail)] font-semibold text-lg mb-1">
                           Failed to Load Leaderboard
                         </h4>
-                        <p className="text-red-700 dark:text-red-400 text-sm mb-4">
+                        <p className="text-[var(--color-data-fail)] text-sm mb-4">
                           {leaderboardError}
                         </p>
                         <button
                           onClick={fetchLeaderboard}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium rounded-lg transition-all"
                         >
                           <svg
                             className="w-4 h-4"
@@ -421,10 +421,10 @@ export default function StudyGroupDashboard() {
                           index === 0
                             ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                             : index === 1
-                              ? 'bg-slate-200 text-slate-700'
+                              ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                               : index === 2
                                 ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
-                                : 'text-slate-500'
+                                : 'text-[var(--color-text-muted)]'
                         }`}
                       >
                         {index + 1}
@@ -477,8 +477,8 @@ export default function StudyGroupDashboard() {
                 />
               </div>
               {formError && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-red-700 dark:text-red-400 text-sm">{formError}</p>
+                <div className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
+                  <p className="text-[var(--color-data-fail)] text-sm">{formError}</p>
                 </div>
               )}
               <div className="flex justify-end gap-3">
@@ -520,8 +520,8 @@ export default function StudyGroupDashboard() {
                 />
               </div>
               {formError && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-red-700 dark:text-red-400 text-sm">{formError}</p>
+                <div className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
+                  <p className="text-[var(--color-data-fail)] text-sm">{formError}</p>
                 </div>
               )}
               <div className="flex justify-end gap-3">
