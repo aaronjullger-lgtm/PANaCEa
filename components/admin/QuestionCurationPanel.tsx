@@ -176,12 +176,12 @@ const QuestionCurationPanel = () => {
   if (error) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl flex items-center gap-3">
+        <div className="p-4 bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5" />
           <span>Error: {error}</span>
           <button
             onClick={fetchQuestions}
-            className="ml-auto px-3 py-1 bg-red-100 dark:bg-red-800/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+            className="ml-auto px-3 py-1 bg-[var(--color-data-fail)]/20 rounded-lg hover:bg-[var(--color-data-fail)]/30 transition-colors"
           >
             Retry
           </button>
@@ -201,7 +201,7 @@ const QuestionCurationPanel = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+          <span className="px-3 py-1 bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-full text-sm font-medium">
             {filteredQuestions.length} pending
           </span>
           <button
@@ -222,7 +222,7 @@ const QuestionCurationPanel = () => {
             onClick={() => setFilter('all')}
             className={`px-3 py-1 text-sm rounded-full transition-colors ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[var(--color-accent)] text-white'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
@@ -234,7 +234,7 @@ const QuestionCurationPanel = () => {
               onClick={() => setFilter(system!)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filter === system
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-[var(--color-accent)] text-white'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -285,10 +285,10 @@ const QuestionCurationPanel = () => {
                       <span
                         className={`px-2 py-1 text-xs rounded ${
                           q.difficulty === 'easy'
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
                             : q.difficulty === 'hard'
-                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                              : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                              ? 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
+                              : 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                         }`}
                       >
                         {q.difficulty}
@@ -313,7 +313,7 @@ const QuestionCurationPanel = () => {
                           onChange={(e) =>
                             handleFieldChange(q.id, 'editedQuestion', e.target.value)
                           }
-                          className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                           rows={4}
                         />
                       ) : (
@@ -330,7 +330,7 @@ const QuestionCurationPanel = () => {
                               }
                               className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
                                 index === correctIndex
-                                  ? 'bg-green-500 text-white'
+                                  ? 'bg-[var(--color-data-pass)] text-white'
                                   : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)]'
                               } ${q.isEditing ? 'cursor-pointer' : ''}`}
                               disabled={!q.isEditing}
@@ -347,11 +347,11 @@ const QuestionCurationPanel = () => {
                                   newOptions[index] = e.target.value;
                                   handleFieldChange(q.id, 'editedOptions', newOptions);
                                 }}
-                                className="flex-1 p-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="flex-1 p-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                               />
                             ) : (
                               <span
-                                className={`${index === correctIndex ? 'text-green-600 dark:text-green-400 font-medium' : 'text-[var(--color-text-secondary)]'}`}
+                                className={`${index === correctIndex ? 'text-[var(--color-data-pass)] font-medium' : 'text-[var(--color-text-secondary)]'}`}
                               >
                                 {opt}
                               </span>
@@ -371,7 +371,7 @@ const QuestionCurationPanel = () => {
                             onChange={(e) =>
                               handleFieldChange(q.id, 'editedRationale', e.target.value)
                             }
-                            className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                             rows={4}
                           />
                         ) : (
@@ -393,7 +393,7 @@ const QuestionCurationPanel = () => {
                           </button>
                           <button
                             onClick={() => handleSave(q)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Save className="w-4 h-4" />
                             Save
@@ -416,7 +416,7 @@ const QuestionCurationPanel = () => {
                               e.stopPropagation();
                               handleAction(q.id, 'delete');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-white hover:bg-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-[var(--color-data-fail)] hover:text-white hover:bg-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
                             Delete
@@ -426,7 +426,7 @@ const QuestionCurationPanel = () => {
                               e.stopPropagation();
                               handleAction(q.id, 'approve');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Check className="w-4 h-4" />
                             Approve
