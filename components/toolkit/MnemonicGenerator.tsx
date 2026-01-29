@@ -103,10 +103,10 @@ const generateMnemonic = async (
 // Mnemonic type badges
 const TypeBadge: React.FC<{ type: GeneratedMnemonic['type'] }> = ({ type }) => {
   const styles = {
-    acronym: 'bg-slate-700 text-slate-200',
-    story: 'bg-slate-700 text-slate-200',
-    visual: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    rhyme: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+    acronym: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
+    story: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
+    visual: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+    rhyme: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
   };
 
   return (
@@ -200,7 +200,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
     return (
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/70 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
       >
         <Sparkles className="w-4 h-4" />
         <span>Generate Mnemonic</span>
@@ -254,16 +254,16 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
             {/* Loading State */}
             {isGenerating && (
               <div className="flex items-center justify-center py-8">
-                <div className="flex items-center gap-3">
-                  <RefreshCw className="w-5 h-5 text-purple-500 animate-spin" />
-                  <span className="text-[var(--color-text-muted)]">Generating mnemonic...</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <RefreshCw className="w-5 h-5 text-[var(--color-accent)] animate-spin" />
+                <span className="text-[var(--color-text-muted)]">Generating mnemonic...</span>
+              </div>
               </div>
             )}
 
             {/* Error State */}
             {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+              <div className="p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-sm text-[var(--color-data-fail)]">
                 {error}
               </div>
             )}
@@ -284,7 +284,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                       title="Copy to clipboard"
                     >
                       {isCopied ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-4 h-4 text-[var(--color-data-pass)]" />
                       ) : (
                         <Copy className="w-4 h-4 text-[var(--color-text-muted)]" />
                       )}
@@ -294,7 +294,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                       disabled={isSaved}
                       className={`p-1.5 rounded-lg transition-colors ${
                         isSaved
-                          ? 'text-green-500 bg-green-100 dark:bg-green-900/30'
+                          ? 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10'
                           : 'hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                       }`}
                       title="Save to library"
@@ -308,8 +308,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-                  <p className="text-lg font-medium text-slate-100 leading-relaxed">
+                <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
+                  <p className="text-lg font-medium text-[var(--color-text-primary)] leading-relaxed">
                     {mnemonic.mnemonic}
                   </p>
                 </div>
@@ -331,7 +331,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                 {mnemonic ? 'Try Another' : 'Generate'}
               </button>
               {isSaved && (
-                <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span className="text-xs text-[var(--color-data-pass)] flex items-center gap-1">
                   <Check className="w-3 h-3" /> Saved
                 </span>
               )}
