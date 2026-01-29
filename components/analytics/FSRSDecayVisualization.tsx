@@ -169,21 +169,21 @@ const CardDecayCard: React.FC<{
   const daysUntilForgotten = card.stability * (Math.pow(0.7, -1) - 1) - daysSinceReview;
 
   const urgencyColors = {
-    safe: 'border-data-pass/30 bg-data-pass/10',
-    warning: 'border-data-provisional/30 bg-data-provisional/10',
-    critical: 'border-data-fail/30 bg-data-fail/10',
+    safe: 'border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/10',
+    warning: 'border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/10',
+    critical: 'border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/10',
   };
 
   const urgencyText = {
     safe: {
       icon: CheckCircle,
-      color: 'text-data-pass',
+      color: 'text-[var(--color-data-pass)]',
       label: 'Memory Stable',
     },
-    warning: { icon: Clock, color: 'text-data-provisional', label: 'Review Soon' },
+    warning: { icon: Clock, color: 'text-[var(--color-data-provisional)]', label: 'Review Soon' },
     critical: {
       icon: AlertTriangle,
-      color: 'text-data-fail',
+      color: 'text-[var(--color-data-fail)]',
       label: 'Forgetting!',
     },
   };
@@ -240,10 +240,10 @@ const CardDecayCard: React.FC<{
           <div
             className={`text-sm font-bold ${
               daysUntilForgotten > 3
-                ? 'text-data-pass'
+                ? 'text-[var(--color-data-pass)]'
                 : daysUntilForgotten > 1
-                  ? 'text-data-provisional'
-                  : 'text-data-fail'
+                  ? 'text-[var(--color-data-provisional)]'
+                  : 'text-[var(--color-data-fail)]'
             }`}
           >
             {daysUntilForgotten > 0 ? formatTimeUntilForgotten(daysUntilForgotten) : 'Now!'}
@@ -276,9 +276,9 @@ const PredictiveAlert: React.FC<{
 }> = ({ criticalCount, warningCount, nextCriticalIn }) => {
   if (criticalCount === 0 && warningCount === 0) {
     return (
-      <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
+      <div className="p-4 rounded-xl bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
         <div className="flex items-center gap-3">
-          <CheckCircle className="w-6 h-6 text-data-pass" />
+          <CheckCircle className="w-6 h-6 text-[var(--color-data-pass)]" />
           <div>
             <h3 className="font-semibold text-[var(--color-text-primary)]">
               Memory Looking Good! 🎉
@@ -294,21 +294,21 @@ const PredictiveAlert: React.FC<{
   }
 
   return (
-    <div className="p-4 rounded-xl bg-data-provisional/10 border border-data-provisional/30">
+    <div className="p-4 rounded-xl bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30">
       <div className="flex items-center gap-3">
-        <AlertTriangle className="w-6 h-6 text-data-provisional" />
+        <AlertTriangle className="w-6 h-6 text-[var(--color-data-provisional)]" />
         <div>
           <h3 className="font-semibold text-[var(--color-text-primary)]">
             ⚠️ Memory Decay Alert
           </h3>
           <p className="text-sm text-[var(--color-text-muted)]">
             {criticalCount > 0 && (
-              <span className="text-data-fail font-medium">
+              <span className="text-[var(--color-data-fail)] font-medium">
                 {criticalCount} card{criticalCount > 1 ? 's' : ''} critically fading!{' '}
               </span>
             )}
             {warningCount > 0 && (
-              <span className="text-data-provisional">
+              <span className="text-[var(--color-data-provisional)]">
                 {warningCount} card{warningCount > 1 ? 's need' : ' needs'} review soon.
               </span>
             )}
