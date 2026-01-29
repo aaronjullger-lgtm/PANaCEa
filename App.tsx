@@ -79,6 +79,7 @@ const CommandCenterPage = lazy(() =>
 const ClinicalReferenceLibrary = lazy(
   () => import('./components/library/ClinicalReferenceLibrary')
 );
+const CustomStudyMode = lazy(() => import('./components/modes/CustomStudyMode'));
 const QuestionCurationPanel = lazy(() => import('./components/admin/QuestionCurationPanel'));
 const ClinicalProfileDashboard = lazy(
   () => import('./components/dashboard/ClinicalProfile/ClinicalProfileDashboard')
@@ -118,6 +119,7 @@ type View =
   | 'menu'
   | 'command_center'
   | 'quiz'
+  | 'custom_study'
   | 'integrations'
   | 'photo_drill'
   | 'ecg_drill'
@@ -552,6 +554,11 @@ const App: React.FC = () => {
     setView('command_center_page');
   }, []);
 
+  // Navigate to custom study mode - memoized
+  const handleNavigateToCustomStudy = useCallback(() => {
+    setView('custom_study');
+  }, []);
+
   // Animation variants for page transitions
   // Optimized for faster navigation with reduced motion preference support
   const pageVariants = {
@@ -725,6 +732,7 @@ const App: React.FC = () => {
                         onNavigateToIntegrations={() => setView('integrations')}
                         onNavigateToSimulation={handleNavigateToSimulation}
                         onNavigateToReference={() => setView('reference_library')}
+                        onNavigateToCustomStudy={handleNavigateToCustomStudy}
                         growthAreas={growthAreas}
                         examLabel={examLabel ?? 'PANCE'}
                       />
@@ -1269,6 +1277,26 @@ const App: React.FC = () => {
                           onNavigateToReference={() => setView('reference_library')}
                           onBack={() => setView('command_center')}
                         />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === 'custom_study' && (
+                  <motion.div
+                    key="custom_study"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary
+                      viewName="custom_study"
+                      onRetry={() => setView('custom_study')}
+                    >
+                      <Suspense fallback={<Loader />}>
+                        <CustomStudyMode onBack={() => setView('command_center')} />
                       </Suspense>
                     </WithGeminiErrorBoundary>
                   </motion.div>

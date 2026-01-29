@@ -84,6 +84,7 @@ interface CommandCenterHubProps {
   onNavigateToIntegrations?: () => void;
   onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
   onNavigateToReference?: () => void;
+  onNavigateToCustomStudy?: () => void;
 }
 
 // Icon mapping
@@ -417,6 +418,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToIntegrations,
   onNavigateToSimulation,
   onNavigateToReference,
+  onNavigateToCustomStudy,
 }) => {
   const { user } = useUser();
   const { showPANREContent } = useUserContext();
@@ -586,6 +588,52 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
       {/* Virtual OSCE Section (Standalone Feature) */}
       <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
+
+      {/* Custom Study Mode - System Chooser (Targeted Practice) */}
+      {onNavigateToCustomStudy && (
+        <GlassCard variant="primary" hoverable className="mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
+              <div className="p-3 rounded-xl bg-action-blue/20 backdrop-blur-sm">
+                <Layers className="w-6 h-6 text-action-blue" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
+                    Custom Study Builder
+                  </h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-action-blue/10 text-action-blue border border-action-blue/20">
+                    System Chooser
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+                  Build targeted sessions: choose specific organ systems, focus areas, and customize difficulty
+                </p>
+                <div className="flex items-center gap-4">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <Target className="w-3.5 h-3.5" />
+                    <span className="font-medium">Multi-System Selection</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span className="font-medium">Custom Focus</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <PrimaryButton
+              variant="primary"
+              size="md"
+              icon={Play}
+              iconRight={ChevronRight}
+              onClick={onNavigateToCustomStudy}
+            >
+              Build Session
+            </PrimaryButton>
+          </div>
+        </GlassCard>
+      )}
 
       {/* PANRE-LA (Only for practicing PAs) */}
       {showPANREContent && (
