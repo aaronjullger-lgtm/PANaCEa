@@ -102,7 +102,7 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         onBack={onBack}
       />
 
-      <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6 space-y-6">
+      <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
         <ClinicalInput
           label="Age"
           unit="years"
@@ -115,7 +115,7 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         />
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-200">Sex</label>
+          <label className="text-sm font-semibold text-[var(--color-text-primary)]">Sex</label>
           <div className="flex gap-4">
             {(['male', 'female'] as const).map((s) => (
               <label key={s} className="flex items-center gap-2 cursor-pointer">
@@ -123,16 +123,16 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   type="radio"
                   checked={sex === s}
                   onChange={() => setSex(s)}
-                  className="w-4 h-4 text-[var(--color-accent)] bg-slate-700 border-slate-600"
+                  className="w-4 h-4 text-[var(--color-accent)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
                 />
-                <span className="capitalize text-slate-200">{s}</span>
+                <span className="capitalize text-[var(--color-text-primary)]">{s}</span>
               </label>
             ))}
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-200">Race</label>
+          <label className="text-sm font-semibold text-[var(--color-text-primary)]">Race</label>
           <div className="flex gap-4">
             {(
               [
@@ -145,9 +145,9 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   type="radio"
                   checked={race === r.value}
                   onChange={() => setRace(r.value)}
-                  className="w-4 h-4 text-[var(--color-accent)] bg-slate-700 border-slate-600"
+                  className="w-4 h-4 text-[var(--color-accent)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
                 />
-                <span className="text-slate-200">{r.label}</span>
+                <span className="text-[var(--color-text-primary)]">{r.label}</span>
               </label>
             ))}
           </div>
