@@ -83,100 +83,14 @@ export function DrillLandingPage({
   children,
   isLoading = false,
 }: DrillLandingPageProps) {
-  // Muted semantic color palette
-  const colorClasses = {
-    // Legacy colors (still supported)
-    blue: {
-      bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
-      border: 'border-steel-blue-200 dark:border-steel-blue-800',
-      text: 'text-steel-blue-600 dark:text-steel-blue-400',
-      button:
-        'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
-      tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
-    },
-    green: {
-      bg: 'bg-sage-50 dark:bg-sage-900/20',
-      border: 'border-sage-200 dark:border-sage-800',
-      text: 'text-sage-600 dark:text-sage-400',
-      button: 'bg-sage-600 hover:bg-sage-700 dark:bg-sage-500 dark:hover:bg-sage-400',
-      tag: 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-300',
-    },
-    purple: {
-      bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
-      border: 'border-deep-plum-200 dark:border-deep-plum-800',
-      text: 'text-deep-plum-600 dark:text-deep-plum-400',
-      button:
-        'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
-      tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
-    },
-    orange: {
-      bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
-      border: 'border-muted-amber-200 dark:border-muted-amber-800',
-      text: 'text-muted-amber-600 dark:text-muted-amber-400',
-      button:
-        'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
-      tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
-    },
-    red: {
-      bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
-      border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
-      text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
-      button:
-        'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
-      tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
-    },
-    // New muted semantic colors
-    sage: {
-      bg: 'bg-sage-50 dark:bg-sage-900/20',
-      border: 'border-sage-200 dark:border-sage-800',
-      text: 'text-sage-600 dark:text-sage-400',
-      button: 'bg-sage-600 hover:bg-sage-700 dark:bg-sage-500 dark:hover:bg-sage-400',
-      tag: 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-300',
-    },
-    'slate-teal': {
-      bg: 'bg-slate-teal-50 dark:bg-slate-teal-900/20',
-      border: 'border-slate-teal-200 dark:border-slate-teal-800',
-      text: 'text-slate-teal-600 dark:text-slate-teal-400',
-      button:
-        'bg-slate-teal-600 hover:bg-slate-teal-700 dark:bg-slate-teal-500 dark:hover:bg-slate-teal-400',
-      tag: 'bg-slate-teal-100 text-slate-teal-700 dark:bg-slate-teal-900/30 dark:text-slate-teal-300',
-    },
-    'dusty-rose': {
-      bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
-      border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
-      text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
-      button:
-        'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
-      tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
-    },
-    'steel-blue': {
-      bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
-      border: 'border-steel-blue-200 dark:border-steel-blue-800',
-      text: 'text-steel-blue-600 dark:text-steel-blue-400',
-      button:
-        'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
-      tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
-    },
-    'muted-amber': {
-      bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
-      border: 'border-muted-amber-200 dark:border-muted-amber-800',
-      text: 'text-muted-amber-600 dark:text-muted-amber-400',
-      button:
-        'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
-      tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
-    },
-    'deep-plum': {
-      bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
-      border: 'border-deep-plum-200 dark:border-deep-plum-800',
-      text: 'text-deep-plum-600 dark:text-deep-plum-400',
-      button:
-        'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
-      tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
-    },
+  // Semantic design tokens (consistent across all drill modes)
+  const colors = {
+    bg: 'bg-[var(--color-bg-tertiary)]',
+    border: 'border-[var(--color-border)]',
+    text: 'text-[var(--color-accent)]',
+    button: 'bg-[var(--color-accent)] hover:opacity-90',
+    tag: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
   };
-
-  const colors =
-    colorClasses[accentColor as keyof typeof colorClasses] || colorClasses['steel-blue'];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
