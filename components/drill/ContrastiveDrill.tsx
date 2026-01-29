@@ -94,11 +94,11 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
 
           if (hasAnswered) {
             if (isCorrect) {
-              bgClass = 'bg-data-pass/10';
-              borderClass = 'border-data-pass';
+              bgClass = 'bg-[var(--color-data-pass)]/10';
+              borderClass = 'border-[var(--color-data-pass)]';
             } else if (isWrongSelection) {
-              bgClass = 'bg-data-fail/10';
-              borderClass = 'border-data-fail';
+              bgClass = 'bg-[var(--color-data-fail)]/10';
+              borderClass = 'border-[var(--color-data-fail)]';
             }
           } else if (isSelected) {
             bgClass = 'bg-[var(--color-accent)]/10';
@@ -124,7 +124,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           <button
             onClick={handleSubmit}
             disabled={!selectedOption}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 hover:bg-blue-700 transition"
+            className="bg-[var(--color-accent)] text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 hover:opacity-90 transition"
           >
             Submit Answer
           </button>
