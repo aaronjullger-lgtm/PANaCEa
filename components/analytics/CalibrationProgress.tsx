@@ -82,9 +82,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
               isCalibrated
                 ? 'bg-data-pass'
                 : progress > 66
-                  ? 'bg-deep-plum-500'
+                  ? 'bg-[var(--color-accent)]'
                   : progress > 33
-                    ? 'bg-steel-blue-500'
+                    ? 'bg-[var(--color-accent)]/70'
                     : 'bg-data-provisional'
             }`}
           />
@@ -112,7 +112,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
               ? 'bg-data-pass/10'
               : state === 'not_started'
                 ? 'bg-[var(--color-bg-tertiary)]'
-                : 'bg-steel-blue-500/10'
+                : 'bg-[var(--color-accent)]/10'
           }`}
         >
           {isCalibrated ? (
@@ -120,7 +120,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           ) : state === 'early' ? (
             <AlertTriangle className="w-5 h-5 text-data-provisional" />
           ) : (
-            <Brain className="w-5 h-5 text-steel-blue-600 dark:text-steel-blue-400" />
+            <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           )}
         </div>
 
@@ -150,9 +150,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
                 isCalibrated
                   ? 'bg-data-pass'
                   : progress > 66
-                    ? 'bg-deep-plum-500'
+                    ? 'bg-[var(--color-accent)]'
                     : progress > 33
-                      ? 'bg-steel-blue-500'
+                      ? 'bg-[var(--color-accent)]/70'
                       : 'bg-data-provisional'
               }`}
             />
@@ -190,10 +190,10 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       {!isCalibrated && showDetails && (
         <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
           <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-            <span className={current >= 20 ? 'text-steel-blue-600 dark:text-steel-blue-400' : ''}>
+            <span className={current >= 20 ? 'text-[var(--color-accent)]' : ''}>
               20: Basic patterns
             </span>
-            <span className={current >= 40 ? 'text-deep-plum-600 dark:text-deep-plum-400' : ''}>
+            <span className={current >= 40 ? 'text-[var(--color-accent)]' : ''}>
               40: Good predictions
             </span>
             <span className={current >= 60 ? 'text-data-pass' : ''}>

@@ -140,12 +140,12 @@ export default function TodoistExportModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Export to Todoist</h2>
+      <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Export to Todoist</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
           >
             <X className="w-6 h-6" />
           </button>
@@ -154,7 +154,7 @@ export default function TodoistExportModal({
         <div className="p-6 space-y-6">
           {/* Export Options */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
               What to Export
             </h3>
             <div className="space-y-3">
@@ -165,9 +165,9 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, includeStudyPlan: e.target.checked }))
                   }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">
+                <span className="ml-2 text-[var(--color-text-secondary)]">
                   Study Plan ({weeklyPlan.length} weeks)
                 </span>
               </label>
@@ -179,9 +179,9 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, includeMissedQuestions: e.target.checked }))
                   }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">
+                <span className="ml-2 text-[var(--color-text-secondary)]">
                   Missed Questions Review ({missedQuestions.length} questions)
                 </span>
               </label>
@@ -190,7 +190,7 @@ export default function TodoistExportModal({
 
           {/* Export Method */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
               Export Method
             </h3>
             <div className="space-y-3">
@@ -203,9 +203,9 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'csv' }))
                   }
-                  className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">
+                <span className="ml-2 text-[var(--color-text-secondary)]">
                   Download CSV (Manual Import)
                 </span>
               </label>
@@ -219,16 +219,16 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'oauth' }))
                   }
-                  className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">Direct Export (OAuth)</span>
+                <span className="ml-2 text-[var(--color-text-secondary)]">Direct Export (OAuth)</span>
               </label>
             </div>
           </div>
 
           {/* OAuth Connection Status */}
           {options.exportMethod === 'oauth' && (
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {isConnected ? (
@@ -270,30 +270,30 @@ export default function TodoistExportModal({
 
           {/* Task Preview */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
               Preview ({generatedTasks.length} tasks)
             </h3>
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 max-h-40 overflow-y-auto">
+            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 max-h-40 overflow-y-auto">
               {generatedTasks.length > 0 ? (
                 <div className="space-y-2">
                   {generatedTasks.slice(0, 5).map((task, index) => (
                     <div key={index} className="text-sm">
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-[var(--color-text-primary)]">
                         {task.content}
                       </div>
                       {task.due_date && (
-                        <div className="text-gray-500 dark:text-gray-400">Due: {task.due_date}</div>
+                        <div className="text-[var(--color-text-muted)]">Due: {task.due_date}</div>
                       )}
                     </div>
                   ))}
                   {generatedTasks.length > 5 && (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-[var(--color-text-muted)]">
                       ... and {generatedTasks.length - 5} more tasks
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">
+                <div className="text-[var(--color-text-muted)] text-sm">
                   No tasks to export. Please select at least one export option.
                 </div>
               )}
@@ -337,10 +337,10 @@ export default function TodoistExportModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-[var(--color-border)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            className="px-4 py-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           >
             Cancel
           </button>
