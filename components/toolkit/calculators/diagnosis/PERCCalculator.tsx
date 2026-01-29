@@ -122,15 +122,15 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         onBack={onBack}
       />
 
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-        <p className="text-sm text-slate-200 leading-relaxed">
-          <strong className="text-slate-100">⚠️ Use only in LOW-RISK patients</strong> (clinical
+      <div className="bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-4">
+        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+          <strong className="text-[var(--color-text-primary)]">⚠️ Use only in LOW-RISK patients</strong> (clinical
           gestalt {'<'}15% pre-test probability). If ALL criteria are absent (PERC negative), PE can
           be ruled out without further testing.
         </p>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6">
+      <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">
         <CheckboxCriteria items={criteriaItems} />
       </div>
 
