@@ -185,7 +185,7 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full text-center"
       >
-        <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 rounded-full bg-[var(--color-data-pass)]/10 flex items-center justify-center mx-auto mb-6">
           {icon || <span className="text-4xl">✓</span>}
         </div>
 
