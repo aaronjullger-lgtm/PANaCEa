@@ -51,7 +51,7 @@ const CATEGORY_CARDS: Array<{
     title: 'Subcategories',
     description: 'Detailed condition classification',
     icon: <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8" />,
-    gradient: 'from-orange-600 to-amber-700',
+    gradient: 'from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
   },
   {
     id: 'random',
@@ -203,7 +203,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
       return (
         <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-red-500 mb-4">
+            <div className="text-[var(--color-data-fail)] mb-4">
               <AlertCircle className="w-12 h-12 mx-auto" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Error Loading Questions</h2>
@@ -271,33 +271,33 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 rounded-xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-6 shadow-lg"
+                  className="mb-6 rounded-xl border-2 border-[var(--color-data-provisional)]/50 bg-[var(--color-data-provisional)]/10 p-6 shadow-lg"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-data-provisional)] flex items-center justify-center">
                       <Lightbulb className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
+                      <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
                         Coach's Corner
                       </h3>
                       {isLoadingHint ? (
-                        <div className="flex items-center gap-3 text-amber-700 dark:text-amber-300">
-                          <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex items-center gap-3 text-[var(--color-text-muted)]">
+                          <div className="w-5 h-5 border-2 border-[var(--color-data-provisional)] border-t-transparent rounded-full animate-spin"></div>
                           <span className="text-sm italic">Thinking about your answer...</span>
                         </div>
                       ) : (
                         <>
-                          <p className="text-amber-900 dark:text-amber-100 mb-4 leading-relaxed">
+                          <p className="text-[var(--color-text-primary)] mb-4 leading-relaxed">
                             {socraticHint}
                           </p>
                           <button
                             onClick={retryAfterHint}
-                            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
+                            className="px-5 py-2.5 bg-[var(--color-data-provisional)] hover:opacity-90 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
                           >
                             Try Again
                           </button>
-                          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                          <p className="mt-3 text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
                             <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
                             <span>
                               Getting it right after this hint will award 50% points (0.5 score)
