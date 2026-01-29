@@ -98,9 +98,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
   performance: {
@@ -113,9 +113,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
   dueForecast: {
@@ -128,9 +128,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
   streaks: {
@@ -143,9 +143,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
   mastery: {
@@ -173,9 +173,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
   studyTime: {
@@ -188,9 +188,9 @@ const VIEW_MODES: Record<
     colorScale: [
       'bg-[var(--color-bg-secondary)]',
       'bg-[var(--color-bg-tertiary)]',
-      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
-      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
-      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
+      'bg-[var(--color-accent)]/20',
+      'bg-[var(--color-accent)]/40',
+      'bg-[var(--color-accent)]/60',
     ],
   },
 };
