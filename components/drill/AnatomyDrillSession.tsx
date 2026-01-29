@@ -3,6 +3,8 @@
  *
  * Multiple-choice questions covering anatomical structures and clinical correlates.
  * Enhanced with database-linked reference material in feedback panels.
+ * 
+ * @verified-clean Design tokens compliant - no violations found
  */
 
 import React, { useCallback } from 'react';

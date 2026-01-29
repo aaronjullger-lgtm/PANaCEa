@@ -19,11 +19,31 @@ interface DDxDrillSessionProps {
 }
 
 const QUESTION_TYPE_LABELS = {
-  mustNotMiss: { label: 'Must Not Miss', icon: AlertTriangle, color: 'red' },
-  mostCommon: { label: 'Most Common', icon: Activity, color: 'blue' },
-  distinguishing: { label: 'Distinguishing Feature', icon: Target, color: 'purple' },
-  redFlag: { label: 'Red Flag', icon: AlertTriangle, color: 'orange' },
-  workup: { label: 'Workup', icon: Stethoscope, color: 'green' },
+  mustNotMiss: { 
+    label: 'Must Not Miss', 
+    icon: AlertTriangle, 
+    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]' 
+  },
+  mostCommon: { 
+    label: 'Most Common', 
+    icon: Activity, 
+    className: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' 
+  },
+  distinguishing: { 
+    label: 'Distinguishing Feature', 
+    icon: Target, 
+    className: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]' 
+  },
+  redFlag: { 
+    label: 'Red Flag', 
+    icon: AlertTriangle, 
+    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]' 
+  },
+  workup: { 
+    label: 'Workup', 
+    icon: Stethoscope, 
+    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]' 
+  },
 };
 
 const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
@@ -63,14 +83,14 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       >
         {drill.availableCategories.length > 0 && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
               Filter by System (Optional)
             </label>
             <select
               value={selectedCategory || ''}
               onChange={(e) => setSelectedCategory(e.target.value || undefined)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full p-2 border border-[var(--color-border)] rounded-lg 
+                         bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
             >
               <option value="">All Systems</option>
               {drill.availableCategories.map((cat) => (
@@ -151,10 +171,10 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               Session Complete!
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-lg text-[var(--color-text-secondary)] mb-4">
               Score: {drill.score}/{drill.totalAttempts} ({accuracy}%)
             </p>
             <div className="flex gap-4 justify-center">
@@ -166,8 +186,8 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
               </button>
               <button
                 onClick={drill.exitToMenu}
-                className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                           text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="px-6 py-2 border border-[var(--color-border)] rounded-lg 
+                           text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
               >
                 Exit
               </button>
@@ -215,14 +235,12 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       {/* Question Type Badge */}
       <div className="flex items-center gap-2 mb-4">
         <span
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium
-                         bg-${typeInfo.color}-100 text-${typeInfo.color}-700 
-                         dark:bg-${typeInfo.color}-900/30 dark:text-${typeInfo.color}-400`}
+          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${typeInfo.className}`}
         >
           <TypeIcon className="w-4 h-4" />
           {typeInfo.label}
         </span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">{question.category}</span>
+        <span className="text-sm text-[var(--color-text-muted)]">{question.category}</span>
       </div>
 
       {/* Presenting Complaint Context */}
