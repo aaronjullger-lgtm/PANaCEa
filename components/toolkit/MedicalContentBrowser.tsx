@@ -300,7 +300,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
               {/* Back Button */}
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+                className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm font-medium">Back to library</span>
