@@ -236,15 +236,15 @@ function useCalculatorPreferences(): CalculatorPreferences {
 const getCategoryColor = (category: Calculator['category']): string => {
   switch (category) {
     case 'risk':
-      return 'text-muted-amber-600 bg-muted-amber-50 dark:bg-muted-amber-900/20';
+      return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10';
     case 'diagnosis':
-      return 'text-steel-blue-600 bg-steel-blue-50 dark:bg-steel-blue-900/20';
+      return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10';
     case 'dosing':
-      return 'text-deep-plum-600 bg-deep-plum-50 dark:bg-deep-plum-900/20';
+      return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10';
     case 'lab':
-      return 'text-sage-600 bg-sage-50 dark:bg-sage-900/20';
+      return 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10';
     case 'guidelines':
-      return 'text-deep-plum-600 bg-deep-plum-50 dark:bg-deep-plum-900/20';
+      return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10';
   }
 };
 
@@ -297,7 +297,7 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
     onClick={onSelect}
     className={`group text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border transition-all duration-200 relative overflow-hidden ${
       isPinned
-        ? 'border-amber-400/50 ring-1 ring-amber-400/20'
+        ? 'border-[var(--color-data-provisional)]/50 ring-1 ring-[var(--color-data-provisional)]/20'
         : 'border-[var(--color-border)] hover:border-[var(--color-accent)]'
     } hover:shadow-lg hover:shadow-[var(--color-accent)]/5`}
   >
@@ -317,13 +317,13 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
             onClick={onTogglePin}
             className={`p-1.5 rounded-lg transition-all ${
               isPinned
-                ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'
-                : 'text-[var(--color-text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 opacity-0 group-hover:opacity-100'
+                ? 'text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10 opacity-0 group-hover:opacity-100'
             }`}
             title={isPinned ? 'Unpin calculator' : 'Pin calculator'}
           >
             {isPinned ? (
-              <Star className="w-4 h-4 fill-amber-500" />
+              <Star className="w-4 h-4 fill-[var(--color-data-provisional)]" />
             ) : (
               <StarOff className="w-4 h-4" />
             )}
@@ -349,7 +349,7 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
           {calc.category}
         </span>
         {isPinned && (
-          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Pinned</span>
+          <span className="text-xs text-[var(--color-data-provisional)] font-medium">Pinned</span>
         )}
       </div>
     </div>
@@ -680,7 +680,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                     {!searchQuery && pinnedCalculatorData.length > 0 && (
                       <section>
                         <div className="flex items-center gap-2 mb-3">
-                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          <Star className="w-4 h-4 text-[var(--color-data-provisional)] fill-[var(--color-data-provisional)]" />
                           <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
                             Pinned
                           </h3>
@@ -840,7 +840,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <Beaker className="w-8 h-8 text-sage-600" />
+                      <Beaker className="w-8 h-8 text-[var(--color-data-pass)]" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Lab Normal Values
                       </h3>
@@ -881,7 +881,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
 
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <Dna className="w-8 h-8 text-steel-blue-600" />
+                      <Dna className="w-8 h-8 text-[var(--color-accent)]" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Anatomy & Physiology
                       </h3>
@@ -904,7 +904,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               >
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <FileImage className="w-8 h-8 text-slate-600" />
+                    <FileImage className="w-8 h-8 text-[var(--color-text-muted)]" />
                     <div>
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Radiology Scroll
