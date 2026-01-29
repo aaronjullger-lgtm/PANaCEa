@@ -80,8 +80,8 @@ const getMasteryLevel = (accuracy: number): { level: string; color: string; bgCo
   if (accuracy >= 90)
     return {
       level: 'Mastered',
-      color: 'text-data-pass dark:text-data-pass',
-      bgColor: 'bg-data-pass',
+      color: 'text-[var(--color-data-pass)]',
+      bgColor: 'bg-[var(--color-data-pass)]',
     };
   if (accuracy >= 80)
     return {
@@ -92,36 +92,36 @@ const getMasteryLevel = (accuracy: number): { level: string; color: string; bgCo
   if (accuracy >= 70)
     return {
       level: 'Competent',
-      color: 'text-action-blue-600 dark:text-action-blue-400',
-      bgColor: 'bg-action-blue-500',
+      color: 'text-[var(--color-accent)]',
+      bgColor: 'bg-[var(--color-accent)]',
     };
   if (accuracy >= 60)
     return {
       level: 'Developing',
-      color: 'text-data-provisional dark:text-data-provisional',
-      bgColor: 'bg-data-provisional',
+      color: 'text-[var(--color-data-provisional)]',
+      bgColor: 'bg-[var(--color-data-provisional)]',
     };
   if (accuracy >= 50)
     return {
       level: 'Needs Work',
-      color: 'text-muted-amber-600 dark:text-muted-amber-400',
-      bgColor: 'bg-muted-amber-500',
+      color: 'text-[var(--color-data-provisional)]',
+      bgColor: 'bg-[var(--color-data-provisional)]',
     };
   return {
     level: 'Critical',
-    color: 'text-data-fail dark:text-data-fail',
-    bgColor: 'bg-data-fail',
+    color: 'text-[var(--color-data-fail)]',
+    bgColor: 'bg-[var(--color-data-fail)]',
   };
 };
 
 const getHeatColor = (accuracy: number): string => {
   // Using "Stormy Slate" semantic design tokens
-  if (accuracy >= 90) return 'bg-data-pass/80 dark:bg-data-pass/70';
+  if (accuracy >= 90) return 'bg-[var(--color-data-pass)]/80';
   if (accuracy >= 80) return 'bg-[var(--color-accent)]/80';
-  if (accuracy >= 70) return 'bg-action-blue-500/80 dark:bg-action-blue-600/80';
-  if (accuracy >= 60) return 'bg-data-provisional/80 dark:bg-data-provisional/70';
-  if (accuracy >= 50) return 'bg-muted-amber-500/80 dark:bg-muted-amber-600/80';
-  return 'bg-data-fail/80 dark:bg-data-fail/70';
+  if (accuracy >= 70) return 'bg-[var(--color-accent)]/60';
+  if (accuracy >= 60) return 'bg-[var(--color-data-provisional)]/80';
+  if (accuracy >= 50) return 'bg-[var(--color-data-provisional)]/60';
+  return 'bg-[var(--color-data-fail)]/80';
 };
 
 // =============================================================================
@@ -284,7 +284,7 @@ export function SystemMasteryMap({
       {showLegend && (
         <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-data-pass" />
+            <div className="w-3 h-3 rounded bg-[var(--color-data-pass)]" />
             <span>≥90% Mastered</span>
           </div>
           <div className="flex items-center gap-2">
@@ -292,29 +292,29 @@ export function SystemMasteryMap({
             <span>≥80% Proficient</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-action-blue-500" />
+            <div className="w-3 h-3 rounded bg-[var(--color-accent)]/60" />
             <span>≥70% Competent</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-data-provisional" />
+            <div className="w-3 h-3 rounded bg-[var(--color-data-provisional)]" />
             <span>≥60% Developing</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-muted-amber-500" />
+            <div className="w-3 h-3 rounded bg-[var(--color-data-provisional)]/60" />
             <span>≥50% Needs Work</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-data-fail" />
-            <span>&lt;50% Critical</span>
+            <div className="w-3 h-3 rounded bg-[var(--color-data-fail)]" />
+            <span><50% Critical</span>
           </div>
         </div>
       )}
 
       {/* Critical systems alert */}
       {overallStats.criticalSystems > 0 && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-data-fail/10 border border-data-fail/30">
-          <AlertTriangle className="h-5 w-5 text-data-fail dark:text-data-fail" />
-          <p className="text-sm text-data-fail dark:text-data-fail/90">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30">
+          <AlertTriangle className="h-5 w-5 text-[var(--color-data-fail)]" />
+          <p className="text-sm text-[var(--color-data-fail)]">
             {overallStats.criticalSystems} system{overallStats.criticalSystems > 1 ? 's' : ''} below
             60% - prioritize these areas
           </p>
@@ -386,14 +386,14 @@ export function SystemMasteryMap({
                   <div className="flex items-center gap-1">
                     {selectedSystem.trend === 'improving' && (
                       <>
-                        <TrendingUp className="h-5 w-5 text-data-pass" />
-                        <span className="text-data-pass font-medium">Improving</span>
+                        <TrendingUp className="h-5 w-5 text-[var(--color-data-pass)]" />
+                        <span className="text-[var(--color-data-pass)] font-medium">Improving</span>
                       </>
                     )}
                     {selectedSystem.trend === 'declining' && (
                       <>
-                        <TrendingDown className="h-5 w-5 text-data-fail" />
-                        <span className="text-data-fail font-medium">Declining</span>
+                        <TrendingDown className="h-5 w-5 text-[var(--color-data-fail)]" />
+                        <span className="text-[var(--color-data-fail)] font-medium">Declining</span>
                       </>
                     )}
                     {selectedSystem.trend === 'stable' && (
@@ -434,7 +434,7 @@ export function SystemMasteryMap({
                     {selectedSystem.weakTopics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-2 py-0.5 text-xs rounded bg-data-fail/10 dark:bg-data-fail/20 text-data-fail dark:text-data-fail/90"
+                        className="px-2 py-0.5 text-xs rounded bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]/90"
                       >
                         {topic}
                       </span>
@@ -452,7 +452,7 @@ export function SystemMasteryMap({
                     {selectedSystem.strongTopics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-2 py-0.5 text-xs rounded bg-data-pass/10 dark:bg-data-pass/20 text-data-pass dark:text-data-pass/90"
+                        className="px-2 py-0.5 text-xs rounded bg-[var(--color-data-pass)]/10 dark:bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] dark:text-[var(--color-data-pass)]/90"
                       >
                         {topic}
                       </span>
