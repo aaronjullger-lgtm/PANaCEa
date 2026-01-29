@@ -193,17 +193,17 @@ export function MediaApprovalDashboard() {
   };
 
   const getQualityBadgeColor = (score?: number) => {
-    if (!score) return 'bg-gray-500';
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (!score) return 'bg-[var(--color-text-muted)]';
+    if (score >= 80) return 'bg-[var(--color-data-pass)]';
+    if (score >= 60) return 'bg-[var(--color-data-provisional)]';
+    return 'bg-[var(--color-data-fail)]';
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading pending media...</p>
         </div>
       </div>
@@ -215,12 +215,12 @@ export function MediaApprovalDashboard() {
       {/* Error Banner */}
       {error && (
         <div className="max-w-7xl mx-auto mb-4">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+          <div className="bg-[var(--color-bg-error)] border border-[var(--color-border-error)] rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[var(--color-data-fail)]">
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <button onClick={() => setError(null)} className="text-[var(--color-data-fail)] hover:opacity-80">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -249,7 +249,7 @@ export function MediaApprovalDashboard() {
             </button>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors"
             >
               <Upload className="w-4 h-4" />
               Upload Media
@@ -265,9 +265,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-provisional)]">{stats.pending}</p>
               </div>
-              <AlertCircle className="w-8 h-8 text-orange-500" />
+              <AlertCircle className="w-8 h-8 text-[var(--color-data-provisional)]" />
             </div>
           </div>
 
@@ -275,9 +275,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approved</p>
-                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-pass)]">{stats.approved}</p>
               </div>
-              <Check className="w-8 h-8 text-green-500" />
+              <Check className="w-8 h-8 text-[var(--color-data-pass)]" />
             </div>
           </div>
 
@@ -285,9 +285,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected</p>
-                <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-fail)]">{stats.rejected}</p>
               </div>
-              <ThumbsDown className="w-8 h-8 text-red-500" />
+              <ThumbsDown className="w-8 h-8 text-[var(--color-data-fail)]" />
             </div>
           </div>
 
@@ -295,9 +295,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approval Rate</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.approvalRate}%</p>
+                <p className="text-3xl font-bold text-[var(--color-accent)]">{stats.approvalRate}%</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-blue-500" />
+              <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
             </div>
           </div>
         </div>
@@ -312,7 +312,7 @@ export function MediaApprovalDashboard() {
               onClick={() => setFilter(category)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === category
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-[var(--color-accent)] text-white'
                   : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
               }`}
             >
@@ -326,7 +326,7 @@ export function MediaApprovalDashboard() {
       <div className="max-w-7xl mx-auto">
         {pendingMedia.length === 0 ? (
           <div className="bg-white dark:bg-[#1F283A] rounded-lg p-12 text-center">
-            <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <Check className="w-16 h-16 text-[var(--color-data-pass)] mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               All caught up!
             </h3>
@@ -376,7 +376,7 @@ export function MediaApprovalDashboard() {
                     {media.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded"
+                        className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2 py-1 rounded"
                       >
                         {tag}
                       </span>
@@ -387,7 +387,7 @@ export function MediaApprovalDashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApprove(media.id)}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Check className="w-4 h-4" />
                       Approve
@@ -397,7 +397,7 @@ export function MediaApprovalDashboard() {
                         setSelectedMedia(media);
                         setShowRejectionModal(true);
                       }}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <ThumbsDown className="w-4 h-4" />
                       Reject
@@ -490,7 +490,7 @@ export function MediaApprovalDashboard() {
                   {selectedMedia.aiMetadata.assessment.issues.length > 0 && (
                     <div className="mb-6">
                       <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Issues</h3>
-                      <ul className="list-disc list-inside text-red-600 dark:text-red-400">
+                      <ul className="list-disc list-inside text-[var(--color-data-fail)]">
                         {selectedMedia.aiMetadata.assessment.issues.map((issue, idx) => (
                           <li key={idx}>{issue}</li>
                         ))}
@@ -503,7 +503,7 @@ export function MediaApprovalDashboard() {
                       <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                         Recommendations
                       </h3>
-                      <ul className="list-disc list-inside text-blue-600 dark:text-blue-400">
+                      <ul className="list-disc list-inside text-[var(--color-accent)]">
                         {selectedMedia.aiMetadata.assessment.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
                         ))}
@@ -517,14 +517,14 @@ export function MediaApprovalDashboard() {
               <div className="flex gap-3">
                 <button
                   onClick={() => handleApprove(selectedMedia.id)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   Approve for Use
                 </button>
                 <button
                   onClick={() => setShowRejectionModal(true)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ThumbsDown className="w-5 h-5" />
                   Reject
@@ -562,7 +562,7 @@ export function MediaApprovalDashboard() {
               <button
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
                 disabled={!rejectionReason.trim() || actionLoading}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 {actionLoading ? 'Processing...' : 'Confirm Rejection'}
               </button>
@@ -804,7 +804,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             {uploading ? 'Uploading...' : 'Upload'}
           </button>
