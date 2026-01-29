@@ -65,11 +65,11 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
     }
 
     if (option === question.correctAnswer) {
-      return `${baseClasses} border-data-pass bg-data-pass/10`;
+      return `${baseClasses} border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10`;
     }
 
     if (option === selectedAnswer && !isCorrect) {
-      return `${baseClasses} border-data-fail bg-data-fail/10`;
+      return `${baseClasses} border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10`;
     }
 
     return `${baseClasses} border-[var(--color-border)] opacity-50`;
@@ -127,7 +127,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className={`absolute inset-0 flex items-center justify-center ${
-                isCorrect ? 'bg-data-pass' : 'bg-data-fail'
+                isCorrect ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'
               } bg-opacity-90`}
             >
               {isCorrect ? (
@@ -161,14 +161,14 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
               {selectedAnswer === option && (
                 <>
                   {isCorrect ? (
-                    <Check className="w-5 h-5 text-data-pass" />
+                    <Check className="w-5 h-5 text-[var(--color-data-pass)]" />
                   ) : (
-                    <X className="w-5 h-5 text-data-fail" />
+                    <X className="w-5 h-5 text-[var(--color-data-fail)]" />
                   )}
                 </>
               )}
               {selectedAnswer && option === question.correctAnswer && selectedAnswer !== option && (
-                <Check className="w-5 h-5 text-data-pass" />
+                <Check className="w-5 h-5 text-[var(--color-data-pass)]" />
               )}
             </div>
           </motion.button>
