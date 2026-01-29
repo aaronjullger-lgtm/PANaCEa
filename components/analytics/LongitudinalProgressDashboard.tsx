@@ -283,33 +283,33 @@ export default function LongitudinalProgressDashboard({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-lg p-4 bg-steel-blue-50 dark:bg-steel-blue-900/20">
+        <div className="rounded-lg p-4 bg-[var(--color-accent)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
-            <Target className="w-4 h-4 text-steel-blue-600 dark:text-steel-blue-400" />
+            <Target className="w-4 h-4 text-[var(--color-accent)]" />
             <span
-              className="text-xs font-medium text-steel-blue-900 dark:text-steel-blue-100"
+              className="text-xs font-medium text-[var(--color-text-primary)]"
             >
               Current Mastery
             </span>
           </div>
           <p
-            className="text-2xl font-bold text-steel-blue-600 dark:text-steel-blue-400"
+            className="text-2xl font-bold text-[var(--color-accent)]"
           >
             {currentMastery}
           </p>
         </div>
 
-        <div className="rounded-lg p-4 bg-sage-50 dark:bg-sage-900/20">
+        <div className="rounded-lg p-4 bg-[var(--color-data-pass)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className={`w-4 h-4 ${
                 improvement >= 0
-                  ? 'text-sage-600 dark:text-sage-400'
-                  : 'text-dusty-rose-500'
+                  ? 'text-[var(--color-data-pass)]'
+                  : 'text-[var(--color-data-fail)]'
               }`}
             />
             <span
-              className="text-xs font-medium text-sage-900 dark:text-sage-100"
+              className="text-xs font-medium text-[var(--color-text-primary)]"
             >
               Improvement
             </span>
@@ -317,8 +317,8 @@ export default function LongitudinalProgressDashboard({
           <p
             className={`text-2xl font-bold ${
               improvement >= 0
-                ? 'text-sage-600 dark:text-sage-400'
-                : 'text-dusty-rose-500'
+                ? 'text-[var(--color-data-pass)]'
+                : 'text-[var(--color-data-fail)]'
             }`}
           >
             {improvement >= 0 ? '+' : ''}
@@ -326,17 +326,17 @@ export default function LongitudinalProgressDashboard({
           </p>
         </div>
 
-        <div className="rounded-lg p-4 bg-deep-plum-50 dark:bg-deep-plum-900/20">
+        <div className="rounded-lg p-4 bg-[var(--color-accent)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
-            <Award className="w-4 h-4 text-deep-plum-600 dark:text-deep-plum-400" />
+            <Award className="w-4 h-4 text-[var(--color-accent)]" />
             <span
-              className="text-xs font-medium text-deep-plum-900 dark:text-deep-plum-100"
+              className="text-xs font-medium text-[var(--color-text-primary)]"
             >
               Total Questions
             </span>
           </div>
           <p
-            className="text-2xl font-bold text-deep-plum-600 dark:text-deep-plum-400"
+            className="text-2xl font-bold text-[var(--color-accent)]"
           >
             {totalQuestions}
           </p>
@@ -370,7 +370,7 @@ export default function LongitudinalProgressDashboard({
                   initial={{ width: 0 }}
                   animate={{ width: `${(phase.masteryScore / maxScore) * 100}%` }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-steel-blue-500 to-deep-plum-500 rounded-full flex items-center justify-end pr-2"
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] rounded-full flex items-center justify-end pr-2"
                 >
                   <span className="text-xs font-bold text-[var(--color-text-inverse)]">
                     {phase.masteryScore}
@@ -383,9 +383,9 @@ export default function LongitudinalProgressDashboard({
       </div>
 
       {/* Motivational Message */}
-      <div className="p-4 rounded-lg bg-gradient-to-r from-steel-blue-50 to-deep-plum-50 border border-steel-blue-200">
+      <div className="p-4 rounded-lg bg-[var(--color-accent)] bg-opacity-10 border border-[var(--color-border)]">
         <div className="flex items-start gap-2">
-          <Info className="w-5 h-5 mt-0.5 flex-shrink-0 text-steel-blue-600" />
+          <Info className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
           <div>
             <h4 className="font-semibold mb-1 text-[var(--color-text-primary)]">
               Keep Building Your Foundation
