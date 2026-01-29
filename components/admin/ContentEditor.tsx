@@ -187,7 +187,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                   <span>Version {content.version}</span>
                 </div>
                 {hasChanges && (
-                  <div className="mt-2 text-sm text-yellow-500 flex items-center gap-2">
+                  <div className="mt-2 text-sm text-[var(--color-data-provisional)] flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     Unsaved changes
                   </div>
@@ -260,12 +260,12 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="p-4 bg-red-500/10 border-b border-red-500/30">
+            <div className="p-4 bg-[var(--color-data-fail)]/10 border-b border-[var(--color-data-fail)]/30">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-red-500 mb-2">Validation Errors</h3>
-                  <ul className="list-disc list-inside text-sm text-red-400 space-y-1">
+                  <h3 className="font-semibold text-[var(--color-data-fail)] mb-2">Validation Errors</h3>
+                  <ul className="list-disc list-inside text-sm text-[var(--color-data-fail)]/80 space-y-1">
                     {validationErrors.map((error, index) => (
                       <li key={index}>{error}</li>
                     ))}
@@ -280,7 +280,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
             {/* Overview */}
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
-                Overview <span className="text-red-500">*</span>
+                Overview <span className="text-[var(--color-data-fail)]">*</span>
               </label>
               <textarea
                 value={editedContent.overview || ''}
@@ -322,7 +322,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                     />
                     <button
                       onClick={() => handleRemoveArrayItem('treatment', index)}
-                      className="px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors self-start"
+                      className="px-3 py-2 bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)]/30 transition-colors self-start"
                     >
                       <X className="w-4 h-4" />
                     </button>
