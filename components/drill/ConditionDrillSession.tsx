@@ -30,21 +30,21 @@ const CATEGORY_CARDS: Array<{
     title: 'Presentations',
     description: 'Match symptoms to conditions',
     icon: <Stethoscope className="w-6 h-6 sm:w-8 sm:h-8" />,
-    gradient: 'from-violet-600 to-purple-700',
+    gradient: 'from-[var(--color-accent)] to-[var(--color-accent)]',
   },
   {
     id: 'diagnosis',
     title: 'Diagnosis',
     description: 'Identify the condition',
     icon: <Search className="w-6 h-6 sm:w-8 sm:h-8" />,
-    gradient: 'from-blue-600 to-indigo-700',
+    gradient: 'from-[var(--color-accent)] to-[var(--color-accent)]',
   },
   {
     id: 'etiology',
     title: 'System Classification',
     description: 'Which organ system is affected?',
     icon: <Layers className="w-6 h-6 sm:w-8 sm:h-8" />,
-    gradient: 'from-teal-600 to-cyan-700',
+    gradient: 'from-[var(--color-data-pass)] to-[var(--color-data-pass)]',
   },
   {
     id: 'complication',
@@ -58,7 +58,7 @@ const CATEGORY_CARDS: Array<{
     title: 'Random Mix',
     description: 'All question types combined',
     icon: <Shuffle className="w-6 h-6 sm:w-8 sm:h-8" />,
-    gradient: 'from-slate-600 to-gray-700',
+    gradient: 'from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]',
   },
 ];
 
@@ -109,20 +109,20 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'menu' || status === 'landing') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
           </button>
           <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-violet-400" />
-            <h1 className="text-base sm:text-lg font-semibold text-slate-200">Condition Drill</h1>
+            <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">Condition Drill</h1>
           </div>
           <div className="w-12 sm:w-16" />
         </header>
@@ -135,10 +135,10 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             transition={{ duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Select Question Type
             </h2>
-            <p className="text-sm sm:text-base text-slate-400">
+            <p className="text-sm sm:text-base text-[var(--color-text-muted)]">
               Progressive drills for medical conditions
             </p>
           </motion.div>
@@ -201,23 +201,23 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     // Show error state
     if (error) {
       return (
-        <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
             <div className="text-[var(--color-data-fail)] mb-4">
               <AlertCircle className="w-12 h-12 mx-auto" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Error Loading Questions</h2>
-            <p className="text-slate-400 mb-6">{error}</p>
+            <p className="text-[var(--color-text-muted)] mb-6">{error}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={handleExit}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:opacity-90 rounded-lg transition-colors"
               >
                 Exit
               </button>
               <button
                 onClick={reset}
-                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 rounded-lg transition-colors"
               >
                 Try Again
               </button>
@@ -314,8 +314,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
               <div className="space-y-2 sm:space-y-3 relative">
                 {/* Submitting overlay */}
                 {isSubmitting && (
-                  <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-                    <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 bg-[var(--color-bg-primary)]/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+                    <div className="w-6 h-6 border-3 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
                 {currentQuestion.options.map((option, index) => (
