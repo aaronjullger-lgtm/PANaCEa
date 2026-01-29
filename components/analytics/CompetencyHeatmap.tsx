@@ -410,27 +410,27 @@ const SAMPLE_DATA: SystemMetrics[] = [
 // ============================================================================
 
 const getAccuracyColor = (accuracy: number): string => {
-  if (accuracy >= 80) return 'bg-sage-500';
-  if (accuracy >= 70) return 'bg-steel-blue-500';
-  if (accuracy >= 60) return 'bg-muted-amber-500';
-  return 'bg-dusty-rose-500';
+  if (accuracy >= 80) return 'bg-data-pass';
+  if (accuracy >= 70) return 'bg-[var(--color-accent)]';
+  if (accuracy >= 60) return 'bg-data-provisional';
+  return 'bg-data-fail';
 };
 
 const getAccuracyColorText = (accuracy: number): string => {
-  if (accuracy >= 80) return 'text-sage-600 dark:text-sage-400';
-  if (accuracy >= 70) return 'text-steel-blue-600 dark:text-steel-blue-400';
-  if (accuracy >= 60) return 'text-muted-amber-600 dark:text-muted-amber-400';
-  return 'text-dusty-rose-600 dark:text-dusty-rose-400';
+  if (accuracy >= 80) return 'text-data-pass';
+  if (accuracy >= 70) return 'text-[var(--color-accent)]';
+  if (accuracy >= 60) return 'text-data-provisional';
+  return 'text-data-fail';
 };
 
 const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
   switch (level) {
     case 'expert':
-      return 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-400';
+      return 'bg-data-pass/10 text-data-pass';
     case 'proficient':
-      return 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-400';
+      return 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]';
     case 'developing':
-      return 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-400';
+      return 'bg-data-provisional/10 text-data-provisional';
     case 'novice':
       return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]';
   }
@@ -439,11 +439,11 @@ const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
 const getSrsStatusIcon = (status: ConditionMetrics['srsStatus']) => {
   switch (status) {
     case 'mastered':
-      return <CheckCircle className="w-4 h-4 text-sage-500" />;
+      return <CheckCircle className="w-4 h-4 text-data-pass" />;
     case 'learning':
-      return <BookOpen className="w-4 h-4 text-steel-blue-500" />;
+      return <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />;
     case 'due':
-      return <AlertTriangle className="w-4 h-4 text-muted-amber-500" />;
+      return <AlertTriangle className="w-4 h-4 text-data-provisional" />;
   }
 };
 
@@ -559,9 +559,9 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
             <span
               className={`text-xs font-medium flex items-center gap-0.5 ${
                 trend === 'up'
-                  ? 'text-sage-600'
+                  ? 'text-data-pass'
                   : trend === 'down'
-                    ? 'text-dusty-rose-600'
+                    ? 'text-data-fail'
                     : 'text-[var(--color-text-muted)]'
               }`}
             >
