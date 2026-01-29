@@ -219,7 +219,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
           transition={{ duration: 0.4 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl text-center"
         >
-          <Activity className="w-16 h-16 text-rose-400 mx-auto mb-4" />
+          <Activity className="w-16 h-16 text-[var(--color-data-fail)] mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete
           </h2>
@@ -229,11 +229,11 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-rose-400">{streak}</div>
+              <div className="text-4xl font-bold text-[var(--color-data-fail)]">{streak}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Best Streak</div>
             </div>
           </div>
@@ -241,7 +241,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-data-fail)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Start New Session
@@ -263,7 +263,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
       <div className="text-center">
         <p className="text-[var(--color-text-secondary)] mb-4">Loading ECG drill...</p>
-        <button onClick={handleExit} className="text-sky-400 hover:text-sky-300">
+        <button onClick={handleExit} className="text-[var(--color-accent)] hover:opacity-90">
           Exit
         </button>
       </div>
