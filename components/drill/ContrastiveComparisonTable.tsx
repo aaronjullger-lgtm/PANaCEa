@@ -13,16 +13,16 @@ export function ContrastiveComparisonTable({
   distinguishers,
 }: ComparisonProps) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mt-4">
-      <h3 className="text-lg font-semibold mb-2 dark:text-slate-100">✓ Correct! {targetCondition}</h3>
+    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4 mt-4">
+      <h3 className="text-lg font-semibold mb-2 text-[var(--color-text-primary)]">✓ Correct! {targetCondition}</h3>
 
       <div className="mb-4">
-        <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+        <h4 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
           🔑 Key Distinguishers
         </h4>
         <ul className="list-disc pl-5 space-y-1">
           {distinguishers.map((d, i) => (
-            <li key={i} className="text-slate-700 dark:text-slate-300">
+            <li key={i} className="text-[var(--color-text-primary)]">
               {d}
             </li>
           ))}
