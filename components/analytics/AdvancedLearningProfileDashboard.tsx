@@ -864,30 +864,30 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="grid md:grid-cols-2 gap-4">
-              <button className="p-5 bg-sage-50 dark:bg-sage-900/20 rounded-xl border border-sage-200 dark:border-sage-800 text-left hover:border-sage-400 transition-colors group">
+              <button className="p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] text-left hover:border-[var(--color-accent)] transition-colors group">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-sage-100 dark:bg-sage-800">
-                    <Zap className="w-5 h-5 text-sage-600 dark:text-sage-400" />
+                  <div className="p-2 rounded-lg bg-[var(--color-bg-tertiary)]">
+                    <Zap className="w-5 h-5 text-[var(--color-accent)]" />
                   </div>
-                  <span className="font-semibold text-sage-700 dark:text-sage-300">
+                  <span className="font-semibold text-[var(--color-text-primary)]">
                     Quick Practice
                   </span>
                 </div>
-                <p className="text-sm text-sage-600 dark:text-sage-400">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   AI-selected questions targeting your weak areas
                 </p>
               </button>
 
-              <button className="p-5 bg-deep-plum-50 dark:bg-deep-plum-900/20 rounded-xl border border-deep-plum-200 dark:border-deep-plum-800 text-left hover:border-deep-plum-400 transition-colors group">
+              <button className="p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] text-left hover:border-[var(--color-accent)] transition-colors group">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-deep-plum-100 dark:bg-deep-plum-800">
-                    <Brain className="w-5 h-5 text-deep-plum-600 dark:text-deep-plum-400" />
+                  <div className="p-2 rounded-lg bg-[var(--color-bg-tertiary)]">
+                    <Brain className="w-5 h-5 text-[var(--color-accent)]" />
                   </div>
-                  <span className="font-semibold text-deep-plum-700 dark:text-deep-plum-300">
+                  <span className="font-semibold text-[var(--color-text-primary)]">
                     Flow Mode
                   </span>
                 </div>
-                <p className="text-sm text-deep-plum-600 dark:text-deep-plum-400">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Adaptive difficulty to maximize learning efficiency
                 </p>
               </button>

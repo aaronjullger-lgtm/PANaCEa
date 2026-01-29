@@ -962,7 +962,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 </button>
                 <div className="pt-4">
                   <SignOutButton>
-                    <button className="w-full px-6 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                    <button className="w-full px-6 py-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-xl font-semibold hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]">
                       Sign Out
                     </button>
                   </SignOutButton>

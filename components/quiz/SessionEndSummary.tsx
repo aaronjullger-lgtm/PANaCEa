@@ -299,11 +299,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]"
       >
         {/* Header with Grade */}
         <div
-          className={`${grade.bg} p-6 text-center border-b border-slate-200 dark:border-slate-700`}
+          className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -313,27 +313,27 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} />
           </motion.div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete!
           </h2>
-          <div className="flex items-center justify-center gap-4">
-            <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
-            <div className="text-left">
-              <div className="text-3xl font-bold text-slate-700 dark:text-slate-200">
-                {overallStats.accuracy}%
-              </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">
-                {overallStats.correct}/{overallStats.total} correct
+            <div className="flex items-center justify-center gap-4">
+              <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
+              <div className="text-left">
+                <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+                  {overallStats.accuracy}%
+                </div>
+                <div className="text-sm text-[var(--color-text-secondary)]">
+                  {overallStats.correct}/{overallStats.total} correct
+                </div>
               </div>
             </div>
-          </div>
           {/* Sync status indicator */}
           {syncStatus && (
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs">
               {syncStatus === 'pending' && (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-slate-400 animate-pulse" />
-                  <span className="text-slate-500">Saving progress...</span>
+                  <Cloud className="w-3.5 h-3.5 text-[var(--color-text-muted)] animate-pulse" />
+                  <span className="text-[var(--color-text-secondary)]">Saving progress...</span>
                 </>
               )}
               {syncStatus === 'synced' && (
@@ -355,45 +355,45 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         {/* Stats Grid */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
               <Target className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.total}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Questions</div>
+              <div className="text-xs text-[var(--color-text-secondary)]">Questions</div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
               <Clock className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.durationMinutes}m
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Duration</div>
+              <div className="text-xs text-[var(--color-text-secondary)]">Duration</div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
               <Zap className="w-6 h-6 mx-auto mb-2 text-amber-500" />
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.questionsPerMinute}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Q/min</div>
+              <div className="text-xs text-[var(--color-text-secondary)]">Q/min</div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
               <Flame className="w-6 h-6 mx-auto mb-2 text-orange-500" />
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.maxStreak}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Best Streak</div>
+              <div className="text-xs text-[var(--color-text-secondary)]">Best Streak</div>
             </div>
           </div>
 
           {/* Distribution Score */}
-          <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+          <div className="mb-6 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-indigo-500" />
-                <span className="font-medium text-slate-700 dark:text-slate-200">
+                <span className="font-medium text-[var(--color-text-primary)]">
                   PANCE Distribution Score
                 </span>
               </div>
@@ -409,7 +409,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 {summary.distributionScore}/100
               </span>
             </div>
-            <div className="h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+            <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${summary.distributionScore}%` }}
@@ -423,7 +423,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 }`}
               />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-xs text-[var(--color-text-muted)] mt-2">
               How closely your session followed the official PANCE content blueprint
             </p>
           </div>
@@ -431,17 +431,17 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {/* System Breakdown */}
           {systemPerformance.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
                 Performance by System
               </h3>
               <div className="space-y-2">
                 {systemPerformance.slice(0, 8).map((sp) => (
                   <div key={sp.system} className="flex items-center gap-3">
-                    <span className="w-12 text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <span className="w-12 text-xs font-medium text-[var(--color-text-secondary)]">
                       {sp.system}
                     </span>
-                    <div className="flex-1 h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           sp.accuracy >= 80
@@ -464,7 +464,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                     >
                       {sp.accuracy}%
                     </span>
-                    <span className="w-10 text-xs text-slate-400 text-right">
+                    <span className="w-10 text-xs text-[var(--color-text-muted)] text-right">
                       {sp.correct}/{sp.total}
                     </span>
                   </div>
@@ -570,7 +570,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row gap-3">
+        <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row gap-3">
           {overallStats.incorrect > 0 && onReviewMissed && (
             <button
               onClick={onReviewMissed}
@@ -610,7 +610,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
           <button
             onClick={handleClose}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition-colors border border-[var(--color-border)]"
           >
             Done
           </button>

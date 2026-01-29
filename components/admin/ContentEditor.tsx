@@ -223,7 +223,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
               <button
                 onClick={handleGenerateWithAI}
                 disabled={generating}
-                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Generate content with AI"
               >
                 {generating ? (
@@ -250,7 +250,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 History
               </button>
               {userRole === 'superadmin' && (
-                <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2">
+                <button className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors flex items-center gap-2">
                   <Check className="w-4 h-4" />
                   Approve & Publish
                 </button>

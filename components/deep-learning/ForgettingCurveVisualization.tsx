@@ -118,20 +118,20 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
 
         {/* Proficiency Metrics */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Peak Proficiency</div>
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Peak Proficiency</div>
             <div className="text-3xl font-bold text-green-600 dark:text-green-400">
               {proficiencyData.peakProficiency}%
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Proficiency</div>
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Current Proficiency</div>
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {proficiencyData.currentProficiency}%
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Decay Rate</div>
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Decay Rate</div>
             <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
               {proficiencyData.decayRate}%/wk
             </div>
@@ -140,14 +140,14 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
       </div>
 
       {/* Forgetting Curve Graph */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg border border-[var(--color-border)]">
+        <h4 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
           Proficiency Over Time
         </h4>
 
         <div className="relative h-64">
           {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-500 pr-2">
+          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-[var(--color-text-muted)] pr-2">
             <span>100%</span>
             <span>75%</span>
             <span>50%</span>
@@ -260,7 +260,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
             </svg>
 
             {/* X-axis labels */}
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-2">
               <span>Today</span>
               <span>7 days</span>
               <span>14 days</span>
