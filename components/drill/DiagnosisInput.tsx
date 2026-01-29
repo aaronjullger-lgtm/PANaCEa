@@ -131,7 +131,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
         disabled={disabled}
         autoFocus={autoFocus}
         placeholder="Type a diagnosis..."
-        className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Diagnosis input"
         aria-autocomplete="list"
         autoComplete="off"
@@ -153,7 +153,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
               ref={listRef}
               id="diagnosis-dropdown"
               role="listbox"
-              className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+              className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-xl max-h-60 overflow-y-auto"
             >
               {filteredConditions.map((condition, index) => (
                 <li
@@ -164,8 +164,8 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`px-4 py-2.5 cursor-pointer transition-colors ${
                     index === highlightedIndex
-                      ? 'bg-slate-700 text-slate-100'
-                      : 'text-slate-300 hover:bg-slate-700/50'
+                      ? 'bg-[var(--color-border)] text-[var(--color-text-primary)]'
+                      : 'text-[var(--color-text-muted)] hover:opacity-90'
                   }`}
                 >
                   <HighlightedText text={condition} query={inputValue} />
@@ -195,7 +195,7 @@ const HighlightedText: React.FC<{ text: string; query: string }> = ({ text, quer
         const isMatch = part.toLowerCase() === queryLower;
         const key = `${index}-${isMatch ? 'match' : 'text'}-${part}`;
         return isMatch ? (
-          <span key={key} className="text-sky-400 font-medium">
+          <span key={key} className="text-[var(--color-accent)] font-medium">
             {part}
           </span>
         ) : (
