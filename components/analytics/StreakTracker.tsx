@@ -38,11 +38,11 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   });
 
   const getStreakColor = () => {
-    if (safeStreak === 0) return 'text-slate-400';
-    if (safeStreak < 3) return 'text-orange-500';
-    if (safeStreak < 7) return 'text-orange-600';
-    if (safeStreak < 14) return 'text-red-500';
-    return 'text-red-600';
+    if (safeStreak === 0) return 'text-[var(--color-text-muted)]';
+    if (safeStreak < 3) return 'text-[var(--color-accent)]';
+    if (safeStreak < 7) return 'text-[var(--color-accent)]';
+    if (safeStreak < 14) return 'text-[var(--color-accent)]';
+    return 'text-[var(--color-accent)]';
   };
 
   const getStreakMessage = () => {
@@ -63,18 +63,18 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   const isToday = (date: string) => date === today;
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+    <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <Flame className="w-5 h-5 text-orange-500" />
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+          <Flame className="w-5 h-5 text-[var(--color-accent)]" />
           Study Streak
         </h3>
         {safeStreak >= safeBestStreak && safeStreak > 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="flex items-center gap-1 text-sm text-yellow-600 dark:text-yellow-500"
+            className="flex items-center gap-1 text-sm text-[var(--color-accent)]"
           >
             <Award className="w-4 h-4" />
             Personal Best!
@@ -92,16 +92,16 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
             className="flex items-baseline gap-2"
           >
             <span className={`text-5xl font-bold ${getStreakColor()}`}>{safeStreak}</span>
-            <span className="text-lg text-slate-600 dark:text-slate-400">
+            <span className="text-lg text-[var(--color-text-secondary)]">
               {safeStreak === 1 ? 'day' : 'days'}
             </span>
           </motion.div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{getStreakMessage()}</p>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">{getStreakMessage()}</p>
         </div>
 
         <div className="text-right">
-          <div className="text-sm text-slate-500 dark:text-slate-400">Best Streak</div>
-          <div className="flex items-center gap-1 text-2xl font-bold text-slate-700 dark:text-slate-300">
+          <div className="text-sm text-[var(--color-text-muted)]">Best Streak</div>
+          <div className="flex items-center gap-1 text-2xl font-bold text-[var(--color-text-primary)]">
             <TrendingUp className="w-5 h-5" />
             {safeBestStreak}
           </div>
@@ -109,10 +109,10 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       </div>
 
       {/* Mini Calendar - Last 7 Days */}
-      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+      <div className="border-t border-[var(--color-border)] pt-4">
         <div className="flex items-center gap-2 mb-3">
-          <Calendar className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <Calendar className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">
             Last 7 Days
           </span>
         </div>
@@ -133,7 +133,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
                 transition={{ delay: index * 0.05 }}
                 className="flex flex-col items-center"
               >
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{dayName}</div>
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">{dayName}</div>
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   className={`
@@ -164,7 +164,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
-          <p className="text-sm text-slate-700 dark:text-slate-300 text-center">
+          <p className="text-sm text-[var(--color-text-primary)] text-center">
             {safeStreak > 0
               ? `Keep your ${safeStreak}-day streak alive! Study today.`
               : 'Start building your study habit today!'}
@@ -179,7 +179,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
-          <p className="text-sm text-data-pass text-center flex items-center justify-center gap-2">
+          <p className="text-sm text-[var(--color-data-pass)] text-center flex items-center justify-center gap-2">
             <CheckCircle className="w-4 h-4" />
             Studied today - Streak active!
           </p>
