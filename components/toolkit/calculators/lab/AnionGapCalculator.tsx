@@ -111,7 +111,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       />
 
       {/* Formula Display */}
-      <div className="bg-gradient-to-r from-slate-900/40 to-slate-800/40 border border-slate-700 rounded-xl p-4">
+      <div className="bg-gradient-to-r from-[var(--color-bg-primary)]/40 to-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-xl p-4">
         <div className="flex items-center gap-3">
           <Beaker className="w-6 h-6 text-[var(--color-accent)]" />
           <div>
@@ -124,7 +124,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       </div>
 
       {/* Input Fields */}
-      <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6 space-y-6">
+      <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ClinicalInput
             label="Sodium (Na⁺)"
@@ -170,8 +170,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         </div>
 
         {correctedAG && ag && correctedAG !== ag && (
-          <div className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
-            <p className="text-sm text-slate-200">
+          <div className="p-3 bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-lg">
+            <p className="text-sm text-[var(--color-text-primary)]">
               <strong>Albumin-corrected:</strong> Uncorrected AG = {ag}, Corrected AG ={' '}
               {correctedAG}
             </p>
@@ -188,10 +188,10 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6"
+            className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6"
           >
             <h3
-              className="text-xl font-bold text-slate-100 mb-4"
+              className="text-xl font-bold text-[var(--color-text-primary)] mb-4"
               style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
             >
               MUDPILES Differential
@@ -200,14 +200,14 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
               {mudpiles.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
+                  className="flex items-start gap-3 p-3 bg-[var(--color-bg-secondary)]/50 rounded-lg border border-[var(--color-border)]"
                 >
                   <div className="w-8 h-8 flex items-center justify-center bg-[var(--color-accent)] text-white font-bold rounded-lg flex-shrink-0">
                     {item.letter}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-slate-200">{item.cause}</div>
-                    <div className="text-xs text-slate-400">{item.details}</div>
+                    <div className="font-semibold text-[var(--color-text-primary)]">{item.cause}</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">{item.details}</div>
                   </div>
                 </div>
               ))}
