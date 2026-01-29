@@ -194,7 +194,7 @@ export default function SyllabusDecompiler({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-3 rounded-lg bg-data-fail/10 text-data-fail"
+              className="mt-4 p-3 rounded-lg bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]"
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
@@ -220,18 +220,18 @@ export default function SyllabusDecompiler({
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Success State */}
-          <div className="rounded-lg p-6 mb-4 bg-data-pass/10 border border-data-pass/30">
+          <div className="rounded-lg p-6 mb-4 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle
-                className="w-5 h-5 text-data-pass"
+                className="w-5 h-5 text-[var(--color-data-pass)]"
               />
               <p
-                className="font-medium text-data-pass"
+                className="font-medium text-[var(--color-data-pass)]"
               >
                 Syllabus Analyzed Successfully!
               </p>
             </div>
-            <p className="text-sm text-data-pass">
+            <p className="text-sm text-[var(--color-data-pass)]">
               Found {extractedTags.length} key topics in {fileName}
             </p>
           </div>
@@ -255,10 +255,10 @@ export default function SyllabusDecompiler({
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       tag.priority === 'high'
-                        ? 'bg-data-fail/15 text-data-fail'
+                        ? 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)]'
                         : tag.priority === 'medium'
-                          ? 'bg-data-provisional/15 text-data-provisional'
-                          : 'bg-data-neutral/15 text-data-neutral'
+                          ? 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]'
+                          : 'bg-[var(--color-data-neutral)]/15 text-[var(--color-data-neutral)]'
                     }`}
                   >
                     {tag.priority}
