@@ -172,7 +172,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
     if (!isSubmitted) return '';
 
     const isCorrect = assigned === feature.belongsTo;
-    return isCorrect ? 'border-data-pass bg-data-pass/10' : 'border-data-fail bg-data-fail/10';
+    return isCorrect ? 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10' : 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10';
   };
 
   return (
@@ -265,7 +265,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           {/* Condition 2 Drop Zone */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-4 h-4 rounded-full bg-data-provisional" />
+              <div className="w-4 h-4 rounded-full bg-[var(--color-data-provisional)]" />
               <h3 className="text-lg font-semibold text-[var(--color-text-secondary)]">
                 {question.conditions[1]?.name}
               </h3>
@@ -276,7 +276,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div
-                className="min-h-[200px] p-4 rounded-xl border-2 border-data-provisional/30 bg-data-provisional/10 space-y-2"
+                className="min-h-[200px] p-4 rounded-xl border-2 border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/10 space-y-2"
                 data-zone="condition2"
               >
                 {condition2Features.map((feature) => (
@@ -334,7 +334,7 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               exit={{ opacity: 0 }}
               className={`
                 flex items-center gap-3 px-6 py-3 rounded-xl text-[var(--color-text-inverse)] font-semibold
-                ${result.correct === result.total ? 'bg-data-pass' : 'bg-data-provisional'}
+                ${result.correct === result.total ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-provisional)]'}
               `}
             >
               {result.correct === result.total ? (
