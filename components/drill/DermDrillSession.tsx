@@ -123,13 +123,13 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
             key="feedback-controls"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-4 ${isCorrect ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500' : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'}`}
+            className={`p-4 ${isCorrect ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]/10 border-t-2 border-[var(--color-data-fail)]'}`}
           >
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div
-                    className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+                    className={`text-lg font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                   >
                     {isCorrect ? 'Correct!' : 'Incorrect'}
                   </div>
@@ -144,7 +144,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                 </div>
                 <button
                   onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${isCorrect ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
                 >
                   Next Case <ArrowRight className="w-4 h-4" />
                 </button>
@@ -207,7 +207,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                     <Eye className="w-16 h-16 text-[var(--color-text-muted)]" />
                     <button
                       onClick={() => setImageRevealed(true)}
-                      className="px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium transition-colors"
+                      className="px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
                     >
                       Reveal Image
                     </button>
@@ -229,19 +229,19 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl text-center"
         >
-          <Scan className="w-16 h-16 text-pink-400 mx-auto mb-4" />
+          <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
           <p className="text-[var(--color-text-secondary)] mb-6">Great work on dermatology!</p>
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" /> Start New Session
             </button>
