@@ -124,7 +124,7 @@ export function AchievementsDashboard({
               {/* Streak */}
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-4 h-4 text-orange-500" />
+                  <Calendar className="w-4 h-4 text-[var(--color-data-provisional)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Current Streak</div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export function AchievementsDashboard({
               {/* Rare Achievements */}
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-purple-500" />
+                  <Star className="w-4 h-4 text-[var(--color-accent)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Rare+</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -154,7 +154,7 @@ export function AchievementsDashboard({
               {/* Recent */}
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Recent</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
