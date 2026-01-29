@@ -159,12 +159,12 @@ export function DDxRankingStep({
     }
 
     if (item.id === correctAnswerId) {
-      return 'bg-data-pass/10 border-data-pass';
+      return 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]';
     }
 
     // Wrong answers at top are more problematic
     if (index < result!.correctPosition) {
-      return 'bg-data-fail/10 border-data-fail';
+      return 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]';
     }
 
     return 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700';
@@ -175,7 +175,7 @@ export function DDxRankingStep({
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <Brain className="h-5 w-5 text-indigo-500" />
+          <Brain className="h-5 w-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
             Rank the Differential Diagnoses
           </h3>
@@ -187,10 +187,10 @@ export function DDxRankingStep({
 
       {/* Case Summary (if provided) */}
       {caseSummary && showHints && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+        <div className="mb-4 p-3 bg-[var(--color-data-provisional)]/10 rounded-lg border border-[var(--color-data-provisional)]">
           <div className="flex items-start gap-2">
-            <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <Lightbulb className="h-4 w-4 text-[var(--color-data-provisional)] mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-[var(--color-data-provisional)]">
               <span className="font-medium">Key Features:</span> {caseSummary}
             </p>
           </div>
@@ -222,7 +222,7 @@ export function DDxRankingStep({
                   flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
                   ${
                     isSubmitted && item.id === correctAnswerId
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-[var(--color-data-pass)] text-white'
                       : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                   }
                 `}
@@ -244,7 +244,7 @@ export function DDxRankingStep({
                     font-medium
                     ${
                       isSubmitted && item.id === correctAnswerId
-                        ? 'text-emerald-700 dark:text-emerald-300'
+                        ? 'text-[var(--color-data-pass)]'
                         : 'text-slate-800 dark:text-slate-200'
                     }
                   `}
@@ -264,12 +264,12 @@ export function DDxRankingStep({
                 {isSubmitted && (
                   <div className="flex-shrink-0">
                     {item.id === correctAnswerId ? (
-                      <div className="flex items-center gap-1 text-data-pass">
+                      <div className="flex items-center gap-1 text-[var(--color-data-pass)]">
                         <Check className="h-5 w-5" />
                         <span className="text-xs font-medium">Correct</span>
                       </div>
                     ) : index < result!.correctPosition ? (
-                      <div className="flex items-center gap-1 text-data-fail">
+                      <div className="flex items-center gap-1 text-[var(--color-data-fail)]">
                         <AlertTriangle className="h-4 w-4" />
                       </div>
                     ) : null}
@@ -312,10 +312,10 @@ export function DDxRankingStep({
             mt-6 p-4 rounded-xl border-2
             ${
               result.score >= 80
-                ? 'bg-data-pass/10 border-data-pass'
+                ? 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]'
                 : result.score >= 60
-                  ? 'bg-data-provisional/10 border-data-provisional'
-                  : 'bg-data-fail/10 border-data-fail'
+                  ? 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]'
+                  : 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]'
             }
           `}
         >
@@ -325,10 +325,10 @@ export function DDxRankingStep({
               flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg
               ${
                 result.score >= 80
-                  ? 'bg-data-pass text-white'
+                  ? 'bg-[var(--color-data-pass)] text-white'
                   : result.score >= 60
-                    ? 'bg-data-provisional text-white'
-                    : 'bg-data-fail text-white'
+                    ? 'bg-[var(--color-data-provisional)] text-white'
+                    : 'bg-[var(--color-data-fail)] text-white'
               }
             `}
             >
@@ -340,10 +340,10 @@ export function DDxRankingStep({
                 font-semibold mb-1
                 ${
                   result.score >= 80
-                    ? 'text-data-pass'
+                    ? 'text-[var(--color-data-pass)]'
                     : result.score >= 60
-                      ? 'text-data-provisional'
-                      : 'text-data-fail'
+                      ? 'text-[var(--color-data-provisional)]'
+                      : 'text-[var(--color-data-fail)]'
                 }
               `}
               >
@@ -359,7 +359,7 @@ export function DDxRankingStep({
           {/* Toggle reasoning button */}
           <button
             onClick={() => setShowReasoning(!showReasoning)}
-            className="mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="mt-3 text-sm text-[var(--color-accent)] hover:underline"
           >
             {showReasoning ? 'Hide' : 'Show'} detailed reasoning
           </button>
@@ -381,7 +381,7 @@ export function DDxRankingStep({
           <button
             onClick={handleSubmit}
             disabled={disabled}
-            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-[var(--color-accent)] text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
           >
             Submit Ranking
           </button>
