@@ -104,7 +104,7 @@ export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
         onBack={onBack}
       />
 
-      <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6">
+      <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">
         <CheckboxCriteria items={criteria} />
       </div>
 
