@@ -169,26 +169,26 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
   };
 
   if (selectedCalculator) {
-    return <div className="min-h-screen bg-slate-950 p-4 md:p-6">{renderCalculator()}</div>;
+    return <div className="min-h-screen bg-[var(--color-bg-primary)] p-4 md:p-6">{renderCalculator()}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1
-              className="text-5xl font-bold text-slate-100 tracking-wide mb-2"
+              className="text-5xl font-bold text-[var(--color-text-primary)] tracking-wide mb-2"
               style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
             >
               Clinical Calculators
             </h1>
-            <p className="text-slate-400">Evidence-based decision support tools</p>
+            <p className="text-[var(--color-text-muted)]">Evidence-based decision support tools</p>
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:opacity-90 border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg text-sm font-medium transition-colors"
           >
             Close
           </button>
@@ -205,11 +205,11 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className="relative px-4 py-3 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:bg-slate-900 transition-colors flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
+                className="relative px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-primary)] hover:opacity-90 transition-colors flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent)]' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`} />
                 <span>{tab.label}</span>
-                <span className="text-xs text-slate-400">({count})</span>
+                <span className="text-xs text-[var(--color-text-muted)]">({count})</span>
                 {isActive && (
                   <motion.div
                     layoutId="calculator-tab-underline"
@@ -233,13 +233,13 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
           >
             {filteredCalculators.length === 0 ? (
               <div className="col-span-full text-center py-16">
-                <p className="text-slate-400">No calculators found matching your search</p>
+                <p className="text-[var(--color-text-muted)]">No calculators found matching your search</p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
                     setActiveCategory('cardiac');
                   }}
-                  className="mt-4 text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="mt-4 text-[var(--color-accent)] hover:opacity-90 text-sm font-medium"
                 >
                   Clear filters
                 </button>
@@ -254,19 +254,19 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => setSelectedCalculator(calc.id)}
-                    className="group text-left bg-slate-900 border border-slate-700 rounded-xl p-6 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-900/20 transition-all"
+                    className="group text-left bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 hover:border-[var(--color-accent)] hover:shadow-xl hover:shadow-[var(--color-accent)]/20 transition-all"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 flex items-center justify-center bg-slate-800 rounded-lg group-hover:bg-blue-600 transition-colors">
-                        <Icon className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
+                      <div className="w-12 h-12 flex items-center justify-center bg-[var(--color-bg-primary)] rounded-lg group-hover:bg-[var(--color-accent)] transition-colors">
+                        <Icon className="w-6 h-6 text-[var(--color-text-muted)] group-hover:text-white transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors mb-1">
+                        <h3 className="text-lg font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors mb-1">
                           {calc.name}
                         </h3>
-                        <p className="text-sm text-slate-400 mb-2">{calc.description}</p>
+                        <p className="text-sm text-[var(--color-text-muted)] mb-2">{calc.description}</p>
                         {calc.formula && (
-                          <p className="text-xs text-slate-500 font-mono bg-slate-800/50 px-2 py-1 rounded">
+                          <p className="text-xs text-[var(--color-text-muted)] font-mono bg-[var(--color-bg-primary)]/50 px-2 py-1 rounded">
                             {calc.formula}
                           </p>
                         )}
