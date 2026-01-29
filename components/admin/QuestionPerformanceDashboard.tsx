@@ -36,21 +36,21 @@ interface PerformanceSummary {
 }
 
 const getQualityColor = (score: number) => {
-  if (score >= 70) return 'text-green-600';
-  if (score >= 50) return 'text-yellow-600';
-  return 'text-red-600';
+  if (score >= 70) return 'text-[var(--color-data-pass)]';
+  if (score >= 50) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
 };
 
 const getQualityBg = (score: number) => {
-  if (score >= 70) return 'bg-green-100';
-  if (score >= 50) return 'bg-yellow-100';
-  return 'bg-red-100';
+  if (score >= 70) return 'bg-[var(--color-data-pass)]/10';
+  if (score >= 50) return 'bg-[var(--color-data-provisional)]/10';
+  return 'bg-[var(--color-data-fail)]/10';
 };
 
 const getAccuracyColor = (accuracy: number) => {
-  if (accuracy >= 70) return 'text-green-600';
-  if (accuracy >= 50) return 'text-yellow-600';
-  return 'text-red-600';
+  if (accuracy >= 70) return 'text-[var(--color-data-pass)]';
+  if (accuracy >= 50) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
 };
 
 export const QuestionPerformanceDashboard: React.FC = () => {
@@ -114,8 +114,8 @@ export const QuestionPerformanceDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-xl">
-            <BarChart3 className="w-6 h-6 text-purple-600" />
+          <div className="p-2 bg-[var(--color-accent)]/10 rounded-xl">
+            <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white">
@@ -129,7 +129,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
         <button
           onClick={fetchPerformance}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -150,47 +150,47 @@ export const QuestionPerformanceDashboard: React.FC = () => {
               {summary.totalQuestionsAnalyzed}
             </p>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+          <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-accent)]/20">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+              <TrendingUp className="w-4 h-4 text-[var(--color-accent)]" />
+              <span className="text-xs font-medium text-[var(--color-accent)]">
                 Avg Accuracy
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-800 dark:text-blue-300">
+            <p className="text-2xl font-bold text-[var(--color-accent)]">
               {summary.avgAccuracy}%
             </p>
           </div>
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
+          <div className="bg-[var(--color-data-fail)]/10 rounded-xl p-4 border border-[var(--color-data-fail)]/20">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingDown className="w-4 h-4 text-red-600" />
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+              <TrendingDown className="w-4 h-4 text-[var(--color-data-fail)]" />
+              <span className="text-xs font-medium text-[var(--color-data-fail)]">
                 Low Accuracy
               </span>
             </div>
-            <p className="text-2xl font-bold text-red-800 dark:text-red-300">
+            <p className="text-2xl font-bold text-[var(--color-data-fail)]">
               {summary.lowAccuracyCount}
             </p>
           </div>
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
+          <div className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 border border-[var(--color-data-provisional)]/20">
             <div className="flex items-center gap-2 mb-1">
-              <Flag className="w-4 h-4 text-orange-600" />
-              <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+              <Flag className="w-4 h-4 text-[var(--color-data-provisional)]" />
+              <span className="text-xs font-medium text-[var(--color-data-provisional)]">
                 Flagged
               </span>
             </div>
-            <p className="text-2xl font-bold text-orange-800 dark:text-orange-300">
+            <p className="text-2xl font-bold text-[var(--color-data-provisional)]">
               {summary.highFlagCount}
             </p>
           </div>
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+          <div className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 border border-[var(--color-data-provisional)]/20">
             <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="w-4 h-4 text-yellow-600" />
-              <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
+              <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)]" />
+              <span className="text-xs font-medium text-[var(--color-data-provisional)]">
                 Needs Review
               </span>
             </div>
-            <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-300">
+            <p className="text-2xl font-bold text-[var(--color-data-provisional)]">
               {summary.needsReviewCount}
             </p>
           </div>
@@ -225,16 +225,16 @@ export const QuestionPerformanceDashboard: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <span className="text-red-700 dark:text-red-400">{error}</span>
+        <div className="bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
+          <span className="text-[var(--color-data-fail)]">{error}</span>
         </div>
       )}
 
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
         </div>
       )}
 
@@ -331,7 +331,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {q.flagCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]">
                             <Flag className="w-3 h-3" />
                             {q.flagCount}
                           </span>
