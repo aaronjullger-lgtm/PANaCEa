@@ -37,16 +37,16 @@ interface DailyStats {
  */
 function getIntensityColor(count: number): string {
   if (count === 0) {
-    return 'bg-clinical-slate-100 dark:bg-clinical-slate-800 border-clinical-slate-200 dark:border-clinical-slate-700';
+    return 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
   } else if (count <= 5) {
-    return 'bg-action-blue-200 dark:bg-action-blue-900/50 border-action-blue-300 dark:border-action-blue-800';
+    return 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/30';
   } else if (count <= 15) {
-    return 'bg-action-blue-400 dark:bg-action-blue-700 border-action-blue-500 dark:border-action-blue-600';
+    return 'bg-[var(--color-accent)]/50 border-[var(--color-accent)]/60';
   } else if (count <= 30) {
-    return 'bg-action-blue-600 dark:bg-action-blue-600 border-action-blue-700 dark:border-action-blue-500';
+    return 'bg-[var(--color-accent)]/75 border-[var(--color-accent)]/80';
   } else {
     // High activity → darkest, most vibrant shade
-    return 'bg-action-blue-800 dark:bg-action-blue-500 border-action-blue-900 dark:border-action-blue-400';
+    return 'bg-[var(--color-accent)] border-[var(--color-accent)]';
   }
 }
 

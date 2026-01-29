@@ -192,10 +192,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   };
 
   const getHourIcon = (hour: number) => {
-    if (hour >= 5 && hour < 12) return <Sunrise className="w-4 h-4 text-muted-amber-500" />;
-    if (hour >= 12 && hour < 17) return <Sun className="w-4 h-4 text-muted-amber-400" />;
-    if (hour >= 17 && hour < 21) return <Sunset className="w-4 h-4 text-muted-amber-600" />;
-    return <Moon className="w-4 h-4 text-deep-plum-500" />;
+    if (hour >= 5 && hour < 12) return <Sunrise className="w-4 h-4 text-[var(--color-accent)]" />;
+    if (hour >= 12 && hour < 17) return <Sun className="w-4 h-4 text-[var(--color-accent)]" />;
+    if (hour >= 17 && hour < 21) return <Sunset className="w-4 h-4 text-[var(--color-accent)]" />;
+    return <Moon className="w-4 h-4 text-[var(--color-accent)]" />;
   };
 
   const getReadinessGradient = (level: string | null): string => {
@@ -203,9 +203,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
       case 'ready':
         return 'from-data-pass to-sage-400';
       case 'almost_ready':
-        return 'from-steel-blue-500 to-steel-blue-400';
+        return 'from-[var(--color-accent)] to-[var(--color-accent-hover)]';
       case 'progressing':
-        return 'from-data-provisional to-muted-amber-400';
+        return 'from-data-provisional to-data-provisional';
       default:
         return 'from-[var(--color-border)] to-[var(--color-border)]';
     }
@@ -253,8 +253,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-steel-blue-100 to-deep-plum-100 dark:from-steel-blue-900/50 dark:to-deep-plum-900/50 flex items-center justify-center">
-          <Brain className="w-10 h-10 text-steel-blue-500" />
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] flex items-center justify-center">
+          <Brain className="w-10 h-10 text-[var(--color-accent)]" />
         </div>
         <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
           No Learning Profile Yet
@@ -276,16 +276,16 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-muted-amber-50 dark:bg-muted-amber-900/30 border border-muted-amber-200 dark:border-muted-amber-800 rounded-xl p-4 flex items-center gap-4"
+            className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
           >
-            <Coffee className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
+            <Coffee className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-muted-amber-800 dark:text-muted-amber-200">Time for a Break?</p>
-              <p className="text-sm text-muted-amber-600 dark:text-muted-amber-300">{breakSuggestion.reason}</p>
+              <p className="font-medium text-[var(--color-text-primary)]">Time for a Break?</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{breakSuggestion.reason}</p>
             </div>
             <button
               onClick={() => setBreakSuggestion({ suggest: false })}
-              className="px-3 py-1 text-sm text-muted-amber-600 hover:bg-[var(--color-bg-tertiary)] rounded-lg"
+              className="px-3 py-1 text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] rounded-lg"
             >
               Dismiss
             </button>
@@ -385,20 +385,20 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                icon={<Target className="w-5 h-5 text-steel-blue-500" />}
+                icon={<Target className="w-5 h-5 text-[var(--color-accent)]" />}
                 label="Lifetime Accuracy"
                 value={`${Math.round(profile.lifetimeAccuracy)}%`}
                 sublabel={`${profile.lifetimeCorrect.toLocaleString()} / ${profile.lifetimeQuestions.toLocaleString()}`}
                 trend={aggregateStats?.accuracyTrend}
               />
               <StatCard
-                icon={<Clock className="w-5 h-5 text-deep-plum-500" />}
+                icon={<Clock className="w-5 h-5 text-[var(--color-accent)]" />}
                 label="Total Study Time"
                 value={formatStudyTime(profile.lifetimeStudyTimeMs)}
                 sublabel="all sessions"
               />
               <StatCard
-                icon={<Flame className="w-5 h-5 text-muted-amber-500" />}
+                icon={<Flame className="w-5 h-5 text-[var(--color-accent)]" />}
                 label="Best Streak"
                 value={profile.bestEverStreak.toString()}
                 sublabel="consecutive correct"
@@ -461,7 +461,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       <Award
                         className={`w-5 h-5 ${
                           learningVelocity.personalBestRatio >= 1
-                            ? 'text-muted-amber-500'
+                            ? 'text-[var(--color-accent)]'
                             : 'text-[var(--color-text-muted)]'
                         }`}
                       />
@@ -478,14 +478,14 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Optimal Study Time */}
             {optimalTime && optimalTime.confidence > 0.5 && (
-              <div className="bg-gradient-to-r from-deep-plum-100 to-deep-plum-50 dark:from-deep-plum-900/30 dark:to-deep-plum-800/30 rounded-xl p-5 border border-deep-plum-200 dark:border-deep-plum-800">
+              <div className="bg-gradient-to-r from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-5 border border-[var(--color-border)]">
                 <div className="flex items-center gap-4">
                   {getHourIcon(optimalTime.hour)}
                   <div>
-                    <p className="text-sm text-deep-plum-600 dark:text-deep-plum-400 font-medium">
+                    <p className="text-sm text-[var(--color-text-secondary)] font-medium">
                       Optimal Study Time
                     </p>
-                    <p className="text-2xl font-bold text-deep-plum-700 dark:text-deep-plum-300">
+                    <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                       {optimalTime.hour === 0
                         ? '12'
                         : optimalTime.hour > 12
@@ -495,8 +495,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="ml-auto text-right">
-                    <p className="text-xs text-deep-plum-500 dark:text-deep-plum-400">Confidence</p>
-                    <p className="text-lg font-semibold text-deep-plum-600 dark:text-deep-plum-300">
+                    <p className="text-xs text-[var(--color-text-muted)]">Confidence</p>
+                    <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                       {Math.round(optimalTime.confidence * 100)}%
                     </p>
                   </div>
@@ -525,7 +525,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 {/* Cognitive State Dashboard */}
                 <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
                   <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-deep-plum-500" />
+                    <Brain className="w-5 h-5 text-[var(--color-accent)]" />
                     Current Mental State
                   </h3>
 
@@ -601,7 +601,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 {/* Test-Taking Patterns */}
                 <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
                   <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
-                    <Timer className="w-5 h-5 text-steel-blue-500" />
+                    <Timer className="w-5 h-5 text-[var(--color-accent)]" />
                     Test-Taking Patterns
                   </h3>
 
@@ -710,8 +710,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* Strengths */}
             {profile.strongestSystems.length > 0 && (
-              <div className="bg-sage-50 dark:bg-sage-900/20 rounded-xl p-6 border border-sage-200 dark:border-sage-800">
-                <h3 className="text-lg font-semibold text-sage-700 dark:text-sage-300 mb-4 flex items-center gap-2">
+              <div className="bg-data-pass/10 rounded-xl p-6 border border-data-pass/30">
+                <h3 className="text-lg font-semibold text-data-pass mb-4 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
                   Your Strongest Systems
                 </h3>
@@ -719,13 +719,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.strongestSystems.map((system, i) => (
                     <div
                       key={system}
-                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-sage-200 dark:border-sage-700"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-data-pass/30"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xl">
                           {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '✓'}
                         </span>
-                        <span className="font-medium text-sage-700 dark:text-sage-300">
+                        <span className="font-medium text-data-pass">
                           {system}
                         </span>
                       </div>
@@ -737,8 +737,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Weaknesses */}
             {profile.weakestSystems.length > 0 && (
-              <div className="bg-muted-amber-50 dark:bg-muted-amber-900/20 rounded-xl p-6 border border-muted-amber-200 dark:border-muted-amber-800">
-                <h3 className="text-lg font-semibold text-muted-amber-700 dark:text-muted-amber-300 mb-4 flex items-center gap-2">
+              <div className="bg-data-provisional/10 rounded-xl p-6 border border-data-provisional/30">
+                <h3 className="text-lg font-semibold text-data-provisional mb-4 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
                   Systems Needing Focus
                 </h3>
@@ -746,13 +746,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.weakestSystems.map((system) => (
                     <div
                       key={system}
-                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-muted-amber-200 dark:border-muted-amber-700 group hover:border-muted-amber-400 transition-colors cursor-pointer"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-data-provisional/30 group hover:border-data-provisional transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-muted-amber-700 dark:text-muted-amber-300">
+                        <span className="font-medium text-data-provisional">
                           {system}
                         </span>
-                        <ChevronRight className="w-4 h-4 text-muted-amber-400 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 text-data-provisional group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   ))}
@@ -763,10 +763,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {/* Time of Day Performance */}
             {timeOfDayStats.length > 0 && (
               <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
-                <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-deep-plum-500" />
-                  Performance by Time of Day
-                </h3>
+                  <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-[var(--color-accent)]" />
+                    Performance by Time of Day
+                  </h3>
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                   {timeOfDayStats.map((stat) => (
                     <div
@@ -813,8 +813,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* Learning Insights */}
             {profile.learningInsights.length > 0 && (
-              <div className="bg-gradient-to-br from-deep-plum-100 to-deep-plum-50 dark:from-deep-plum-900/30 dark:to-deep-plum-800/30 rounded-xl p-6 border border-deep-plum-200 dark:border-deep-plum-800">
-                <h3 className="text-lg font-semibold text-deep-plum-700 dark:text-deep-plum-300 mb-4 flex items-center gap-2">
+              <div className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-6 border border-[var(--color-border)]">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <Lightbulb className="w-5 h-5" />
                   Learning Insights
                 </h3>
@@ -824,8 +824,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       key={i}
                       className="flex items-start gap-3 bg-[var(--color-bg-primary)]/70 rounded-lg p-3"
                     >
-                      <Sparkles className="w-5 h-5 text-deep-plum-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-deep-plum-700 dark:text-deep-plum-200">
+                      <Sparkles className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
+                      <span className="text-[var(--color-text-secondary)]">
                         {insight}
                       </span>
                     </li>
@@ -836,8 +836,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Recommendations */}
             {profile.recommendations.length > 0 && (
-              <div className="bg-steel-blue-50 dark:bg-steel-blue-900/20 rounded-xl p-6 border border-steel-blue-200 dark:border-steel-blue-800">
-                <h3 className="text-lg font-semibold text-steel-blue-700 dark:text-steel-blue-300 mb-4 flex items-center gap-2">
+              <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <Target className="w-5 h-5" />
                   Personalized Recommendations
                 </h3>
@@ -845,14 +845,14 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.recommendations.map((rec, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-3 bg-[var(--color-bg-primary)] rounded-lg p-4 border border-steel-blue-100 dark:border-steel-blue-800 hover:border-steel-blue-300 dark:hover:border-steel-blue-600 transition-colors cursor-pointer group"
+                      className="flex items-start gap-3 bg-[var(--color-bg-primary)] rounded-lg p-4 border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors cursor-pointer group"
                     >
-                      <div className="w-8 h-8 rounded-full bg-steel-blue-100 dark:bg-steel-blue-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-steel-blue-600 dark:text-steel-blue-300 font-semibold text-sm">
+                      <div className="w-8 h-8 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center flex-shrink-0">
+                        <span className="text-[var(--color-text-primary)] font-semibold text-sm">
                           {i + 1}
                         </span>
                       </div>
-                      <span className="text-steel-blue-700 dark:text-steel-blue-200 flex-1">
+                      <span className="text-[var(--color-text-secondary)] flex-1">
                         {rec}
                       </span>
                       <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
@@ -983,8 +983,8 @@ const PatternInsight: React.FC<{
 }> = ({ label, value, description, quality }) => {
   const qualityStyles = {
     excellent:
-      'bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300 border-sage-200 dark:border-sage-800',
-    good: 'bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300 border-steel-blue-200 dark:border-steel-blue-800',
+      'bg-data-pass/10 text-data-pass border-data-pass/30',
+    good: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)]',
     'needs-work':
       'bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 border-muted-amber-200 dark:border-muted-amber-800',
     info: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
@@ -1043,7 +1043,7 @@ const RecentSessionsList: React.FC<{
               </p>
               {session.bestStreak > 0 && (
                 <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-muted-amber-500" />
+                  <Flame className="w-3 h-3 text-[var(--color-accent)]" />
                   {session.bestStreak} streak
                 </p>
               )}
