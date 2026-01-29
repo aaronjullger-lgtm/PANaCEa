@@ -152,7 +152,7 @@ export function StreakFlame({
         <motion.div
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[var(--color-bg-primary)]"
+          className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--color-data-fail)] rounded-full border-2 border-[var(--color-bg-primary)]"
         />
       )}
     </div>
@@ -195,7 +195,7 @@ export function StreakBadge({
         <motion.div
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
-          className="w-2 h-2 bg-red-500 rounded-full"
+          className="w-2 h-2 bg-[var(--color-data-fail)] rounded-full"
         />
       )}
     </div>
