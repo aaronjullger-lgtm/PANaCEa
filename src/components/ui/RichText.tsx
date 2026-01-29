@@ -33,11 +33,11 @@ function parseMarkdown(text: string, accentColor: string): React.ReactNode[] {
 
   // Define color classes
   const colorClasses: Record<string, string> = {
-    blue: 'text-blue-600 dark:text-blue-400',
-    green: 'text-green-600 dark:text-green-400',
-    purple: 'text-purple-600 dark:text-purple-400',
-    red: 'text-red-600 dark:text-red-400',
-    orange: 'text-orange-600 dark:text-orange-400',
+    blue: 'text-[var(--color-accent)]',
+    green: 'text-data-pass',
+    purple: 'text-[var(--color-text-secondary)]',
+    red: 'text-data-fail',
+    orange: 'text-data-provisional',
   };
 
   const accentClass = colorClasses[accentColor] || colorClasses.blue;
@@ -68,7 +68,7 @@ function parseMarkdown(text: string, accentColor: string): React.ReactNode[] {
       render: (match: string, content: string) => (
         <code
           key={key++}
-          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-sm font-mono text-slate-900 dark:text-slate-100"
+          className="px-1.5 py-0.5 rounded bg-[var(--color-bg-secondary)] text-sm font-mono text-[var(--color-text-primary)]"
         >
           {content}
         </code>

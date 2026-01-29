@@ -356,11 +356,11 @@ export async function generateComparison(
 export function getSeverityColor(severity: 'high' | 'medium' | 'low'): string {
   switch (severity) {
     case 'high':
-      return 'text-red-500';
+      return 'text-data-fail';
     case 'medium':
-      return 'text-amber-500';
+      return 'text-data-provisional';
     case 'low':
-      return 'text-green-500';
+      return 'text-data-pass';
   }
 }
 
@@ -370,11 +370,11 @@ export function getSeverityColor(severity: 'high' | 'medium' | 'low'): string {
 export function getSeverityBgColor(severity: 'high' | 'medium' | 'low'): string {
   switch (severity) {
     case 'high':
-      return 'bg-red-500/10 border-red-500/30';
+      return 'bg-data-fail/10 border-data-fail/30';
     case 'medium':
-      return 'bg-amber-500/10 border-amber-500/30';
+      return 'bg-data-provisional/10 border-data-provisional/30';
     case 'low':
-      return 'bg-green-500/10 border-green-500/30';
+      return 'bg-data-pass/10 border-data-pass/30';
   }
 }
 

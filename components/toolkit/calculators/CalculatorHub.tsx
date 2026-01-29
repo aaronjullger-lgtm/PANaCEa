@@ -207,13 +207,13 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                 onClick={() => setActiveCategory(tab.id)}
                 className="relative px-4 py-3 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:bg-slate-900 transition-colors flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent)]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 <span className="text-xs text-slate-400">({count})</span>
                 {isActive && (
                   <motion.div
                     layoutId="calculator-tab-underline"
-                    className="absolute inset-x-2 -bottom-1 h-0.5 rounded-full bg-blue-400"
+                    className="absolute inset-x-2 -bottom-1 h-0.5 rounded-full bg-[var(--color-accent)]"
                   />
                 )}
               </button>

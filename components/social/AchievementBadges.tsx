@@ -103,25 +103,25 @@ const TIER_COLORS = {
     gradient: 'from-slate-200 to-slate-400',
   },
   gold: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-    border: 'border-yellow-400 dark:border-yellow-600',
-    text: 'text-yellow-700 dark:text-yellow-400',
-    ring: 'ring-yellow-500',
-    gradient: 'from-yellow-200 to-yellow-500',
+    bg: 'bg-amber-100 dark:bg-amber-900/30',
+    border: 'border-amber-400 dark:border-amber-700',
+    text: 'text-amber-700 dark:text-amber-300',
+    ring: 'ring-amber-500',
+    gradient: 'from-amber-200 to-amber-500',
   },
   platinum: {
-    bg: 'bg-cyan-100 dark:bg-cyan-900/30',
-    border: 'border-cyan-300 dark:border-cyan-600',
-    text: 'text-cyan-700 dark:text-cyan-300',
-    ring: 'ring-cyan-400',
-    gradient: 'from-cyan-200 to-cyan-400',
+    bg: 'bg-slate-200 dark:bg-slate-700/50',
+    border: 'border-slate-400 dark:border-slate-500',
+    text: 'text-slate-700 dark:text-slate-200',
+    ring: 'ring-slate-400',
+    gradient: 'from-slate-300 to-slate-500',
   },
   diamond: {
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-    border: 'border-purple-300 dark:border-purple-600',
-    text: 'text-purple-700 dark:text-purple-300',
-    ring: 'ring-purple-400',
-    gradient: 'from-purple-200 via-pink-300 to-purple-400',
+    bg: 'bg-slate-800/50 dark:bg-slate-700/50',
+    border: 'border-slate-600 dark:border-slate-500',
+    text: 'text-[var(--color-accent)]',
+    ring: 'ring-[var(--color-accent)]',
+    gradient: 'from-blue-600 to-indigo-600',
   },
 };
 
@@ -249,7 +249,7 @@ export function AchievementBadges({
             initial={{ width: 0 }}
             animate={{ width: `${stats.percentage}%` }}
             transition={{ duration: 0.5 }}
-            className="absolute h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+            className="absolute h-full bg-gradient-to-r from-blue-600 to-indigo-600"
           />
         </div>
       )}
@@ -292,7 +292,7 @@ export function AchievementBadges({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="4"
-                    className="text-indigo-500/30"
+                    className="text-slate-500/30"
                   />
                   <circle
                     cx="50"
@@ -302,7 +302,7 @@ export function AchievementBadges({
                     stroke="currentColor"
                     strokeWidth="4"
                     strokeDasharray={`${progress * 2.83} 283`}
-                    className="text-indigo-500"
+                    className="text-[var(--color-accent)]"
                   />
                 </svg>
               )}
@@ -349,7 +349,7 @@ export function AchievementBadges({
         <div className="text-center">
           <button
             onClick={() => setFilter('all')}
-            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="text-sm text-[var(--color-accent)] hover:underline"
           >
             View all {achievements.length} achievements →
           </button>
@@ -447,7 +447,7 @@ export function AchievementBadges({
                 {/* XP Reward */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
                   <span className="text-sm text-slate-600 dark:text-slate-400">XP Reward</span>
-                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-lg font-bold text-[var(--color-accent)]">
                     +{selectedAchievement.xpReward.toLocaleString()} XP
                   </span>
                 </div>

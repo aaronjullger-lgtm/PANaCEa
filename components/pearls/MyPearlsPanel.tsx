@@ -323,8 +323,8 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
     if (loading) {
       return (
         <div className="flex flex-col items-center justify-center h-64">
-          <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
-          <p className="mt-3 text-slate-600 dark:text-slate-300">Loading pearls...</p>
+          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+          <p className="mt-3 text-[var(--color-text-muted)]">Loading pearls...</p>
         </div>
       );
     }
@@ -332,13 +332,13 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center h-64">
-          <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-full">
-            <X className="w-8 h-8 text-red-500" />
+          <div className="p-4 bg-data-fail/10 rounded-full">
+            <X className="w-8 h-8 text-data-fail" />
           </div>
-          <p className="mt-3 text-slate-600 dark:text-slate-300">{error}</p>
+          <p className="mt-3 text-[var(--color-text-muted)]">{error}</p>
           <button
             onClick={fetchPearls}
-            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="mt-4 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
           >
             Try Again
           </button>
@@ -349,10 +349,10 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
     if (filteredPearls.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center h-64">
-          <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-            <Sparkles className="w-8 h-8 text-purple-500" />
+          <div className="p-4 bg-[var(--color-bg-secondary)] rounded-full">
+            <Sparkles className="w-8 h-8 text-[var(--color-accent)]" />
           </div>
-          <p className="mt-3 text-slate-600 dark:text-slate-300">{getEmptyMessage()}</p>
+          <p className="mt-3 text-[var(--color-text-muted)]">{getEmptyMessage()}</p>
         </div>
       );
     }
@@ -374,20 +374,20 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
         >
           {/* Front of card */}
           <div
-            className="flashcard-face absolute inset-0 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 p-6 shadow-lg border border-slate-200 dark:border-slate-600 flex flex-col"
+            className="flashcard-face absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-border)] flex flex-col"
           >
             {/* Tags */}
             <div className="flex items-center gap-2 mb-4">
-              <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+              <span className="px-2 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full text-xs font-medium">
                 {currentPearl?.system}
               </span>
               {currentPearl?.category && (
-                <span className="px-2 py-1 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full text-xs">
+                <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-full text-xs">
                   {currentPearl.category}
                 </span>
               )}
               {currentPearl?.userInteraction?.mastered && (
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs flex items-center gap-1">
+                <span className="px-2 py-1 bg-data-pass/10 text-data-pass rounded-full text-xs flex items-center gap-1">
                   <Star className="w-3 h-3" /> Mastered
                 </span>
               )}
@@ -395,30 +395,30 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
 
             {/* Pearl text */}
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-lg text-center text-slate-800 dark:text-slate-100 font-medium leading-relaxed">
+              <p className="text-lg text-center text-[var(--color-text-primary)] font-medium leading-relaxed">
                 {currentPearl?.pearlText}
               </p>
             </div>
 
             {/* Hint to flip */}
-            <p className="text-xs text-slate-400 text-center mt-4">
+            <p className="text-xs text-[var(--color-text-muted)] text-center mt-4">
               Tap to see explanation
             </p>
           </div>
 
           {/* Back of card */}
           <div
-            className="flashcard-face flashcard-back absolute inset-0 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 p-6 shadow-lg border border-purple-200 dark:border-purple-700 flex flex-col overflow-auto"
+            className="flashcard-face flashcard-back absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-accent)]/30 flex flex-col overflow-auto"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Brain className="w-5 h-5 text-purple-500" />
-              <span className="font-semibold text-purple-700 dark:text-purple-300">
+              <Brain className="w-5 h-5 text-[var(--color-accent)]" />
+              <span className="font-semibold text-[var(--color-accent)]">
                 Explanation
               </span>
             </div>
 
             <div className="flex-1 overflow-auto">
-              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+              <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                 {currentPearl?.fullExplanation || 'No additional explanation available.'}
               </p>
             </div>
@@ -429,7 +429,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
                 {currentPearl.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2 py-0.5 bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 rounded text-xs"
+                    className="px-2 py-0.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded text-xs"
                   >
                     #{tag}
                   </span>
@@ -447,19 +447,19 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           <button
             onClick={goPrev}
             disabled={filteredPearls.length <= 1}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             aria-label="Previous pearl"
             title="Previous pearl"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px] text-center">
+          <span className="text-sm text-[var(--color-text-muted)] min-w-[60px] text-center">
             {currentIndex + 1} / {filteredPearls.length}
           </span>
           <button
             onClick={goNext}
             disabled={filteredPearls.length <= 1}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             aria-label="Next pearl"
             title="Next pearl"
           >
@@ -474,8 +474,8 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
             onClick={toggleSaved}
             className={`p-2 rounded-lg transition-colors ${
               currentPearl?.userInteraction?.isSaved
-                ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600'
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600'
+                ? 'bg-data-provisional/10 text-data-provisional'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
             title={currentPearl?.userInteraction?.isSaved ? 'Unsave pearl' : 'Save pearl'}
             aria-label={currentPearl?.userInteraction?.isSaved ? 'Unsave pearl' : 'Save pearl'}
@@ -490,7 +490,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           {/* Review Later */}
           <button
             onClick={reviewLater}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-data-provisional/10 text-data-provisional rounded-lg hover:bg-data-provisional/20 transition-colors"
           >
             <Clock className="w-4 h-4" />
             <span className="text-sm font-medium">Review Later</span>
@@ -499,7 +499,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           {/* Mark Mastered */}
           <button
             onClick={markAsMastered}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-data-pass text-[var(--color-text-inverse)] rounded-lg hover:bg-data-pass/90 transition-colors shadow-md"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm font-medium">Mastered</span>
@@ -522,25 +522,25 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+        <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 p-6 text-[var(--color-text-inverse)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+              <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg backdrop-blur-sm">
                 <Gem className="w-6 h-6" />
               </div>
               <div>
                 <h2 className="text-xl font-bold">My Clinical Pearls</h2>
-                <p className="text-purple-100 text-sm">
+                <p className="text-[var(--color-text-inverse)]/80 text-sm">
                   {stats.total} pearls • {stats.mastered} mastered • {stats.due} due
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--color-bg-primary)]/20 rounded-lg transition-colors"
               aria-label="Close panel"
             >
               <X className="w-5 h-5" />
@@ -558,8 +558,8 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   filter === f
-                    ? 'bg-white text-purple-600 shadow-lg'
-                    : 'bg-white/20 hover:bg-white/30'
+                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-accent)] shadow-lg'
+                    : 'bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30'
                 }`}
               >
                 {f === 'all' && `All (${stats.total})`}
@@ -578,15 +578,15 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
                   setSystemFilter(e.target.value || null);
                   setCurrentIndex(0);
                 }}
-                className="bg-white/20 border-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/60 focus:ring-2 focus:ring-white/50"
+                className="bg-[var(--color-bg-primary)]/20 border-none rounded-lg px-3 py-2 text-sm text-[var(--color-text-inverse)] placeholder-[var(--color-text-inverse)]/60 focus:ring-2 focus:ring-[var(--color-bg-primary)]/50"
                 aria-label="Filter by system"
                 title="Filter by system"
               >
-                <option value="" className="text-slate-800">
+                <option value="" className="text-[var(--color-text-primary)]">
                   All Systems
                 </option>
                 {systems.map((sys) => (
-                  <option key={sys} value={sys} className="text-slate-800">
+                  <option key={sys} value={sys} className="text-[var(--color-text-primary)]">
                     {sys}
                   </option>
                 ))}

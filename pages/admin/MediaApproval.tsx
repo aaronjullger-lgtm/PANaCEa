@@ -228,10 +228,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   };
 
   const getQualityBadgeColor = (score?: number) => {
-    if (!score) return 'bg-gray-500';
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (!score) return 'bg-[var(--color-bg-tertiary)]';
+    if (score >= 80) return 'bg-data-pass';
+    if (score >= 60) return 'bg-data-provisional';
+    return 'bg-data-fail';
   };
 
   const getMediaTypeIcon = (mediaType: string) => {
@@ -264,30 +264,30 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading pending media...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
+          <p className="text-[var(--color-text-muted)]">Loading pending media...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419] p-6">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Media Approval Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-muted)]">
               Review and approve uploaded medical images and educational resources
             </p>
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -300,8 +300,8 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             onClick={() => setBatchMode(!batchMode)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               batchMode
-                ? 'bg-blue-600 text-white'
-                : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
             }`}
           >
             {batchMode ? 'Cancel Batch' : 'Batch Mode'}
@@ -311,14 +311,14 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <>
               <button
                 onClick={handleBatchApprove}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-data-pass hover:bg-data-pass/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 Approve {selectedItems.size}
               </button>
               <button
                 onClick={handleBatchReject}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-data-fail hover:bg-data-fail/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 <ThumbsDown className="w-4 h-4" />
                 Reject {selectedItems.size}
@@ -328,7 +328,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
           <button
             onClick={loadPendingMedia}
-            className="ml-auto p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="ml-auto p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
             title="Refresh"
           >
             <RefreshCw className="w-5 h-5" />
@@ -337,13 +337,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
           <input
             type="text"
             placeholder="Search media by filename, tags, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1F283A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
           />
         </div>
       </div>
@@ -352,58 +352,58 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       {stats && (
         <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
           <motion.div
-            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            className="bg-[var(--color-bg-secondary)] rounded-lg p-6 shadow-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Pending</p>
+                <p className="text-3xl font-bold text-data-provisional">{stats.pending}</p>
               </div>
-              <AlertCircle className="w-8 h-8 text-orange-500" />
+              <AlertCircle className="w-8 h-8 text-data-provisional" />
             </div>
           </motion.div>
 
           <motion.div
-            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            className="bg-[var(--color-bg-secondary)] rounded-lg p-6 shadow-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approved</p>
-                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Approved</p>
+                <p className="text-3xl font-bold text-data-pass">{stats.approved}</p>
               </div>
-              <Check className="w-8 h-8 text-green-500" />
+              <Check className="w-8 h-8 text-data-pass" />
             </div>
           </motion.div>
 
           <motion.div
-            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            className="bg-[var(--color-bg-secondary)] rounded-lg p-6 shadow-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected</p>
-                <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Rejected</p>
+                <p className="text-3xl font-bold text-data-fail">{stats.rejected}</p>
               </div>
-              <ThumbsDown className="w-8 h-8 text-red-500" />
+              <ThumbsDown className="w-8 h-8 text-data-fail" />
             </div>
           </motion.div>
 
           <motion.div
-            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            className="bg-[var(--color-bg-secondary)] rounded-lg p-6 shadow-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approval Rate</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.approvalRate}%</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Approval Rate</p>
+                <p className="text-3xl font-bold text-[var(--color-accent)]">{stats.approvalRate}%</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-blue-500" />
+              <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
             </div>
           </motion.div>
         </div>
@@ -412,7 +412,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       {/* Filters */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-gray-500" />
+          <Filter className="w-5 h-5 text-[var(--color-text-muted)]" />
           {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams', 'pdf', 'video'].map(
             (category) => (
               <button
@@ -420,8 +420,8 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                 onClick={() => setFilter(category)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   filter === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
                 }`}
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -434,12 +434,12 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       {/* Media Grid */}
       <div className="max-w-7xl mx-auto">
         {filteredMedia.length === 0 ? (
-          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-12 text-center">
-            <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-12 text-center">
+            <Check className="w-16 h-16 text-data-pass mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               All caught up!
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-muted)]">
               {searchTerm
                 ? 'No media matches your search.'
                 : 'No pending media to review at this time.'}
@@ -454,13 +454,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`bg-white dark:bg-[#1F283A] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
-                    selectedItems.has(media.id) ? 'ring-2 ring-blue-500' : ''
+                  className={`bg-[var(--color-bg-secondary)] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
+                    selectedItems.has(media.id) ? 'ring-2 ring-[var(--color-accent)]' : ''
                   }`}
                 >
                   {/* Image Preview */}
                   <div
-                    className="relative h-48 bg-gray-200 dark:bg-gray-800 cursor-pointer"
+                    className="relative h-48 bg-[var(--color-bg-tertiary)] cursor-pointer"
                     onClick={() => !batchMode && setSelectedMedia(media)}
                   >
                     {batchMode && (
@@ -488,7 +488,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
                     <div className="absolute top-2 right-2 flex gap-2">
                       <span
-                        className={`${getQualityBadgeColor(media.qualityScore)} text-white text-xs font-bold px-2 py-1 rounded`}
+                        className={`${getQualityBadgeColor(media.qualityScore)} text-[var(--color-text-inverse)] text-xs font-bold px-2 py-1 rounded`}
                       >
                         {media.qualityScore || 'N/A'}
                       </span>
@@ -498,16 +498,16 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                   {/* Details */}
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate flex-1">
+                      <h3 className="font-semibold text-[var(--color-text-primary)] truncate flex-1">
                         {media.filename}
                       </h3>
-                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded ml-2">
+                      <span className="text-xs bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] px-2 py-1 rounded ml-2">
                         {media.mediaType}
                       </span>
                     </div>
 
                     {media.condition && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className="text-sm text-[var(--color-text-muted)] mb-2">
                         {media.condition.name}
                       </p>
                     )}
@@ -516,7 +516,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                       {media.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded"
+                          className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2 py-1 rounded"
                         >
                           {tag}
                         </span>

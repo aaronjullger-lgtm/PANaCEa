@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
-import { AuthProvider } from './components/AuthProvider';
+import { AuthProvider } from './components/auth/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
 

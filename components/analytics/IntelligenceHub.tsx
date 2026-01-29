@@ -329,8 +329,8 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
-            <Brain className="w-6 h-6 text-white" />
+          <div className="p-2 bg-[var(--color-accent)] rounded-lg">
+            <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Intelligence Hub</h2>
@@ -350,7 +350,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             onClick={handleBackToDashboard}
             className={`px-3 py-1.5 rounded-lg transition-colors ${
               viewLevel === 'dashboard'
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)]'
             }`}
           >
@@ -363,7 +363,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 onClick={handleBackToSystem}
                 className={`px-3 py-1.5 rounded-lg transition-colors ${
                   viewLevel === 'system'
-                    ? 'bg-[var(--color-accent)] text-white'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                     : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)]'
                 }`}
               >
@@ -374,7 +374,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
           {selectedSubcategory && (
             <>
               <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-              <span className="px-3 py-1.5 bg-[var(--color-accent)] text-white rounded-lg">
+              <span className="px-3 py-1.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg">
                 {selectedSubcategory}
               </span>
             </>
@@ -393,10 +393,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             className="space-y-6"
           >
             {/* High-Yield Gaps - Priority Alert */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+            <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                <h3 className="font-semibold text-amber-900 dark:text-amber-300">
+                <AlertTriangle className="w-5 h-5 text-[var(--color-warning)]" />
+                <h3 className="font-semibold text-[var(--color-text-primary)]">
                   High-Yield Gaps (Top 3 Priority Areas)
                 </h3>
               </div>
@@ -405,13 +405,13 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   <button
                     key={`${gap.system}-${gap.subcategory}`}
                     onClick={() => handleSystemClick(gap.system)}
-                    className="text-left p-3 bg-white dark:bg-slate-800 rounded-lg border border-amber-300 dark:border-amber-700 hover:shadow-md transition-shadow"
+                    className="text-left p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-warning)]/40 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                      <span className="text-xs font-bold text-[var(--color-warning)]">
                         #{index + 1} PRIORITY
                       </span>
-                      <Target className="w-4 h-4 text-amber-600" />
+                      <Target className="w-4 h-4 text-[var(--color-warning)]" />
                     </div>
                     <div className="font-semibold text-sm text-[var(--color-text-primary)] mb-1">
                       {gap.system}: {gap.subcategory}
@@ -420,7 +420,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       <span className="text-[var(--color-text-muted)]">
                         Accuracy: {gap.accuracy}%
                       </span>
-                      <span className="text-amber-700 dark:text-amber-400 font-medium">
+                      <span className="text-[var(--color-warning)] font-medium">
                         Weight: {gap.examWeight.toFixed(1)}x
                       </span>
                     </div>
@@ -444,7 +444,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         cy={radarChartData.centerY}
                         r={circle.radius}
                         fill="none"
-                        stroke={theme === 'dark' ? '#334155' : '#e2e8f0'}
+                        stroke="var(--color-border)"
                         strokeWidth="1"
                         strokeDasharray={i === radarChartData.gridCircles.length - 1 ? '0' : '4 4'}
                       />
@@ -468,7 +468,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       y1={axis.y1}
                       x2={axis.x2}
                       y2={axis.y2}
-                      stroke={theme === 'dark' ? '#334155' : '#cbd5e1'}
+                      stroke="var(--color-border)"
                       strokeWidth="1"
                     />
                   ))}
@@ -476,8 +476,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   {/* Performance polygon */}
                   <path
                     d={radarChartData.pathD}
-                    fill="rgba(99, 102, 241, 0.2)"
-                    stroke="#6366f1"
+                    fill="var(--color-accent)"
+                    fillOpacity={0.2}
+                    stroke="var(--color-accent)"
                     strokeWidth="2"
                   />
 
@@ -491,7 +492,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                           cx={point.x}
                           cy={point.y}
                           r="4"
-                          fill="#6366f1"
+                          fill="var(--color-accent)"
                           className="cursor-pointer hover:r-6 transition-all"
                           onClick={() => handleSystemClick(point.system)}
                         />
@@ -540,7 +541,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                   </div>
                   <div className="w-full h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                      className="h-full bg-[var(--color-accent)] rounded-full transition-all"
                       style={{ width: `${sys.accuracy}%` }}
                     />
                   </div>
@@ -563,7 +564,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-5 h-5 text-indigo-500" />
+                  <Target className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -576,7 +577,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Brain className="w-5 h-5 text-purple-500" />
+                  <Brain className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Retention</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -589,7 +590,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-blue-500" />
+                  <Clock className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Decision Speed</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -597,9 +598,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     {Math.round(currentSystemStats.avgDecisionTimeMs / 1000)}s
                   </div>
                   {currentSystemStats.decisionTimeTrend < 0 ? (
-                    <TrendingDown className="w-5 h-5 text-green-500" />
+                    <TrendingDown className="w-5 h-5 text-[var(--color-success)]" />
                   ) : (
-                    <TrendingUp className="w-5 h-5 text-orange-500" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-warning)]" />
                   )}
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">
@@ -609,7 +610,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-5 h-5 text-teal-500" />
+                  <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Topics</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -623,7 +624,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             {onStartSession && (
               <button
                 onClick={() => onStartSession(currentSystemStats.system)}
-                className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
+                className="w-full p-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
               >
                 <Play className="w-5 h-5" />
                 Quick Start PANCE Session -{' '}
@@ -675,10 +676,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     <div
                       className={`h-full rounded-full transition-all ${
                         subcat.accuracy >= 80
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                          ? 'bg-[var(--color-success)]'
                           : subcat.accuracy >= 60
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                            : 'bg-gradient-to-r from-orange-500 to-red-500'
+                            ? 'bg-[var(--color-accent)]'
+                            : 'bg-[var(--color-warning)]'
                       }`}
                       style={{ width: `${subcat.accuracy}%` }}
                     />
@@ -702,7 +703,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-5 h-5 text-indigo-500" />
+                  <Target className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -716,7 +717,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-5 h-5 text-purple-500" />
+                  <Activity className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Conditions</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -727,7 +728,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-5 h-5 text-blue-500" />
+                  <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Last Practiced</span>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -743,7 +744,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
             {onStartSession && selectedSystem && (
               <button
                 onClick={() => onStartSession(selectedSystem, selectedSubcategory!)}
-                className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
+                className="w-full p-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
               >
                 <Play className="w-5 h-5" />
                 Practice {selectedSubcategory} Now
@@ -763,18 +764,18 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     transition={{ duration: 0.2 }}
                     className="space-y-3"
                   >
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                       Conditions ({currentSubcategoryStats.conditions.length})
                     </h3>
 
                     {currentSubcategoryStats.conditions.length === 0 ? (
                       /* Empty State */
                       <div className="flex flex-col items-center justify-center py-16 px-4">
-                        <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        <FileText className="w-12 h-12 text-[var(--color-text-muted)] mb-3" />
+                        <p className="text-sm font-medium text-[var(--color-text-muted)]">
                           No conditions found
                         </p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        <p className="text-xs text-[var(--color-text-muted)] mt-1">
                           Questions will appear here as you practice
                         </p>
                       </div>
@@ -818,10 +819,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     className="space-y-6"
                   >
                     {/* Sticky Header Bar */}
-                    <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 -mx-6 -mt-6 px-6 py-4">
+                    <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-b border-[var(--color-border)] -mx-6 -mt-6 px-6 py-4">
                       <button
                         onClick={() => setSelectedCondition(null)}
-                        className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                        className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                       >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Conditions
@@ -832,27 +833,27 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                             {selectedCondition.name}
                           </h2>
                           <div className="flex items-center gap-2">
-                            <span className="inline-block bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                            <span className="inline-block bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
                               {selectedSubcategory}
                             </span>
                             {selectedCondition.trend === 'improving' && (
-                              <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                              <span className="inline-flex items-center gap-1 bg-[var(--color-success)]/10 text-[var(--color-success)] text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
                                 <TrendingUp className="w-3 h-3" />
                                 Improving
                               </span>
                             )}
                             {selectedCondition.trend === 'declining' && (
-                              <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                              <span className="inline-flex items-center gap-1 bg-[var(--color-error)]/10 text-[var(--color-error)] text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
                                 <TrendingDown className="w-3 h-3" />
                                 Declining
                               </span>
                             )}
                             {selectedCondition.trend === 'stable' && (
-                              <span className="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                              <span className="inline-flex items-center gap-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
                                 <Circle className="w-3 h-3" />
                                 Stable
                               </span>
@@ -864,99 +865,99 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
                         <div className="flex items-center gap-2 mb-2">
-                          <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <Target className="w-4 h-4 text-[var(--color-accent)]" />
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">
                             Accuracy
                           </span>
                         </div>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                           {selectedCondition.accuracy}%
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1">
                           {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions}{' '}
                           correct
                         </div>
                       </div>
 
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
                         <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <BarChart3 className="w-4 h-4 text-[var(--color-text-muted)]" />
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">
                             Attempts
                           </span>
                         </div>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                           {selectedCondition.totalQuestions}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1">
                           Total questions
                         </div>
                       </div>
 
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
                         <div className="flex items-center gap-2 mb-2">
-                          <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <Brain className="w-4 h-4 text-[var(--color-accent)]" />
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">
                             Retention
                           </span>
                         </div>
-                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        <div className="text-2xl font-bold text-[var(--color-accent)]">
                           {selectedCondition.retentionScore}%
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1">
                           Memory strength
                         </div>
                       </div>
 
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
                         <div className="flex items-center gap-2 mb-2">
-                          <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">
                             Avg Time
                           </span>
                         </div>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                           {(selectedCondition.avgDecisionTimeMs / 1000).toFixed(1)}s
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1">
                           Per question
                         </div>
                       </div>
                     </div>
 
                     {/* Performance Section */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6 space-y-6">
+                      <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                         Performance Metrics
                       </h3>
 
                       {/* Accuracy Progress */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                          <span className="font-medium text-[var(--color-text-primary)]">
                             Accuracy Rate
                           </span>
-                          <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          <span className="font-semibold text-[var(--color-text-primary)]">
                             {selectedCondition.accuracy}%
                           </span>
                         </div>
-                        <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${selectedCondition.accuracy}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
                             className={`absolute inset-y-0 left-0 rounded-full ${
                               selectedCondition.accuracy >= 80
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                ? 'bg-[var(--color-success)]'
                                 : selectedCondition.accuracy >= 60
-                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                                  : 'bg-gradient-to-r from-orange-500 to-red-500'
+                                  ? 'bg-[var(--color-accent)]'
+                                  : 'bg-[var(--color-warning)]'
                             }`}
                           />
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-[var(--color-text-muted)]">
                           {selectedCondition.correctAnswers} out of{' '}
                           {selectedCondition.totalQuestions} questions answered correctly
                         </p>
@@ -965,22 +966,22 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       {/* Retention Progress */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                          <span className="font-medium text-[var(--color-text-primary)]">
                             Retention Strength
                           </span>
-                          <span className="font-semibold text-purple-600 dark:text-purple-400">
+                          <span className="font-semibold text-[var(--color-accent)]">
                             {selectedCondition.retentionScore}%
                           </span>
                         </div>
-                        <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${selectedCondition.retentionScore}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                            className="absolute inset-y-0 left-0 bg-[var(--color-accent)] rounded-full"
                           />
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-[var(--color-text-muted)]">
                           Predicted memory stability based on spaced repetition algorithm
                         </p>
                       </div>
@@ -988,16 +989,16 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 
                     {/* Next Review Card */}
                     {selectedCondition.nextDue && (
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+                      <div className="bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-xl p-5">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
-                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg">
+                            <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                            <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
                               Next Review Scheduled
                             </h4>
-                            <p className="text-sm text-blue-700 dark:text-blue-400">
+                            <p className="text-sm text-[var(--color-text-primary)]">
                               Due in{' '}
                               {Math.round(
                                 (selectedCondition.nextDue.getTime() - Date.now()) /
@@ -1005,7 +1006,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                               )}{' '}
                               days
                             </p>
-                            <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1">
                               {selectedCondition.nextDue.toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 year: 'numeric',
@@ -1019,12 +1020,12 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     )}
 
                     {/* Study Recommendation */}
-                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-amber-500" />
+                    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
+                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-[var(--color-warning)]" />
                         Study Recommendation
                       </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
                         {selectedCondition.accuracy < 60
                           ? 'This condition needs more practice. Consider reviewing the material and attempting more questions.'
                           : selectedCondition.accuracy < 80

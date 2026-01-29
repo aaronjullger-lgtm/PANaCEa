@@ -96,11 +96,11 @@ const VIEW_MODES: Record<
     getValue: (data) => data.questionsAnswered,
     formatValue: (v) => `${v} questions`,
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-200 dark:bg-slate-700/50',
-      'bg-slate-400 dark:bg-slate-600',
-      'bg-slate-500 dark:bg-slate-500',
-      'bg-slate-600 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
   performance: {
@@ -111,11 +111,11 @@ const VIEW_MODES: Record<
     getValue: (data) => data.accuracy,
     formatValue: (v) => `${v}%`,
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-600 dark:bg-slate-700/50',
-      'bg-slate-500 dark:bg-slate-600',
-      'bg-slate-400 dark:bg-slate-500',
-      'bg-slate-300 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
   dueForecast: {
@@ -126,11 +126,11 @@ const VIEW_MODES: Record<
     getValue: (data) => data.dueCount || 0,
     formatValue: (v) => `${v} due`,
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-200 dark:bg-slate-700/50',
-      'bg-slate-400 dark:bg-slate-600',
-      'bg-slate-500 dark:bg-slate-500',
-      'bg-slate-600 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
   streaks: {
@@ -141,11 +141,11 @@ const VIEW_MODES: Record<
     getValue: (data) => data.streakLength || 0,
     formatValue: (v) => (v > 0 ? `${v} day streak` : 'No streak'),
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-200 dark:bg-slate-700/50',
-      'bg-slate-400 dark:bg-slate-600',
-      'bg-slate-500 dark:bg-slate-500',
-      'bg-slate-600 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
   mastery: {
@@ -171,11 +171,11 @@ const VIEW_MODES: Record<
     },
     formatValue: (v) => `${v}% avg mastery`,
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-200 dark:bg-slate-700/50',
-      'bg-slate-400 dark:bg-slate-600',
-      'bg-slate-500 dark:bg-slate-500',
-      'bg-slate-600 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
   studyTime: {
@@ -186,11 +186,11 @@ const VIEW_MODES: Record<
     getValue: (data) => Math.round(data.totalTimeMs / 60000), // Convert to minutes
     formatValue: (v) => (v >= 60 ? `${Math.floor(v / 60)}h ${v % 60}m` : `${v}m`),
     colorScale: [
-      'bg-slate-100 dark:bg-slate-800',
-      'bg-slate-200 dark:bg-slate-700/50',
-      'bg-slate-400 dark:bg-slate-600',
-      'bg-slate-500 dark:bg-slate-500',
-      'bg-slate-600 dark:bg-slate-400',
+      'bg-[var(--color-bg-secondary)]',
+      'bg-[var(--color-bg-tertiary)]',
+      'bg-steel-blue-100 dark:bg-steel-blue-900/30',
+      'bg-steel-blue-300 dark:bg-steel-blue-800/40',
+      'bg-steel-blue-500 dark:bg-steel-blue-700/50',
     ],
   },
 };
@@ -299,7 +299,7 @@ const DayCell: React.FC<DayCellProps> = ({
     >
       <span
         className={`
-        ${intensity > 0.5 ? 'text-white' : 'text-[var(--color-text-primary)]'}
+        ${intensity > 0.5 ? 'text-[var(--color-text-inverse)]' : 'text-[var(--color-text-primary)]'}
       `}
       >
         {date.getUTCDate()}
@@ -307,7 +307,7 @@ const DayCell: React.FC<DayCellProps> = ({
 
       {/* Indicator dot for streak view */}
       {viewMode === 'streaks' && data?.streakActive && (
-        <span className="absolute -top-1 -right-1 w-2 h-2 bg-slate-400 rounded-full" />
+        <span className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--color-border-strong)] rounded-full" />
       )}
     </motion.button>
   );
@@ -665,7 +665,7 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
           <div className="text-xs text-[var(--color-text-muted)]">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-slate-300">
+          <div className="text-2xl font-bold text-[var(--color-text-primary)]">
             {Math.round(
               performanceData.length > 0
                 ? (performanceData.filter((r) => r.isCorrect).length / performanceData.length) * 100

@@ -17,11 +17,11 @@ interface PerformanceTrendChartProps {
 const getTrendIcon = (trend: 'improving' | 'declining' | 'stable') => {
   switch (trend) {
     case 'improving':
-      return <TrendingUp className="w-4 h-4 text-green-500" />;
+      return <TrendingUp className="w-4 h-4 text-[var(--color-success)]" />;
     case 'declining':
-      return <TrendingDown className="w-4 h-4 text-red-500" />;
+      return <TrendingDown className="w-4 h-4 text-[var(--color-error)]" />;
     default:
-      return <Minus className="w-4 h-4 text-slate-400" />;
+      return <Minus className="w-4 h-4 text-[var(--color-text-muted)]" />;
   }
 };
 
@@ -99,10 +99,10 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
 
   if (!stats) {
     return (
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 text-center">
-        <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-        <p className="text-slate-600 dark:text-slate-400">No study activity in this period.</p>
-        <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 text-center">
+        <Calendar className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
+        <p className="text-[var(--color-text-muted)]">No study activity in this period.</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">
           Start practicing to see your trends!
         </p>
       </div>
@@ -113,29 +113,29 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
     <div className="space-y-4">
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Total Questions</p>
-          <p className="text-xl font-bold text-blue-800 dark:text-blue-300">
+        <div className="bg-[var(--color-accent)]/10 rounded-lg p-3">
+          <p className="text-xs text-[var(--color-accent)] font-medium">Total Questions</p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">
             {stats.totalAttempts}
           </p>
         </div>
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-          <p className="text-xs text-green-600 dark:text-green-400 font-medium">Avg Accuracy</p>
-          <p className="text-xl font-bold text-green-800 dark:text-green-300">
+        <div className="bg-[var(--color-success)]/10 rounded-lg p-3">
+          <p className="text-xs text-[var(--color-success)] font-medium">Avg Accuracy</p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">
             {stats.avgAccuracy}%
           </p>
         </div>
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-          <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Active Days</p>
-          <p className="text-xl font-bold text-purple-800 dark:text-purple-300">
+        <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3">
+          <p className="text-xs text-[var(--color-text-muted)] font-medium">Active Days</p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">
             {stats.activeDays}
           </p>
         </div>
-        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Trend</p>
+        <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3">
+          <p className="text-xs text-[var(--color-text-muted)] font-medium">Trend</p>
           <div className="flex items-center gap-2 mt-1">
             {getTrendIcon(stats.trend)}
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
+            <span className="text-sm font-medium text-[var(--color-text-primary)] capitalize">
               {stats.trend}
             </span>
           </div>
@@ -143,13 +143,13 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
       </div>
 
       {/* Chart */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="font-medium text-slate-800 dark:text-white flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-500" />
+          <h4 className="font-medium text-[var(--color-text-primary)] flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[var(--color-accent)]" />
             Daily Activity
           </h4>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-xs text-[var(--color-text-muted)]">
             Last {period === '7d' ? '7' : period === '14d' ? '14' : '30'} days
           </span>
         </div>
@@ -160,12 +160,12 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
             const height = day.attempts > 0 ? (day.attempts / maxAttempts) * 100 : 0;
             const accuracyColor =
               day.accuracy >= 70
-                ? 'bg-green-500'
+                ? 'bg-[var(--color-success)]'
                 : day.accuracy >= 50
-                  ? 'bg-yellow-500'
+                  ? 'bg-[var(--color-warning)]'
                   : day.accuracy > 0
-                    ? 'bg-red-500'
-                    : 'bg-slate-200 dark:bg-slate-700';
+                    ? 'bg-[var(--color-error)]'
+                    : 'bg-[var(--color-bg-tertiary)]';
 
             return (
               <motion.div
@@ -178,7 +178,7 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
               >
                 {/* Tooltip */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                  <div className="bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
+                  <div className="bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-xs rounded px-2 py-1 whitespace-nowrap border border-[var(--color-border)]">
                     <div className="font-medium">
                       {new Date(day.date).toLocaleDateString('en-US', {
                         month: 'short',
@@ -195,7 +195,7 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
         </div>
 
         {/* X-axis labels */}
-        <div className="flex justify-between mt-2 text-[10px] text-slate-400">
+        <div className="flex justify-between mt-2 text-[10px] text-[var(--color-text-muted)]">
           {(() => {
             const firstDay = chartData[0];
             return firstDay ? (
@@ -215,16 +215,16 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
         {/* Legend */}
         <div className="flex items-center justify-center gap-4 mt-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
-            <span className="text-slate-600 dark:text-slate-400">≥70%</span>
+            <div className="w-3 h-3 rounded bg-[var(--color-success)]" />
+            <span className="text-[var(--color-text-muted)]">≥70%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-500" />
-            <span className="text-slate-600 dark:text-slate-400">50-69%</span>
+            <div className="w-3 h-3 rounded bg-[var(--color-warning)]" />
+            <span className="text-[var(--color-text-muted)]">50-69%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500" />
-            <span className="text-slate-600 dark:text-slate-400">&lt;50%</span>
+            <div className="w-3 h-3 rounded bg-[var(--color-error)]" />
+            <span className="text-[var(--color-text-muted)]">&lt;50%</span>
           </div>
         </div>
       </div>

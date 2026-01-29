@@ -60,29 +60,20 @@ export default function WeaknessCheatsheetExporter({
 
   return (
     <div
-      className={`rounded-xl p-4 ${
-        theme === 'light' ? 'bg-[var(--color-bg-secondary)]' : 'bg-gray-800'
-      }`}
+      data-theme={theme}
+      className="rounded-xl p-4 bg-[var(--color-bg-secondary)]"
     >
       <div className="flex items-center gap-2 mb-3">
-        <FileText
-          className={`w-5 h-5 ${
-            theme === 'light' ? 'text-[var(--color-accent)]' : 'text-blue-400'
-          }`}
-        />
+        <FileText className="w-5 h-5 text-[var(--color-accent)]" />
         <h3
-          className={`font-medium ${
-            theme === 'light' ? 'text-[var(--color-text-primary)]' : 'text-white'
-          }`}
+          className="font-medium text-[var(--color-text-primary)]"
         >
           Weakness Study Guide
         </h3>
       </div>
 
       <p
-        className={`text-xs mb-4 ${
-          theme === 'light' ? 'text-[var(--color-text-muted)]' : 'text-gray-400'
-        }`}
+        className="text-xs mb-4 text-[var(--color-text-muted)]"
       >
         Generate a professional PDF study guide based on questions you've missed. Perfect for
         focused review and cramming sessions.
@@ -91,9 +82,7 @@ export default function WeaknessCheatsheetExporter({
       {/* Time Period Selector */}
       <div className="mb-4">
         <label
-          className={`block text-sm font-medium mb-2 ${
-            theme === 'light' ? 'text-[var(--color-text-primary)]' : 'text-gray-300'
-          }`}
+          className="block text-sm font-medium mb-2 text-[var(--color-text-primary)]"
         >
           Time Period
         </label>
@@ -104,12 +93,8 @@ export default function WeaknessCheatsheetExporter({
               onClick={() => setDays(d)}
               className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                 days === d
-                  ? theme === 'light'
-                    ? 'bg-[var(--color-accent)] text-white'
-                    : 'bg-blue-600 text-white'
-                  : theme === 'light'
-                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               {d}d
@@ -121,46 +106,34 @@ export default function WeaknessCheatsheetExporter({
       {/* Summary */}
       {summary.totalWeaknesses > 0 ? (
         <div
-          className={`p-3 rounded-lg mb-4 ${
-            theme === 'light'
-              ? 'bg-blue-50 border border-blue-200'
-              : 'bg-blue-900/20 border border-blue-800'
-          }`}
+          className="p-3 rounded-lg mb-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
         >
           <div className="flex items-start gap-2">
             <AlertCircle
-              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                theme === 'light' ? 'text-blue-600' : 'text-blue-400'
-              }`}
+              className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]"
             />
             <div>
               <p
-                className={`text-sm font-medium mb-1 ${
-                  theme === 'light' ? 'text-blue-900' : 'text-blue-100'
-                }`}
+                className="text-sm font-medium mb-1 text-[var(--color-text-primary)]"
               >
                 Found {summary.totalWeaknesses} area{summary.totalWeaknesses > 1 ? 's' : ''} to
                 review
               </p>
-              <p className={`text-xs ${theme === 'light' ? 'text-blue-700' : 'text-blue-300'}`}>
+              <p className="text-xs text-[var(--color-text-muted)]">
                 {summary.totalQuestions} questions from last {days} days
               </p>
               <div className="mt-2 flex flex-wrap gap-1">
                 {summary.systems.slice(0, 3).map((sys) => (
                   <span
                     key={sys.system}
-                    className={`text-xs px-2 py-1 rounded ${
-                      theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-800 text-blue-200'
-                    }`}
+                    className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
                   >
                     {sys.system} ({sys.errorCount})
                   </span>
                 ))}
                 {summary.systems.length > 3 && (
                   <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-800 text-blue-200'
-                    }`}
+                    className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
                   >
                     +{summary.systems.length - 3} more
                   </span>
@@ -171,18 +144,12 @@ export default function WeaknessCheatsheetExporter({
         </div>
       ) : (
         <div
-          className={`p-3 rounded-lg mb-4 text-center ${
-            theme === 'light'
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-green-900/20 border border-green-800'
-          }`}
+          className="p-3 rounded-lg mb-4 text-center bg-[var(--color-success)]/10 border border-[var(--color-success)]/30"
         >
           <Check
-            className={`w-6 h-6 mx-auto mb-2 ${
-              theme === 'light' ? 'text-green-600' : 'text-green-400'
-            }`}
+            className="w-6 h-6 mx-auto mb-2 text-[var(--color-success)]"
           />
-          <p className={`text-sm ${theme === 'light' ? 'text-green-900' : 'text-green-100'}`}>
+          <p className="text-sm text-[var(--color-text-primary)]">
             No significant weaknesses in the last {days} days!
           </p>
         </div>
@@ -194,16 +161,12 @@ export default function WeaknessCheatsheetExporter({
         disabled={summary.totalWeaknesses === 0 || exportStatus !== 'idle'}
         className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
           exportStatus === 'success'
-            ? 'bg-green-500 text-white'
+            ? 'bg-[var(--color-success)] text-[var(--color-text-inverse)]'
             : exportStatus === 'error'
-              ? 'bg-red-500 text-white'
+              ? 'bg-[var(--color-error)] text-[var(--color-text-inverse)]'
               : summary.totalWeaknesses === 0
-                ? theme === 'light'
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : theme === 'light'
-                  ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                : 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90'
         }`}
       >
         {exportStatus === 'success' ? (
@@ -225,9 +188,7 @@ export default function WeaknessCheatsheetExporter({
       </button>
 
       <p
-        className={`text-xs mt-2 text-center ${
-          theme === 'light' ? 'text-[var(--color-text-muted)]' : 'text-gray-500'
-        }`}
+        className="text-xs mt-2 text-center text-[var(--color-text-muted)]"
       >
         Opens in new window for printing to PDF
       </p>
@@ -271,6 +232,37 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
     day: 'numeric',
   });
 
+  const rootStyles = getComputedStyle(document.documentElement);
+  const resolveToken = (value: string, fallback: string) => value || fallback;
+  const exportAccent = resolveToken(
+    rootStyles.getPropertyValue('--color-accent').trim(),
+    'currentColor'
+  );
+  const exportText = resolveToken(
+    rootStyles.getPropertyValue('--color-text-primary').trim(),
+    'currentColor'
+  );
+  const exportMuted = resolveToken(
+    rootStyles.getPropertyValue('--color-text-muted').trim(),
+    'currentColor'
+  );
+  const exportInverse = resolveToken(
+    rootStyles.getPropertyValue('--color-text-inverse').trim(),
+    'currentColor'
+  );
+  const exportBg = resolveToken(
+    rootStyles.getPropertyValue('--color-bg-primary').trim(),
+    'transparent'
+  );
+  const exportSurface = resolveToken(
+    rootStyles.getPropertyValue('--color-bg-secondary').trim(),
+    'transparent'
+  );
+  const exportBorder = resolveToken(
+    rootStyles.getPropertyValue('--color-border').trim(),
+    'currentColor'
+  );
+
   let html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -278,6 +270,15 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
   <meta charset="UTF-8">
   <title>PANaCEa Weakness Summary - Last ${days} Days</title>
   <style>
+    :root {
+      --export-accent: ${exportAccent};
+      --export-text: ${exportText};
+      --export-muted: ${exportMuted};
+      --export-inverse: ${exportInverse};
+      --export-bg: ${exportBg};
+      --export-surface: ${exportSurface};
+      --export-border: ${exportBorder};
+    }
     @media print {
       @page { margin: 0.5in; }
       .no-print { display: none; }
@@ -288,16 +289,17 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
       max-width: 8.5in;
       margin: 0 auto;
       padding: 20px;
-      background: #fff;
+      background: var(--export-bg);
+      color: var(--export-text);
     }
     .header {
       text-align: center;
-      border-bottom: 3px solid #3b82f6;
+      border-bottom: 3px solid var(--export-accent);
       padding-bottom: 20px;
       margin-bottom: 30px;
     }
     .header h1 {
-      color: #3b82f6;
+      color: var(--export-accent);
       margin: 0 0 10px 0;
     }
     .system-section {
@@ -305,8 +307,12 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
       page-break-inside: avoid;
     }
     .system-header {
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      color: white;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--export-accent) 90%, transparent) 0%,
+        color-mix(in srgb, var(--export-accent) 60%, transparent) 100%
+      );
+      color: var(--export-inverse);
       padding: 12px 20px;
       border-radius: 8px;
       margin-bottom: 15px;
@@ -316,32 +322,32 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
       padding: 0;
     }
     .condition-item {
-      background: #f9fafb;
-      border-left: 4px solid #3b82f6;
+      background: color-mix(in srgb, var(--export-surface) 90%, transparent);
+      border-left: 4px solid var(--export-accent);
       padding: 10px 15px;
       margin-bottom: 10px;
       border-radius: 4px;
     }
     .condition-item .condition-name {
       font-weight: 600;
-      color: #1a1a1a;
+      color: var(--export-text);
     }
     .condition-item .topic {
       font-size: 0.875rem;
-      color: #6b7280;
+      color: var(--export-muted);
     }
     .print-button {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #3b82f6;
-      color: white;
+      background: var(--export-accent);
+      color: var(--export-inverse);
       border: none;
       padding: 12px 24px;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px color-mix(in srgb, var(--export-text) 12%, transparent);
     }
   </style>
 </head>
@@ -391,7 +397,7 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
   });
 
   html += `
-  <div style="text-align: center; color: #9ca3af; font-size: 0.875rem; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+  <div style="text-align: center; color: var(--export-muted); font-size: 0.875rem; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--export-border);">
     <p>Generated by PANaCEa AI Study Platform</p>
     <p style="margin-top: 10px;"><strong>Tip:</strong> Review these conditions in your study materials and use PANaCEa's targeted drill modes for focused practice.</p>
   </div>

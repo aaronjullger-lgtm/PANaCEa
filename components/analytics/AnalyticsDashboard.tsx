@@ -256,7 +256,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-steel-blue-500/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
@@ -276,7 +276,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-sage-500/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
@@ -292,7 +292,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-muted-amber/50 transition-colors">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -317,12 +317,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Weakest Subject Areas - Student Priority */}
           {weakestAreas.length > 0 && (
-            <div className="p-5 rounded-xl bg-muted-amber-50 dark:bg-muted-amber-950/20 border-2 border-muted-amber-200 dark:border-muted-amber-800">
+            <div className="p-5 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
               <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 rounded-lg bg-muted-amber-500/10">
-                  <AlertCircle className="w-5 h-5 text-muted-amber-600 dark:text-muted-amber-400" />
+                <div className="p-2 rounded-lg bg-data-provisional/10">
+                  <AlertCircle className="w-5 h-5 text-data-provisional" />
                 </div>
-                <h3 className="font-bold text-muted-amber-900 dark:text-muted-amber-100">
+                <h3 className="font-bold text-data-provisional">
                   Focus Areas - Highest Impact
                 </h3>
               </div>
@@ -330,13 +330,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 {weakestAreas.map((area) => (
                   <div
                     key={area.system}
-                    className="p-3 rounded-lg bg-[var(--color-bg-primary)] border border-muted-amber-200 dark:border-muted-amber-800"
+                    className="p-3 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
                   >
                     <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
                       {area.system}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-muted-amber-600 dark:text-muted-amber-400">
+                      <span className="text-2xl font-bold text-data-provisional">
                         {area.accuracy}%
                       </span>
                       <span className="text-xs text-[var(--color-text-muted)]">
@@ -373,8 +373,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <Radar
                       name="Accuracy"
                       dataKey="accuracy"
-                      stroke="var(--color-steel-blue-500)"
-                      fill="var(--color-steel-blue-500)"
+                      stroke="var(--color-accent)"
+                      fill="var(--color-accent)"
                       fillOpacity={0.35}
                     />
                   </RadarChart>
@@ -413,7 +413,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       yAxisId="left"
                       type="monotone"
                       dataKey="accuracy"
-                      stroke="var(--color-sage-500)"
+                      stroke="var(--color-accent)"
                       strokeWidth={2}
                       dot={false}
                       name="Accuracy (%)"
@@ -422,7 +422,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       yAxisId="right"
                       type="monotone"
                       dataKey="pace"
-                      stroke="var(--color-steel-blue-500)"
+                      stroke="var(--color-text-secondary)"
                       strokeWidth={2}
                       dot={false}
                       name="Pace (s)"
@@ -571,14 +571,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   />
                   <Bar
                     dataKey="seconds"
-                    fill="var(--color-muted-amber)"
+                    fill="var(--color-accent)"
                     radius={[6, 6, 0, 0]}
                     name="Avg seconds"
                   >
                     {timeData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill="var(--color-muted-amber)"
+                        fill="var(--color-accent)"
                         fillOpacity={entry.count >= MIN_SYSTEM_REVIEWS ? 1 : 0.3}
                       />
                     ))}

@@ -8,7 +8,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
-import { CommandCenterHub } from '../components/CommandCenterHub';
+import { CommandCenterHub } from '../components/navigation/CommandCenterHub';
 import type { PerformanceRecord, Question, SessionSettings } from '../types';
 
 interface CommandCenterPageProps {

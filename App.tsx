@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Keyboard, X } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'sonner';
-import Loader from './components/Loader';
-import ThemeToggleButton from './components/ThemeToggleButton';
+import Loader from './components/loading/Loader';
+import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './components/LandingPage';
-import { LoadingProgress } from './components/LoadingProgress';
+import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
 import { initializeSession } from './services/core';
 import { useUserStats } from './hooks/useUserStats';
@@ -34,9 +34,9 @@ import {
 } from './contexts/KeyboardShortcutsContext';
 
 // Lazy load components for better performance
-const QuizView = lazy(() => import('./components/QuizView'));
-const MenuView = lazy(() => import('./components/MenuView'));
-const PhotoDrillSession = lazy(() => import('./components/PhotoDrillSession'));
+const QuizView = lazy(() => import('./components/quiz/QuizView'));
+const MenuView = lazy(() => import('./components/navigation/MenuView'));
+const PhotoDrillSession = lazy(() => import('./components/drill/PhotoDrillSession'));
 const RapidRecallDrill = lazy(() => import('./components/drill/recall/RapidRecallDrill'));
 const DDxCompareDrill = lazy(() => import('./components/drill/ddx/DDxCompareDrill'));
 const MiniLabDrillSession = lazy(() => import('./components/drill/MiniLabDrillSession'));
@@ -59,16 +59,16 @@ const PatientEncounterMode = lazy(() => import('./components/modes/PatientEncoun
 const CodeBlueSpeedMode = lazy(() => import('./components/modes/CodeBlueSpeedMode'));
 const GrandRoundsMode = lazy(() => import('./components/modes/GrandRoundsMode'));
 const IntegrationsHub = lazy(() => import('./components/integrations/IntegrationsHub'));
-const SettingsStatsModal = lazy(() => import('./components/SettingsStatsModal'));
-const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal'));
+const SettingsStatsModal = lazy(() => import('./components/modals/SettingsStatsModal'));
+const KeyboardShortcutsModal = lazy(() => import('./components/modals/KeyboardShortcutsModal'));
 const PANRELASimulator = lazy(() => import('./components/lifelong-learning/PANRELASimulator'));
-const CommandPalette = lazy(() => import('./components/CommandPalette'));
+const CommandPalette = lazy(() => import('./components/navigation/CommandPalette'));
 const UserProfileModal = lazy(() => import('./components/onboarding/UserProfileModal'));
 const MediaApproval = lazy(() => import('./pages/admin/MediaApproval'));
 const StudyGroupDashboard = lazy(() => import('./components/social/StudyGroupDashboard'));
 const ToolkitHub = lazy(() => import('./components/toolkit/ToolkitHub'));
 const GapAnalysisDashboard = lazy(() => import('./components/dashboard/GapAnalysisDashboard'));
-const CommandCenterHub = lazy(() => import('./components/CommandCenterHub'));
+const CommandCenterHub = lazy(() => import('./components/navigation/CommandCenterHub'));
 const TrainingMenu = lazy(() => import('./components/dashboard/TrainingMenu'));
 const SimulationPage = lazy(() =>
   import('./pages/SimulationPage').then((m) => ({ default: m.SimulationPage }))
@@ -85,7 +85,7 @@ const ClinicalProfileDashboard = lazy(
 );
 
 // Non-lazy components that should always be available
-import { OfflineSyncIndicator } from './components/OfflineSyncIndicator';
+import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -694,7 +694,7 @@ const App: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-800"
+                  className="mb-4 p-3 rounded-md bg-data-fail/10 text-data-fail text-sm border border-data-fail/30"
                 >
                   {error}
                 </motion.div>
@@ -1091,7 +1091,7 @@ const App: React.FC = () => {
                       <div className="relative">
                         <button
                           onClick={() => setView('command_center')}
-                          className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          className="absolute top-4 left-4 z-10 p-2 bg-[var(--color-bg-primary)] rounded-full shadow-sm border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -1103,7 +1103,7 @@ const App: React.FC = () => {
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="w-5 h-5 text-slate-600 dark:text-slate-400"
+                            className="w-5 h-5 text-[var(--color-text-muted)]"
                           >
                             <path d="m15 18-6-6 6-6" />
                           </svg>

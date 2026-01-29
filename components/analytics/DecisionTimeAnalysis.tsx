@@ -116,9 +116,9 @@ function formatTime(seconds: number): string {
  */
 function getTimeColor(seconds: number, median: number, theme: 'light' | 'dark' = 'light'): string {
   const ratio = seconds / median;
-  if (ratio > 1.5) return theme === 'light' ? '#ef4444' : '#f87171'; // Red
-  if (ratio < 0.7) return theme === 'light' ? '#10b981' : '#34d399'; // Green
-  return theme === 'light' ? '#f59e0b' : '#fbbf24'; // Amber
+  if (ratio > 1.5) return 'var(--color-error)';
+  if (ratio < 0.7) return 'var(--color-success)';
+  return 'var(--color-warning)';
 }
 
 export default function DecisionTimeAnalysis({
@@ -144,9 +144,7 @@ export default function DecisionTimeAnalysis({
   if (stats.length === 0) {
     return (
       <div
-        className={`rounded-lg p-6 text-center ${
-          theme === 'light' ? 'bg-gray-50 text-gray-500' : 'bg-gray-800 text-gray-400'
-        }`}
+        className="rounded-lg p-6 text-center bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]"
       >
         <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p className="text-sm">
@@ -157,10 +155,10 @@ export default function DecisionTimeAnalysis({
   }
 
   return (
-    <div className={`rounded-lg p-6 ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}>
+    <div className="rounded-lg p-6 bg-[var(--color-bg-primary)]" data-theme={theme}>
       <div className="flex items-center gap-2 mb-6">
-        <Clock className={`w-6 h-6 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`} />
-        <h3 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+        <Clock className="w-6 h-6 text-[var(--color-accent)]" />
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
           Decision Time Analysis
         </h3>
       </div>
@@ -172,24 +170,18 @@ export default function DecisionTimeAnalysis({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className={`rounded-lg p-4 ${
-              theme === 'light' ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-800 hover:bg-gray-700'
-            } transition-colors`}
+            className="rounded-lg p-4 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h4
-                    className={`font-semibold ${
-                      theme === 'light' ? 'text-gray-900' : 'text-white'
-                    }`}
+                    className="font-semibold text-[var(--color-text-primary)]"
                   >
                     {stat.systemName}
                   </h4>
                   <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900 text-blue-300'
-                    }`}
+                    className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
                   >
                     {stat.totalQuestions} questions
                   </span>
@@ -214,12 +206,16 @@ export default function DecisionTimeAnalysis({
                   <div className="flex items-center gap-1">
                     <TrendingUp
                       className={`w-4 h-4 ${
-                        stat.accuracy >= 70 ? 'text-green-500' : 'text-red-500'
+                        stat.accuracy >= 70
+                          ? 'text-[var(--color-success)]'
+                          : 'text-[var(--color-error)]'
                       }`}
                     />
                     <span
                       className={`font-semibold ${
-                        stat.accuracy >= 70 ? 'text-green-600' : 'text-red-600'
+                        stat.accuracy >= 70
+                          ? 'text-[var(--color-success)]'
+                          : 'text-[var(--color-error)]'
                       }`}
                     >
                       {stat.accuracy}%
@@ -231,18 +227,12 @@ export default function DecisionTimeAnalysis({
 
             {/* AI Insight */}
             <div
-              className={`flex items-start gap-2 p-3 rounded-md ${
-                theme === 'light'
-                  ? 'bg-blue-50 border border-blue-200'
-                  : 'bg-blue-900/20 border border-blue-800'
-              }`}
+              className="flex items-start gap-2 p-3 rounded-md bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
             >
               <Brain
-                className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                  theme === 'light' ? 'text-blue-600' : 'text-blue-400'
-                }`}
+                className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]"
               />
-              <p className={`text-sm ${theme === 'light' ? 'text-blue-900' : 'text-blue-100'}`}>
+              <p className="text-sm text-[var(--color-text-primary)]">
                 <span className="font-semibold">AI Insight: </span>
                 {stat.insight}
               </p>
@@ -253,21 +243,15 @@ export default function DecisionTimeAnalysis({
 
       {/* Summary Statistics */}
       <div
-        className={`mt-6 p-4 rounded-lg ${
-          theme === 'light'
-            ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
-            : 'bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800'
-        }`}
+        className="mt-6 p-4 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
       >
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle
-            className={`w-5 h-5 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`}
-          />
-          <h4 className={`font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+          <AlertCircle className="w-5 h-5 text-[var(--color-accent)]" />
+          <h4 className="font-semibold text-[var(--color-text-primary)]">
             Key Takeaway
           </h4>
         </div>
-        <p className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+        <p className="text-sm text-[var(--color-text-secondary)]">
           Median decision time: <span className="font-bold">{formatTime(medianTime ?? 0)}</span>.
           Categories where you spend significantly more time may indicate knowledge gaps requiring
           focused review, even if your accuracy appears acceptable.

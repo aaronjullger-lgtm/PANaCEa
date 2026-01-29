@@ -57,7 +57,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
             min={min}
             max={max}
             step={step}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
           />
           {unit && (
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">
@@ -69,7 +69,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none cursor-pointer"
+          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all appearance-none cursor-pointer"
         >
           <option value="">Select...</option>
           {options?.map((option) => (
@@ -111,7 +111,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
             }
             ${
               item.state
-                ? 'bg-blue-950/30 border-2 border-blue-700'
+                ? 'bg-slate-800/50 border-2 border-slate-700'
                 : 'bg-slate-900/50 border-2 border-slate-700'
             }
           `}
@@ -121,7 +121,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
             checked={item.state}
             onChange={(e) => !item.disabled && item.setState(e.target.checked)}
             disabled={item.disabled}
-            className="w-5 h-5 mt-0.5 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+            className="w-5 h-5 mt-0.5 text-[var(--color-accent)] bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
@@ -130,7 +130,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
                 <span
                   className={`
                   px-2 py-0.5 rounded text-xs font-bold
-                  ${item.state ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400'}
+                  ${item.state ? 'bg-[var(--color-accent)] text-white' : 'bg-slate-700 text-slate-400'}
                 `}
                 >
                   +{item.points}

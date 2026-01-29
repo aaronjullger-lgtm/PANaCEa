@@ -71,7 +71,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   size = 160,
   strokeWidth = 12,
   color = 'url(#progressGradient)',
-  backgroundColor = '#e2e8f0',
+  backgroundColor = 'var(--color-border)',
   label,
   sublabel,
   animated = true,
@@ -87,9 +87,9 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
       <svg width={size} height={size} className="transform -rotate-90">
         <defs>
           <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#06b6d4" />
+            <stop offset="0%" stopColor="var(--color-accent)" />
+            <stop offset="50%" stopColor="var(--color-accent)" />
+            <stop offset="100%" stopColor="var(--color-success)" />
           </linearGradient>
         </defs>
         {/* Background circle */}
@@ -122,7 +122,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="text-3xl font-bold text-slate-800 dark:text-slate-100"
+          className="text-3xl font-bold text-[var(--color-text-primary)]"
           initial={animated ? { opacity: 0, scale: 0.5 } : undefined}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
@@ -130,7 +130,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           {label || `${Math.round(percentage)}%`}
         </motion.span>
         {sublabel && (
-          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sublabel}</span>
+          <span className="text-xs text-[var(--color-text-muted)] mt-1">{sublabel}</span>
         )}
       </div>
     </div>
@@ -141,22 +141,22 @@ const TrendIndicator: React.FC<{ trend: TrendAnalysis }> = ({ trend }) => {
   const getIcon = () => {
     switch (trend.direction) {
       case 'improving':
-        return <TrendingUp className="w-5 h-5 text-emerald-500" />;
+        return <TrendingUp className="w-5 h-5 text-[var(--color-success)]" />;
       case 'declining':
-        return <TrendingDown className="w-5 h-5 text-red-500" />;
+        return <TrendingDown className="w-5 h-5 text-[var(--color-error)]" />;
       default:
-        return <Minus className="w-5 h-5 text-slate-400" />;
+        return <Minus className="w-5 h-5 text-[var(--color-text-muted)]" />;
     }
   };
 
   const getColor = () => {
     switch (trend.direction) {
       case 'improving':
-        return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
+        return 'bg-[var(--color-success)]/10 text-[var(--color-success)]';
       case 'declining':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+        return 'bg-[var(--color-error)]/10 text-[var(--color-error)]';
       default:
-        return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400';
+        return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]';
     }
   };
 
@@ -190,7 +190,7 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
 
   return (
     <div className="w-full">
-      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-1">
         <span>{ci.lower.toFixed(1)}%</span>
         <span className="flex items-center gap-1">
           <Info className="w-3 h-3" />
@@ -198,15 +198,15 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
         </span>
         <span>{ci.upper.toFixed(1)}%</span>
       </div>
-      <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div className="relative h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         {/* Gradient fill */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-accent)]/40 via-[var(--color-success)]/40 to-[var(--color-accent)]/40 opacity-30" />
         {/* Marker for current accuracy */}
         <motion.div
           initial={{ left: '0%' }}
           animate={{ left: `${Math.min(100, Math.max(0, markerPosition))}%` }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="absolute top-0 bottom-0 w-1 bg-white dark:bg-slate-200 rounded-full shadow-md"
+          className="absolute top-0 bottom-0 w-1 bg-[var(--color-text-inverse)] rounded-full shadow-md"
           style={{ transform: 'translateX(-50%)' }}
         />
       </div>
@@ -218,10 +218,10 @@ const PANCEPredictionBadge: React.FC<{
   prediction: ReturnType<typeof predictPANCEScore>;
 }> = ({ prediction }) => {
   const getStatusColor = () => {
-    if (prediction.predictedScore >= 450) return 'from-emerald-500 to-cyan-500';
-    if (prediction.predictedScore >= 400) return 'from-blue-500 to-purple-500';
-    if (prediction.predictedScore >= 350) return 'from-amber-500 to-orange-500';
-    return 'from-red-500 to-pink-500';
+    if (prediction.predictedScore >= 450) return 'from-[var(--color-success)] to-[var(--color-accent)]';
+    if (prediction.predictedScore >= 400) return 'from-[var(--color-accent)] to-[var(--color-accent)]/70';
+    if (prediction.predictedScore >= 350) return 'from-[var(--color-warning)] to-[var(--color-warning)]/70';
+    return 'from-[var(--color-error)] to-[var(--color-error)]/70';
   };
 
   return (
@@ -229,18 +229,18 @@ const PANCEPredictionBadge: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1 }}
-      className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-xl border border-slate-200 dark:border-slate-600"
+      className="mt-4 p-4 bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)]"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Award
-            className={`w-5 h-5 bg-gradient-to-r ${getStatusColor()} text-white rounded p-0.5`}
+            className={`w-5 h-5 bg-gradient-to-r ${getStatusColor()} text-[var(--color-text-inverse)] rounded p-0.5`}
           />
-          <span className="font-medium text-slate-700 dark:text-slate-200">
+          <span className="font-medium text-[var(--color-text-primary)]">
             PANCE Score Prediction
           </span>
         </div>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-xs text-[var(--color-text-muted)]">
           {prediction.range.min} - {prediction.range.max}
         </span>
       </div>
@@ -255,10 +255,10 @@ const PANCEPredictionBadge: React.FC<{
           {prediction.predictedScore}
         </motion.div>
         <div className="flex-1">
-          <div className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          <div className="text-sm font-medium text-[var(--color-text-primary)]">
             {prediction.passLikelihood}
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">Passing score: ~350</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Passing score: ~350</div>
         </div>
       </div>
     </motion.div>
@@ -275,8 +275,8 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
       transition={{ delay: 1.3 }}
       className="mt-4 space-y-2"
     >
-      <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
-        <Sparkles className="w-4 h-4 text-amber-500" />
+      <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)]">
+        <Sparkles className="w-4 h-4 text-[var(--color-warning)]" />
         Statistical Insights
       </div>
       <ul className="space-y-1.5">
@@ -286,9 +286,9 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.4 + i * 0.1 }}
-            className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
+            className="flex items-start gap-2 text-sm text-[var(--color-text-muted)]"
           >
-            <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 mt-0.5 text-[var(--color-accent)] flex-shrink-0" />
             <span>{insight}</span>
           </motion.li>
         ))}
@@ -327,11 +327,11 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
   // Get grade color
   const getGradeInfo = () => {
-    if (accuracy >= 90) return { grade: 'A', color: 'text-emerald-500' };
-    if (accuracy >= 80) return { grade: 'B', color: 'text-blue-500' };
-    if (accuracy >= 70) return { grade: 'C', color: 'text-amber-500' };
-    if (accuracy >= 60) return { grade: 'D', color: 'text-orange-500' };
-    return { grade: 'F', color: 'text-red-500' };
+    if (accuracy >= 90) return { grade: 'A', color: 'text-[var(--color-success)]' };
+    if (accuracy >= 80) return { grade: 'B', color: 'text-[var(--color-accent)]' };
+    if (accuracy >= 70) return { grade: 'C', color: 'text-[var(--color-warning)]' };
+    if (accuracy >= 60) return { grade: 'D', color: 'text-[var(--color-warning)]' };
+    return { grade: 'F', color: 'text-[var(--color-error)]' };
   };
 
   const gradeInfo = getGradeInfo();
@@ -341,7 +341,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 ${className}`}
+        className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] ${className}`}
       >
         <div className="flex items-center gap-4">
           <CircularProgress value={accuracy} size={80} strokeWidth={8} />
@@ -350,7 +350,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
               <span className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</span>
               {stats.trend && <TrendIndicator trend={stats.trend} />}
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {totalQuestions} questions answered
             </p>
           </div>
@@ -363,17 +363,17 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 ${className}`}
+      className={`p-6 bg-[var(--color-bg-primary)] rounded-2xl shadow-lg border border-[var(--color-border)] ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-            <Brain className="w-5 h-5 text-white" />
+          <div className="p-2 bg-[var(--color-accent)] rounded-lg">
+            <Brain className="w-5 h-5 text-[var(--color-text-inverse)]" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h3 className="font-semibold text-[var(--color-text-primary)]">{title}</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
               Based on {totalQuestions} questions
             </p>
           </div>
@@ -392,7 +392,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
           transition={{ delay: 0.8, type: 'spring' }}
           className="mt-4 flex items-center gap-2"
         >
-          <span className="text-sm text-slate-500 dark:text-slate-400">Grade:</span>
+          <span className="text-sm text-[var(--color-text-muted)]">Grade:</span>
           <span className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</span>
         </motion.div>
       </div>
@@ -410,7 +410,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-700 dark:text-amber-400 text-sm"
+          className="flex items-center gap-2 p-3 bg-[var(--color-warning)]/10 rounded-lg text-[var(--color-warning)] text-sm"
         >
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           <span>Answer more questions for stable statistics</span>

@@ -343,7 +343,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
           </p>
           <button
             onClick={() => (window.location.href = '/menu')}
-            className="px-6 py-3 bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white rounded-xl text-white font-semibold transition-all shadow-lg flex items-center gap-2 mx-auto"
+            className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 border border-[var(--color-accent)]/40 rounded-xl text-[var(--color-text-inverse)] font-semibold transition-all shadow-lg flex items-center gap-2 mx-auto"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

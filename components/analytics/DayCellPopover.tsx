@@ -98,18 +98,18 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
 
           {/* Accuracy */}
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+            <div className="p-2 bg-[var(--color-success)]/10 rounded-lg">
+              <TrendingUp className="w-4 h-4 text-[var(--color-success)]" />
             </div>
             <div className="flex-1">
               <div className="text-xs text-[var(--color-text-muted)]">Accuracy</div>
               <div
                 className={`text-lg font-bold ${
                   data.accuracy >= 80
-                    ? 'text-emerald-500'
+                    ? 'text-[var(--color-success)]'
                     : data.accuracy >= 60
-                      ? 'text-yellow-500'
-                      : 'text-red-500'
+                      ? 'text-[var(--color-warning)]'
+                      : 'text-[var(--color-error)]'
                 }`}
               >
                 {data.accuracy}%
@@ -120,8 +120,8 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
           {/* Average Time per Question */}
           {data.avgTimeMs !== undefined && data.avgTimeMs > 0 && (
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Clock className="w-4 h-4 text-blue-500" />
+              <div className="p-2 bg-[var(--color-accent)]/10 rounded-lg">
+                <Clock className="w-4 h-4 text-[var(--color-accent)]" />
               </div>
               <div className="flex-1">
                 <div className="text-xs text-[var(--color-text-muted)]">Avg Time per Question</div>
@@ -135,8 +135,8 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
           {/* Weakest System */}
           {data.weakestSystem && (
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <AlertCircle className="w-4 h-4 text-amber-500" />
+              <div className="p-2 bg-[var(--color-warning)]/10 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-[var(--color-warning)]" />
               </div>
               <div className="flex-1">
                 <div className="text-xs text-[var(--color-text-muted)]">Weakest System</div>

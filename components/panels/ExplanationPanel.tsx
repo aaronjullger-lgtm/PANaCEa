@@ -95,8 +95,8 @@ const GlassPanel: React.FC<{
     <div
       className={`
         backdrop-blur-md rounded-xl border p-5 shadow-lg
-        bg-white/70 dark:bg-slate-800/80 
-        border-slate-200/60 dark:border-slate-700/60
+        bg-[var(--color-bg-primary)]/80 
+        border-[var(--color-border)]/60
         ${highlightClass}
         ${className}
       `}
@@ -186,7 +186,7 @@ const SectionHeader: React.FC<{
   className?: string;
 }> = ({ icon, title, className = '' }) => (
   <div className={`flex items-center gap-2 mb-3 ${className}`}>
-    <span className="text-slate-600 dark:text-slate-400">{icon}</span>
+    <span className="text-[var(--color-text-muted)]">{icon}</span>
     <h3 className="font-bold text-lg text-[var(--color-text-primary)]">{title}</h3>
   </div>
 );
@@ -208,20 +208,20 @@ const DifferentialAccordion: React.FC<{
       {differentials.map((diff, index) => (
         <div
           key={index}
-          className="border border-slate-200/60 dark:border-slate-700/60 rounded-lg overflow-hidden bg-white/50 dark:bg-slate-800/50"
+          className="border border-[var(--color-border)]/60 rounded-lg overflow-hidden bg-[var(--color-bg-primary)]/60"
         >
           <button
             onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-            className="w-full flex items-center justify-between p-3 text-left hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+            className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--color-bg-tertiary)]/60 transition-colors"
             aria-expanded={expandedIndex === index}
           >
             <span className="font-medium text-[var(--color-text-primary)] line-clamp-1">
               {diff.option}
             </span>
             {expandedIndex === index ? (
-              <ChevronUp className="w-5 h-5 text-slate-500 flex-shrink-0" />
+              <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-slate-500 flex-shrink-0" />
+              <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
             )}
           </button>
           <AnimatePresence>
@@ -274,18 +274,18 @@ const FeedbackButtons: React.FC<{
       <button
         onClick={() => handleFeedback(true)}
         disabled={disabled}
-        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-colors disabled:opacity-50"
+        className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-data-pass/10 hover:border-data-pass/30 transition-colors disabled:opacity-50"
         aria-label="Helpful"
       >
-        <ThumbsUp className="w-4 h-4 text-slate-500 hover:text-green-600" />
+        <ThumbsUp className="w-4 h-4 text-[var(--color-text-muted)] hover:text-data-pass" />
       </button>
       <button
         onClick={() => handleFeedback(false)}
         disabled={disabled}
-        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-700 transition-colors disabled:opacity-50"
+        className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-data-fail/10 hover:border-data-fail/30 transition-colors disabled:opacity-50"
         aria-label="Not helpful"
       >
-        <ThumbsDown className="w-4 h-4 text-slate-500 hover:text-red-600" />
+        <ThumbsDown className="w-4 h-4 text-[var(--color-text-muted)] hover:text-data-fail" />
       </button>
     </div>
   );
@@ -443,7 +443,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               {buzzwords.map((buzzword, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1.5 bg-amber-100/80 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-semibold border border-amber-200/60 dark:border-amber-700/40"
+                  className="px-3 py-1.5 bg-data-provisional/10 text-data-provisional rounded-full text-sm font-semibold border border-data-provisional/30"
                 >
                   {buzzword}
                 </span>
@@ -456,8 +456,8 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {mnemonic && mnemonic !== '[Mnemonic: None]' && (
           <section className="mb-6">
             <SectionHeader icon={<HelpCircle className="w-5 h-5" />} title="Memory Aid" />
-            <div className="p-3 bg-blue-50/80 dark:bg-blue-900/20 rounded-lg border border-blue-200/60 dark:border-blue-700/40">
-              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">{mnemonic}</p>
+            <div className="p-3 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30">
+              <p className="text-sm text-[var(--color-accent)] font-medium">{mnemonic}</p>
             </div>
           </section>
         )}
@@ -483,7 +483,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                   key={index}
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
-                  <span className="text-amber-500 mt-1.5 flex-shrink-0">💡</span>
+                  <span className="text-data-provisional mt-1.5 flex-shrink-0">💡</span>
                   <span dangerouslySetInnerHTML={{ __html: pearl }} className="flex-1" />
                 </li>
               ))}
@@ -519,12 +519,12 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                 <a
                   key={index}
                   href={`/concepts/${link.conceptId}`}
-                  className="flex items-center gap-2 p-3 bg-blue-50/80 dark:bg-blue-900/20 rounded-lg border border-blue-200/60 dark:border-blue-700/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/30 transition-colors group"
+                  className="flex items-center gap-2 p-3 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/15 transition-colors group"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <ExternalLink className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  <ExternalLink className="w-4 h-4 text-[var(--color-accent)] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-[var(--color-accent)]">
                     {link.title}
                   </span>
                 </a>
@@ -534,13 +534,13 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         )}
 
         {/* Actions Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[var(--color-border)]/60">
           <div className="flex flex-wrap gap-2">
             {/* Teach Me This Button */}
             {onTeach && (
               <button
                 onClick={onTeach}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
               >
                 <BookOpen className="w-4 h-4" />
                 Teach Me This
@@ -550,7 +550,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
             {/* Ask Tutor Button */}
             <button
               onClick={() => setShowTutor(!showTutor)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-colors shadow-md"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-semibold rounded-lg hover:bg-[var(--color-accent)] transition-colors shadow-md"
             >
               <MessageCircle className="w-4 h-4" />
               Ask Tutor
@@ -569,7 +569,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60"
+              className="mt-4 pt-4 border-t border-[var(--color-border)]/60"
             >
               <div className="space-y-3">
                 <SectionHeader
@@ -583,27 +583,27 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                     onChange={(e) => setTutorQuestion(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAskTutor()}
                     placeholder="Why isn't it B? or Explain like I'm 5..."
-                    className="flex-1 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                   />
                   <button
                     onClick={handleAskTutor}
                     disabled={!tutorQuestion.trim() || loadingTutor}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loadingTutor ? 'Thinking...' : 'Ask'}
                   </button>
                 </div>
                 {/* Show skeleton while loading and no response yet */}
                 {loadingTutor && !tutorResponse && (
-                  <div className="p-4 bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200/60 dark:border-purple-700/40">
+                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
                     <ClinicalSkeleton variant="compact" lines={4} />
                   </div>
                 )}
                 
                 {/* Show streaming response as it arrives */}
                 {tutorResponse && (
-                  <div className="p-4 bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200/60 dark:border-purple-700/40">
-                    <p className="text-sm text-purple-900 dark:text-purple-100 leading-relaxed whitespace-pre-wrap">
+                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
                       {tutorResponse}
                     </p>
                   </div>

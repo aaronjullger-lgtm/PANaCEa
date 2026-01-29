@@ -48,23 +48,39 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
   // Color coding based on retrievability - using slate palette for consistency
   const getRetrievabilityColor = (r: number) => {
-    if (r >= 0.9) return 'text-slate-200';
-    if (r >= 0.7) return 'text-slate-300';
-    if (r >= 0.5) return 'text-slate-400';
-    return 'text-slate-500';
+    if (r >= 0.9) return 'text-[var(--color-text-primary)]';
+    if (r >= 0.7) return 'text-[var(--color-text-primary)]';
+    if (r >= 0.5) return 'text-[var(--color-text-muted)]';
+    return 'text-[var(--color-text-muted)]';
   };
 
   // Get state badge color - using slate palette for consistency
   const getStateBadge = () => {
     switch (data.state) {
       case 'new':
-        return { bg: 'bg-slate-600/20', text: 'text-slate-300', label: 'New' };
+        return {
+          bg: 'bg-[var(--color-bg-tertiary)]',
+          text: 'text-[var(--color-text-muted)]',
+          label: 'New',
+        };
       case 'learning':
-        return { bg: 'bg-slate-500/20', text: 'text-slate-300', label: 'Learning' };
+        return {
+          bg: 'bg-[var(--color-accent)]/15',
+          text: 'text-[var(--color-accent)]',
+          label: 'Learning',
+        };
       case 'review':
-        return { bg: 'bg-slate-400/20', text: 'text-slate-200', label: 'Review' };
+        return {
+          bg: 'bg-[var(--color-success)]/15',
+          text: 'text-[var(--color-success)]',
+          label: 'Review',
+        };
       case 'relearning':
-        return { bg: 'bg-slate-700/30', text: 'text-slate-400', label: 'Relearning' };
+        return {
+          bg: 'bg-[var(--color-warning)]/15',
+          text: 'text-[var(--color-warning)]',
+          label: 'Relearning',
+        };
     }
   };
 
@@ -83,7 +99,11 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
   if (compact) {
     return (
       <div
-        className={`p-4 rounded-xl border ${isDue ? 'border-amber-500/50 bg-amber-500/10' : 'border-slate-700 bg-slate-800'}`}
+        className={`p-4 rounded-xl border ${
+          isDue
+            ? 'border-[var(--color-warning)]/50 bg-[var(--color-warning)]/10'
+            : 'border-[var(--color-border)] bg-[var(--color-bg-primary)]'
+        }`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -93,8 +113,10 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               <Brain className={`w-5 h-5 ${stateBadge.text}`} />
             </div>
             <div>
-              <h4 className="font-medium text-white text-sm">{data.conceptName}</h4>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
+              <h4 className="font-medium text-[var(--color-text-primary)] text-sm">
+                {data.conceptName}
+              </h4>
+              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 <span>{data.system}</span>
                 <span>•</span>
                 <span className={getRetrievabilityColor(data.retrievability)}>
@@ -107,13 +129,17 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
           {isDue && onReviewNow && (
             <button
               onClick={onReviewNow}
-              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/90 text-[var(--color-text-inverse)] text-xs font-medium rounded-lg transition-colors"
             >
               Review Now
             </button>
           )}
 
-          {!isDue && <span className="text-xs text-slate-400">Due in {daysUntilDue}d</span>}
+          {!isDue && (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              Due in {daysUntilDue}d
+            </span>
+          )}
         </div>
       </div>
     );
@@ -121,10 +147,12 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl border ${isDue ? 'border-amber-500/50' : 'border-slate-700'} bg-slate-800 overflow-hidden`}
+      className={`rounded-2xl border ${
+        isDue ? 'border-[var(--color-warning)]/50' : 'border-[var(--color-border)]'
+      } bg-[var(--color-bg-primary)] overflow-hidden`}
     >
       {/* Header */}
-      <div className="p-5 border-b border-slate-700">
+      <div className="p-5 border-b border-[var(--color-border)]">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -133,18 +161,20 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               >
                 {stateBadge.label}
               </span>
-              <span className="text-xs text-slate-500">{data.system}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{data.system}</span>
             </div>
-            <h3 className="text-lg font-semibold text-white">{data.conceptName}</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              {data.conceptName}
+            </h3>
           </div>
 
           {isDue ? (
-            <div className="flex items-center gap-2 text-amber-400">
+            <div className="flex items-center gap-2 text-[var(--color-warning)]">
               <AlertCircle className="w-5 h-5" />
               <span className="text-sm font-medium">Due for Review</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
               <Calendar className="w-4 h-4" />
               <span className="text-sm">Due in {daysUntilDue} days</span>
             </div>
@@ -153,19 +183,23 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 divide-x divide-slate-700">
+      <div className="grid grid-cols-3 divide-x divide-[var(--color-border)]">
         {/* Stability */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-[var(--color-text-muted)] mb-1">
             <TrendingUp className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Stability</span>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
             {data.stability.toFixed(1)}
-            <span className="text-sm font-normal text-slate-400">d</span>
+            <span className="text-sm font-normal text-[var(--color-text-muted)]">d</span>
           </p>
           {stabilityTrend !== 0 && (
-            <p className={`text-xs ${stabilityTrend > 0 ? 'text-slate-300' : 'text-slate-500'}`}>
+            <p
+              className={`text-xs ${
+                stabilityTrend > 0 ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'
+              }`}
+            >
               {stabilityTrend > 0 ? '+' : ''}
               {stabilityTrend.toFixed(1)}d from last
             </p>
@@ -174,22 +208,22 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
         {/* Difficulty */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-[var(--color-text-muted)] mb-1">
             <Target className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Difficulty</span>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
             {data.difficulty.toFixed(1)}
-            <span className="text-sm font-normal text-slate-400">/10</span>
+            <span className="text-sm font-normal text-[var(--color-text-muted)]">/10</span>
           </p>
-          <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="mt-1 h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full ${
                 data.difficulty <= 3
-                  ? 'bg-slate-400'
+                  ? 'bg-[var(--color-success)]'
                   : data.difficulty <= 6
-                    ? 'bg-slate-500'
-                    : 'bg-slate-600'
+                    ? 'bg-[var(--color-warning)]'
+                    : 'bg-[var(--color-error)]'
               }`}
               style={{ width: `${data.difficulty * 10}%` }}
             />
@@ -198,14 +232,14 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
         {/* Retrievability */}
         <div className="p-4 text-center">
-          <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+          <div className="flex items-center justify-center gap-1 text-[var(--color-text-muted)] mb-1">
             <Brain className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Recall</span>
           </div>
           <p className={`text-2xl font-bold ${getRetrievabilityColor(data.retrievability)}`}>
             {Math.round(data.retrievability * 100)}%
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {data.retrievability >= 0.9
               ? 'Excellent'
               : data.retrievability >= 0.7
@@ -219,8 +253,8 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
       {/* Stability History Mini Chart */}
       {data.stabilityHistory.length > 1 && (
-        <div className="px-5 py-4 border-t border-slate-700">
-          <p className="text-xs text-slate-400 mb-2 flex items-center gap-2">
+        <div className="px-5 py-4 border-t border-[var(--color-border)]">
+          <p className="text-xs text-[var(--color-text-muted)] mb-2 flex items-center gap-2">
             <Clock className="w-3 h-3" />
             Stability Growth Over {data.reviewCount} Reviews
           </p>
@@ -231,14 +265,14 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex-1 bg-slate-500/30 rounded-t transition-all hover:bg-slate-400/50"
+                  className="flex-1 bg-[var(--color-accent)]/20 rounded-t transition-all hover:bg-[var(--color-accent)]/40"
                   style={{ height: `${Math.max(height, 10)}%` }}
                   title={`${point.date}: ${point.stability.toFixed(1)}d`}
                 />
               );
             })}
           </div>
-          <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+          <div className="flex justify-between text-[10px] text-[var(--color-text-muted)] mt-1">
             <span>{data.stabilityHistory[0]?.date || ''}</span>
             <span>{data.stabilityHistory[data.stabilityHistory.length - 1]?.date || ''}</span>
           </div>
@@ -247,11 +281,10 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
 
       {/* Review Button */}
       {isDue && onReviewNow && (
-        <div className="p-4 bg-slate-900/50 border-t border-slate-700">
+        <div className="p-4 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)]">
           <button
             onClick={onReviewNow}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 
-              text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+            className="w-full py-3 bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/90 text-[var(--color-text-inverse)] font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle className="w-5 h-5" />
             Review This Concept Now

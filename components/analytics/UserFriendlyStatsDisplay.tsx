@@ -68,11 +68,12 @@ const StatCard: React.FC<StatCardProps> = ({
   color = 'blue',
 }) => {
   const colorClasses = {
-    blue: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
-    green: 'bg-slate-400/10 text-slate-200 border-slate-400/20',
-    amber: 'bg-slate-600/10 text-slate-400 border-slate-600/20',
-    red: 'bg-slate-700/10 text-slate-500 border-slate-700/20',
-    purple: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
+    blue: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/20',
+    green: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20',
+    amber: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/20',
+    red: 'bg-[var(--color-error)]/10 text-[var(--color-error)] border-[var(--color-error)]/20',
+    purple:
+      'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/20',
   };
 
   return (
@@ -87,9 +88,9 @@ const StatCard: React.FC<StatCardProps> = ({
           <div
             className={`flex items-center gap-1 text-xs font-medium ${
               trend === 'up'
-                ? 'text-slate-300'
+                ? 'text-[var(--color-success)]'
                 : trend === 'down'
-                  ? 'text-slate-500'
+                  ? 'text-[var(--color-error)]'
                   : 'text-[var(--color-text-muted)]'
             }`}
           >
@@ -142,10 +143,10 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
       : Math.min(100, Math.max(0, passProbability));
 
   const getColor = (s: number) => {
-    if (s >= 80) return '#10b981'; // green
-    if (s >= 65) return '#64748b'; // slate
-    if (s >= 50) return '#94a3b8'; // slate
-    return '#cbd5e1'; // slate
+    if (s >= 80) return 'var(--color-success)';
+    if (s >= 65) return 'var(--color-accent)';
+    if (s >= 50) return 'var(--color-warning)';
+    return 'var(--color-border-strong)';
   };
 
   const getLabel = (s: number) => {
@@ -233,10 +234,10 @@ const SystemStrengthBar: React.FC<{
   isStrength: boolean;
 }> = ({ system, mastery, trend, isStrength }) => {
   const getBarColor = (m: number) => {
-    if (m >= 80) return 'bg-slate-300';
-    if (m >= 60) return 'bg-slate-400';
-    if (m >= 40) return 'bg-slate-500';
-    return 'bg-slate-600';
+    if (m >= 80) return 'bg-[var(--color-success)]';
+    if (m >= 60) return 'bg-[var(--color-accent)]';
+    if (m >= 40) return 'bg-[var(--color-warning)]';
+    return 'bg-[var(--color-error)]';
   };
 
   return (
@@ -258,9 +259,9 @@ const SystemStrengthBar: React.FC<{
       <div
         className={`w-4 ${
           trend === 'improving'
-            ? 'text-slate-300'
+            ? 'text-[var(--color-success)]'
             : trend === 'declining'
-              ? 'text-slate-500'
+              ? 'text-[var(--color-error)]'
               : 'text-[var(--color-text-muted)]'
         }`}
       >
@@ -289,10 +290,10 @@ const RecommendationCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
 
   const priorityColors = {
-    critical: 'border-slate-500/50 bg-slate-500/5',
-    high: 'border-slate-400/50 bg-slate-400/5',
-    medium: 'border-slate-600/50 bg-slate-600/5',
-    low: 'border-slate-700/50 bg-slate-700/5',
+    critical: 'border-[var(--color-error)]/30 bg-[var(--color-error)]/5',
+    high: 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/5',
+    medium: 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5',
+    low: 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]',
   };
 
   return (
@@ -309,10 +310,10 @@ const RecommendationCard: React.FC<{
         <div
           className={`mt-0.5 ${
             recommendation.priority === 'critical'
-              ? 'text-slate-300'
+              ? 'text-[var(--color-error)]'
               : recommendation.priority === 'high'
-                ? 'text-slate-400'
-                : 'text-slate-500'
+                ? 'text-[var(--color-warning)]'
+                : 'text-[var(--color-text-muted)]'
           }`}
         >
           <Lightbulb className="w-5 h-5" />
@@ -321,7 +322,7 @@ const RecommendationCard: React.FC<{
           <p className="font-medium text-[var(--color-text-primary)] text-sm">
             {recommendation.recommendation}
           </p>
-          <p className="text-xs text-slate-300 dark:text-slate-300 mt-1">
+          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
             {recommendation.expectedImpact}
           </p>
         </div>
@@ -399,7 +400,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
+        <RefreshCw className="w-6 h-6 text-[var(--color-text-muted)] animate-spin" />
         <span className="ml-2 text-[var(--color-text-muted)]">Analyzing your learning data...</span>
       </div>
     );
@@ -519,7 +520,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Quick Stats Row */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Clock className="w-5 h-5 mx-auto text-slate-400 mb-2" />
+                <Clock className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.avgTimePerQuestion}s
                 </p>
@@ -527,7 +528,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               </div>
 
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Timer className="w-5 h-5 mx-auto text-slate-400 mb-2" />
+                <Timer className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.totalStudyHours}h
                 </p>
@@ -535,7 +536,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               </div>
 
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 text-center">
-                <Zap className="w-5 h-5 mx-auto text-slate-400 mb-2" />
+                <Zap className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {stats.questionsPerHour}
                 </p>
@@ -585,7 +586,11 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                     </div>
                     {stats.shouldTrustFirstInstinct !== null && (
                       <div
-                        className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-slate-400/10 text-slate-300' : 'bg-slate-500/10 text-slate-400'} text-sm flex items-center gap-2`}
+                        className={`p-3 rounded-lg ${
+                          stats.shouldTrustFirstInstinct
+                            ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                            : 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                        } text-sm flex items-center gap-2`}
                       >
                         <Lightbulb className="w-4 h-4 flex-shrink-0" />
                         {stats.shouldTrustFirstInstinct
@@ -619,7 +624,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       </span>
                     </div>
                     {stats.optimalBreakFrequency !== null && (
-                      <div className="p-3 rounded-lg bg-slate-500/10 text-slate-300 text-sm flex items-center gap-2">
+                      <div className="p-3 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-sm flex items-center gap-2">
                         <Coffee className="w-4 h-4" />
                         Take a break every {stats.optimalBreakFrequency} questions
                       </div>
@@ -678,7 +683,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {readiness.priorityAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-3 py-1.5 bg-slate-600/10 text-slate-500 dark:text-slate-400 rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded-full text-sm font-medium"
                     >
                       {area}
                     </span>
@@ -698,7 +703,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {readiness.strengths.map((strength) => (
                     <span
                       key={strength}
-                      className="px-3 py-1.5 bg-slate-400/10 text-slate-300 dark:text-slate-300 rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-full text-sm font-medium"
                     >
                       {strength}
                     </span>
@@ -708,10 +713,10 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             )}
 
             {/* Days to Ready */}
-            <div className="bg-gradient-to-r from-slate-500/10 to-slate-600/10 border border-slate-500/20 rounded-xl p-5">
+            <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-500/20 rounded-xl">
-                  <Calendar className="w-6 h-6 text-slate-400" />
+                <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-xl">
+                  <Calendar className="w-6 h-6 text-[var(--color-text-muted)]" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -741,7 +746,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Strengths */}
             {systems.strengths.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-slate-300 dark:text-slate-300 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Your Strengths ({systems.strengths.length})
                 </h3>
@@ -762,7 +767,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Weaknesses */}
             {systems.weaknesses.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   Areas to Improve ({systems.weaknesses.length})
                 </h3>
@@ -783,7 +788,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Improving */}
             {systems.improving.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
                   Rapidly Improving ({systems.improving.length})
                 </h3>
@@ -804,7 +809,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Declining */}
             {systems.declining.length > 0 && (
               <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-5">
-                <h3 className="text-sm font-medium text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <TrendingDown className="w-4 h-4" />
                   Needs Review ({systems.declining.length})
                 </h3>

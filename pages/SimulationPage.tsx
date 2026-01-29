@@ -106,6 +106,43 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
     { id: 'due', label: 'Due for Review', icon: Clock, color: 'emerald' },
   ];
 
+  const getFocusTone = (tone: string) => {
+    switch (tone) {
+      case 'amber':
+        return {
+          border: 'border-data-provisional',
+          bg: 'bg-data-provisional/10',
+          badge: 'bg-data-provisional/15 text-data-provisional',
+          icon: 'bg-data-provisional text-[var(--color-text-inverse)]',
+          check: 'bg-data-provisional',
+        };
+      case 'emerald':
+        return {
+          border: 'border-data-pass',
+          bg: 'bg-data-pass/10',
+          badge: 'bg-data-pass/15 text-data-pass',
+          icon: 'bg-data-pass text-[var(--color-text-inverse)]',
+          check: 'bg-data-pass',
+        };
+      case 'purple':
+        return {
+          border: 'border-data-fail',
+          bg: 'bg-data-fail/10',
+          badge: 'bg-data-fail/15 text-data-fail',
+          icon: 'bg-data-fail text-[var(--color-text-inverse)]',
+          check: 'bg-data-fail',
+        };
+      default:
+        return {
+          border: 'border-[var(--color-accent)]',
+          bg: 'bg-[var(--color-accent)]/10',
+          badge: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]',
+          icon: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]',
+          check: 'bg-[var(--color-accent)]',
+        };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       <div className="max-w-5xl mx-auto">
@@ -124,8 +161,8 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           </button>
 
           <div className="flex items-center gap-4 mb-3">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-700">
-              <Brain className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 border border-[var(--color-accent)]/30">
+              <Brain className="w-10 h-10 text-[var(--color-accent)]" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -147,7 +184,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         >
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-emerald-500" />
+              <Target className="w-4 h-4 text-data-pass" />
               <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -157,7 +194,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Zap className="w-4 h-4 text-blue-500" />
+              <Zap className="w-4 h-4 text-[var(--color-accent)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Today</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -167,7 +204,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
+              <TrendingUp className="w-4 h-4 text-data-provisional" />
               <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -177,7 +214,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Flag className="w-4 h-4 text-purple-500" />
+              <Flag className="w-4 h-4 text-data-fail" />
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -201,6 +238,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             {focusOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = selectedFocus === option.id;
+              const tone = getFocusTone(option.color);
 
               return (
                 <button
@@ -208,7 +246,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   onClick={() => setSelectedFocus(option.id)}
                   className={`relative p-5 rounded-xl border-2 transition-all text-left ${
                     isSelected
-                      ? `border-${option.color}-500 bg-${option.color}-50 dark:bg-${option.color}-900/20`
+                      ? `${tone.border} ${tone.bg}`
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'
                   }`}
                 >
@@ -216,7 +254,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                     <div
                       className={`p-3 rounded-xl ${
                         isSelected
-                          ? `bg-${option.color}-500 text-white`
+                          ? tone.icon
                           : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                       }`}
                     >
@@ -231,7 +269,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                           <span
                             className={`text-sm px-2 py-0.5 rounded-full ${
                               isSelected
-                                ? `bg-${option.color}-100 dark:bg-${option.color}-800 text-${option.color}-700 dark:text-${option.color}-200`
+                                ? tone.badge
                                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                             }`}
                           >
@@ -243,9 +281,9 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   </div>
                   {isSelected && (
                     <div
-                      className={`absolute top-3 right-3 w-6 h-6 rounded-full bg-${option.color}-500 flex items-center justify-center`}
+                      className={`absolute top-3 right-3 w-6 h-6 rounded-full ${tone.check} flex items-center justify-center`}
                     >
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-[var(--color-text-inverse)]" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -272,7 +310,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           onClick={handleStart}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full py-5 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-3"
+          className="w-full py-5 px-8 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-3"
         >
           <Award className="w-6 h-6" />
           Start {examLabel} Session

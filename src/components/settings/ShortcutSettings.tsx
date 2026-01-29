@@ -134,18 +134,18 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
   return (
     <div
       ref={containerRef}
-      className={`bg-slate-900 rounded-xl border border-slate-700 p-6 ${className}`}
+      className={`bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Keyboard className="w-6 h-6 text-blue-400" />
-          <h2 className="text-2xl font-bold text-slate-100">Keyboard Shortcuts</h2>
+          <Keyboard className="w-6 h-6 text-[var(--color-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Keyboard Shortcuts</h2>
         </div>
 
         <button
           onClick={handleReset}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-600"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg transition-colors border border-[var(--color-border)]"
         >
           <RotateCcw className="w-4 h-4" />
           <span className="text-sm font-medium">Reset to Defaults</span>
@@ -153,9 +153,9 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       </div>
 
       {/* Instructions */}
-      <p className="text-slate-400 text-sm mb-6">
+      <p className="text-[var(--color-text-muted)] text-sm mb-6">
         Click any shortcut button to rebind it. Press{' '}
-        <kbd className="px-2 py-1 bg-slate-800 rounded border border-slate-600 text-xs">Escape</kbd>{' '}
+        <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)] text-xs">Escape</kbd>{' '}
         to cancel.
       </p>
 
@@ -166,10 +166,10 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-2 mb-4 px-4 py-3 bg-green-900/30 border border-green-700 rounded-lg"
+            className="flex items-center gap-2 mb-4 px-4 py-3 bg-data-pass/10 border border-data-pass/30 rounded-lg"
           >
-            <Check className="w-5 h-5 text-green-400" />
-            <span className="text-green-300 text-sm">{successMessage}</span>
+            <Check className="w-5 h-5 text-data-pass" />
+            <span className="text-data-pass text-sm">{successMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -181,10 +181,10 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-2 mb-4 px-4 py-3 bg-red-900/30 border border-red-700 rounded-lg"
+            className="flex items-center gap-2 mb-4 px-4 py-3 bg-data-fail/10 border border-data-fail/30 rounded-lg"
           >
-            <AlertCircle className="w-5 h-5 text-red-400" />
-            <span className="text-red-300 text-sm">{conflictWarning}</span>
+            <AlertCircle className="w-5 h-5 text-data-fail" />
+            <span className="text-data-fail text-sm">{conflictWarning}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -201,12 +201,14 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
             <motion.div
               key={action}
               layout
-              className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+              className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-strong)] transition-colors"
             >
               {/* Action Name */}
               <div className="flex-1">
-                <h3 className="text-slate-100 font-medium">{displayName}</h3>
-                <p className="text-slate-500 text-xs mt-1">{getActionDescription(action)}</p>
+                <h3 className="text-[var(--color-text-primary)] font-medium">{displayName}</h3>
+                <p className="text-[var(--color-text-muted)] text-xs mt-1">
+                  {getActionDescription(action)}
+                </p>
               </div>
 
               {/* Key Button */}
@@ -217,14 +219,14 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
                   min-w-[120px] px-6 py-3 rounded-lg font-mono text-sm font-bold transition-all
                   ${
                     isListening
-                      ? 'bg-blue-600 text-white border-2 border-blue-400 animate-pulse'
-                      : 'bg-slate-700 text-slate-200 border-2 border-slate-600 hover:border-blue-500 hover:bg-slate-600'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-2 border-[var(--color-accent)] animate-pulse'
+                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)]'
                   }
                 `}
               >
                 {isListening ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-2 h-2 bg-white rounded-full animate-ping" />
+                    <span className="w-2 h-2 bg-[var(--color-text-inverse)] rounded-full animate-ping" />
                     Press any key...
                   </span>
                 ) : (
@@ -237,10 +239,11 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       </div>
 
       {/* Footer Note */}
-      <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-        <p className="text-slate-400 text-xs">
-          <strong className="text-slate-300">Note:</strong> Shortcuts are automatically saved to
-          your browser's local storage. They will not trigger when you are typing in text fields.
+      <div className="mt-6 p-4 bg-[var(--color-bg-secondary)]/70 rounded-lg border border-[var(--color-border)]">
+        <p className="text-[var(--color-text-muted)] text-xs">
+          <strong className="text-[var(--color-text-secondary)]">Note:</strong> Shortcuts are
+          automatically saved to your browser's local storage. They will not trigger when you are
+          typing in text fields.
         </p>
       </div>
     </div>
@@ -311,10 +314,13 @@ export const ShortcutSettingsCompact: React.FC<ShortcutSettingsProps> = ({
   }, [listeningFor, updateShortcut, onUpdate]);
 
   return (
-    <div className={`bg-slate-800 rounded-lg p-4 ${className}`}>
+    <div className={`bg-[var(--color-bg-secondary)] rounded-lg p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-slate-100 font-semibold text-sm">Shortcuts</h3>
-        <button onClick={resetShortcuts} className="text-xs text-slate-400 hover:text-slate-200">
+        <h3 className="text-[var(--color-text-primary)] font-semibold text-sm">Shortcuts</h3>
+        <button
+          onClick={resetShortcuts}
+          className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+        >
           Reset
         </button>
       </div>
@@ -322,15 +328,15 @@ export const ShortcutSettingsCompact: React.FC<ShortcutSettingsProps> = ({
       <div className="space-y-2">
         {actions.map((action) => (
           <div key={action} className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">{getActionDisplayName(action)}</span>
+            <span className="text-[var(--color-text-muted)]">{getActionDisplayName(action)}</span>
             <button
               onClick={() => setListeningFor(action)}
               className={`
                 px-3 py-1 rounded font-mono text-xs
                 ${
                   listeningFor === action
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                 }
               `}
             >

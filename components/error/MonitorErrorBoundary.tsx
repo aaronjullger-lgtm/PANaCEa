@@ -43,7 +43,7 @@ function MonitorMalfunctionFallback({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-slate-900 rounded-xl border border-red-500/50 p-6 min-h-[200px] flex flex-col items-center justify-center"
+      className="bg-[var(--color-bg-primary)] rounded-xl border border-data-fail/40 p-6 min-h-[200px] flex flex-col items-center justify-center"
     >
       {/* Scanline effect overlay */}
       <div
@@ -60,13 +60,13 @@ function MonitorMalfunctionFallback({
         transition={{ duration: 2, repeat: Infinity }}
         className="mb-4"
       >
-        <AlertTriangle className="w-12 h-12 text-red-500" />
+        <AlertTriangle className="w-12 h-12 text-data-fail" />
       </motion.div>
 
       {/* Main error message */}
-      <h3 className="text-red-400 font-mono text-lg font-bold mb-2">MONITOR MALFUNCTION</h3>
+      <h3 className="text-data-fail font-mono text-lg font-bold mb-2">MONITOR MALFUNCTION</h3>
 
-      <p className="text-slate-400 font-mono text-sm text-center mb-4">
+      <p className="text-[var(--color-text-muted)] font-mono text-sm text-center mb-4">
         Vital signs display offline.
         <br />
         Patient care systems unaffected.
@@ -75,10 +75,10 @@ function MonitorMalfunctionFallback({
       {/* Error details (collapsed by default in production) */}
       {process.env.NODE_ENV === 'development' && error && (
         <details className="mb-4 w-full max-w-md">
-          <summary className="text-slate-500 text-xs cursor-pointer hover:text-slate-400">
+          <summary className="text-[var(--color-text-muted)] text-xs cursor-pointer hover:text-[var(--color-text-secondary)]">
             Technical Details
           </summary>
-          <pre className="text-red-400/70 text-xs mt-2 p-2 bg-slate-800 rounded overflow-auto max-h-24">
+          <pre className="text-data-fail/70 text-xs mt-2 p-2 bg-[var(--color-bg-secondary)] rounded overflow-auto max-h-24">
             {error.message}
           </pre>
         </details>
@@ -87,8 +87,8 @@ function MonitorMalfunctionFallback({
       {/* Reboot button */}
       <button
         onClick={onReboot}
-        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 
-                   border border-slate-600 rounded-lg text-slate-300 font-mono text-sm
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] 
+                   border border-[var(--color-border)] rounded-lg text-[var(--color-text-secondary)] font-mono text-sm
                    transition-colors duration-200"
       >
         <Power className="w-4 h-4" />
@@ -97,13 +97,13 @@ function MonitorMalfunctionFallback({
 
       {/* Error count indicator */}
       {errorCount > 1 && (
-        <p className="text-slate-600 text-xs mt-3 font-mono">
+        <p className="text-[var(--color-text-muted)] text-xs mt-3 font-mono">
           Error count: {errorCount} | Consider refreshing the page
         </p>
       )}
 
       {/* Simulated static noise effect */}
-      <div className="absolute bottom-2 right-2 flex items-center gap-1 text-slate-600">
+      <div className="absolute bottom-2 right-2 flex items-center gap-1 text-[var(--color-text-muted)]">
         <Activity className="w-3 h-3" />
         <span className="text-xs font-mono">NO SIGNAL</span>
       </div>
@@ -116,14 +116,14 @@ function MonitorMalfunctionFallback({
  */
 function MinimalFallback({ onReboot }: { onReboot: () => void }) {
   return (
-    <div className="bg-slate-900 rounded-xl border border-red-500/50 p-6 min-h-[200px] flex flex-col items-center justify-center">
-      <div className="text-red-500 text-4xl mb-4">⚠️</div>
-      <h3 className="text-red-400 font-mono text-lg font-bold mb-2">MONITOR OFFLINE</h3>
-      <p className="text-slate-400 text-sm text-center mb-4">Display error - click to retry</p>
+    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-data-fail/40 p-6 min-h-[200px] flex flex-col items-center justify-center">
+      <div className="text-data-fail text-4xl mb-4">⚠️</div>
+      <h3 className="text-data-fail font-mono text-lg font-bold mb-2">MONITOR OFFLINE</h3>
+      <p className="text-[var(--color-text-muted)] text-sm text-center mb-4">Display error - click to retry</p>
       <button
         onClick={onReboot}
-        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 
-                   rounded-lg text-slate-300 text-sm"
+        className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] 
+                   rounded-lg text-[var(--color-text-secondary)] text-sm"
       >
         🔄 Reboot
       </button>

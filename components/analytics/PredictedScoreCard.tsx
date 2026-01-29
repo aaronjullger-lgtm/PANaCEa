@@ -46,37 +46,37 @@ export interface PredictedScoreCardProps {
 const READINESS_CONFIG = {
   confident_pass: {
     icon: CheckCircle,
-    color: 'text-slate-50 dark:text-slate-200',
-    bgColor: 'bg-slate-700/20 dark:bg-slate-700/30',
-    borderColor: 'border-slate-500 dark:border-slate-600',
-    ringColor: 'ring-slate-400',
+    color: 'text-data-pass',
+    bgColor: 'bg-data-pass/10',
+    borderColor: 'border-data-pass/30',
+    ringColor: 'ring-data-pass/40',
     label: 'Confident Pass',
     description: "You're well-prepared for the exam!",
   },
   likely_pass: {
     icon: Target,
-    color: 'text-slate-300 dark:text-slate-300',
-    bgColor: 'bg-slate-600/20 dark:bg-slate-600/30',
-    borderColor: 'border-slate-400 dark:border-slate-500',
-    ringColor: 'ring-slate-400',
+    color: 'text-steel-blue-600 dark:text-steel-blue-400',
+    bgColor: 'bg-steel-blue-50 dark:bg-steel-blue-900/30',
+    borderColor: 'border-steel-blue-200 dark:border-steel-blue-800',
+    ringColor: 'ring-steel-blue-300',
     label: 'Likely Pass',
     description: 'On track - keep up the momentum!',
   },
   borderline: {
     icon: AlertTriangle,
-    color: 'text-slate-400 dark:text-slate-400',
-    bgColor: 'bg-slate-500/20 dark:bg-slate-500/30',
-    borderColor: 'border-slate-400 dark:border-slate-500',
-    ringColor: 'ring-slate-400',
+    color: 'text-muted-amber-600 dark:text-muted-amber-400',
+    bgColor: 'bg-muted-amber-50 dark:bg-muted-amber-900/30',
+    borderColor: 'border-muted-amber-200 dark:border-muted-amber-800',
+    ringColor: 'ring-muted-amber-300',
     label: 'Borderline',
     description: 'More focused preparation needed.',
   },
   not_ready: {
     icon: XCircle,
-    color: 'text-slate-500 dark:text-slate-500',
-    bgColor: 'bg-slate-400/20 dark:bg-slate-400/30',
-    borderColor: 'border-slate-300 dark:border-slate-400',
-    ringColor: 'ring-slate-300',
+    color: 'text-data-fail',
+    bgColor: 'bg-data-fail/10',
+    borderColor: 'border-data-fail/30',
+    ringColor: 'ring-data-fail/40',
     label: 'Not Ready',
     description: 'Significant improvement needed.',
   },
@@ -126,13 +126,13 @@ export function PredictedScoreCard({
   if (isLoading) {
     return (
       <div
-        className={`rounded-2xl border-2 p-6 bg-slate-50 dark:bg-slate-800/50 ${compact ? 'p-4' : 'p-6'}`}
+        className={`rounded-2xl border-2 p-6 bg-[var(--color-bg-secondary)] border-[var(--color-border)] ${compact ? 'p-4' : 'p-6'}`}
       >
         <div className="space-y-4 animate-pulse">
-          <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
-          <div className="h-16 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full" />
-          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded" />
+          <div className="h-6 w-32 bg-[var(--color-bg-tertiary)] rounded" />
+          <div className="h-16 w-24 bg-[var(--color-bg-tertiary)] rounded" />
+          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded-full" />
+          <div className="h-4 w-48 bg-[var(--color-bg-tertiary)] rounded" />
         </div>
       </div>
     );
@@ -141,34 +141,34 @@ export function PredictedScoreCard({
   // Insufficient data state
   if (prediction.scaledScore === 0) {
     return (
-      <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-700 p-6 bg-slate-50 dark:bg-slate-800/50">
+      <div className="rounded-2xl border-2 border-[var(--color-border)] p-6 bg-[var(--color-bg-secondary)]">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-slate-200 dark:bg-slate-700">
-            <BarChart3 className="h-6 w-6 text-slate-500" />
+          <div className="p-3 rounded-xl bg-[var(--color-bg-tertiary)]">
+            <BarChart3 className="h-6 w-6 text-[var(--color-text-muted)]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
               Predicted PANCE Score
             </h3>
-            <p className="text-sm text-slate-500">Insufficient data</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Insufficient data</p>
           </div>
         </div>
 
         <div className="text-center py-8">
-          <p className="text-4xl font-bold text-slate-300 dark:text-slate-600 mb-2">---</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <p className="text-4xl font-bold text-[var(--color-text-muted)] mb-2">---</p>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
             Answer more questions to see your predicted score
           </p>
 
           {/* Progress to prediction */}
           <div className="max-w-xs mx-auto">
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-1">
               <span>{questionsAnswered} answered</span>
               <span>100 needed</span>
             </div>
-            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-slate-500 transition-all"
+                className="h-full bg-[var(--color-accent)] transition-all"
                 style={{ width: `${Math.min(100, questionsAnswered)}%` }}
               />
             </div>
@@ -178,8 +178,8 @@ export function PredictedScoreCard({
         <div className="space-y-2">
           {prediction.recommendations.map((rec, i) => (
             <div key={i} className="flex items-start gap-2 text-sm">
-              <Info className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
-              <span className="text-slate-600 dark:text-slate-400">{rec}</span>
+              <Info className="h-4 w-4 text-[var(--color-text-muted)] mt-0.5 flex-shrink-0" />
+              <span className="text-[var(--color-text-muted)]">{rec}</span>
             </div>
           ))}
         </div>
@@ -206,7 +206,7 @@ export function PredictedScoreCard({
             <ReadinessIcon className={`h-6 w-6 ${readinessConfig.color}`} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
               Predicted PANCE Score
             </h3>
             <p className={`text-sm ${readinessConfig.color}`}>{readinessConfig.label}</p>
@@ -218,10 +218,10 @@ export function PredictedScoreCard({
           <div
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${
               trend.direction === 'up'
-                ? 'bg-slate-200 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200'
+                ? 'bg-data-pass/10 text-data-pass'
                 : trend.direction === 'down'
-                  ? 'bg-slate-300 dark:bg-slate-600/50 text-slate-600 dark:text-slate-300'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
+                  ? 'bg-data-fail/10 text-data-fail'
+                  : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
             }`}
           >
             {trend.direction === 'up' && <TrendingUp className="h-4 w-4" />}
@@ -241,11 +241,11 @@ export function PredictedScoreCard({
             key={prediction.scaledScore}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="text-5xl font-bold text-slate-900 dark:text-white"
+            className="text-5xl font-bold text-[var(--color-text-primary)]"
           >
             {prediction.scaledScore}
           </motion.p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-[var(--color-text-muted)]">
             {prediction.confidenceInterval.lower} - {prediction.confidenceInterval.upper} (95% CI)
           </p>
         </div>
@@ -259,31 +259,31 @@ export function PredictedScoreCard({
                 relative w-16 h-16 rounded-full border-4
                 ${
                   prediction.passLikelihood >= 75
-                    ? 'border-slate-400'
+                    ? 'border-data-pass/60'
                     : prediction.passLikelihood >= 50
-                      ? 'border-slate-500'
-                      : 'border-slate-600'
+                      ? 'border-data-provisional/60'
+                      : 'border-data-fail/60'
                 }
               `}
               >
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">
+                  <span className="text-xl font-bold text-[var(--color-text-primary)]">
                     {prediction.passLikelihood}%
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-1">Pass Likelihood</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">Pass Likelihood</p>
             </div>
 
             {/* Percentile (if available) */}
             {percentile !== undefined && (
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full border-4 border-slate-500 flex items-center justify-center">
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">
+                <div className="w-16 h-16 rounded-full border-4 border-[var(--color-border)] flex items-center justify-center">
+                  <span className="text-xl font-bold text-[var(--color-text-primary)]">
                     {percentile}th
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Percentile</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Percentile</p>
               </div>
             )}
           </div>
@@ -293,10 +293,10 @@ export function PredictedScoreCard({
       {/* Score Visualization Bar */}
       {!compact && (
         <div className="mb-6">
-          <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-visible">
+          <div className="relative h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-visible">
             {/* Confidence interval range */}
             <div
-              className="absolute h-full bg-slate-300 dark:bg-slate-700/50 rounded-full"
+              className="absolute h-full bg-[var(--color-border)] rounded-full"
               style={{
                 left: `${confidencePositions.lower}%`,
                 width: `${confidencePositions.upper - confidencePositions.lower}%`,
@@ -305,11 +305,13 @@ export function PredictedScoreCard({
 
             {/* Pass threshold line */}
             <div
-              className="absolute top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-500"
+              className="absolute top-0 bottom-0 w-0.5 bg-[var(--color-border)]"
               style={{ left: `${passPosition}%` }}
             >
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="text-xs text-slate-500">Pass: {PASS_THRESHOLD}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  Pass: {PASS_THRESHOLD}
+                </span>
               </div>
             </div>
 
@@ -322,15 +324,15 @@ export function PredictedScoreCard({
             >
               <div
                 className={`
-                w-5 h-5 rounded-full border-3 border-white dark:border-slate-800 shadow-lg
-                ${prediction.scaledScore >= PASS_THRESHOLD ? 'bg-slate-500' : 'bg-slate-600'}
+                w-5 h-5 rounded-full border-3 border-[var(--color-bg-primary)] shadow-lg
+                ${prediction.scaledScore >= PASS_THRESHOLD ? 'bg-data-pass' : 'bg-data-fail'}
               `}
               />
             </motion.div>
           </div>
 
           {/* Scale labels */}
-          <div className="flex justify-between mt-2 text-xs text-slate-500">
+          <div className="flex justify-between mt-2 text-xs text-[var(--color-text-muted)]">
             <span>{SCALE_MIN}</span>
             <span>{SCALE_MAX}</span>
           </div>
@@ -339,13 +341,13 @@ export function PredictedScoreCard({
 
       {/* Projected Pass Date (if not ready) */}
       {prediction.projectedDate && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-white/50 dark:bg-slate-800/50 mb-4">
-          <Calendar className="h-5 w-5 text-slate-500" />
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-bg-secondary)]/70 mb-4">
+          <Calendar className="h-5 w-5 text-[var(--color-text-muted)]" />
           <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">
               Estimated Ready Date
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               {prediction.projectedDate.toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
@@ -361,14 +363,14 @@ export function PredictedScoreCard({
         <div className="grid grid-cols-2 gap-4 mb-4">
           {prediction.strengths.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
+              <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2 flex items-center gap-1">
                 <Sparkles className="h-3 w-3" /> Strengths
               </p>
               <div className="space-y-1">
                 {prediction.strengths.slice(0, 3).map((s, i) => (
                   <div
                     key={i}
-                    className="text-sm text-slate-600 dark:text-slate-300 capitalize"
+                    className="text-sm text-[var(--color-text-secondary)] capitalize"
                   >
                     {s.replace(/_/g, ' ')}
                   </div>
@@ -379,12 +381,12 @@ export function PredictedScoreCard({
 
           {prediction.weaknesses.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
+              <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" /> Focus Areas
               </p>
               <div className="space-y-1">
                 {prediction.weaknesses.slice(0, 3).map((w, i) => (
-                  <div key={i} className="text-sm text-slate-500 dark:text-slate-400 capitalize">
+                  <div key={i} className="text-sm text-[var(--color-text-muted)] capitalize">
                     {w.replace(/_/g, ' ')}
                   </div>
                 ))}
@@ -397,11 +399,11 @@ export function PredictedScoreCard({
       {/* Recommendations */}
       {!compact && prediction.recommendations.length > 0 && (
         <div className="space-y-2 mb-4">
-          <p className="text-xs font-medium text-slate-500">Recommendations</p>
+          <p className="text-xs font-medium text-[var(--color-text-muted)]">Recommendations</p>
           {prediction.recommendations.slice(0, 3).map((rec, i) => (
             <div key={i} className="flex items-start gap-2 text-sm">
-              <ChevronRight className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
-              <span className="text-slate-700 dark:text-slate-300">{rec}</span>
+              <ChevronRight className="h-4 w-4 text-[var(--color-text-muted)] mt-0.5 flex-shrink-0" />
+              <span className="text-[var(--color-text-secondary)]">{rec}</span>
             </div>
           ))}
         </div>
@@ -411,14 +413,14 @@ export function PredictedScoreCard({
       {onViewDetails && (
         <button
           onClick={onViewDetails}
-          className="w-full py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+          className="w-full py-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
         >
           View Full Analytics →
         </button>
       )}
 
       {/* Footer Stats */}
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200/50 dark:border-slate-700/50 text-xs text-slate-500">
+      <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]/70 text-xs text-[var(--color-text-muted)]">
         <div className="flex items-center gap-1">
           <BarChart3 className="h-3 w-3" />
           <span>{questionsAnswered} questions analyzed</span>

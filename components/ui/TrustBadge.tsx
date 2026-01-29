@@ -59,9 +59,9 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
-          bg-emerald-50 dark:bg-emerald-900/30
-          text-emerald-700 dark:text-emerald-400
-          border border-emerald-200 dark:border-emerald-700/50
+          bg-data-pass/10
+          text-data-pass
+          border border-data-pass/30
           rounded-full font-medium
           ${className}
         `}
@@ -83,9 +83,9 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
-          bg-violet-50 dark:bg-violet-900/30
-          text-violet-700 dark:text-violet-400
-          border border-violet-200 dark:border-violet-700/50
+          bg-data-provisional/10
+          text-data-provisional
+          border border-data-provisional/30
           rounded-full font-medium
           ${className}
         `}
@@ -106,9 +106,9 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className={`
         inline-flex items-center ${sizes.gap} ${sizes.padding}
-        bg-slate-100 dark:bg-slate-800
-        text-slate-500 dark:text-slate-400
-        border border-slate-200 dark:border-slate-700
+        bg-[var(--color-bg-secondary)]
+        text-[var(--color-text-muted)]
+        border border-[var(--color-border)]
         rounded-full font-medium
         ${className}
       `}

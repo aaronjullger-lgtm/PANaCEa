@@ -66,7 +66,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-4 h-4 text-amber-500" />
+        <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />
         <div>
           <p className="text-sm font-semibold text-[var(--color-text-primary)]">
             Top Confusion Pairs
@@ -84,7 +84,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
         </div>
       )}
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-[var(--color-error)]">{error}</p>}
 
       {!isLoading && !error && rankedPairs.length === 0 && (
         <p className="text-xs text-[var(--color-text-muted)]">
@@ -104,7 +104,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
                 <div>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                     {pair.correctCondition}{' '}
-                    <span className="text-[10px] text-green-500 ml-1">correct</span>
+                    <span className="text-[10px] text-[var(--color-success)] ml-1">correct</span>
                   </p>
                   <p className="text-xs text-[var(--color-text-secondary)]">
                     confused for{' '}
@@ -123,7 +123,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
               {pair.correctConditionId && pair.selectedConditionId && (
                 <button
                   onClick={() => handleCompare(pair)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
+                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-text-inverse)] shadow-sm transition hover:opacity-90"
                   disabled={prefetchingId === pair.id}
                 >
                   {prefetchingId === pair.id ? (

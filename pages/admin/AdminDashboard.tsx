@@ -159,7 +159,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-2xl max-w-md text-center"
         >
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Access Denied
           </h2>
@@ -169,7 +169,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           </p>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
+            className="px-6 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
           >
             Go Back
           </button>
@@ -201,17 +201,17 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
                   {activePanel === 'flags' ? (
                     <>
-                      <Flag className="w-7 h-7 text-red-500" />
+                      <Flag className="w-7 h-7 text-data-fail" />
                       Flagged Questions
                     </>
                   ) : activePanel === 'performance' ? (
                     <>
-                      <BarChart3 className="w-7 h-7 text-purple-500" />
+                      <BarChart3 className="w-7 h-7 text-[var(--color-accent)]" />
                       Question Performance
                     </>
                   ) : activePanel === 'curation' ? (
                     <>
-                      <Sparkles className="w-7 h-7 text-amber-500" />
+                      <Sparkles className="w-7 h-7 text-data-provisional" />
                       Question Curation
                     </>
                   ) : (
@@ -274,10 +274,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Total Users */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-blue-500/20 rounded-lg">
-                      <Users className="w-6 h-6 text-blue-500" />
+                    <div className="p-3 bg-[var(--color-accent)]/20 rounded-lg">
+                      <Users className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <TrendingUp className="w-5 h-5 text-data-pass" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.totalUsers}
@@ -288,10 +288,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Active Users */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-green-500/20 rounded-lg">
-                      <ActivityIcon className="w-6 h-6 text-green-500" />
+                    <div className="p-3 bg-data-pass/20 rounded-lg">
+                      <ActivityIcon className="w-6 h-6 text-data-pass" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <TrendingUp className="w-5 h-5 text-data-pass" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.activeUsers}
@@ -302,10 +302,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Total Questions */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-purple-500/20 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-purple-500" />
+                    <div className="p-3 bg-[var(--color-accent)]/20 rounded-lg">
+                      <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <TrendingUp className="w-5 h-5 text-data-pass" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.totalQuestions.toLocaleString()}
@@ -316,10 +316,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Average Accuracy */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-amber-500/20 rounded-lg">
-                      <TrendingUp className="w-6 h-6 text-amber-500" />
+                    <div className="p-3 bg-data-provisional/20 rounded-lg">
+                      <TrendingUp className="w-6 h-6 text-data-provisional" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <TrendingUp className="w-5 h-5 text-data-pass" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.avgAccuracy}%
@@ -330,14 +330,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Pending Flags */}
                 <button
                   onClick={() => setActivePanel('flags')}
-                  className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)] hover:border-red-500/50 transition-colors text-left"
+                  className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)] hover:border-data-fail/50 transition-colors text-left"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-red-500/20 rounded-lg">
-                      <Flag className="w-6 h-6 text-red-500" />
+                    <div className="p-3 bg-data-fail/20 rounded-lg">
+                      <Flag className="w-6 h-6 text-data-fail" />
                     </div>
                     {stats.pendingFlags > 0 && (
-                      <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-data-fail text-[var(--color-text-inverse)] rounded-full">
                         Action Needed
                       </span>
                     )}
@@ -400,9 +400,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('performance')}
-                    className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg hover:bg-[var(--color-accent)]/20 transition-colors text-left"
                   >
-                    <BarChart3 className="w-5 h-5 text-purple-500" />
+                    <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Question Performance
@@ -415,9 +415,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('curation')}
-                    className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
                   >
-                    <Sparkles className="w-5 h-5 text-amber-500" />
+                    <Sparkles className="w-5 h-5 text-data-provisional" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Question Curation
@@ -430,9 +430,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('flags')}
-                    className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-data-fail/10 border border-data-fail/30 rounded-lg hover:bg-data-fail/20 transition-colors text-left"
                   >
-                    <Flag className="w-5 h-5 text-red-500" />
+                    <Flag className="w-5 h-5 text-data-fail" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Flagged Questions
@@ -458,9 +458,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
               </div>
 
               {/* Info Note */}
-              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="mt-6 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg">
                 <div className="flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-[var(--color-text-muted)]">
                     <strong className="text-[var(--color-text-primary)]">Demo Mode:</strong> This is
                     a demonstration admin dashboard. In production, this would connect to real APIs

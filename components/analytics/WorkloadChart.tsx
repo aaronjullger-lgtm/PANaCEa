@@ -47,7 +47,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
       <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
         {(data.retention * 100).toFixed(0)}% Retention Target
         {data.isCMRR && (
-          <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded">
+          <span className="ml-2 px-2 py-0.5 bg-[var(--color-accent)]/15 text-[var(--color-accent)] text-xs rounded">
             CMRR
           </span>
         )}
@@ -73,10 +73,10 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
           <span
             className={`font-mono ${
               data.minutes <= 30
-                ? 'text-green-400'
+                ? 'text-[var(--color-success)]'
                 : data.minutes <= 60
-                  ? 'text-yellow-400'
-                  : 'text-red-400'
+                  ? 'text-[var(--color-warning)]'
+                  : 'text-[var(--color-error)]'
             }`}
           >
             {data.minutes <= 30 ? 'High' : data.minutes <= 60 ? 'Medium' : 'Low'}
@@ -86,7 +86,9 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
 
       {data.isCMRR && (
         <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-          <p className="text-xs text-blue-400">⭐ Optimal balance of retention and workload</p>
+          <p className="text-xs text-[var(--color-accent)]">
+            ⭐ Optimal balance of retention and workload
+          </p>
         </div>
       )}
     </div>
@@ -115,7 +117,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
     return (
       <div className="flex items-center justify-center" style={{ height }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
           <p className="text-sm text-[var(--color-text-secondary)]">
             Simulating workload over 365 days...
           </p>
@@ -127,7 +129,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   if (error) {
     return (
       <div className="flex items-center justify-center" style={{ height }}>
-        <div className="text-center text-red-400">
+        <div className="text-center text-[var(--color-error)]">
           <p className="text-sm">Failed to generate workload projection</p>
           <p className="text-xs mt-2 text-[var(--color-text-secondary)]">{error}</p>
         </div>
@@ -150,10 +152,10 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
     <div className="w-full">
       {/* Header with CMRR Info */}
       {cmrrPoint && (
-        <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+        <div className="mb-4 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-blue-400 mb-1">
+              <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-1">
                 ⭐ Recommended Retention: {(cmrrPoint.retention * 100).toFixed(0)}%
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
@@ -236,14 +238,14 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
           {cmrrPoint && (
             <ReferenceLine
               x={cmrrPoint.retention}
-              stroke="#3b82f6"
+              stroke="var(--color-accent)"
               strokeDasharray="5 5"
               strokeWidth={2}
               yAxisId="left"
               label={{
                 value: 'CMRR',
                 position: 'top',
-                fill: '#3b82f6',
+                fill: 'var(--color-accent)',
                 fontSize: 11,
                 fontWeight: 'bold',
               }}
@@ -260,12 +262,12 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
                   key={`cell-${index}`}
                   fill={
                     entry.isCMRR
-                      ? '#3b82f6' // Blue for CMRR
+                      ? 'var(--color-accent)' // CMRR highlight
                       : sustainability >= 70
-                        ? '#1e293b' // Stormy slate for sustainable
+                        ? 'var(--color-success)' // Sustainable
                         : sustainability >= 40
-                          ? '#f59e0b' // Amber for moderate
-                          : '#ef4444' // Red for unsustainable
+                          ? 'var(--color-warning)' // Moderate
+                          : 'var(--color-error)' // Unsustainable
                   }
                   opacity={entry.isCMRR ? 1 : 0.7}
                 />
@@ -280,10 +282,10 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
               type="monotone"
               dataKey="minutes"
               name="Time Required"
-              stroke="#f8fafc"
+              stroke="var(--color-text-primary)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 6, fill: '#f8fafc' }}
+              activeDot={{ r: 6, fill: 'var(--color-text-primary)' }}
             />
           )}
         </ComposedChart>
@@ -292,19 +294,19 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-[var(--color-text-secondary)]">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded"></div>
+          <div className="w-3 h-3 bg-[var(--color-accent)] rounded"></div>
           <span>CMRR (Optimal)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-[#1e293b] rounded"></div>
+          <div className="w-3 h-3 bg-[var(--color-success)] rounded"></div>
           <span>Sustainable (&lt;30 min/day)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-amber-500 rounded"></div>
+          <div className="w-3 h-3 bg-[var(--color-warning)] rounded"></div>
           <span>Moderate (30-60 min/day)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-500 rounded"></div>
+          <div className="w-3 h-3 bg-[var(--color-error)] rounded"></div>
           <span>Unsustainable (&gt;60 min/day)</span>
         </div>
       </div>

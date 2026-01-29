@@ -120,17 +120,17 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
   const getStatusColor = (status: ContentStatus) => {
     switch (status) {
       case 'published':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-data-pass/20 text-data-pass border-data-pass/30';
       case 'approved':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30';
       case 'pending_review':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-data-provisional/20 text-data-provisional border-data-provisional/30';
       case 'draft':
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border-[var(--color-border)]';
       case 'archived':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-data-fail/20 text-data-fail border-data-fail/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border-[var(--color-border)]';
     }
   };
 
@@ -196,7 +196,7 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2">
-              <button className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 New Content
               </button>

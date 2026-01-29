@@ -61,38 +61,38 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
     const baseClasses = 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-105';
     
     if (!selectedAnswer) {
-      return `${baseClasses} border-slate-300 hover:border-steel-blue-500 hover:bg-steel-blue-50`;
+      return `${baseClasses} border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)]`;
     }
 
     if (option === question.correctAnswer) {
-      return `${baseClasses} border-sage-500 bg-sage-50`;
+      return `${baseClasses} border-data-pass bg-data-pass/10`;
     }
 
     if (option === selectedAnswer && !isCorrect) {
-      return `${baseClasses} border-dusty-rose-500 bg-dusty-rose-50`;
+      return `${baseClasses} border-data-fail bg-data-fail/10`;
     }
 
-    return `${baseClasses} border-slate-200 opacity-50`;
+    return `${baseClasses} border-[var(--color-border)] opacity-50`;
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+    <div className="w-full max-w-4xl mx-auto bg-[var(--color-bg-primary)] rounded-2xl shadow-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Camera className="w-5 h-5 text-steel-blue-600" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          <Camera className="w-5 h-5 text-[var(--color-accent)]" />
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">
             {question.modality === 'dermatology' ? 'Dermatology' : 'Radiology'} Drill
           </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
           <Zap className="w-4 h-4" />
           <span>Rapid Fire</span>
         </div>
       </div>
 
       {/* Image Display */}
-      <div className="relative aspect-video mb-6 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
+      <div className="relative aspect-video mb-6 rounded-xl overflow-hidden bg-[var(--color-bg-secondary)]">
         {/* BlurHash or Thumbnail Preview */}
         {!imageLoaded && question.thumbnailUrl && (
           <img
@@ -115,7 +115,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
         {/* Loading Indicator */}
         {!imageLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-steel-blue-500 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent" />
           </div>
         )}
 
@@ -127,13 +127,13 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className={`absolute inset-0 flex items-center justify-center ${
-                isCorrect ? 'bg-sage-500' : 'bg-dusty-rose-500'
+                isCorrect ? 'bg-data-pass' : 'bg-data-fail'
               } bg-opacity-90`}
             >
               {isCorrect ? (
-                <Check className="w-24 h-24 text-white" strokeWidth={3} />
+                <Check className="w-24 h-24 text-[var(--color-text-inverse)]" strokeWidth={3} />
               ) : (
-                <X className="w-24 h-24 text-white" strokeWidth={3} />
+                <X className="w-24 h-24 text-[var(--color-text-inverse)]" strokeWidth={3} />
               )}
             </motion.div>
           )}
@@ -141,7 +141,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       </div>
 
       {/* Question */}
-      <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4 text-center">
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4 text-center">
         What is the diagnosis?
       </h2>
 
@@ -157,18 +157,18 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
             className={getOptionClassName(option)}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-slate-800 dark:text-slate-100">{option}</span>
+              <span className="font-medium text-[var(--color-text-primary)]">{option}</span>
               {selectedAnswer === option && (
                 <>
                   {isCorrect ? (
-                    <Check className="w-5 h-5 text-sage-600" />
+                    <Check className="w-5 h-5 text-data-pass" />
                   ) : (
-                    <X className="w-5 h-5 text-dusty-rose-600" />
+                    <X className="w-5 h-5 text-data-fail" />
                   )}
                 </>
               )}
               {selectedAnswer && option === question.correctAnswer && selectedAnswer !== option && (
-                <Check className="w-5 h-5 text-sage-600" />
+                <Check className="w-5 h-5 text-data-pass" />
               )}
             </div>
           </motion.button>
@@ -176,7 +176,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
       </div>
 
       {/* Metadata */}
-      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center justify-between text-sm text-[var(--color-text-muted)]">
         <span>Difficulty: {question.difficulty}</span>
         {question.system && <span>System: {question.system}</span>}
       </div>

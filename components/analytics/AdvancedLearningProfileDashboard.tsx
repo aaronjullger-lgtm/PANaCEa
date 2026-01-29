@@ -203,7 +203,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
       case 'ready':
         return 'from-data-pass to-sage-400';
       case 'almost_ready':
-        return 'from-steel-blue-500 to-slate-teal-400';
+        return 'from-steel-blue-500 to-steel-blue-400';
       case 'progressing':
         return 'from-data-provisional to-muted-amber-400';
       default:
@@ -256,10 +256,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-steel-blue-100 to-deep-plum-100 dark:from-steel-blue-900/50 dark:to-deep-plum-900/50 flex items-center justify-center">
           <Brain className="w-10 h-10 text-steel-blue-500" />
         </div>
-        <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300">
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
           No Learning Profile Yet
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md">
+        <p className="text-[var(--color-text-muted)] max-w-md">
           Complete a few study sessions to build your personalized learning profile. We&apos;ll
           analyze your patterns and provide AI-powered insights to optimize your studying.
         </p>
@@ -285,7 +285,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setBreakSuggestion({ suggest: false })}
-              className="px-3 py-1 text-sm text-muted-amber-600 hover:bg-muted-amber-100 dark:hover:bg-muted-amber-900/50 rounded-lg"
+              className="px-3 py-1 text-sm text-muted-amber-600 hover:bg-[var(--color-bg-tertiary)] rounded-lg"
             >
               Dismiss
             </button>
@@ -306,8 +306,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-steel-blue-500 text-white shadow-md'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-md'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             {tab.icon}
@@ -329,17 +329,19 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {/* PANCE Readiness Hero */}
             {profile.estimatedScore && (
               <div
-                className={`bg-gradient-to-br ${getReadinessGradient(profile.readinessLevel)} rounded-2xl p-6 text-white shadow-lg`}
+                className={`bg-gradient-to-br ${getReadinessGradient(profile.readinessLevel)} rounded-2xl p-6 text-[var(--color-text-inverse)] shadow-lg`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/80 text-sm font-medium mb-1">Estimated PANCE Score</p>
+                    <p className="text-[var(--color-text-inverse)] opacity-80 text-sm font-medium mb-1">
+                      Estimated PANCE Score
+                    </p>
                     <div className="flex items-baseline gap-3">
                       <span className="text-5xl font-bold">{profile.estimatedScore}</span>
-                      <span className="text-white/70">/800</span>
+                      <span className="text-[var(--color-text-inverse)] opacity-70">/800</span>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <GraduationCap className="w-5 h-5 text-white/80" />
+                      <GraduationCap className="w-5 h-5 text-[var(--color-text-inverse)] opacity-80" />
                       <span className="font-medium">
                         {getReadinessLabel(profile.readinessLevel)}
                       </span>
@@ -356,7 +358,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         stroke="currentColor"
                         strokeWidth="8"
                         fill="none"
-                        className="text-white/20"
+                        className="text-[var(--color-text-inverse)] opacity-20"
                       />
                       <circle
                         cx="56"
@@ -366,7 +368,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         strokeWidth="8"
                         fill="none"
                         strokeDasharray={`${(profile.estimatedScore / 800) * 301} 301`}
-                        className="text-white"
+                        className="text-[var(--color-text-inverse)]"
                         strokeLinecap="round"
                       />
                     </svg>
@@ -411,33 +413,33 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Learning Velocity */}
             {learningVelocity && (
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-steel-blue-500" />
+              <div className="bg-[var(--color-bg-primary)] rounded-xl p-5 border border-[var(--color-border)]">
+                <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[var(--color-accent)]" />
                   Learning Velocity
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Questions/Hour</p>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                    <p className="text-xs text-[var(--color-text-muted)]">Questions/Hour</p>
+                    <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                       {Math.round(learningVelocity.masteryRate)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Retention Rate</p>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                    <p className="text-xs text-[var(--color-text-muted)]">Retention Rate</p>
+                    <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                       {Math.round(learningVelocity.retentionEfficiency)}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Trend</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">Trend</p>
                     <div
                       className={`flex items-center gap-1 text-lg font-semibold ${
                         learningVelocity.trend === 'accelerating'
                           ? 'text-data-pass'
                           : learningVelocity.trend === 'decelerating'
                             ? 'text-data-fail'
-                            : 'text-slate-500'
+                            : 'text-[var(--color-text-muted)]'
                       }`}
                     >
                       {learningVelocity.trend === 'accelerating' && (
@@ -454,12 +456,16 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
                 {/* Personal Best Indicator */}
                 {learningVelocity.personalBestRatio > 0.9 && (
-                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                     <div className="flex items-center gap-2 text-sm">
                       <Award
-                        className={`w-5 h-5 ${learningVelocity.personalBestRatio >= 1 ? 'text-muted-amber-500' : 'text-slate-400'}`}
+                        className={`w-5 h-5 ${
+                          learningVelocity.personalBestRatio >= 1
+                            ? 'text-muted-amber-500'
+                            : 'text-[var(--color-text-muted)]'
+                        }`}
                       />
-                      <span className="text-slate-600 dark:text-slate-300">
+                      <span className="text-[var(--color-text-muted)]">
                         {learningVelocity.personalBestRatio >= 1
                           ? "You're at your personal best!"
                           : `${Math.round(learningVelocity.personalBestRatio * 100)}% of your personal best`}
@@ -517,8 +523,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {cognitiveState ? (
               <>
                 {/* Cognitive State Dashboard */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
+                <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
                     <Brain className="w-5 h-5 text-deep-plum-500" />
                     Current Mental State
                   </h3>
@@ -593,8 +599,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 </div>
 
                 {/* Test-Taking Patterns */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
+                <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
                     <Timer className="w-5 h-5 text-steel-blue-500" />
                     Test-Taking Patterns
                   </h3>
@@ -685,7 +691,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-[var(--color-text-muted)]">
                 <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Start a study session to track cognitive metrics</p>
               </div>
@@ -713,7 +719,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.strongestSystems.map((system, i) => (
                     <div
                       key={system}
-                      className="bg-white dark:bg-sage-900/30 rounded-lg p-4 border border-sage-200 dark:border-sage-700"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-sage-200 dark:border-sage-700"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xl">
@@ -740,7 +746,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.weakestSystems.map((system) => (
                     <div
                       key={system}
-                      className="bg-white dark:bg-muted-amber-900/30 rounded-lg p-4 border border-muted-amber-200 dark:border-muted-amber-700 group hover:border-muted-amber-400 transition-colors cursor-pointer"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-muted-amber-200 dark:border-muted-amber-700 group hover:border-muted-amber-400 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-muted-amber-700 dark:text-muted-amber-300">
@@ -756,8 +762,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Time of Day Performance */}
             {timeOfDayStats.length > 0 && (
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
+              <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
+                <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-deep-plum-500" />
                   Performance by Time of Day
                 </h3>
@@ -765,9 +771,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {timeOfDayStats.map((stat) => (
                     <div
                       key={stat.hour}
-                      className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50"
+                      className="text-center p-3 rounded-lg bg-[var(--color-bg-secondary)]"
                     >
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         {stat.hour === 0
                           ? '12am'
                           : stat.hour > 12
@@ -785,7 +791,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       >
                         {Math.round(stat.accuracy)}%
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">{stat.questionsAttempted}q</p>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        {stat.questionsAttempted}q
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -814,10 +822,12 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.learningInsights.map((insight, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 bg-white/60 dark:bg-deep-plum-900/40 rounded-lg p-3"
+                      className="flex items-start gap-3 bg-[var(--color-bg-primary)]/70 rounded-lg p-3"
                     >
                       <Sparkles className="w-5 h-5 text-deep-plum-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-deep-plum-700 dark:text-deep-plum-200">{insight}</span>
+                      <span className="text-deep-plum-700 dark:text-deep-plum-200">
+                        {insight}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -835,15 +845,17 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.recommendations.map((rec, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-3 bg-white dark:bg-steel-blue-900/40 rounded-lg p-4 border border-steel-blue-100 dark:border-steel-blue-800 hover:border-steel-blue-300 dark:hover:border-steel-blue-600 transition-colors cursor-pointer group"
+                      className="flex items-start gap-3 bg-[var(--color-bg-primary)] rounded-lg p-4 border border-steel-blue-100 dark:border-steel-blue-800 hover:border-steel-blue-300 dark:hover:border-steel-blue-600 transition-colors cursor-pointer group"
                     >
                       <div className="w-8 h-8 rounded-full bg-steel-blue-100 dark:bg-steel-blue-800 flex items-center justify-center flex-shrink-0">
                         <span className="text-steel-blue-600 dark:text-steel-blue-300 font-semibold text-sm">
                           {i + 1}
                         </span>
                       </div>
-                      <span className="text-steel-blue-700 dark:text-steel-blue-200 flex-1">{rec}</span>
-                      <ChevronRight className="w-5 h-5 text-steel-blue-400 group-hover:translate-x-1 transition-transform" />
+                      <span className="text-steel-blue-700 dark:text-steel-blue-200 flex-1">
+                        {rec}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
                     </div>
                   ))}
                 </div>
@@ -898,10 +910,10 @@ const StatCard: React.FC<{
   sublabel?: string;
   trend?: 'improving' | 'declining' | 'stable';
 }> = ({ icon, label, value, sublabel, trend }) => (
-  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+  <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 border border-[var(--color-border)]">
     <div className="flex items-center gap-2 mb-2">
       {icon}
-      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
       {trend && (
         <span className="ml-auto">
           {trend === 'improving' && <TrendingUp className="w-4 h-4 text-data-pass" />}
@@ -909,8 +921,8 @@ const StatCard: React.FC<{
         </span>
       )}
     </div>
-    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
-    {sublabel && <p className="text-xs text-slate-400 mt-1">{sublabel}</p>}
+    <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
+    {sublabel && <p className="text-xs text-[var(--color-text-muted)] mt-1">{sublabel}</p>}
   </div>
 );
 
@@ -942,23 +954,23 @@ const CognitiveGauge: React.FC<{
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={colorClass.split(' ')[0]}>{icon}</span>
-          <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+          <span className="font-medium text-[var(--color-text-secondary)]">{label}</span>
         </div>
         <span className={`text-lg font-bold ${colorClass.split(' ')[0]}`}>
           {Math.round(value)}%
         </span>
       </div>
-      <div className="relative h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div className="relative h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <div
           className={`absolute left-0 top-0 h-full rounded-full transition-all ${colorClass.split(' ')[1]}`}
           style={{ width: `${value}%` }}
         />
       </div>
-      <div className="flex justify-between text-xs text-slate-400">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
         <span>{lowLabel}</span>
         <span>{highLabel}</span>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
+      <p className="text-sm text-[var(--color-text-muted)]">{description}</p>
     </div>
   );
 };
@@ -975,7 +987,7 @@ const PatternInsight: React.FC<{
     good: 'bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300 border-steel-blue-200 dark:border-steel-blue-800',
     'needs-work':
       'bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 border-muted-amber-200 dark:border-muted-amber-800',
-    info: 'bg-slate-100 dark:bg-slate-700/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+    info: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
   };
 
   return (
@@ -985,7 +997,7 @@ const PatternInsight: React.FC<{
           <p className="font-medium">{label}</p>
           <p className="text-sm mt-1 opacity-80">{description}</p>
         </div>
-        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-white/50 dark:bg-black/20">
+        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-[var(--color-bg-primary)]/60">
           {value}
         </span>
       </div>
@@ -997,22 +1009,24 @@ const RecentSessionsList: React.FC<{
   sessions: SessionSummary[];
   formatDate: (date: string) => string;
 }> = ({ sessions, formatDate }) => (
-  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-      <BarChart3 className="w-4 h-4 text-steel-blue-500" />
+  <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+    <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] p-4 border-b border-[var(--color-border)] flex items-center gap-2">
+      <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
       Recent Sessions
     </h3>
-    <div className="divide-y divide-slate-100 dark:divide-slate-700">
+    <div className="divide-y divide-[var(--color-border)]">
       {sessions.map((session) => (
         <div
           key={session.id}
-          className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          className="p-4 flex items-center justify-between hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           <div>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">
               {formatDate(session.startedAt)}
             </p>
-            <p className="text-xs text-slate-500">{session.totalQuestions} questions</p>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {session.totalQuestions} questions
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -1028,7 +1042,7 @@ const RecentSessionsList: React.FC<{
                 {Math.round(session.accuracy)}%
               </p>
               {session.bestStreak > 0 && (
-                <p className="text-xs text-slate-400 flex items-center gap-1">
+                <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
                   <Flame className="w-3 h-3 text-muted-amber-500" />
                   {session.bestStreak} streak
                 </p>

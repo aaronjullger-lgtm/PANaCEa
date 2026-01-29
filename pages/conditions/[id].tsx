@@ -190,19 +190,19 @@ const ConditionPage: React.FC = () => {
       {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading condition content...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]"></div>
+          <p className="mt-4 text-[var(--color-text-muted)]">Loading condition content...</p>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
         <div className="text-center py-12">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+          <div className="bg-data-fail/10 border border-data-fail/30 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-data-fail mb-2">
               Content Not Available
             </h2>
-            <p className="text-red-600 dark:text-red-300">{error}</p>
+            <p className="text-data-fail">{error}</p>
           </div>
         </div>
       )}
@@ -215,11 +215,11 @@ const ConditionPage: React.FC = () => {
             <div className="flex items-center gap-3 mb-4">
               {conditionMeta && (
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
                     {conditionMeta.system}
                   </span>
                   {conditionMeta.subcategory && (
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-[var(--color-text-muted)]">
                       • {conditionMeta.subcategory}
                     </span>
                   )}
@@ -227,10 +227,10 @@ const ConditionPage: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{displayName}</h1>
+            <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-2">{displayName}</h1>
 
             {conditionMeta?.aliases && conditionMeta.aliases.length > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Also known as: {conditionMeta.aliases.join(', ')}
               </p>
             )}
@@ -241,7 +241,7 @@ const ConditionPage: React.FC = () => {
           {/* Tabbed interface for subtypes */}
           {subtypes.length > 0 && (
             <div className="mb-6">
-              <div className="border-b border-gray-200 dark:border-gray-700">
+              <div className="border-b border-[var(--color-border)]">
                 <nav className="flex gap-4" aria-label="Condition subtypes">
                   {subtypes.map((tab) => (
                     <button
@@ -251,15 +251,15 @@ const ConditionPage: React.FC = () => {
                     px-4 py-3 font-medium text-sm border-b-2 transition-colors
                     ${
                       activeSubtype === tab.id
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                        ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]'
                     }
                   `}
                       aria-current={activeSubtype === tab.id ? 'page' : undefined}
                     >
                       <span>{tab.label}</span>
                       {tab.description && (
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">
+                        <span className="block text-xs text-[var(--color-text-muted)]">
                           {tab.description}
                         </span>
                       )}
@@ -274,7 +274,7 @@ const ConditionPage: React.FC = () => {
           <div className="condition-sections space-y-4">
             {sections.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">
+                <p className="text-[var(--color-text-muted)]">
                   Condition content isn&apos;t available for this entry.
                 </p>
               </div>

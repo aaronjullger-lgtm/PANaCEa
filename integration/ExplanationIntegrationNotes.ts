@@ -33,8 +33,8 @@
  * In QuizView.tsx or your question display component:
  *
  * ```typescript
- * import ExplanationPanel from '../components/ExplanationPanel';
- * import type { DifferentialItem } from '../components/ExplanationPanel';
+ * import ExplanationPanel from '../components/panels/ExplanationPanel';
+ * import type { DifferentialItem } from '../components/panels/ExplanationPanel';
  * ```
  */
 
@@ -187,8 +187,8 @@ export const INTEGRATION_EXAMPLE = `
 // In QuizView.tsx or similar component
 
 import React, { useState, useCallback } from 'react';
-import ExplanationPanel from '../components/ExplanationPanel';
-import type { DifferentialItem } from '../components/ExplanationPanel';
+import ExplanationPanel from '../components/panels/ExplanationPanel';
+import type { DifferentialItem } from '../components/panels/ExplanationPanel';
 import { storeUserReaction } from '../lib/services/explanationCompressionService';
 
 // Inside your component:

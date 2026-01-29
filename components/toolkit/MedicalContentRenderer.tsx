@@ -96,7 +96,7 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
           {content.condition}
         </h3>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4 flex-wrap">
-          <span className="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium">
+          <span className="px-2 py-1 rounded-md bg-slate-800/50 text-[var(--color-accent)] font-medium">
             {content.system}
           </span>
           <span>•</span>
@@ -224,8 +224,8 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
 
       {/* Clinical Management & Counseling Section */}
       {(content.patient_education || content.disposition || content.prevention) && (
-        <div className="p-6 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20">
-          <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-100 mb-4">
+        <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50">
+          <h3 className="text-lg font-bold text-slate-100 mb-4">
             Clinical Management & Counseling
           </h3>
           <div className="space-y-4">
@@ -233,12 +233,12 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
             {content.patient_education && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <UserCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h5 className="font-semibold text-indigo-900 dark:text-indigo-100">
+                  <UserCheck className="w-4 h-4 text-slate-400" />
+                  <h5 className="font-semibold text-slate-100">
                     Patient Education
                   </h5>
                 </div>
-                <div className="text-indigo-800 dark:text-indigo-200 ml-6">
+                <div className="text-slate-300 ml-6">
                   <MarkdownContent content={content.patient_education} />
                 </div>
               </div>
@@ -248,12 +248,12 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
             {content.disposition && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Hospital className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h5 className="font-semibold text-indigo-900 dark:text-indigo-100">
+                  <Hospital className="w-4 h-4 text-slate-400" />
+                  <h5 className="font-semibold text-slate-100">
                     Disposition/Referral
                   </h5>
                 </div>
-                <div className="text-indigo-800 dark:text-indigo-200 ml-6">
+                <div className="text-slate-300 ml-6">
                   <MarkdownContent content={content.disposition} />
                 </div>
               </div>
@@ -263,12 +263,12 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
             {content.prevention && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h5 className="font-semibold text-indigo-900 dark:text-indigo-100">
+                  <ShieldCheck className="w-4 h-4 text-slate-400" />
+                  <h5 className="font-semibold text-slate-100">
                     Prevention/Screening
                   </h5>
                 </div>
-                <div className="text-indigo-800 dark:text-indigo-200 ml-6">
+                <div className="text-slate-300 ml-6">
                   <MarkdownContent content={content.prevention} />
                 </div>
               </div>
@@ -277,16 +277,16 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
         </div>
       )}
 
-      {/* Gold Standard Diagnosis - Blue Section */}
+      {/* Gold Standard Diagnosis - Slate Section */}
       {content.gold_standard_dx && (
-        <div className="p-5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+        <div className="p-5 rounded-xl border border-slate-700 bg-slate-800/50">
           <div className="flex items-center gap-2 mb-3">
-            <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+            <Target className="w-5 h-5 text-slate-400" />
+            <h4 className="font-semibold text-slate-100">
               Gold Standard Diagnosis
             </h4>
           </div>
-          <p className="text-blue-800 dark:text-blue-200">{content.gold_standard_dx}</p>
+          <p className="text-slate-300">{content.gold_standard_dx}</p>
         </div>
       )}
 

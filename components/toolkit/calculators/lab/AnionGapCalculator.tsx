@@ -111,14 +111,14 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       />
 
       {/* Formula Display */}
-      <div className="bg-gradient-to-r from-blue-950/40 to-indigo-950/40 border border-blue-700 rounded-xl p-4">
+      <div className="bg-gradient-to-r from-slate-900/40 to-slate-800/40 border border-slate-700 rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <Beaker className="w-6 h-6 text-blue-400" />
+          <Beaker className="w-6 h-6 text-[var(--color-accent)]" />
           <div>
-            <div className="font-mono text-lg font-semibold text-blue-200">
+            <div className="font-mono text-lg font-semibold text-slate-200">
               AG = Na⁺ − (Cl⁻ + HCO₃⁻)
             </div>
-            <div className="text-sm text-blue-300 mt-1">Normal range: 8-12 mEq/L</div>
+            <div className="text-sm text-slate-300 mt-1">Normal range: 8-12 mEq/L</div>
           </div>
         </div>
       </div>
@@ -170,8 +170,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         </div>
 
         {correctedAG && ag && correctedAG !== ag && (
-          <div className="p-3 bg-blue-950/30 border border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-200">
+          <div className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <p className="text-sm text-slate-200">
               <strong>Albumin-corrected:</strong> Uncorrected AG = {ag}, Corrected AG ={' '}
               {correctedAG}
             </p>
@@ -202,7 +202,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   key={idx}
                   className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
                 >
-                  <div className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white font-bold rounded-lg flex-shrink-0">
+                  <div className="w-8 h-8 flex items-center justify-center bg-[var(--color-accent)] text-white font-bold rounded-lg flex-shrink-0">
                     {item.letter}
                   </div>
                   <div className="min-w-0">

@@ -132,7 +132,7 @@ export const LearningProfileDashboard: React.FC = () => {
       case 'progressing':
         return 'text-data-provisional';
       default:
-        return 'text-slate-500';
+        return 'text-[var(--color-text-muted)]';
     }
   };
 
@@ -152,7 +152,7 @@ export const LearningProfileDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-8 h-8 text-steel-blue-500 animate-spin" />
+        <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
       </div>
     );
   }
@@ -161,10 +161,10 @@ export const LearningProfileDashboard: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <AlertTriangle className="w-12 h-12 text-data-provisional" />
-        <p className="text-slate-600 dark:text-slate-400">{error}</p>
+        <p className="text-[var(--color-text-muted)]">{error}</p>
         <button
           onClick={loadProfile}
-          className="px-4 py-2 bg-steel-blue-500 text-white rounded-lg hover:bg-steel-blue-600 transition-colors"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
         >
           Try Again
         </button>
@@ -175,11 +175,11 @@ export const LearningProfileDashboard: React.FC = () => {
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8 text-center">
-        <Brain className="w-16 h-16 text-slate-300 dark:text-slate-600" />
-        <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300">
+        <Brain className="w-16 h-16 text-[var(--color-text-muted)]" />
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
           No Learning Profile Yet
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md">
+        <p className="text-[var(--color-text-muted)] max-w-md">
           Complete a few study sessions to build your personalized learning profile. We&apos;ll
           track your patterns and provide insights to optimize your studying.
         </p>
@@ -192,19 +192,19 @@ export const LearningProfileDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
             Your Learning Profile
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-[var(--color-text-muted)]">
             Based on {profile.lifetimeQuestions.toLocaleString()} questions answered
           </p>
         </div>
         <button
           onClick={loadProfile}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
           title="Refresh"
         >
-          <RefreshCw className="w-5 h-5 text-slate-500" />
+          <RefreshCw className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
       </div>
 
@@ -224,7 +224,7 @@ export const LearningProfileDashboard: React.FC = () => {
                 <span className="text-4xl font-bold text-steel-blue-700 dark:text-steel-blue-300">
                   {profile.estimatedScore}
                 </span>
-                <span className="text-sm text-slate-500">/800</span>
+                <span className="text-sm text-[var(--color-text-muted)]">/800</span>
               </div>
               <p
                 className={`text-sm mt-2 font-medium ${getReadinessColor(profile.readinessLevel)}`}
@@ -241,7 +241,7 @@ export const LearningProfileDashboard: React.FC = () => {
                   stroke="currentColor"
                   strokeWidth="8"
                   fill="none"
-                  className="text-slate-200 dark:text-slate-700"
+                  className="text-[var(--color-border)]"
                 />
                 <circle
                   cx="48"
@@ -294,29 +294,29 @@ export const LearningProfileDashboard: React.FC = () => {
 
       {/* Aggregate Trends */}
       {aggregateStats && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-          <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
             <Activity className="w-4 h-4" />
             Recent Performance Trends
           </h3>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-slate-400">Avg Accuracy (Last 10)</p>
-              <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+              <p className="text-xs text-[var(--color-text-muted)]">Avg Accuracy (Last 10)</p>
+              <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                 {aggregateStats.recentAvgAccuracy !== null
                   ? `${Math.round(aggregateStats.recentAvgAccuracy)}%`
                   : '—'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-400">Trend</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Trend</p>
               <p
                 className={`text-lg font-semibold flex items-center gap-1 ${
                   aggregateStats.accuracyTrend === 'improving'
                     ? 'text-data-pass'
                     : aggregateStats.accuracyTrend === 'declining'
                       ? 'text-data-fail'
-                      : 'text-slate-500'
+                      : 'text-[var(--color-text-muted)]'
                 }`}
               >
                 {aggregateStats.accuracyTrend === 'improving' && <TrendingUp className="w-4 h-4" />}
@@ -328,8 +328,8 @@ export const LearningProfileDashboard: React.FC = () => {
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-400">Total Sessions</p>
-              <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+              <p className="text-xs text-[var(--color-text-muted)]">Total Sessions</p>
+              <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                 {aggregateStats.totalSessions}
               </p>
             </div>
@@ -338,8 +338,8 @@ export const LearningProfileDashboard: React.FC = () => {
       )}
 
       {/* Test-Taking Patterns */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 border border-[var(--color-border)]">
+        <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
           <Brain className="w-4 h-4" />
           Your Test-Taking Patterns
         </h3>
@@ -486,19 +486,21 @@ export const LearningProfileDashboard: React.FC = () => {
 
       {/* Recent Sessions */}
       {sessions.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] p-4 border-b border-[var(--color-border)] flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
             Recent Sessions
           </h3>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-[var(--color-border)]">
             {sessions.slice(0, 5).map((session) => (
               <div key={session.id} className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     {formatDate(session.startedAt)}
                   </p>
-                  <p className="text-xs text-slate-500">{session.totalQuestions} questions</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    {session.totalQuestions} questions
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
@@ -514,7 +516,7 @@ export const LearningProfileDashboard: React.FC = () => {
                       {Math.round(session.accuracy)}%
                     </p>
                     {session.bestStreak > 0 && (
-                      <p className="text-xs text-slate-400 flex items-center gap-1">
+                      <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
                         <Flame className="w-3 h-3 text-muted-amber-400" />
                         {session.bestStreak} streak
                       </p>
@@ -537,13 +539,13 @@ const StatCard: React.FC<{
   value: string;
   sublabel?: string;
 }> = ({ icon, label, value, sublabel }) => (
-  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+  <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 border border-[var(--color-border)]">
     <div className="flex items-center gap-2 mb-2">
       {icon}
-      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
     </div>
-    <p className="text-2xl font-bold text-slate-700 dark:text-slate-200">{value}</p>
-    {sublabel && <p className="text-xs text-slate-400 mt-1">{sublabel}</p>}
+    <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
+    {sublabel && <p className="text-xs text-[var(--color-text-muted)] mt-1">{sublabel}</p>}
   </div>
 );
 
@@ -563,8 +565,8 @@ const PatternItem: React.FC<{
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{description}</p>
+        <p className="text-sm font-medium text-[var(--color-text-primary)]">{label}</p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">{description}</p>
       </div>
       <span className={`px-3 py-1 rounded-full text-sm font-medium ${colorClasses[color]}`}>
         {value}

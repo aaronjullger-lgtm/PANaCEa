@@ -147,7 +147,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           ) : (
             <ResponsiveContainer width="100%" height={320}>
               <RadarChart data={radarData} outerRadius={120}>
-                <PolarGrid stroke="#e2e8f0" />
+                <PolarGrid stroke="var(--color-border)" />
                 <PolarAngleAxis
                   dataKey="system"
                   tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
@@ -160,8 +160,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 <Radar
                   name="Accuracy"
                   dataKey="accuracy"
-                  stroke="#6366f1"
-                  fill="#6366f1"
+                  stroke="var(--color-accent)"
+                  fill="var(--color-accent)"
                   fillOpacity={0.35}
                 />
               </RadarChart>
@@ -178,7 +178,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
           ) : (
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                 <YAxis
                   yAxisId="left"
@@ -195,7 +195,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                   yAxisId="left"
                   type="monotone"
                   dataKey="accuracy"
-                  stroke="#10b981"
+                  stroke="var(--color-success)"
                   strokeWidth={2}
                   dot={false}
                   name="Accuracy (%)"
@@ -204,7 +204,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                   yAxisId="right"
                   type="monotone"
                   dataKey="pace"
-                  stroke="#6366f1"
+                  stroke="var(--color-accent)"
                   strokeWidth={2}
                   dot={false}
                   name="Pace (s)"
@@ -226,7 +226,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
         ) : (
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={timeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="system"
                 tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
@@ -236,7 +236,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
               />
               <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="seconds" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Avg seconds" />
+              <Bar
+                dataKey="seconds"
+                fill="var(--color-warning)"
+                radius={[6, 6, 0, 0]}
+                name="Avg seconds"
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

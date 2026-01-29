@@ -123,7 +123,7 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   type="radio"
                   checked={sex === s}
                   onChange={() => setSex(s)}
-                  className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600"
+                  className="w-4 h-4 text-[var(--color-accent)] bg-slate-700 border-slate-600"
                 />
                 <span className="capitalize text-slate-200">{s}</span>
               </label>
@@ -145,7 +145,7 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   type="radio"
                   checked={race === r.value}
                   onChange={() => setRace(r.value)}
-                  className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600"
+                  className="w-4 h-4 text-[var(--color-accent)] bg-slate-700 border-slate-600"
                 />
                 <span className="text-slate-200">{r.label}</span>
               </label>

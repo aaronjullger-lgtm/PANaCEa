@@ -432,7 +432,7 @@ const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
     case 'developing':
       return 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-400';
     case 'novice':
-      return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+      return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]';
   }
 };
 
@@ -465,8 +465,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
         onClick={() => onNavigate('system')}
         className={`flex items-center gap-1 ${
           level === 'system'
-            ? 'text-slate-900 dark:text-white font-semibold'
-            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'text-[var(--color-text-primary)] font-semibold'
+            : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
         }`}
       >
         <BarChart3 className="w-4 h-4" />
@@ -475,13 +475,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
 
       {systemName && (
         <>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
+          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
           <button
             onClick={() => onNavigate('category')}
             className={`${
               level === 'category'
-                ? 'text-slate-900 dark:text-white font-semibold'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                ? 'text-[var(--color-text-primary)] font-semibold'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             {systemName}
@@ -491,8 +491,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
 
       {categoryName && (
         <>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-900 dark:text-white font-semibold">{categoryName}</span>
+          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-[var(--color-text-primary)] font-semibold">{categoryName}</span>
         </>
       )}
     </nav>
@@ -533,7 +533,7 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`${sizeClasses[size]} rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all text-left group relative overflow-hidden`}
+      className={`${sizeClasses[size]} rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:shadow-lg transition-all text-left group relative overflow-hidden`}
     >
       {/* Background accuracy indicator */}
       <div
@@ -544,10 +544,10 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
       <div className="relative">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <span className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-1">
+          <span className="font-semibold text-[var(--color-text-primary)] text-sm line-clamp-1">
             {label}
           </span>
-          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
         </div>
 
         {/* Accuracy */}
@@ -562,7 +562,7 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
                   ? 'text-sage-600'
                   : trend === 'down'
                     ? 'text-dusty-rose-600'
-                    : 'text-slate-500'
+                    : 'text-[var(--color-text-muted)]'
               }`}
             >
               {trend === 'up' ? (
@@ -579,13 +579,13 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
 
         {/* Coverage bar */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
             <span>Coverage</span>
             <span>{coverage}%</span>
           </div>
-          <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-slate-400 dark:bg-slate-500 transition-all duration-500"
+              className="h-full bg-[var(--color-accent)]/40 transition-all duration-500"
               style={{ width: `${coverage}%` }}
             />
           </div>
@@ -609,7 +609,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all"
+      className="flex items-center justify-between p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all"
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
         {/* SRS Status */}
@@ -618,7 +618,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
         {/* Condition info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-900 dark:text-white truncate">
+            <span className="font-medium text-[var(--color-text-primary)] truncate">
               {condition.name}
             </span>
             <span
@@ -627,7 +627,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
               {condition.masteryLevel}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-1">
             <span>{condition.totalAttempts} attempts</span>
             {daysAgo !== null && (
               <span className="flex items-center gap-1">
@@ -651,8 +651,8 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
         onClick={onPractice}
         className={`ml-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
           condition.srsStatus === 'due'
-            ? 'bg-muted-amber-500 hover:bg-muted-amber-600 text-white'
-            : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300'
+            ? 'bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/90 text-[var(--color-text-inverse)]'
+            : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]'
         }`}
       >
         {condition.srsStatus === 'due' ? (
@@ -724,29 +724,29 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
       {/* Header with summary stats */}
       {drilldownLevel === 'system' && showDetailedMetrics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Overall Accuracy</div>
+          <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">Overall Accuracy</div>
             <div className={`text-2xl font-bold ${getAccuracyColorText(summaryStats.avgAccuracy)}`}>
               {summaryStats.avgAccuracy}%
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+          <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">
               Questions Answered
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summaryStats.total}
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Strong Areas</div>
-            <div className="text-2xl font-bold text-sage-600 dark:text-sage-400">
+          <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">Strong Areas</div>
+            <div className="text-2xl font-bold text-[var(--color-success)]">
               {summaryStats.strongAreas}
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Needs Work</div>
-            <div className="text-2xl font-bold text-muted-amber-600 dark:text-muted-amber-400">
+          <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">Needs Work</div>
+            <div className="text-2xl font-bold text-[var(--color-warning)]">
               {summaryStats.weakAreas}
             </div>
           </div>
@@ -811,12 +811,12 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+              <div className="text-center py-12 text-[var(--color-text-muted)]">
                 <Info className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No category breakdown available for this system yet.</p>
                 <button
                   onClick={() => handlePractice('system', selectedSystem.code)}
-                  className="mt-4 px-6 py-2 bg-steel-blue-500 hover:bg-steel-blue-600 text-white rounded-lg transition-colors"
+                  className="mt-4 px-6 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg transition-colors"
                 >
                   Practice {selectedSystem.name}
                 </button>
@@ -855,9 +855,9 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
       {drilldownLevel !== 'system' && (
         <button
           onClick={() => handleNavigate(drilldownLevel === 'condition' ? 'category' : 'system')}
-          className="md:hidden fixed bottom-6 left-6 p-3 bg-white dark:bg-slate-800 rounded-full shadow-lg border border-slate-200 dark:border-slate-700"
+          className="md:hidden fixed bottom-6 left-6 p-3 bg-[var(--color-bg-primary)] rounded-full shadow-lg border border-[var(--color-border)]"
         >
-          <ChevronLeft className="w-6 h-6 text-slate-600 dark:text-slate-300" />
+          <ChevronLeft className="w-6 h-6 text-[var(--color-text-muted)]" />
         </button>
       )}
     </div>

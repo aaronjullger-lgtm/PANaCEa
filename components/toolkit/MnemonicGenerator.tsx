@@ -103,8 +103,8 @@ const generateMnemonic = async (
 // Mnemonic type badges
 const TypeBadge: React.FC<{ type: GeneratedMnemonic['type'] }> = ({ type }) => {
   const styles = {
-    acronym: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    story: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    acronym: 'bg-slate-700 text-slate-200',
+    story: 'bg-slate-700 text-slate-200',
     visual: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     rhyme: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
   };
@@ -200,7 +200,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
     return (
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
       >
         <Sparkles className="w-4 h-4" />
         <span>Generate Mnemonic</span>
@@ -229,7 +229,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-500" />
+              <Brain className="w-5 h-5 text-[var(--color-accent)]" />
               <h3 className="font-semibold text-[var(--color-text-primary)]">Mnemonic Generator</h3>
             </div>
             <button
@@ -308,8 +308,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <p className="text-lg font-medium text-purple-900 dark:text-purple-100 leading-relaxed">
+                <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+                  <p className="text-lg font-medium text-slate-100 leading-relaxed">
                     {mnemonic.mnemonic}
                   </p>
                 </div>

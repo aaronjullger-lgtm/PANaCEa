@@ -86,8 +86,8 @@ const getMasteryLevel = (accuracy: number): { level: string; color: string; bgCo
   if (accuracy >= 80)
     return {
       level: 'Proficient',
-      color: 'text-slate-teal-600 dark:text-slate-teal-400',
-      bgColor: 'bg-slate-teal-500',
+      color: 'text-[var(--color-accent)]',
+      bgColor: 'bg-[var(--color-accent)]',
     };
   if (accuracy >= 70)
     return {
@@ -117,7 +117,7 @@ const getMasteryLevel = (accuracy: number): { level: string; color: string; bgCo
 const getHeatColor = (accuracy: number): string => {
   // Using "Stormy Slate" semantic design tokens
   if (accuracy >= 90) return 'bg-data-pass/80 dark:bg-data-pass/70';
-  if (accuracy >= 80) return 'bg-slate-teal-500/80 dark:bg-slate-teal-600/80';
+  if (accuracy >= 80) return 'bg-[var(--color-accent)]/80';
   if (accuracy >= 70) return 'bg-action-blue-500/80 dark:bg-action-blue-600/80';
   if (accuracy >= 60) return 'bg-data-provisional/80 dark:bg-data-provisional/70';
   if (accuracy >= 50) return 'bg-muted-amber-500/80 dark:bg-muted-amber-600/80';
@@ -165,10 +165,13 @@ export function SystemMasteryMap({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+        <div className="h-8 w-48 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
         <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
           {Array.from({ length: 15 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div
+              key={i}
+              className="h-24 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -180,18 +183,18 @@ export function SystemMasteryMap({
       {/* Header with overall stats */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Organ System Mastery
           </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-[var(--color-text-muted)]">
             {overallStats.masteredSystems}/{data.length} systems at proficiency
           </p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
             {overallStats.weightedAccuracy}%
           </p>
-          <p className="text-xs text-slate-500">Weighted Accuracy</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Weighted Accuracy</p>
         </div>
       </div>
 
@@ -219,7 +222,7 @@ export function SystemMasteryMap({
                 relative rounded-xl cursor-pointer transition-all overflow-hidden
                 ${compact ? 'p-3' : 'p-4'}
                 ${heatColor}
-                ${isHovered ? 'ring-2 ring-white/50 scale-105' : ''}
+                ${isHovered ? 'ring-2 ring-[var(--color-text-inverse)]/40 scale-105' : ''}
               `}
             >
               {/* Coverage overlay */}
@@ -231,35 +234,45 @@ export function SystemMasteryMap({
               {/* Content */}
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-white/80">
+                  <div className="text-[var(--color-text-inverse)]/80">
                     {SYSTEM_ICONS[system.system] || <Activity className="h-5 w-5" />}
                   </div>
                   <div className="flex items-center gap-1">
-                    {system.trend === 'improving' && <TrendingUp className="h-3 w-3 text-white" />}
-                    {system.trend === 'declining' && (
-                      <TrendingDown className="h-3 w-3 text-white" />
+                    {system.trend === 'improving' && (
+                      <TrendingUp className="h-3 w-3 text-[var(--color-text-inverse)]" />
                     )}
-                    {system.trend === 'stable' && <Minus className="h-3 w-3 text-white/60" />}
+                    {system.trend === 'declining' && (
+                      <TrendingDown className="h-3 w-3 text-[var(--color-text-inverse)]" />
+                    )}
+                    {system.trend === 'stable' && (
+                      <Minus className="h-3 w-3 text-[var(--color-text-inverse)]/60" />
+                    )}
                   </div>
                 </div>
 
-                <p className={`font-bold text-white ${compact ? 'text-lg' : 'text-xl'}`}>
+                <p
+                  className={`font-bold text-[var(--color-text-inverse)] ${compact ? 'text-lg' : 'text-xl'}`}
+                >
                   {Math.round(system.accuracy)}%
                 </p>
 
-                <p className={`text-white/80 truncate ${compact ? 'text-xs' : 'text-sm'}`}>
+                <p
+                  className={`text-[var(--color-text-inverse)]/80 truncate ${
+                    compact ? 'text-xs' : 'text-sm'
+                  }`}
+                >
                   {system.displayName}
                 </p>
 
                 {!compact && (
-                  <p className="text-xs text-white/60 mt-1">
+                  <p className="text-xs text-[var(--color-text-inverse)]/60 mt-1">
                     {system.questionsAnswered} Qs • {Math.round(system.blueprintWeight * 100)}%
                   </p>
                 )}
               </div>
 
               {/* Blueprint weight indicator */}
-              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-medium bg-black/30 text-white">
+              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-medium bg-black/30 text-[var(--color-text-inverse)]">
                 {Math.round(system.blueprintWeight * 100)}%
               </div>
             </motion.div>
@@ -269,13 +282,13 @@ export function SystemMasteryMap({
 
       {/* Legend */}
       {showLegend && (
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-data-pass" />
             <span>≥90% Mastered</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-slate-teal-500" />
+            <div className="w-3 h-3 rounded bg-[var(--color-accent)]" />
             <span>≥80% Proficient</span>
           </div>
           <div className="flex items-center gap-2">
@@ -299,7 +312,7 @@ export function SystemMasteryMap({
 
       {/* Critical systems alert */}
       {overallStats.criticalSystems > 0 && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-data-fail/10 dark:bg-data-fail/20 border border-data-fail/30 dark:border-data-fail/40">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-data-fail/10 border border-data-fail/30">
           <AlertTriangle className="h-5 w-5 text-data-fail dark:text-data-fail" />
           <p className="text-sm text-data-fail dark:text-data-fail/90">
             {overallStats.criticalSystems} system{overallStats.criticalSystems > 1 ? 's' : ''} below
@@ -323,17 +336,17 @@ export function SystemMasteryMap({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6"
+              className="w-full max-w-md bg-[var(--color-bg-primary)] rounded-2xl shadow-xl p-6"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`p-3 rounded-xl ${getHeatColor(selectedSystem.accuracy)}`}>
                     {SYSTEM_ICONS[selectedSystem.system] || (
-                      <Activity className="h-6 w-6 text-white" />
+                      <Activity className="h-6 w-6 text-[var(--color-text-inverse)]" />
                     )}
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">
                       {selectedSystem.displayName}
                     </h4>
                     <p className={getMasteryLevel(selectedSystem.accuracy).color}>
@@ -343,33 +356,33 @@ export function SystemMasteryMap({
                 </div>
                 <button
                   onClick={() => setSelectedSystem(null)}
-                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)]"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Accuracy</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
+                  <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                     {Math.round(selectedSystem.accuracy)}%
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Questions</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">Questions</p>
+                  <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                     {selectedSystem.questionsAnswered}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Blueprint Weight</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">Blueprint Weight</p>
+                  <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                     {Math.round(selectedSystem.blueprintWeight * 100)}%
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Trend</p>
+                <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">Trend</p>
                   <div className="flex items-center gap-1">
                     {selectedSystem.trend === 'improving' && (
                       <>
@@ -385,8 +398,8 @@ export function SystemMasteryMap({
                     )}
                     {selectedSystem.trend === 'stable' && (
                       <>
-                        <Minus className="h-5 w-5 text-slate-500" />
-                        <span className="text-slate-600 font-medium">Stable</span>
+                        <Minus className="h-5 w-5 text-[var(--color-text-muted)]" />
+                        <span className="text-[var(--color-text-muted)] font-medium">Stable</span>
                       </>
                     )}
                   </div>
@@ -396,12 +409,12 @@ export function SystemMasteryMap({
               {/* Coverage progress */}
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-slate-400">Coverage</span>
-                  <span className="text-slate-900 dark:text-white">
+                  <span className="text-[var(--color-text-muted)]">Coverage</span>
+                  <span className="text-[var(--color-text-primary)]">
                     {selectedSystem.questionsAnswered}/{selectedSystem.questionsNeeded}
                   </span>
                 </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <div
                     className={`h-full ${getHeatColor(selectedSystem.accuracy)} transition-all`}
                     style={{
@@ -414,7 +427,7 @@ export function SystemMasteryMap({
               {/* Weak/Strong topics */}
               {selectedSystem.weakTopics && selectedSystem.weakTopics.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
                     Areas to Review:
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -432,7 +445,7 @@ export function SystemMasteryMap({
 
               {selectedSystem.strongTopics && selectedSystem.strongTopics.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
                     Strengths:
                   </p>
                   <div className="flex flex-wrap gap-1">

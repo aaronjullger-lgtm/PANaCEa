@@ -437,7 +437,7 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
             onClick={() => handleTierChange(tier)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
               currentTier === tier
-                ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm'
                 : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >

@@ -246,15 +246,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'mode':
-        return 'text-blue-600 dark:text-blue-400';
+        return 'text-[var(--color-accent)]';
       case 'condition':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-data-pass';
       case 'drug':
-        return 'text-purple-600 dark:text-purple-400';
+        return 'text-data-provisional';
       case 'action':
-        return 'text-amber-600 dark:text-amber-400';
+        return 'text-[var(--color-text-secondary)]';
       default:
-        return 'text-slate-600 dark:text-slate-400';
+        return 'text-[var(--color-text-muted)]';
     }
   };
 
@@ -276,14 +276,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-2xl bg-[var(--color-bg-primary)] rounded-xl shadow-2xl overflow-hidden"
         >
           {/* Search Input */}
-          <div className="flex items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center px-4 py-3 border-b border-[var(--color-border)]">
             {isSearching ? (
-              <Loader2 className="w-5 h-5 text-blue-500 mr-3 animate-spin" />
+              <Loader2 className="w-5 h-5 text-[var(--color-accent)] mr-3 animate-spin" />
             ) : (
-              <Search className="w-5 h-5 text-slate-400 mr-3" />
+              <Search className="w-5 h-5 text-[var(--color-text-muted)] mr-3" />
             )}
             <input
               ref={inputRef}
@@ -291,20 +291,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search modes, conditions, drugs..."
-              className="flex-1 bg-transparent text-slate-900 dark:text-white placeholder-slate-400 outline-none text-lg"
+              className="flex-1 bg-transparent text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none text-lg"
             />
             <button
               onClick={onClose}
-              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+              className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
             >
-              <X className="w-5 h-5 text-slate-400" />
+              <X className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>
           </div>
 
           {/* Search Error */}
           {searchError && (
-            <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+            <div className="px-4 py-3 bg-data-fail/10 border-b border-data-fail/30">
+              <p className="text-sm text-data-fail flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 <span>{searchError}</span>
               </p>
@@ -314,12 +314,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
           {/* Results */}
           <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto py-2">
             {isSearching && query.trim().length >= 2 ? (
-              <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-blue-500" />
+              <div className="px-4 py-8 text-center text-[var(--color-text-muted)]">
+                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-[var(--color-accent)]" />
                 <p>Searching medical content...</p>
               </div>
             ) : results.length === 0 ? (
-              <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+              <div className="px-4 py-8 text-center text-[var(--color-text-muted)]">
                 {query.trim() ? (
                   <>
                     <p className="font-medium mb-1">No results found</p>
@@ -335,8 +335,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                   key={result.id}
                   onClick={result.action}
                   onMouseEnter={() => setSelectedIndex(index)}
-                  className={`w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                    index === selectedIndex ? 'bg-slate-50 dark:bg-slate-700/50' : ''
+                  className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors ${
+                    index === selectedIndex ? 'bg-[var(--color-bg-tertiary)]' : ''
                   }`}
                 >
                   <div className="flex-1 text-left">
@@ -346,39 +346,39 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                       >
                         {result.category}
                       </span>
-                      <span className="text-slate-900 dark:text-white font-medium">
+                      <span className="text-[var(--color-text-primary)] font-medium">
                         {result.title}
                       </span>
                     </div>
                     {result.subtitle && (
-                      <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <div className="text-sm text-[var(--color-text-muted)] mt-1">
                         {result.subtitle}
                       </div>
                     )}
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                  <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)]" />
                 </button>
               ))
             )}
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
             <div className="flex items-center gap-4">
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded">
                   ↑↓
                 </kbd>{' '}
                 Navigate
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded">
                   ↵
                 </kbd>{' '}
                 Select
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded">
+                <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded">
                   esc
                 </kbd>{' '}
                 Close

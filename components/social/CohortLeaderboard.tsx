@@ -245,12 +245,12 @@ export function CohortLeaderboard({
                 relative rounded-xl border-2 transition-all cursor-pointer
                 ${
                   isCurrentUser
-                    ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600'
+                    ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600'
                     : rankConfig
                       ? `${rankConfig.bg} ${rankConfig.border}`
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                 }
-                ${isExpanded ? 'ring-2 ring-indigo-500' : ''}
+                ${isExpanded ? 'ring-2 ring-[var(--color-accent)]' : ''}
               `}
               onClick={() => {
                 setExpandedUserId(isExpanded ? null : entry.userId);
