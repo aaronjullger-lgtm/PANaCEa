@@ -84,13 +84,13 @@ export function VersionHistoryViewer({
   const getChangeTypeColor = (changeType: string) => {
     switch (changeType) {
       case 'create':
-        return 'bg-blue-500/20 text-blue-400';
+        return 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]';
       case 'update':
-        return 'bg-yellow-500/20 text-yellow-400';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]';
       case 'publish':
-        return 'bg-green-500/20 text-green-400';
+        return 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]';
       default:
-        return 'bg-gray-500/20 text-gray-400';
+        return 'bg-[var(--color-bg-tertiary)]/20 text-[var(--color-text-muted)]';
     }
   };
 
