@@ -46,37 +46,37 @@ export interface PredictedScoreCardProps {
 const READINESS_CONFIG = {
   confident_pass: {
     icon: CheckCircle,
-    color: 'text-data-pass',
-    bgColor: 'bg-data-pass/10',
-    borderColor: 'border-data-pass/30',
-    ringColor: 'ring-data-pass/40',
+    color: 'text-[var(--color-data-pass)]',
+    bgColor: 'bg-[var(--color-data-pass)] bg-opacity-10',
+    borderColor: 'border-[var(--color-data-pass)] border-opacity-30',
+    ringColor: 'ring-[var(--color-data-pass)] ring-opacity-40',
     label: 'Confident Pass',
     description: "You're well-prepared for the exam!",
   },
   likely_pass: {
     icon: Target,
-    color: 'text-steel-blue-600 dark:text-steel-blue-400',
-    bgColor: 'bg-steel-blue-50 dark:bg-steel-blue-900/30',
-    borderColor: 'border-steel-blue-200 dark:border-steel-blue-800',
-    ringColor: 'ring-steel-blue-300',
+    color: 'text-[var(--color-accent)]',
+    bgColor: 'bg-[var(--color-accent)] bg-opacity-10',
+    borderColor: 'border-[var(--color-accent)] border-opacity-30',
+    ringColor: 'ring-[var(--color-accent)] ring-opacity-40',
     label: 'Likely Pass',
     description: 'On track - keep up the momentum!',
   },
   borderline: {
     icon: AlertTriangle,
-    color: 'text-muted-amber-600 dark:text-muted-amber-400',
-    bgColor: 'bg-muted-amber-50 dark:bg-muted-amber-900/30',
-    borderColor: 'border-muted-amber-200 dark:border-muted-amber-800',
-    ringColor: 'ring-muted-amber-300',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)] bg-opacity-10',
+    borderColor: 'border-[var(--color-data-provisional)] border-opacity-30',
+    ringColor: 'ring-[var(--color-data-provisional)] ring-opacity-40',
     label: 'Borderline',
     description: 'More focused preparation needed.',
   },
   not_ready: {
     icon: XCircle,
-    color: 'text-data-fail',
-    bgColor: 'bg-data-fail/10',
-    borderColor: 'border-data-fail/30',
-    ringColor: 'ring-data-fail/40',
+    color: 'text-[var(--color-data-fail)]',
+    bgColor: 'bg-[var(--color-data-fail)] bg-opacity-10',
+    borderColor: 'border-[var(--color-data-fail)] border-opacity-30',
+    ringColor: 'ring-[var(--color-data-fail)] ring-opacity-40',
     label: 'Not Ready',
     description: 'Significant improvement needed.',
   },
@@ -218,9 +218,9 @@ export function PredictedScoreCard({
           <div
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${
               trend.direction === 'up'
-                ? 'bg-data-pass/10 text-data-pass'
+                ? 'bg-[var(--color-data-pass)] bg-opacity-10 text-[var(--color-data-pass)]'
                 : trend.direction === 'down'
-                  ? 'bg-data-fail/10 text-data-fail'
+                  ? 'bg-[var(--color-data-fail)] bg-opacity-10 text-[var(--color-data-fail)]'
                   : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
             }`}
           >
@@ -259,10 +259,10 @@ export function PredictedScoreCard({
                 relative w-16 h-16 rounded-full border-4
                 ${
                   prediction.passLikelihood >= 75
-                    ? 'border-data-pass/60'
+                    ? 'border-[var(--color-data-pass)] border-opacity-60'
                     : prediction.passLikelihood >= 50
-                      ? 'border-data-provisional/60'
-                      : 'border-data-fail/60'
+                      ? 'border-[var(--color-data-provisional)] border-opacity-60'
+                      : 'border-[var(--color-data-fail)] border-opacity-60'
                 }
               `}
               >
@@ -325,7 +325,7 @@ export function PredictedScoreCard({
               <div
                 className={`
                 w-5 h-5 rounded-full border-3 border-[var(--color-bg-primary)] shadow-lg
-                ${prediction.scaledScore >= PASS_THRESHOLD ? 'bg-data-pass' : 'bg-data-fail'}
+                ${prediction.scaledScore >= PASS_THRESHOLD ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'}
               `}
               />
             </motion.div>
