@@ -124,14 +124,14 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
       >
-        <Stethoscope className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+        <Stethoscope className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <span className="text-sm font-medium text-[var(--color-text-primary)]">
           {currentOption.label}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -142,25 +142,25 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full mt-2 right-0 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
+            className="absolute top-full mt-2 right-0 w-72 bg-[var(--color-bg-secondary)] rounded-lg shadow-xl border border-[var(--color-border)] overflow-hidden z-50"
           >
             <div className="max-h-96 overflow-y-auto">
               {ROTATION_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
-                  className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700 last:border-b-0 ${
-                    option.id === currentRotation ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  className={`w-full text-left px-4 py-3 hover:bg-[var(--color-bg-tertiary)] transition-colors border-b border-[var(--color-border)] last:border-b-0 ${
+                    option.id === currentRotation ? 'bg-[var(--color-accent)]/10' : ''
                   }`}
                 >
-                  <div className="font-medium text-slate-900 dark:text-slate-100">
+                  <div className="font-medium text-[var(--color-text-primary)]">
                     {option.label}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <div className="text-xs text-[var(--color-text-muted)] mt-1">
                     {option.description}
                   </div>
                   {option.id !== 'all' && (
-                    <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    <div className="text-xs text-[var(--color-text-muted)] mt-1">
                       {option.modes.length} training mode{option.modes.length !== 1 ? 's' : ''}
                     </div>
                   )}
