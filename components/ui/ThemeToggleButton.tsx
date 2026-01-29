@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTheme } from '../hooks/useTheme';
-import { SunIcon } from './icons/SunIcon';
-import { MoonIcon } from './icons/MoonIcon';
+import { useTheme } from '@/hooks/useTheme';
+import { SunIcon } from '@/components/icons/SunIcon';
+import { MoonIcon } from '@/components/icons/MoonIcon';
 
 const ThemeToggleButton: React.FC = () => {
   const [theme, setTheme] = useTheme();

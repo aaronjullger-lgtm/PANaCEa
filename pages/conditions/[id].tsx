@@ -285,20 +285,20 @@ const ConditionPage: React.FC = () => {
                 key={section.key}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                className="bg-[var(--color-bg-secondary)] rounded-lg shadow-sm border border-[var(--color-border)] overflow-hidden"
               >
                 <button
                   onClick={() => toggleSection(section.key)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
                     {section.Icon && (
                       <section.Icon className="w-5 h-5 text-[var(--color-accent)]" />
                     )}
                     <span>{section.title}</span>
                   </h3>
                   <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform ${
+                    className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${
                       expandedSections.has(section.key) ? 'rotate-180' : ''
                     }`}
                     fill="none"
@@ -321,7 +321,7 @@ const ConditionPage: React.FC = () => {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="border-t border-gray-200 dark:border-gray-700"
+                        className="border-t border-[var(--color-border)]"
                     >
                       <div className="px-6 py-4 condition-content">
                         <FormattedSection content={section.content} />

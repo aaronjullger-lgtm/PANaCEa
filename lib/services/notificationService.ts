@@ -40,38 +40,38 @@ export async function sendFlagResolvedNotification(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #e2e8f0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--color-bg-primary); color: var(--color-text-secondary);">
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
           <td align="center" style="padding: 40px 20px;">
-            <table role="presentation" style="max-width: 600px; width: 100%; background-color: #1e293b; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <table role="presentation" style="max-width: 600px; width: 100%; background-color: var(--color-bg-secondary); border-radius: 12px; box-shadow: 0 4px 6px var(--color-shadow-soft);">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #334155;">
-                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #60a5fa;">PANaCEa</h1>
-                  <p style="margin: 8px 0 0; font-size: 14px; color: #94a3b8;">Adaptive Medical Learning</p>
+                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid var(--color-border);">
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: var(--color-accent);">PANaCEa</h1>
+                  <p style="margin: 8px 0 0; font-size: 14px; color: var(--color-text-muted);">Adaptive Medical Learning</p>
                 </td>
               </tr>
               
               <!-- Content -->
               <tr>
                 <td style="padding: 40px;">
-                  ${userFirstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0;">Thank you, ${userFirstName}! 🎉</p>` : '<p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0;">Thank you! 🎉</p>'}
+                  ${userFirstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary);">Thank you, ${userFirstName}! 🎉</p>` : '<p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary);">Thank you! 🎉</p>'}
                   
-                  <p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0; line-height: 1.6;">
+                  <p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary); line-height: 1.6;">
                     We've reviewed and fixed the issue you reported with question <strong>#${questionId.substring(0, 8)}</strong>.
                   </p>
                   
                   <!-- Issue Type Badge -->
-                  <div style="margin: 20px 0; padding: 12px 16px; background-color: #1e40af; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 14px; color: #93c5fd;">
+                  <div style="margin: 20px 0; padding: 12px 16px; background-color: var(--color-bg-tertiary); border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">
                       <strong>Issue Type:</strong> ${formatFlagType(flagType)}
                     </p>
                   </div>
                   
                   <!-- Question Preview -->
-                  <div style="margin: 20px 0; padding: 16px; background-color: #0f172a; border-left: 4px solid #60a5fa; border-radius: 4px;">
-                    <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                  <div style="margin: 20px 0; padding: 16px; background-color: var(--color-bg-primary); border-left: 4px solid var(--color-accent); border-radius: 4px;">
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary); line-height: 1.6;">
                       ${truncatedQuestion}
                     </p>
                   </div>
@@ -80,11 +80,11 @@ export async function sendFlagResolvedNotification(
                     resolutionNote
                       ? `
                   <!-- Resolution Note -->
-                  <div style="margin: 20px 0; padding: 16px; background-color: #065f46; border-radius: 8px;">
-                    <p style="margin: 0 0 8px; font-size: 13px; color: #6ee7b7; font-weight: 600;">
+                  <div style="margin: 20px 0; padding: 16px; background-color: var(--color-bg-tertiary); border-radius: 8px;">
+                    <p style="margin: 0 0 8px; font-size: 13px; color: var(--color-accent); font-weight: 600;">
                       What We Fixed:
                     </p>
-                    <p style="margin: 0; font-size: 14px; color: #d1fae5; line-height: 1.6;">
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary); line-height: 1.6;">
                       ${resolutionNote}
                     </p>
                   </div>
@@ -95,12 +95,12 @@ export async function sendFlagResolvedNotification(
                   <table role="presentation" style="width: 100%; margin: 30px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${appUrl}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Continue Studying</a>
+                        <a href="${appUrl}" style="display: inline-block; padding: 14px 32px; background-color: var(--color-accent); color: var(--color-text-inverse); text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Continue Studying</a>
                       </td>
                     </tr>
                   </table>
                   
-                  <p style="margin: 20px 0 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
+                  <p style="margin: 20px 0 0; font-size: 14px; color: var(--color-text-muted); line-height: 1.6;">
                     Your feedback helps us maintain the highest quality medical education content. Thank you for being an active member of the PANaCEa community!
                   </p>
                 </td>
@@ -108,11 +108,11 @@ export async function sendFlagResolvedNotification(
               
               <!-- Footer -->
               <tr>
-                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #334155;">
-                  <p style="margin: 0 0 8px; font-size: 13px; color: #64748b;">
+                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid var(--color-border);">
+                  <p style="margin: 0 0 8px; font-size: 13px; color: var(--color-text-muted);">
                     PANaCEa - Professional Medical Education Platform
                   </p>
-                  <p style="margin: 0; font-size: 12px; color: #475569;">
+                  <p style="margin: 0; font-size: 12px; color: var(--color-text-muted);">
                     Building trust through community feedback
                   </p>
                 </td>
@@ -180,61 +180,61 @@ export async function sendAdminFlagNotification(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #e2e8f0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--color-bg-primary); color: var(--color-text-secondary);">
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
           <td align="center" style="padding: 40px 20px;">
-            <table role="presentation" style="max-width: 600px; width: 100%; background-color: #1e293b; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <table role="presentation" style="max-width: 600px; width: 100%; background-color: var(--color-bg-secondary); border-radius: 12px; box-shadow: 0 4px 6px var(--color-shadow-soft);">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #334155;">
-                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #f59e0b;">Admin Alert</h1>
-                  <p style="margin: 8px 0 0; font-size: 14px; color: #94a3b8;">Question Flagged for Review</p>
+                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid var(--color-border);">
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: var(--color-data-provisional);">Admin Alert</h1>
+                  <p style="margin: 8px 0 0; font-size: 14px; color: var(--color-text-muted);">Question Flagged for Review</p>
                 </td>
               </tr>
               
               <!-- Content -->
               <tr>
                 <td style="padding: 40px;">
-                  <p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0; line-height: 1.6;">
+                  <p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary); line-height: 1.6;">
                     A user has flagged a question for review.
                   </p>
                   
                   <!-- Flag Details -->
-                  <div style="margin: 20px 0; padding: 16px; background-color: #0f172a; border-radius: 8px;">
-                    <p style="margin: 0 0 8px; font-size: 13px; color: #94a3b8;">
+                  <div style="margin: 20px 0; padding: 16px; background-color: var(--color-bg-tertiary); border-radius: 8px;">
+                    <p style="margin: 0 0 8px; font-size: 13px; color: var(--color-text-muted);">
                       <strong>Flag Type:</strong> ${formatFlagType(questionFlag.flagType)}
                     </p>
                     ${
                       questionFlag.userFirstName
                         ? `
-                    <p style="margin: 0 0 8px; font-size: 13px; color: #94a3b8;">
+                    <p style="margin: 0 0 8px; font-size: 13px; color: var(--color-text-muted);">
                       <strong>Reported by:</strong> ${questionFlag.userFirstName}
                     </p>
                     `
                         : ''
                     }
-                    <p style="margin: 0; font-size: 13px; color: #94a3b8;">
+                    <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
                       <strong>Question ID:</strong> #${questionFlag.questionId.substring(0, 8)}
                     </p>
                   </div>
                   
                   <!-- Question Preview -->
-                  <div style="margin: 20px 0; padding: 16px; background-color: #0f172a; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                    <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8; text-transform: uppercase;">
+                  <div style="margin: 20px 0; padding: 16px; background-color: var(--color-bg-primary); border-left: 4px solid var(--color-data-provisional); border-radius: 4px;">
+                    <p style="margin: 0 0 8px; font-size: 12px; color: var(--color-text-muted); text-transform: uppercase;">
                       Question Text:
                     </p>
-                    <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary); line-height: 1.6;">
                       ${truncatedQuestion}
                     </p>
                   </div>
                   
                   <!-- User Description -->
-                  <div style="margin: 20px 0; padding: 16px; background-color: #0f172a; border-radius: 8px;">
-                    <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8; text-transform: uppercase;">
+                  <div style="margin: 20px 0; padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px;">
+                    <p style="margin: 0 0 8px; font-size: 12px; color: var(--color-text-muted); text-transform: uppercase;">
                       User's Description:
                     </p>
-                    <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary); line-height: 1.6;">
                       ${questionFlag.description}
                     </p>
                   </div>
@@ -242,7 +242,7 @@ export async function sendAdminFlagNotification(
                   <table role="presentation" style="width: 100%; margin: 30px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${adminUrl}" style="display: inline-block; padding: 14px 32px; background-color: #f59e0b; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Review in Admin Panel</a>
+                        <a href="${adminUrl}" style="display: inline-block; padding: 14px 32px; background-color: var(--color-data-provisional); color: var(--color-text-inverse); text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Review in Admin Panel</a>
                       </td>
                     </tr>
                   </table>
@@ -251,8 +251,8 @@ export async function sendAdminFlagNotification(
               
               <!-- Footer -->
               <tr>
-                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #334155;">
-                  <p style="margin: 0; font-size: 13px; color: #64748b;">
+                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid var(--color-border);">
+                  <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
                     PANaCEa Admin Dashboard
                   </p>
                 </td>

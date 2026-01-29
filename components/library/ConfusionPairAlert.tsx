@@ -184,7 +184,9 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 {topPair.correctCondition}
               </p>
-              <p className="text-[10px] text-green-500 uppercase tracking-wide mt-0.5">Correct</p>
+              <p className="text-[10px] text-[var(--color-data-pass)] uppercase tracking-wide mt-0.5">
+                Correct
+              </p>
             </div>
 
             <ArrowLeftRight className="w-6 h-6 text-[var(--color-text-muted)]" />
@@ -193,7 +195,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 {topPair.selectedCondition}
               </p>
-              <p className="text-[10px] text-red-500 uppercase tracking-wide mt-0.5">
+              <p className="text-[10px] text-[var(--color-data-fail)] uppercase tracking-wide mt-0.5">
                 Confused For
               </p>
             </div>
@@ -232,7 +234,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
           <div className="px-4 py-3 border-t border-[var(--color-border)]/50 flex gap-2">
             <button
               onClick={() => onCompare(correctConditionId, selectedConditionId)}
-              className="flex-1 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="flex-1 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Compare Side-by-Side
             </button>

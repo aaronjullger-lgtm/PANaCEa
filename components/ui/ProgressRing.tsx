@@ -13,9 +13,9 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
   const offset = circumference - (normalizedScore / 100) * circumference;
 
   const getScoreColor = () => {
-    if (normalizedScore < 50) return 'text-amber-600';
-    if (normalizedScore < 75) return 'text-blue-600';
-    return 'text-emerald-600';
+    if (normalizedScore < 50) return 'text-[var(--color-data-fail)]';
+    if (normalizedScore < 75) return 'text-[var(--color-data-provisional)]';
+    return 'text-[var(--color-data-pass)]';
   };
 
   return (

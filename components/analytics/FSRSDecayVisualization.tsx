@@ -117,14 +117,14 @@ const DecayCurve: React.FC<{
       <polyline
         points={points}
         fill="none"
-        stroke="url(#decay-gradient)"
+        stroke="url(#retention-gradient)"
         strokeWidth="2"
         strokeLinecap="round"
       />
 
       {/* Gradient definition */}
       <defs>
-        <linearGradient id="decay-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id="retention-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="var(--color-data-pass)" />
           <stop offset="50%" stopColor="var(--color-data-provisional)" />
           <stop offset="100%" stopColor="var(--color-data-fail)" />

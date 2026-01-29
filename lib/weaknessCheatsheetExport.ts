@@ -138,28 +138,28 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #1a1a1a;
+      color: var(--color-text-primary);
       max-width: 8.5in;
       margin: 0 auto;
       padding: 20px;
-      background: #fff;
+      background: var(--color-bg-primary);
     }
     
     .header {
       text-align: center;
-      border-bottom: 3px solid #3b82f6;
+      border-bottom: 3px solid var(--color-accent);
       padding-bottom: 20px;
       margin-bottom: 30px;
     }
     
     .header h1 {
-      color: #3b82f6;
+      color: var(--color-accent);
       margin: 0 0 10px 0;
       font-size: 28px;
     }
     
     .header .subtitle {
-      color: #6b7280;
+      color: var(--color-text-muted);
       font-size: 14px;
     }
     
@@ -168,8 +168,8 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     }
     
     .system-header {
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent) 100%);
+      color: var(--color-text-inverse);
       padding: 12px 20px;
       border-radius: 8px;
       margin-bottom: 20px;
@@ -184,7 +184,7 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     }
     
     .system-header .error-badge {
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--color-bg-primary);
       padding: 4px 12px;
       border-radius: 12px;
       font-size: 12px;
@@ -192,15 +192,15 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     }
     
     .question-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 20px;
     }
     
     .question-card .condition {
-      color: #6b7280;
+      color: var(--color-text-muted);
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
@@ -210,7 +210,7 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     
     .question-card .question-text {
       font-weight: 600;
-      color: #111827;
+      color: var(--color-text-primary);
       margin-bottom: 15px;
       font-size: 15px;
     }
@@ -225,21 +225,21 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
       padding: 8px 12px;
       margin-bottom: 6px;
       border-radius: 6px;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border);
       font-size: 14px;
     }
     
     .question-card .options li.correct {
-      background: #dcfce7;
-      border-color: #86efac;
+      background: color-mix(in srgb, var(--color-data-pass) 15%, transparent);
+      border-color: color-mix(in srgb, var(--color-data-pass) 40%, transparent);
       font-weight: 600;
-      color: #166534;
+      color: var(--color-data-pass);
     }
     
     .question-card .rationale {
-      background: #eff6ff;
-      border-left: 4px solid #3b82f6;
+      background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+      border-left: 4px solid var(--color-accent);
       padding: 12px 16px;
       margin-bottom: 12px;
       border-radius: 4px;
@@ -247,27 +247,27 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     
     .question-card .rationale-title {
       font-weight: 700;
-      color: #1e40af;
+      color: var(--color-accent);
       font-size: 13px;
       margin-bottom: 6px;
     }
     
     .question-card .rationale-text {
-      color: #1e3a8a;
+      color: var(--color-text-secondary);
       font-size: 13px;
       line-height: 1.5;
     }
     
     .question-card .pearls {
-      background: #fef3c7;
-      border-left: 4px solid #f59e0b;
+      background: color-mix(in srgb, var(--color-data-provisional) 15%, transparent);
+      border-left: 4px solid var(--color-data-provisional);
       padding: 12px 16px;
       border-radius: 4px;
     }
     
     .question-card .pearls-title {
       font-weight: 700;
-      color: #92400e;
+      color: var(--color-data-provisional);
       font-size: 13px;
       margin-bottom: 6px;
     }
@@ -275,7 +275,7 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     .question-card .pearls ul {
       margin: 0;
       padding-left: 20px;
-      color: #78350f;
+      color: var(--color-text-secondary);
       font-size: 13px;
     }
     
@@ -285,30 +285,30 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
     
     .footer {
       text-align: center;
-      color: #9ca3af;
+      color: var(--color-text-muted);
       font-size: 12px;
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--color-border);
     }
     
     .print-button {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #3b82f6;
-      color: white;
+      background: var(--color-accent);
+      color: var(--color-text-inverse);
       border: none;
       padding: 12px 24px;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px var(--color-shadow-soft);
       font-size: 14px;
     }
     
     .print-button:hover {
-      background: #2563eb;
+      background: color-mix(in srgb, var(--color-accent) 90%, transparent);
     }
   </style>
 </head>
@@ -325,8 +325,8 @@ function generateCheatsheetHTML(weaknesses: CategoryWeakness[], days: number): s
 
   if (weaknesses.length === 0) {
     html += `
-  <div style="text-align: center; padding: 60px 20px; color: #6b7280;">
-    <h2 style="color: #10b981; margin-bottom: 10px;">🎉 Excellent Work!</h2>
+  <div style="text-align: center; padding: 60px 20px; color: var(--color-text-muted);">
+    <h2 style="color: var(--color-data-pass); margin-bottom: 10px;">🎉 Excellent Work!</h2>
     <p>No significant weaknesses identified in the last ${days} days.</p>
     <p>Keep up the great study habits!</p>
   </div>

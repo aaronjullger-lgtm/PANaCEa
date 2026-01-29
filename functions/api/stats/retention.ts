@@ -70,11 +70,11 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
     }));
 
     const stabilityBuckets = [
-      { bucket: '<1d', count: 0, color: '#ef4444' },
-      { bucket: '1-3d', count: 0, color: '#f97316' },
-      { bucket: '3-7d', count: 0, color: '#eab308' },
-      { bucket: '7-21d', count: 0, color: '#3b82f6' },
-      { bucket: '21d+', count: 0, color: '#10b981' },
+      { bucket: '<1d', count: 0, color: 'var(--color-data-fail)' },
+      { bucket: '1-3d', count: 0, color: 'var(--color-data-provisional)' },
+      { bucket: '3-7d', count: 0, color: 'var(--color-accent)' },
+      { bucket: '7-21d', count: 0, color: 'var(--color-accent)' },
+      { bucket: '21d+', count: 0, color: 'var(--color-data-pass)' },
     ];
 
     srsItems.forEach((item: SRSItemRecord) => {

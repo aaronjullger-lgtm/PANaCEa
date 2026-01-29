@@ -546,7 +546,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             <button
               type="button"
               onClick={handleTeachMe}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white dark:text-slate-900 rounded-lg transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors text-sm font-medium"
             >
               <GraduationCap className="w-4 h-4" />
               Teach me this

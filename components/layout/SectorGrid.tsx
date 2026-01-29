@@ -46,7 +46,7 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
             onClick={() => handleNavigate(item.path)}
-            className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 text-left hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-md"
+            className="group relative bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 text-left hover:border-[var(--color-accent)] transition-all shadow-sm hover:shadow-md"
           >
             {/* Icon Badge */}
             <div className={`inline-flex p-3 ${item.color} rounded-lg mb-4`}>
@@ -55,21 +55,23 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
 
             {/* Content */}
             <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                {item.title}
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
                 {item.description}
               </p>
             </div>
 
             {/* Arrow Indicator */}
-            <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
+            <div className="flex items-center text-[var(--color-accent)] text-sm font-medium">
               <span className="opacity-0 group-hover:opacity-100 transition-opacity">Go</span>
               <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
             </div>
 
             {/* Subtle Background Pattern */}
             <div className="absolute top-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-5 transition-opacity">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-transparent rounded-full transform translate-x-8 -translate-y-8"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)] to-transparent rounded-full transform translate-x-8 -translate-y-8"></div>
             </div>
           </motion.button>
         );

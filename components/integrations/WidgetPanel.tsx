@@ -94,20 +94,20 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="bg-[var(--color-bg-primary)] rounded-lg shadow-lg p-6 border border-[var(--color-border)]">
       <div className="flex items-center gap-3 mb-4">
-        <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Embeddable Widgets</h2>
+        <Code className="w-6 h-6 text-[var(--color-accent)]" />
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Embeddable Widgets</h2>
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+      <p className="text-sm text-[var(--color-text-secondary)] mb-6">
         Generate embeddable widgets for your Notion dashboards or Obsidian notes. Display your study
         streak or question of the day.
       </p>
 
       {/* Widget Type Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           Widget Type:
         </label>
         <div className="flex gap-2">
@@ -115,8 +115,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setSelectedWidget('streak')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedWidget === 'streak'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             Current Streak
@@ -125,8 +125,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setSelectedWidget('question-of-day')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedWidget === 'question-of-day'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             Question of Day
@@ -136,7 +136,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
 
       {/* Theme Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           Theme:
         </label>
         <div className="flex gap-2">
@@ -144,8 +144,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setTheme('light')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               theme === 'light'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             Light
@@ -154,8 +154,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setTheme('dark')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               theme === 'dark'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             Dark
@@ -165,7 +165,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
 
       {/* Embed Format Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           Embed Format:
         </label>
         <div className="flex gap-2">
@@ -173,8 +173,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setEmbedFormat('html')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               embedFormat === 'html'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             HTML (Notion)
@@ -183,8 +183,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={() => setEmbedFormat('obsidian')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
               embedFormat === 'obsidian'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             Obsidian
@@ -195,18 +195,18 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
       {/* Preview */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)]">
             Preview:
           </label>
           <button
             onClick={handleRefreshPreview}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             title="Refresh preview"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-        <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+        <div className="border border-[var(--color-border)] rounded-lg overflow-hidden bg-[var(--color-bg-secondary)]">
           {widgetHTML ? (
             <iframe
               key={previewKey}
@@ -216,7 +216,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
               title="Widget Preview"
             />
           ) : (
-            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            <div className="p-8 text-center text-[var(--color-text-muted)]">
               {selectedWidget === 'question-of-day' && !questionOfDay
                 ? 'No questions available. Complete some questions first!'
                 : 'Widget preview will appear here'}
@@ -227,7 +227,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
 
       {/* Embed Code */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           Embed Code:
         </label>
         <div className="relative">
@@ -235,30 +235,30 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             value={embedCode}
             readOnly
             rows={4}
-            className="w-full px-4 py-2 font-mono text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none"
+            className="w-full px-4 py-2 font-mono text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] resize-none"
           />
           <button
             onClick={handleCopyCode}
-            className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="absolute top-2 right-2 p-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-bg-tertiary)] transition-colors"
             title="Copy code"
           >
             {copied ? (
-              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <CheckCircle className="w-4 h-4 text-[var(--color-data-pass)]" />
             ) : (
-              <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <Copy className="w-4 h-4 text-[var(--color-text-secondary)]" />
             )}
           </button>
         </div>
       </div>
 
       {/* Instructions */}
-      <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-        <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-2">
+      <div className="p-4 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30">
+        <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-2">
           How to Embed:
         </h3>
         <div className="space-y-2">
-          <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded border border-yellow-300 dark:border-yellow-700 mb-2">
-            <p className="text-xs font-medium text-yellow-900 dark:text-yellow-300 flex items-start gap-1.5">
+          <div className="p-2 bg-[var(--color-data-provisional)]/10 rounded border border-[var(--color-data-provisional)]/30 mb-2">
+            <p className="text-xs font-medium text-[var(--color-data-provisional)] flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
               <span>
                 Important: Replace YOUR_USER_ID in the URL with your actual user ID before
@@ -267,8 +267,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-indigo-800 dark:text-indigo-400 mb-1">Notion:</p>
-            <ol className="text-xs text-indigo-700 dark:text-indigo-400 space-y-0.5 list-decimal list-inside pl-2">
+            <p className="text-xs font-medium text-[var(--color-accent)] mb-1">Notion:</p>
+            <ol className="text-xs text-[var(--color-accent)] space-y-0.5 list-decimal list-inside pl-2">
               <li>Replace YOUR_USER_ID in the URL with your user ID</li>
               <li>Type /embed in your Notion page</li>
               <li>Paste the widget URL (not the full iframe code)</li>
@@ -276,10 +276,10 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             </ol>
           </div>
           <div>
-            <p className="text-xs font-medium text-indigo-800 dark:text-indigo-400 mb-1">
+            <p className="text-xs font-medium text-[var(--color-accent)] mb-1">
               Obsidian:
             </p>
-            <ol className="text-xs text-indigo-700 dark:text-indigo-400 space-y-0.5 list-decimal list-inside pl-2">
+            <ol className="text-xs text-[var(--color-accent)] space-y-0.5 list-decimal list-inside pl-2">
               <li>Replace YOUR_USER_ID in the code with your user ID</li>
               <li>Switch to Obsidian embed format above</li>
               <li>Copy and paste the code block into your note</li>

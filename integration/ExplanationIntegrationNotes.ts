@@ -164,13 +164,13 @@
  *
  * ```css
  * :root {
- *   --color-glass-bg: rgba(255, 255, 255, 0.7);
- *   --color-glass-border: rgba(148, 163, 184, 0.3);
+ *   --color-glass-bg: color-mix(in srgb, var(--color-bg-primary) 70%, transparent);
+ *   --color-glass-border: color-mix(in srgb, var(--color-border) 30%, transparent);
  * }
  *
  * .dark {
- *   --color-glass-bg: rgba(30, 41, 59, 0.8);
- *   --color-glass-border: rgba(255, 255, 255, 0.08);
+ *   --color-glass-bg: color-mix(in srgb, var(--color-bg-tertiary) 80%, transparent);
+ *   --color-glass-border: color-mix(in srgb, var(--color-border-strong) 20%, transparent);
  * }
  * ```
  */

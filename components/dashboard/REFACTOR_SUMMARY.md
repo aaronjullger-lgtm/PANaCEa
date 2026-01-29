@@ -8,13 +8,13 @@ The Training Menu dashboard had **three completely different card designs** with
 #### 1. Core PANCE Card (Action Blue Theme)
 ```
 ┌─────────────────────────────────────────────────────┐
-│ bg-gradient-to-br from-slate-900 to-slate-800      │
-│ border-slate-700                                    │
+│ bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] │
+│ border-[var(--color-border)]                        │
 │                                                     │
 │  🧠  Core PANCE Simulation                         │
 │      Comprehensive questions...                     │
 │                                                     │
-│  [Start Session] ← bg-action-blue-600 (different!) │
+│  [Start Session] ← bg-[var(--color-accent)] (different!) │
 └─────────────────────────────────────────────────────┘
 ```
 **Issues:**
@@ -26,13 +26,13 @@ The Training Menu dashboard had **three completely different card designs** with
 #### 2. Grand Rounds Card (Stormy Slate Theme)
 ```
 ┌─────────────────────────────────────────────────────┐
-│ bg-gradient-to-br from-slate-800 to-slate-900      │
-│ border-slate-600                                    │
+│ bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] │
+│ border-[var(--color-border)]                        │
 │                                                     │
 │  🏆  Grand Rounds  [Daily Challenge]               │
 │      Compete with peers...                         │
 │                                                     │
-│  [Start Challenge] ← bg-slate-800 (different!)     │
+│  [Start Challenge] ← bg-[var(--color-bg-tertiary)] (different!) │
 └─────────────────────────────────────────────────────┘
 ```
 **Issues:**
@@ -76,27 +76,27 @@ All three cards now share the **exact same base styling**:
 
 #### Background Gradient (ALL CARDS)
 ```css
-bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950
-border border-slate-800
+bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-tertiary)]
+border border-[var(--color-border)]
 ```
 - Deep, rich dark gradient
-- No more flat slate-900 or inconsistent from-slate-800
+- No more flat legacy gradients or inconsistent starts
 - Subtle purple/indigo tint on `to-slate-950`
 
 #### Hover State (ALL CARDS)
 ```css
-hover:border-indigo-500/30
-hover:shadow-2xl hover:shadow-indigo-500/10
+hover:border-[var(--color-accent)]/30
+hover:shadow-2xl hover:shadow-[var(--color-accent)]/10
 ```
 - Glowing indigo border on hover
 - Premium shadow effect
-- Subtle gradient overlay appears (from-indigo-500/5 via-transparent to-purple-500/5)
+- Subtle gradient overlay appears (from-[var(--color-accent)]/5 via-transparent to-[var(--color-accent)]/5)
 
 #### Glass-morphism Icon Container (ALL CARDS)
 ```tsx
-<div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl
-              group-hover:bg-white/10 group-hover:scale-110">
-  <Icon className="text-indigo-400 group-hover:text-indigo-300" />
+<div className="bg-[var(--color-bg-tertiary)]/40 backdrop-blur-sm border border-[var(--color-border)] rounded-xl
+              group-hover:bg-[var(--color-bg-tertiary)]/60 group-hover:scale-110">
+  <Icon className="text-[var(--color-accent)] group-hover:text-[var(--color-accent)]" />
 </div>
 ```
 - Frosted glass effect
@@ -105,9 +105,9 @@ hover:shadow-2xl hover:shadow-indigo-500/10
 
 #### Stats Grid (ALL CARDS)
 ```tsx
-<div className="rounded-lg bg-slate-950/50 border border-slate-800/50 p-3">
-  <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
-  <p className="text-xl font-bold text-white tabular-nums">{value}</p>
+<div className="rounded-lg bg-[var(--color-bg-tertiary)]/60 border border-[var(--color-border)] p-3">
+  <p className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">{label}</p>
+  <p className="text-xl font-bold text-[var(--color-text-inverse)] tabular-nums">{value}</p>
 </div>
 ```
 - Consistent darker background (slate-950/50)
@@ -117,10 +117,10 @@ hover:shadow-2xl hover:shadow-indigo-500/10
 #### Primary Button (ALL CARDS - THE KEY FIX)
 ```tsx
 <button className="
-  bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-  shadow-lg shadow-indigo-500/25
-  hover:shadow-xl hover:shadow-indigo-500/40
-  font-semibold text-white
+  bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent)] to-[var(--color-accent)]
+  shadow-lg shadow-[var(--color-accent)]/25
+  hover:shadow-xl hover:shadow-[var(--color-accent)]/40
+  font-semibold text-[var(--color-text-inverse)]
 ">
   {buttonText}
   <ArrowRight /> ← Animated on hover
@@ -128,7 +128,7 @@ hover:shadow-2xl hover:shadow-indigo-500/10
 ```
 **This is the critical unification:**
 - **All buttons now use the SAME vibrant gradient**
-- No more action-blue-600, no more slate-800
+- No more legacy action-blue, no more legacy slate tokens
 - Consistent shadow glow effect
 - Shine animation on hover (sliding white/20 gradient)
 
@@ -140,16 +140,16 @@ hover:shadow-2xl hover:shadow-indigo-500/10
 
 **BEFORE** (Core PANCE Card):
 ```tsx
-<div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
+<div className="bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 shadow-xl">
   <div className="flex flex-col md:flex-row gap-6">
     <div className="flex-1">
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-600">
-          <Brain className="w-7 h-7 text-slate-100" />
+        <div className="w-14 h-14 rounded-2xl bg-[var(--color-bg-tertiary)]/60 flex items-center justify-center shadow-sm border border-[var(--color-border)]">
+          <Brain className="w-7 h-7 text-[var(--color-text-inverse)]" />
         </div>
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-white">Core PANCE Simulation</h2>
-          <p className="text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
+          <h2 className="text-xl font-bold text-[var(--color-text-inverse)]">Core PANCE Simulation</h2>
+          <p className="text-[var(--color-text-secondary)] mt-1 min-h-[3rem] transition-all duration-200">
             {getFocusDescription()}
           </p>
         </div>
@@ -160,7 +160,7 @@ hover:shadow-2xl hover:shadow-indigo-500/10
       <button
         type="button"
         onClick={handleCoreStart}
-        className="w-full md:w-auto px-8 py-3.5 bg-action-blue-600 text-white font-semibold rounded-xl hover:bg-action-blue-700 hover:shadow-xl transition-all shadow-lg"
+        className="w-full md:w-auto px-8 py-3.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-xl hover:bg-[var(--color-accent)]/90 hover:shadow-xl transition-all shadow-lg"
       >
         Start Session
       </button>
@@ -239,7 +239,7 @@ if (!searchQuery && osceMode) {
       onAction={() => handleDrillClick(osceMode)}
       variant="premium"
       badge={
-        <span className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg">
+        <span className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-full shadow-lg">
           PREMIUM
         </span>
       }

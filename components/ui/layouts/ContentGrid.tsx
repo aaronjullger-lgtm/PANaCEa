@@ -43,22 +43,22 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className="bg-slate-900 border border-slate-700 rounded-2xl p-6 animate-pulse"
+          className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 animate-pulse"
         >
           {/* Header skeleton */}
           <div className="space-y-3 mb-6">
-            <div className="h-8 bg-slate-800 rounded w-3/4" />
+            <div className="h-8 bg-[var(--color-bg-tertiary)] rounded w-3/4" />
             <div className="flex gap-2">
-              <div className="h-6 bg-slate-800 rounded w-20" />
-              <div className="h-6 bg-slate-800 rounded w-16" />
+              <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-20" />
+              <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-16" />
             </div>
           </div>
 
           {/* Content skeleton */}
           <div className="space-y-2">
-            <div className="h-4 bg-slate-800 rounded w-full" />
-            <div className="h-4 bg-slate-800 rounded w-5/6" />
-            <div className="h-4 bg-slate-800 rounded w-4/6" />
+            <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full" />
+            <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6" />
+            <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-4/6" />
           </div>
         </div>
       ))}
@@ -184,12 +184,14 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
           {title && (
             <div>
               <h1
-                className="text-4xl font-bold text-slate-100 tracking-wide"
+                className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide"
                 style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
               >
                 {title}
               </h1>
-              {subtitle && <p className="text-slate-400 mt-1">{subtitle}</p>}
+              {subtitle && (
+                <p className="text-[var(--color-text-muted)] mt-1">{subtitle}</p>
+              )}
             </div>
           )}
           {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
@@ -214,8 +216,8 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4">
-      <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-      <p className="text-slate-400 text-sm">{message}</p>
+      <Loader2 className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+      <p className="text-[var(--color-text-muted)] text-sm">{message}</p>
     </div>
   );
 };

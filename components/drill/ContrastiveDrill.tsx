@@ -55,7 +55,11 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   };
 
   if (isLoadingQuestion && !currentQuestion) {
-    return <div className="p-8 text-center text-slate-500">Generating scenario...</div>;
+    return (
+      <div className="p-8 text-center text-[var(--color-text-muted)]">
+        Generating scenario...
+      </div>
+    );
   }
 
   if (isDrillComplete) {
@@ -69,7 +73,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
       {/* Progress Header */}
-      <div className="flex justify-between items-center text-sm text-slate-500">
+      <div className="flex justify-between items-center text-sm text-[var(--color-text-muted)]">
         <span>
           Problem {stats.total + 1} of {set.conditions.length}
         </span>
@@ -77,8 +81,10 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
       </div>
 
       {/* Vignette Card */}
-      <div className="bg-white dark:bg-slate-800 shadow rounded-xl p-6 border border-slate-100 dark:border-slate-700">
-        <p className="text-lg leading-relaxed text-slate-800 dark:text-slate-100">{currentQuestion?.vignette}</p>
+      <div className="bg-[var(--color-bg-secondary)] shadow rounded-xl p-6 border border-[var(--color-border)]">
+        <p className="text-lg leading-relaxed text-[var(--color-text-primary)]">
+          {currentQuestion?.vignette}
+        </p>
       </div>
 
       {/* Options */}
@@ -89,8 +95,9 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           const isWrongSelection = hasAnswered && isSelected && !lastResult?.isCorrect;
 
           // Use design system colors: data-pass, data-fail, and accent
-          let bgClass = 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700';
-          let borderClass = 'border-slate-200 dark:border-slate-600';
+          let bgClass =
+            'bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]';
+          let borderClass = 'border-[var(--color-border)]';
 
           if (hasAnswered) {
             if (isCorrect) {
@@ -124,7 +131,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           <button
             onClick={handleSubmit}
             disabled={!selectedOption}
-            className="bg-[var(--color-accent)] text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 hover:opacity-90 transition"
+            className="bg-[var(--color-accent)] text-[var(--color-text-inverse)] px-6 py-2 rounded-lg font-medium disabled:opacity-50 hover:opacity-90 transition"
           >
             Submit Answer
           </button>
@@ -138,7 +145,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleNext}
-                className="bg-slate-800 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-700 transition"
+                className="bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] px-6 py-2 rounded-lg font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition"
               >
                 Next Question →
               </button>

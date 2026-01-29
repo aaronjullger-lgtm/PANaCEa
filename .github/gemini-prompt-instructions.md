@@ -92,10 +92,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
 ### Design System
 
-- List items: white bg, slate-200 border, hover:translate-x-1, hover:border-blue-300, hover:shadow-sm
-- Detail cards: slate-50 bg, rounded-xl, slate-200 border, 2xl title
-- Stats grids: 2-4 columns, icons from Lucide React, slate-500 labels
-- Progress bars: color-coded (green 80+, blue 60-80, orange/red <60), animated with Framer Motion
+- List items: `bg-[var(--color-bg-secondary)]`, `border-[var(--color-border)]`, hover translate-x-1, hover border accent, hover shadow-sm
+- Detail cards: `bg-[var(--color-bg-secondary)]`, rounded-xl, `border-[var(--color-border)]`, 2xl title
+- Stats grids: 2-4 columns, icons from Lucide React, `text-[var(--color-text-muted)]` labels
+- Progress bars: color-coded by semantic tokens (pass/provisional/fail), animated with Framer Motion
 - Empty states: centered, muted icon, helpful message
 
 ### Database Access

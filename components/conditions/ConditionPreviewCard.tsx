@@ -140,8 +140,8 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
         p-5 rounded-xl border-2
         ${accent.bg} ${accent.border}
         transition-all duration-200
-        hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+        hover:shadow-lg hover:border-[var(--color-accent)]
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-accent)]
         group
       `}
     >
@@ -149,7 +149,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           {/* Condition Name - Prominent */}
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1.5 leading-tight">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1.5 leading-tight">
             {condition.condition}
           </h3>
 
@@ -158,7 +158,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
             <span
               className={`
                 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold
-                ${accent.text} bg-white/80 dark:bg-slate-800/80 border ${accent.border}
+                ${accent.text} bg-[var(--color-bg-primary)]/80 border ${accent.border}
               `}
             >
               <Sparkles className="w-3 h-3" />
@@ -167,7 +167,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
 
             {/* System badge if different from subcategory */}
             {condition.system && (
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-[var(--color-text-muted)]">
                 {condition.system}
               </span>
             )}
@@ -175,7 +175,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
         </div>
 
         {/* Arrow Icon */}
-        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 mt-1 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-200" />
+        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0 mt-1 group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all duration-200" />
       </div>
 
       {/* Content Section */}
@@ -189,9 +189,9 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm"
               >
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-medium text-[var(--color-text-secondary)]">
                   <RichText accentColor="blue">{item.text}</RichText>
                 </span>
               </motion.div>
@@ -208,9 +208,9 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 + 0.1 }}
-                className="p-3 rounded-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/50 border border-slate-200 dark:border-slate-700"
+                className="p-3 rounded-lg bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
               >
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
                   <RichText accentColor="blue">{item.text}</RichText>
                 </p>
               </motion.div>
@@ -220,7 +220,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
 
         {/* Empty State */}
         {contentItems.length === 0 && (
-          <div className="text-sm text-slate-500 dark:text-slate-400 italic flex items-center gap-2">
+            <div className="text-sm text-[var(--color-text-muted)] italic flex items-center gap-2">
             <ChevronRight className="w-4 h-4" />
             Click to view full details
           </div>

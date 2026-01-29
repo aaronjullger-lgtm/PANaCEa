@@ -50,7 +50,7 @@ function MonitorMalfunctionFallback({
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)',
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, var(--color-bg-tertiary) 2px, var(--color-bg-tertiary) 4px)',
         }}
       />
 

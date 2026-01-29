@@ -66,7 +66,7 @@ import {
   Scan,
   TestTube,
 } from 'lucide-react';
-import { Sparkline } from '@/components/Sparkline';
+import { Sparkline } from '@/components/ui/Sparkline';
 import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';

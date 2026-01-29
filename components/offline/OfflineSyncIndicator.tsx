@@ -5,13 +5,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { WifiOff, Wifi, CloudOff, Cloud, Loader2 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import {
   getSyncStatus,
   syncPendingOperations,
   setupAutoSync,
   isOnline as checkOnline,
-} from '../lib/services/offlineSyncService';
+} from '@/lib/services/offlineSyncService';
 
 interface SyncStatus {
   pendingCount: number;

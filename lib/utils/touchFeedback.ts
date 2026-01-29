@@ -22,7 +22,7 @@ export function hapticFeedback(style: 'light' | 'medium' | 'heavy' = 'medium'): 
  */
 export function addRippleEffect(
   event: React.TouchEvent | React.MouseEvent,
-  color: string = 'rgba(255, 255, 255, 0.3)'
+  color: string = 'var(--color-text-inverse)'
 ): void {
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();

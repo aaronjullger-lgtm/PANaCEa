@@ -47,14 +47,14 @@ export function OfflineSyncPanel() {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h3 className="font-semibold text-muted-amber-900 dark:text-muted-amber-100">Offline Requests</h3>
+          <h3 className="font-semibold text-[var(--color-data-provisional)]">Offline Requests</h3>
         </div>
-        <span className="text-sm font-medium text-muted-amber-700 dark:text-muted-amber-300">
+        <span className="text-sm font-medium text-[var(--color-data-provisional)]">
           {queue.length} pending
         </span>
       </div>
 
-      <p className="text-sm text-muted-amber-800 dark:text-muted-amber-200 mb-3">
+      <p className="text-sm text-[var(--color-data-provisional)] mb-3">
         {queue.length} {queue.length === 1 ? 'request' : 'requests'} will be synced when you're back
         online.
       </p>
@@ -62,7 +62,7 @@ export function OfflineSyncPanel() {
       <button
         onClick={handleRetryAll}
         disabled={isProcessing || !navigator.onLine}
-        className="w-full bg-muted-amber-600 hover:bg-muted-amber-700 disabled:bg-muted-amber-400 dark:bg-muted-amber-700 dark:hover:bg-muted-amber-600 text-white font-medium py-2 px-4 rounded transition-colors disabled:cursor-not-allowed"
+        className="w-full bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 disabled:bg-[var(--color-data-provisional)]/60 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded transition-colors disabled:cursor-not-allowed"
       >
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
@@ -89,7 +89,7 @@ export function OfflineSyncPanel() {
       </button>
 
       {!navigator.onLine && (
-        <p className="text-xs text-muted-amber-700 dark:text-muted-amber-300 mt-2 text-center">
+        <p className="text-xs text-[var(--color-data-provisional)] mt-2 text-center">
           You're offline. Requests will auto-sync when connected.
         </p>
       )}

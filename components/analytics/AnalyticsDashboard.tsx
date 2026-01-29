@@ -13,9 +13,9 @@ import {
   Tooltip,
   CartesianGrid,
   BarChart,
-  Bar,
   Cell,
 } from 'recharts';
+import { Bar } from 'recharts/es6/cartesian/Bar';
 import {
   Sparkles,
   Gauge,

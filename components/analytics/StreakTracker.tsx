@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, TrendingUp, Calendar, Award, CheckCircle } from 'lucide-react';
-import { getTodayUTC, DAY_NAMES } from '../lib/utils/timeUtils';
+import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 
 interface StreakTrackerProps {
   currentStreak: number;

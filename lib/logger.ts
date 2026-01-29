@@ -81,10 +81,10 @@ interface LogEntry {
 // ============================================================================
 
 const LEVEL_COLORS: Record<LogLevel, string> = {
-  debug: '#9ca3af', // gray
-  info: '#3b82f6', // blue
-  warn: '#f59e0b', // amber
-  error: '#ef4444', // red
+  debug: 'var(--color-text-muted)',
+  info: 'var(--color-accent)',
+  warn: 'var(--color-data-provisional)',
+  error: 'var(--color-data-fail)',
 };
 
 const LEVEL_EMOJI: Record<LogLevel, string> = {
@@ -102,7 +102,7 @@ function formatForConsole(entry: LogEntry): string[] {
     `%c${prefix}%c ${entry.message} %c(${timestamp})`,
     `color: ${LEVEL_COLORS[entry.level]}; font-weight: bold`,
     'color: inherit',
-    'color: #6b7280; font-size: 0.85em',
+    'color: var(--color-text-muted); font-size: 0.85em',
   ];
 
   return parts;

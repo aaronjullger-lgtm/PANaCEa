@@ -22,31 +22,31 @@ import {
   Settings,
   ChevronRight,
 } from 'lucide-react';
-import { useIsMobile } from '../lib/utils/responsive';
+import { useIsMobile } from '@/lib/utils/responsive';
 import type {
   PerformanceRecord,
   SessionSettings,
   Question,
   TopicStats,
   SystemCode,
-} from '../types';
-import TrainingMenu from './dashboard/TrainingMenu';
-import ProgressRing from './ProgressRing';
-import TopicHeatmap from './TopicHeatmap';
-import SystemDrilldownModal from './SystemDrilldownModal';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
-import type { SystemDrilldownSelection } from './SystemDrilldownModal';
-import type { ConditionMeta } from '../src/types/conditions';
-import ConditionDetailModal from './ConditionDetailModal';
-import DrugDetailModal from './DrugDetailModal';
-import { findConditionMetaById } from '../src/lib/conditionSearch';
-import { findDrugByName } from '../src/lib/drugSearch';
-import { unifiedSearch, type UnifiedSearchResult } from '../src/lib/unifiedSearch';
-import type { DrugEntry } from '../src/archived/pharm-old/drugTypes';
-import { StreakTracker } from './StreakTracker';
-import { QuickReviewMode } from './QuickReviewMode';
-import { BookmarksPanel } from './BookmarksPanel';
-import { StudyGuideGenerator } from './StudyGuideGenerator';
+} from '@/types';
+import TrainingMenu from '@/components/dashboard/TrainingMenu';
+import ProgressRing from '@/components/ui/ProgressRing';
+import TopicHeatmap from '@/components/analytics/TopicHeatmap';
+import SystemDrilldownModal from '@/components/modals/SystemDrilldownModal';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@src/constants';
+import type { SystemDrilldownSelection } from '@/components/modals/SystemDrilldownModal';
+import type { ConditionMeta } from '@src/types/conditions';
+import ConditionDetailModal from '@/components/modals/ConditionDetailModal';
+import DrugDetailModal from '@/components/modals/DrugDetailModal';
+import { findConditionMetaById } from '@src/lib/conditionSearch';
+import { findDrugByName } from '@src/lib/drugSearch';
+import { unifiedSearch, type UnifiedSearchResult } from '@src/lib/unifiedSearch';
+import type { DrugEntry } from '@src/archived/pharm-old/drugTypes';
+import { StreakTracker } from '@/components/analytics/StreakTracker';
+import { QuickReviewMode } from '@/components/session/QuickReviewMode';
+import { BookmarksPanel } from '@/components/panels/BookmarksPanel';
+import { StudyGuideGenerator } from '@/components/toolkit/StudyGuideGenerator';
 import {
   WidgetGrid,
   TimeScopeFilter,
@@ -55,7 +55,7 @@ import {
   DEFAULT_WIDGET_CONFIG,
   RootCauseAnalysis,
   DailyPrescription,
-} from './ProgressDashboard';
+} from '@/components/ProgressDashboard';
 import type {
   WidgetId,
   WidgetData,
@@ -63,10 +63,10 @@ import type {
   ProgressDayRecord,
   SystemMasterySummary,
   ErrorTagCount,
-} from './ProgressDashboard';
-import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from '../lib/dashboardUtils';
-import { getTimeBasedGreeting } from '../lib/utils/timeUtils';
-import type { ErrorTag } from '../types';
+} from '@/components/ProgressDashboard';
+import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from '@/lib/dashboardUtils';
+import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
+import type { ErrorTag } from '@/types';
 
 // System names for dynamic welcome message
 const SYSTEM_DISPLAY_NAMES: Record<string, string> = {

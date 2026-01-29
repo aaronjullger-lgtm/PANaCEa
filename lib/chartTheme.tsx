@@ -41,7 +41,7 @@ export const chartTheme = {
       border: '1px solid var(--color-border)',
       borderRadius: '0.75rem',
       padding: '0.75rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      boxShadow: '0 4px 6px -1px var(--color-shadow-soft)',
     },
     labelStyle: {
       color: 'var(--color-text-primary)',
@@ -70,23 +70,23 @@ export const chartTheme = {
   colors: {
     primary: 'var(--color-accent)',
     secondary: 'var(--color-accent-secondary)',
-    success: '#10b981', // Emerald 500
-    warning: '#f59e0b', // Amber 500
-    error: '#ef4444', // Red 500
-    info: '#3b82f6', // Blue 500
-    neutral: '#64748b', // Slate 500
+    success: 'var(--color-data-pass)',
+    warning: 'var(--color-data-provisional)',
+    error: 'var(--color-data-fail)',
+    info: 'var(--color-accent)',
+    neutral: 'var(--color-text-muted)',
   },
 
   /**
    * Gradient definitions for areas/bars
    */
   gradients: {
-    primary: ['#3b82f6', '#1e40af'], // Blue gradient
-    success: ['#10b981', '#059669'], // Emerald gradient
-    warning: ['#f59e0b', '#d97706'], // Amber gradient
-    error: ['#ef4444', '#dc2626'], // Red gradient
-    accent: ['#8b5cf6', '#7c3aed'], // Purple gradient
-    performance: ['#3b82f6', '#10b981'], // Blue to emerald
+    primary: ['var(--color-accent)', 'var(--color-accent)'],
+    success: ['var(--color-data-pass)', 'var(--color-data-pass)'],
+    warning: ['var(--color-data-provisional)', 'var(--color-data-provisional)'],
+    error: ['var(--color-data-fail)', 'var(--color-data-fail)'],
+    accent: ['var(--color-accent)', 'var(--color-accent)'],
+    performance: ['var(--color-accent)', 'var(--color-data-pass)'],
   },
 };
 

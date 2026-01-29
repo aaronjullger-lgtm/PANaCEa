@@ -107,27 +107,27 @@ describe('TrainingMenu Component Logic', () => {
 
     it('should map themes to valid Tailwind background classes', () => {
       const themeMap: Record<string, string> = {
-        stone: 'bg-stone-100',
-        slate: 'bg-slate-100',
-        amber: 'bg-amber-100',
-        blue: 'bg-blue-100',
-        teal: 'bg-teal-100',
-        red: 'bg-red-100',
-        emerald: 'bg-emerald-100',
-        rose: 'bg-rose-100',
-        pink: 'bg-pink-100',
-        violet: 'bg-violet-100',
-        cyan: 'bg-cyan-100',
-        purple: 'bg-purple-100',
-        orange: 'bg-orange-100',
-        indigo: 'bg-indigo-100',
-        green: 'bg-green-100',
+        stone: 'bg-[var(--color-bg-secondary)]',
+        slate: 'bg-[var(--color-bg-secondary)]',
+        amber: 'bg-[var(--color-bg-secondary)]',
+        blue: 'bg-[var(--color-bg-secondary)]',
+        teal: 'bg-[var(--color-bg-secondary)]',
+        red: 'bg-[var(--color-bg-secondary)]',
+        emerald: 'bg-[var(--color-bg-secondary)]',
+        rose: 'bg-[var(--color-bg-secondary)]',
+        pink: 'bg-[var(--color-bg-secondary)]',
+        violet: 'bg-[var(--color-bg-secondary)]',
+        cyan: 'bg-[var(--color-bg-secondary)]',
+        purple: 'bg-[var(--color-bg-secondary)]',
+        orange: 'bg-[var(--color-bg-secondary)]',
+        indigo: 'bg-[var(--color-bg-secondary)]',
+        green: 'bg-[var(--color-bg-secondary)]',
       };
 
       MODE_REGISTRY.forEach((mode) => {
         const bgClass = themeMap[mode.theme];
         expect(bgClass).toBeDefined();
-        expect(bgClass).toMatch(/^bg-\w+-100$/);
+        expect(bgClass).toMatch(/^bg-\[var\(--color-bg-(primary|secondary|tertiary)\)\]$/);
       });
     });
   });

@@ -101,51 +101,51 @@ export async function sendPasswordResetEmail(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #e2e8f0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--color-bg-primary); color: var(--color-text-secondary);">
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
           <td align="center" style="padding: 40px 20px;">
-            <table role="presentation" style="max-width: 600px; width: 100%; background-color: #1e293b; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <table role="presentation" style="max-width: 600px; width: 100%; background-color: var(--color-bg-secondary); border-radius: 12px; box-shadow: 0 4px 6px var(--color-shadow-soft);">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #334155;">
-                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #60a5fa;">PANaCEa</h1>
-                  <p style="margin: 8px 0 0; font-size: 14px; color: #94a3b8;">Adaptive Medical Learning</p>
+                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid var(--color-border);">
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: var(--color-accent);">PANaCEa</h1>
+                  <p style="margin: 8px 0 0; font-size: 14px; color: var(--color-text-muted);">Adaptive Medical Learning</p>
                 </td>
               </tr>
               
               <!-- Content -->
               <tr>
                 <td style="padding: 40px;">
-                  ${firstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0;">Hello ${firstName},</p>` : ''}
+                  ${firstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary);">Hello ${firstName},</p>` : ''}
                   
-                  <p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0; line-height: 1.6;">
+                  <p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary); line-height: 1.6;">
                     You recently requested to reset your password for your PANaCEa account. Click the button below to reset it.
                   </p>
                   
                   <table role="presentation" style="width: 100%; margin: 30px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Reset Password</a>
+                        <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background-color: var(--color-accent); color: var(--color-text-inverse); text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Reset Password</a>
                       </td>
                     </tr>
                   </table>
                   
-                  <p style="margin: 20px 0 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
+                  <p style="margin: 20px 0 0; font-size: 14px; color: var(--color-text-muted); line-height: 1.6;">
                     If you did not request a password reset, please ignore this email. This link will expire in 1 hour.
                   </p>
                   
-                  <p style="margin: 20px 0 0; font-size: 13px; color: #64748b; line-height: 1.6;">
+                  <p style="margin: 20px 0 0; font-size: 13px; color: var(--color-text-muted); line-height: 1.6;">
                     If the button above doesn't work, copy and paste this URL into your browser:<br>
-                    <span style="color: #60a5fa;">${resetUrl}</span>
+                    <span style="color: var(--color-accent);">${resetUrl}</span>
                   </p>
                 </td>
               </tr>
               
               <!-- Footer -->
               <tr>
-                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #334155;">
-                  <p style="margin: 0; font-size: 13px; color: #64748b;">
+                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid var(--color-border);">
+                  <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
                     PANaCEa - Professional Medical Education Platform
                   </p>
                 </td>
@@ -181,51 +181,51 @@ export async function sendVerificationEmail(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #e2e8f0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--color-bg-primary); color: var(--color-text-secondary);">
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
           <td align="center" style="padding: 40px 20px;">
-            <table role="presentation" style="max-width: 600px; width: 100%; background-color: #1e293b; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <table role="presentation" style="max-width: 600px; width: 100%; background-color: var(--color-bg-secondary); border-radius: 12px; box-shadow: 0 4px 6px var(--color-shadow-soft);">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #334155;">
-                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #60a5fa;">PANaCEa</h1>
-                  <p style="margin: 8px 0 0; font-size: 14px; color: #94a3b8;">Adaptive Medical Learning</p>
+                <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid var(--color-border);">
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: var(--color-accent);">PANaCEa</h1>
+                  <p style="margin: 8px 0 0; font-size: 14px; color: var(--color-text-muted);">Adaptive Medical Learning</p>
                 </td>
               </tr>
               
               <!-- Content -->
               <tr>
                 <td style="padding: 40px;">
-                  ${firstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0;">Welcome, ${firstName}</p>` : '<p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0;">Welcome to PANaCEa</p>'}
+                  ${firstName ? `<p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary);">Welcome, ${firstName}</p>` : '<p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary);">Welcome to PANaCEa</p>'}
                   
-                  <p style="margin: 0 0 20px; font-size: 16px; color: #e2e8f0; line-height: 1.6;">
+                  <p style="margin: 0 0 20px; font-size: 16px; color: var(--color-text-secondary); line-height: 1.6;">
                     Thank you for joining PANaCEa. To complete your registration and access your account, please verify your email address by clicking the button below.
                   </p>
                   
                   <table role="presentation" style="width: 100%; margin: 30px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${verifyUrl}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Verify Email Address</a>
+                        <a href="${verifyUrl}" style="display: inline-block; padding: 14px 32px; background-color: var(--color-accent); color: var(--color-text-inverse); text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500;">Verify Email Address</a>
                       </td>
                     </tr>
                   </table>
                   
-                  <p style="margin: 20px 0 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
+                  <p style="margin: 20px 0 0; font-size: 14px; color: var(--color-text-muted); line-height: 1.6;">
                     This link will expire in 24 hours. If you did not create an account, please ignore this email.
                   </p>
                   
-                  <p style="margin: 20px 0 0; font-size: 13px; color: #64748b; line-height: 1.6;">
+                  <p style="margin: 20px 0 0; font-size: 13px; color: var(--color-text-muted); line-height: 1.6;">
                     If the button above doesn't work, copy and paste this URL into your browser:<br>
-                    <span style="color: #60a5fa;">${verifyUrl}</span>
+                    <span style="color: var(--color-accent);">${verifyUrl}</span>
                   </p>
                 </td>
               </tr>
               
               <!-- Footer -->
               <tr>
-                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #334155;">
-                  <p style="margin: 0; font-size: 13px; color: #64748b;">
+                <td style="padding: 30px 40px; text-align: center; border-top: 1px solid var(--color-border);">
+                  <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
                     PANaCEa - Professional Medical Education Platform
                   </p>
                 </td>

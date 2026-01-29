@@ -13,7 +13,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
-import { MODE_REGISTRY } from '../config/training-modes';
+import { MODE_REGISTRY } from '@/config/training-modes';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -267,7 +267,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"
         />
 
         {/* Command Palette */}

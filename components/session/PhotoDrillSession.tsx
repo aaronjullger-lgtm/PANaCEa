@@ -258,9 +258,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   // =========================================================================
   if (status === 'playing' || status === 'feedback') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Floating Header */}
-        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-[var(--color-border)]">
+        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
@@ -280,12 +280,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
             <div className="flex items-center gap-1.5">
               <Flame
                 className={`w-5 h-5 ${
-                  streak > 0 ? 'text-white' : 'text-[var(--color-text-muted)]'
+                  streak > 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
-                  streak > 0 ? 'text-white' : 'text-[var(--color-text-muted)]'
+                  streak > 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
                 }`}
               >
                 {streak}
@@ -312,12 +312,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                   <div className="w-full space-y-4">
                     {/* Patient Chart Header */}
                     <div className="bg-[var(--color-bg-tertiary)] backdrop-blur-sm rounded-xl border border-[var(--color-border)] overflow-hidden">
-                      <div className="px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-[var(--color-border)] flex items-center gap-3">
-                        <ClipboardList className="w-5 h-5 text-slate-400" />
+                      <div className="px-4 py-3 bg-gradient-to-r from-[var(--color-bg-elevated)] to-[var(--color-bg-tertiary)] border-b border-[var(--color-border)] flex items-center gap-3">
+                        <ClipboardList className="w-5 h-5 text-[var(--color-text-muted)]" />
                         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                           Patient Chart
                         </h2>
-                        <span className="ml-auto px-2.5 py-1 bg-slate-700/60 rounded-lg text-xs font-medium text-slate-300 uppercase tracking-wide">
+                        <span className="ml-auto px-2.5 py-1 bg-[var(--color-bg-secondary)]/70 rounded-lg text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
                           Clinical Presentation Mode
                         </span>
                       </div>
@@ -344,7 +344,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       <div className="p-4 border-b border-[var(--color-border)]">
                         <div className="flex items-start gap-4">
                           <div className="p-2.5 bg-[var(--color-bg-secondary)] rounded-lg">
-                            <Heart className="w-5 h-5 text-red-400" />
+                            <Heart className="w-5 h-5 text-[var(--color-data-fail)]" />
                           </div>
                           <div>
                             <div className="text-sm text-[var(--color-text-secondary)] mb-1">
@@ -361,7 +361,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       <div className="p-4 border-b border-[var(--color-border)]">
                         <div className="flex items-start gap-4">
                           <div className="p-2.5 bg-[var(--color-bg-secondary)] rounded-lg">
-                            <Stethoscope className="w-5 h-5 text-emerald-400" />
+                            <Stethoscope className="w-5 h-5 text-[var(--color-data-pass)]" />
                           </div>
                           <div>
                             <div className="text-sm text-[var(--color-text-secondary)] mb-1">
@@ -378,7 +378,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       <div className="p-4">
                         <div className="flex items-start gap-4">
                           <div className="p-2.5 bg-[var(--color-bg-secondary)] rounded-lg">
-                            <ClipboardList className="w-5 h-5 text-blue-400" />
+                            <ClipboardList className="w-5 h-5 text-[var(--color-data-provisional)]" />
                           </div>
                           <div>
                             <div className="text-sm text-[var(--color-text-secondary)] mb-1">
@@ -405,7 +405,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                                     key={idx}
                                     className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
                                   >
-                                    <span className="text-violet-400 mt-1">•</span>
+                                    <span className="text-[var(--color-accent)] mt-1">•</span>
                                     <span>{finding}</span>
                                   </li>
                                 )
@@ -418,7 +418,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     {/* Reveal Image Button */}
                     <button
                       onClick={handleRevealImage}
-                      className="w-full py-4 bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all shadow-lg"
+                      className="w-full py-4 bg-[var(--color-bg-elevated)]/70 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)] rounded-xl text-[var(--color-text-primary)] font-semibold flex items-center justify-center gap-3 transition-all shadow-lg"
                     >
                       <Eye className="w-5 h-5" />
                       View Clinical Findings
@@ -428,9 +428,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
                 {/* Image View (shown for non-derm cases or when revealed) */}
                 {(imageRevealed || !currentCase.clinicalContext) && (
-                  <div className="relative bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
+                  <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
                     <div
-                      className={`absolute inset-0 bg-slate-800 animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                      className={`absolute inset-0 bg-[var(--color-bg-elevated)] animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
                       aria-hidden
                     />
                     <img
@@ -441,12 +441,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       onError={() => setImageErrored(true)}
                     />
                     {imageErrored && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 text-slate-200 text-sm">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-secondary)] text-sm">
                         Unable to load image. Check public/images path.
                       </div>
                     )}
                     {/* Modality Badge */}
-                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
+                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
                       {currentCase.modality === 'derm'
                         ? 'Clinical Presentation'
                         : currentCase.modality}
@@ -491,8 +491,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 transition={{ duration: 0.2 }}
                 className={`p-4 ${
                   isCorrect
-                    ? 'bg-emerald-950/50 border-t-2 border-emerald-500'
-                    : 'bg-red-950/50 border-t-2 border-red-500'
+                    ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]'
+                    : 'bg-[var(--color-data-fail)]/10 border-t-2 border-[var(--color-data-fail)]'
                 }`}
               >
                 <div className="max-w-2xl mx-auto">
@@ -500,7 +500,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     <div>
                       <div
                         className={`text-lg font-bold ${
-                          isCorrect ? 'text-emerald-400' : 'text-red-400'
+                          isCorrect
+                            ? 'text-[var(--color-data-pass)]'
+                            : 'text-[var(--color-data-fail)]'
                         }`}
                       >
                         {isCorrect ? 'Correct' : 'Incorrect'}
@@ -523,7 +525,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       onClick={handleNextCase}
                       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                         isCorrect
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                          ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)]'
                           : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                       }`}
                     >
@@ -569,7 +571,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
@@ -577,7 +579,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Start New Session

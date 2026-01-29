@@ -30,7 +30,7 @@ import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/analytics';
-import QuizView from '../QuizView';
+import QuizView from '@/components/session/QuizView';
 import type { Question, PerformanceRecord, SessionSettings } from '../../types';
 
 interface SystemDrillSessionProps {

@@ -40,8 +40,8 @@ import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
 import { getUserContext, setUserContext, CareerStage } from '@/services/analytics';
 import { refreshUserContext } from '@/hooks/useUserContext';
-import { RotationSelector } from '../onboarding/RotationSelector';
-import { ANALYTICS_PALETTES, type AnalyticsPalette } from '../SettingsStatsModal';
+import { RotationSelector } from '@/components/onboarding/RotationSelector';
+import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
 import FSRSOptimizer from './FSRSOptimizer';
 import WorkloadProjector from './WorkloadProjector';
 import DataExport from './DataExport';
@@ -151,14 +151,14 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Career Stage Selection - Most Important */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-700 overflow-hidden">
+      <section className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl border-2 border-[var(--color-border)] overflow-hidden">
         <button
           onClick={() => toggleSection('career-stage')}
           className="w-full p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-              <Target className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+              <Target className="w-5 h-5 text-[var(--color-text-inverse)]" />
             </div>
             <div className="text-left">
               <h3 className="font-bold text-[var(--color-text-primary)]">Your Exam Focus</h3>
@@ -203,15 +203,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                         onClick={() => handleCareerStageChange(option.value)}
                         className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-500/10'
-                            : 'border-[var(--color-border)] hover:border-blue-300 bg-[var(--color-bg-primary)]'
+                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                            : 'border-[var(--color-border)] hover:border-[var(--color-accent)] bg-[var(--color-bg-primary)]'
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                               isSelected
-                                ? 'bg-blue-500 text-white'
+                                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
                             }`}
                           >
@@ -222,7 +222,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                               <span className="font-semibold text-[var(--color-text-primary)]">
                                 {option.label}
                               </span>
-                              {isSelected && <Check className="w-4 h-4 text-blue-500" />}
+                              {isSelected && (
+                                <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                              )}
                             </div>
                             <p className="text-sm text-[var(--color-text-muted)]">
                               {option.description}
@@ -235,9 +237,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                 </div>
 
                 {careerStage === 'unknown' && (
-                  <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
-                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                  <div className="flex items-start gap-2 p-3 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg">
+                    <AlertCircle className="w-4 h-4 text-[var(--color-data-provisional)] mt-0.5" />
+                    <p className="text-xs text-[var(--color-data-provisional)]">
                       Please select your exam focus to unlock all relevant features
                     </p>
                   </div>

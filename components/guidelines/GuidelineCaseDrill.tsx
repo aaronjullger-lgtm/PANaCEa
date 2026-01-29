@@ -107,25 +107,27 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
   const accuracy = totalVignettes > 0 ? Math.round((correctCount / totalVignettes) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
         <button
           onClick={onExit}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
         >
           <XCircle className="w-5 h-5" />
           <span className="text-sm font-medium hidden sm:inline">Exit</span>
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg font-bold text-slate-100">{guideline.name}</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-lg font-bold text-[var(--color-text-primary)]">
+            {guideline.name}
+          </h1>
+          <p className="text-xs text-[var(--color-text-muted)]">
             Case {currentVignetteIndex + 1} of {totalVignettes}
           </p>
         </div>
 
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-[var(--color-text-muted)]">
           {correctCount}/{currentVignetteIndex + (status === 'answering' ? 0 : 1)} correct
         </div>
       </header>
@@ -143,30 +145,36 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
               exit="exit"
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-slate-900 rounded-2xl p-8 text-center">
+              <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-8 text-center">
                 <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-                <p className="text-slate-400 mb-6">
+                <p className="text-[var(--color-text-muted)] mb-6">
                   You've completed all {totalVignettes} cases for {guideline.name}.
                 </p>
 
                 <div className="flex justify-center gap-8 mb-8">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-emerald-400">{correctCount}</div>
-                    <div className="text-sm text-slate-500">Correct</div>
+                    <div className="text-4xl font-bold text-[var(--color-data-pass)]">
+                      {correctCount}
+                    </div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-slate-300">{totalVignettes}</div>
-                    <div className="text-sm text-slate-500">Total</div>
+                    <div className="text-4xl font-bold text-[var(--color-text-secondary)]">
+                      {totalVignettes}
+                    </div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Total</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-sky-400">{accuracy}%</div>
-                    <div className="text-sm text-slate-500">Accuracy</div>
+                    <div className="text-4xl font-bold text-[var(--color-accent)]">
+                      {accuracy}%
+                    </div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Accuracy</div>
                   </div>
                 </div>
 
                 <button
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 rounded-lg font-medium transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Practice Again

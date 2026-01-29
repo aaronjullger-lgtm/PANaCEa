@@ -40,14 +40,14 @@ body,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - Action Blue (#2563EB) with AAA contrast white text */
+  /* Primary button - semantic accent with high contrast text */
   .btn-primary {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-action-blue-600 text-white shadow-sm
-           hover:bg-action-blue-700 hover:shadow-md
+           bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-accent-hover)] hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-action-blue-600 dark:text-white dark:hover:bg-action-blue-500;
+           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-accent-hover)];
   }
 
   /* Secondary button - high contrast with borders */
@@ -63,21 +63,21 @@ body,
   /* Success button - for submit actions */
   .btn-success {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-sage-600 text-white shadow-sm
-           hover:bg-sage-700 hover:shadow-md
+           bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-data-pass)]/90 hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-sage-500 dark:text-white dark:hover:bg-sage-400;
+           dark:bg-[var(--color-data-pass)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-pass)]/80;
   }
 
   /* Danger button - for destructive actions */
   .btn-danger {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-dusty-rose-600 text-white shadow-sm
-           hover:bg-dusty-rose-700 hover:shadow-md
+           bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-data-fail)]/90 hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-dusty-rose-500 dark:text-white dark:hover:bg-dusty-rose-400;
+           dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
   }
 
   /* Ghost button - transparent with high contrast text */
@@ -93,7 +93,7 @@ body,
   /* Glass button - our themed PANaCEa button */
   .btn-glass {
     @apply px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-md
-           bg-[var(--color-accent)] text-white 
+           bg-[var(--color-accent)] text-[var(--color-text-inverse)]
            hover:bg-[var(--color-accent-hover)] hover:shadow-lg
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -105,20 +105,20 @@ body,
   }
 
   .pill-select-active {
-      @apply bg-action-blue-600 text-white
-        dark:bg-action-blue-600 dark:text-white;
+    @apply bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+      dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)];
   }
 
   .pill-select-inactive {
-    @apply bg-slate-100 text-slate-700 border border-transparent
-           hover:bg-slate-200 
-           dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700
-           dark:hover:bg-slate-700;
+      @apply bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border border-transparent
+        hover:bg-[var(--color-bg-tertiary)]
+        dark:bg-[var(--color-bg-secondary)] dark:text-[var(--color-text-secondary)] dark:border-[var(--color-border)]
+        dark:hover:bg-[var(--color-bg-tertiary)];
   }
 
   .pill-select-disabled {
-    @apply bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50
-           dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700;
+      @apply bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)] cursor-not-allowed opacity-50
+        dark:bg-[var(--color-bg-secondary)] dark:text-[var(--color-text-muted)] dark:border-[var(--color-border)];
   }
 
   /* Card Content Min Height - prevents text overlap in grid layouts */
@@ -128,33 +128,33 @@ body,
 
   /* Theme-Safe Card - Always maintains proper contrast */
   .card-theme-safe {
-    @apply bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100;
+    @apply bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] dark:bg-[var(--color-bg-primary)] dark:text-[var(--color-text-primary)];
   }
 
   /* Theme-Safe Text Classes */
   .text-theme-primary {
-    @apply text-slate-900 dark:text-slate-100;
+    @apply text-[var(--color-text-primary)] dark:text-[var(--color-text-primary)];
   }
 
   .text-theme-secondary {
-    @apply text-slate-600 dark:text-slate-300;
+    @apply text-[var(--color-text-secondary)] dark:text-[var(--color-text-secondary)];
   }
 
   .text-theme-muted {
-    @apply text-slate-500 dark:text-slate-400;
+    @apply text-[var(--color-text-muted)] dark:text-[var(--color-text-muted)];
   }
 
   /* Theme-Safe Background Classes */
   .bg-theme-primary {
-    @apply bg-white dark:bg-slate-900;
+    @apply bg-[var(--color-bg-primary)] dark:bg-[var(--color-bg-primary)];
   }
 
   .bg-theme-secondary {
-    @apply bg-slate-50 dark:bg-slate-800;
+    @apply bg-[var(--color-bg-secondary)] dark:bg-[var(--color-bg-secondary)];
   }
 
   .bg-theme-tertiary {
-    @apply bg-slate-100 dark:bg-slate-700;
+    @apply bg-[var(--color-bg-tertiary)] dark:bg-[var(--color-bg-tertiary)];
   }
 }
 

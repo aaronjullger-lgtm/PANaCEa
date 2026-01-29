@@ -148,8 +148,8 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
   if (phase === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-        <p className="text-slate-600 dark:text-slate-400">Loading questions...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
+        <p className="text-[var(--color-text-secondary)]">Loading questions...</p>
       </div>
     );
   }
@@ -157,12 +157,12 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
   if (phase === 'error') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <AlertTriangle className="w-12 h-12 text-amber-500 mb-4" />
-        <p className="text-slate-900 dark:text-white font-medium mb-2">Oops!</p>
-        <p className="text-slate-600 dark:text-slate-400 mb-4">{error}</p>
+        <AlertTriangle className="w-12 h-12 text-[var(--color-data-provisional)] mb-4" />
+        <p className="text-[var(--color-text-primary)] font-medium mb-2">Oops!</p>
+        <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
         <button
           onClick={onEnd}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)]"
         >
           Go Back
         </button>
@@ -180,28 +180,28 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           {stats?.isRetryPhase && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-medium">
+            <div className="flex items-center gap-2 px-3 py-1 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] rounded-full text-sm font-medium">
               <RotateCcw className="w-4 h-4" />
               Retry Phase
             </div>
           )}
-          <div className="text-sm text-slate-600 dark:text-slate-400">
+          <div className="text-sm text-[var(--color-text-secondary)]">
             Round {stats?.currentIncrement}
           </div>
         </div>
 
         <button
           onClick={onEnd}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)]"
         >
-          <X className="w-5 h-5 text-slate-500" />
+          <X className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full mb-6 overflow-hidden">
+      <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full mb-6 overflow-hidden">
         <motion.div
-          className="h-full bg-blue-500"
+          className="h-full bg-[var(--color-accent)]"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3 }}
@@ -211,17 +211,17 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       {/* Stats Bar */}
       <div className="flex items-center justify-between mb-6 text-sm">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-1 text-[var(--color-data-pass)]">
             <CheckCircle className="w-4 h-4" />
             {stats?.correctCount}
           </div>
-          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-1 text-[var(--color-text-secondary)]">
             <Target className="w-4 h-4" />
             {stats?.accuracy.toFixed(0)}%
           </div>
         </div>
         {stats && stats.retryQueueSize && stats.retryQueueSize > 0 && !stats.isRetryPhase && (
-          <div className="text-amber-600 dark:text-amber-400 text-sm">
+          <div className="text-[var(--color-data-provisional)] text-sm">
             {stats.retryQueueSize} to retry
           </div>
         )}

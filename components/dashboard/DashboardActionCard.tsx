@@ -54,10 +54,16 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   const renderPattern = () => {
     if (backgroundPattern === 'dots') {
       return (
-        <svg className="absolute inset-0 w-full h-full opacity-30 dark:opacity-20" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1" fill="currentColor" className="text-slate-400 dark:text-slate-600" />
+              <circle
+                cx="2"
+                cy="2"
+                r="1"
+                fill="currentColor"
+                className="text-[var(--color-text-muted)]"
+              />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
@@ -66,10 +72,16 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
     }
     if (backgroundPattern === 'grid') {
       return (
-        <svg className="absolute inset-0 w-full h-full opacity-20 dark:opacity-10" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-slate-400 dark:text-slate-600" />
+              <path
+                d="M 32 0 L 0 0 0 32"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.5"
+                className="text-[var(--color-text-muted)]"
+              />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
@@ -81,18 +93,17 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   return (
     <motion.div
       className="group relative overflow-hidden rounded-2xl 
-                 border border-slate-200 dark:border-slate-800 
-                 bg-gradient-to-br from-white via-slate-50 to-slate-100 
-                 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 
+                 border border-[var(--color-border)] 
+                 bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 
                  transition-all duration-300 
-                 hover:border-indigo-400/40 dark:hover:border-indigo-500/30 
-                 hover:shadow-xl hover:shadow-indigo-400/10 dark:hover:shadow-indigo-500/10"
+                 hover:border-[var(--color-accent)]/40 
+                 hover:shadow-xl hover:shadow-[var(--color-accent)]/10"
     >
       {/* Background Pattern Layer */}
       {renderPattern()}
 
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/5 via-transparent to-purple-400/5 dark:from-indigo-500/5 dark:via-transparent dark:to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/5 via-transparent to-[var(--color-accent)]/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       {/* Content */}
       <div className="relative p-6 md:p-8">
@@ -102,22 +113,22 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
             {/* Glass-morphism Icon Container */}
             <div
               className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl 
-                         bg-slate-100/80 dark:bg-white/5 backdrop-blur-sm 
-                         border border-slate-200 dark:border-white/10
+                         bg-[var(--color-bg-tertiary)]/80 backdrop-blur-sm 
+                         border border-[var(--color-border)]
                          shadow-lg transition-all duration-300 
-                         group-hover:bg-slate-200/90 dark:group-hover:bg-white/10 
+                         group-hover:bg-[var(--color-bg-tertiary)]/90 
                          group-hover:scale-110"
             >
-              <Icon className="h-7 w-7 text-indigo-600 dark:text-indigo-400 transition-colors duration-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-300" />
+              <Icon className="h-7 w-7 text-[var(--color-accent)] transition-colors duration-300 group-hover:text-[var(--color-accent)]" />
             </div>
 
             {/* Title & Subtitle */}
             <div className="flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+              <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1 tracking-tight">
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">
                   {subtitle}
                 </p>
               )}
@@ -153,16 +164,16 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
 
         {/* Description */}
         {description && (
-          <p className="mb-6 text-slate-700 dark:text-slate-300 leading-relaxed">
+          <p className="mb-6 text-[var(--color-text-secondary)] leading-relaxed">
             {description}
           </p>
         )}
 
         {/* Timer Display */}
         {showTimer && timerText && (
-          <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 w-fit">
+          <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 w-fit">
             <svg 
-              className="w-4 h-4 text-amber-600 dark:text-amber-400" 
+              className="w-4 h-4 text-[var(--color-data-provisional)]" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"
@@ -174,7 +185,7 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
               />
             </svg>
-            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+            <span className="text-sm font-medium text-[var(--color-data-provisional)]">
               {timerText}
             </span>
           </div>
@@ -188,19 +199,19 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
               return (
                 <div
                   key={stat.label}
-                  className="rounded-lg bg-slate-100/80 dark:bg-slate-950/50 
-                             border border-slate-200 dark:border-slate-800/50 
-                             p-4 backdrop-blur-sm transition-colors hover:bg-slate-200/80 dark:hover:bg-slate-900/50"
+                  className="rounded-lg bg-[var(--color-bg-tertiary)]/80 
+                             border border-[var(--color-border)] 
+                             p-4 backdrop-blur-sm transition-colors hover:bg-[var(--color-bg-tertiary)]/90"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     {StatIcon && (
-                      <StatIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                      <StatIcon className="h-4 w-4 text-[var(--color-text-muted)]" />
                     )}
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
                       {stat.label}
                     </p>
                   </div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums leading-none">
+                  <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums leading-none">
                     {stat.value}
                   </p>
                 </div>

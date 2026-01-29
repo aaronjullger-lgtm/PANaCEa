@@ -117,11 +117,11 @@ export function generateStreakWidgetHTML(
   theme: 'light' | 'dark' = 'light'
 ): string {
   const isDark = theme === 'dark';
-  const bgColor = isDark ? '#1f2937' : '#ffffff';
-  const textColor = isDark ? '#f9fafb' : '#111827';
-  const accentColor = isDark ? '#818cf8' : '#6366f1';
-  const secondaryColor = isDark ? '#9ca3af' : '#6b7280';
-  const borderColor = isDark ? '#374151' : '#e5e7eb';
+  const bgColor = isDark ? 'var(--color-bg-primary)' : 'var(--color-bg-primary)';
+  const textColor = isDark ? 'var(--color-text-primary)' : 'var(--color-text-primary)';
+  const accentColor = isDark ? 'var(--color-accent)' : 'var(--color-accent)';
+  const secondaryColor = isDark ? 'var(--color-text-muted)' : 'var(--color-text-muted)';
+  const borderColor = isDark ? 'var(--color-border)' : 'var(--color-border)';
 
   return `
 <!DOCTYPE html>
@@ -142,7 +142,7 @@ export function generateStreakWidgetHTML(
       border-radius: 12px;
       padding: 20px;
       max-width: 300px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px var(--color-shadow-soft);
     }
     .header {
       display: flex;
@@ -246,12 +246,12 @@ export function generateQuestionOfDayHTML(
   theme: 'light' | 'dark' = 'light'
 ): string {
   const isDark = theme === 'dark';
-  const bgColor = isDark ? '#1f2937' : '#ffffff';
-  const textColor = isDark ? '#f9fafb' : '#111827';
-  const accentColor = isDark ? '#34d399' : '#10b981';
-  const secondaryColor = isDark ? '#9ca3af' : '#6b7280';
-  const borderColor = isDark ? '#374151' : '#e5e7eb';
-  const tagBg = isDark ? '#374151' : '#f3f4f6';
+  const bgColor = isDark ? 'var(--color-bg-primary)' : 'var(--color-bg-primary)';
+  const textColor = isDark ? 'var(--color-text-primary)' : 'var(--color-text-primary)';
+  const accentColor = isDark ? 'var(--color-accent)' : 'var(--color-accent)';
+  const secondaryColor = isDark ? 'var(--color-text-muted)' : 'var(--color-text-muted)';
+  const borderColor = isDark ? 'var(--color-border)' : 'var(--color-border)';
+  const tagBg = isDark ? 'var(--color-bg-tertiary)' : 'var(--color-bg-tertiary)';
 
   return `
 <!DOCTYPE html>
@@ -272,7 +272,7 @@ export function generateQuestionOfDayHTML(
       border-radius: 12px;
       padding: 20px;
       max-width: 500px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px var(--color-shadow-soft);
     }
     .header {
       display: flex;

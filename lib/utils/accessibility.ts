@@ -235,8 +235,8 @@ export function createSkipLink(targetId: string = 'main-content'): HTMLElement {
     width: 1px;
     height: 1px;
     overflow: hidden;
-    background: #000;
-    color: #fff;
+    background: var(--color-bg-primary);
+    color: var(--color-text-inverse);
     padding: 10px 20px;
     text-decoration: none;
     z-index: 100000;

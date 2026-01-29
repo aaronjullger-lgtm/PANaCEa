@@ -227,7 +227,7 @@ export function SystemMasteryMap({
             >
               {/* Coverage overlay */}
               <div
-                className="absolute bottom-0 left-0 right-0 bg-black/20"
+                className="absolute bottom-0 left-0 right-0 bg-[var(--color-bg-tertiary)]/40"
                 style={{ height: `${100 - coverage}%` }}
               />
 
@@ -272,7 +272,7 @@ export function SystemMasteryMap({
               </div>
 
               {/* Blueprint weight indicator */}
-              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-medium bg-black/30 text-[var(--color-text-inverse)]">
+              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--color-bg-tertiary)]/60 text-[var(--color-text-inverse)]">
                 {Math.round(system.blueprintWeight * 100)}%
               </div>
             </motion.div>
@@ -328,7 +328,7 @@ export function SystemMasteryMap({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-bg-tertiary)]/70"
             onClick={() => setSelectedSystem(null)}
           >
             <motion.div

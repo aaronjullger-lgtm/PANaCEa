@@ -22,7 +22,7 @@ export const WorkloadProjector: React.FC = () => {
         className="w-full flex items-center justify-between group"
       >
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-500" />
+          <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="font-semibold text-[var(--color-text-primary)]">Workload Projector</h3>
         </div>
         {isExpanded ? (
@@ -46,10 +46,10 @@ export const WorkloadProjector: React.FC = () => {
             <div className="space-y-2">
               <label className="flex items-center justify-between text-sm text-[var(--color-text-primary)]">
                 <span className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-500" />
+                  <Target className="w-4 h-4 text-[var(--color-accent)]" />
                   Daily New Cards
                 </span>
-                <span className="font-mono text-blue-500">{dailyNewCards}</span>
+                <span className="font-mono text-[var(--color-accent)]">{dailyNewCards}</span>
               </label>
               <input
                 type="range"
@@ -58,7 +58,7 @@ export const WorkloadProjector: React.FC = () => {
                 step="5"
                 value={dailyNewCards}
                 onChange={(e) => setDailyNewCards(parseInt(e.target.value, 10))}
-                className="w-full accent-blue-500"
+                className="w-full accent-[var(--color-accent)]"
               />
               <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
                 <span>5</span>
@@ -70,10 +70,10 @@ export const WorkloadProjector: React.FC = () => {
             <div className="space-y-2">
               <label className="flex items-center justify-between text-sm text-[var(--color-text-primary)]">
                 <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
+                  <Clock className="w-4 h-4 text-[var(--color-accent)]" />
                   Available Time
                 </span>
-                <span className="font-mono text-blue-500">{availableTime} min</span>
+                <span className="font-mono text-[var(--color-accent)]">{availableTime} min</span>
               </label>
               <input
                 type="range"
@@ -82,7 +82,7 @@ export const WorkloadProjector: React.FC = () => {
                 step="15"
                 value={availableTime}
                 onChange={(e) => setAvailableTime(parseInt(e.target.value, 10))}
-                className="w-full accent-blue-500"
+                className="w-full accent-[var(--color-accent)]"
               />
               <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
                 <span>15 min</span>
@@ -102,8 +102,8 @@ export const WorkloadProjector: React.FC = () => {
           </div>
 
           {/* Info Box */}
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <p className="text-xs text-blue-400 leading-relaxed">
+          <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
+            <p className="text-xs text-[var(--color-accent)] leading-relaxed">
               <strong>CMRR (Compute Minimum Recommended Retention)</strong> shows the optimal
               balance between retention and workload. The chart simulates 365 days of spaced
               repetition to predict steady-state workload for different retention targets.

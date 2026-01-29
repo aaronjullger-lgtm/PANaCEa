@@ -108,7 +108,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
       className={`${containerClasses} ${bgColor} text-[var(--color-text-primary)] transition-colors duration-300`}
     >
       {/* Premium Glass Header - Matches App.tsx styling */}
-      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
+      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div
           className={`${fullWidth ? 'w-full' : 'max-w-5xl mx-auto'} px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2`}
         >

@@ -27,11 +27,11 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   variant = 'rectangular',
   animation = 'pulse',
 }) => {
-  const baseClasses = 'bg-slate-200 dark:bg-slate-700';
+  const baseClasses = 'bg-[var(--color-bg-tertiary)]';
 
   const animationClasses = {
     pulse: 'animate-pulse',
-    wave: 'animate-shimmer bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700 bg-[length:200%_100%]',
+    wave: 'animate-shimmer bg-gradient-to-r from-[var(--color-bg-tertiary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] bg-[length:200%_100%]',
     none: '',
   };
 

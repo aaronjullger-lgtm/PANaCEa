@@ -7,7 +7,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
-import { logError, addBreadcrumb as logBreadcrumb } from '../lib/errors/errorLogger';
+import { logError, addBreadcrumb as logBreadcrumb } from '@/lib/errors/errorLogger';
 import {
   toAppError,
   ApiError,
@@ -17,7 +17,7 @@ import {
   ExternalServiceError,
   isAppError,
   type AppError,
-} from '../lib/errors/types';
+} from '@/lib/errors/types';
 
 export interface GeminiErrorInfo {
   type: 'rate_limit' | 'server_error' | 'network' | 'timeout' | 'generic';

@@ -3,9 +3,9 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { DrugEntry, DrugInteraction } from '../pharm/drugTypes';
-import { formatDrugName } from '../lib/drugBrandNames';
-import { toTitleCase } from '../lib/textUtils';
+import type { DrugEntry, DrugInteraction } from '@/pharm/drugTypes';
+import { formatDrugName } from '@/lib/drugBrandNames';
+import { toTitleCase } from '@/lib/textUtils';
 
 interface DrugDetailModalProps {
   drug: DrugEntry;

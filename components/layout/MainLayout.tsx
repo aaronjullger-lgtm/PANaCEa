@@ -19,7 +19,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen bg-[var(--color-bg-secondary)]">
       {/* Sidebar - Hidden on mobile by default */}
       <div className="hidden md:block">
         <Sidebar />
@@ -33,15 +33,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header with Menu Button */}
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)]">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
             aria-label="Open menu"
           >
-            <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            <Menu className="w-5 h-5 text-[var(--color-text-secondary)]" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">PANaCEa</h1>
+          <h1 className="text-lg font-bold text-[var(--color-text-primary)]">PANaCEa</h1>
         </header>
 
         {/* Page Content */}

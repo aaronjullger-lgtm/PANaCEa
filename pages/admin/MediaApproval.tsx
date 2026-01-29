@@ -522,7 +522,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                         </span>
                       ))}
                       {media.tags.length > 3 && (
-                        <span className="text-xs text-gray-500">+{media.tags.length - 3}</span>
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          +{media.tags.length - 3}
+                        </span>
                       )}
                     </div>
 
@@ -531,7 +533,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(media.id)}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                           <Check className="w-4 h-4" />
                           Approve
@@ -541,14 +543,14 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                             setSelectedMedia(media);
                             setShowRejectionModal(true);
                           }}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 bg-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                           <ThumbsDown className="w-4 h-4" />
                           Reject
                         </button>
                         <button
                           onClick={() => setSelectedMedia(media)}
-                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-colors"
+                          className="bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-muted)] p-2 rounded-lg transition-colors"
                         >
                           <Eye className="w-5 h-5" />
                         </button>
@@ -564,18 +566,20 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
       {/* Detail Modal */}
       {selectedMedia && !showRejectionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-[#1F283A] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--color-bg-secondary)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Media Details</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  Media Details
+                </h2>
                 <button
                   onClick={() => setSelectedMedia(null)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -589,7 +593,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                   className="w-full rounded-lg mb-6"
                 />
               ) : (
-                <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg mb-6 flex items-center justify-center text-8xl">
+                <div className="w-full h-64 bg-[var(--color-bg-tertiary)] rounded-lg mb-6 flex items-center justify-center text-8xl">
                   {getMediaTypeIcon(selectedMedia.mediaType)}
                 </div>
               )}
@@ -597,26 +601,26 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Quality Score</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-muted)] mb-1">Quality Score</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.qualityScore || 'N/A'}/100
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clinical Image</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-muted)] mb-1">Clinical Image</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.isClinical ? 'Yes' : 'No'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Media Type</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-muted)] mb-1">Media Type</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.mediaType}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Folder</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-muted)] mb-1">Folder</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.folder}
                   </p>
                 </div>
@@ -627,16 +631,16 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   {selectedMedia.pageCount && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pages</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <p className="text-sm text-[var(--color-text-muted)] mb-1">Pages</p>
+                      <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                         {selectedMedia.pageCount}
                       </p>
                     </div>
                   )}
                   {selectedMedia.duration && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Duration</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <p className="text-sm text-[var(--color-text-muted)] mb-1">Duration</p>
+                      <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                         {Math.floor(selectedMedia.duration / 60)}:
                         {(selectedMedia.duration % 60).toString().padStart(2, '0')}
                       </p>
@@ -650,20 +654,20 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                 <div className="mb-6">
                   {selectedMedia.citation && (
                     <div className="mb-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Citation</p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+                      <p className="text-sm text-[var(--color-text-muted)] mb-1">Citation</p>
+                      <p className="text-sm text-[var(--color-text-secondary)] italic">
                         {selectedMedia.citation}
                       </p>
                     </div>
                   )}
                   {selectedMedia.sourceUrl && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Source URL</p>
+                      <p className="text-sm text-[var(--color-text-muted)] mb-1">Source URL</p>
                       <a
                         href={selectedMedia.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        className="text-sm text-[var(--color-accent)] hover:underline"
                       >
                         {selectedMedia.sourceUrl}
                       </a>
@@ -675,11 +679,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
               {/* AI Analysis */}
               {selectedMedia.aiMetadata?.assessment?.aiAnalysis && (
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI Analysis</h3>
-                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                    AI Analysis
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-3">
                     {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <p className="text-sm text-[var(--color-text-muted)] mb-2">
                     Diagnostic Quality:{' '}
                     <span className="font-medium">
                       {selectedMedia.aiMetadata.assessment.aiAnalysis.diagnosticQuality}
@@ -687,10 +693,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                   </p>
                   {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className="text-sm text-[var(--color-text-muted)] mb-2">
                         Clinical Features:
                       </p>
-                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                      <ul className="list-disc list-inside text-[var(--color-text-secondary)]">
                         {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map(
                           (feature, idx) => (
                             <li key={idx}>{feature}</li>
@@ -707,8 +713,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                 <>
                   {selectedMedia.aiMetadata.assessment.issues.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Issues</h3>
-                      <ul className="list-disc list-inside text-red-600 dark:text-red-400">
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                        Issues
+                      </h3>
+                      <ul className="list-disc list-inside text-[var(--color-data-fail)]">
                         {selectedMedia.aiMetadata.assessment.issues.map((issue, idx) => (
                           <li key={idx}>{issue}</li>
                         ))}
@@ -718,10 +726,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
                   {selectedMedia.aiMetadata.assessment.recommendations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
                         Recommendations
                       </h3>
-                      <ul className="list-disc list-inside text-blue-600 dark:text-blue-400">
+                      <ul className="list-disc list-inside text-[var(--color-accent)]">
                         {selectedMedia.aiMetadata.assessment.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
                         ))}
@@ -735,14 +743,14 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
               <div className="flex gap-3">
                 <button
                   onClick={() => handleApprove(selectedMedia.id)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   Approve for Use
                 </button>
                 <button
                   onClick={() => setShowRejectionModal(true)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ThumbsDown className="w-5 h-5" />
                   Reject
@@ -755,20 +763,22 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
       {/* Rejection Modal */}
       {showRejectionModal && selectedMedia && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-[#1F283A] rounded-lg max-w-md w-full p-6"
+            className="bg-[var(--color-bg-secondary)] rounded-lg max-w-md w-full p-6"
           >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Reject Media</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
+              Reject Media
+            </h2>
+            <p className="text-[var(--color-text-muted)] mb-4">
               Please provide a reason for rejection:
             </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-32 px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] mb-4 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
               placeholder="e.g., Poor image quality, not clinically relevant, duplicate..."
             />
             <div className="flex gap-3">
@@ -777,14 +787,14 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
                   setShowRejectionModal(false);
                   setRejectionReason('');
                 }}
-                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-muted)] font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
                 disabled={!rejectionReason.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 Confirm Rejection
               </button>

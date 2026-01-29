@@ -67,13 +67,11 @@ export default function DrugCardRenderer({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`rounded-xl shadow-2xl overflow-hidden ${
-        theme === 'light' ? 'bg-white' : 'bg-gray-900'
-      }`}
+      className="rounded-xl shadow-2xl overflow-hidden bg-[var(--color-bg-primary)]"
       style={{ maxWidth: '800px', maxHeight: '90vh' }}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+      <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] text-[var(--color-text-inverse)] p-6">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
@@ -81,14 +79,14 @@ export default function DrugCardRenderer({
               <h2 className="text-2xl font-bold">{drug.name}</h2>
             </div>
             {drug.genericName && <p className="text-sm opacity-90 mb-1">({drug.genericName})</p>}
-            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
+            <span className="inline-block px-3 py-1 bg-[var(--color-text-inverse)]/20 rounded-full text-sm font-medium">
               {drug.class}
             </span>
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg hover:bg-[var(--color-text-inverse)]/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -105,7 +103,7 @@ export default function DrugCardRenderer({
           onToggle={() => toggleSection('mechanism')}
           theme={theme}
         >
-          <p className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}>{drug.mechanism}</p>
+          <p className="text-[var(--color-text-secondary)]">{drug.mechanism}</p>
         </Section>
 
         {/* Indications */}
@@ -118,7 +116,7 @@ export default function DrugCardRenderer({
         >
           <ul className="list-disc pl-5 space-y-1">
             {drug.indications.map((indication, idx) => (
-              <li key={idx} className={theme === 'light' ? 'text-gray-700' : 'text-gray-300'}>
+              <li key={idx} className="text-[var(--color-text-secondary)]">
                 {indication}
               </li>
             ))}
@@ -140,12 +138,8 @@ export default function DrugCardRenderer({
                 key={idx}
                 className={`p-3 rounded-lg cursor-pointer transition-all ${
                   highlightedEffect === effect
-                    ? theme === 'light'
-                      ? 'bg-red-100 border-2 border-red-500'
-                      : 'bg-red-900/30 border-2 border-red-500'
-                    : theme === 'light'
-                      ? 'bg-gray-50 hover:bg-gray-100'
-                      : 'bg-gray-800 hover:bg-gray-700'
+                    ? 'bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)]'
+                    : 'bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                 }`}
                 onMouseEnter={() => setHighlightedEffect(effect)}
                 onMouseLeave={() => setHighlightedEffect(null)}
@@ -155,13 +149,11 @@ export default function DrugCardRenderer({
                     {getSystemIcon(effect.system)}
                     <div>
                       <p
-                        className={`font-medium ${
-                          theme === 'light' ? 'text-gray-900' : 'text-white'
-                        }`}
+                        className="font-medium text-[var(--color-text-primary)]"
                       >
                         {effect.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         {effect.system} • {effect.severity}
                       </p>
                     </div>
@@ -176,7 +168,7 @@ export default function DrugCardRenderer({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600"
+                      className="mt-3 pt-3 border-t border-[var(--color-border)]"
                     >
                       {renderVisualization(effect, theme)}
                     </motion.div>
@@ -200,18 +192,12 @@ export default function DrugCardRenderer({
             {drug.interactions.map((interaction, idx) => (
               <li
                 key={idx}
-                className={`flex items-start gap-2 p-2 rounded ${
-                  theme === 'light' ? 'bg-yellow-50' : 'bg-yellow-900/20'
-                }`}
+                className="flex items-start gap-2 p-2 rounded bg-[var(--color-data-provisional)]/10"
               >
                 <AlertTriangle
-                  className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                    theme === 'light' ? 'text-yellow-600' : 'text-yellow-400'
-                  }`}
+                  className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-data-provisional)]"
                 />
-                <span
-                  className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                >
+                <span className="text-sm text-[var(--color-text-secondary)]">
                   {interaction}
                 </span>
               </li>
@@ -227,11 +213,7 @@ export default function DrugCardRenderer({
           onToggle={() => toggleSection('dosing')}
           theme={theme}
         >
-          <p
-            className={`font-mono text-sm whitespace-pre-line ${
-              theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-            }`}
-          >
+          <p className="font-mono text-sm whitespace-pre-line text-[var(--color-text-secondary)]">
             {drug.dosing}
           </p>
         </Section>
@@ -239,7 +221,7 @@ export default function DrugCardRenderer({
         {/* Clinical Pearls */}
         <Section
           title="Clinical Pearls"
-          icon={<Zap className="w-5 h-5 text-yellow-500" />}
+          icon={<Zap className="w-5 h-5 text-[var(--color-data-provisional)]" />}
           isExpanded={expandedSection === 'pearls'}
           onToggle={() => toggleSection('pearls')}
           theme={theme}
@@ -248,20 +230,12 @@ export default function DrugCardRenderer({
             {drug.pearls.map((pearl, idx) => (
               <li
                 key={idx}
-                className={`flex items-start gap-2 p-3 rounded-lg ${
-                  theme === 'light'
-                    ? 'bg-yellow-50 border border-yellow-200'
-                    : 'bg-yellow-900/20 border border-yellow-800'
-                }`}
+                className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30"
               >
                 <Gem
-                  className={`w-5 h-5 flex-shrink-0 ${
-                    theme === 'light' ? 'text-amber-500' : 'text-amber-400'
-                  }`}
+                  className="w-5 h-5 flex-shrink-0 text-[var(--color-data-provisional)]"
                 />
-                <span
-                  className={`text-sm ${theme === 'light' ? 'text-yellow-900' : 'text-yellow-100'}`}
-                >
+                <span className="text-sm text-[var(--color-text-secondary)]">
                   {pearl}
                 </span>
               </li>
@@ -296,23 +270,19 @@ function Section({
   badge,
 }: SectionProps): React.ReactElement {
   return (
-    <div className={`border-b ${theme === 'light' ? 'border-gray-200' : 'border-gray-700'}`}>
+    <div className="border-b border-[var(--color-border)]">
       <button
         onClick={onToggle}
-        className={`w-full flex items-center justify-between p-4 transition-colors ${
-          theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-gray-800'
-        }`}
+        className="w-full flex items-center justify-between p-4 transition-colors hover:bg-[var(--color-bg-secondary)]"
       >
         <div className="flex items-center gap-3">
-          <span className={theme === 'light' ? 'text-blue-600' : 'text-blue-400'}>{icon}</span>
-          <h3 className={`font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+          <span className="text-[var(--color-accent)]">{icon}</span>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">
             {title}
           </h3>
           {badge !== undefined && (
             <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/30 text-blue-400'
-              }`}
+              className="text-xs px-2 py-1 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
             >
               {badge}
             </span>
@@ -348,15 +318,15 @@ function getSystemIcon(system: SideEffect['system']): React.ReactNode {
 
   switch (system) {
     case 'cardiac':
-      return <Heart className={`${iconClass} text-red-500`} />;
+      return <Heart className={`${iconClass} text-[var(--color-data-fail)]`} />;
     case 'neuro':
-      return <Brain className={`${iconClass} text-purple-500`} />;
+      return <Brain className={`${iconClass} text-[var(--color-accent)]`} />;
     case 'gi':
-      return <Activity className={`${iconClass} text-orange-500`} />;
+      return <Activity className={`${iconClass} text-[var(--color-data-provisional)]`} />;
     case 'derm':
-      return <AlertTriangle className={`${iconClass} text-yellow-500`} />;
+      return <AlertTriangle className={`${iconClass} text-[var(--color-data-provisional)]`} />;
     default:
-      return <Info className={`${iconClass} text-gray-500`} />;
+      return <Info className={`${iconClass} text-[var(--color-text-muted)]`} />;
   }
 }
 
@@ -373,9 +343,7 @@ function getSeverityBadge(
     case 'serious':
       return (
         <span
-          className={`${baseClass} ${
-            theme === 'light' ? 'bg-red-100 text-red-700' : 'bg-red-900/30 text-red-400'
-          }`}
+          className={`${baseClass} bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]`}
         >
           Serious
         </span>
@@ -383,9 +351,7 @@ function getSeverityBadge(
     case 'common':
       return (
         <span
-          className={`${baseClass} ${
-            theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/30 text-blue-400'
-          }`}
+          className={`${baseClass} bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]`}
         >
           Common
         </span>
@@ -393,9 +359,7 @@ function getSeverityBadge(
     case 'rare':
       return (
         <span
-          className={`${baseClass} ${
-            theme === 'light' ? 'bg-gray-100 text-gray-700' : 'bg-gray-700 text-gray-400'
-          }`}
+          className={`${baseClass} bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]`}
         >
           Rare
         </span>
@@ -409,28 +373,35 @@ function getSeverityBadge(
 function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React.ReactNode {
   if (!effect.visualization) return null;
 
-  const bgClass = theme === 'light' ? 'bg-gray-100' : 'bg-gray-800';
+  const bgClass = 'bg-[var(--color-bg-secondary)]';
 
   if (effect.visualization === 'ekg') {
     // Simplified EKG visualization for QT prolongation
     if (effect.name.toLowerCase().includes('qt')) {
       return (
         <div className={`p-4 rounded-lg ${bgClass}`}>
-          <p className="text-xs font-semibold mb-2 text-gray-600 dark:text-gray-400">
+          <p className="text-xs font-semibold mb-2 text-[var(--color-text-secondary)]">
             EKG Pattern: Prolonged QT Interval
           </p>
           <svg
             viewBox="0 0 400 100"
             className="w-full h-20"
-            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+            style={{ filter: 'drop-shadow(0 2px 4px color-mix(in srgb, var(--color-text-muted) 20%, transparent))' }}
           >
             {/* Baseline */}
-            <line x1="0" y1="50" x2="400" y2="50" stroke="#94a3b8" strokeWidth="1" />
+            <line
+              x1="0"
+              y1="50"
+              x2="400"
+              y2="50"
+              stroke="var(--color-text-muted)"
+              strokeWidth="1"
+            />
 
             {/* Normal beat */}
             <path
               d="M 20 50 L 30 50 L 35 20 L 37 50 L 40 60 L 45 50 L 80 50"
-              stroke="#10b981"
+              stroke="var(--color-data-pass)"
               strokeWidth="2"
               fill="none"
             />
@@ -438,20 +409,20 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
             {/* Prolonged QT beat - wider T wave */}
             <path
               d="M 120 50 L 130 50 L 135 20 L 137 50 L 140 60 L 155 50 L 190 50"
-              stroke="#ef4444"
+              stroke="var(--color-data-fail)"
               strokeWidth="2"
               fill="none"
             />
 
             {/* Annotations */}
-            <text x="50" y="75" fontSize="10" fill="#10b981">
+            <text x="50" y="75" fontSize="10" fill="var(--color-data-pass)">
               Normal
             </text>
-            <text x="140" y="75" fontSize="10" fill="#ef4444">
+            <text x="140" y="75" fontSize="10" fill="var(--color-data-fail)">
               Prolonged
             </text>
           </svg>
-          <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
+          <p className="text-xs mt-2 text-[var(--color-text-secondary)]">
             May lead to Torsades de Pointes (polymorphic VT)
           </p>
         </div>
@@ -462,13 +433,13 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
   if (effect.visualization === 'wave') {
     return (
       <div className={`p-4 rounded-lg ${bgClass}`}>
-        <p className="text-xs font-semibold mb-2 text-gray-600 dark:text-gray-400">
+        <p className="text-xs font-semibold mb-2 text-[var(--color-text-secondary)]">
           Effect Pattern
         </p>
         <svg viewBox="0 0 200 50" className="w-full h-16">
           <path
             d="M 0 25 Q 25 10, 50 25 T 100 25 T 150 25 T 200 25"
-            stroke="#3b82f6"
+            stroke="var(--color-accent)"
             strokeWidth="2"
             fill="none"
           />
@@ -479,8 +450,10 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
 
   return (
     <div className={`p-4 rounded-lg ${bgClass} text-center`}>
-      <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-      <p className="text-xs text-gray-600 dark:text-gray-400">Monitor closely for this effect</p>
+      <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[var(--color-data-provisional)]" />
+      <p className="text-xs text-[var(--color-text-secondary)]">
+        Monitor closely for this effect
+      </p>
     </div>
   );
 }

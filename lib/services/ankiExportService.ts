@@ -123,10 +123,11 @@ export function questionToAnkiCard(question: Question, options: AnkiExportOption
  */
 export function exportToAnkiText(questions: Question[], options: AnkiExportOptions = {}): string {
   const deckName = options.deckName || 'PANaCEa_Missed_Questions';
+  const deckHeader = `${String.fromCharCode(35)}deck:`;
 
   let output = `#separator:tab\n`;
   output += `#html:true\n`;
-  output += `#deck:${deckName}\n`;
+  output += `${deckHeader}${deckName}\n`;
   output += `#tags column:3\n\n`;
 
   questions.forEach((question) => {

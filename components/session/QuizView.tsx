@@ -1,7 +1,7 @@
 // components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useShortcut } from '../src/context/ShortcutContext';
+import { useShortcut } from '@src/context/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 
 // Core services - using client-safe API wrappers
@@ -38,11 +38,11 @@ import { recordQuestion, getSessionSummary, resetSessionDistribution } from '@/s
 import { generateAlternateRationale } from '@/services/ai';
 
 // Components
-import { FlagQuestionModal } from './FlagQuestionModal';
-import AnswerChoice from './quiz/AnswerChoice';
-import ErrorTagger from './quiz/ErrorTagger';
-import Loader from './Loader';
-import WellnessCheckModal from './wellness/WellnessCheckModal';
+import { FlagQuestionModal } from '@/components/modals/FlagQuestionModal';
+import AnswerChoice from '@/components/quiz/AnswerChoice';
+import ErrorTagger from '@/components/quiz/ErrorTagger';
+import Loader from '@/components/loading/Loader';
+import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
 import {
@@ -51,39 +51,39 @@ import {
   QuestionTimer,
   MomentumBadge,
   StreakBadge,
-} from './quiz';
-import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
+} from '@/components/quiz';
+import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
 
 // Sprint 10: Trust badges for question source indication
-import { TrustBadge } from './TrustBadge';
+import { TrustBadge } from '@/components/ui/TrustBadge';
 
 // Icons
-import { CloseIcon } from './icons/CloseIcon';
-import { FlagIcon } from './icons/FlagIcon';
+import { CloseIcon } from '@/components/icons/CloseIcon';
+import { FlagIcon } from '@/components/icons/FlagIcon';
 import { AlertTriangle, BarChart3 } from 'lucide-react';
-import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
-import { ClearHighlightIcon } from './icons/ClearHighlightIcon';
+import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
+import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
 // Types
-import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '../types';
-import type { SRSScheduleResult } from '../lib/services/srsService';
+import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
+import type { SRSScheduleResult } from '@/lib/services/srsService';
 
 // Lib utils
-import { updateReviewOutcome } from '../lib/services/srsService';
-import { calculateParTime } from '../lib/utils/questionComplexity';
+import { updateReviewOutcome } from '@/lib/services/srsService';
+import { calculateParTime } from '@/lib/utils/questionComplexity';
 import {
   optimisticUpdateStats,
   optimisticUpdateSystemStats,
   createOptimisticPerformanceRecord,
-} from '../lib/utils/optimisticUI';
+} from '@/lib/utils/optimisticUI';
 
 // Hooks
-import { useAuth } from '../hooks/useAuth';
-import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
-import { useImplicitMetrics } from '../hooks/useImplicitMetrics';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
+import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 
 // Other services (non-barrel)
-import { feedback } from '../services/core/feedbackService';
+import { feedback } from '@/services/core/feedbackService';
 
 interface QuizViewProps {
   initialQueue: Question[];

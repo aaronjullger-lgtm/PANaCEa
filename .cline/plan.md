@@ -15,8 +15,8 @@
     -   Convert the floating chips into a proper sticky Tab Bar with a bottom border.
 
 ## Phase 3: Dark Mode Polish
-- [ ] **Task:** Adjust background colors. Ensure cards use a slightly lighter shade (`bg-card` or `bg-slate-800`) than the main background (`bg-background` or `bg-slate-950`).
-- [ ] **Task:** Verify text contrast on the "Warning" (Orange) button in Dark Mode.
+- [ ] **Task:** Adjust background colors. Ensure cards use a slightly lighter surface token (`bg-[var(--color-bg-secondary)]`) than the main background (`bg-[var(--color-bg-primary)]`).
+- [ ] **Task:** Verify text contrast on the "Warning" button variant in Dark Mode.
 
 ## Phase 4: Final Polish
 - [ ] **Task:** Add hover states (`scale-101` or `border-primary`) to the Grid Cards (ECG, Derm, etc.) to improve interactivity cues.

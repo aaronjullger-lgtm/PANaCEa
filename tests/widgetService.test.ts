@@ -220,7 +220,7 @@ describe('Widget Service', () => {
 
       const html = generateStreakWidgetHTML(streakData, 'dark');
 
-      expect(html).toContain('#1f2937'); // Dark background color
+      expect(html).toContain('var(--color-bg-primary)');
       expect(html).toContain('3');
     });
 
@@ -292,7 +292,7 @@ describe('Widget Service', () => {
     it('should support dark theme', () => {
       const html = generateQuestionOfDayHTML(mockQuestion, 'dark');
 
-      expect(html).toContain('#1f2937'); // Dark background
+      expect(html).toContain('var(--color-bg-primary)');
     });
 
     it('should include current date', () => {

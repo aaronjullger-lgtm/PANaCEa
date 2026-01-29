@@ -61,7 +61,7 @@ const VisualizationDemoPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -69,10 +69,10 @@ const VisualizationDemoPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2"
         >
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-4xl font-bold text-[var(--color-text-primary)]">
             📊 Data Visualization Components
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-[var(--color-text-muted)]">
             Interactive demo of RadialProgress, TrendSparkline, and ActivityHeatmap
           </p>
         </motion.div>
@@ -82,21 +82,21 @@ const VisualizationDemoPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl"
+          className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                 🎯 Radial Progress Indicators
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Circular progress rings perfect for displaying accuracy percentages
               </p>
             </div>
             <button
               onClick={handleRandomize}
               disabled={isAnimating}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 disabled:bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${isAnimating ? 'animate-spin' : ''}`} />
               Randomize
@@ -113,7 +113,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Overall Accuracy"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Large (140px)</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-2">Large (140px)</p>
             </div>
 
             {/* Medium Display */}
@@ -125,7 +125,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Current Session"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Medium (100px)</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-2">Medium (100px)</p>
             </div>
 
             {/* Compact Display */}
@@ -137,7 +137,7 @@ const VisualizationDemoPage: React.FC = () => {
                 showValue={true}
                 label="Quick View"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Compact (60px)</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-2">Compact (60px)</p>
             </div>
 
             {/* Custom Color */}
@@ -146,25 +146,25 @@ const VisualizationDemoPage: React.FC = () => {
                 value={accuracyValue}
                 size={100}
                 strokeWidth={10}
-                color="#8b5cf6"
+                color="var(--color-accent)"
                 showValue={true}
                 label="Custom Purple"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Custom color</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-2">Custom color</p>
             </div>
           </div>
 
           {/* Multi-comparison */}
-          <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="mt-8 pt-8 border-t border-[var(--color-border)]">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
               Multi-System Comparison
             </h3>
             <MultiRadialProgress
               items={[
-                { value: 85, label: 'Cardiology', color: '#ef4444' },
-                { value: 72, label: 'Neurology', color: '#3b82f6' },
-                { value: 90, label: 'Nephrology', color: '#10b981' },
-                { value: 68, label: 'Pulmonology', color: '#f59e0b' },
+                { value: 85, label: 'Cardiology', color: 'var(--color-data-fail)' },
+                { value: 72, label: 'Neurology', color: 'var(--color-accent)' },
+                { value: 90, label: 'Nephrology', color: 'var(--color-data-pass)' },
+                { value: 68, label: 'Pulmonology', color: 'var(--color-data-provisional)' },
               ]}
               size={100}
               className="justify-center"
@@ -177,21 +177,21 @@ const VisualizationDemoPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl"
+          className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               📈 Trend Sparklines
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               Small line charts showing performance trends over recent sessions
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Standard Sparkline */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
+            <div className="bg-gradient-to-br from-[var(--color-data-pass)]/10 to-[var(--color-data-pass)]/5 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-4">
                 Recent Performance (Improving)
               </h3>
               <TrendSparkline
@@ -206,8 +206,8 @@ const VisualizationDemoPage: React.FC = () => {
             </div>
 
             {/* Declining Trend */}
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
+            <div className="bg-gradient-to-br from-[var(--color-data-provisional)]/10 to-[var(--color-data-provisional)]/5 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-4">
                 Needs Attention (Declining)
               </h3>
               <TrendSparkline
@@ -223,8 +223,8 @@ const VisualizationDemoPage: React.FC = () => {
           </div>
 
           {/* Color Scheme Variations */}
-          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
               Color Scheme Variations
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -265,21 +265,21 @@ const VisualizationDemoPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl"
+          className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               🗓️ Activity Heatmap
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               GitHub-style contribution calendar showing daily study intensity
             </p>
           </div>
 
           <ActivityHeatmap performanceData={sampleData} weeks={13} />
 
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-900 dark:text-blue-300">
+          <div className="mt-4 p-4 bg-[var(--color-accent)]/10 rounded-lg">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               <strong>💡 Tip:</strong> Click on any day to see detailed statistics including
               questions answered, accuracy, average time, and system breakdown for that day.
             </p>
@@ -291,25 +291,25 @@ const VisualizationDemoPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 shadow-xl"
+          className="bg-gradient-to-br from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 rounded-2xl p-6 shadow-xl"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               🎨 Combined Dashboard Preview
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               How all components work together in your Statistics tab
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Recent Form Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                <span className="text-sm font-medium text-[var(--color-text-muted)]">
                   Recent Form
                 </span>
-                <span className="text-xl font-bold text-green-500">+8%</span>
+                <span className="text-xl font-bold text-[var(--color-data-pass)]">+8%</span>
               </div>
               <TrendSparkline
                 data={sparklineData}
@@ -322,16 +322,16 @@ const VisualizationDemoPage: React.FC = () => {
             </div>
 
             {/* Streak Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg text-center">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400 block mb-2">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg text-center">
+              <span className="text-sm font-medium text-[var(--color-text-muted)] block mb-2">
                 Active Streak
               </span>
-              <div className="text-5xl font-bold text-orange-500">15</div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">questions in a row</span>
+              <div className="text-5xl font-bold text-[var(--color-data-provisional)]">15</div>
+              <span className="text-xs text-[var(--color-text-muted)]">questions in a row</span>
             </div>
 
             {/* Accuracy Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg flex items-center justify-center">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg flex items-center justify-center">
               <RadialProgress
                 value={accuracyValue}
                 size={120}
@@ -350,11 +350,11 @@ const VisualizationDemoPage: React.FC = () => {
           transition={{ delay: 0.5 }}
           className="text-center space-y-2 pb-8"
         >
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-[var(--color-text-muted)]">
             All components are <strong>theme-aware</strong>, <strong>mobile-responsive</strong>, and{' '}
             <strong>accessibility-compliant</strong>
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             Built with React, TypeScript, Framer Motion, and pure SVG • Zero external chart
             libraries
           </p>

@@ -138,7 +138,7 @@ export function OptimizedImage({
   if ((mergedConfig.lazyLoad && !isVisible) || !isLoaded) {
     return (
       <div
-        className={`bg-gray-200 dark:bg-gray-700 animate-pulse ${className}`}
+        className={`bg-[var(--color-bg-tertiary)] animate-pulse ${className}`}
         style={{
           aspectRatio:
             mergedConfig.maxWidth && mergedConfig.maxHeight
@@ -148,7 +148,7 @@ export function OptimizedImage({
         }}
       >
         {mergedConfig.placeholder && (
-          <div className="w-full h-full flex items-center justify-center text-gray-500">
+          <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)]">
             {mergedConfig.placeholder}
           </div>
         )}
@@ -160,7 +160,7 @@ export function OptimizedImage({
   if (hasError) {
     return (
       <div
-        className={`bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${className}`}
+        className={`bg-[var(--color-bg-secondary)] flex items-center justify-center ${className}`}
         style={{
           aspectRatio:
             mergedConfig.maxWidth && mergedConfig.maxHeight
@@ -169,7 +169,7 @@ export function OptimizedImage({
           minHeight: '200px',
         }}
       >
-        <div className="text-gray-500 dark:text-gray-400 text-center p-4">
+        <div className="text-[var(--color-text-muted)] text-center p-4">
           <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -183,7 +183,7 @@ export function OptimizedImage({
               setHasError(false);
               setIsLoaded(false);
             }}
-            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="mt-2 text-xs text-[var(--color-accent)] hover:underline"
           >
             Retry
           </button>

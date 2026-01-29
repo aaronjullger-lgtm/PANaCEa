@@ -538,11 +538,11 @@ export function getAchievementDisplayDescription(
  */
 export function getAchievementRarityColor(rarity: AchievementRarity): string {
   const colors: Record<AchievementRarity, string> = {
-    common: '#94a3b8', // slate-400
-    uncommon: '#22c55e', // green-500
-    rare: '#3b82f6', // blue-500
-    epic: '#a855f7', // purple-500
-    legendary: '#f59e0b', // amber-500
+    common: 'var(--color-text-muted)',
+    uncommon: 'var(--color-data-pass)',
+    rare: 'var(--color-accent)',
+    epic: 'var(--color-accent)',
+    legendary: 'var(--color-data-provisional)',
   };
   return colors[rarity];
 }

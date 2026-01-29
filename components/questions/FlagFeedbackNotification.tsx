@@ -50,10 +50,10 @@ interface FlagFeedbackNotificationProps {
 // Status badge component
 const StatusBadge: React.FC<{ status: FlaggedQuestion['status'] }> = ({ status }) => {
   const styles = {
-    pending: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
-    under_review: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
-    resolved: 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-300',
-    rejected: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
+    pending: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+    under_review: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    resolved: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+    rejected: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   };
 
   const labels = {
@@ -107,10 +107,10 @@ const FlagItem: React.FC<{ flag: FlaggedQuestion }> = ({ flag }) => {
         <Flag
           className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
             flag.status === 'resolved'
-              ? 'text-sage-500'
+              ? 'text-[var(--color-data-pass)]'
               : flag.status === 'rejected'
-                ? 'text-dusty-rose-500'
-                : 'text-muted-amber-500'
+                ? 'text-[var(--color-data-fail)]'
+                : 'text-[var(--color-data-provisional)]'
           }`}
         />
 
@@ -285,7 +285,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
         className="relative p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
       >
         <Bell className="w-5 h-5 text-[var(--color-text-muted)]" />
-        <span className="absolute -top-1 -right-1 w-5 h-5 bg-sage-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] text-xs font-bold rounded-full flex items-center justify-center">
           {newResolvedCount}
         </span>
       </button>
@@ -301,18 +301,18 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-3 bg-sage-50 dark:bg-sage-950/20 border border-sage-200 dark:border-sage-800 rounded-xl mb-4"
+        className="p-3 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30 rounded-xl mb-4"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-sage-100 dark:bg-sage-900/50 rounded-full">
-              <ThumbsUp className="w-5 h-5 text-sage-600 dark:text-sage-400" />
+            <div className="p-2 bg-[var(--color-data-pass)]/15 rounded-full">
+              <ThumbsUp className="w-5 h-5 text-[var(--color-data-pass)]" />
             </div>
             <div>
-              <p className="font-medium text-sage-900 dark:text-sage-100">
+              <p className="font-medium text-[var(--color-data-pass)]">
                 {newResolvedCount} of your flag{newResolvedCount > 1 ? 's' : ''} resolved! 🎉
               </p>
-              <p className="text-sm text-sage-700 dark:text-sage-300">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Thanks for helping improve question quality.
               </p>
             </div>
@@ -321,15 +321,15 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsOpen(true)}
-              className="px-3 py-1.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] text-sm font-medium rounded-lg transition-colors"
             >
               View Details
             </button>
             <button
               onClick={handleDismiss}
-              className="p-1.5 hover:bg-sage-200 dark:hover:bg-sage-800 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-[var(--color-data-pass)]/20 rounded-lg transition-colors"
             >
-              <X className="w-4 h-4 text-sage-600 dark:text-sage-400" />
+              <X className="w-4 h-4 text-[var(--color-data-pass)]" />
             </button>
           </div>
         </div>
@@ -345,7 +345,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4"
           onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
         >
           <motion.div
@@ -372,7 +372,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 p-4 bg-[var(--color-bg-secondary)]">
               <div className="text-center">
-                <div className="text-xl font-bold text-sage-600 dark:text-sage-400">
+                <div className="text-xl font-bold text-[var(--color-data-pass)]">
                   {totalResolved}
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">Resolved</div>

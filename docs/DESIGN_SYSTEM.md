@@ -47,11 +47,11 @@ Resolves conflicts between Grand Rounds (orange), PANCE (outline), and OSCE (blu
 
 | Rank | Variant | Visual | Use Case | Examples |
 |------|---------|--------|----------|----------|
-| **Primary** | `primary` | **Gradient Blue** `from-blue-600 to-indigo-600` | Main action, CTA | "Start Session", "Start Encounter" |
-| **Secondary** | `secondary` | **Glass/Outline** White bg, colored border | Alternative actions | "View Details", "Review Again" |
-| **Warning** | `warning` | **Gradient Amber** `from-amber-500 to-orange-500` | Daily challenges, alerts | "Start Grand Rounds" |
-| **Success** | `success` | **Gradient Green** `from-emerald-500 to-green-600` | Completion, positive | "Complete Achievement" |
-| **Danger** | `danger` | **Gradient Red** `from-red-500 to-rose-600` | Destructive actions | "Delete Item" |
+| **Primary** | `primary` | **Gradient Accent** `from-[var(--color-accent)] to-[var(--color-accent)]` | Main action, CTA | "Start Session", "Start Encounter" |
+| **Secondary** | `secondary` | **Glass/Outline** `bg-[var(--color-bg-primary)] border-[var(--color-border)]` | Alternative actions | "View Details", "Review Again" |
+| **Warning** | `warning` | **Gradient Provisional** `from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]` | Daily challenges, alerts | "Start Grand Rounds" |
+| **Success** | `success` | **Gradient Pass** `from-[var(--color-data-pass)] to-[var(--color-data-pass)]` | Completion, positive | "Complete Achievement" |
+| **Danger** | `danger` | **Gradient Fail** `from-[var(--color-data-fail)] to-[var(--color-data-fail)]` | Destructive actions | "Delete Item" |
 | **Ghost** | `ghost` | **Transparent** Hover bg only | Tertiary, subtle | "Cancel", "Skip" |
 
 **Standards:**
@@ -66,7 +66,7 @@ Resolves conflicts between Grand Rounds (orange), PANCE (outline), and OSCE (blu
 - **Grand Rounds Banner:** Use `warning` variant (amber gradient) ✅
 - **Core PANCE Simulation:** Use `secondary` variant (glass/outline) for understated elegance ✅
 - **Virtual OSCE:** Use `primary` variant (blue gradient) for emphasis ✅
-- **PANRE-LA:** Use custom `deep-plum-500` solid (specialty feature) ✅
+- **PANRE-LA:** Use a dedicated specialty accent token ✅
 
 ---
 
@@ -165,12 +165,12 @@ Consistent icon treatment across all cards and sections:
 ### Primary Colors
 
 ```css
---color-action-blue: #3B82F6;      /* Primary CTA, links */
---color-deep-plum-500: #6B21A8;    /* Specialty accents */
---color-sage-500: #10B981;         /* Success, positive */
---color-muted-amber: #F59E0B;      /* Warnings, challenges */
---color-steel-blue-400: #38BDF8;   /* Info, OSCE */
---color-dusty-rose: #F43F5E;       /* Danger, alerts */
+--color-action-blue: /* Primary CTA, links */
+--color-deep-plum-500: /* Specialty accents */
+--color-sage-500: /* Success, positive */
+--color-muted-amber: /* Warnings, challenges */
+--color-steel-blue-400: /* Info, OSCE */
+--color-dusty-rose: /* Danger, alerts */
 ```
 
 ### Surface Colors (CSS Variables)
@@ -213,18 +213,18 @@ When creating or updating a component, verify:
 ### Before (Inconsistent)
 
 ```tsx
-// Grand Rounds: Orange solid button, tight padding
-<button className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white">
+// Grand Rounds: Warning button, tight padding
+<button className="px-4 py-2 bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 text-[var(--color-text-inverse)]">
   Start
 </button>
 
-// PANCE: White outline button
-<button className="px-6 py-3 bg-white border-2 border-slate-200 hover:border-blue-500">
+// PANCE: Glass outline button
+<button className="px-6 py-3 bg-[var(--color-bg-primary)] border-2 border-[var(--color-border)] hover:border-[var(--color-accent)]">
   Start Session
 </button>
 
-// OSCE: Blue gradient button, spacious padding
-<button className="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
+// OSCE: Accent gradient button, spacious padding
+<button className="px-5 py-3 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]">
   Start Encounter
 </button>
 ```

@@ -23,11 +23,11 @@ export function AppSidebar({ className }: AppSidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo/Brand */}
-      <div className="px-6 py-5 border-b border-gray-800">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+      <div className="px-6 py-5 border-b border-[var(--color-border)]">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] bg-clip-text text-transparent">
           PANaCEa
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Universal Medical Companion</p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">Universal Medical Companion</p>
       </div>
 
       {/* Navigation Sections */}
@@ -35,7 +35,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
         {NAVIGATION_CONFIG.map((section, sectionIdx) => (
           <div key={section.category}>
             {/* Category Header */}
-            <h3 className="px-3 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <h3 className="px-3 mb-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               {section.category}
             </h3>
 
@@ -52,8 +52,9 @@ export function AppSidebar({ className }: AppSidebarProps) {
                     className={({ isActive }) =>
                       cn(
                         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                        'text-gray-300 hover:text-white hover:bg-gray-800/50',
-                        isActive && 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]/60',
+                        isActive &&
+                          'bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20'
                       )
                     }
                   >
@@ -62,14 +63,14 @@ export function AppSidebar({ className }: AppSidebarProps) {
                         <Icon
                           className={cn(
                             'w-5 h-5 transition-colors',
-                            isActive ? 'text-blue-400' : 'text-gray-400'
+                            isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
                           )}
                         />
                         <span className="text-sm font-medium">{item.label}</span>
                         {isActive && (
                           <motion.div
                             layoutId={`sidebar-indicator-${sectionIdx}`}
-                            className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400"
+                            className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -86,12 +87,12 @@ export function AppSidebar({ className }: AppSidebarProps) {
       </nav>
 
       {/* Sign Out Button */}
-      <div className="px-4 py-4 border-t border-gray-800">
+      <div className="px-4 py-4 border-t border-[var(--color-border)]">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 text-gray-300 hover:text-white hover:bg-red-500/10"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-data-fail)]/10"
         >
-          <LogOut className="w-5 h-5 text-gray-400" />
+          <LogOut className="w-5 h-5 text-[var(--color-text-muted)]" />
           <span className="text-sm font-medium">Sign Out</span>
         </button>
       </div>
@@ -103,7 +104,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
         aria-label="Toggle menu"
       >
         {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -112,7 +113,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col w-64 bg-gray-900 border-r border-gray-800 fixed inset-y-0 left-0 z-30',
+          'hidden lg:flex flex-col w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] fixed inset-y-0 left-0 z-30',
           className
         )}
       >
@@ -129,7 +130,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeMobile}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden"
             />
 
             {/* Drawer */}
@@ -138,7 +139,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 w-64 bg-gray-900 border-r border-gray-800 z-50 lg:hidden"
+              className="fixed inset-y-0 left-0 w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] z-50 lg:hidden"
             >
               <SidebarContent />
             </motion.aside>

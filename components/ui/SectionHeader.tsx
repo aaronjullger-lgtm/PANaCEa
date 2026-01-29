@@ -36,9 +36,10 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   variant = 'brand',
   className = '',
 }) => {
-  const iconColorClass = variant === 'brand' 
-    ? 'text-indigo-500 dark:text-indigo-400' 
-    : 'text-amber-500 dark:text-yellow-400';
+  const iconColorClass =
+    variant === 'brand'
+      ? 'text-[var(--color-accent)]'
+      : 'text-[var(--color-data-provisional)]';
 
   return (
     <motion.div
@@ -53,7 +54,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
             <Icon className="w-5 h-5" aria-hidden="true" />
           </div>
         )}
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
           {title}
         </h2>
       </div>

@@ -50,7 +50,7 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-[var(--color-overlay)] z-40"
             onClick={onClose}
           />
 
@@ -60,24 +60,24 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)] rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] px-6 py-4 flex items-center justify-between">
               <div>
-                <p className="text-sm text-red-500 dark:text-red-400 font-medium mb-1">
+                <p className="text-sm text-[var(--color-data-fail)] font-medium mb-1">
                   You confused these conditions
                 </p>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
                   {comparison.conditionA} vs {comparison.conditionB}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
                 aria-label="Close comparison panel"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
 
@@ -87,10 +87,10 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             </div>
 
             {/* Footer with CTA */}
-            <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-6 py-4">
+            <div className="sticky bottom-0 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] px-6 py-4">
               <button
                 onClick={handleDrillBoth}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold rounded-xl transition-colors"
               >
                 <Layers className="w-5 h-5" />
                 Drill Both Conditions

@@ -12,7 +12,6 @@
 import React from 'react';
 import {
   ComposedChart,
-  Bar,
   Line,
   XAxis,
   YAxis,
@@ -23,6 +22,7 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts';
+import { Bar } from 'recharts/es6/cartesian/Bar';
 import { useWorkloadProjection } from '../../hooks/useWorkloadProjection';
 
 interface WorkloadChartProps {

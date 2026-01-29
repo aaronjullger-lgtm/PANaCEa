@@ -1,18 +1,18 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import type { ConditionMeta } from '../src/types/conditions';
+import type { ConditionMeta } from '@src/types/conditions';
 import {
   getConditionById,
   getConditionByIdSync,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
-} from '../lib/loadConditions';
-import ConditionSidebar from './ConditionSidebar';
-import FormattedSection from './conditions/FormattedSection';
-import { BuzzwordBanner } from './conditions/BuzzwordBanner';
-import { ConditionFamilyView } from './library/ConditionFamilyView';
+} from '@/lib/loadConditions';
+import ConditionSidebar from '@/components/panels/ConditionSidebar';
+import FormattedSection from '@/components/conditions/FormattedSection';
+import { BuzzwordBanner } from '@/components/conditions/BuzzwordBanner';
+import { ConditionFamilyView } from '@/components/library/ConditionFamilyView';
 import { useAuth } from '@clerk/clerk-react';
 
 /**

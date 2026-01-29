@@ -113,6 +113,8 @@ export default defineConfig(({ mode }) => {
   const isDevelopment = mode === 'development';
   const isProduction = mode === 'production';
   const useMockMode = env.VITE_USE_MOCK === 'true';
+  const hasSentryConfig = Boolean(env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT);
+  const shouldUploadSentry = isProduction && hasSentryConfig && env.SENTRY_UPLOAD === 'true';
 
   // Log mock mode status during build
   if (useMockMode) {
@@ -120,11 +122,6 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    // Define environment variables for client-side code
-    define: {
-      // Make VITE_USE_MOCK available to client code
-      'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK || 'false'),
-    },
     server: {
       port: 3000,
       host: '0.0.0.0',
@@ -149,7 +146,7 @@ export default defineConfig(({ mode }) => {
           name: 'PANaCEa - PANCE Prep AI',
           short_name: 'PANaCEa',
           description: 'AI-powered PANCE/PANRE preparation platform',
-          theme_color: '#ffffff',
+          theme_color: 'var(--color-bg-primary)',
           icons: [
             {
               src: 'pwa-192x192.png',
@@ -288,7 +285,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       // Sentry plugin for source maps upload (production only)
-      ...(isProduction && env.SENTRY_AUTH_TOKEN
+      ...(shouldUploadSentry
         ? [
             sentryVitePlugin({
               org: env.SENTRY_ORG,
@@ -305,6 +302,8 @@ export default defineConfig(({ mode }) => {
         : []),
     ],
     define: {
+      // Make VITE_USE_MOCK available to client code
+      'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK || 'false'),
       // Global shim for CJS modules
       global: 'window',
       // Process shims for browser compatibility

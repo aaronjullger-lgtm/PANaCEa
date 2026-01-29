@@ -78,7 +78,7 @@ const DEFAULT_SETTINGS: ViewerSettings = {
   wireframe: false,
   showAnnotations: true,
   showGrid: false,
-  backgroundColor: '#1a1a2e',
+  backgroundColor: 'var(--color-bg-primary)',
   ambientLightIntensity: 0.6,
   directionalLightIntensity: 0.8,
 };
@@ -248,7 +248,10 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
       if (exists) {
         return prev.filter((r) => r.name !== structureName);
       }
-      return [...prev, { id: structureName, name: structureName, color: color || '#00ff88' }];
+      return [
+        ...prev,
+        { id: structureName, name: structureName, color: color || 'var(--color-data-pass)' },
+      ];
     });
   }, []);
 

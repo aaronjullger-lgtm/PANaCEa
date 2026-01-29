@@ -276,7 +276,7 @@ export default function StudyGroupDashboard() {
                     <p className="text-[var(--color-data-fail)] text-sm mb-4">{groupsError}</p>
                     <button
                       onClick={fetchGroups}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium rounded-lg transition-all"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-all"
                     >
                       <svg
                         className="w-4 h-4"
@@ -382,7 +382,7 @@ export default function StudyGroupDashboard() {
                         </p>
                         <button
                           onClick={fetchLeaderboard}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium rounded-lg transition-all"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-all"
                         >
                           <svg
                             className="w-4 h-4"
@@ -451,7 +451,7 @@ export default function StudyGroupDashboard() {
 
       {/* Create Group Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Create Study Group</h3>
             <form onSubmit={handleCreateGroup}>
@@ -492,7 +492,7 @@ export default function StudyGroupDashboard() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-white rounded-lg disabled:opacity-50 transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg disabled:opacity-50 transition-all"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Group'}
                 </button>
@@ -504,7 +504,7 @@ export default function StudyGroupDashboard() {
 
       {/* Join Group Modal */}
       {showJoinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Join Study Group</h3>
             <form onSubmit={handleJoinGroup}>
@@ -535,7 +535,7 @@ export default function StudyGroupDashboard() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-white rounded-lg disabled:opacity-50 transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg disabled:opacity-50 transition-all"
                 >
                   {isSubmitting ? 'Joining...' : 'Join Group'}
                 </button>

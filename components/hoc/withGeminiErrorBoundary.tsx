@@ -17,7 +17,7 @@
  */
 
 import React, { ComponentType, ReactNode } from 'react';
-import { GeminiErrorBoundary } from '../GeminiErrorBoundary';
+import { GeminiErrorBoundary } from '@/components/error/GeminiErrorBoundary';
 
 /**
  * List of AI-dependent views that should have error boundaries

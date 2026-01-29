@@ -85,9 +85,9 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
   if (isLoading) {
     return (
       <div
-        className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 ${className}`}
+        className={`bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6 ${className}`}
       >
-        <div className="text-center text-slate-600 dark:text-slate-400">
+        <div className="text-center text-[var(--color-text-secondary)]">
           Analyzing your learning style...
         </div>
       </div>
@@ -97,14 +97,14 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
   if (error || !profile) {
     return (
       <div
-        className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 ${className}`}
+        className={`bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6 ${className}`}
       >
         <div className="text-center">
-          <Brain className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 mb-2">
+          <Brain className="w-12 h-12 mx-auto text-[var(--color-text-muted)] mb-3" />
+          <p className="text-[var(--color-text-secondary)] mb-2">
             {error || 'Complete more questions to detect your learning style'}
           </p>
-          <p className="text-sm text-slate-500 dark:text-slate-500">
+          <p className="text-sm text-[var(--color-text-muted)]">
             We need at least 50 questions to analyze your behavior patterns
           </p>
         </div>
@@ -167,29 +167,29 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
 
   return (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 ${className}`}
+      className={`bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] ${className}`}
     >
       {/* Header */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+      <div className="p-6 border-b border-[var(--color-border)]">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-1">
-              <Brain className="w-7 h-7 text-purple-600" />
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-1">
+              <Brain className="w-7 h-7 text-[var(--color-accent)]" />
               Your Learning Style
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{profile.overallStyle}</p>
+            <p className="text-[var(--color-text-secondary)] text-sm">{profile.overallStyle}</p>
           </div>
 
           <button
             onClick={() => setShowRecommendations(!showRecommendations)}
-            className="px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors text-sm font-medium flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-lg hover:bg-[var(--color-accent)]/20 transition-colors text-sm font-medium flex items-center gap-1.5"
           >
             <Lightbulb className="w-4 h-4" />
             {showRecommendations ? 'Hide' : 'Show'} Tips
           </button>
         </div>
 
-        <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 dark:text-slate-500">
+        <div className="flex items-center gap-4 mt-3 text-xs text-[var(--color-text-muted)]">
           <span>{profile.dataPoints} questions analyzed</span>
           <span>•</span>
           <span>Updated {new Date(profile.lastAnalyzed).toLocaleDateString()}</span>
@@ -218,10 +218,10 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="border-t border-slate-200 dark:border-slate-700 p-6 bg-purple-50 dark:bg-purple-900/10"
+          className="border-t border-[var(--color-border)] p-6 bg-[var(--color-accent)]/10"
         >
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-3">
-            <Lightbulb className="w-5 h-5 text-purple-600" />
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2 mb-3">
+            <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
             Personalized Study Tips
           </h3>
 
@@ -229,9 +229,9 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
             {recommendations.map((rec, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]"
               >
-                <span className="text-purple-600 dark:text-purple-400 font-bold">•</span>
+                <span className="text-[var(--color-accent)] font-bold">•</span>
                 {rec}
               </li>
             ))}
@@ -264,29 +264,29 @@ const DimensionDisplay: React.FC<DimensionDisplayProps> = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          <span className="font-medium text-slate-900 dark:text-slate-100">{label}</span>
+          <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
+          <span className="font-medium text-[var(--color-text-primary)]">{label}</span>
         </div>
 
-        <span className="text-sm text-slate-600 dark:text-slate-400">
+        <span className="text-sm text-[var(--color-text-secondary)]">
           {Math.round(confidence * 100)}% confidence
         </span>
       </div>
 
       <div className="ml-7">
-        <div className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium mb-1">
+        <div className="inline-block px-3 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full text-sm font-medium mb-1">
           {formatValue(value)}
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">{description}</p>
       </div>
 
       {/* Confidence Bar */}
-      <div className="ml-7 w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+      <div className="ml-7 w-full bg-[var(--color-bg-tertiary)] rounded-full h-1.5 overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${confidence * 100}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
+          className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-full"
         />
       </div>
     </div>

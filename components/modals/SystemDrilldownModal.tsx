@@ -191,15 +191,15 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   }, [conditionStats, activeSubcategory]);
 
   const getBarColor = (score: number) => {
-    if (score < 50) return 'bg-red-500';
-    if (score < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (score < 50) return 'bg-[var(--color-data-fail)]';
+    if (score < 80) return 'bg-[var(--color-data-provisional)]';
+    return 'bg-[var(--color-data-pass)]';
   };
 
   const systemLabel = system ? SYSTEM_LABELS[system] : 'System Details';
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm">
       <div className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col border border-[var(--color-border)]">
         {/* HEADER */}
         <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
@@ -235,19 +235,19 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                 </h3>
                 {subcategoryStats.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1 text-[11px] text-slate-500">
+                    <label className="flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]">
                       <input
                         id="show-weak-only"
                         name="show-weak-only"
                         type="checkbox"
-                        className="h-3 w-3 rounded border-slate-300"
+                        className="h-3 w-3 rounded border-[var(--color-border)]"
                         checked={showWeakOnly}
                         onChange={(e) => setShowWeakOnly(e.target.checked)}
                       />
                       <span>Weak only (&lt;80%)</span>
                     </label>
                     <select
-                      className="border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-[11px] px-2 py-1 text-slate-600 dark:text-slate-300"
+                      className="border border-[var(--color-border)] rounded-md bg-[var(--color-bg-primary)] text-[11px] px-2 py-1 text-[var(--color-text-secondary)]"
                       value={sortMode}
                       onChange={(e) => setSortMode(e.target.value as 'weakest' | 'alpha' | 'most')}
                     >
@@ -299,7 +299,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                             {sub.total !== 1 ? 's' : ''}
                           </span>
                           {isWeak && (
-                            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                            <span className="text-[11px] text-[var(--color-data-provisional)] font-medium">
                               Weak area
                             </span>
                           )}

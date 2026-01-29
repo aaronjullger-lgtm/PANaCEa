@@ -82,10 +82,10 @@ const STATUS_EMOJI: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  critical: 'text-dusty-rose-500',
-  at_risk: 'text-muted-amber-500',
-  stable: 'text-sage-500',
-  mastered: 'text-steel-blue-400',
+  critical: 'text-[var(--color-data-fail)]',
+  at_risk: 'text-[var(--color-data-provisional)]',
+  stable: 'text-[var(--color-data-pass)]',
+  mastered: 'text-[var(--color-accent)]',
 };
 
 // =============================================================================
@@ -109,7 +109,11 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         transition={{ delay: 0.2 }}
         className={cn(
           'text-5xl font-black',
-          isPositive ? 'text-sage-500' : isNeutral ? 'text-slate-400' : 'text-muted-amber-500'
+          isPositive
+            ? 'text-[var(--color-data-pass)]'
+            : isNeutral
+              ? 'text-[var(--color-text-muted)]'
+              : 'text-[var(--color-data-fail)]'
         )}
       >
         {isPositive ? '+' : ''}
@@ -119,7 +123,7 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="text-slate-500 dark:text-slate-400 text-sm mt-2"
+        className="text-[var(--color-text-muted)] text-sm mt-2"
       >
         Your PANCE Score {isPositive ? 'Increased' : isNeutral ? 'Held Steady' : 'Adjusted'}
       </motion.div>
@@ -127,7 +131,7 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="text-lg text-slate-600 dark:text-slate-300 mt-1"
+        className="text-lg text-[var(--color-text-secondary)] mt-1"
       >
         Session Accuracy: <span className="font-bold">{accuracy.toFixed(0)}%</span>
       </motion.div>
@@ -150,10 +154,10 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="bg-steel-blue-50 dark:bg-steel-blue-900/30 rounded-xl p-4 text-center"
+        className="bg-[var(--color-accent)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-steel-blue-600 dark:text-steel-blue-400">{stabilized}</div>
-        <div className="text-xs text-steel-blue-700 dark:text-steel-blue-300 mt-1">Cards Stabilized</div>
+        <div className="text-3xl font-bold text-[var(--color-accent)]">{stabilized}</div>
+        <div className="text-xs text-[var(--color-accent)] mt-1">Cards Stabilized</div>
         <div className="text-lg mt-1">⬆️</div>
       </motion.div>
 
@@ -161,12 +165,12 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="bg-deep-plum-50 dark:bg-deep-plum-900/30 rounded-xl p-4 text-center"
+        className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-deep-plum-600 dark:text-deep-plum-400">
+        <div className="text-3xl font-bold text-[var(--color-data-provisional)]">
           -{decayPrevented.toFixed(1)}%
         </div>
-        <div className="text-xs text-deep-plum-700 dark:text-deep-plum-300 mt-1">Decay Prevented</div>
+        <div className="text-xs text-[var(--color-data-provisional)] mt-1">Decay Prevented</div>
         <div className="text-lg mt-1">🛡️</div>
       </motion.div>
 
@@ -174,12 +178,10 @@ function ImpactCards({
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="bg-sage-50 dark:bg-sage-900/30 rounded-xl p-4 text-center"
+        className="bg-[var(--color-data-pass)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-sage-600 dark:text-sage-400">
-          +{bufferDays}
-        </div>
-        <div className="text-xs text-sage-700 dark:text-sage-300 mt-1">Days Buffer</div>
+        <div className="text-3xl font-bold text-[var(--color-data-pass)]">+{bufferDays}</div>
+        <div className="text-xs text-[var(--color-data-pass)] mt-1">Days Buffer</div>
         <div className="text-lg mt-1">📅</div>
       </motion.div>
     </div>
@@ -197,9 +199,9 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.6 }}
-      className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4"
+      className="bg-[var(--color-bg-secondary)] rounded-xl p-4"
     >
-      <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+      <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
         🏥 System Triage Update
       </h4>
       <div className="space-y-2">
@@ -211,18 +213,20 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
             transition={{ delay: 0.7 + i * 0.1 }}
             className="flex items-center justify-between text-sm"
           >
-            <span className="font-medium text-slate-700 dark:text-slate-200">{sys.system}</span>
+            <span className="font-medium text-[var(--color-text-primary)]">{sys.system}</span>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">
+              <span className="text-[var(--color-text-muted)]">
                 {STATUS_EMOJI[sys.previousStatus]}→{STATUS_EMOJI[sys.newStatus]}
               </span>
-              <span className="text-slate-500 tabular-nums">
+              <span className="text-[var(--color-text-muted)] tabular-nums">
                 {sys.previousAccuracy.toFixed(0)}% → {sys.newAccuracy.toFixed(0)}%
               </span>
               <span
                 className={cn(
                   'font-bold tabular-nums',
-                  sys.accuracyDelta > 0 ? 'text-sage-500' : 'text-dusty-rose-500'
+                  sys.accuracyDelta > 0
+                    ? 'text-[var(--color-data-pass)]'
+                    : 'text-[var(--color-data-fail)]'
                 )}
               >
                 ({sys.accuracyDelta > 0 ? '+' : ''}
@@ -252,25 +256,31 @@ function TrajectoryUpdate({
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8 }}
-      className="bg-gradient-to-r from-slate-50 to-steel-blue-50 dark:from-slate-800/50 dark:to-steel-blue-900/30 rounded-xl p-4"
+      className="bg-gradient-to-r from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
-      <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-2">
+      <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2 flex items-center gap-2">
         📈 Trajectory Update
       </h4>
-      <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+      <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
         <div>
-          <span className="text-slate-500">Before:</span>{' '}
-          <span className="text-dusty-rose-500">Score projected to drop to {before} in 7 days</span>
+          <span className="text-[var(--color-text-muted)]">Before:</span>{' '}
+          <span className="text-[var(--color-data-fail)]">
+            Score projected to drop to {before} in 7 days
+          </span>
         </div>
         <div>
-          <span className="text-slate-500">After:</span>{' '}
-          <span className={improved ? 'text-sage-500' : 'text-muted-amber-500'}>
+          <span className="text-[var(--color-text-muted)]">After:</span>{' '}
+          <span
+            className={
+              improved ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'
+            }
+          >
             Score projected to drop to {after} in 7 days
           </span>
         </div>
       </div>
       {bufferDays > 0 && (
-        <div className="mt-3 text-sm font-medium text-sage-600 dark:text-sage-400">
+        <div className="mt-3 text-sm font-medium text-[var(--color-data-pass)]">
           ✅ You just bought yourself {bufferDays} extra day{bufferDays !== 1 ? 's' : ''} of buffer!
         </div>
       )}
@@ -288,7 +298,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
       transition={{ delay: 0.9, type: 'spring', stiffness: 200 }}
       className="text-center"
     >
-      <div className="inline-flex items-center gap-2 bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-700 dark:text-muted-amber-300 px-4 py-2 rounded-full">
+      <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
         <span className="text-xl">🔥</span>
         <span className="font-bold">{streak}-Day Study Streak!</span>
       </div>
@@ -297,7 +307,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
-          className="text-sm text-slate-500 mt-2"
+          className="text-sm text-[var(--color-text-muted)] mt-2"
         >
           {milestone}
         </motion.div>
@@ -314,7 +324,7 @@ function AchievementBadge({ achievement }: { achievement: string }) {
       transition={{ delay: 1.0, type: 'spring' }}
       className="text-center"
     >
-      <div className="inline-flex items-center gap-2 bg-muted-amber-100 dark:bg-muted-amber-900/30 text-muted-amber-700 dark:text-muted-amber-300 px-4 py-2 rounded-full">
+      <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
         <span className="text-xl">🏆</span>
         <span className="font-bold">{achievement}</span>
       </div>
@@ -343,12 +353,12 @@ export function SessionPostMortem({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className={cn(
-        'max-w-lg mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden',
+        'max-w-lg mx-auto bg-[var(--color-bg-primary)] rounded-2xl shadow-xl overflow-hidden',
         className
       )}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-steel-blue-500 to-deep-plum-600 p-6 text-white text-center">
+      <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] p-6 text-[var(--color-text-inverse)] text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -377,7 +387,7 @@ export function SessionPostMortem({
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden"
+          className="bg-[var(--color-bg-secondary)] rounded-full h-3 overflow-hidden"
         >
           <motion.div
             initial={{ width: 0 }}
@@ -386,14 +396,14 @@ export function SessionPostMortem({
             className={cn(
               'h-full rounded-full',
               data.accuracy >= 80
-                ? 'bg-sage-500'
+                ? 'bg-[var(--color-data-pass)]'
                 : data.accuracy >= 60
-                  ? 'bg-muted-amber-500'
-                  : 'bg-dusty-rose-500'
+                  ? 'bg-[var(--color-data-provisional)]'
+                  : 'bg-[var(--color-data-fail)]'
             )}
           />
         </motion.div>
-        <div className="text-center text-sm text-slate-500">
+        <div className="text-center text-sm text-[var(--color-text-muted)]">
           {data.correctCount}/{data.questionsAnswered} Correct
         </div>
 
@@ -436,7 +446,7 @@ export function SessionPostMortem({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.2 }}
           onClick={onContinue}
-          className="flex-1 bg-steel-blue-600 hover:bg-steel-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+          className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold py-3 px-6 rounded-xl transition-colors"
         >
           Continue Streak
         </motion.button>
@@ -445,7 +455,7 @@ export function SessionPostMortem({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.3 }}
           onClick={onViewDashboard}
-          className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl transition-colors"
+          className="flex-1 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] font-semibold py-3 px-6 rounded-xl transition-colors"
         >
           View Dashboard
         </motion.button>

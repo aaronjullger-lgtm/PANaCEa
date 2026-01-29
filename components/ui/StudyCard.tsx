@@ -47,12 +47,12 @@ export const StudyCard: React.FC<StudyCardProps> = ({
 }) => {
   // Theme-aware styles using CSS variables
   const cardBg = isActive
-    ? 'bg-action-blue-600/10 dark:bg-action-blue-600/20'
-    : 'bg-white dark:bg-slate-800/50';
+    ? 'bg-[var(--color-accent)]/10'
+    : 'bg-[var(--color-bg-primary)]';
 
   const cardBorder = isActive
-    ? 'border-action-blue-600 ring-2 ring-action-blue-600/30'
-    : 'border-slate-200 dark:border-slate-700 hover:border-action-blue-400 dark:hover:border-action-blue-500';
+    ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30'
+    : 'border-[var(--color-border)] hover:border-[var(--color-accent)]';
 
   return (
     <div
@@ -84,7 +84,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
           <Icon
             className={`
               w-5 h-5 
-              ${isActive ? 'text-action-blue-600' : 'text-action-blue-600 dark:text-action-blue-400'}
+              ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-accent)]'}
             `}
           />
           <h3
@@ -93,8 +93,8 @@ export const StudyCard: React.FC<StudyCardProps> = ({
               font-bold 
               ${
                 isActive
-                  ? 'text-action-blue-600 dark:text-action-blue-400'
-                  : 'text-[var(--color-text-primary)] dark:text-white'
+                  ? 'text-[var(--color-accent)]'
+                  : 'text-[var(--color-text-primary)]'
               }
             `}
           >
@@ -104,7 +104,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
 
         {/* Optional badge */}
         {badge && (
-          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]">
             {badge}
           </span>
         )}
@@ -112,7 +112,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
 
       {/* Subtitle */}
       {subtitle && (
-        <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400 mb-3 line-clamp-2">
+        <p className="text-sm text-[var(--color-text-secondary)] mb-3 line-clamp-2">
           {subtitle}
         </p>
       )}
@@ -131,17 +131,17 @@ export const StudyCard: React.FC<StudyCardProps> = ({
             rounded-lg
             font-semibold
             text-sm
-            bg-action-blue-600
-            hover:bg-action-blue-700
-            active:bg-action-blue-800
-            text-white
+            bg-[var(--color-accent)]
+            hover:bg-[var(--color-accent-hover)]
+            active:bg-[var(--color-accent-hover)]
+            text-[var(--color-text-inverse)]
             transition-colors
             duration-150
             focus:outline-none
             focus:ring-2
-            focus:ring-action-blue-500
+            focus:ring-[var(--color-accent)]
             focus:ring-offset-2
-            dark:focus:ring-offset-slate-900
+            focus:ring-offset-[var(--color-bg-primary)]
           "
           onClick={(e) => {
             e.stopPropagation();

@@ -30,7 +30,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
 
   if (!insights) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-[var(--color-text-muted)]">
         <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <p>Complete at least 20 questions to see your circadian performance analytics.</p>
       </div>
@@ -45,10 +45,10 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
   };
 
   const getBarColor = (accuracy: number): string => {
-    if (accuracy >= 0.85) return 'bg-green-500';
-    if (accuracy >= 0.7) return 'bg-blue-500';
-    if (accuracy >= 0.5) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (accuracy >= 0.85) return 'bg-[var(--color-data-pass)]';
+    if (accuracy >= 0.7) return 'bg-[var(--color-data-provisional)]';
+    if (accuracy >= 0.5) return 'bg-[var(--color-accent)]';
+    return 'bg-[var(--color-data-fail)]';
   };
 
   // Filter hours with data
@@ -57,41 +57,41 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <Clock className="w-8 h-8 text-[var(--color-accent)]" />
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
               Circadian Performance Analytics
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">Discover your peak study hours</p>
+            <p className="text-[var(--color-text-secondary)]">Discover your peak study hours</p>
           </div>
         </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Best Time</div>
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Best Time</div>
+            <div className="text-lg font-bold text-[var(--color-data-pass)]">
               {insights.bestTimeRange}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-[var(--color-text-muted)] mt-1">
               {insights.bestAccuracy.toFixed(0)}% accuracy
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Average</div>
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Average</div>
+            <div className="text-lg font-bold text-[var(--color-data-provisional)]">
               {insights.averageAccuracy.toFixed(0)}%
             </div>
-            <div className="text-xs text-gray-500 mt-1">Overall performance</div>
+            <div className="text-xs text-[var(--color-text-muted)] mt-1">Overall performance</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Lowest Time</div>
-            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Lowest Time</div>
+            <div className="text-lg font-bold text-[var(--color-data-fail)]">
               {insights.worstTimeRange}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-[var(--color-text-muted)] mt-1">
               {insights.worstAccuracy.toFixed(0)}% accuracy
             </div>
           </div>
@@ -99,8 +99,8 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
       </div>
 
       {/* Hourly Performance Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-lg">
+        <h4 className="text-lg font-bold text-[var(--color-text-primary)] mb-6">
           Performance by Hour of Day
         </h4>
 
@@ -116,14 +116,14 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
               {/* Hour Label */}
               <div className="flex items-center gap-2 w-24">
                 {getTimeOfDayIcon(stat.hour)}
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-semibold text-[var(--color-text-secondary)]">
                   {formatHour(stat.hour)}
                 </span>
               </div>
 
               {/* Performance Bar */}
               <div className="flex-1 relative">
-                <div className="h-8 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-8 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${stat.accuracy * 100}%` }}
@@ -131,7 +131,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
                     className={`h-full ${getBarColor(stat.accuracy)} rounded-full flex items-center justify-end pr-3`}
                   >
                     {stat.accuracy > 0.15 && (
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-bold text-[var(--color-text-inverse)]">
                         {(stat.accuracy * 100).toFixed(0)}%
                       </span>
                     )}
@@ -141,7 +141,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
 
               {/* Question Count */}
               <div className="w-16 text-right">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {stat.totalQuestions}Q
                 </span>
               </div>
@@ -150,23 +150,23 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
         </div>
 
         {/* Legend */}
-        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
           <div className="flex items-center justify-center gap-6 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded" />
-              <span className="text-gray-600 dark:text-gray-400">Excellent (85%+)</span>
+              <div className="w-3 h-3 bg-[var(--color-data-pass)] rounded" />
+              <span className="text-[var(--color-text-secondary)]">Excellent (85%+)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded" />
-              <span className="text-gray-600 dark:text-gray-400">Good (70-84%)</span>
+              <div className="w-3 h-3 bg-[var(--color-data-provisional)] rounded" />
+              <span className="text-[var(--color-text-secondary)]">Good (70-84%)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded" />
-              <span className="text-gray-600 dark:text-gray-400">Fair (50-69%)</span>
+              <div className="w-3 h-3 bg-[var(--color-accent)] rounded" />
+              <span className="text-[var(--color-text-secondary)]">Fair (50-69%)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded" />
-              <span className="text-gray-600 dark:text-gray-400">Needs Work (&lt;50%)</span>
+              <div className="w-3 h-3 bg-[var(--color-data-fail)] rounded" />
+              <span className="text-[var(--color-text-secondary)]">Needs Work (&lt;50%)</span>
             </div>
           </div>
         </div>
@@ -176,7 +176,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 text-white"
+        className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-xl p-6 text-[var(--color-text-inverse)]"
       >
         <div className="flex items-start gap-4">
           <TrendingUp className="w-8 h-8 flex-shrink-0" />
@@ -184,14 +184,16 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
             <h4 className="text-lg font-bold mb-2 flex items-center gap-2">
               <BarChart2 className="w-5 h-5" /> Personalized Recommendation
             </h4>
-            <p className="text-white/90 leading-relaxed">{insights.recommendation}</p>
+            <p className="text-[var(--color-text-inverse)]/90 leading-relaxed">
+              {insights.recommendation}
+            </p>
           </div>
         </div>
       </motion.div>
 
       {/* Time Distribution */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-lg">
+        <h4 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">
           Study Session Distribution
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -218,14 +220,14 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
                 : 0;
 
             return (
-              <div key={period} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <div key={period} className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
+                <div className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
                   {period}
                 </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">
                   {totalQ}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {avgAcc > 0 ? `${(avgAcc * 100).toFixed(0)}% avg` : 'No data'}
                 </div>
               </div>

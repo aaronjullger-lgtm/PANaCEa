@@ -2,9 +2,9 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GlassCard } from './ui/GlassCard';
-import { PrimaryButton } from './ui/PrimaryButton';
-import { RecommendationFeed } from './dashboard/RecommendationFeed';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { RecommendationFeed } from '@/components/dashboard/RecommendationFeed';
 import { useUser } from '@clerk/clerk-react';
 import {
   Zap,
@@ -48,12 +48,12 @@ import {
   FolderTree,
   Sparkles,
 } from 'lucide-react';
-import type { PerformanceRecord, Question, SessionSettings } from '../types';
-import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
-import { DatabaseAnalyticsDashboard } from './analytics/DatabaseAnalyticsDashboard';
-import { LearningProfileDashboard } from './analytics/LearningProfileDashboard';
-import { AdvancedLearningProfileDashboard } from './analytics/AdvancedLearningProfileDashboard';
-import { UserFriendlyStatsDisplay } from './analytics/UserFriendlyStatsDisplay';
+import type { PerformanceRecord, Question, SessionSettings } from '@/types';
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+import { DatabaseAnalyticsDashboard } from '@/components/analytics/DatabaseAnalyticsDashboard';
+import { LearningProfileDashboard } from '@/components/analytics/LearningProfileDashboard';
+import { AdvancedLearningProfileDashboard } from '@/components/analytics/AdvancedLearningProfileDashboard';
+import { UserFriendlyStatsDisplay } from '@/components/analytics/UserFriendlyStatsDisplay';
 import {
   VISUAL_DIAGNOSTICS_MODES,
   CLINICAL_SIMULATION_MODES,
@@ -62,8 +62,8 @@ import {
   CATEGORY_INFO,
   type TrainingModeConfig,
   type TrainingCategory,
-} from '../config/training-modes';
-import { useUserContext } from '../hooks/useUserContext';
+} from '@/config/training-modes';
+import { useUserContext } from '@/hooks/useUserContext';
 
 // ============================================================================
 // Types

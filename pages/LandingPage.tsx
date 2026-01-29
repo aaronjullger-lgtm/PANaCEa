@@ -117,7 +117,7 @@ export function LandingPage() {
               setAuthMode('sign-in');
               setShowAuth(true);
             }}
-            className="px-6 py-2.5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
+            className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -136,7 +136,7 @@ export function LandingPage() {
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
               <span className="text-[var(--color-text-primary)]">Your Complete </span>
-              <span className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#E9ECF1] dark:to-[#ffffff] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent">
                 PA School Resource
               </span>
             </h1>
@@ -157,7 +157,7 @@ export function LandingPage() {
                 setAuthMode('sign-up');
                 setShowAuth(true);
               }}
-              className="group px-8 py-4 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              className="group px-8 py-4 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -218,8 +218,8 @@ export function LandingPage() {
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#E9ECF1] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                <feature.icon className="w-7 h-7 text-white dark:text-[#101729]" />
+              <div className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg border border-[var(--color-border)]">
+                <feature.icon className="w-7 h-7 text-[var(--color-accent)]" />
               </div>
               <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                 {feature.title}
@@ -234,7 +234,7 @@ export function LandingPage() {
 
       {/* Benefits Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] rounded-3xl p-12 text-white shadow-2xl">
+        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-2xl border border-[var(--color-border)]">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -243,7 +243,7 @@ export function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl font-bold mb-6">Comprehensive Study Tools</h2>
-              <p className="text-xl text-[#E9ECF1] mb-8">
+              <p className="text-xl text-[var(--color-text-secondary)] mb-8">
                 Track your performance, identify knowledge gaps, and focus your study time
                 effectively.
               </p>
@@ -252,7 +252,7 @@ export function LandingPage() {
                   setAuthMode('sign-up');
                   setShowAuth(true);
                 }}
-                className="px-8 py-4 bg-white text-[#1F283A] rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -274,10 +274,10 @@ export function LandingPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4"
+                  className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
                 >
-                  <CheckCircle2 className="w-6 h-6 text-[#E9ECF1] flex-shrink-0 mt-0.5" />
-                  <span className="text-lg font-medium leading-relaxed text-[#E9ECF1]">
+                  <CheckCircle2 className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
+                  <span className="text-lg font-medium leading-relaxed text-[var(--color-text-secondary)]">
                     {benefit}
                   </span>
                 </motion.div>
@@ -307,7 +307,7 @@ export function LandingPage() {
               setAuthMode('sign-up');
               setShowAuth(true);
             }}
-            className="px-10 py-5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto"
+            className="px-10 py-5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-bold text-xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -334,7 +334,7 @@ export function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-[var(--color-bg-tertiary)]/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
             onClick={() => setShowAuth(false)}
           >
             <motion.div
@@ -346,14 +346,14 @@ export function LandingPage() {
             >
               <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] px-6 py-5 text-white">
+                <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-2xl font-bold">
                       {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
                     </h3>
                     <button
                       onClick={() => setShowAuth(false)}
-                      className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                      className="p-1 hover:bg-[var(--color-bg-secondary)]/60 rounded-lg transition-colors"
                       aria-label="Close"
                     >
                       <svg
@@ -371,7 +371,7 @@ export function LandingPage() {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-[#E9ECF1] text-base">
+                  <p className="text-[var(--color-text-secondary)] text-base">
                     {authMode === 'sign-up'
                       ? 'Create your free account to start studying'
                       : 'Sign in to access your personalized study dashboard'}
@@ -389,9 +389,10 @@ export function LandingPage() {
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton: 'hover:scale-105 transition-transform',
-                          formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
+                          formButtonPrimary:
+                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg',
                           footerActionLink:
-                            'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                            'text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]',
                         },
                       }}
                       fallbackRedirectUrl="/"
@@ -405,9 +406,10 @@ export function LandingPage() {
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton: 'hover:scale-105 transition-transform',
-                          formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
+                          formButtonPrimary:
+                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg',
                           footerActionLink:
-                            'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                            'text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]',
                         },
                       }}
                       fallbackRedirectUrl="/"

@@ -93,12 +93,12 @@
 # 👁️ SYSTEM 4: VISUAL CORTEX ("STORMY SLATE" & UNCERTAINTY)
 **Mandate:** Reduce Extraneous Cognitive Load. Enforce "Aesthetic Monotony."
 1.  **Semantic Design Tokens (Tailwind):**
-    -   ❌ **FORBIDDEN:** Arbitrary hex values (`bg-[#123]`), standard colors (`bg-blue-500`, `bg-orange-500`).
+  -   ❌ **FORBIDDEN:** Arbitrary hex values (custom hex colors), standard palette utilities (e.g., `bg-blue-*`, `bg-orange-*`).
     -   ✅ **REQUIRED:**
-        -   `bg-surface-primary` (#0f172a / Slate 900)
-        -   `bg-surface-card` (#1e293b / Slate 800)
-        -   `text-action-primary` (#f8fafc / Slate 50)
-        -   `bg-action-muted` (rgba(30, 41, 59, 0.5))
+    -   `bg-surface-primary` (theme-aware primary surface)
+    -   `bg-surface-card` (theme-aware card surface)
+    -   `text-action-primary` (theme-aware primary text)
+    -   `bg-action-muted` (theme-aware muted overlay)
 2.  **Epistemic Uncertainty Visualization:**
     -   **Rule:** Never show precise scores for low data ($N < 60$).
     -   **Implementation:**

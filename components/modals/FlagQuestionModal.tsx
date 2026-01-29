@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { X, Flag, AlertCircle, CheckCircle } from 'lucide-react';
-import { useQuestionFlag } from '../hooks/useQuestionFlag';
+import { useQuestionFlag } from '@/hooks/useQuestionFlag';
 
 interface FlagQuestionModalProps {
   isOpen: boolean;

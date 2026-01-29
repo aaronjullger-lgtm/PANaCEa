@@ -127,12 +127,12 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
   const displayedSystemScore = systemTotals.total > 0 ? systemTotals.score : topicStats.score;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 relative">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-[var(--color-overlay)] px-4">
+      <div className="w-full max-w-md bg-[var(--color-bg-primary)] rounded-2xl shadow-xl p-6 relative">
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          className="absolute top-3 right-3 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -170,7 +170,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                   className={`w-full text-left p-2 rounded-md border ${
                     activeSubcategory === sub.name
                       ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                      : 'border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                   } transition-colors`}
                 >
                   <div className="flex justify-between items-center text-xs mb-1">
@@ -179,7 +179,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                       {sub.score.toFixed(0)}% ({sub.correct}/{sub.total})
                     </span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5">
+                  <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-1.5">
                     <div
                       className={`h-1.5 rounded-full ${getBarColor(sub.score)}`}
                       style={{ width: `${sub.score}%` }}
@@ -193,7 +193,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
         {/* Conditions under selected subcategory */}
         {activeSubcategory && (
-          <div className="mt-4 border-t border-slate-200 dark:border-slate-600 pt-3">
+          <div className="mt-4 border-t border-[var(--color-border)] pt-3">
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
               Conditions in <span className="underline">{activeSubcategory}</span>
             </h3>
@@ -201,7 +201,10 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
               {conditionStats
                 .filter((c) => c.subcategory === activeSubcategory)
                 .map((c) => (
-                  <div key={c.key} className="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
+                  <div
+                    key={c.key}
+                    className="p-2 bg-[var(--color-bg-secondary)] rounded-md border border-[var(--color-border)]"
+                  >
                     <div className="flex justify-between items-center text-xs mb-1">
                       <span className="font-medium text-[var(--color-text-secondary)]">{c.name}</span>
                       <span className="text-[var(--color-text-muted)]">

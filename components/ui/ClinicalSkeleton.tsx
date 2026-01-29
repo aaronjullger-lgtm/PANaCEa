@@ -79,8 +79,7 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
             }}
             className={`
               ${isCompact ? 'h-4' : 'h-5'}
-              bg-gradient-to-r from-slate-200 to-slate-300 
-              dark:from-slate-700 dark:to-slate-600
+              bg-gradient-to-r from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)]
               rounded
             `}
           />
@@ -89,7 +88,7 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
 
       {/* Optional shimmer effect overlay for premium feel */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-text-inverse)]/15 to-transparent"
         animate={{
           x: ['-100%', '100%'],
         }}

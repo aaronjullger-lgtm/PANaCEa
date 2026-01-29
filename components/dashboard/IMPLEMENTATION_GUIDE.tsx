@@ -20,7 +20,7 @@ import { DashboardActionCard } from '@/components/dashboard/DashboardActionCard'
 // STEP 2: Replace Core PANCE Simulation Card
 // ============================================================================
 // BEFORE (lines 670-700 in TrainingMenu.tsx):
-// <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
+// <div className="bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 shadow-xl">
 //   ... Complex nested divs with inconsistent styling ...
 // </div>
 
@@ -53,7 +53,7 @@ export const CorePANCECard = ({ onStartSession, recommendedSystem }: {
 // STEP 3: Replace Grand Rounds Challenge Card
 // ============================================================================
 // BEFORE (lines 703-745 in TrainingMenu.tsx):
-// <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-6 shadow-lg">
+// <div className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6 shadow-lg">
 //   ... Different button style (slate-800 bg) ...
 // </div>
 
@@ -76,7 +76,7 @@ export const GrandRoundsCard = ({ onStartChallenge, todaysQuestionCount }: {
     onAction={onStartChallenge}
     variant="daily"
     badge={
-      <span className="px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
+      <span className="px-3 py-1 text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full border border-[var(--color-accent)]/30">
         Daily
       </span>
     }
@@ -107,7 +107,7 @@ export const VirtualOSCECard = ({ onStartEncounter, isUnlocked }: {
     disabled={!isUnlocked}
     variant="premium"
     badge={
-      <span className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg shadow-indigo-500/30">
+      <span className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-full shadow-lg shadow-[var(--color-accent)]/30">
         PREMIUM
       </span>
     }

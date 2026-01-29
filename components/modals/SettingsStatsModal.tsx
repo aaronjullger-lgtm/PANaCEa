@@ -40,12 +40,12 @@ import type {
   ClinicalRotation,
   YearInProgram,
 } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
-import { RotationSelector } from './onboarding/RotationSelector';
-import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
-import type { WidgetId } from './ProgressDashboard';
+import { RotationSelector } from '@/components/onboarding/RotationSelector';
+import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/ProgressDashboard';
+import type { WidgetId } from '@/components/ProgressDashboard';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
 import {
   calculateAccuracy,
@@ -53,18 +53,18 @@ import {
   loadWidgetPreferences as loadWidgetPrefs,
   saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
-import ActivityHeatmap from './analytics/ActivityHeatmap';
-import DecisionTimeAnalysis from './analytics/DecisionTimeAnalysis';
-import LongitudinalProgressDashboard from './analytics/LongitudinalProgressDashboard';
-import WeaknessCheatsheetExporter from './analytics/WeaknessCheatsheetExporter';
+import ActivityHeatmap from '@/components/analytics/ActivityHeatmap';
+import DecisionTimeAnalysis from '@/components/analytics/DecisionTimeAnalysis';
+import LongitudinalProgressDashboard from '@/components/analytics/LongitudinalProgressDashboard';
+import WeaknessCheatsheetExporter from '@/components/analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
-import EnhancedSettingsTab from './settings/EnhancedSettingsTab';
+import EnhancedSettingsTab from '@/components/settings/EnhancedSettingsTab';
 import { useCommuter } from '@/contexts/CommuterContext';
-import RadialProgress from './ui/RadialProgress';
-import TrendSparkline from './ui/TrendSparkline';
+import RadialProgress from '@/components/ui/RadialProgress';
+import TrendSparkline from '@/components/ui/TrendSparkline';
 
 // Lazy load Character Gallery
-const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
+const CharacterGallery = lazy(() => import('@/components/characters/CharacterGallery'));
 
 // Gold Achievement Thresholds - Reserved for extraordinary performance
 const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;

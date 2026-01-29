@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { useTheme } from './hooks/useTheme';
-import { LandingPage } from './components/LandingPage';
+import { LandingPage } from './pages/LandingPage';
 import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
 import { initializeSession } from './services/core';
@@ -34,9 +34,9 @@ import {
 } from './contexts/KeyboardShortcutsContext';
 
 // Lazy load components for better performance
-const QuizView = lazy(() => import('./components/quiz/QuizView'));
+const QuizView = lazy(() => import('./components/session/QuizView'));
 const MenuView = lazy(() => import('./components/navigation/MenuView'));
-const PhotoDrillSession = lazy(() => import('./components/drill/PhotoDrillSession'));
+const PhotoDrillSession = lazy(() => import('./components/session/PhotoDrillSession'));
 const RapidRecallDrill = lazy(() => import('./components/drill/recall/RapidRecallDrill'));
 const DDxCompareDrill = lazy(() => import('./components/drill/ddx/DDxCompareDrill'));
 const MiniLabDrillSession = lazy(() => import('./components/drill/MiniLabDrillSession'));
