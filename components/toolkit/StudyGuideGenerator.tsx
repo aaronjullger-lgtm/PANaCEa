@@ -354,7 +354,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-2xl w-full"
       >
         {/* Header */}
         <div className="bg-[var(--color-accent)] p-6 text-white dark:text-[var(--color-bg-primary)] rounded-t-2xl">
@@ -374,68 +374,68 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         <div className="p-6">
           {/* Options */}
           <div className="space-y-4 mb-6">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
               <Settings className="w-5 h-5" />
               <span className="font-semibold">Customize Your Guide</span>
             </div>
 
-            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={includeAnswers}
                 onChange={(e) => setIncludeAnswers(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 dark:text-white">Include Answers</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="font-medium text-[var(--color-text-primary)]">Include Answers</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
                   Show correct answers in the guide
                 </div>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={includeRationale}
                 onChange={(e) => setIncludeRationale(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 dark:text-white">Include Rationale</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="font-medium text-[var(--color-text-primary)]">Include Rationale</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
                   Detailed explanations for each question
                 </div>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={includePearls}
                 onChange={(e) => setIncludePearls(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 dark:text-white">
+                <div className="font-medium text-[var(--color-text-primary)]">
                   Include Clinical Pearls
                 </div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="text-sm text-[var(--color-text-muted)]">
                   Key takeaways and mnemonics
                 </div>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={groupBySystem}
                 onChange={(e) => setGroupBySystem(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 dark:text-white">Group by System</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="font-medium text-[var(--color-text-primary)]">Group by System</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
                   Organize questions by organ system
                 </div>
               </div>
@@ -446,13 +446,13 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 px-6 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 py-3 px-6 rounded-lg border-2 border-[var(--color-border)] text-[var(--color-text-secondary)] font-semibold hover:bg-[var(--color-bg-tertiary)] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleDownload}
-              className="flex-1 py-3 px-6 rounded-lg bg-slate-700 hover:bg-slate-800 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 px-6 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <Download className="w-5 h-5" />
               Download HTML
