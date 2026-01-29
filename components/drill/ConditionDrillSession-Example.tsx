@@ -183,13 +183,13 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
 
                 if (showResult) {
                   if (isCorrect) {
-                    bgColor = 'bg-green-500/10';
-                    borderColor = 'border-green-500';
-                    textColor = 'text-green-500';
+                    bgColor = 'bg-[var(--color-data-pass)]/10';
+                    borderColor = 'border-[var(--color-data-pass)]';
+                    textColor = 'text-[var(--color-data-pass)]';
                   } else if (isSelected) {
-                    bgColor = 'bg-red-500/10';
-                    borderColor = 'border-red-500';
-                    textColor = 'text-red-500';
+                    bgColor = 'bg-[var(--color-data-fail)]/10';
+                    borderColor = 'border-[var(--color-data-fail)]';
+                    textColor = 'text-[var(--color-data-fail)]';
                   }
                 } else if (isSelected) {
                   bgColor = 'bg-[var(--color-accent)]/10';
