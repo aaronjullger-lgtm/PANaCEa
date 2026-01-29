@@ -65,7 +65,11 @@ const CATEGORY_CARDS: Array<{
 /**
  * ConditionDrillSession - Condition-based quiz drill mode
  */
-const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit }) => {
+const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
+  onExit,
+  initialSystem,
+  initialSubcategory,
+}) => {
   const {
     currentQuestion,
     score,
@@ -89,7 +93,17 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     reset,
     startSession,
     exitToMenu,
-  } = useConditionDrill();
+  } = useConditionDrill({
+    initialSystem,
+    initialSubcategory,
+  });
+
+  // Compute dynamic title based on filter props
+  const drillTitle = initialSystem
+    ? `${initialSystem} Drill`
+    : initialSubcategory
+    ? `${initialSubcategory} Drill`
+    : 'Condition Drill';
 
   // Handler that records selection for implicit metrics then submits
   const handleAnswerSelect = (index: number) => {
@@ -122,7 +136,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
           </button>
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">Condition Drill</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">{drillTitle}</h1>
           </div>
           <div className="w-12 sm:w-16" />
         </header>
@@ -182,7 +196,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     if (isLoading) {
       return (
         <MiniDrillLayout
-          title="Condition Drill"
+          title={drillTitle}
           score={score}
           totalAttempts={totalAttempts}
           streak={streak}
@@ -239,7 +253,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
         )}
 
         <MiniDrillLayout
-          title="Condition Drill"
+          title={drillTitle}
           score={score}
           totalAttempts={totalAttempts}
           streak={streak}
@@ -342,7 +356,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   // Fallback - Use skeleton loader for zero CLS
   return (
     <MiniDrillLayout
-      title="Condition Drill"
+      title={drillTitle}
       score={0}
       totalAttempts={0}
       streak={0}

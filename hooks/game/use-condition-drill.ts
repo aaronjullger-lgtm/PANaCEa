@@ -54,6 +54,11 @@ export interface ImplicitMetrics {
   timezone: string;
 }
 
+export interface UseConditionDrillOptions {
+  initialSystem?: string;
+  initialSubcategory?: string;
+}
+
 export interface UseConditionDrillReturn {
   currentQuestion: ConditionQuestion | null;
   score: number;
@@ -122,8 +127,18 @@ function createInitialImplicitMetrics(): ImplicitMetrics {
   };
 }
 
-export function useConditionDrill(): UseConditionDrillReturn {
+export function useConditionDrill(options: UseConditionDrillOptions = {}): UseConditionDrillReturn {
   const { getToken, isSignedIn } = useAuth();
+  const { initialSystem, initialSubcategory } = options;
+
+  // Store current filter state
+  const [currentFilters, setCurrentFilters] = useState<{
+    system?: string;
+    subcategory?: string;
+  }>({
+    system: initialSystem,
+    subcategory: initialSubcategory,
+  });
 
   // Get calibration tracking from session context
   // Safe to call even if SessionProvider is not present (will throw if used)
@@ -205,12 +220,29 @@ export function useConditionDrill(): UseConditionDrillReturn {
   }, []);
 
   const fetchQuestionsFromAPI = useCallback(
-    async (count: number = INITIAL_QUEUE_SIZE): Promise<ConditionQuestion[]> => {
+    async (
+      count: number = INITIAL_QUEUE_SIZE,
+      filters?: { system?: string; subcategory?: string }
+    ): Promise<ConditionQuestion[]> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/questions?limit=${count}`);
+        const token = isSignedIn ? await getToken() : null;
+
+        // Use the new filtered endpoint
+        const response = await fetch('/api/questions/condition-drill', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            count,
+            system: filters?.system,
+            subcategory: filters?.subcategory,
+          }),
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch questions');
@@ -235,7 +267,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
         setIsLoading(false);
       }
     },
-    []
+    [isSignedIn, getToken]
   );
 
   const startSession = useCallback(
@@ -244,7 +276,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
       recentConditionsRef.current.clear();
       metacognitionTrackerRef.current = initSessionTracker(); // Reset metacognition tracker
 
-      const questions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE);
+      const questions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE, currentFilters);
 
       if (questions.length === 0) {
         setError('No questions available. Please try again.');
@@ -265,7 +297,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
       setStatus('playing');
       startImplicitTracking();
     },
-    [fetchQuestionsFromAPI, startImplicitTracking]
+    [fetchQuestionsFromAPI, startImplicitTracking, currentFilters]
   );
 
   const showCategoryMenu = useCallback(() => {
@@ -519,7 +551,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
   }, []);
 
   const nextQuestion = useCallback(async () => {
-    const newQuestions = await fetchQuestionsFromAPI(1);
+    const newQuestions = await fetchQuestionsFromAPI(1, currentFilters);
 
     if (newQuestions.length > 0 && newQuestions[0]) {
       const newQuestion = newQuestions[0];
@@ -535,13 +567,13 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setMetacognitionPrompt(null);
     setStatus('playing');
     startImplicitTracking();
-  }, [fetchQuestionsFromAPI, startImplicitTracking]);
+  }, [fetchQuestionsFromAPI, startImplicitTracking, currentFilters]);
 
   const reset = useCallback(async () => {
     recentConditionsRef.current.clear();
     metacognitionTrackerRef.current = initSessionTracker();
 
-    const newQuestions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE);
+    const newQuestions = await fetchQuestionsFromAPI(INITIAL_QUEUE_SIZE, currentFilters);
 
     if (newQuestions.length === 0) {
       setError('No questions available. Please try again.');
@@ -561,7 +593,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setMetacognitionPrompt(null);
     setStatus('playing');
     startImplicitTracking();
-  }, [fetchQuestionsFromAPI, startImplicitTracking]);
+  }, [fetchQuestionsFromAPI, startImplicitTracking, currentFilters]);
 
   return {
     currentQuestion,

@@ -61,7 +61,7 @@ export async function getPhotoDrillBatch(
 ): Promise<PhotoDrillQuestion[]> {
   const {
     prisma,
-    system: _system, // Reserved for future system-based filtering
+    system,
     modality,
     difficulty = 'medium',
     count = 10,
@@ -75,6 +75,11 @@ export async function getPhotoDrillBatch(
       usageType: 'quiz',
       isAnnotated: false, // Use clean images without annotations
     };
+
+    // Filter by organ system (e.g., 'Cardiovascular', 'Pulmonary')
+    if (system) {
+      whereClause.system = system;
+    }
 
     // Filter by modality (dermatology or radiology)
     if (modality) {
