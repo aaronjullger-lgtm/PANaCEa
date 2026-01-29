@@ -16,32 +16,32 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
     if (score === undefined) {
       // No data - Glass style
       return {
-        bg: 'bg-white/70 dark:bg-slate-800/50',
-        border: 'border-slate-200 dark:border-slate-700',
-        text: 'text-slate-500 dark:text-slate-400',
+        bg: 'bg-[var(--color-bg-secondary)]/70',
+        border: 'border-[var(--color-border)]',
+        text: 'text-[var(--color-text-muted)]',
       };
     }
     if (score < 75) {
-      // Weakness - subtle slate-600 tinting (darker = lower score)
+      // Weakness - data-fail tinting (darker = lower score)
       return {
-        bg: 'bg-slate-100 dark:bg-slate-700/20',
-        border: 'border-slate-300 dark:border-slate-600/50',
-        text: 'text-slate-600 dark:text-slate-400',
+        bg: 'bg-[var(--color-data-fail)]/10',
+        border: 'border-[var(--color-data-fail)]/30',
+        text: 'text-[var(--color-data-fail)]',
       };
     }
     if (score < 85) {
-      // Moderate - slate-500 tinting
+      // Moderate - data-provisional tinting
       return {
-        bg: 'bg-slate-50 dark:bg-slate-600/20',
-        border: 'border-slate-200 dark:border-slate-500/50',
-        text: 'text-slate-500 dark:text-slate-400',
+        bg: 'bg-[var(--color-data-provisional)]/10',
+        border: 'border-[var(--color-data-provisional)]/30',
+        text: 'text-[var(--color-data-provisional)]',
       };
     }
-    // Strong - slate-300 tinting (lighter = higher score)
+    // Strong - data-pass tinting (lighter = higher score)
     return {
-      bg: 'bg-slate-50 dark:bg-slate-500/20',
-      border: 'border-slate-200 dark:border-slate-400/50',
-      text: 'text-slate-400 dark:text-slate-300',
+      bg: 'bg-[var(--color-data-pass)]/10',
+      border: 'border-[var(--color-data-pass)]/30',
+      text: 'text-[var(--color-data-pass)]',
     };
   };
 
