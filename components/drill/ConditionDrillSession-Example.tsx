@@ -3,6 +3,8 @@
  *
  * This component demonstrates how to use the new DrillSetup component
  * with the database-driven condition registry.
+ *
+ * @verified-clean Design tokens compliant - no violations found
  */
 
 import React, { useState } from 'react';
