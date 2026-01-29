@@ -50,29 +50,29 @@ interface DrillStatsDashboardProps {
   onStartDrill?: (drillType: DrillType) => void;
 }
 
-const DRILL_INFO: Record<DrillType, { label: string; icon: React.ElementType; color: string }> = {
-  ecg_drill: { label: 'ECG Interpretation', icon: Activity, color: 'rose' },
-  derm_drill: { label: 'Derm Recognition', icon: Brain, color: 'pink' },
-  imaging_drill: { label: 'Radiology Review', icon: Brain, color: 'slate' },
-  system_drill: { label: 'System Drill', icon: Layers, color: 'indigo' },
-  subcategory_drill: { label: 'Subcategory Drill', icon: FolderTree, color: 'violet' },
-  condition_drill: { label: 'Condition Deep Dive', icon: Target, color: 'teal' },
-  pharmacology: { label: 'Pharmacology Quiz', icon: Beaker, color: 'purple' },
-  physiology_drill: { label: 'Physiology Review', icon: Heart, color: 'red' },
-  anatomy_review: { label: 'Anatomy Review', icon: Bone, color: 'stone' },
-  ventilator_hero: { label: 'Ventilator Management', icon: Wind, color: 'blue' },
-  mini_lab: { label: 'Lab Interpretation', icon: Beaker, color: 'emerald' },
-  fluid_electrolyte: { label: 'Fluids & Electrolytes', icon: Beaker, color: 'cyan' },
-  first_line_treatment: { label: 'First-Line Treatment', icon: Target, color: 'orange' },
-  guideline_drill: { label: 'Guidelines & Scoring', icon: Target, color: 'green' },
-  rapid_recall: { label: 'Rapid Recall', icon: Flame, color: 'red' },
-  code_blue_speed: { label: 'Code Blue Speed', icon: Activity, color: 'red' },
-  ddx_compare: { label: 'DDx Compare', icon: Target, color: 'purple' },
-  ddx_drill: { label: 'Differential Dx', icon: Activity, color: 'blue' },
-  procedure_drill: { label: 'Procedures', icon: Target, color: 'green' },
-  history_drill: { label: 'History Taking', icon: Heart, color: 'purple' },
-  antibiotic_mode: { label: 'Bug-Drug Match', icon: Beaker, color: 'teal' },
-  polypharmacy_puzzle: { label: 'Polypharmacy Puzzle', icon: Droplets, color: 'amber' },
+const DRILL_INFO: Record<DrillType, { label: string; icon: React.ElementType }> = {
+  ecg_drill: { label: 'ECG Interpretation', icon: Activity },
+  derm_drill: { label: 'Derm Recognition', icon: Brain },
+  imaging_drill: { label: 'Radiology Review', icon: Brain },
+  system_drill: { label: 'System Drill', icon: Layers },
+  subcategory_drill: { label: 'Subcategory Drill', icon: FolderTree },
+  condition_drill: { label: 'Condition Deep Dive', icon: Target },
+  pharmacology: { label: 'Pharmacology Quiz', icon: Beaker },
+  physiology_drill: { label: 'Physiology Review', icon: Heart },
+  anatomy_review: { label: 'Anatomy Review', icon: Bone },
+  ventilator_hero: { label: 'Ventilator Management', icon: Wind },
+  mini_lab: { label: 'Lab Interpretation', icon: Beaker },
+  fluid_electrolyte: { label: 'Fluids & Electrolytes', icon: Beaker },
+  first_line_treatment: { label: 'First-Line Treatment', icon: Target },
+  guideline_drill: { label: 'Guidelines & Scoring', icon: Target },
+  rapid_recall: { label: 'Rapid Recall', icon: Flame },
+  code_blue_speed: { label: 'Code Blue Speed', icon: Activity },
+  ddx_compare: { label: 'DDx Compare', icon: Target },
+  ddx_drill: { label: 'Differential Dx', icon: Activity },
+  procedure_drill: { label: 'Procedures', icon: Target },
+  history_drill: { label: 'History Taking', icon: Heart },
+  antibiotic_mode: { label: 'Bug-Drug Match', icon: Beaker },
+  polypharmacy_puzzle: { label: 'Polypharmacy Puzzle', icon: Droplets },
 };
 
 const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onStartDrill }) => {
@@ -111,9 +111,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
   const getDifficultyBadge = (difficulty: 'easy' | 'medium' | 'hard') => {
     const colors = {
-      easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      easy: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20',
+      medium: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20',
+      hard: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] dark:bg-[var(--color-data-fail)]/20',
     };
     return (
       <span className={`text-xs px-2 py-1 rounded-full font-medium ${colors[difficulty]}`}>
@@ -133,7 +133,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
         {/* Header */}
         <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
             <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
               Drill Performance Dashboard
             </h2>
@@ -152,7 +152,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Target className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Active Drills</span>
               </div>
               <div className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -162,7 +162,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Activity className="w-5 h-5 text-[var(--color-data-pass)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Total Sessions</span>
               </div>
               <div className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -172,7 +172,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Avg Accuracy</span>
               </div>
               <div className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -182,7 +182,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                <Clock className="w-5 h-5 text-[var(--color-data-provisional)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Time Invested</span>
               </div>
               <div className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -193,10 +193,10 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
           {/* Due for Review */}
           {dueForReview.length > 0 && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-5 mb-8">
+            <div className="bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-xl p-5 mb-8">
               <div className="flex items-center gap-2 mb-3">
-                <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                <h3 className="font-semibold text-amber-900 dark:text-amber-200">
+                <Calendar className="w-5 h-5 text-[var(--color-data-provisional)]" />
+                <h3 className="font-semibold text-[var(--color-text-primary)]">
                   Due for Review ({dueForReview.length})
                 </h3>
               </div>
@@ -207,7 +207,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     <button
                       key={drillType}
                       onClick={() => onStartDrill?.(drillType)}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-sm font-medium text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                      className="px-3 py-1.5 bg-[var(--color-bg-secondary)] rounded-lg text-sm font-medium text-[var(--color-text-primary)] hover:opacity-90 transition-opacity"
                     >
                       {info?.label || drillType}
                     </button>
@@ -233,12 +233,12 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0 }}
-                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-red-300 dark:hover:border-red-700 transition-all duration-300 cursor-pointer"
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-data-fail)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('code_blue_speed')}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2.5 rounded-lg bg-red-100 dark:bg-red-900/20">
-                        <HeartPulse className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      <div className="p-2.5 rounded-lg bg-[var(--color-data-fail)]/10">
+                        <HeartPulse className="w-5 h-5 text-[var(--color-data-fail)]" />
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
@@ -250,7 +250,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+                      <div className="text-3xl font-bold text-[var(--color-data-fail)]">
                         {simulationStats.codeBlue.survivalRate}%
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -277,12 +277,12 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-700 transition-all duration-300 cursor-pointer"
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-accent)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('fluid_electrolyte')}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2.5 rounded-lg bg-cyan-100 dark:bg-cyan-900/20">
-                        <Droplets className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                      <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/10">
+                        <Droplets className="w-5 h-5 text-[var(--color-accent)]" />
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
@@ -294,7 +294,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+                      <div className="text-3xl font-bold text-[var(--color-accent)]">
                         {simulationStats.fluids.casesSolved}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -313,12 +313,12 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 cursor-pointer"
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-data-pass)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('antibiotic_mode')}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/20">
-                        <Bug className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      <div className="p-2.5 rounded-lg bg-[var(--color-data-pass)]/10">
+                        <Bug className="w-5 h-5 text-[var(--color-data-pass)]" />
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
@@ -330,7 +330,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
+                      <div className="text-3xl font-bold text-[var(--color-data-pass)]">
                         {simulationStats.antibiotics.coverageMastery}%
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -379,12 +379,8 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       onClick={() => setExpandedDrill(isExpanded ? null : (drillType as DrillType))}
                       className="w-full p-5 flex items-center gap-4 hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     >
-                      <div
-                        className={`p-3 rounded-lg bg-${info?.color}-100 dark:bg-${info?.color}-900/20`}
-                      >
-                        <Icon
-                          className={`w-6 h-6 text-${info?.color}-600 dark:text-${info?.color}-400`}
-                        />
+                      <div className="p-3 rounded-lg bg-[var(--color-accent)]/10">
+                        <Icon className="w-6 h-6 text-[var(--color-accent)]" />
                       </div>
 
                       <div className="flex-1 text-left">
@@ -433,7 +429,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                                 <div className="text-xs text-[var(--color-text-muted)] mb-1">
                                   Best Accuracy
                                 </div>
-                                <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                <div className="text-lg font-semibold text-[var(--color-data-pass)]">
                                   {stats.bestAccuracy.toFixed(0)}%
                                 </div>
                               </div>
@@ -441,7 +437,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                                 <div className="text-xs text-[var(--color-text-muted)] mb-1">
                                   Best Streak
                                 </div>
-                                <div className="text-lg font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                <div className="text-lg font-semibold text-[var(--color-data-provisional)] flex items-center gap-1">
                                   <Flame className="w-4 h-4" />
                                   {stats.bestStreak}
                                 </div>
@@ -488,7 +484,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                                   return (
                                     <span
                                       key={key}
-                                      className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full font-medium"
+                                      className="text-xs px-2 py-1 bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] rounded-full font-medium"
                                     >
                                       ✓ {labels[key]}
                                     </span>
@@ -537,7 +533,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                                 onStartDrill?.(drillType as DrillType);
                                 onClose?.();
                               }}
-                              className={`w-full px-4 py-2.5 bg-${info?.color}-600 hover:bg-${info?.color}-500 text-white rounded-lg font-medium transition-colors`}
+                              className="w-full px-4 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-all"
                             >
                               Practice Now
                             </button>
