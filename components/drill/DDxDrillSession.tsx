@@ -118,11 +118,11 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 dark:text-red-400 mb-4">{drill.error}</p>
+            <AlertTriangle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
+            <p className="text-[var(--color-data-fail)] mb-4">{drill.error}</p>
             <button
               onClick={() => drill.startSession(selectedCategory)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
             >
               Try Again
             </button>
@@ -160,7 +160,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => drill.startSession(selectedCategory)}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
               >
                 Play Again
               </button>
@@ -226,8 +226,8 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       </div>
 
       {/* Presenting Complaint Context */}
-      <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 mb-4">
-        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+      <div className="bg-[var(--color-accent)]/10 rounded-lg p-3 mb-4">
+        <p className="text-sm text-[var(--color-accent)]">
           <span className="font-semibold">Presenting Complaint:</span>{' '}
           {question.presentingComplaint}
         </p>
