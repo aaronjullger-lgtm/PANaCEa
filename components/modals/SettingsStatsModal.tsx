@@ -40,6 +40,18 @@ import type {
   ClinicalRotation,
   YearInProgram,
 } from '@/types';
+import type {
+  ToggleSettings,
+  ContentDifficultySettings,
+  QuestionFormatSettings,
+  FeedbackSettings,
+  PerformanceTrackingSettings,
+} from '@/types/toggleSettings';
+import {
+  loadToggleSettings,
+  saveToggleSettings,
+  DEFAULT_TOGGLE_SETTINGS,
+} from '@/types/toggleSettings';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
@@ -408,6 +420,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     return loadUserProfile() || { hasCompletedOnboarding: false };
   });
 
+  // Toggle Settings state - Load from localStorage
+  const [toggleSettings, setToggleSettings] = useState<ToggleSettings>(() => {
+    return loadToggleSettings();
+  });
+
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
 
@@ -489,6 +506,115 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const handleDisableAllMiniModes = () => {
     setEnabledMiniModes(new Set());
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify([]));
+  };
+
+  // Toggle handlers for Content Difficulty
+  const handleToggleContentDifficulty = (setting: keyof ContentDifficultySettings) => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        contentDifficulty: {
+          ...prev.contentDifficulty,
+          [setting]: !prev.contentDifficulty[setting],
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Toggle handlers for Question Format (boolean fields)
+  const handleToggleQuestionFormat = (
+    setting: Exclude<keyof QuestionFormatSettings, 'vignetteStyle' | 'labValueDisplay'>
+  ) => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        questionFormat: {
+          ...prev.questionFormat,
+          [setting]: !prev.questionFormat[setting],
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Handler for vignette style (enum)
+  const handleSetVignetteStyle = (style: 'standard' | 'brief' | 'detailed') => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        questionFormat: {
+          ...prev.questionFormat,
+          vignetteStyle: style,
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Handler for lab value display (enum)
+  const handleSetLabValueDisplay = (display: 'interpreted' | 'raw' | 'both') => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        questionFormat: {
+          ...prev.questionFormat,
+          labValueDisplay: display,
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Toggle handlers for Feedback
+  const handleToggleFeedback = (
+    setting: Exclude<keyof FeedbackSettings, 'explanationDepth'>
+  ) => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        feedback: {
+          ...prev.feedback,
+          [setting]: !prev.feedback[setting],
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Handler for explanation depth (enum)
+  const handleSetExplanationDepth = (depth: 'brief' | 'standard' | 'comprehensive') => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        feedback: {
+          ...prev.feedback,
+          explanationDepth: depth,
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
+  };
+
+  // Toggle handlers for Performance Tracking
+  const handleTogglePerformanceTracking = (setting: keyof PerformanceTrackingSettings) => {
+    setToggleSettings((prev) => {
+      const updated: ToggleSettings = {
+        ...prev,
+        performanceTracking: {
+          ...prev.performanceTracking,
+          [setting]: !prev.performanceTracking[setting],
+        },
+      };
+      saveToggleSettings(updated);
+      return updated;
+    });
   };
 
   const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
@@ -1170,6 +1296,507 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
                 />
+
+                {/* Divider */}
+                <div className="border-t border-[var(--color-border)] pt-6">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-6">
+                    Study Preferences
+                  </h3>
+                </div>
+
+                {/* Content Difficulty Settings */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Content Difficulty
+                    </h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Control the complexity and scope of medical content presented to you.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Core Content Only
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Focus on core PANCE blueprint content (excludes advanced pathology)
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.contentDifficulty.coreOnly}
+                        onChange={() => handleToggleContentDifficulty('coreOnly')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Include Advanced Content
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Include rare conditions and complex mechanisms for deeper learning
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.contentDifficulty.advancedContent}
+                        onChange={() => handleToggleContentDifficulty('advancedContent')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          High-Yield Topics Only
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Filter to commonly tested concepts and high-yield topics
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.contentDifficulty.highYieldOnly}
+                        onChange={() => handleToggleContentDifficulty('highYieldOnly')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          First-Line Treatment Priority
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Prioritize first-line treatment questions over second/third-line options
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.contentDifficulty.firstLineOnly}
+                        onChange={() => handleToggleContentDifficulty('firstLineOnly')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Question Format Settings */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Question Format
+                    </h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Customize how questions are presented and displayed.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Vignette Style Selector */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="mb-2">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Vignette Style
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Choose how detailed question vignettes should be
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSetVignetteStyle('brief')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.vignetteStyle === 'brief'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Brief
+                        </button>
+                        <button
+                          onClick={() => handleSetVignetteStyle('standard')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.vignetteStyle === 'standard'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Standard
+                        </button>
+                        <button
+                          onClick={() => handleSetVignetteStyle('detailed')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.vignetteStyle === 'detailed'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Detailed
+                        </button>
+                      </div>
+                    </div>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Image Integration
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Include images (X-rays, CT scans, dermpath) in questions
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.questionFormat.imageIntegration}
+                        onChange={() => handleToggleQuestionFormat('imageIntegration')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    {/* Lab Value Display Selector */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="mb-2">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Lab Value Display
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Choose how lab values are presented
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSetLabValueDisplay('interpreted')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.labValueDisplay === 'interpreted'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Interpreted
+                        </button>
+                        <button
+                          onClick={() => handleSetLabValueDisplay('raw')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.labValueDisplay === 'raw'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Raw
+                        </button>
+                        <button
+                          onClick={() => handleSetLabValueDisplay('both')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.questionFormat.labValueDisplay === 'both'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Both
+                        </button>
+                      </div>
+                    </div>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Show Vital Signs
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Display vital signs in question vignettes
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.questionFormat.showVitals}
+                        onChange={() => handleToggleQuestionFormat('showVitals')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Multimedia Enabled
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Include audio for heart/lung sounds when relevant
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.questionFormat.multimediaEnabled}
+                        onChange={() => handleToggleQuestionFormat('multimediaEnabled')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Feedback & Review Settings */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Feedback & Review
+                    </h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Control how feedback is delivered and review sessions are configured.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Immediate Feedback
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Show immediate feedback after each answer
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.feedback.immediateFeedback}
+                        onChange={() => handleToggleFeedback('immediateFeedback')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    {/* Explanation Depth Selector */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="mb-2">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Explanation Depth
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Choose how detailed explanations should be
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSetExplanationDepth('brief')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.feedback.explanationDepth === 'brief'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Brief
+                        </button>
+                        <button
+                          onClick={() => handleSetExplanationDepth('standard')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.feedback.explanationDepth === 'standard'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Standard
+                        </button>
+                        <button
+                          onClick={() => handleSetExplanationDepth('comprehensive')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-all ${
+                            toggleSettings.feedback.explanationDepth === 'comprehensive'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                          }`}
+                        >
+                          Comprehensive
+                        </button>
+                      </div>
+                    </div>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Spaced Repetition (FSRS)
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Enable the FSRS v6 algorithm for optimal review scheduling
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.feedback.spacedRepetition}
+                        onChange={() => handleToggleFeedback('spacedRepetition')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Auto-Advance
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Automatically advance to next question after viewing explanation
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.feedback.autoAdvance}
+                        onChange={() => handleToggleFeedback('autoAdvance')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Show Clinical Pearls
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Display high-yield clinical pearls with explanations
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.feedback.showPearls}
+                        onChange={() => handleToggleFeedback('showPearls')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Show Related Concepts
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Display related concepts and differential diagnoses
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.feedback.showRelatedConcepts}
+                        onChange={() => handleToggleFeedback('showRelatedConcepts')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Performance Tracking Settings */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                      Performance Tracking
+                    </h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Control visibility and granularity of performance metrics.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Streak Tracking
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Track and display your answer streaks
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.streakTracking}
+                        onChange={() => handleTogglePerformanceTracking('streakTracking')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Detailed Analytics
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Show detailed analytics on dashboard
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.detailedAnalytics}
+                        onChange={() => handleTogglePerformanceTracking('detailedAnalytics')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Progress Notifications
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Enable notifications for progress milestones
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.progressNotifications}
+                        onChange={() => handleTogglePerformanceTracking('progressNotifications')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Realtime Trends
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Show real-time performance trends and insights
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.realtimeTrends}
+                        onChange={() => handleTogglePerformanceTracking('realtimeTrends')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          System Breakdown
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Display performance breakdown by organ system
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.systemBreakdown}
+                        onChange={() => handleTogglePerformanceTracking('systemBreakdown')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Longitudinal View
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Show longitudinal progress over time
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={toggleSettings.performanceTracking.longitudinalView}
+                        onChange={() => handleTogglePerformanceTracking('longitudinalView')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+                  </div>
+                </div>
 
                 {/* Divider */}
                 <div className="border-t border-[var(--color-border)] pt-6">
