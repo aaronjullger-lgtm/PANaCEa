@@ -200,14 +200,14 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   // Get grade/rating
   const getGrade = (accuracy: number) => {
     if (accuracy >= 90)
-      return { grade: 'A', color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' };
+      return { grade: 'A', color: 'text-[var(--color-data-pass)]', bg: 'bg-[var(--color-data-pass)]/10' };
     if (accuracy >= 80)
-      return { grade: 'B', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' };
+      return { grade: 'B', color: 'text-[var(--color-accent)]', bg: 'bg-[var(--color-accent)]/10' };
     if (accuracy >= 70)
-      return { grade: 'C', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' };
+      return { grade: 'C', color: 'text-[var(--color-data-provisional)]', bg: 'bg-[var(--color-data-provisional)]/10' };
     if (accuracy >= 60)
-      return { grade: 'D', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' };
-    return { grade: 'F', color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30' };
+      return { grade: 'D', color: 'text-[var(--color-data-provisional)]', bg: 'bg-[var(--color-data-provisional)]/15' };
+    return { grade: 'F', color: 'text-[var(--color-data-fail)]', bg: 'bg-[var(--color-data-fail)]/10' };
   };
 
   const grade = getGrade(overallStats.accuracy);
@@ -338,14 +338,14 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               )}
               {syncStatus === 'synced' && (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-emerald-600 dark:text-emerald-400">Progress saved</span>
+                  <Cloud className="w-3.5 h-3.5 text-[var(--color-data-pass)]" />
+                  <span className="text-[var(--color-data-pass)]">Progress saved</span>
                 </>
               )}
               {syncStatus === 'failed' && (
                 <>
-                  <CloudOff className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-amber-600 dark:text-amber-400">Saved locally</span>
+                  <CloudOff className="w-3.5 h-3.5 text-[var(--color-data-provisional)]" />
+                  <span className="text-[var(--color-data-provisional)]">Saved locally</span>
                 </>
               )}
             </div>
@@ -356,7 +356,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Target className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+              <Target className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.total}
               </div>
@@ -364,7 +364,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Clock className="w-6 h-6 mx-auto mb-2 text-purple-500" />
+              <Clock className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.durationMinutes}m
               </div>
@@ -372,7 +372,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Zap className="w-6 h-6 mx-auto mb-2 text-amber-500" />
+              <Zap className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.questionsPerMinute}
               </div>
@@ -380,7 +380,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Flame className="w-6 h-6 mx-auto mb-2 text-orange-500" />
+              <Flame className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {overallStats.maxStreak}
               </div>
@@ -392,7 +392,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           <div className="mb-6 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-indigo-500" />
+                <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="font-medium text-[var(--color-text-primary)]">
                   PANCE Distribution Score
                 </span>
@@ -400,10 +400,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <span
                 className={`text-xl font-bold ${
                   summary.distributionScore >= 80
-                    ? 'text-emerald-500'
+                    ? 'text-[var(--color-data-pass)]'
                     : summary.distributionScore >= 60
-                      ? 'text-amber-500'
-                      : 'text-red-500'
+                      ? 'text-[var(--color-data-provisional)]'
+                      : 'text-[var(--color-data-fail)]'
                 }`}
               >
                 {summary.distributionScore}/100
@@ -416,10 +416,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className={`h-full rounded-full ${
                   summary.distributionScore >= 80
-                    ? 'bg-emerald-500'
+                    ? 'bg-[var(--color-data-pass)]'
                     : summary.distributionScore >= 60
-                      ? 'bg-amber-500'
-                      : 'bg-red-500'
+                      ? 'bg-[var(--color-data-provisional)]'
+                      : 'bg-[var(--color-data-fail)]'
                 }`}
               />
             </div>
@@ -445,10 +445,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                       <div
                         className={`h-full rounded-full transition-all ${
                           sp.accuracy >= 80
-                            ? 'bg-emerald-400'
+                            ? 'bg-[var(--color-data-pass)]'
                             : sp.accuracy >= 60
-                              ? 'bg-amber-400'
-                              : 'bg-red-400'
+                              ? 'bg-[var(--color-data-provisional)]'
+                              : 'bg-[var(--color-data-fail)]'
                         }`}
                         style={{ width: `${sp.accuracy}%` }}
                       />
@@ -456,10 +456,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                     <span
                       className={`w-12 text-xs font-bold text-right ${
                         sp.accuracy >= 80
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-[var(--color-data-pass)]'
                           : sp.accuracy >= 60
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-[var(--color-data-provisional)]'
+                            : 'text-[var(--color-data-fail)]'
                       }`}
                     >
                       {sp.accuracy}%
@@ -475,12 +475,12 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
           {/* Weak Areas Alert */}
           {weakAreas.length > 0 && (
-            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+            <div className="mb-6 p-4 bg-[var(--color-data-provisional)]/10 rounded-xl border border-[var(--color-data-provisional)]/30">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="font-medium text-amber-700 dark:text-amber-400">Focus Areas</span>
+                <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
+                <span className="font-medium text-[var(--color-data-provisional)]">Focus Areas</span>
               </div>
-              <p className="text-sm text-amber-600 dark:text-amber-500">
+              <p className="text-sm text-[var(--color-data-provisional)]">
                 {weakAreas.map((w) => w.name).join(', ')} — consider reviewing these topics
               </p>
             </div>
@@ -488,14 +488,14 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
           {/* Strong Areas */}
           {strongAreas.length > 0 && (
-            <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+            <div className="mb-6 p-4 bg-[var(--color-data-pass)]/10 rounded-xl border border-[var(--color-data-pass)]/30">
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-5 h-5 text-emerald-500" />
-                <span className="font-medium text-emerald-700 dark:text-emerald-400">
+                <Award className="w-5 h-5 text-[var(--color-data-pass)]" />
+                <span className="font-medium text-[var(--color-data-pass)]">
                   Strong Areas
                 </span>
               </div>
-              <p className="text-sm text-emerald-600 dark:text-emerald-500">
+              <p className="text-sm text-[var(--color-data-pass)]">
                 {strongAreas.map((s) => s.name).join(', ')}
               </p>
             </div>
@@ -504,10 +504,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {/* Behavioral Insights Section */}
           {(patternAnalysis.overallInsights.length > 0 ||
             behavioralCalibration.insights.length > 0) && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+            <div className="mb-6 p-4 bg-[var(--color-accent)]/10 rounded-xl border border-[var(--color-accent)]/30">
               <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-5 h-5 text-blue-500" />
-                <span className="font-medium text-blue-700 dark:text-blue-400">
+                <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
+                <span className="font-medium text-[var(--color-accent)]">
                   Test-Taking Insights
                 </span>
               </div>
@@ -515,7 +515,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 {patternAnalysis.overallInsights.slice(0, 3).map((insight, i) => (
                   <li
                     key={`pattern-${i}`}
-                    className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400"
+                    className="flex items-start gap-2 text-sm text-[var(--color-accent)]"
                   >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
@@ -524,7 +524,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 {behavioralCalibration.insights.slice(0, 2).map((insight, i) => (
                   <li
                     key={`behavior-${i}`}
-                    className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400"
+                    className="flex items-start gap-2 text-sm text-[var(--color-accent)]"
                   >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
@@ -534,13 +534,13 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
               {/* Answer change stats */}
               {(patternAnalysis.changedToCorrect > 0 || patternAnalysis.changedToWrong > 0) && (
-                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
-                  <p className="text-xs text-blue-500 dark:text-blue-400 mb-2">Answer Changes</p>
+                <div className="mt-3 pt-3 border-t border-[var(--color-accent)]/30">
+                  <p className="text-xs text-[var(--color-accent)] mb-2">Answer Changes</p>
                   <div className="flex gap-4 text-sm">
-                    <span className="text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[var(--color-data-pass)]">
                       ✓ {patternAnalysis.changedToCorrect} helped
                     </span>
-                    <span className="text-red-500 dark:text-red-400">
+                    <span className="text-[var(--color-data-fail)]">
                       ✗ {patternAnalysis.changedToWrong} hurt
                     </span>
                   </div>
@@ -574,7 +574,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {overallStats.incorrect > 0 && onReviewMissed && (
             <button
               onClick={onReviewMissed}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors"
             >
               <XCircle className="w-5 h-5" />
               Review {overallStats.incorrect} Missed
@@ -584,7 +584,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {/* Metacognitive Reflection Button - Research shows 15-20% learning gains */}
           <button
             onClick={() => setShowReflection(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium hover:bg-[var(--color-accent)]/30 transition-colors"
           >
             <BookOpen className="w-5 h-5" />
             Reflect
@@ -601,7 +601,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 resetPauseTracking();
                 onStartNewSession();
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:bg-[var(--color-accent)]/90 transition-colors"
             >
               <Zap className="w-5 h-5" />
               New Session

@@ -43,26 +43,26 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden shadow-sm">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-secondary)] transition-colors"
       >
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-blue-500" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">
             Session Insights
           </span>
         </div>
         <div className="flex items-center gap-2">
           {!isExpanded && (
-            <span className="text-xs text-slate-500">{distributionSummary.totalQuestions} Qs</span>
+            <span className="text-xs text-action-muted">{distributionSummary.totalQuestions} Qs</span>
           )}
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-slate-400" />
+            <ChevronUp className="w-4 h-4 text-action-muted" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-action-muted" />
           )}
         </div>
       </button>
@@ -77,17 +77,17 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700">
+            <div className="px-4 pb-4 border-t border-[var(--color-border)]">
               {/* Tabs */}
-              <div className="flex gap-1 py-3 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex gap-1 py-3 border-b border-[var(--color-border)]">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                        : 'text-action-muted hover:bg-[var(--color-bg-secondary)]'
                     }`}
                   >
                     <tab.icon className="w-3.5 h-3.5" />
@@ -147,7 +147,7 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
 }) => {
   if (summary.totalQuestions === 0) {
     return (
-      <div className="text-center py-4 text-sm text-slate-500">
+      <div className="text-center py-4 text-sm text-action-muted">
         Answer questions to see PANCE distribution coverage
       </div>
     );
@@ -160,50 +160,50 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
     <div className="space-y-3">
       {/* Overall stats */}
       <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="px-2 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-          <div className="text-lg font-bold text-slate-700 dark:text-slate-300">
+        <div className="px-2 py-2 bg-[var(--color-bg-secondary)] rounded-lg">
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {summary.totalQuestions}
           </div>
-          <div className="text-xs text-slate-500">Questions</div>
+          <div className="text-xs text-action-muted">Questions</div>
         </div>
-        <div className="px-2 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+        <div className="px-2 py-2 bg-[var(--color-accent)]/10 rounded-lg">
+          <div className="text-lg font-bold text-[var(--color-accent)]">
             {summary.questionsPerMinute}/min
           </div>
-          <div className="text-xs text-slate-500">Pace</div>
+          <div className="text-xs text-action-muted">Pace</div>
         </div>
       </div>
 
       {/* Top systems */}
       {topSystems.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <div className="text-xs font-medium text-action-muted uppercase tracking-wider">
             System Coverage
           </div>
           {topSystems.map((sys) => (
             <div key={sys.system} className="flex items-center gap-2">
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-600 dark:text-slate-400 truncate">{sys.name}</span>
-                  <span className="text-slate-500">
+                  <span className="text-[var(--color-text-secondary)] truncate">{sys.name}</span>
+                  <span className="text-action-muted">
                     {sys.count} ({sys.percent}%)
                   </span>
                 </div>
-                <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
                       Math.abs(sys.percent - sys.target) <= 5
-                        ? 'bg-emerald-500'
+                        ? 'bg-[var(--color-data-pass)]'
                         : Math.abs(sys.percent - sys.target) <= 10
-                          ? 'bg-amber-500'
-                          : 'bg-red-400'
+                          ? 'bg-[var(--color-data-provisional)]'
+                          : 'bg-[var(--color-data-fail)]'
                     }`}
                     style={{
                       width: `${Math.min(100, (sys.count / Math.max(1, summary.totalQuestions)) * 100 * 2)}%`,
                     }}
                   />
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5">Target: {sys.target}%</div>
+                <div className="text-xs text-action-muted mt-0.5">Target: {sys.target}%</div>
               </div>
             </div>
           ))}
@@ -214,10 +214,10 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
       <div
         className={`text-xs text-center py-2 rounded-lg ${
           summary.distributionScore >= 80
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+            ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]'
             : summary.distributionScore >= 60
-              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-              : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+              ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]'
+              : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
         }`}
       >
         {summary.distributionScore >= 80

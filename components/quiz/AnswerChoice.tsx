@@ -84,9 +84,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     } else if (isAnswered) {
       // After answering states
       if (isCorrect) {
-        buttonClasses += ' !bg-green-600 !text-white !border-transparent font-bold shadow-md';
+        buttonClasses += ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-bold shadow-md';
       } else if (isSelected) {
-        buttonClasses += ' !bg-red-600 !text-white !border-transparent font-bold shadow-md';
+        buttonClasses += ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-bold shadow-md';
         animationClass = 'animate-shake';
       } else {
         buttonClasses +=
@@ -95,7 +95,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     } else if (isSelected && !isAnswered) {
       // Selected but not yet submitted - show highlighted state
       buttonClasses +=
-        ' bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 shadow-md text-[var(--color-text-primary)] font-semibold';
+        ' bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)] shadow-md text-[var(--color-text-primary)] font-semibold';
     } else {
       // Default hoverable state - use CSS variable for hover background to work in both light and dark mode
       buttonClasses +=
@@ -140,8 +140,8 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
                 transition-all duration-150
                 ${
                   isEliminated
-                    ? 'text-red-500 opacity-100'
-                    : 'text-slate-400 opacity-50 hover:opacity-100 hover:text-red-500 hover:bg-red-50'
+                    ? 'text-[var(--color-data-fail)] opacity-100'
+                    : 'text-[var(--color-text-muted)] opacity-50 hover:opacity-100 hover:text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/10'
                 }
                 group-hover:opacity-75
               `}

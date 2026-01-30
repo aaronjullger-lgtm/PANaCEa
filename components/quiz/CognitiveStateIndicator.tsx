@@ -33,32 +33,32 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
     if (flowState > 70) {
       return {
         label: 'In Flow',
-        color: 'text-emerald-500',
-        bg: 'bg-emerald-500/10 border-emerald-500/30',
+        color: 'text-[var(--color-data-pass)]',
+        bg: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/30',
         icon: <Zap className="w-4 h-4" />,
       };
     }
     if (fatigueLevel > 60) {
       return {
         label: 'Consider Break',
-        color: 'text-amber-500',
-        bg: 'bg-amber-500/10 border-amber-500/30',
+        color: 'text-[var(--color-data-provisional)]',
+        bg: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30',
         icon: <Coffee className="w-4 h-4" />,
       };
     }
     if (cognitiveLoad > 75) {
       return {
         label: 'High Load',
-        color: 'text-orange-500',
-        bg: 'bg-orange-500/10 border-orange-500/30',
+        color: 'text-[var(--color-data-provisional)]',
+        bg: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30',
         icon: <Brain className="w-4 h-4" />,
       };
     }
     if (attentionLevel > 70) {
       return {
         label: 'Focused',
-        color: 'text-blue-500',
-        bg: 'bg-blue-500/10 border-blue-500/30',
+        color: 'text-[var(--color-accent)]',
+        bg: 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30',
         icon: <Target className="w-4 h-4" />,
       };
     }
@@ -94,7 +94,7 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
     >
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Brain className="w-5 h-5 text-blue-500" />
+        <Brain className="w-5 h-5 text-[var(--color-accent)]" />
         <span className="font-medium text-[var(--color-text-primary)]">Cognitive State</span>
         <div
           className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${state.bg} ${state.color} text-xs font-medium`}
@@ -125,13 +125,22 @@ interface MetricBarProps {
 const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) => {
   // For inverted metrics, lower is better
   const displayValue = inverted ? 100 - value : value;
+  
+  // Map color names to semantic tokens
+  const colorMap: Record<string, string> = {
+    blue: 'bg-[var(--color-accent)]',
+    emerald: 'bg-[var(--color-data-pass)]',
+    orange: 'bg-[var(--color-data-provisional)]',
+    red: 'bg-[var(--color-data-fail)]',
+  };
+  
   const barColor = inverted
     ? value > 60
-      ? 'bg-red-500'
+      ? 'bg-[var(--color-data-fail)]'
       : value > 40
-        ? 'bg-amber-500'
-        : 'bg-emerald-500'
-    : `bg-${color}-500`;
+        ? 'bg-[var(--color-data-provisional)]'
+        : 'bg-[var(--color-data-pass)]'
+    : colorMap[color] || 'bg-[var(--color-accent)]';
 
   return (
     <div className="space-y-1">
@@ -144,10 +153,7 @@ const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) 
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(100, displayValue)}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`h-full rounded-full ${inverted ? barColor : `bg-${color}-500`}`}
-          style={
-            !inverted ? { backgroundColor: `var(--color-${color}, rgb(59, 130, 246))` } : undefined
-          }
+          className={`h-full rounded-full ${barColor}`}
         />
       </div>
     </div>

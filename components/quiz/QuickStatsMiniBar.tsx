@@ -59,10 +59,10 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
         <Target
           className={`w-3.5 h-3.5 ${
             stats.accuracy >= 80
-              ? 'text-emerald-500'
+              ? 'text-[var(--color-data-pass)]'
               : stats.accuracy >= 60
-                ? 'text-amber-500'
-                : 'text-red-500'
+                ? 'text-[var(--color-data-provisional)]'
+                : 'text-[var(--color-data-fail)]'
           }`}
         />
         <span className="font-medium text-slate-600 dark:text-slate-400">{stats.accuracy}%</span>
@@ -73,7 +73,7 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
 
       {/* Streak */}
       {stats.streak >= 2 && (
-        <div className="flex items-center gap-1.5 text-emerald-600">
+        <div className="flex items-center gap-1.5 text-[var(--color-data-pass)]">
           <TrendingUp className="w-3.5 h-3.5" />
           <span className="font-medium">{stats.streak} streak</span>
         </div>

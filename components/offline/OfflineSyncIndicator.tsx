@@ -111,10 +111,10 @@ export function OfflineSyncIndicator() {
     <div
       className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg border transition-all ${
         status.isOffline
-          ? 'bg-yellow-900/90 border-yellow-700 text-yellow-100'
+          ? 'bg-[var(--color-data-provisional)]/90 border-[var(--color-data-provisional)]/70 text-[var(--color-text-inverse)]'
           : status.pendingCount > 0
-            ? 'bg-blue-900/90 border-blue-700 text-blue-100'
-            : 'bg-green-900/90 border-green-700 text-green-100'
+            ? 'bg-[var(--color-accent)]/90 border-[var(--color-accent)]/70 text-[var(--color-text-inverse)]'
+            : 'bg-[var(--color-data-pass)]/90 border-[var(--color-data-pass)]/70 text-[var(--color-text-inverse)]'
       }`}
     >
       {/* Status Icon */}

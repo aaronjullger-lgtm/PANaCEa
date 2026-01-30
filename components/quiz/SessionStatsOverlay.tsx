@@ -129,17 +129,17 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
       className="fixed top-4 right-4 z-50 w-80"
     >
       {/* Compact Header */}
-      <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-[var(--color-bg-primary)]/95 backdrop-blur-sm rounded-xl shadow-lg border border-[var(--color-border)] overflow-hidden">
         {/* Quick Stats Bar */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           <div className="flex items-center gap-4">
             {/* Question Count */}
             <div className="flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-blue-500" />
-              <span className="font-semibold text-slate-700 dark:text-slate-200">
+              <Target className="w-4 h-4 text-[var(--color-accent)]" />
+              <span className="font-semibold text-[var(--color-text-primary)]">
                 Q{currentQuestionNumber}
               </span>
             </div>
@@ -147,10 +147,10 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
             {/* Accuracy */}
             <div className="flex items-center gap-1.5">
               <TrendingUp
-                className={`w-4 h-4 ${sessionAccuracy >= 70 ? 'text-emerald-500' : sessionAccuracy >= 50 ? 'text-amber-500' : 'text-red-500'}`}
+                className={`w-4 h-4 ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
               />
               <span
-                className={`font-semibold ${sessionAccuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : sessionAccuracy >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}
+                className={`font-semibold ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
               >
                 {sessionAccuracy}%
               </span>
@@ -160,9 +160,9 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
             {summary && (
               <div className="flex items-center gap-1.5">
                 <PieChart
-                  className={`w-4 h-4 ${summary.distributionScore >= 80 ? 'text-emerald-500' : summary.distributionScore >= 60 ? 'text-amber-500' : 'text-red-500'}`}
+                  className={`w-4 h-4 ${summary.distributionScore >= 80 ? 'text-[var(--color-data-pass)]' : summary.distributionScore >= 60 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                 />
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-xs text-action-muted">
                   {summary.distributionScore}
                 </span>
               </div>
@@ -170,9 +170,9 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
           </div>
 
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-slate-400" />
+            <ChevronUp className="w-4 h-4 text-action-muted" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-action-muted" />
           )}
         </button>
 
@@ -184,17 +184,17 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="border-t border-slate-200 dark:border-slate-700"
+              className="border-t border-[var(--color-border)]"
             >
               {/* Performance Section */}
               <div className="p-3 space-y-3">
                 {/* Time & Pace */}
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-action-muted">
                     <Clock className="w-4 h-4" />
                     <span>{summary.sessionDuration} min</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-action-muted">
                     <Zap className="w-4 h-4" />
                     <span>{summary.questionsPerMinute} Q/min</span>
                   </div>
@@ -202,18 +202,18 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
                 {/* Accuracy Comparison */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Session</div>
+                  <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
+                    <div className="text-xs text-action-muted mb-1">Session</div>
                     <div
-                      className={`text-lg font-bold ${sessionAccuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : sessionAccuracy >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}
+                      className={`text-lg font-bold ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {sessionAccuracy}%
                     </div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Last 10</div>
+                  <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
+                    <div className="text-xs text-action-muted mb-1">Last 10</div>
                     <div
-                      className={`text-lg font-bold ${recentAccuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : recentAccuracy >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}
+                      className={`text-lg font-bold ${recentAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : recentAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {recentAccuracy}%
                     </div>
@@ -222,11 +222,11 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
                 {/* Distribution Alert */}
                 {needsCorrection.length > 0 && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2 text-sm">
-                    <div className="font-medium text-amber-700 dark:text-amber-400 mb-1">
+                  <div className="bg-[var(--color-data-provisional)]/10 rounded-lg p-2 text-sm border border-[var(--color-data-provisional)]/30">
+                    <div className="font-medium text-[var(--color-data-provisional)] mb-1">
                       Distribution Drift
                     </div>
-                    <div className="text-xs text-amber-600 dark:text-amber-500">
+                    <div className="text-xs text-[var(--color-data-provisional)]">
                       {needsCorrection.slice(0, 2).map((d) => (
                         <span key={d.system} className="mr-2">
                           {d.system}: {d.driftPercent > 0 ? '+' : ''}
@@ -239,7 +239,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
                 {/* Mini Distribution Chart */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-action-muted">
                     <span>System Distribution</span>
                     <span>Score: {summary.distributionScore}/100</span>
                   </div>
@@ -247,22 +247,22 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                   <div className="space-y-1">
                     {systemBars.slice(0, 6).map((bar) => (
                       <div key={bar.system} className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 w-10">
+                        <span className="text-xs font-medium text-action-muted w-10">
                           {bar.system}
                         </span>
-                        <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               bar.isOver
-                                ? 'bg-amber-400'
+                                ? 'bg-[var(--color-data-provisional)]'
                                 : bar.isUnder
-                                  ? 'bg-blue-400'
-                                  : 'bg-emerald-400'
+                                  ? 'bg-[var(--color-accent)]'
+                                  : 'bg-[var(--color-data-pass)]'
                             }`}
                             style={{ width: `${Math.min(bar.percent, 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 w-8 text-right">
+                        <span className="text-xs text-action-muted w-8 text-right">
                           {bar.count}
                         </span>
                       </div>

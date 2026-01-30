@@ -46,16 +46,16 @@ export const ConfidenceBadge: React.FC<{
     high: {
       label: 'Confident',
       icon: Zap,
-      bg: 'bg-emerald-100 dark:bg-emerald-900/30',
-      text: 'text-emerald-700 dark:text-emerald-400',
-      border: 'border-emerald-200 dark:border-emerald-800',
+      bg: 'bg-[var(--color-data-pass)]/10',
+      text: 'text-[var(--color-data-pass)]',
+      border: 'border-[var(--color-data-pass)]/30',
     },
     medium: {
       label: 'Uncertain',
       icon: HelpCircle,
-      bg: 'bg-amber-100 dark:bg-amber-900/30',
-      text: 'text-amber-700 dark:text-amber-400',
-      border: 'border-amber-200 dark:border-amber-800',
+      bg: 'bg-[var(--color-data-provisional)]/10',
+      text: 'text-[var(--color-data-provisional)]',
+      border: 'border-[var(--color-data-provisional)]/30',
     },
     low: {
       label: 'Hesitant',
@@ -121,10 +121,10 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
             <div
               className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                 stats.calibrationScore >= 65
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                  ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]'
                   : stats.calibrationScore >= 40
-                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]'
+                    : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
               }`}
             >
               {stats.calibrationScore}%
@@ -190,7 +190,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                       key={i}
                       className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400"
                     >
-                      <span className="text-blue-500 mt-0.5">💡</span>
+                      <span className="text-[var(--color-accent)] mt-0.5">💡</span>
                       <span>{insight}</span>
                     </div>
                   ))}
@@ -220,15 +220,15 @@ const BehaviorRow: React.FC<{
   description: string;
 }> = ({ label, icon: Icon, accuracy, count, expected, color, description }) => {
   const colorClasses = {
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500',
-    slate: 'bg-slate-400',
+    emerald: 'bg-[var(--color-data-pass)]',
+    amber: 'bg-[var(--color-data-provisional)]',
+    slate: 'bg-[var(--color-surface)]',
   };
 
   const iconColors = {
-    emerald: 'text-emerald-600 dark:text-emerald-400',
-    amber: 'text-amber-600 dark:text-amber-400',
-    slate: 'text-slate-500 dark:text-slate-400',
+    emerald: 'text-[var(--color-data-pass)]',
+    amber: 'text-[var(--color-data-provisional)]',
+    slate: 'text-[var(--color-text-secondary)]',
   };
 
   const status = (() => {
@@ -251,12 +251,12 @@ const BehaviorRow: React.FC<{
             <span
               className={`text-sm font-medium ${
                 status === 'calibrated'
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-[var(--color-data-pass)]'
                   : status === 'better'
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-[var(--color-accent)]'
                     : status === 'worse'
-                      ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'text-[var(--color-data-provisional)]'
+                      : 'text-[var(--color-text-secondary)]'
               }`}
             >
               {accuracy}% correct

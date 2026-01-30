@@ -152,26 +152,26 @@ const difficultyConfig: Record<
 > = {
   easy: {
     label: 'Straightforward',
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-100',
+    color: 'text-[var(--color-data-pass)]',
+    bgColor: 'bg-[var(--color-data-pass)]/10',
     icon: Zap,
   },
   medium: {
     label: 'Moderate',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    color: 'text-[var(--color-accent)]',
+    bgColor: 'bg-[var(--color-accent)]/10',
     icon: Gauge,
   },
   hard: {
     label: 'Challenging',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)]/10',
     icon: Brain,
   },
   expert: {
     label: 'Complex',
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
+    color: 'text-[var(--color-data-fail)]',
+    bgColor: 'bg-[var(--color-data-fail)]/10',
     icon: Brain,
   },
 };
@@ -228,8 +228,8 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
               }}
               className={`w-2 h-2 rounded-full ${
                 dot <= (level === 'easy' ? 1 : level === 'medium' ? 2 : level === 'hard' ? 3 : 4)
-                  ? config.bgColor.replace('100', '500')
-                  : 'bg-slate-200'
+                  ? config.color.replace('text-', 'bg-')
+                  : 'bg-[var(--color-bg-tertiary)]'
               }`}
             />
           ))}
@@ -240,11 +240,11 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="text-xs text-slate-500 space-y-1"
+          className="text-xs text-[var(--color-text-muted)] space-y-1"
         >
           {reasoning.map((reason, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span className="w-1 h-1 rounded-full bg-[var(--color-text-muted)]" />
               <span>{reason}</span>
             </div>
           ))}

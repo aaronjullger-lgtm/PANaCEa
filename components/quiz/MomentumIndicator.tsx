@@ -34,16 +34,16 @@ const levelConfig: Record<
 > = {
   peaked: {
     icon: Flame,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-    borderColor: 'border-orange-200 dark:border-orange-800',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
+    borderColor: 'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
     label: 'On Fire',
   },
   rising: {
     icon: TrendingUp,
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
-    borderColor: 'border-emerald-200 dark:border-emerald-800',
+    color: 'text-[var(--color-data-pass)]',
+    bgColor: 'bg-[var(--color-data-pass)]/10 dark:bg-[var(--color-data-pass)]/30',
+    borderColor: 'border-[var(--color-data-pass)]/30 dark:border-[var(--color-data-pass)]/80',
     label: 'Rising',
   },
   steady: {
@@ -55,16 +55,16 @@ const levelConfig: Record<
   },
   cooling: {
     icon: TrendingDown,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-    borderColor: 'border-amber-200 dark:border-amber-800',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
+    borderColor: 'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
     label: 'Cooling',
   },
   cold: {
     icon: Snowflake,
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-800',
+    color: 'text-[var(--color-accent)]',
+    bgColor: 'bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/30',
+    borderColor: 'border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80',
     label: 'Cold',
   },
 };
@@ -128,13 +128,13 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
               transition={{ duration: 0.5 }}
               className={`h-full rounded-full ${
                 momentum.level === 'peaked'
-                  ? 'bg-orange-500'
+                  ? 'bg-[var(--color-data-provisional)]'
                   : momentum.level === 'rising'
-                    ? 'bg-emerald-500'
+                    ? 'bg-[var(--color-data-pass)]'
                     : momentum.level === 'cooling'
-                      ? 'bg-amber-500'
+                      ? 'bg-[var(--color-data-provisional)]'
                       : momentum.level === 'cold'
-                        ? 'bg-blue-400'
+                        ? 'bg-[var(--color-accent)]'
                         : 'bg-slate-400'
               }`}
             />
@@ -144,14 +144,14 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
           <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
             {momentum.streak > 0 && (
               <span className="flex items-center gap-1">
-                <Zap className="w-3 h-3 text-amber-500" />
+                <Zap className="w-3 h-3 text-[var(--color-data-provisional)]" />
                 {momentum.streak} streak
               </span>
             )}
             <span>{momentum.recentAccuracy}% recent</span>
             {momentum.speedTrend !== 'consistent' && (
               <span
-                className={momentum.speedTrend === 'faster' ? 'text-emerald-600' : 'text-amber-600'}
+                className={momentum.speedTrend === 'faster' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}
               >
                 {momentum.speedTrend === 'faster' ? '↗ Faster' : '↘ Slower'}
               </span>
@@ -167,9 +167,9 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+            className="px-3 py-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80 rounded-lg"
           >
-            <p className="text-xs text-blue-700 dark:text-blue-300">💡 {momentum.recommendation}</p>
+            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90">💡 {momentum.recommendation}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -181,15 +181,15 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+            className="px-3 py-2 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80 rounded-lg"
           >
             <div className="flex items-start gap-2">
-              <Coffee className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <Coffee className="w-4 h-4 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]/90 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                <p className="text-xs font-medium text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]/90">
                   Time for a break?
                 </p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <p className="text-xs text-[var(--color-data-provisional)]/80 dark:text-[var(--color-data-provisional)]/80 mt-0.5">
                   {fatigue.signals.join(' • ')}
                 </p>
               </div>

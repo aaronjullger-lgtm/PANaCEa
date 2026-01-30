@@ -42,13 +42,13 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
       value: 'very_sure',
       label: 'Very Sure',
       shortLabel: 'Sure',
-      color: 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200',
+      color: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/30 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20',
     },
     {
       value: 'somewhat_sure',
       label: 'Somewhat Sure',
       shortLabel: 'Maybe',
-      color: 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200',
+      color: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/20',
     },
     {
       value: 'guessing',
@@ -159,12 +159,12 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
   ) => {
     if (accuracy === null) return { icon: Minus, color: 'text-slate-400', label: 'N/A' };
     if (accuracy >= expected.min && accuracy <= expected.max) {
-      return { icon: TrendingUp, color: 'text-emerald-600', label: 'Well calibrated' };
+      return { icon: TrendingUp, color: 'text-[var(--color-data-pass)]', label: 'Well calibrated' };
     }
     if (accuracy > expected.max) {
-      return { icon: TrendingUp, color: 'text-blue-600', label: 'Underconfident' };
+      return { icon: TrendingUp, color: 'text-[var(--color-accent)]', label: 'Underconfident' };
     }
-    return { icon: TrendingDown, color: 'text-amber-600', label: 'Overconfident' };
+    return { icon: TrendingDown, color: 'text-[var(--color-data-provisional)]', label: 'Overconfident' };
   };
 
   return (
@@ -185,10 +185,10 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
             <div
               className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                 stats.calibrationScore >= 75
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]'
                   : stats.calibrationScore >= 50
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-red-100 text-red-700'
+                    ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]'
+                    : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
               }`}
             >
               {stats.calibrationScore}%
@@ -243,15 +243,15 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
               {/* Interpretation */}
               <div className="pt-2 text-xs text-slate-500 leading-relaxed">
                 {stats.calibrationScore !== null && stats.calibrationScore >= 75 ? (
-                  <span className="text-emerald-600">
+                  <span className="text-[var(--color-data-pass)]">
                     ✓ Your confidence aligns well with performance - you know what you know!
                   </span>
                 ) : stats.verySureAccuracy !== null && stats.verySureAccuracy < 80 ? (
-                  <span className="text-amber-600">
+                  <span className="text-[var(--color-data-provisional)]">
                     ⚠ Consider slowing down on "Very Sure" answers - review before submitting.
                   </span>
                 ) : stats.guessingAccuracy !== null && stats.guessingAccuracy > 50 ? (
-                  <span className="text-blue-600">
+                  <span className="text-[var(--color-accent)]">
                     💡 You're underconfident! Trust your knowledge more on uncertain questions.
                   </span>
                 ) : (
@@ -275,8 +275,8 @@ const ConfidenceRow: React.FC<{
   color: 'emerald' | 'amber' | 'slate';
 }> = ({ label, accuracy, count, expected, color }) => {
   const colorClasses = {
-    emerald: 'bg-emerald-100 border-emerald-200',
-    amber: 'bg-amber-100 border-amber-200',
+    emerald: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/20',
+    amber: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20',
     slate: 'bg-slate-100 border-slate-200',
   };
 
@@ -300,11 +300,11 @@ const ConfidenceRow: React.FC<{
             <span
               className={`text-sm font-medium ${
                 status === 'calibrated'
-                  ? 'text-emerald-600'
+                  ? 'text-[var(--color-data-pass)]'
                   : status === 'underconfident'
-                    ? 'text-blue-600'
+                    ? 'text-[var(--color-accent)]'
                     : status === 'overconfident'
-                      ? 'text-amber-600'
+                      ? 'text-[var(--color-data-provisional)]'
                       : 'text-slate-600'
               }`}
             >

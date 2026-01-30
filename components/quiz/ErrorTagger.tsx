@@ -24,21 +24,21 @@ const ERROR_TAG_OPTIONS: { tag: ErrorTag; label: string; icon: React.ReactNode; 
       label: 'Knowledge Gap',
       icon: <Brain className="w-4 h-4" />,
       color:
-        'text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-100 dark:text-purple-300 dark:bg-purple-900/30 dark:border-purple-700 dark:hover:bg-purple-900/50',
+        'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/20',
     },
     {
       tag: 'misread_question',
       label: 'Misread Question',
       icon: <Eye className="w-4 h-4" />,
       color:
-        'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-700 dark:hover:bg-blue-900/50',
+        'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/20',
     },
     {
       tag: 'guessing',
       label: 'Guessing',
       icon: <HelpCircle className="w-4 h-4" />,
       color:
-        'text-amber-600 bg-amber-50 border-amber-200 hover:bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30 dark:border-amber-700 dark:hover:bg-amber-900/50',
+        'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20 hover:bg-[var(--color-data-provisional)]/20',
     },
   ];
 
@@ -57,7 +57,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
       <motion.div
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"
+        className="flex items-center gap-2 text-xs text-action-muted"
       >
         <span>Tagged as</span>
         <span
@@ -76,7 +76,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-wrap items-center gap-2"
     >
-      <span className="text-xs text-slate-500 dark:text-slate-400">Why did you miss it?</span>
+      <span className="text-xs text-action-muted">Why did you miss it?</span>
       {ERROR_TAG_OPTIONS.map((option) => (
         <button
           key={option.tag}

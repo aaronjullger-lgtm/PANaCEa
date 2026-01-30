@@ -22,7 +22,7 @@ const SuccessRing: React.FC = () => (
     initial={{ scale: 0.8, opacity: 0.6 }}
     animate={{ scale: 2, opacity: 0 }}
     transition={{ duration: 0.4, ease: 'easeOut' }}
-    className="absolute inset-0 rounded-full border-2 border-emerald-400"
+    className="absolute inset-0 rounded-full border-2 border-[var(--color-data-pass)]"
   />
 );
 
@@ -33,26 +33,26 @@ const StreakIndicator: React.FC<{ streak: number }> = ({ streak }) => {
   const getStreakStyle = () => {
     if (streak >= 10)
       return {
-        bg: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        bg: 'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
         text: 'Excellent streak!',
-        glow: 'shadow-amber-500/25',
+        glow: 'shadow-[var(--color-data-provisional)]/25',
       };
     if (streak >= 7)
       return {
-        bg: 'bg-gradient-to-r from-orange-400 to-amber-400',
+        bg: 'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
         text: 'Great momentum!',
-        glow: 'shadow-orange-400/25',
+        glow: 'shadow-[var(--color-data-provisional)]/25',
       };
     if (streak >= 5)
       return {
-        bg: 'bg-gradient-to-r from-emerald-400 to-teal-400',
+        bg: 'bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]',
         text: 'Nice streak!',
-        glow: 'shadow-emerald-400/25',
+        glow: 'shadow-[var(--color-data-pass)]/25',
       };
     return {
-      bg: 'bg-gradient-to-r from-blue-400 to-cyan-400',
+      bg: 'bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]',
       text: 'Keep going!',
-      glow: 'shadow-blue-400/25',
+      glow: 'shadow-[var(--color-accent)]/25',
     };
   };
 
@@ -118,7 +118,7 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
                   initial={{ scale: 0.8 }}
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-                  className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"
+                  className="w-14 h-14 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center shadow-lg shadow-[var(--color-data-pass)]/30"
                 >
                   <motion.div
                     initial={{ pathLength: 0 }}
@@ -134,7 +134,7 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
               <motion.div
                 animate={{ x: [-3, 3, -3, 3, 0] }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30"
+                className="w-14 h-14 rounded-full bg-[var(--color-data-fail)] flex items-center justify-center shadow-lg shadow-[var(--color-data-fail)]/30"
               >
                 <X className="w-8 h-8 text-white" strokeWidth={3} />
               </motion.div>

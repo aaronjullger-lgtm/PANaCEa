@@ -31,7 +31,7 @@ export function OfflineSyncPanel() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-300 dark:border-muted-amber-700 rounded-lg p-4 shadow-lg max-w-sm">
+    <div className="fixed bottom-4 right-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg p-4 shadow-lg max-w-sm">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <svg

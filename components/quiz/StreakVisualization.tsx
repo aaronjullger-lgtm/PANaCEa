@@ -88,23 +88,23 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-orange-500" />
-            <span className="text-slate-600 dark:text-slate-400">
+            <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" />
+            <span className="text-action-muted">
               Best:{' '}
-              <span className="font-semibold text-orange-600 dark:text-orange-400">
+              <span className="font-semibold text-[var(--color-data-provisional)]">
                 {stats.maxStreak}
               </span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span className="text-slate-600 dark:text-slate-400">
+            <Zap className="w-4 h-4 text-[var(--color-data-provisional)]" />
+            <span className="text-action-muted">
               Avg: <span className="font-semibold">{stats.avgStreak}</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-blue-500" />
-            <span className="text-slate-600 dark:text-slate-400">
+            <Target className="w-4 h-4 text-[var(--color-accent)]" />
+            <span className="text-action-muted">
               Streaks: <span className="font-semibold">{stats.totalStreaks}</span>
             </span>
           </div>
@@ -114,7 +114,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
       {/* Visual Timeline */}
       <div className="relative">
         {/* Background grid */}
-        <div className="flex gap-0.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg overflow-hidden">
+        <div className="flex gap-0.5 p-2 bg-[var(--color-bg-secondary)] rounded-lg overflow-hidden">
           {displayData.map((record, i) => (
             <motion.div
               key={i}
@@ -123,8 +123,8 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
               transition={{ delay: i * 0.02, duration: 0.15 }}
               className={`flex-1 min-w-[4px] max-w-[12px] h-6 rounded-sm ${
                 record.isCorrect
-                  ? 'bg-emerald-400 dark:bg-emerald-500'
-                  : 'bg-red-400 dark:bg-red-500'
+                  ? 'bg-[var(--color-data-pass)]'
+                  : 'bg-[var(--color-data-fail)]'
               }`}
               title={`Q${performanceData.length - displayData.length + i + 1}: ${record.isCorrect ? 'Correct' : 'Incorrect'} - ${record.topic || 'Unknown'}`}
             />
@@ -132,13 +132,13 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500">
+        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-action-muted">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-sm bg-emerald-400" />
+            <div className="w-3 h-3 rounded-sm bg-[var(--color-data-pass)]" />
             <span>Correct</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-sm bg-red-400" />
+            <div className="w-3 h-3 rounded-sm bg-[var(--color-data-fail)]" />
             <span>Incorrect</span>
           </div>
         </div>
@@ -146,8 +146,8 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
 
       {/* Streak breakdown (if there are interesting patterns) */}
       {stats.maxStreak >= 5 && (
-        <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-          <div className="flex items-center gap-2 text-sm text-orange-700 dark:text-orange-400">
+        <div className="p-2 bg-[var(--color-data-provisional)]/10 rounded-lg border border-[var(--color-data-provisional)]/30">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-data-provisional)]">
             <Flame className="w-4 h-4" />
             <span>
               {stats.maxStreak >= 10
@@ -176,11 +176,11 @@ export const StreakBadge: React.FC<{
       animate={{ scale: 1, opacity: 1 }}
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
         streak >= 10
-          ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+          ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
           : streak >= 5
-            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-      } ${isActive ? 'ring-2 ring-offset-1 ring-orange-400' : ''}`}
+            ? 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]'
+            : 'bg-[var(--color-bg-tertiary)] text-action-muted'
+      } ${isActive ? 'ring-2 ring-offset-1 ring-[var(--color-data-provisional)]' : ''}`}
     >
       <Flame className={`w-3 h-3 ${isActive ? 'animate-pulse' : ''}`} />
       <span>{streak}</span>

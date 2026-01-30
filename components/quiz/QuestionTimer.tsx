@@ -66,14 +66,14 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
     const ratio = finalElapsed / parTimeMs;
 
     let timerStatus: 'good' | 'warning' | 'overtime' = 'good';
-    let color = 'text-emerald-600 bg-emerald-500';
+    let color = 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]';
 
     if (ratio >= THRESHOLDS.overtime) {
       timerStatus = 'overtime';
-      color = 'text-red-600 bg-red-500';
+      color = 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]';
     } else if (ratio >= THRESHOLDS.warning) {
       timerStatus = 'warning';
-      color = 'text-amber-600 bg-amber-500';
+      color = 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]';
     }
 
     return {
@@ -110,7 +110,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-1 text-xs text-red-600"
+            className="flex items-center gap-1 text-xs text-[var(--color-data-fail)]"
           >
             <AlertCircle className="w-3 h-3" />
             <span>Over time</span>
@@ -118,12 +118,12 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
         )}
 
         {isAnswered && (
-          <span className="text-xs text-slate-500">Par: {Math.round(parTimeMs / 1000)}s</span>
+          <span className="text-xs text-action-muted">Par: {Math.round(parTimeMs / 1000)}s</span>
         )}
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progressPercent}%` }}

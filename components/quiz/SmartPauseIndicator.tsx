@@ -51,11 +51,11 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
   const getBannerStyle = () => {
     switch (pauseAnalysis.recommendation) {
       case 'recommended':
-        return 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700';
+        return 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30';
       case 'suggested':
-        return 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700';
+        return 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30';
       case 'soft':
-        return 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600';
+        return 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]';
       default:
         return '';
     }
@@ -64,11 +64,11 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
   const getIcon = () => {
     switch (pauseAnalysis.recommendation) {
       case 'recommended':
-        return <Coffee className="w-5 h-5 text-amber-500" />;
+        return <Coffee className="w-5 h-5 text-[var(--color-data-provisional)]" />;
       case 'suggested':
-        return <Sparkles className="w-5 h-5 text-blue-500" />;
+        return <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />;
       case 'soft':
-        return <Heart className="w-5 h-5 text-rose-400" />;
+        return <Heart className="w-5 h-5 text-[var(--color-data-fail)]" />;
       default:
         return null;
     }
@@ -85,19 +85,19 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">
               {pauseAnalysis.message}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-action-muted mt-1">
               {pauseAnalysis.encouragement}
             </p>
           </div>
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="flex-shrink-0 p-1 rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors"
             title="Dismiss"
           >
-            <X className="w-4 h-4 text-slate-400" />
+            <X className="w-4 h-4 text-action-muted" />
           </button>
         </div>
       </motion.div>
@@ -142,7 +142,7 @@ export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshK
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"
         >
-          <div className="px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium shadow-lg">
+          <div className="px-4 py-2 rounded-full bg-[var(--color-data-pass)] text-white text-sm font-medium shadow-lg">
             {message}
           </div>
         </motion.div>
