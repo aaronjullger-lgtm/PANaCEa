@@ -36,7 +36,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       {/* Fully Unlocked Badge */}
       {isFullyUnlocked && (
         <div className="absolute top-2 right-2">
-          <CheckCircle className="w-5 h-5 text-green-500" />
+          <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" />
         </div>
       )}
 
@@ -65,10 +65,10 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className={`h-full ${
               completion === 100
-                ? 'bg-green-500'
+                ? 'bg-[var(--color-data-pass)]'
                 : completion >= 50
-                  ? 'bg-blue-500'
-                  : 'bg-slate-400'
+                  ? 'bg-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-tertiary)]'
             }`}
           />
         </div>

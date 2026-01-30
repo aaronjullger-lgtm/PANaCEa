@@ -137,11 +137,11 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
                     <div
                       className={`text-xs text-center mt-1 ${
                         variant.rarity === 'legendary'
-                          ? 'text-amber-500'
+                          ? 'text-[var(--color-data-provisional)]'
                           : variant.rarity === 'epic'
-                            ? 'text-purple-500'
+                            ? 'text-[var(--color-accent)]'
                             : variant.rarity === 'rare'
-                              ? 'text-blue-500'
+                              ? 'text-[var(--color-accent)]'
                               : 'text-[var(--color-text-muted)]'
                       }`}
                     >

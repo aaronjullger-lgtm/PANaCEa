@@ -214,7 +214,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
 
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <Sparkles className="w-4 h-4 text-[var(--color-accent)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Characters</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -227,7 +227,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
 
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-amber-500" />
+                  <Star className="w-4 h-4 text-[var(--color-data-provisional)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Accessories</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -240,7 +240,7 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
 
               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <Lock className="w-4 h-4 text-slate-500" />
+                  <Lock className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <div className="text-xs text-[var(--color-text-muted)]">Locked</div>
                 </div>
                 <div className="text-2xl font-bold text-[var(--color-text-primary)]">
