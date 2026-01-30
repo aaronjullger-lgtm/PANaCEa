@@ -43,12 +43,8 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
           appearance={{
             elements: {
               avatarBox:
-                'w-12 h-12 ring-1 ring-[var(--color-border)] bg-[var(--color-bg-primary)] dark:bg-slate-700 dark:ring-white/20',
-              userButtonAvatarBox: 'dark:bg-slate-700',
+                'w-12 h-12 ring-1 ring-[var(--color-border)] bg-[var(--color-bg-primary)]',
               avatarImage: 'dark:brightness-110',
-            },
-            variables: {
-              colorBackground: 'rgb(226 232 240)', // slate-200
             },
           }}
         />
@@ -65,17 +61,17 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
       {/* Sync Status Indicator */}
       <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
         {isSyncing ? (
-          <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+          <div className="flex items-center gap-1.5 text-[var(--color-accent)]">
             <Cloud className="w-4 h-4 animate-pulse" />
             <span className="text-xs font-medium">Syncing...</span>
           </div>
         ) : syncError ? (
-          <div className="flex items-center gap-1.5 text-red-500 dark:text-red-400">
+          <div className="flex items-center gap-1.5 text-[var(--color-data-fail)]">
             <CloudOff className="w-4 h-4" />
             <span className="text-xs font-medium">Sync error</span>
           </div>
         ) : lastSyncTime ? (
-          <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-1.5 text-[var(--color-data-pass)]">
             <Cloud className="w-4 h-4" />
             <span className="text-xs font-medium">Cloud synced</span>
           </div>
