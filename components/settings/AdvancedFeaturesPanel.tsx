@@ -103,10 +103,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
     <div className="space-y-6">
       {/* Phase 13: Mental Health & Burnout Prevention */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Heart className="w-5 h-5 text-pink-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <Heart className="w-5 h-5 text-[var(--color-accent)]" />
           Mental Health & Wellness
-        </h3>
+        </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
@@ -121,8 +121,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               onClick={handleWellnessToggle}
               className={`p-2 rounded-lg transition-colors ${
                 wellnessChecksEnabled
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                  ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
               }`}
             >
               {wellnessChecksEnabled ? (
@@ -146,8 +146,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               onClick={handleCircadianToggle}
               className={`p-2 rounded-lg transition-colors ${
                 circadianTrackingEnabled
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
               }`}
             >
               {circadianTrackingEnabled ? (
@@ -172,10 +172,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
       {/* Phase 15: Hardware & Future-Proofing */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Watch className="w-5 h-5 text-blue-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <Watch className="w-5 h-5 text-[var(--color-accent)]" />
           Hardware Integration
-        </h3>
+        </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex-1">
@@ -194,8 +194,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               }}
               className={`p-2 rounded-lg transition-colors ${
                 watchNotificationsEnabled
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
               }`}
             >
               {watchNotificationsEnabled ? (
@@ -221,10 +221,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
       {/* Phase 17: Deep Learning Enhancements */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           Deep Learning Features
-        </h3>
+        </h2>
         <div className="space-y-4">
           {onOpenForgettingCurve && (
             <button
@@ -251,8 +251,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   onClick={() => handlePersonaChange(persona.id)}
                   className={`p-3 rounded-lg border-2 text-left transition-all ${
                     selectedPersona === persona.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-blue-300'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                      : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                       </div>
                     </div>
                     {selectedPersona === persona.id && (
-                      <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <Users className="w-5 h-5 text-[var(--color-accent)]" />
                     )}
                   </div>
                 </button>
@@ -278,17 +278,17 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
       {/* Phase 18: OSCE & Practical Skills */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Stethoscope className="w-5 h-5 text-green-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />
           OSCE & Practical Skills
-        </h3>
+        </h2>
         <div className="grid grid-cols-1 gap-3">
           <button
             className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <Video className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <Video className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">Video Vignettes</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -302,7 +302,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <FileText className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">SOAP Note Trainer</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -316,7 +316,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <List className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <List className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">
                   Differential Diagnosis Ranker
@@ -330,10 +330,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
       {/* Phase 19: Post-Graduation & Lifelong Learning */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-indigo-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <GraduationCap className="w-5 h-5 text-[var(--color-accent)]" />
           Lifelong Learning
-        </h3>
+        </h2>
         <div className="space-y-3">
           {onOpenPANRELA && (
             <button
@@ -350,7 +350,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             hover:border-indigo-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <Bell className="w-5 h-5 text-[var(--color-accent)]" />
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">New Drug Newsfeed</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -364,10 +364,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
       {/* Additional Features */}
       <section>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Globe className="w-5 h-5 text-orange-500" />
+        <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <Globe className="w-5 h-5 text-[var(--color-accent)]" />
           Additional Features
-        </h3>
+        </h2>
         <div className="space-y-4">
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
@@ -383,8 +383,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   onClick={() => handleSpanishModeChange(mode)}
                   className={`p-2 rounded-lg border-2 text-center text-sm font-semibold transition-all ${
                     spanishMode === mode
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
-                      : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-orange-300'
+                      ? 'border-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-data-provisional)]/50'
                   }`}
                 >
                   {mode === 'english' && 'English'}
@@ -408,8 +408,8 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               onClick={handleHapticToggle}
               className={`p-2 rounded-lg transition-colors ${
                 hapticEnabled
-                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
               }`}
             >
               {hapticEnabled ? <Vibrate className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}

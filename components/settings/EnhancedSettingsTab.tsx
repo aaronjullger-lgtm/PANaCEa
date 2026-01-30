@@ -383,14 +383,14 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
 
                 {/* Certification Status - Only for practicing PAs */}
                 {careerStage === 'practicing' && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                  <div className="p-3 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-green-600" />
+                      <Award className="w-5 h-5 text-[var(--color-data-pass)]" />
                       <div>
-                        <p className="font-medium text-green-800 dark:text-green-300">
+                        <p className="font-medium text-[var(--color-data-pass)]">
                           PA-C Certified
                         </p>
-                        <p className="text-xs text-green-700 dark:text-green-400">
+                        <p className="text-xs text-[var(--color-data-pass)]">
                           PANRE-LA Simulator and recertification content enabled
                         </p>
                       </div>
@@ -442,9 +442,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   <div className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg">
                     <div className="flex items-center gap-3">
                       {theme === 'dark' ? (
-                        <Moon className="w-5 h-5 text-indigo-400" />
+                        <Moon className="w-5 h-5 text-[var(--color-accent)]" />
                       ) : (
-                        <Sun className="w-5 h-5 text-amber-500" />
+                        <Sun className="w-5 h-5 text-[var(--color-data-provisional)]" />
                       )}
                       <div>
                         <div className="font-medium text-[var(--color-text-primary)]">
@@ -457,7 +457,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     </div>
                     <button
                       onClick={onToggleTheme}
-                      className="px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+                      className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
                     >
                       Switch
                     </button>
@@ -564,11 +564,11 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   {/* Sync Status */}
                   <div className="flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg">
                     {isSyncing ? (
-                      <Cloud className="w-5 h-5 text-blue-500 animate-pulse" />
+                      <Cloud className="w-5 h-5 text-[var(--color-accent)] animate-pulse" />
                     ) : syncError ? (
-                      <XCircle className="w-5 h-5 text-red-500" />
+                      <XCircle className="w-5 h-5 text-[var(--color-data-fail)]" />
                     ) : lastSyncTime ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" />
                     ) : (
                       <Cloud className="w-5 h-5 text-[var(--color-text-muted)]" />
                     )}
@@ -577,11 +577,11 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                       <div
                         className={`text-sm ${
                           isSyncing
-                            ? 'text-blue-600 dark:text-blue-400'
+                            ? 'text-[var(--color-accent)]'
                             : syncError
-                              ? 'text-red-600 dark:text-red-400'
+                              ? 'text-[var(--color-data-fail)]'
                               : lastSyncTime
-                                ? 'text-green-600 dark:text-green-400'
+                                ? 'text-[var(--color-data-pass)]'
                                 : 'text-[var(--color-text-primary)]'
                         }`}
                       >
@@ -599,7 +599,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   {/* Sign Out Button */}
                   <button
                     onClick={() => signOut()}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-400 font-medium transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/20 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)] font-medium transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
@@ -625,9 +625,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       <DataExport />
 
       {/* Info Tip */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-        <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
-          <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="p-4 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30">
+        <p className="text-sm text-[var(--color-accent)] flex items-start gap-2">
+          <Lightbulb className="w-4 h-4 text-[var(--color-data-provisional)] flex-shrink-0 mt-0.5" />
           <span>
             <strong>Tip:</strong> Your settings are saved automatically and sync across devices when
             logged in.

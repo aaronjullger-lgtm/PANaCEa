@@ -66,12 +66,12 @@ const CHRONOTYPE_INFO: Record<Chronotype, { label: string; emoji: string; descri
  * Cognitive state color mapping
  */
 const STATE_COLORS: Record<StudyRecommendation['cognitiveState'], string> = {
-  peak: 'bg-emerald-500',
-  good: 'bg-blue-500',
-  trough: 'bg-amber-500',
-  recovery: 'bg-violet-500',
-  late_night: 'bg-indigo-500',
-  rest: 'bg-slate-500',
+  peak: 'bg-[var(--color-data-pass)]',
+  good: 'bg-[var(--color-accent)]',
+  trough: 'bg-[var(--color-data-provisional)]',
+  recovery: 'bg-[var(--color-accent)]',
+  late_night: 'bg-[var(--color-accent)]',
+  rest: 'bg-[var(--color-text-muted)]',
 };
 
 export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
@@ -164,12 +164,12 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
       )}
 
       {/* Chronotype Display */}
-      <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-3">
           <span className="text-4xl">{chronotypeInfo.emoji}</span>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">{chronotypeInfo.label}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <h3 className="font-semibold text-[var(--color-text-primary)]">{chronotypeInfo.label}</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">
               {chronotypeInfo.description}
             </p>
           </div>
@@ -179,54 +179,54 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
       {/* Wake Time Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
             Weekday Wake Time
           </label>
           <input
             type="time"
             value={preferences.weekdayWakeTime}
             onChange={(e) => handleWakeTimeChange('weekdayWakeTime', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 
-                       bg-white dark:bg-slate-700 text-slate-900 dark:text-white
-                       focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 rounded-lg border border-[var(--color-border-primary)] 
+                       bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]
+                       focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
             Your typical wake time on school/work days
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
             Weekend Wake Time
           </label>
           <input
             type="time"
             value={preferences.weekendWakeTime}
             onChange={(e) => handleWakeTimeChange('weekendWakeTime', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 
-                       bg-white dark:bg-slate-700 text-slate-900 dark:text-white
-                       focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 rounded-lg border border-[var(--color-border-primary)] 
+                       bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]
+                       focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
             Your typical wake time on weekends/days off
           </p>
         </div>
       </div>
 
       {/* Irregular Schedule Toggle */}
-      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+      <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)]/50 rounded-lg">
         <div>
-          <span className="text-slate-700 dark:text-slate-300 font-medium">
+          <span className="text-[var(--color-text-primary)] font-medium">
             Irregular Sleep Schedule
           </span>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-[var(--color-text-muted)]">
             Enable if your wake time varies significantly day to day
           </p>
         </div>
         <button
           onClick={handleIrregularToggle}
           className={`relative w-12 h-6 rounded-full transition-colors ${
-            preferences.irregularSchedule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+            preferences.irregularSchedule ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'
           }`}
         >
           <span
@@ -238,39 +238,39 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
       </div>
 
       {/* Cognitive Windows Summary */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-        <h3 className="font-semibold text-slate-900 dark:text-white mb-3">
+      <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border-primary)] rounded-xl p-4">
+        <h3 className="font-semibold text-[var(--color-text-primary)] mb-3">
           Your Cognitive Windows
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg">
-            <div className="text-emerald-600 dark:text-emerald-400 font-medium">Peak</div>
-            <div className="text-slate-700 dark:text-slate-300">
+          <div className="bg-[var(--color-data-pass)]/10 p-3 rounded-lg">
+            <div className="text-[var(--color-data-pass)] font-medium">Peak</div>
+            <div className="text-[var(--color-text-secondary)]">
               {cognitiveWindows.peakStart} - {cognitiveWindows.peakEnd}
             </div>
           </div>
-          <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-            <div className="text-amber-600 dark:text-amber-400 font-medium">Trough</div>
-            <div className="text-slate-700 dark:text-slate-300">
+          <div className="bg-[var(--color-data-provisional)]/10 p-3 rounded-lg">
+            <div className="text-[var(--color-data-provisional)] font-medium">Trough</div>
+            <div className="text-[var(--color-text-secondary)]">
               {cognitiveWindows.troughStart} - {cognitiveWindows.troughEnd}
             </div>
           </div>
-          <div className="bg-violet-50 dark:bg-violet-900/20 p-3 rounded-lg">
-            <div className="text-violet-600 dark:text-violet-400 font-medium">Recovery</div>
-            <div className="text-slate-700 dark:text-slate-300">
+          <div className="bg-[var(--color-accent)]/10 p-3 rounded-lg">
+            <div className="text-[var(--color-accent)] font-medium">Recovery</div>
+            <div className="text-[var(--color-text-secondary)]">
               {cognitiveWindows.eveningStart} - {cognitiveWindows.eveningEnd}
             </div>
           </div>
         </div>
-        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        <div className="mt-3 text-xs text-[var(--color-text-muted)]">
           💡 Optimal exam time for your chronotype: <strong>{optimalExamTime}</strong>
         </div>
       </div>
 
       {/* Daily Schedule */}
       {showSchedule && (
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-3">
+        <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border-primary)] rounded-xl p-4">
+          <h3 className="font-semibold text-[var(--color-text-primary)] mb-3">
             Recommended Daily Schedule
           </h3>
           <div className="space-y-2">
@@ -279,27 +279,27 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
                 key={idx}
                 className={`flex items-center justify-between p-3 rounded-lg ${
                   slot.priority === 'high'
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500'
+                    ? 'bg-[var(--color-data-pass)]/10 border-l-4 border-[var(--color-data-pass)]'
                     : slot.priority === 'medium'
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400'
-                      : 'bg-slate-50 dark:bg-slate-700/50 border-l-4 border-slate-300'
+                      ? 'bg-[var(--color-accent)]/10 border-l-4 border-[var(--color-accent)]'
+                      : 'bg-[var(--color-bg-tertiary)] border-l-4 border-[var(--color-border-primary)]'
                 }`}
               >
                 <div>
-                  <div className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                  <div className="font-medium text-[var(--color-text-primary)] text-sm">
                     {slot.timeRange}
                   </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                  <div className="text-xs text-[var(--color-text-secondary)]">
                     {slot.recommendation}
                   </div>
                 </div>
                 <span
                   className={`text-xs px-2 py-1 rounded ${
                     slot.priority === 'high'
-                      ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200'
+                      ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
                       : slot.priority === 'medium'
-                        ? 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
-                        : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                        ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                   }`}
                 >
                   {slot.state}
@@ -311,7 +311,7 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
       )}
 
       {/* Research Citation */}
-      <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
+      <p className="text-xs text-[var(--color-text-muted)] text-center">
         Based on chronobiology research: 8:30 AM wake time associated with 73.1% high scorers
         (Preckel et al., 2011)
       </p>

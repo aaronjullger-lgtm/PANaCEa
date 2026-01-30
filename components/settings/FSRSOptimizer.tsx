@@ -67,13 +67,13 @@ export const FSRSOptimizer: React.FC = () => {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Brain className="w-5 h-5 text-purple-500" />
-            <h3 className="font-semibold text-[var(--color-text-primary)]">
-              FSRS Algorithm Optimizer
-            </h3>
-          </div>
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
+          <h3 className="font-semibold text-[var(--color-text-primary)]">
+            FSRS Algorithm Optimizer
+          </h3>
+        </div>
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
             Personalizes your spacing algorithm based on your memory patterns. Default parameters
             are 20-30% less efficient than optimized ones.
@@ -95,9 +95,9 @@ export const FSRSOptimizer: React.FC = () => {
         onClick={handleOptimize}
         disabled={isOptimizing}
         className="w-full flex items-center justify-center gap-2 px-4 py-3 
-                 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 
-                 text-white font-medium rounded-lg transition-all
-                 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed
+                 text-[var(--color-btn-primary-text)] font-medium rounded-lg transition-all
+                 hover:scale-[1.02] active:scale-[0.98]"
       >
         {isOptimizing ? (
           <>
@@ -121,7 +121,7 @@ export const FSRSOptimizer: React.FC = () => {
           </div>
           <div className="w-full h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-purple-500 transition-all duration-300"
+              className="h-full bg-[var(--color-accent)] transition-all duration-300"
               style={{ width: `${progress.progress}%` }}
             />
           </div>
@@ -130,15 +130,15 @@ export const FSRSOptimizer: React.FC = () => {
 
       {/* Success Result */}
       {result && (
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+        <div className="p-4 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30 rounded-lg">
           <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)] flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-green-400 mb-2">Optimization Complete!</p>
+              <p className="text-sm font-medium text-[var(--color-data-pass)] mb-2">Optimization Complete!</p>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <div className="text-[var(--color-text-secondary)]">Efficiency Gain</div>
-                  <div className="text-lg font-bold text-green-400">
+                  <div className="text-lg font-bold text-[var(--color-data-pass)]">
                     +{result.metrics.improvementVsDefault.toFixed(1)}%
                   </div>
                 </div>
@@ -162,11 +162,11 @@ export const FSRSOptimizer: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <div className="p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-400 mb-1">Optimization Failed</p>
+              <p className="text-sm font-medium text-[var(--color-data-fail)] mb-1">Optimization Failed</p>
               <p className="text-xs text-[var(--color-text-secondary)]">{error}</p>
             </div>
           </div>
@@ -175,8 +175,8 @@ export const FSRSOptimizer: React.FC = () => {
 
       {/* Info Box */}
       {!isOptimizing && !result && !error && (
-        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-          <p className="text-xs text-blue-400">
+        <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
+          <p className="text-xs text-[var(--color-accent)]">
             ℹ️ Requires at least 50 reviews across 20+ unique questions. Optimization takes 10-30
             seconds and runs client-side using WebAssembly.
           </p>

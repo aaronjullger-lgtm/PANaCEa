@@ -305,7 +305,7 @@ export const DataExport: React.FC = () => {
                    rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed
                    hover:scale-[1.02] active:scale-[0.98]"
         >
-          <FileSpreadsheet className="w-8 h-8 text-green-500" />
+          <FileSpreadsheet className="w-8 h-8 text-[var(--color-data-pass)]" />
           <div className="text-left">
             <div className="font-semibold text-[var(--color-text-primary)]">Export to CSV</div>
             <div className="text-xs text-[var(--color-text-secondary)] mt-1">
@@ -323,7 +323,7 @@ export const DataExport: React.FC = () => {
                    rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed
                    hover:scale-[1.02] active:scale-[0.98]"
         >
-          <FileText className="w-8 h-8 text-blue-500" />
+          <FileText className="w-8 h-8 text-[var(--color-accent)]" />
           <div className="text-left">
             <div className="font-semibold text-[var(--color-text-primary)]">
               Cognitive Health Report
@@ -340,20 +340,20 @@ export const DataExport: React.FC = () => {
         <div
           className={`flex items-start gap-3 p-4 rounded-lg ${
             exportStatus.type === 'success'
-              ? 'bg-green-500/10 border border-green-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
+              ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
+              : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
           }`}
         >
           {exportStatus.type === 'error' && (
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
           )}
           {exportStatus.type === 'success' && (
-            <Download className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+            <Download className="w-5 h-5 text-[var(--color-data-pass)] flex-shrink-0 mt-0.5" />
           )}
           <div>
             <p
               className={`text-sm font-medium ${
-                exportStatus.type === 'success' ? 'text-green-400' : 'text-red-400'
+                exportStatus.type === 'success' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
               }`}
             >
               {exportStatus.message}
@@ -364,9 +364,9 @@ export const DataExport: React.FC = () => {
 
       {/* Loading State */}
       {isExporting && (
-        <div className="flex items-center justify-center gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-          <p className="text-sm text-blue-400">Preparing export...</p>
+        <div className="flex items-center justify-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-accent)]"></div>
+          <p className="text-sm text-[var(--color-accent)]">Preparing export...</p>
         </div>
       )}
 
@@ -377,19 +377,19 @@ export const DataExport: React.FC = () => {
         </h4>
         <ul className="space-y-2 text-xs text-[var(--color-text-secondary)]">
           <li className="flex items-start gap-2">
-            <span className="text-blue-400">•</span>
+            <span className="text-[var(--color-accent)]">•</span>
             <span>Complete review history with timestamps and accuracy</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400">•</span>
+            <span className="text-[var(--color-accent)]">•</span>
             <span>Behavioral telemetry: response times, mouse tracking, pauses</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400">•</span>
+            <span className="text-[var(--color-accent)]">•</span>
             <span>Cognitive flags: rapid guesses, hesitation, answer changes</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400">•</span>
+            <span className="text-[var(--color-accent)]">•</span>
             <span>System and condition metadata for granular analysis</span>
           </li>
         </ul>
