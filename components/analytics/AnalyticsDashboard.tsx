@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ResponsiveContainer,
   Radar,
@@ -29,45 +29,132 @@ import {
   Info,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import type { PerformanceRecord, SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import chartTheme from '@/lib/chartTheme';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 // Minimum reviews needed for confident predictions (FSRS calibration threshold)
 const CALIBRATION_THRESHOLD = 60;
 const MIN_SYSTEM_REVIEWS = 5; // Minimum reviews per system for confident display
 
 interface AnalyticsDashboardProps {
-  performanceData: PerformanceRecord[];
   isLoading?: boolean;
 }
 
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
-type TrendDatum = { label: string; accuracy: number; pace: number };
 type TimeDatum = { system: string; seconds: number; accuracy: number; count: number };
 type StabilityTrendDatum = { date: string; avgStability: number; totalReviews: number };
 
-function calculateReadinessScore(records: PerformanceRecord[]): number {
-  if (!records.length) return 0;
-  const correct = records.filter((r) => r.isCorrect).length;
-  const accuracy = correct / records.length;
-  const uniqueSystems = new Set(records.map((r) => r.system).filter(Boolean));
-  const coverage = uniqueSystems.size / Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
-  // Weighted blend: 70% accuracy, 30% coverage
-  return Math.round((accuracy * 0.7 + coverage * 0.3) * 100);
+interface UserStatsResponse {
+  success: boolean;
+  stats: {
+    overall: {
+      totalAttempts: number;
+      correctAttempts: number;
+      accuracy: number;
+      questionsSeenCount: number;
+      currentStreak: number;
+      totalStudyDays: number;
+      avgTimeMs: number | null;
+      avgAnswerChanges: number | null;
+    };
+    bySystems: Record<
+      string,
+      {
+        total: number;
+        correct: number;
+        accuracy: number;
+        trend: 'improving' | 'declining' | 'neutral';
+        avgTimeMs: number | null;
+        lastAttempt: string | null;
+      }
+    >;
+    byConditions: Array<{
+      conditionId: string;
+      total: number;
+      correct: number;
+      accuracy: number;
+    }>;
+    weakAreas: Array<{
+      system: string;
+      accuracy: number;
+      attempts: number;
+      trend: 'improving' | 'declining' | 'neutral';
+    }>;
+    strongAreas: Array<{
+      system: string;
+      accuracy: number;
+      attempts: number;
+    }>;
+    weakConditions: Array<{
+      conditionId: string;
+      total: number;
+      correct: number;
+      accuracy: number;
+    }>;
+    recentPerformance: {
+      last7Days: {
+        attempts: number;
+        accuracy: number | null;
+      };
+      previous7Days: {
+        attempts: number;
+        accuracy: number | null;
+      };
+      trend: 'improving' | 'declining' | 'stable' | 'insufficient_data';
+    };
+    recommendations: string[];
+  };
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
-  performanceData,
-  isLoading = false,
-}) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoading = false }) => {
   const { getToken } = useAuth();
+  const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [stabilityTrendData, setStabilityTrendData] = useState<StabilityTrendDatum[]>([]);
   const [stabilityLoading, setStabilityLoading] = useState(true);
   const [stabilityError, setStabilityError] = useState<string | null>(null);
+
+  // Fetch user stats on mount
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      try {
+        const token = await getToken();
+        if (!token) {
+          setStatsLoading(false);
+          return;
+        }
+
+        const response = await fetch(getApiEndpoint('/api/user/stats'), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            throw new Error(`Expected JSON but got ${contentType}`);
+          }
+          throw new Error('Failed to fetch user stats');
+        }
+
+        const result = await response.json();
+        setUserStats(result);
+      } catch (error) {
+        console.error('[AnalyticsDashboard] Failed to fetch user stats:', error);
+        setStatsError(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [getToken]);
 
   // Fetch stability trend on mount
   useEffect(() => {
@@ -115,84 +202,62 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     fetchStabilityTrend();
   }, [getToken]);
 
+  // Transform server data for radar chart (system performance)
   const radarData: SystemRadarDatum[] = useMemo(() => {
-    const map = new Map<SystemCode, { correct: number; total: number }>();
-    performanceData.forEach((r) => {
-      if (!r.system) return;
-      const existing = map.get(r.system as SystemCode) || { correct: 0, total: 0 };
-      map.set(r.system as SystemCode, {
-        correct: existing.correct + (r.isCorrect ? 1 : 0),
-        total: existing.total + 1,
-      });
-    });
-    return Array.from(map.entries())
+    if (!userStats?.stats.bySystems) return [];
+
+    return Object.entries(userStats.stats.bySystems)
       .map(([system, stats]) => ({
-        system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-        accuracy: stats.total ? Math.round((stats.correct / stats.total) * 100) : 0,
+        system,
+        accuracy: stats.accuracy,
         attempts: stats.total,
       }))
-      .sort((a, b) => b.attempts - a.attempts) // Sort by most attempted
-      .slice(0, 10); // Show top 10 systems
-  }, [performanceData]);
+      .filter((d) => d.attempts > 0)
+      .sort((a, b) => b.attempts - a.attempts)
+      .slice(0, 10); // Top 10 systems by attempts
+  }, [userStats]);
 
-  const readinessScore = useMemo(() => calculateReadinessScore(performanceData), [performanceData]);
-
-  const trendData: TrendDatum[] = useMemo(() => {
-    const sorted = [...performanceData].sort((a, b) => a.timestamp - b.timestamp);
-    const buckets: TrendDatum[] = [];
-    const bucketSize = Math.max(1, Math.floor(sorted.length / 8));
-    for (let i = 0; i < sorted.length; i += bucketSize) {
-      const slice = sorted.slice(i, i + bucketSize);
-      if (!slice.length) continue;
-      const correct = slice.filter((r) => r.isCorrect).length;
-      const avgTime = slice.reduce((sum, r) => sum + (r.timeSpentMs || 0), 0) / slice.length;
-      const lastItem = slice[slice.length - 1];
-      buckets.push({
-        label: lastItem ? new Date(lastItem.timestamp).toLocaleDateString() : '',
-        accuracy: Math.round((correct / slice.length) * 100),
-        pace: Math.round(avgTime / 1000),
-      });
-    }
-    return buckets;
-  }, [performanceData]);
-
+  // Transform server data for time chart (decision time by system)
   const timeData: TimeDatum[] = useMemo(() => {
-    const map = new Map<SystemCode, { time: number; count: number; correct: number }>();
-    performanceData.forEach((r) => {
-      if (!r.system || r.timeSpentMs == null) return;
-      const existing = map.get(r.system as SystemCode) || { time: 0, count: 0, correct: 0 };
-      map.set(r.system as SystemCode, {
-        time: existing.time + r.timeSpentMs!,
-        count: existing.count + 1,
-        correct: existing.correct + (r.isCorrect ? 1 : 0),
-      });
-    });
-    return Array.from(map.entries())
+    if (!userStats?.stats.bySystems) return [];
+
+    return Object.entries(userStats.stats.bySystems)
       .map(([system, stats]) => ({
-        system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-        seconds: Math.round(stats.time / stats.count / 1000),
-        accuracy: Math.round((stats.correct / stats.count) * 100),
-        count: stats.count,
+        system,
+        seconds: stats.avgTimeMs ? Math.round(stats.avgTimeMs / 1000) : 0,
+        accuracy: stats.accuracy,
+        count: stats.total,
       }))
-      .sort((a, b) => b.accuracy - a.accuracy) // Sort by accuracy
-      .slice(0, 8); // Top 8 systems
-  }, [performanceData]);
+      .filter((d) => d.count > 0 && d.seconds > 0)
+      .sort((a, b) => b.accuracy - a.accuracy)
+      .slice(0, 8); // Top 8 systems by accuracy
+  }, [userStats]);
 
-  // Find weakest areas (for student context)
-  const weakestAreas = useMemo(() => {
-    return radarData
-      .filter((d) => d.attempts >= 5) // Only include systems with enough data
-      .sort((a, b) => a.accuracy - b.accuracy)
-      .slice(0, 3);
-  }, [radarData]);
+  // Calculate readiness score (weighted blend of accuracy and coverage)
+  const readinessScore = useMemo(() => {
+    if (!userStats?.stats.overall || !userStats.stats.bySystems) return 0;
 
-  const hasData = performanceData.length > 0;
+    const accuracy = userStats.stats.overall.accuracy / 100;
+    const systemsWithData = Object.values(userStats.stats.bySystems).filter(
+      (s) => s.total > 0
+    ).length;
+    const totalSystems = Object.keys(userStats.stats.bySystems).length;
+    const coverage = totalSystems > 0 ? systemsWithData / totalSystems : 0;
+
+    // Weighted blend: 70% accuracy, 30% coverage
+    return Math.round((accuracy * 0.7 + coverage * 0.3) * 100);
+  }, [userStats]);
+
+  // Determine if we have sufficient data
+  const hasData = userStats && userStats.stats.overall.totalAttempts > 0;
+  const totalAttempts = userStats?.stats.overall.totalAttempts ?? 0;
+
   const handleStartSession = () => {
     window.location.assign('/study/main-session');
   };
 
   // Loading state skeleton
-  if (isLoading) {
+  if (isLoading || statsLoading) {
     return (
       <div className="space-y-6">
         <SkeletonLoader height="5rem" className="rounded-xl" />
@@ -210,18 +275,31 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     );
   }
 
+  // Error state
+  if (statsError) {
+    return (
+      <div className="p-6 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertCircle className="w-5 h-5 text-data-provisional" />
+          <h3 className="font-bold text-data-provisional">Error Loading Analytics</h3>
+        </div>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {statsError}. Please try refreshing the page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+        <div className="p-4 rounded-xl bg-surface-card border border-[var(--color-border)]">
           <div className="flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-[var(--color-accent)] mt-0.5" />
+            <Sparkles className="w-5 h-5 text-action-primary mt-0.5" />
             <div>
-              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
-                PANCE Readiness Overview
-              </h4>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <h4 className="font-semibold text-action-primary mb-1">PANCE Readiness Overview</h4>
+              <p className="text-sm text-action-muted">
                 Track your progress across all organ systems. Focus on your weakest areas for
                 maximum improvement.
               </p>
@@ -232,91 +310,85 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-          <div className="mb-4 p-4 rounded-full bg-[var(--color-bg-tertiary)]">
-            <BarChart3 className="w-12 h-12 text-[var(--color-text-muted)]" />
+        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-card rounded-xl border border-[var(--color-border)]">
+          <div className="mb-4 p-4 rounded-full bg-action-muted">
+            <BarChart3 className="w-12 h-12 text-action-muted" />
           </div>
-          <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+          <h3 className="text-xl font-semibold text-action-primary mb-2">
             Start Building Your Profile
           </h3>
-          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-md mb-6">
+          <p className="text-sm text-action-muted text-center max-w-md mb-6">
             Complete your first 20-question session to unlock personalized analytics, track your
             progress across organ systems, and identify your focus areas.
           </p>
           <PrimaryButton size="md" icon={Play} onClick={handleStartSession}>
             Start Calibration Session
           </PrimaryButton>
-          <p className="text-xs text-[var(--color-text-muted)] mt-3">
+          <p className="text-xs text-action-muted mt-3">
             ~15 minutes • Interleaved across 3+ organ systems
           </p>
         </div>
       )}
 
       {/* Stats Grid - Student Context */}
-      {hasData && (
+      {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
-                  {readinessScore}%
-                </div>
-                <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
+                <div className="text-4xl font-bold text-action-primary">{readinessScore}%</div>
+                <TrendingUp className="w-5 h-5 text-action-primary" />
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Based on accuracy (
-                {Math.round(
-                  (performanceData.filter((r) => r.isCorrect).length / performanceData.length) * 100
-                )}
-                %) + coverage
+              <p className="text-xs text-action-muted">
+                Based on accuracy ({userStats.stats.overall.accuracy}%) + coverage
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
-                  {trendData.at(-1)?.accuracy ?? 0}%
+                <div className="text-4xl font-bold text-action-primary">
+                  {userStats.stats.recentPerformance.last7Days.accuracy ?? 0}%
                 </div>
-                <Activity className="w-5 h-5 text-[var(--color-accent)]" />
+                <Activity className="w-5 h-5 text-action-primary" />
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Last {trendData.length} session{trendData.length !== 1 ? 's' : ''}
+              <p className="text-xs text-action-muted">
+                Last 7 days ({userStats.stats.recentPerformance.last7Days.attempts} questions)
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 transition-colors">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
-                  {timeData.length
-                    ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s`
+                <div className="text-4xl font-bold text-action-primary">
+                  {userStats.stats.overall.avgTimeMs
+                    ? `${Math.round(userStats.stats.overall.avgTimeMs / 1000)}s`
                     : '—'}
                 </div>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">Average per question</p>
+              <p className="text-xs text-action-muted">Average per question</p>
             </div>
           </div>
 
           {/* FSRS Calibration Progress - Epistemic Uncertainty UI */}
           <CalibrationProgress
-            current={performanceData.length}
+            current={totalAttempts}
             target={CALIBRATION_THRESHOLD}
             showDetails={true}
           />
 
           {/* Weakest Subject Areas - Student Priority */}
-          {weakestAreas.length > 0 && (
+          {userStats.stats.weakAreas.length > 0 && (
             <div className="p-5 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
               <div className="flex items-center gap-2 mb-3">
                 <div className="p-2 rounded-lg bg-data-provisional/10">
@@ -327,21 +399,19 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {weakestAreas.map((area) => (
+                {userStats.stats.weakAreas.slice(0, 3).map((area) => (
                   <div
                     key={area.system}
-                    className="p-3 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
+                    className="p-3 rounded-lg bg-surface-primary border border-data-provisional/30"
                   >
-                    <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+                    <div className="text-sm font-semibold text-action-primary mb-1">
                       {area.system}
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-data-provisional">
                         {area.accuracy}%
                       </span>
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        {area.attempts} Q's
-                      </span>
+                      <span className="text-xs text-action-muted">{area.attempts} Q's</span>
                     </div>
                   </div>
                 ))}
@@ -351,12 +421,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Visual vs Text Performance Split */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
+            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <Activity className="w-4 h-4" /> System Performance Radar
               </div>
               {radarData.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-muted)]">No data yet.</p>
+                <p className="text-sm text-action-muted">No data yet.</p>
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <RadarChart data={radarData} outerRadius={120}>
@@ -382,67 +452,52 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               )}
             </div>
 
-            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
-                <TrendingUp className="w-4 h-4" /> Accuracy & Pace Trend
+            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+                <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
-              {trendData.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Start a session to see trends.
-                </p>
+              {userStats.stats.recentPerformance.trend === 'insufficient_data' ? (
+                <div className="flex flex-col items-center justify-center h-[320px]">
+                  <p className="text-sm text-action-muted">
+                    Complete more questions to see performance trends.
+                  </p>
+                </div>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    />
-                    <YAxis
-                      yAxisId="left"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                      domain={[0, 100]}
-                    />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    />
-                    <Tooltip />
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="accuracy"
-                      stroke="var(--color-accent)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Accuracy (%)"
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="pace"
-                      stroke="var(--color-text-secondary)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Pace (s)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="flex flex-col items-center justify-center h-[320px]">
+                  <div className="text-6xl font-bold text-action-primary mb-4">
+                    {userStats.stats.recentPerformance.trend === 'improving' && '📈'}
+                    {userStats.stats.recentPerformance.trend === 'declining' && '📉'}
+                    {userStats.stats.recentPerformance.trend === 'stable' && '➡️'}
+                  </div>
+                  <p className="text-lg font-semibold text-action-primary mb-2">
+                    {userStats.stats.recentPerformance.trend === 'improving' &&
+                      'Trending Upward'}
+                    {userStats.stats.recentPerformance.trend === 'declining' &&
+                      'Needs Focus'}
+                    {userStats.stats.recentPerformance.trend === 'stable' && 'Holding Steady'}
+                  </p>
+                  <p className="text-sm text-action-muted text-center max-w-xs">
+                    Last 7 days: {userStats.stats.recentPerformance.last7Days.accuracy}% (
+                    {userStats.stats.recentPerformance.last7Days.attempts} questions)
+                    <br />
+                    Previous 7 days: {userStats.stats.recentPerformance.previous7Days.accuracy}% (
+                    {userStats.stats.recentPerformance.previous7Days.attempts} questions)
+                  </p>
+                </div>
               )}
             </div>
           </div>
 
-          {/* FSRS Stability Growth Trend - NEW */}
-          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+          {/* FSRS Stability Growth Trend */}
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
+              <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
+                  <div className="w-3 h-3 border-2 border-action-primary border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs text-action-muted">Fetching data...</span>
                 </div>
               )}
             </div>
@@ -454,11 +509,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <SkeletonLoader width="100%" height="320" />
             ) : stabilityTrendData.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[320px] text-center">
-                <Brain className="w-12 h-12 text-[var(--color-text-muted)] mb-2 opacity-30" />
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <Brain className="w-12 h-12 text-action-muted mb-2 opacity-30" />
+                <p className="text-sm text-action-muted">
                   Complete questions to track your memory stability growth over time.
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                <p className="text-xs text-action-muted mt-1">
                   Stability measures how well you retain knowledge.
                 </p>
               </div>
@@ -500,8 +555,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="mt-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-muted)]">
+                <div className="mt-3 p-3 bg-surface-card rounded-lg border border-[var(--color-border)]">
+                  <p className="text-xs text-action-muted">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
@@ -527,20 +582,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             )}
           </div>
 
-          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+          {/* Decision Time by System */}
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
+              <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Clock className="w-4 h-4" /> Decision Time by System
               </div>
               {timeData.some((d) => d.count < MIN_SYSTEM_REVIEWS) && (
-                <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                <div className="flex items-center gap-1 text-xs text-action-muted">
                   <Info className="w-3 h-3" />
                   <span>Faded bars = &lt;{MIN_SYSTEM_REVIEWS} reviews</span>
                 </div>
               )}
             </div>
             {timeData.length === 0 ? (
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <p className="text-sm text-action-muted">
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (

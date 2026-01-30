@@ -69,13 +69,13 @@ import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/t
 import type { SRSScheduleResult } from '@/lib/services/srsService';
 
 // Lib utils
-import { updateReviewOutcome } from '@/lib/services/srsService';
 import { calculateParTime } from '@/lib/utils/questionComplexity';
 import {
   optimisticUpdateStats,
   optimisticUpdateSystemStats,
   createOptimisticPerformanceRecord,
 } from '@/lib/utils/optimisticUI';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 // Hooks
 import { useAuth } from '@/hooks/useAuth';
@@ -754,55 +754,51 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
     });
 
-    // Update SRS schedule (if user is authenticated)
+      // Update SRS schedule (if user is authenticated)
     if (user?.id && currentQuestion.id) {
-      // Calculate complexity-aware par time based on word count, images, and labs
-      const baselineTime = calculateParTime(currentQuestion);
-      const performanceRatio = timeToAnswer / baselineTime;
+      // Submit review to API endpoint (replaces legacy updateReviewOutcome)
+      // This syncs FSRS data to server, creates QuestionAttempt, updates UserProgress
+      getToken()
+        .then(async (token) => {
+          try {
+            const response = await fetch(getApiEndpoint(API_ENDPOINTS.SUBMIT_REVIEW), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({
+                questionId: currentQuestion.id,
+                selectedAnswer: selectedAnswerIndex,
+                timeSpentMs: timeToAnswer,
+                timeToFirstClick: implicitMetrics.getMetrics().timeToFirstClick,
+                answerSwitches: answerChangeCount,
+                totalDwellTime: timeToAnswer,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              }),
+            });
 
-      // Calculate quality score (0-5 scale) using FSRS v5 adaptive logic
-      // Quality accounts for both correctness AND time relative to question complexity
-      let quality: number;
-      if (isCorrect) {
-        // Correct answers: quality depends on speed relative to question complexity
-        if (performanceRatio < 0.75) {
-          quality = 5; // Easy - significantly faster than par (mastery)
-        } else if (performanceRatio < 1.25) {
-          quality = 4; // Good - within normal range
-        } else {
-          quality = 3; // Hard - slower than expected but still correct
-        }
-      } else {
-        // Incorrect answers: quality depends on whether it was rushed or thoughtful
-        if (performanceRatio < 0.5) {
-          quality = 1; // Failed - incorrect AND rushed (likely guessing/anchoring bias)
-        } else {
-          quality = 2; // Again - incorrect but took time (knowledge gap, not careless)
-        }
-      }
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+              throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
 
-      // Check if in red zone (performance < 75%)
-      const topicPerformance = performanceData
-        .filter((p) => p.topic === currentQuestion.topic)
-        .slice(-20);
-      const recentCorrect = topicPerformance.filter((p) => p.isCorrect).length;
-      const isInRedZone =
-        topicPerformance.length > 0 && recentCorrect / topicPerformance.length < 0.75;
-
-      // Update SRS schedule asynchronously (non-blocking)
-      // FSRS v5 will apply additional modifiers based on quality, time, and red zone status
-      updateReviewOutcome(user.id, currentQuestion.id, {
-        quality,
-        timeToAnswer,
-        baselineTime,
-        isInRedZone,
-      })
-        .then((result) => {
-          setSrsResult(result);
+            const result = await response.json();
+            
+            // Map API response to legacy SRSScheduleResult format for backward compatibility
+            setSrsResult({
+              nextReview: new Date(Date.now() + 24 * 60 * 60 * 1000), // Placeholder
+              stability: result.data?.implicitMetrics?.latencyRatio ?? 1.0,
+              difficulty: result.data?.quality ?? 3,
+            });
+          } catch (err) {
+            console.error('Failed to submit review to server:', err);
+            // Silent failure - don't block the user
+            // Local data is already recorded, server sync can be retried later
+          }
         })
         .catch((err) => {
-          console.error('Failed to update SRS schedule:', err);
-          // Silent failure - don't block the user
+          console.error('Failed to get auth token:', err);
         });
     }
 

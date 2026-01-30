@@ -3,6 +3,9 @@
  *
  * Get comprehensive user statistics for analytics and FSRS tuning.
  * Returns per-system accuracy, trends, weak areas, and study recommendations.
+ *
+ * PHASE 1 FIX: Uses blueprint normalization to aggregate both abbreviations
+ * and full system names (e.g., "CV" and "Cardiovascular" both count).
  */
 
 import { z } from 'zod';
@@ -16,27 +19,11 @@ import {
   CACHE_CONFIG,
   isKVAvailable,
 } from '../_shared/cache';
+import { normalizeSystemName, getAllSystems } from '@/lib/constants/blueprint';
 
 const UserStatsSchema = z.object({
   query: z.object({}).optional(), // No query params for this endpoint
 });
-
-const SYSTEMS = [
-  'CV',
-  'PULM',
-  'GI',
-  'NEURO',
-  'MSK',
-  'DERM',
-  'HEME',
-  'ENDO',
-  'HEENT',
-  'RENAL',
-  'REPRO',
-  'PSYCH',
-  'ID',
-  'GU',
-];
 
 export const onRequestOptions = withCors();
 
@@ -108,7 +95,21 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
           ).toFixed(2)
         : null;
 
-    // Calculate per-system stats
+    // PHASE 1 FIX: Normalize all system names and aggregate by canonical name
+    // This handles both "CV" and "Cardiovascular" being counted together
+    const systemMap = new Map<string, Array<(typeof allAttempts)[0]>>();
+
+    for (const attempt of allAttempts) {
+      if (attempt.system) {
+        const normalizedSystem = normalizeSystemName(attempt.system);
+        if (!systemMap.has(normalizedSystem)) {
+          systemMap.set(normalizedSystem, []);
+        }
+        systemMap.get(normalizedSystem)!.push(attempt);
+      }
+    }
+
+    // Calculate per-system stats using normalized names
     const systemStats: Record<
       string,
       {
@@ -121,10 +122,11 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       }
     > = {};
 
-    for (const system of SYSTEMS) {
-      const systemAttempts = allAttempts.filter(
-        (a: (typeof allAttempts)[0]) => a.system === system
-      );
+    // Get canonical system list from blueprint
+    const canonicalSystems = getAllSystems();
+
+    for (const system of canonicalSystems) {
+      const systemAttempts = systemMap.get(system) || [];
       const total = systemAttempts.length;
       const correct = systemAttempts.filter((a: (typeof systemAttempts)[0]) => a.wasCorrect).length;
       const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
@@ -377,6 +379,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       totalAttempts,
       accuracy: overallAccuracy,
       weakAreasCount: weakAreas.length,
+      systemsCounted: Object.keys(systemStats).filter((k) => systemStats[k].total > 0).length,
     });
 
     return {

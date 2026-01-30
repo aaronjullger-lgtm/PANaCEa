@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
   RECOMMENDATIONS: '/api/recommendations',
+  SUBMIT_REVIEW: '/api/drills/submit-review',
+  USER_STATS: '/api/user/stats',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;
