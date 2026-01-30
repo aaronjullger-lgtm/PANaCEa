@@ -84,16 +84,16 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl overflow-hidden relative"
+      className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-6 text-white shadow-xl overflow-hidden relative"
     >
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-bg-primary)]/10 rounded-full blur-3xl" />
 
       <div className="relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
+            <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg">
               <Brain className="w-6 h-6" />
             </div>
             <div>
@@ -104,7 +104,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
 
           {dueCount > 0 && (
             <div className="animate-pulse">
-              <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+              <div className="w-3 h-3 bg-[var(--color-data-provisional)] rounded-full" />
             </div>
           )}
         </div>
@@ -120,7 +120,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
             {dueCount > 0 && (
               <button
                 onClick={onReviewClick}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-purple-700 rounded-lg font-semibold hover:bg-white/90 transition-colors shadow-lg"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-primary)] text-[var(--color-accent)] rounded-lg font-semibold hover:bg-[var(--color-bg-primary)]/90 transition-colors shadow-lg"
               >
                 <span>Review Now</span>
                 <ArrowRight className="w-4 h-4" />
@@ -136,7 +136,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
             {/* Retention Rate */}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="w-4 h-4 text-green-300" />
+                <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />
                 <span className="text-xs text-white/70">Retention</span>
               </div>
               <div className="text-2xl font-bold">{retentionRate}%</div>
@@ -145,7 +145,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
             {/* Mature Cards */}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-blue-300" />
+                <Calendar className="w-4 h-4 text-[var(--color-accent)]" />
                 <span className="text-xs text-white/70">Learned</span>
               </div>
               <div className="text-2xl font-bold">{matureCards}</div>

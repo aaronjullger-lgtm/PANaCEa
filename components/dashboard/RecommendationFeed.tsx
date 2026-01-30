@@ -244,7 +244,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
     <div className={`mb-8 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--color-text-primary)]">
-          <Sparkles className="w-5 h-5 text-amber-500" />
+          <Sparkles className="w-5 h-5 text-[var(--color-data-provisional)]" />
           Smart Recommendations
         </h3>
         <div className="flex items-center gap-2">
@@ -279,12 +279,12 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
             >
               {/* Priority Indicator */}
               {rec.priority === 'high' && (
-                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[var(--color-data-fail)] shadow-[0_0_8px_var(--color-data-fail)]" />
               )}
 
               <div className="flex flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <div className="p-3 rounded-xl bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]">
                     <Lightbulb className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
@@ -308,7 +308,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
                   <button
                     onClick={() => handleAction(rec.id, 'complete')}
-                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/10 transition-colors"
                     title="Mark as Done"
                   >
                     <Check className="w-4 h-4 mx-auto" />
@@ -331,7 +331,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
         {generating && recommendations.length === 0 && (
           <div className="col-span-full py-8 flex flex-col items-center justify-center text-[var(--color-text-muted)]">
-            <Loader2 className="w-8 h-8 animate-spin mb-2 text-blue-500" />
+            <Loader2 className="w-8 h-8 animate-spin mb-2 text-[var(--color-accent)]" />
             <p>Analyzing your learning profile...</p>
           </div>
         )}

@@ -81,12 +81,12 @@ interface HighYieldSidebarProps {
 
 const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudyClick }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+    <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-amber-600" />
-        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">High Yield Focus</h3>
+        <Target className="w-5 h-5 text-[var(--color-data-provisional)]" />
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)]">High Yield Focus</h3>
       </div>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+      <p className="text-sm text-[var(--color-text-secondary)] mb-6">
         Top priorities based on gap size and question volume
       </p>
 
@@ -97,30 +97,30 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-700/50"
+            className="p-4 bg-gradient-to-r from-[var(--color-data-provisional)]/10 to-[var(--color-data-provisional)]/5 rounded-xl border border-[var(--color-data-provisional)]/30"
           >
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-amber-600">#{index + 1}</span>
-                  <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="text-lg font-bold text-[var(--color-data-provisional)]">#{index + 1}</span>
+                  <h4 className="font-semibold text-[var(--color-text-primary)]">
                     {system.name}
                   </h4>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                   +{Math.round(system.topPerformerGap)}% to reach Top 10%
                 </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
                 <span>Your: {system.accuracy}%</span>
                 <span>Goal: {system.cohortP90}%</span>
               </div>
               <button
                 onClick={() => onStudyClick(system.name)}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 Study Now
                 <ArrowRight className="w-4 h-4" />
@@ -142,29 +142,29 @@ const CustomTooltip = ({ active, payload }: any) => {
 
   const data = payload[0].payload;
   return (
-    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 shadow-lg">
-      <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-2">{data.name}</h4>
+    <div className="bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border border-[var(--color-border)] rounded-lg px-4 py-3 shadow-lg">
+      <h4 className="font-bold text-[var(--color-text-primary)] mb-2">{data.name}</h4>
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-slate-600 dark:text-slate-400">Your Accuracy:</span>
-          <span className="font-semibold text-blue-600 dark:text-blue-400">{data.accuracy}%</span>
+          <span className="text-[var(--color-text-secondary)]">Your Accuracy:</span>
+          <span className="font-semibold text-[var(--color-accent)]">{data.accuracy}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-slate-600 dark:text-slate-400">Cohort Average:</span>
-          <span className="font-semibold text-slate-700 dark:text-slate-300">
+          <span className="text-[var(--color-text-secondary)]">Cohort Average:</span>
+          <span className="font-semibold text-[var(--color-text-primary)]">
             {data.cohortAverage}%
           </span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-slate-600 dark:text-slate-400">Top 10%:</span>
-          <span className="font-semibold text-amber-600 dark:text-amber-500">
+          <span className="text-[var(--color-text-secondary)]">Top 10%:</span>
+          <span className="font-semibold text-[var(--color-data-provisional)]">
             {data.cohortP90}%
           </span>
         </div>
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+        <div className="border-t border-[var(--color-border)] pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-600 dark:text-slate-400">Gap to Close:</span>
-            <span className="font-bold text-amber-600">+{Math.round(data.topPerformerGap)}%</span>
+            <span className="text-[var(--color-text-secondary)]">Gap to Close:</span>
+            <span className="font-bold text-[var(--color-data-provisional)]">+{Math.round(data.topPerformerGap)}%</span>
           </div>
         </div>
       </div>
@@ -251,12 +251,12 @@ export const GapAnalysisDashboard: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+      <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3 animate-pulse mb-8" />
+          <div className="h-8 bg-[var(--color-bg-tertiary)] rounded w-1/3 animate-pulse mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 h-96 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse" />
-            <div className="h-96 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse" />
+            <div className="lg:col-span-2 h-96 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
+            <div className="h-96 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
           </div>
         </div>
       </div>
@@ -266,24 +266,24 @@ export const GapAnalysisDashboard: React.FC = () => {
   // Error state
   if (error && !data) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md">
+      <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center p-6">
+        <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-data-fail)]/30 p-8 max-w-md">
           <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
               Unable to Load Analysis
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+            <p className="text-[var(--color-text-secondary)] mb-6">{error}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setRetryCount(retryCount + 1)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-semibold rounded-lg transition-colors"
               >
                 Retry
               </button>
               <button
                 onClick={() => navigate('/')}
-                className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 font-semibold rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-primary)] font-semibold rounded-lg transition-colors"
               >
                 Go Home
               </button>
@@ -321,7 +321,7 @@ export const GapAnalysisDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+    <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <motion.div
@@ -330,10 +330,10 @@ export const GapAnalysisDashboard: React.FC = () => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Gap Analysis</h1>
+            <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Gap Analysis</h1>
           </div>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-[var(--color-text-secondary)]">
             Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total
             attempts
           </p>
@@ -345,39 +345,39 @@ export const GapAnalysisDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-white rounded-xl border border-gray-200 p-4"
+            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
             <div className="flex items-center gap-2 mb-1">
-              <Trophy className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-zinc-600">Overall Percentile</span>
+              <Trophy className="w-5 h-5 text-[var(--color-data-provisional)]" />
+              <span className="text-sm text-[var(--color-text-secondary)]">Overall Percentile</span>
             </div>
-            <p className="text-2xl font-bold text-zinc-900">{data.overallPercentile}%</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{data.overallPercentile}%</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-white rounded-xl border border-gray-200 p-4"
+            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-5 h-5 text-blue-600" />
-              <span className="text-sm text-zinc-600">Systems Analyzed</span>
+              <Target className="w-5 h-5 text-[var(--color-accent)]" />
+              <span className="text-sm text-[var(--color-text-secondary)]">Systems Analyzed</span>
             </div>
-            <p className="text-2xl font-bold text-zinc-900">{data.systems.length}</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{data.systems.length}</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="bg-white rounded-xl border border-gray-200 p-4"
+            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-zinc-600">High Priority Areas</span>
+              <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)]" />
+              <span className="text-sm text-[var(--color-text-secondary)]">High Priority Areas</span>
             </div>
-            <p className="text-2xl font-bold text-zinc-900">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
               {
                 data.systems.filter((s) => s.status === 'critical' || s.status === 'weakness')
                   .length
@@ -393,13 +393,13 @@ export const GapAnalysisDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
-            className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6"
+            className="lg:col-span-2 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6"
           >
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">
                 Performance vs. Top 10%
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Sorted by improvement opportunity (highest yield first)
               </p>
             </div>
@@ -465,13 +465,13 @@ export const GapAnalysisDashboard: React.FC = () => {
             </ResponsiveContainer>
 
             {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-4 text-xs text-zinc-600">
+            <div className="flex items-center justify-center gap-6 mt-4 text-xs text-[var(--color-text-secondary)]">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-600" />
+                <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]" />
                 <span>Your Score</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-zinc-400" />
+                <div className="w-3 h-0.5 bg-[var(--color-text-muted)]" />
                 <span>Average</span>
               </div>
               <div className="flex items-center gap-2">

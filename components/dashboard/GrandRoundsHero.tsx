@@ -68,9 +68,9 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
 
   const getDifficultyBadge = () => {
     const colors = {
-      intermediate: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      advanced: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-      expert: 'bg-red-500/20 text-red-300 border-red-500/30',
+      intermediate: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30',
+      advanced: 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)] border-[var(--color-text-muted)]/30',
+      expert: 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
     };
     return (
       <span
@@ -115,23 +115,23 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         onClick={onExpand}
-        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 mb-4 flex items-center justify-between hover:border-slate-600 transition-all group"
+        className="w-full bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-3 mb-4 flex items-center justify-between hover:border-[var(--color-border)] transition-all group"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-slate-700/40 rounded-lg">
-            <Trophy className="w-4 h-4 text-slate-400" />
+          <div className="p-2 bg-[var(--color-bg-tertiary)]/40 rounded-lg">
+            <Trophy className="w-4 h-4 text-[var(--color-text-muted)]" />
           </div>
           <div className="text-left">
-            <span className="text-sm font-medium text-slate-200">Grand Rounds:</span>
-            <span className="text-sm text-slate-400 ml-2">{challengeTopic}</span>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">Grand Rounds:</span>
+            <span className="text-sm text-[var(--color-text-muted)] ml-2">{challengeTopic}</span>
           </div>
           {userStatus === 'completed' && (
-            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30 flex items-center gap-1">
+            <span className="px-2 py-0.5 bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] text-xs rounded-full border border-[var(--color-data-pass)]/30 flex items-center gap-1">
               <CheckCircle className="w-3 h-3" /> Completed
             </span>
           )}
         </div>
-        <ChevronDown className="w-4 h-4 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
+        <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)] group-hover:translate-y-0.5 transition-transform" />
       </motion.button>
     );
   }
@@ -148,14 +148,14 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
         relative overflow-hidden rounded-2xl border
         ${
           userStatus === 'completed'
-            ? 'bg-gradient-to-br from-emerald-900/40 via-emerald-800/30 to-teal-900/40 border-emerald-700/40'
-            : 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700'
+            ? 'bg-gradient-to-br from-[var(--color-data-pass)]/40 via-[var(--color-data-pass)]/30 to-[var(--color-accent)]/40 border-[var(--color-data-pass)]/40'
+            : 'bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] border-[var(--color-border)]'
         }
       `}
       >
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-radial from-slate-600/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-radial from-slate-700/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-radial from-[var(--color-bg-tertiary)]/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-radial from-[var(--color-bg-tertiary)]/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
 
         {/* Dismiss button */}
         {onDismiss && userStatus === 'completed' && (
@@ -174,15 +174,15 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
                 <div
-                  className={`p-3 rounded-xl ${userStatus === 'completed' ? 'bg-emerald-500/20' : 'bg-slate-700/40'}`}
+                  className={`p-3 rounded-xl ${userStatus === 'completed' ? 'bg-[var(--color-data-pass)]/20' : 'bg-[var(--color-bg-tertiary)]/40'}`}
                 >
                   <Trophy
-                    className={`w-6 h-6 ${userStatus === 'completed' ? 'text-emerald-400' : 'text-slate-400'}`}
+                    className={`w-6 h-6 ${userStatus === 'completed' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-text-muted)]'}`}
                   />
                 </div>
                 {getDifficultyBadge()}
                 {userStatus === 'completed' && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30">
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] text-xs rounded-full border border-[var(--color-data-pass)]/30">
                     <CheckCircle className="w-3 h-3" />
                     Completed
                   </span>
@@ -213,8 +213,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all
                   ${
                     userStatus === 'completed'
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                      : 'bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white text-white shadow-lg transition-all'
+                      ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-white shadow-lg shadow-[var(--color-data-pass)]/30'
+                      : 'bg-[var(--color-bg-secondary)]/50 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-white text-white shadow-lg transition-all'
                   }
                 `}
               >
@@ -246,7 +246,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {/* Score bar */}
                   <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-accent)] rounded-full transition-all duration-500"
                       style={{ width: `${userScore}%` }}
                     />
                     <div
@@ -259,7 +259,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {userPercentile !== undefined && (
                     <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
                       <TrendingUp
-                        className={`w-5 h-5 ${userPercentile >= 50 ? 'text-emerald-400' : 'text-muted-amber-400'}`}
+                        className={`w-5 h-5 ${userPercentile >= 50 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
                       />
                       <div>
                         <div className="text-sm font-medium text-white">
