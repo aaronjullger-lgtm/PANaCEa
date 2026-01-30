@@ -337,6 +337,17 @@ export default defineConfig(({ mode }) => {
         // which stubs them out instead of externalizing (which leaves bare imports)
         // sharp is a Node.js-only image processing library - must never be bundled for browser
         external: ['sharp'],
+        onwarn(warning, warn) {
+          if (
+            warning.code === 'SOURCEMAP_ERROR' &&
+            warning.loc?.file &&
+            (warning.loc.file.includes('components/navigation/CommandCenterHub.tsx') ||
+              warning.loc.file.includes('components/dashboard/TrainingMenu.tsx'))
+          ) {
+            return;
+          }
+          warn(warning);
+        },
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
           interop: 'compat',

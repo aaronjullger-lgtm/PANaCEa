@@ -13,7 +13,7 @@ let clearUserContext: (() => void) | null = null;
 
 // Load Sentry functions asynchronously (production only)
 if (import.meta.env.PROD) {
-  import('../lib/monitoring/sentry')
+  import('@/lib/monitoring/sentry')
     .then((sentry) => {
       setUserContext = sentry.setUserContext;
       clearUserContext = sentry.clearUserContext;
