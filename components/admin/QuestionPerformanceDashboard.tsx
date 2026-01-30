@@ -118,10 +118,10 @@ export const QuestionPerformanceDashboard: React.FC = () => {
             <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
               Question Performance
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               Identify and improve low-performing questions
             </p>
           </div>
@@ -139,14 +139,14 @@ export const QuestionPerformanceDashboard: React.FC = () => {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <span className="text-xs font-medium text-[var(--color-text-muted)]">
                 Analyzed
               </span>
             </div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summary.totalQuestionsAnalyzed}
             </p>
           </div>
@@ -198,15 +198,15 @@ export const QuestionPerformanceDashboard: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+      <div className="flex flex-wrap gap-4 items-center bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Sort by:</span>
+          <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">Sort by:</span>
         </div>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
+          className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm"
         >
           <option value="quality">Quality Score</option>
           <option value="accuracy">Accuracy</option>
@@ -216,7 +216,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
         <select
           value={order}
           onChange={(e) => setOrder(e.target.value as typeof order)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
+          className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm"
         >
           <option value="asc">Worst First</option>
           <option value="desc">Best First</option>
@@ -240,40 +240,40 @@ export const QuestionPerformanceDashboard: React.FC = () => {
 
       {/* Questions Table */}
       {!loading && !error && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-900/50">
+              <thead className="bg-[var(--color-bg-secondary)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Question
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     System
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Quality
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Accuracy
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Attempts
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Avg Time
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                     Flags
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-[var(--color-border)]">
                 {questions.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-4 py-12 text-center text-slate-500 dark:text-slate-400"
+                      className="px-4 py-12 text-center text-[var(--color-text-muted)]"
                     >
                       No question performance data available yet.
                       <br />
@@ -289,18 +289,18 @@ export const QuestionPerformanceDashboard: React.FC = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                      className="hover:bg-[var(--color-bg-secondary)]"
                     >
                       <td className="px-4 py-3">
-                        <div className="max-w-xs truncate text-sm text-slate-800 dark:text-white">
+                        <div className="max-w-xs truncate text-sm text-[var(--color-text-primary)]">
                           {q.questionText}
                         </div>
-                        <div className="text-xs text-slate-500 font-mono">
+                        <div className="text-xs text-[var(--color-text-muted)] font-mono">
                           {q.questionId.slice(0, 8)}...
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]">
                           {q.system}
                         </span>
                       </td>
@@ -316,15 +316,15 @@ export const QuestionPerformanceDashboard: React.FC = () => {
                         <span className={`text-sm font-medium ${getAccuracyColor(q.accuracy)}`}>
                           {q.accuracy}%
                         </span>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {q.correctAttempts}/{q.totalAttempts}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                      <td className="px-4 py-3 text-center text-sm text-[var(--color-text-secondary)]">
                         {q.totalAttempts}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
+                        <span className="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
                           <Clock className="w-3 h-3" />
                           {formatTime(q.avgTimeMs)}
                         </span>
@@ -336,7 +336,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
                             {q.flagCount}
                           </span>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span className="text-[var(--color-text-muted)]">-</span>
                         )}
                       </td>
                     </motion.tr>

@@ -233,8 +233,8 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
             <Flag className="w-6 h-6 text-[var(--color-data-fail)]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">Flagged Questions</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Flagged Questions</h2>
+            <p className="text-sm text-[var(--color-text-muted)]">
               Review and resolve user-reported issues
             </p>
           </div>
@@ -298,15 +298,15 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+        <div className="flex flex-wrap gap-4 items-center bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
+          <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">Filters:</span>
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
+          className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-sm"
         >
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
@@ -317,7 +317,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
+          className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-sm"
         >
           <option value="">All Priorities</option>
           <option value="critical">Critical</option>
@@ -346,12 +346,12 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       {!loading && !error && (
         <div className="space-y-4">
           {flags.length === 0 ? (
-            <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+            <div className="text-center py-12 bg-[var(--color-bg-secondary)] rounded-xl">
               <CheckCircle2 className="w-12 h-12 text-[var(--color-data-pass)] mx-auto mb-3" />
-              <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
+              <p className="text-lg font-medium text-[var(--color-text-secondary)]">
                 No flagged questions
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 All clear! No issues match the current filters.
               </p>
             </div>
@@ -374,12 +374,12 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+                    className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden"
                   >
                     {/* Flag Header */}
                     <button
                       onClick={() => toggleExpanded(flag.id)}
-                      className="w-full p-4 flex items-start gap-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="w-full p-4 flex items-start gap-4 text-left hover:bg-[var(--color-bg-secondary)] transition-colors"
                     >
                       <div className={`p-2 rounded-lg ${priorityConfig.bgColor}`}>
                         <Flag className={`w-5 h-5 ${priorityConfig.color}`} />
@@ -399,18 +399,18 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                             {FLAG_TYPE_LABELS[flag.flagType] || flag.flagType}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-800 dark:text-white font-medium truncate">
+                        <p className="text-sm text-[var(--color-text-primary)] font-medium truncate">
                           {flag.questionText}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <p className="text-xs text-[var(--color-text-muted)] mt-1">
                           Reported {formatDate(flag.createdAt)}
                           {flag.userFirstName && ` by ${flag.userFirstName}`}
                         </p>
                       </div>
                       {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-slate-400" />
+                        <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                        <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
                       )}
                     </button>
 
@@ -422,24 +422,24 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="border-t border-slate-200 dark:border-slate-700"
+                          className="border-t border-[var(--color-border)]"
                         >
                           <div className="p-4 space-y-4">
                             {/* Question Details */}
-                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
+                              <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2 flex items-center gap-2">
                                 <BookOpen className="w-4 h-4" />
                                 Question Text
                               </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                              <p className="text-sm text-[var(--color-text-secondary)]">
                                 {flag.questionText}
                               </p>
                               {flag.correctAnswer && (
-                                <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                                <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
                                   <span className="text-xs font-medium text-[var(--color-data-pass)]">
                                     Correct Answer:{' '}
                                   </span>
-                                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                                  <span className="text-sm text-[var(--color-text-secondary)]">
                                     {flag.correctAnswer}
                                   </span>
                                 </div>
@@ -459,19 +459,19 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
                             {/* Metadata */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                              <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                                 <User className="w-4 h-4" />
                                 <span>{flag.userEmail || flag.userId}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                              <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                                 <Tag className="w-4 h-4" />
                                 <span>{flag.system || 'No system'}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                              <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                                 <Calendar className="w-4 h-4" />
                                 <span>{formatDate(flag.createdAt)}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                              <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                                 <ExternalLink className="w-4 h-4" />
                                 <span className="font-mono">{flag.questionId.slice(0, 8)}...</span>
                               </div>
@@ -479,15 +479,15 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
                             {/* Resolution Section */}
                             {flag.status === 'pending' || flag.status === 'in_review' ? (
-                              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                              <div className="border-t border-[var(--color-border)] pt-4">
+                                <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
                                   Resolve this flag
                                 </h4>
                                 <textarea
                                   value={resolutionNote}
                                   onChange={(e) => setResolutionNote(e.target.value)}
                                   placeholder="Enter resolution note..."
-                                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm mb-3 resize-none"
+                                  className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-sm mb-3 resize-none"
                                   rows={3}
                                 />
                                 <div className="flex items-center gap-3">
@@ -496,7 +496,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                     onChange={(e) =>
                                       setResolveAction(e.target.value as 'fixed' | 'dismissed')
                                     }
-                                    className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm"
+                                    className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-sm"
                                   >
                                     <option value="fixed">Mark as Fixed</option>
                                     <option value="dismissed">Dismiss</option>
@@ -516,7 +516,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                 </div>
                               </div>
                             ) : (
-                              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                              <div className="border-t border-[var(--color-border)] pt-4">
                                 <div className="bg-[var(--color-data-pass)]/10 rounded-lg p-3">
                                   <p className="text-sm text-[var(--color-data-pass)]">
                                     <strong>Resolved by:</strong> {flag.reviewedBy}

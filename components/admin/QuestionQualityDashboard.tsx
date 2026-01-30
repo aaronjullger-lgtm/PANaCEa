@@ -160,7 +160,7 @@ export function QuestionQualityDashboard() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
           Question Quality Dashboard
         </h1>
         <button
@@ -173,7 +173,7 @@ export function QuestionQualityDashboard() {
 
       {/* Filters */}
       <div className="flex gap-4 items-center">
-        <Filter className="w-5 h-5 text-slate-500" />
+        <Filter className="w-5 h-5 text-[var(--color-text-muted)]" />
         <select
           value={systemFilter}
           onChange={(e) => setSystemFilter(e.target.value)}
@@ -248,7 +248,7 @@ export function QuestionQualityDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Validation Status Breakdown */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Validation Status</h2>
           <div className="space-y-3">
             {stats.statusBreakdown.map((item) => {
@@ -288,7 +288,7 @@ export function QuestionQualityDashboard() {
         </div>
 
         {/* Quality Distribution */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Quality Distribution</h2>
           <div className="space-y-3">
             {Object.entries(stats.qualityDistribution).map(([tier, count]) => {
@@ -318,18 +318,18 @@ export function QuestionQualityDashboard() {
               );
             })}
           </div>
-          <div className="mt-4 text-xs text-slate-500">
+          <div className="mt-4 text-xs text-[var(--color-text-muted)]">
             Excellent: 80-100 | Good: 60-79 | Fair: 40-59 | Poor: 0-39
           </div>
         </div>
 
         {/* System Coverage */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">System Coverage</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b dark:border-slate-700">
+                <tr className="border-b border-[var(--color-border)]">
                   <th className="text-left py-2">System</th>
                   <th className="text-right py-2">Count</th>
                   <th className="text-right py-2">Avg Quality</th>
@@ -338,7 +338,7 @@ export function QuestionQualityDashboard() {
               </thead>
               <tbody>
                 {stats.systemCoverage.map((system) => (
-                  <tr key={system.system} className="border-b dark:border-slate-700/50">
+                  <tr key={system.system} className="border-b border-[var(--color-border)]">
                     <td className="py-2">{system.system}</td>
                     <td className="text-right font-mono">{system.count}</td>
                     <td className="text-right font-mono">
@@ -357,7 +357,7 @@ export function QuestionQualityDashboard() {
         </div>
 
         {/* Top Flagged Questions */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Flag className="w-5 h-5 text-[var(--color-data-fail)]" />
             Top Flagged Questions
@@ -408,15 +408,15 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm"
+      className="bg-[var(--color-bg-primary)] rounded-xl p-4 shadow-sm"
     >
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
           <Icon className="w-5 h-5" />
         </div>
         <div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="text-xl font-bold text-slate-900 dark:text-white">{value}</p>
+          <p className="text-sm text-[var(--color-text-secondary)]">{title}</p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">{value}</p>
         </div>
       </div>
     </motion.div>

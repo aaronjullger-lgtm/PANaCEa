@@ -204,14 +204,14 @@ export function MediaApprovalDashboard() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading pending media...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading pending media...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6">
+    <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
       {/* Error Banner */}
       {error && (
         <div className="max-w-7xl mx-auto mb-4">
@@ -231,10 +231,10 @@ export function MediaApprovalDashboard() {
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Media Approval Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-secondary)]">
               Review and approve uploaded medical images for educational use
             </p>
           </div>
@@ -242,7 +242,7 @@ export function MediaApprovalDashboard() {
             <button
               onClick={loadPendingMedia}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -261,40 +261,40 @@ export function MediaApprovalDashboard() {
       {/* Stats */}
       {stats && (
         <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Pending</p>
                 <p className="text-3xl font-bold text-[var(--color-data-provisional)]">{stats.pending}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-[var(--color-data-provisional)]" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approved</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Approved</p>
                 <p className="text-3xl font-bold text-[var(--color-data-pass)]">{stats.approved}</p>
               </div>
               <Check className="w-8 h-8 text-[var(--color-data-pass)]" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Rejected</p>
                 <p className="text-3xl font-bold text-[var(--color-data-fail)]">{stats.rejected}</p>
               </div>
               <ThumbsDown className="w-8 h-8 text-[var(--color-data-fail)]" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approval Rate</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Approval Rate</p>
                 <p className="text-3xl font-bold text-[var(--color-accent)]">{stats.approvalRate}%</p>
               </div>
               <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
@@ -313,7 +313,7 @@ export function MediaApprovalDashboard() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === category
                   ? 'bg-[var(--color-accent)] text-white'
-                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -325,12 +325,12 @@ export function MediaApprovalDashboard() {
       {/* Media Grid */}
       <div className="max-w-7xl mx-auto">
         {pendingMedia.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-12 text-center">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-12 text-center">
             <Check className="w-16 h-16 text-[var(--color-data-pass)] mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               All caught up!
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-secondary)]">
               No pending media to review at this time.
             </p>
           </div>
@@ -339,11 +339,11 @@ export function MediaApprovalDashboard() {
             {pendingMedia.map((media) => (
               <div
                 key={media.id}
-                className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="bg-[var(--color-bg-primary)] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 {/* Image Preview */}
                 <div
-                  className="relative h-48 bg-gray-200 dark:bg-gray-800 cursor-pointer"
+                  className="relative h-48 bg-[var(--color-bg-tertiary)] cursor-pointer"
                   onClick={() => setSelectedMedia(media)}
                 >
                   <img
@@ -362,12 +362,12 @@ export function MediaApprovalDashboard() {
 
                 {/* Details */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 truncate">
+                  <h3 className="font-semibold text-[var(--color-text-primary)] mb-2 truncate">
                     {media.filename}
                   </h3>
 
                   {media.Condition && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <p className="text-sm text-[var(--color-text-secondary)] mb-2">
                       {media.Condition.name}
                     </p>
                   )}
@@ -404,7 +404,7 @@ export function MediaApprovalDashboard() {
                     </button>
                     <button
                       onClick={() => setSelectedMedia(media)}
-                      className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-colors"
+                      className="bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] p-2 rounded-lg transition-colors"
                     >
                       <Eye className="w-5 h-5" />
                     </button>
@@ -419,13 +419,13 @@ export function MediaApprovalDashboard() {
       {/* Detail Modal */}
       {selectedMedia && !showRejectionModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Media Details</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Media Details</h2>
                 <button
                   onClick={() => setSelectedMedia(null)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -441,14 +441,14 @@ export function MediaApprovalDashboard() {
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Quality Score</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-1">Quality Score</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.qualityScore || 'N/A'}/100
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clinical Image</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-1">Clinical Image</p>
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {selectedMedia.isClinical ? 'Yes' : 'No'}
                   </p>
                 </div>
@@ -457,11 +457,11 @@ export function MediaApprovalDashboard() {
               {/* AI Analysis */}
               {selectedMedia.aiMetadata?.assessment?.aiAnalysis && (
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI Analysis</h3>
-                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">AI Analysis</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-3">
                     {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-2">
                     Diagnostic Quality:{' '}
                     <span className="font-medium">
                       {selectedMedia.aiMetadata.assessment.aiAnalysis.diagnosticQuality}
@@ -469,10 +469,10 @@ export function MediaApprovalDashboard() {
                   </p>
                   {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className="text-sm text-[var(--color-text-secondary)] mb-2">
                         Clinical Features:
                       </p>
-                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                      <ul className="list-disc list-inside text-[var(--color-text-secondary)]">
                         {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map(
                           (feature, idx) => (
                             <li key={idx}>{feature}</li>
@@ -489,7 +489,7 @@ export function MediaApprovalDashboard() {
                 <>
                   {selectedMedia.aiMetadata.assessment.issues.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Issues</h3>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">Issues</h3>
                       <ul className="list-disc list-inside text-[var(--color-data-fail)]">
                         {selectedMedia.aiMetadata.assessment.issues.map((issue, idx) => (
                           <li key={idx}>{issue}</li>
@@ -500,7 +500,7 @@ export function MediaApprovalDashboard() {
 
                   {selectedMedia.aiMetadata.assessment.recommendations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
                         Recommendations
                       </h3>
                       <ul className="list-disc list-inside text-[var(--color-accent)]">
@@ -538,15 +538,15 @@ export function MediaApprovalDashboard() {
       {/* Rejection Modal */}
       {showRejectionModal && selectedMedia && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Reject Media</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Reject Media</h2>
+            <p className="text-[var(--color-text-secondary)] mb-4">
               Please provide a reason for rejection:
             </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white mb-4"
+              className="w-full h-32 px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] mb-4"
               placeholder="e.g., Poor image quality, not clinically relevant, duplicate..."
             />
             <div className="flex gap-3">
@@ -555,7 +555,7 @@ export function MediaApprovalDashboard() {
                   setShowRejectionModal(false);
                   setRejectionReason('');
                 }}
-                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -667,12 +667,12 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg max-w-lg w-full p-6">
+      <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-lg w-full p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Upload Medical Image</h2>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Upload Medical Image</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
           >
             <X className="w-6 h-6" />
           </button>
@@ -694,8 +694,8 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           onDragLeave={() => setDragOver(false)}
           className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-colors ${
             dragOver
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-              : 'border-gray-300 dark:border-gray-600'
+              ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+              : 'border-[var(--color-border)]'
           }`}
         >
           {file ? (
@@ -706,11 +706,11 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 className="w-20 h-20 object-cover rounded"
               />
               <div className="text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
-                <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">{file.name}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 <button
                   onClick={() => setFile(null)}
-                  className="text-xs text-red-500 hover:text-red-700 mt-1"
+                  className="text-xs text-[var(--color-data-fail)] hover:opacity-80 mt-1"
                 >
                   Remove
                 </button>
@@ -718,9 +718,9 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             </div>
           ) : (
             <>
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">Drag & drop an image here, or</p>
-              <label className="cursor-pointer text-blue-600 hover:text-blue-700">
+              <Upload className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
+              <p className="text-[var(--color-text-secondary)] mb-2">Drag & drop an image here, or</p>
+              <label className="cursor-pointer text-[var(--color-accent)] hover:opacity-90">
                 browse files
                 <input
                   type="file"
@@ -735,13 +735,13 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
         {/* Category */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Category
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]"
           >
             <option value="ecg">ECG</option>
             <option value="derm">Dermatology</option>
@@ -753,7 +753,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
         {/* Correct Diagnosis (for drill questions) */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Correct Diagnosis (for drill questions)
           </label>
           <input
@@ -761,13 +761,13 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             value={correctDiagnosis}
             onChange={(e) => setCorrectDiagnosis(e.target.value)}
             placeholder="e.g., Atrial Fibrillation"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]"
           />
         </div>
 
         {/* Distractors */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Wrong Answers (comma-separated)
           </label>
           <input
@@ -775,13 +775,13 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             value={distractors}
             onChange={(e) => setDistractors(e.target.value)}
             placeholder="e.g., Sinus Tachycardia, Atrial Flutter, SVT"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]"
           />
         </div>
 
         {/* Description */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Description
           </label>
           <textarea
@@ -789,7 +789,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description of the image..."
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]"
           />
         </div>
 
@@ -797,7 +797,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Cancel
           </button>
