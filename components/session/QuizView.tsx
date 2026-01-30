@@ -1041,9 +1041,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }, [isAnswered, currentQuestion, performanceData]);
 
   const getBarColor = (score: number): string => {
-    if (score < 50) return 'bg-dusty-rose-500';
-    if (score < 80) return 'bg-muted-amber-500';
-    return 'bg-sage-500';
+    if (score < 50) return 'bg-[var(--color-data-fail)]';
+    if (score < 80) return 'bg-[var(--color-data-provisional)]';
+    return 'bg-[var(--color-data-pass)]';
   };
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
@@ -1080,16 +1080,16 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <div className="bg-[var(--color-card-bg)] rounded-xl border border-[var(--color-border)] p-6 mb-6 space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]/50 animate-pulse" />
-                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                <div className="h-4 w-32 bg-[var(--color-bg-secondary)] rounded animate-pulse" />
               </div>
               <div className="space-y-3">
-                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[95%] animate-pulse" />
-                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[88%] animate-pulse" style={{ animationDelay: '0.1s' }} />
-                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[92%] animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[60%] animate-pulse" style={{ animationDelay: '0.3s' }} />
+                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[95%] animate-pulse" />
+                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[88%] animate-pulse" style={{ animationDelay: '0.1s' }} />
+                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[92%] animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[60%] animate-pulse" style={{ animationDelay: '0.3s' }} />
               </div>
               <div className="pt-4 border-t border-[var(--color-border)]">
-                <div className="h-5 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[75%] animate-pulse" />
+                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[75%] animate-pulse" />
               </div>
             </div>
 
@@ -1101,12 +1101,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   className="bg-[var(--color-card-bg)] rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-3"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 font-medium">
+                  <div className="w-8 h-8 rounded-full bg-[var(--color-bg-secondary)] flex items-center justify-center text-[var(--color-text-muted)] font-medium">
                     {letter}
                   </div>
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[85%] animate-pulse" />
-                    <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-[65%] animate-pulse" />
+                    <div className="h-4 bg-[var(--color-bg-secondary)] rounded w-[85%] animate-pulse" />
+                    <div className="h-4 bg-[var(--color-bg-secondary)] rounded w-[65%] animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -1186,8 +1186,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Toggle session stats (S)"
               className={`p-1.5 rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? 'bg-steel-blue-100 text-steel-blue-700 border-steel-blue-300'
-                  : 'bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-steel-blue-50 hover:text-steel-blue-600 hover:border-steel-blue-300'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]'
+                  : 'bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1197,7 +1197,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={() => setShowReportModal(true)}
               title="Report an issue with this question"
-              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-[var(--color-data-fail)]/10 hover:text-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]"
+              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-data-fail)]/10 hover:text-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]"
             >
               <AlertTriangle className="w-5 h-5" />
             </button>
@@ -1208,8 +1208,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title={isFlagged ? 'Unflag for review' : 'Flag for review'}
               className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
-                  ? 'bg-muted-amber-100 text-muted-amber-700 border-muted-amber-300'
-                  : 'bg-[var(--color-card-bg)] text-slate-600 dark:text-slate-400 border-[var(--color-border)] hover:bg-white dark:hover:bg-slate-700 hover:border-[var(--color-accent)]'
+                  ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]'
+                  : 'bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -1231,7 +1231,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 });
               }}
               title="Clear highlights"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:border-[var(--color-accent)] transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)] transition-colors"
             >
               <ClearHighlightIcon className="w-5 h-5" />
             </button>
@@ -1240,15 +1240,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <div className="flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-card-bg)]">
               <button
                 onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white dark:hover:bg-slate-700 rounded-l-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
                 A-
               </button>
-              <div className="w-px h-4 bg-[#D0C7BF]"></div>
+              <div className="w-px h-4 bg-[var(--color-border)]"></div>
               <button
                 onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white dark:hover:bg-slate-700 rounded-r-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
                 A+
@@ -1259,7 +1259,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={handleEndSession}
               title="End Session"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
@@ -1351,7 +1351,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
             {/* Error Tagger - Only show when incorrect */}
             {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-              <div className="mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
                 <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
               </div>
             )}
@@ -1376,13 +1376,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
             {isExplainerLoading && (
               <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
-                <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"></div>
                 <div
-                  className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
+                  className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
                   style={{ animationDelay: '0.2s' }}
                 ></div>
                 <div
-                  className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
+                  className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
                   style={{ animationDelay: '0.4s' }}
                 ></div>
                 <span className="text-sm">Generating new explanation...</span>
@@ -1390,7 +1390,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             )}
 
             {alternateRationale && !isExplainerLoading && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 animate-fade-in">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
                 <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
                   Alternate Explanation
                 </h4>
@@ -1402,7 +1402,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
             {/* Clinical Pearls Section */}
             {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                 <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                   Key Pearls: {currentQuestion.condition}
                 </h3>
@@ -1414,13 +1414,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               </div>
             )}
 
-            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
               <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">My Notes</h3>
               <textarea
                 value={localNote}
                 onChange={handleNoteChange}
                 placeholder="Type your notes here... They will be saved automatically."
-                className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
                 rows={3}
               />
             </div>

@@ -127,21 +127,21 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-[var(--color-bg-primary)]/90 flex items-center justify-center z-50 p-4"
     >
       <motion.div
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-deep-plum-600 to-deep-plum-500 p-6 rounded-t-2xl">
+        <div className="bg-[var(--color-accent)] p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Brain className="w-8 h-8 text-white" />
               <div>
                 <h2 className="text-xl font-bold text-white">Session Reflection</h2>
-                <p className="text-deep-plum-200 text-sm">
+                <p className="text-white/80 text-sm">
                   Take a moment to reflect on your performance
                 </p>
               </div>
@@ -192,7 +192,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                       {currentStep === 2 ? (
                         /* Confidence Rating Slider */
                         <div className="space-y-4 pt-4">
-                          <div className="flex justify-between text-sm text-slate-400">
+                          <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
                             <span>Not confident</span>
                             <span>Very confident</span>
                           </div>
@@ -202,15 +202,15 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                             max="5"
                             value={confidenceRating}
                             onChange={(e) => setConfidenceRating(parseInt(e.target.value))}
-                            className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-deep-plum-500"
+                            className="w-full h-3 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent)]"
                           />
-                          <div className="flex justify-between text-xs text-slate-500">
+                          <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
                             {['1', '2', '3', '4', '5'].map((num) => (
                               <span
                                 key={num}
                                 className={
                                   confidenceRating === parseInt(num)
-                                    ? 'text-deep-plum-400 font-bold'
+                                    ? 'text-[var(--color-accent)] font-bold'
                                     : ''
                                 }
                               >
@@ -220,9 +220,9 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                           </div>
 
                           {/* Confidence Comparison */}
-                          <div className="mt-6 p-4 bg-slate-700/50 rounded-lg">
-                            <p className="text-slate-300 text-sm">
-                              <span className="font-semibold text-deep-plum-400">
+                          <div className="mt-6 p-4 bg-[var(--color-bg-tertiary)]/50 rounded-lg">
+                            <p className="text-[var(--color-text-secondary)] text-sm">
+                              <span className="font-semibold text-[var(--color-accent)]">
                                 Calibration Check:
                               </span>{' '}
                               You were{' '}
@@ -233,17 +233,17 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                                   : 'moderately'}{' '}
                               confident and scored {score}%.
                               {Math.abs(confidenceRating * 20 - score) <= 20 ? (
-                                <span className="text-sage-400">
+                                <span className="text-[var(--color-data-pass)]">
                                   {' '}
                                   Your confidence was well-calibrated! ✓
                                 </span>
                               ) : confidenceRating * 20 > score ? (
-                                <span className="text-muted-amber-400">
+                                <span className="text-[var(--color-data-provisional)]">
                                   {' '}
                                   Consider being more cautious in your self-assessment.
                                 </span>
                               ) : (
-                                <span className="text-steel-blue-400">
+                                <span className="text-[var(--color-accent)]">
                                   {' '}
                                   You may be underestimating your abilities!
                                 </span>
@@ -262,11 +262,11 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                                 : setImprovementPlan(e.target.value)
                             }
                             placeholder={prompt.placeholder}
-                            className="w-full h-32 bg-slate-700 text-white rounded-xl p-4 resize-none
-                              border-2 border-transparent focus:border-deep-plum-500 focus:outline-none
-                              placeholder:text-slate-500"
+                            className="w-full h-32 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl p-4 resize-none
+                              border-2 border-transparent focus:border-[var(--color-accent)] focus:outline-none
+                              placeholder:text-[var(--color-text-muted)]"
                           />
-                          <p className="text-slate-500 text-sm">💡 {prompt.hint}</p>
+                          <p className="text-[var(--color-text-muted)] text-sm">💡 {prompt.hint}</p>
                         </>
                       )}
                     </>
@@ -280,12 +280,12 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-4"
               >
-                <div className="flex items-center gap-3 text-deep-plum-400">
+                <div className="flex items-center gap-3 text-[var(--color-accent)]">
                   <CheckCircle className="w-6 h-6" />
                   <h3 className="text-lg font-semibold">Topics to Review</h3>
                 </div>
 
-                <p className="text-white">
+                <p className="text-[var(--color-text-primary)]">
                   Select topics you want to prioritize in future sessions:
                 </p>
 
@@ -297,15 +297,15 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                         onClick={() => handleTopicToggle(topic)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                           topicsToReview.includes(topic)
-                            ? 'bg-deep-plum-500 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            ? 'bg-[var(--color-accent)] text-white'
+                            : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/80'
                         }`}
                       >
                         {topic}
                       </button>
                     ))
                   ) : (
-                    <p className="text-slate-400 italic">Great job! No missed topics to review.</p>
+                    <p className="text-[var(--color-text-muted)] italic">Great job! No missed topics to review.</p>
                   )}
                 </div>
               </motion.div>
@@ -314,10 +314,10 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-700 flex justify-between items-center">
+        <div className="p-6 border-t border-[var(--color-border)] flex justify-between items-center">
           <button
             onClick={onSkip}
-            className="text-slate-400 hover:text-slate-300 transition-colors text-sm"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors text-sm"
           >
             Skip reflection
           </button>
@@ -327,8 +327,8 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             disabled={!canProceed()}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
               canProceed()
-                ? 'bg-deep-plum-500 hover:bg-deep-plum-600 text-white'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                ? 'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
             }`}
           >
             {currentStep >= REFLECTION_PROMPTS.length ? (

@@ -159,9 +159,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: 'spring' }}
-                className="w-16 h-16 bg-slate-600/20 rounded-full flex items-center justify-center mb-4"
+                className="w-16 h-16 bg-[var(--color-bg-tertiary)]/60 rounded-full flex items-center justify-center mb-4"
               >
-                <AlertTriangle className="w-8 h-8 text-slate-500" />
+                <AlertTriangle className="w-8 h-8 text-[var(--color-text-muted)]" />
               </motion.div>
 
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -175,8 +175,8 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
 
               {isChunkError && (
-                <div className="w-full mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <p className="text-sm text-blue-400 flex items-center gap-2">
+                <div className="w-full mb-6 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg">
+                  <p className="text-sm text-[var(--color-accent)] flex items-center gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Clearing cache and refreshing...
                   </p>
@@ -184,8 +184,8 @@ export class ErrorBoundary extends Component<Props, State> {
               )}
 
               {import.meta.env.DEV && this.state.error && (
-                <div className="w-full mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-left">
-                  <p className="text-sm font-mono text-red-500 mb-2">
+                <div className="w-full mb-6 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-lg text-left">
+                  <p className="text-sm font-mono text-[var(--color-data-fail)] mb-2">
                     {this.state.error.toString()}
                   </p>
                   {this.state.errorInfo && (
