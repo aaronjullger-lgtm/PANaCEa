@@ -25,7 +25,7 @@ const router = Router();
 // ============================================================================
 
 // Fetch questions from the database-first question bank
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ error: 'Database not configured' });
@@ -50,7 +50,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Fetch questions for a user (with no-repeat logic) - POST variant
-router.post('/fetch', async (req: Request, res: Response) => {
+router.post('/fetch', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ error: 'Database not configured' });
@@ -73,7 +73,7 @@ router.post('/fetch', async (req: Request, res: Response) => {
 });
 
 // Question Query Route (Authenticated No-Repeat)
-router.post('/query', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/query', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { system, difficulty, limit = 10 } = req.body;
 
@@ -94,7 +94,7 @@ router.post('/query', requireAuth, async (req: AuthenticatedRequest, res: Respon
 });
 
 // Batch fetch questions by ID
-router.post('/batch', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/batch', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { ids } = req.body;
 
@@ -150,7 +150,7 @@ router.post('/batch', requireAuth, async (req: AuthenticatedRequest, res: Respon
 router.post(
   '/no-repeat',
   validateRequired(['userId', 'filter']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -172,7 +172,7 @@ router.post(
 router.post(
   '/history',
   validateRequired(['userId', 'questionId', 'metadata']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -191,7 +191,7 @@ router.post(
 );
 
 // Get golden repository statistics
-router.get('/repository/stats', async (req: Request, res: Response) => {
+router.get('/repository/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, stats: { totalQuestions: 0 } });
@@ -208,7 +208,7 @@ router.get('/repository/stats', async (req: Request, res: Response) => {
 });
 
 // Get question statistics (simple alias for repository stats)
-router.get('/stats', async (req: Request, res: Response) => {
+router.get('/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ error: 'Database not configured' });
@@ -236,7 +236,7 @@ router.post(
   '/flag',
   validateRequired(['userId', 'questionId', 'flagType', 'description']),
   validateEnum('flagType', ['typo', 'incorrect_answer', 'unclear', 'outdated', 'other']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const {
         userId,
@@ -310,7 +310,7 @@ router.post(
   '/flag/:flagId/resolve',
   requireAdmin(),
   validateRequired(['reviewedBy', 'resolutionNote']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { flagId } = req.params;
       const { reviewedBy, resolutionNote } = req.body;
@@ -369,7 +369,7 @@ router.post(
 );
 
 // Get all flags (Admin-only)
-router.get('/flags', async (req: Request, res: Response) => {
+router.get('/flags', async (req: Request, res: Response): Promise<void> => {
   try {
     const { status, priority } = req.query;
 
@@ -400,7 +400,7 @@ router.get('/flags', async (req: Request, res: Response) => {
 router.post(
   '/generate',
   validateRequired(['queryText', 'questionType']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { queryText, questionType, system, difficulty } = req.body;
 
@@ -519,7 +519,7 @@ router.post(
 
 // Seeds Management (Tasks 111)
 
-router.post('/seeds', validateRequired(['seedData']), async (req: Request, res: Response) => {
+router.post('/seeds', validateRequired(['seedData']), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -535,7 +535,7 @@ router.post('/seeds', validateRequired(['seedData']), async (req: Request, res: 
   }
 });
 
-router.get('/seeds/:id/assemble', async (req: Request, res: Response) => {
+router.get('/seeds/:id/assemble', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -554,7 +554,7 @@ router.get('/seeds/:id/assemble', async (req: Request, res: Response) => {
 router.post(
   '/seeds/assemble',
   validateRequired(['filter', 'count']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -572,7 +572,7 @@ router.post(
   }
 );
 
-router.get('/seeds/stats', async (req: Request, res: Response) => {
+router.get('/seeds/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, stats: {} });
