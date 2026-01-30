@@ -62,6 +62,22 @@ export const chartTheme = {
       paddingTop: '1rem',
     },
     iconType: 'circle' as const,
+    textStyle: {
+      fill: 'var(--color-text-muted)',
+      fontSize: '0.875rem',
+    },
+  },
+
+  /**
+   * Axis label styling (for XAxis and YAxis label prop)
+   */
+  axisLabel: {
+    style: {
+      fill: 'var(--color-text-muted)',
+      fontSize: 12,
+      fontWeight: 500,
+    },
+    offset: -5,
   },
 
   /**
@@ -87,6 +103,16 @@ export const chartTheme = {
     error: ['var(--color-data-fail)', 'var(--color-data-fail)'],
     accent: ['var(--color-accent)', 'var(--color-accent)'],
     performance: ['var(--color-accent)', 'var(--color-data-pass)'],
+  },
+
+  /**
+   * Circular progress / radial chart standards
+   * Ensures consistency across all donut/circular charts
+   */
+  radialProgress: {
+    strokeWidth: 8,
+    strokeLinecap: 'round' as const,
+    animationDuration: 1, // seconds
   },
 };
 

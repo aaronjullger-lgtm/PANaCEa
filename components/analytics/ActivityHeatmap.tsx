@@ -456,7 +456,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                             date
                               ? `${getIntensityColor(count)} cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)]/50`
-                              : 'bg-transparent border-transparent cursor-default'
+                              : 'bg-[var(--color-bg-tertiary)]/30 border-transparent cursor-default'
                           }`}
                           title={
                             date && stats

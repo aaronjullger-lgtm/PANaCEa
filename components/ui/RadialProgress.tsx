@@ -99,6 +99,7 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
+          strokeDashoffset={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
           transition={{

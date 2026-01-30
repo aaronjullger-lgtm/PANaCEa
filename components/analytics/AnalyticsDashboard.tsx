@@ -32,6 +32,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
+import { EmptyRadarChart, EmptyLineChart } from '@/components/analytics/EmptyChartState';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
@@ -426,7 +427,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
                 <Activity className="w-4 h-4" /> System Performance Radar
               </div>
               {radarData.length === 0 ? (
-                <p className="text-sm text-action-muted">No data yet.</p>
+                <EmptyRadarChart message="Complete questions across organ systems" height={320} />
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <RadarChart data={radarData} outerRadius={120}>
@@ -508,15 +509,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
             ) : stabilityLoading ? (
               <SkeletonLoader width="100%" height="320" />
             ) : stabilityTrendData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[320px] text-center">
-                <Brain className="w-12 h-12 text-action-muted mb-2 opacity-30" />
-                <p className="text-sm text-action-muted">
-                  Complete questions to track your memory stability growth over time.
-                </p>
-                <p className="text-xs text-action-muted mt-1">
-                  Stability measures how well you retain knowledge.
-                </p>
-              </div>
+              <EmptyLineChart message="Complete questions to track memory stability growth" height={320} />
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={320}>

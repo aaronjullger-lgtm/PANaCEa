@@ -73,7 +73,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
   if (compact) {
     return (
       <div className="inline-flex items-center gap-2">
-        <div className="relative w-24 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+        <div className="relative w-24 h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -141,7 +141,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="relative w-full h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden mb-2">
+          <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden mb-2">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
