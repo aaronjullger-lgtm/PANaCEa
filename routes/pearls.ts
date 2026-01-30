@@ -14,7 +14,7 @@ const router = Router();
 router.post(
   '/extract',
   validateRequired(['questionId', 'explanation']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -33,7 +33,7 @@ router.post(
 );
 
 // Get daily pearl
-router.get('/daily', async (req: Request, res: Response) => {
+router.get('/daily', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, pearl: null });
@@ -51,7 +51,7 @@ router.get('/daily', async (req: Request, res: Response) => {
 });
 
 // Get user's pearls (Review My Pearls)
-router.get('/user/:userId', async (req: Request, res: Response) => {
+router.get('/user/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, pearls: [] });
@@ -70,7 +70,7 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
 });
 
 // Get user's favorite pearls
-router.get('/user/:userId/favorites', async (req: Request, res: Response) => {
+router.get('/user/:userId/favorites', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, pearls: [] });
@@ -91,7 +91,7 @@ router.get('/user/:userId/favorites', async (req: Request, res: Response) => {
 router.post(
   '/:pearlId/useful',
   validateRequired(['userId']),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ success: false, error: 'Database not configured' });
@@ -111,7 +111,7 @@ router.post(
 );
 
 // Search pearls
-router.post('/search', async (req: Request, res: Response) => {
+router.post('/search', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, pearls: [] });
@@ -128,7 +128,7 @@ router.post('/search', async (req: Request, res: Response) => {
 });
 
 // Get pearl statistics
-router.get('/stats', async (req: Request, res: Response) => {
+router.get('/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.json({ success: true, stats: {} });
