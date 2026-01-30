@@ -24,7 +24,7 @@ const router = Router();
 // Medical Wordle
 // ============================================================================
 
-router.get('/wordle/daily', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/wordle/daily', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const payload = await getDailyWordForUser(req.auth!.userId);
     res.json(payload);
@@ -41,7 +41,7 @@ router.post(
   '/wordle/guess',
   requireAuth,
   validateRequired(['guess']),
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const { guess } = req.body;
       const payload = await submitWordleGuess(req.auth!.userId, guess);
@@ -60,7 +60,7 @@ router.post(
 // Grand Rounds Daily Challenge
 // ============================================================================
 
-router.get('/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
       return res.status(503).json({ error: 'Database not configured' });
@@ -140,7 +140,7 @@ router.post(
   '/grand-rounds/submit',
   requireAuth,
   validateRequired(['challengeId', 'answers', 'timeSpentMs']),
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
         return res.status(503).json({ error: 'Database not configured' });
