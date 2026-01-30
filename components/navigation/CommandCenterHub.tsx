@@ -64,6 +64,7 @@ import {
   type TrainingCategory,
 } from '@/config/training-modes';
 import { useUserContext } from '@/hooks/useUserContext';
+import { calculateStreaks } from '@/lib/dashboardUtils';
 
 // ============================================================================
 // Types
@@ -291,23 +292,66 @@ const QuickStatsBar: React.FC<{
         },
         { label: 'Accuracy', value: `${accuracy}%`, icon: Target, color: 'text-sage-500' },
         { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
-      ].map((stat, i) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05, duration: 0.3, ease: 'easeOut' }}
-          className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)]/60 transition-colors"
-        >
-          <div className="p-2 rounded-lg bg-[var(--color-bg-primary)]">
-            <stat.icon className={`w-5 h-5 ${stat.color}`} />
-          </div>
-          <div>
-            <div className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</div>
-            <div className="text-xs text-[var(--color-text-muted)]">{stat.label}</div>
-          </div>
-        </motion.div>
-      ))}
+      ].map((stat, i) => {
+        const isDueCard = stat.label === 'Due for Review';
+        const hasDueItems = isDueCard && dueCount > 0;
+        
+        return (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={
+              hasDueItems
+                ? {
+                    opacity: 1,
+                    y: 0,
+                    scale: [1, 1.02, 1],
+                    borderColor: [
+                      'var(--color-border)',
+                      'rgba(251, 191, 36, 0.4)',
+                      'var(--color-border)',
+                    ],
+                  }
+                : { opacity: 1, y: 0 }
+            }
+            transition={
+              hasDueItems
+                ? {
+                    opacity: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' },
+                    y: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' },
+                    scale: {
+                      delay: i * 0.05 + 0.3,
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: 'loop' as const,
+                      ease: 'easeInOut',
+                    },
+                    borderColor: {
+                      delay: i * 0.05 + 0.3,
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: 'loop' as const,
+                      ease: 'easeInOut',
+                    },
+                  }
+                : { delay: i * 0.05, duration: 0.3, ease: 'easeOut' }
+            }
+            className={`flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border transition-colors ${
+              hasDueItems
+                ? 'border-data-provisional/30 hover:border-data-provisional/40'
+                : 'border-[var(--color-border)] hover:border-[var(--color-border)]/60'
+            }`}
+          >
+            <div className="p-2 rounded-lg bg-[var(--color-bg-primary)]">
+              <stat.icon className={`w-5 h-5 ${stat.color}`} />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</div>
+              <div className="text-xs text-[var(--color-text-muted)]">{stat.label}</div>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 };
@@ -442,35 +486,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       );
     });
 
-    // Calculate streak from performance data
-    let streak = 0;
-    const sortedData = [...(performanceData || [])].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const checkDate = new Date(today);
-    const dateSet = new Set<string>();
-
-    for (const record of sortedData) {
-      const recordDate = new Date(record.timestamp);
-      recordDate.setHours(0, 0, 0, 0);
-      const isoDateParts = recordDate.toISOString().split('T');
-      const dateStr = isoDateParts[0] ?? recordDate.toDateString();
-
-      if (!dateSet.has(dateStr)) {
-        dateSet.add(dateStr);
-
-        if (recordDate.getTime() === checkDate.getTime()) {
-          streak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else if (recordDate.getTime() < checkDate.getTime()) {
-          break;
-        }
-      }
-    }
+    // Calculate streak using shared utility (Single Source of Truth)
+    const { current: streak } = calculateStreaks(performanceData || []);
 
     const dueCount =
       propDueCount ?? (flaggedQuestions?.length || 0) + (missedQuestions?.length || 0);
@@ -555,36 +572,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         questionsToday={stats.questionsToday}
         examLabel={examLabel}
       />
-
-      {/* Due for Review CTA */}
-      {stats.dueCount > 0 && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.005 }}
-          onClick={() =>
-          onNavigateToSimulation
-            ? onNavigateToSimulation({ initialFocus: 'due' })
-            : onStartSession({ focus: 'review' })
-          }
-          className="w-full mb-6 p-4 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 rounded-xl flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-data-provisional/20 dark:bg-data-provisional/10">
-              <AlertCircle className="w-5 h-5 text-muted-amber" />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-[var(--color-text-primary)]">
-                {stats.dueCount} questions due for review
-              </div>
-              <div className="text-sm text-muted-amber">
-                Strengthen retention with spaced repetition
-              </div>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-amber group-hover:translate-x-1 transition-transform" />
-        </motion.button>
-      )}
 
       {/* Virtual OSCE Section (Standalone Feature) */}
       <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />

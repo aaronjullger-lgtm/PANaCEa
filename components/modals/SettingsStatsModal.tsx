@@ -712,7 +712,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       return {
         totalQuestions: 0,
         totalCorrect: 0,
-        overallAccuracy: 0,
+        overallAccuracy: null, // null instead of 0 to indicate "no data" state
         currentStreak: 0,
         bestStreak: 0,
         todayQuestions: 0,
@@ -1066,14 +1066,22 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   {/* Overall Accuracy with Radial Progress */}
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 flex flex-col items-center justify-center">
-                    <RadialProgress
-                      value={stats.overallAccuracy}
-                      size={100}
-                      strokeWidth={8}
-                      showValue={true}
-                      label="Overall Accuracy"
-                      ariaLabel={`Overall accuracy: ${stats.overallAccuracy.toFixed(0)}% correct across all questions`}
-                    />
+                    {stats.overallAccuracy !== null ? (
+                      <RadialProgress
+                        value={stats.overallAccuracy}
+                        size={100}
+                        strokeWidth={8}
+                        showValue={true}
+                        label="Overall Accuracy"
+                        ariaLabel={`Overall accuracy: ${stats.overallAccuracy.toFixed(0)}% correct across all questions`}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold text-[var(--color-text-muted)] mb-2">--</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">Overall Accuracy</div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1 italic">No data yet</div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
