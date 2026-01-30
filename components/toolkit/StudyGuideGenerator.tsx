@@ -357,14 +357,14 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-2xl w-full"
       >
         {/* Header */}
-        <div className="bg-[var(--color-accent)] p-6 text-white dark:text-[var(--color-bg-primary)] rounded-t-2xl">
+        <div className="bg-[var(--color-accent)] p-6 text-[var(--color-text-inverse)] dark:text-[var(--color-bg-primary)] rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
               <FileText className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-2xl font-bold">Generate Study Guide</h2>
-              <p className="text-indigo-100 text-sm">
+              <p className="text-[var(--color-text-inverse)]/90 text-sm">
                 {questions.length} question{questions.length !== 1 ? 's' : ''} ready to export
               </p>
             </div>
@@ -459,7 +459,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
             </button>
             <button
               onClick={handlePrint}
-              className="flex-1 py-3 px-6 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white dark:text-[var(--color-bg-primary)] font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              className="flex-1 py-3 px-6 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] dark:text-[var(--color-bg-primary)] font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
             >
               <Printer className="w-5 h-5" />
               Print
