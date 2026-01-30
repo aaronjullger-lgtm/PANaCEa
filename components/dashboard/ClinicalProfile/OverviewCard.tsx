@@ -13,32 +13,32 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-sm">
-        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-          <Target className="w-5 h-5 text-blue-500" />
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 shadow-sm">
+        <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
+          <Target className="w-5 h-5 text-[var(--color-accent)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">Accuracy</p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-white">{accuracyPct}%</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Accuracy</p>
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">{accuracyPct}%</p>
           </div>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-sm">
-        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-          <Clock3 className="w-5 h-5 text-emerald-500" />
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 shadow-sm">
+        <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
+          <Clock3 className="w-5 h-5 text-[var(--color-data-pass)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">Avg Time / Q</p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Avg Time / Q</p>
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {avgTimeSec ? `${avgTimeSec}s` : '—'}
             </p>
           </div>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-sm">
-        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-          <Activity className="w-5 h-5 text-indigo-500" />
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 shadow-sm">
+        <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
+          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">Avg Session</p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Avg Session</p>
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {avgSessionLength ? `${Math.round(avgSessionLength)} min` : '—'}
             </p>
           </div>

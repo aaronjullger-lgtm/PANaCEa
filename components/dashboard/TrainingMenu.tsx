@@ -340,7 +340,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   };
 
   /**
-   * Get special styling for specific drill modes - Clinical Theme
+   * Get special styling for specific drill modes - Using Semantic Tokens
+   * ALL colors must use var(--color-*) to comply with design system
    */
   const getDrillModeStyles = (
     modeId: string
@@ -351,99 +352,22 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     iconBg: string;
     iconColor: string;
   } => {
-    // Clinical Theme: Clean whites/navy with subtle color accents
+    // Base styles using semantic tokens
     const baseStyles = {
       light: 'bg-[var(--color-bg-primary)]',
       border: 'border-[var(--color-border)]',
       iconBg: 'bg-[var(--color-bg-tertiary)]',
+      iconColorDefault: 'text-[var(--color-text-secondary)]',
     };
 
-    switch (modeId) {
-      case 'photo_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-slate-600 dark:text-slate-300',
-        };
-      case 'ecg_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-rose-600 dark:text-rose-400',
-        };
-      case 'derm_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-pink-600 dark:text-pink-400',
-        };
-      case 'imaging_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-slate-600 dark:text-slate-300',
-        };
-      case 'mini_lab':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-emerald-600 dark:text-emerald-400',
-        };
-      case 'rapid_recall':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-amber-600 dark:text-amber-400',
-        };
-      case 'ddx_compare':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-blue-600 dark:text-blue-400',
-        };
-      case 'guideline_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-teal-600 dark:text-teal-400',
-        };
-      case 'condition_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-violet-600 dark:text-violet-400',
-        };
-      case 'first_line_treatment':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-cyan-600 dark:text-cyan-400',
-        };
-      case 'pharmacology':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-purple-600 dark:text-purple-400',
-        };
-      default:
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-[#364154] dark:text-[#E9ECF1]',
-        };
-    }
+    // All drill modes now use consistent semantic tokens
+    // Mode-specific visual differentiation comes from icons, not color
+    return {
+      background: baseStyles.light,
+      border: baseStyles.border,
+      iconBg: baseStyles.iconBg,
+      iconColor: baseStyles.iconColorDefault,
+    };
   };
 
   /**
@@ -468,9 +392,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             </span>
           )}
         </div>
-        <div className="w-full h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+        <div className="w-full max-w-[50%] h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-300"
+            className="h-full bg-[var(--color-accent)] transition-all duration-300"
             style={{ width: `${masteryPercent}%` }}
           />
         </div>
@@ -537,26 +461,26 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
         className={`
-          relative p-5 rounded-2xl border overflow-hidden
+          relative p-6 rounded-2xl border overflow-hidden
           text-left transition-all duration-200
           ${
             isDisabled
-              ? 'opacity-40 grayscale cursor-not-allowed bg-slate-900/30 text-slate-600 border-dashed border-slate-700'
-              : 'bg-transparent hover:bg-slate-800/20 cursor-pointer border-slate-700 hover:border-white hover:shadow-xl'
+              ? 'opacity-40 grayscale cursor-not-allowed bg-[var(--color-bg-secondary)]/30 text-[var(--color-text-muted)] border-dashed border-[var(--color-border)]'
+              : 'bg-transparent hover:bg-[var(--color-bg-secondary)]/20 cursor-pointer border-[var(--color-border)] hover:border-[var(--color-text-primary)] hover:shadow-xl'
           }
           ${featuredClasses}
-          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''}
+          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-[var(--color-text-primary)] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-slate-500 dark:text-slate-600 bg-slate-200/50 dark:bg-slate-800/50 px-2 py-0.5 rounded-full z-10 border border-slate-300/30 dark:border-slate-700/30">
+          <span className="absolute top-2 right-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 px-2 py-0.5 rounded-full z-10 border border-[var(--color-border)]/30">
             Coming Soon
           </span>
         )}
 
         {/* Daily Recommended badge */}
         {isDailyRecommended && !isDisabled && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-slate-200 dark:border-slate-600">
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-[var(--color-border)]">
             <TrendingUp className="w-3 h-3" />
             Daily Pick
           </div>
@@ -564,7 +488,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         <div className="flex flex-col gap-3 relative z-[1]">
           <div
-            className={`w-10 h-10 rounded-xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-700 ${isDisabled ? 'opacity-50' : ''}`}
+            className={`w-10 h-10 rounded-xl bg-[var(--color-bg-secondary)]/60 flex items-center justify-center shadow-sm border border-[var(--color-border)] ${isDisabled ? 'opacity-50' : ''}`}
           >
             <IconComponent
               className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`}
@@ -572,12 +496,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           </div>
           <div className="min-h-[80px]">
             <h3
-              className={`font-semibold text-white text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}
+              className={`font-semibold text-[var(--color-text-primary)] text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}
             >
               {mode.label}
             </h3>
             <p
-              className={`text-sm text-slate-300 mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
+              className={`text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
             >
               {getDrillDescription(mode)}
             </p>
@@ -607,8 +531,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     return (
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-lg font-bold text-white">{title}</h3>
-          <p className="text-sm text-slate-400 hidden sm:block">{description}</p>
+          <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">{title}</h2>
+          <p className="text-sm text-[var(--color-text-muted)] hidden sm:block">{description}</p>
         </div>
 
         {/* Desktop: Standard 3-column grid */}
@@ -634,8 +558,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="flex gap-6 h-full">
       {/* Sticky Category Sidebar - Desktop only */}
       <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-0 h-fit">
-        <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-4 shadow-sm space-y-2">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
+        <div className="bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-2xl p-4 shadow-sm space-y-2">
+          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
             Categories
           </h3>
           {CATEGORY_SECTIONS.map((section) => (
@@ -644,8 +568,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               onClick={() => scrollToSection(section.key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                 activeSection === section.key
-                  ? 'bg-slate-800 text-white font-medium border border-slate-600'
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                  ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium border border-[var(--color-border)]'
+                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]'
               }`}
             >
               <span className="text-sm truncate">{section.title}</span>
@@ -659,13 +583,13 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       <div className="flex-1 space-y-8 overflow-y-auto">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
           <input
             type="text"
             placeholder="Search modes (e.g., ECG, Antibiotics, Rapid)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50"
+            className="w-full pl-10 pr-4 py-3 bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-text-primary)]/30 focus:border-[var(--color-text-primary)]/50"
           />
         </div>
 
@@ -684,7 +608,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             buttonText="Start Session"
             onAction={handleCoreStart}
             variant="default"
-            buttonVariant="primary"
+            buttonVariant="secondary"
           />
         )}
 
@@ -710,7 +634,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 variant="daily"
                 buttonVariant="warning"
                 badge={
-                  <span className="px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
+                  <span className="px-3 py-1 text-xs font-semibold bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-full border border-[var(--color-accent)]/30">
                     Daily
                   </span>
                 }
@@ -728,7 +652,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* No Results Message */}
         {searchQuery && filteredModes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-slate-500">No modes found matching "{searchQuery}"</p>
+            <p className="text-[var(--color-text-muted)]">No modes found matching "{searchQuery}"</p>
           </div>
         )}
       </div>

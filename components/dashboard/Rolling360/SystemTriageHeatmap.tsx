@@ -85,9 +85,9 @@ const STATUS_CONFIG: Record<
     pulse: false,
   },
   mastered: {
-    bg: 'bg-sky-500/20 dark:bg-sky-500/30',
-    border: 'border-sky-500',
-    text: 'text-sky-500 dark:text-sky-400',
+    bg: 'bg-[var(--color-accent)]/20',
+    border: 'border-[var(--color-accent)]',
+    text: 'text-[var(--color-accent)]',
     label: 'Discharge Ready',
     emoji: '🔵',
     pulse: false,
@@ -161,7 +161,7 @@ function TriagePillList({
               onClick={() => onSystemClick?.(cell.system)}
               className={cn(
                 'w-full flex items-center gap-3 p-3 rounded-lg border',
-                'hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors',
+                'hover:bg-[var(--color-bg-tertiary)] transition-colors',
                 config.bg,
                 config.border
               )}
@@ -170,7 +170,7 @@ function TriagePillList({
               <span className="text-lg">{config.emoji}</span>
 
               {/* System Name */}
-              <span className="flex-1 text-left font-medium text-slate-900 dark:text-white">
+              <span className="flex-1 text-left font-medium text-[var(--color-text-primary)]">
                 {cell.displayName}
               </span>
 
@@ -180,7 +180,7 @@ function TriagePillList({
               </span>
 
               {/* Progress Bar */}
-              <div className="w-20 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div className="w-20 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${cell.accuracy}%` }}
@@ -193,7 +193,7 @@ function TriagePillList({
               </div>
 
               {/* Blueprint Weight */}
-              <span className="text-xs text-slate-500 dark:text-slate-400 w-10 text-right">
+              <span className="text-xs text-[var(--color-text-muted)] w-10 text-right">
                 {(cell.weight * 100).toFixed(0)}%
               </span>
             </motion.button>
@@ -227,12 +227,12 @@ function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void 
       )}
     >
       {/* System Name */}
-      <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
+      <div className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wide">
         {cell.displayName}
       </div>
 
       {/* Blueprint Weight */}
-      <div className="text-[10px] text-slate-500 dark:text-slate-400">
+      <div className="text-[10px] text-[var(--color-text-muted)]">
         {(cell.weight * 100).toFixed(0)}% of exam
       </div>
 
@@ -240,7 +240,7 @@ function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void 
       <div className={cn('text-2xl font-black mt-1', config.text)}>{cell.accuracy.toFixed(0)}%</div>
 
       {/* Progress Bar */}
-      <div className="w-full h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mt-2 overflow-hidden">
+      <div className="w-full h-1.5 bg-[var(--color-bg-tertiary)] rounded-full mt-2 overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${cell.accuracy}%` }}
@@ -254,7 +254,7 @@ function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void 
 
       {/* Question Count Badge */}
       {cell.total > 0 && (
-        <div className="absolute top-2 right-2 text-[9px] bg-white/80 dark:bg-slate-800/80 rounded px-1.5 py-0.5 text-slate-600 dark:text-slate-300">
+        <div className="absolute top-2 right-2 text-[9px] bg-[var(--color-bg-primary)]/80 rounded px-1.5 py-0.5 text-[var(--color-text-secondary)]">
           n={cell.total}
         </div>
       )}
@@ -327,22 +327,22 @@ export function SystemTriageHeatmap({
     return (
       <div className={cn('', className)}>
         {/* Summary Header */}
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--color-border)]">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
             System Triage
           </h3>
           <div className="flex gap-3 text-xs">
             {statusCounts.critical > 0 && (
-              <span className="text-red-500">🔴 {statusCounts.critical}</span>
+              <span className="text-[var(--color-data-fail)]">🔴 {statusCounts.critical}</span>
             )}
             {statusCounts.at_risk > 0 && (
-              <span className="text-amber-500">🟡 {statusCounts.at_risk}</span>
+              <span className="text-[var(--color-data-provisional)]">🟡 {statusCounts.at_risk}</span>
             )}
             {statusCounts.stable > 0 && (
-              <span className="text-green-500">🟢 {statusCounts.stable}</span>
+              <span className="text-[var(--color-data-pass)]">🟢 {statusCounts.stable}</span>
             )}
             {statusCounts.mastered > 0 && (
-              <span className="text-sky-500">🔵 {statusCounts.mastered}</span>
+              <span className="text-[var(--color-accent)]">🔵 {statusCounts.mastered}</span>
             )}
           </div>
         </div>
@@ -355,22 +355,22 @@ export function SystemTriageHeatmap({
   return (
     <div className={cn('', className)}>
       {/* Summary Header */}
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--color-border)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
           PANCE System Triage
         </h3>
         <div className="flex gap-3 text-xs">
           {statusCounts.critical > 0 && (
-            <span className="text-red-500 font-medium">🔴 {statusCounts.critical} Critical</span>
+            <span className="text-[var(--color-data-fail)] font-medium">🔴 {statusCounts.critical} Critical</span>
           )}
           {statusCounts.at_risk > 0 && (
-            <span className="text-amber-500 font-medium">🟡 {statusCounts.at_risk} At Risk</span>
+            <span className="text-[var(--color-data-provisional)] font-medium">🟡 {statusCounts.at_risk} At Risk</span>
           )}
           {statusCounts.stable > 0 && (
-            <span className="text-green-500 font-medium">🟢 {statusCounts.stable} Stable</span>
+            <span className="text-[var(--color-data-pass)] font-medium">🟢 {statusCounts.stable} Stable</span>
           )}
           {statusCounts.mastered > 0 && (
-            <span className="text-sky-500 font-medium">🔵 {statusCounts.mastered} Mastered</span>
+            <span className="text-[var(--color-accent)] font-medium">🔵 {statusCounts.mastered} Mastered</span>
           )}
         </div>
       </div>
@@ -383,8 +383,8 @@ export function SystemTriageHeatmap({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-        <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+      <div className="mt-4 pt-3 border-t border-[var(--color-border)]">
+        <div className="flex flex-wrap justify-center gap-4 text-xs text-[var(--color-text-muted)]">
           <span>🔴 &lt;60% Critical</span>
           <span>🟡 60-75% At Risk</span>
           <span>🟢 75-90% Stable</span>

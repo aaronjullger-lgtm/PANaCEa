@@ -86,24 +86,24 @@ const SparklesIcon = ({ className }: { className?: string }) => (
 
 function ExamReadinessSkeleton() {
   return (
-    <div className="bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 animate-pulse">
+    <div className="bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)]/50 animate-pulse">
       {/* Header skeleton */}
       <div className="flex items-center justify-between mb-6">
-        <div className="h-6 bg-slate-700 rounded-lg w-40" />
-        <div className="h-5 bg-slate-700 rounded-full w-24" />
+        <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-40" />
+        <div className="h-5 bg-[var(--color-bg-tertiary)] rounded-full w-24" />
       </div>
 
       {/* Score skeleton */}
       <div className="flex flex-col items-center mb-6">
-        <div className="h-20 w-32 bg-slate-700 rounded-xl mb-2" />
-        <div className="h-4 bg-slate-700 rounded w-24" />
+        <div className="h-20 w-32 bg-[var(--color-bg-tertiary)] rounded-xl mb-2" />
+        <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-24" />
       </div>
 
       {/* Progress bar skeleton */}
-      <div className="h-3 bg-slate-700 rounded-full mb-4" />
+      <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full mb-4" />
 
       {/* Button skeleton */}
-      <div className="h-14 bg-slate-700 rounded-xl" />
+      <div className="h-14 bg-[var(--color-bg-tertiary)] rounded-xl" />
     </div>
   );
 }
@@ -127,10 +127,10 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-          <SparklesIcon className="w-5 h-5 text-amber-400" />
+          <SparklesIcon className="w-5 h-5 text-[var(--color-data-provisional)]" />
           Building Your Profile
         </h3>
-        <span className="px-3 py-1 bg-slate-700/50 text-slate-300 text-sm rounded-full">
+        <span className="px-3 py-1 bg-[var(--color-bg-tertiary)]/50 text-[var(--color-text-secondary)] text-sm rounded-full">
           {stats.totalInWindow}/50 Questions
         </span>
       </div>
@@ -147,7 +147,7 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
               stroke="currentColor"
               strokeWidth="8"
               fill="none"
-              className="text-slate-700"
+              className="text-[var(--color-bg-tertiary)]"
             />
             <motion.circle
               cx="64"
@@ -156,7 +156,7 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
               stroke="currentColor"
               strokeWidth="8"
               fill="none"
-              className="text-amber-400"
+              className="text-[var(--color-data-provisional)]"
               strokeLinecap="round"
               initial={{ strokeDasharray: '0 352' }}
               animate={{ strokeDasharray: `${progress * 3.52} 352` }}
@@ -167,14 +167,14 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
             <span className="text-3xl font-bold text-[var(--color-text-primary)]">
               {stats.totalInWindow}
             </span>
-            <span className="text-xs text-slate-400">of 50</span>
+            <span className="text-xs text-[var(--color-text-muted)]">of 50</span>
           </div>
         </div>
       </div>
 
       {/* Message */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-        <p className="text-sm text-amber-200 text-center">
+      <div className="bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20 rounded-xl p-4">
+        <p className="text-sm text-[var(--color-data-provisional)] text-center">
           Answer <span className="font-semibold">{questionsNeeded} more questions</span> in Main
           Session to unlock your preliminary PANCE score prediction.
         </p>
@@ -211,10 +211,10 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-          <ChartBarIcon className="w-5 h-5 text-amber-400" />
+          <ChartBarIcon className="w-5 h-5 text-[var(--color-data-provisional)]" />
           Exam Readiness
         </h3>
-        <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-sm rounded-full flex items-center gap-1">
+        <span className="px-3 py-1 bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] text-sm rounded-full flex items-center gap-1">
           <ExclamationTriangleIcon className="w-4 h-4" />
           Provisional
         </span>
@@ -230,9 +230,9 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           <span className="text-6xl font-bold text-[var(--color-text-primary)]">
             {stats.predictedScore || '---'}
           </span>
-          <span className="text-xl text-slate-400 ml-2">/800</span>
+          <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-2">Predicted PANCE Score</p>
       </div>
 
       {/* Accuracy */}
@@ -241,32 +241,32 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
             {stats.accuracyPercent?.toFixed(1) || '0'}%
           </span>
-          <p className="text-xs text-slate-400">Accuracy</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
         </div>
-        <div className="w-px h-10 bg-slate-700" />
+        <div className="w-px h-10 bg-[var(--color-border)]" />
         <div className="text-center">
           <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
             {stats.totalInWindow}
           </span>
-          <p className="text-xs text-slate-400">Questions</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Questions</p>
         </div>
       </div>
 
       {/* Confidence Progress */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs text-slate-400">
+        <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
           <span>Confidence Building</span>
           <span>{stats.totalInWindow}/180</span>
         </div>
-        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
+            className="h-full bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
             initial={{ width: 0 }}
             animate={{ width: `${(stats.totalInWindow / 180) * 100}%` }}
             transition={{ duration: 0.8 }}
           />
         </div>
-        <p className="text-xs text-slate-500 text-center">
+        <p className="text-xs text-[var(--color-text-muted)] text-center">
           {questionsToConfident} more questions for confident prediction
         </p>
       </div>
@@ -303,12 +303,12 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-          <ChartBarIcon className="w-5 h-5 text-teal-400" />
+          <ChartBarIcon className="w-5 h-5 text-[var(--color-data-pass)]" />
           Exam Readiness
         </h3>
         <span
           className={`px-3 py-1 text-sm rounded-full flex items-center gap-1
-          ${isPassing ? 'bg-teal-500/20 text-teal-300' : 'bg-red-500/20 text-red-300'}`}
+          ${isPassing ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'}`}
         >
           {isPassing ? (
             <CheckCircleIcon className="w-4 h-4" />
@@ -326,12 +326,12 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           animate={{ scale: 1, opacity: 1 }}
           className="inline-block"
         >
-          <span className={`text-6xl font-bold ${isPassing ? 'text-teal-400' : 'text-red-400'}`}>
+          <span className={`text-6xl font-bold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}>
             {stats.predictedScore || '---'}
           </span>
-          <span className="text-xl text-slate-400 ml-2">/800</span>
+          <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-slate-400 mt-2">Predicted PANCE Score</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-2">Predicted PANCE Score</p>
       </div>
 
       {/* Stats Grid */}
@@ -340,36 +340,36 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <span className="text-xl font-semibold text-[var(--color-text-primary)]">
             {stats.accuracyPercent?.toFixed(1) || '0'}%
           </span>
-          <p className="text-xs text-slate-400">Accuracy</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
         </div>
         <div className="text-center">
           <span
-            className={`text-xl font-semibold ${isPassing ? 'text-teal-400' : 'text-amber-400'}`}
+            className={`text-xl font-semibold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
           >
             {passLikelihood.toFixed(0)}%
           </span>
-          <p className="text-xs text-slate-400">Pass Chance</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Pass Chance</p>
         </div>
         <div className="text-center">
           <span className="text-xl font-semibold text-[var(--color-text-primary)]">
             {stats.totalInWindow}
           </span>
-          <p className="text-xs text-slate-400">Questions</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Questions</p>
         </div>
       </div>
 
       {/* Pass Probability Bar */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs text-slate-400">
+        <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
           <span>Pass Probability</span>
           <span>{passLikelihood.toFixed(1)}%</span>
         </div>
-        <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
             className={`h-full ${
               isPassing
-                ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
-                : 'bg-gradient-to-r from-red-500 to-orange-500'
+                ? 'bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]'
+                : 'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)]'
             }`}
             initial={{ width: 0 }}
             animate={{ width: `${passLikelihood}%` }}
@@ -380,11 +380,11 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
 
       {/* Blueprint Adherence */}
       {stats.blueprintAdherence !== null && (
-        <div className="flex items-center justify-between text-sm bg-slate-700/30 rounded-lg px-4 py-2">
-          <span className="text-slate-400">Blueprint Match</span>
+        <div className="flex items-center justify-between text-sm bg-[var(--color-bg-tertiary)]/30 rounded-lg px-4 py-2">
+          <span className="text-[var(--color-text-muted)]">Blueprint Match</span>
           <span
             className={`font-semibold ${
-              stats.blueprintAdherence >= 0.85 ? 'text-teal-400' : 'text-amber-400'
+              stats.blueprintAdherence >= 0.85 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'
             }`}
           >
             {(stats.blueprintAdherence * 100).toFixed(0)}%
@@ -434,9 +434,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   if (error) {
     return (
       <div
-        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}
+        className={`bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-data-fail)]/30 ${className}`}
       >
-        <p className="text-red-400 text-center">Failed to load exam readiness data</p>
+        <p className="text-[var(--color-data-fail)] text-center">Failed to load exam readiness data</p>
       </div>
     );
   }
@@ -451,7 +451,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
 
   return (
     <div
-      className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+      className={`bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)]/50 ${className}`}
     >
       <AnimatePresence mode="wait">
         {/* Show Calibration Protocol UI for new users (< 60 questions) */}
