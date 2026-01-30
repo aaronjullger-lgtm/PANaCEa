@@ -1197,7 +1197,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={() => setShowReportModal(true)}
               title="Report an issue with this question"
-              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-[var(--color-data-fail)]/10 hover:text-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]"
             >
               <AlertTriangle className="w-5 h-5" />
             </button>
@@ -1259,7 +1259,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={handleEndSession}
               title="End Session"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>

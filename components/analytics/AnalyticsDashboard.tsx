@@ -334,7 +334,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
       {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
@@ -348,7 +348,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
@@ -364,7 +364,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -389,7 +389,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
 
           {/* Weakest Subject Areas - Student Priority */}
           {userStats.stats.weakAreas.length > 0 && (
-            <div className="p-5 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
+            <div className="p-6 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
               <div className="flex items-center gap-2 mb-3">
                 <div className="p-2 rounded-lg bg-data-provisional/10">
                   <AlertCircle className="w-5 h-5 text-data-provisional" />
@@ -421,7 +421,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
 
           {/* Visual vs Text Performance Split */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <Activity className="w-4 h-4" /> System Performance Radar
               </div>
@@ -452,7 +452,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
               )}
             </div>
 
-            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
@@ -489,7 +489,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
           </div>
 
           {/* FSRS Stability Growth Trend */}
-          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
@@ -583,7 +583,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
           </div>
 
           {/* Decision Time by System */}
-          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Clock className="w-4 h-4" /> Decision Time by System

@@ -212,7 +212,7 @@ const CoreAdaptiveHero: React.FC<{
 
         <div className="flex items-center">
           <PrimaryButton
-            variant="primary"
+            variant="secondary"
             size="lg"
             icon={Play}
             iconRight={ChevronRight}

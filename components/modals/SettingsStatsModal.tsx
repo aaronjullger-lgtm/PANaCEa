@@ -1159,7 +1159,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-6">
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
                 <EnhancedSettingsTab
                   theme={theme}
@@ -1172,8 +1172,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 />
 
                 {/* Divider */}
-                <div className="border-t border-[var(--color-border)] pt-4">
-                  <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
+                <div className="border-t border-[var(--color-border)] pt-6">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-6">
                     Advanced Study Options
                   </h3>
                 </div>
@@ -1276,10 +1276,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
                     {/* Visual Modes */}
-                    <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Visual Drills
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1292,9 +1292,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                            className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1306,8 +1306,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
 
                     {/* Recall Modes */}
-                    <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Recall Modes
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1320,9 +1320,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                            className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1334,8 +1334,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
 
                     {/* Pharmacology Modes */}
-                    <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Pharmacology
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1350,9 +1350,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                            className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/40'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1364,8 +1364,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
 
                     {/* Clinical Simulation Modes */}
-                    <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Clinical Simulation
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1385,9 +1385,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                            className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/40'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1399,8 +1399,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
 
                     {/* Engagement Modes (Phase 7) */}
-                    <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Engagement Modes
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1411,10 +1411,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ].map((mode) => (
                           <div
                             key={mode.id}
-                            className={`p-2 rounded-lg text-left text-xs cursor-not-allowed ${
+                            className={`p-3 rounded-lg text-left text-xs cursor-not-allowed ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
+                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20 opacity-60'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] opacity-60'
                             }`}
                           >
                             <div className="font-semibold">{mode.label}</div>

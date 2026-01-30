@@ -144,9 +144,9 @@ const SrsDashboard = () => {
         </div>
       </div>
       <div>
-        <h3 className="text-lg font-bold mb-4 text-[var(--color-text-primary)]">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 text-[var(--color-text-primary)]">
           Memory Stability Distribution
-        </h3>
+        </h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={analytics.stabilityDistribution}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -161,9 +161,9 @@ const SrsDashboard = () => {
 
       {/* FSRS Insight Card - Per-Topic Drilldown */}
       <div className="mt-6">
-        <h3 className="text-lg font-bold mb-4 text-[var(--color-text-primary)]">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 text-[var(--color-text-primary)]">
           Topic Deep Dive
-        </h3>
+        </h2>
         <FSRSInsightCard
           data={{
             conceptName: 'Cardiovascular',

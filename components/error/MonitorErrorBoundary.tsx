@@ -43,7 +43,7 @@ function MonitorMalfunctionFallback({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-[var(--color-bg-primary)] rounded-xl border border-data-fail/40 p-6 min-h-[200px] flex flex-col items-center justify-center"
+      className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-data-fail)]/40 p-6 min-h-[200px] flex flex-col items-center justify-center"
     >
       {/* Scanline effect overlay */}
       <div
@@ -60,11 +60,11 @@ function MonitorMalfunctionFallback({
         transition={{ duration: 2, repeat: Infinity }}
         className="mb-4"
       >
-        <AlertTriangle className="w-12 h-12 text-data-fail" />
+        <AlertTriangle className="w-12 h-12 text-[var(--color-data-fail)]" />
       </motion.div>
 
       {/* Main error message */}
-      <h3 className="text-data-fail font-mono text-lg font-bold mb-2">MONITOR MALFUNCTION</h3>
+      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">MONITOR MALFUNCTION</h3>
 
       <p className="text-[var(--color-text-muted)] font-mono text-sm text-center mb-4">
         Vital signs display offline.
@@ -78,7 +78,7 @@ function MonitorMalfunctionFallback({
           <summary className="text-[var(--color-text-muted)] text-xs cursor-pointer hover:text-[var(--color-text-secondary)]">
             Technical Details
           </summary>
-          <pre className="text-data-fail/70 text-xs mt-2 p-2 bg-[var(--color-bg-secondary)] rounded overflow-auto max-h-24">
+          <pre className="text-[var(--color-data-fail)]/70 text-xs mt-2 p-2 bg-[var(--color-bg-secondary)] rounded overflow-auto max-h-24">
             {error.message}
           </pre>
         </details>
@@ -116,9 +116,9 @@ function MonitorMalfunctionFallback({
  */
 function MinimalFallback({ onReboot }: { onReboot: () => void }) {
   return (
-    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-data-fail/40 p-6 min-h-[200px] flex flex-col items-center justify-center">
-      <div className="text-data-fail text-4xl mb-4">⚠️</div>
-      <h3 className="text-data-fail font-mono text-lg font-bold mb-2">MONITOR OFFLINE</h3>
+    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-data-fail)]/40 p-6 min-h-[200px] flex flex-col items-center justify-center">
+      <div className="text-[var(--color-data-fail)] text-4xl mb-4">⚠️</div>
+      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">MONITOR OFFLINE</h3>
       <p className="text-[var(--color-text-muted)] text-sm text-center mb-4">Display error - click to retry</p>
       <button
         onClick={onReboot}
