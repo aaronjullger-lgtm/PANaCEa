@@ -155,7 +155,7 @@ const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Daily Challenge • {dateStr}
               </span>
             </div>
-            <p className="text-sm text-[var(--color-text-secondary)]">
+            <p className="text-sm text-slate-300">
               Same questions for everyone. Compare your score!
             </p>
           </div>

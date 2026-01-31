@@ -117,9 +117,11 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
             isEliminated && !isAnswered ? 'line-through' : ''
           }`}
         >
-          <span className="flex-1 pr-8">
-            <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
-            {displayText}
+          <span className="flex-1 pr-8 flex items-center">
+            <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 mr-2 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-border)] border-b-2 text-xs font-mono font-bold shadow-sm">
+              {String.fromCharCode(65 + index)}
+            </kbd>
+            <span>{displayText}</span>
           </span>
 
           {/* X icon for elimination - only show before answering */}

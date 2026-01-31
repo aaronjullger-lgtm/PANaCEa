@@ -26,7 +26,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ['→', 'j'], description: 'Next condition', context: 'Detail panel' },
   { keys: ['b'], description: 'Toggle bookmark', context: 'Detail panel' },
   { keys: ['q'], description: 'Start quick quiz', context: 'Detail panel' },
-  { keys: ['c'], description: 'Open DDx compare', context: 'Detail panel' },
+  { keys: ['c'], description: 'Open DDx Compare', context: 'Detail panel' },
   { keys: ['h'], description: 'Toggle High Yield filter', context: 'Sidebar' },
   { keys: ['?'], description: 'Show this help', context: 'Global' },
 ];

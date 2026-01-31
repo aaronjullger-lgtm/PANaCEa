@@ -158,7 +158,7 @@ const DRILL_MODES: DrillCard[] = [
   },
   {
     id: 'first_line',
-    name: 'First-Line Treatments',
+    name: 'First Line Treatments',
     description: 'Rapid-fire treatment selection for common conditions',
     icon: Target,
     category: 'quick-fire',
@@ -205,7 +205,7 @@ const CATEGORY_INFO: Record<
   },
   'quick-fire': {
     title: 'Quick-Fire Drills',
-    description: 'Rapid recall: Buzzwords, Bug-Drug, Derm, First-Line, Daily Term',
+    description: 'Rapid Recall: Buzzwords, Bug-Drug, Derm, First Line, Daily Term',
     icon: Zap,
     gradient: 'from-[var(--color-data-provisional)] to-[var(--color-accent)]',
   },
