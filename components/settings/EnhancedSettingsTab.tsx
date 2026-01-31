@@ -308,26 +308,29 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                       <GraduationCap className="w-4 h-4" />
                       Where are you in your PA journey?
                     </label>
-                    <select
-                      value={userProfile.yearInProgram || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value && YEAR_IN_PROGRAM_OPTIONS.includes(value as YearInProgram)) {
-                          handleUpdateProfile({ yearInProgram: value as YearInProgram });
-                        }
-                      }}
-                      className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
-                        text-[var(--color-text-primary)]
-                        focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
-                        transition-all text-sm"
-                    >
-                      <option value="">Select year...</option>
-                      {YEAR_IN_PROGRAM_OPTIONS.filter((y) => y !== 'Graduated').map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={userProfile.yearInProgram || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && YEAR_IN_PROGRAM_OPTIONS.includes(value as YearInProgram)) {
+                            handleUpdateProfile({ yearInProgram: value as YearInProgram });
+                          }
+                        }}
+                        className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                          text-[var(--color-text-primary)] appearance-none
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
+                          transition-all text-sm"
+                      >
+                        <option value="">Select year...</option>
+                        {YEAR_IN_PROGRAM_OPTIONS.filter((y) => y !== 'Graduated').map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" />
+                    </div>
                   </div>
                 )}
 

@@ -901,7 +901,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     ? 'Dashboard Preferences'
                     : activeTab === 'activity'
                       ? 'Activity'
-                      : 'Settings'}
+                      : 'Account'}
               </h2>
             </div>
             <button

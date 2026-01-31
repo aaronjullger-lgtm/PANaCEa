@@ -422,7 +422,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   <div>
                     <p className="text-xs text-[var(--color-text-muted)]">Questions/Hour</p>
                     <p className="text-2xl font-bold text-[var(--color-text-primary)]">
-                      {Math.round(learningVelocity.masteryRate)}
+                      {learningVelocity.masteryRate === 0 || !learningVelocity.masteryRate
+                        ? '--'
+                        : Math.round(learningVelocity.masteryRate)}
                     </p>
                   </div>
                   <div>

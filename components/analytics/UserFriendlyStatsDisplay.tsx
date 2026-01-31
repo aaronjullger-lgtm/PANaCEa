@@ -641,7 +641,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Zap className="w-5 h-5 mx-auto text-text-muted mb-2" />
                 <p className="text-lg font-bold text-text-primary">
-                  {displayData.questionsPerHour}
+                  {displayData.questionsPerHour === 0 ? '--' : displayData.questionsPerHour}
                 </p>
                 <p className="text-xs text-text-muted">questions/hour</p>
               </div>

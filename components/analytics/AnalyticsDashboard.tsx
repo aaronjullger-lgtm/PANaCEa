@@ -475,7 +475,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
                       'Trending Upward'}
                     {userStats.stats.recentPerformance.trend === 'declining' &&
                       'Needs Focus'}
-                    {userStats.stats.recentPerformance.trend === 'stable' && 'Holding Steady'}
+                    {userStats.stats.recentPerformance.trend === 'stable' && (() => {
+                      const last7 = userStats.stats.recentPerformance.last7Days.accuracy ?? 0;
+                      const prev7 = userStats.stats.recentPerformance.previous7Days.accuracy ?? 0;
+                      const delta = last7 - prev7;
+                      const deltaStr = delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`;
+                      return deltaStr;
+                    })()}
                   </p>
                   <p className="text-sm text-action-muted text-center max-w-xs">
                     Last 7 days: {userStats.stats.recentPerformance.last7Days.accuracy}% (

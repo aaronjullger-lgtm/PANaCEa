@@ -99,11 +99,24 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
 
   return (
     <div
+      onClick={() => {
+        if (!isCalibrated) {
+          window.location.assign('/study/main-session');
+        }
+      }}
       className={`p-4 rounded-xl border-2 transition-colors ${
         isCalibrated
           ? 'bg-data-pass/10 border-data-pass/30'
-          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
+          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] cursor-pointer hover:border-action-primary/50 hover:bg-action-muted/10'
       }`}
+      role={!isCalibrated ? 'button' : undefined}
+      tabIndex={!isCalibrated ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (!isCalibrated && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          window.location.assign('/study/main-session');
+        }
+      }}
     >
       <div className="flex items-start gap-3">
         <div
