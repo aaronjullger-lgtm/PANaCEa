@@ -6,7 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bookmark, BookmarkCheck, X, Search, Tag, Calendar, Trash2 } from 'lucide-react';
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 interface BookmarksPanelProps {
   bookmarkedQuestions: Question[];

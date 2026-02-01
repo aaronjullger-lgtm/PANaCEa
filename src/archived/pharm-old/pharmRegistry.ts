@@ -102,6 +102,7 @@ export const drugToClass: Record<string, string> = {};
 
 for (const className of Object.keys(drugClasses)) {
   const drugs = drugClasses[className];
+  if (!drugs) continue;
   for (const drug of drugs) {
     drugToClass[drug.toLowerCase()] = className;
   }

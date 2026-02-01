@@ -13,6 +13,7 @@ export const TASK_TYPES = {
   PREVENTION: 'prevention',
   PROGNOSIS: 'prognosis',
   COMPLICATION: 'complication',
+  CLINICAL_PEARL: 'clinical_pearl',
 } as const;
 
 export type TaskType = (typeof TASK_TYPES)[keyof typeof TASK_TYPES];
@@ -29,6 +30,7 @@ export function getTaskTypeLabel(taskType: TaskType): string {
     prevention: 'Prevention/Screening',
     prognosis: 'Prognosis/Outcomes',
     complication: 'Complications',
+    clinical_pearl: 'Clinical Pearls',
   };
 
   return labels[taskType] || taskType;
@@ -46,6 +48,7 @@ export function getTaskTypeDescription(taskType: TaskType): string {
     prevention: 'What preventive measures or screening is recommended?',
     prognosis: 'What is the expected outcome/prognosis?',
     complication: 'What complications should be monitored?',
+    clinical_pearl: 'Key clinical pearls and high-yield facts.',
   };
 
   return descriptions[taskType] || '';
@@ -118,6 +121,14 @@ export function inferTaskType(questionText: string): TaskType {
     lowerQuestion.includes('monitor for')
   ) {
     return TASK_TYPES.COMPLICATION;
+  }
+
+  if (
+    lowerQuestion.includes('clinical pearl') ||
+    lowerQuestion.includes('key takeaway') ||
+    lowerQuestion.includes('high-yield')
+  ) {
+    return TASK_TYPES.CLINICAL_PEARL;
   }
 
   // Default to diagnosis if unclear

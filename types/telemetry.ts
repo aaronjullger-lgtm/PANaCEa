@@ -522,13 +522,15 @@ export function aggregateTelemetry(data: TelemetryData[]): TelemetryAggregate | 
     {} as TelemetryAggregate['by_question_type']
   );
 
+  const medianIdx = Math.floor(durations.length / 2);
+  const p90Idx = Math.floor(durations.length * 0.9);
   return {
     total_responses: data.length,
     rapid_guess_count: rapidGuessCount,
     rapid_guess_rate: rapidGuessCount / data.length,
     avg_duration_ms: durations.reduce((a, b) => a + b, 0) / durations.length,
-    median_duration_ms: durations[Math.floor(durations.length / 2)],
-    p90_duration_ms: durations[Math.floor(durations.length * 0.9)],
+    median_duration_ms: durations[medianIdx] ?? 0,
+    p90_duration_ms: durations[p90Idx] ?? 0,
     avg_time_to_first_interaction_ms:
       firstInteractions.length > 0
         ? firstInteractions.reduce((a, b) => a + b, 0) / firstInteractions.length

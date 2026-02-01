@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TopicStats } from '../types';
+import type { TopicStats } from '@/types';
 
 interface TopicBarChartProps {
   topicScores: TopicStats[];

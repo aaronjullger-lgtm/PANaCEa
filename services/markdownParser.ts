@@ -80,7 +80,7 @@ function emphasizeLeadingKeyword(text: string, keyword: string): string {
   const match = text.match(pattern);
   if (!match) return applyClinicalBolding(text);
 
-  const rest = match[1].trim();
+  const rest = (match[1] ?? '').trim();
   const dash = rest ? ' — ' : '';
   return `**${keyword}**${dash}${applyClinicalBolding(rest)}`.trim();
 }
@@ -91,12 +91,12 @@ function formatTextParts(raw: string, keyword?: string): { parts: TextPart[]; is
   const parts: TextPart[] = [];
 
   const isSecondaryLabel = colonMatch
-    ? /\b(Prevalence|Type\s*\d|Stage|Classification|Category)\b/i.test(colonMatch[1])
+    ? /\b(Prevalence|Type\s*\d|Stage|Classification|Category)\b/i.test(colonMatch[1] ?? '')
     : false;
 
   if (colonMatch) {
-    const label = colonMatch[1].trim();
-    const rest = colonMatch[2].trim();
+    const label = (colonMatch[1] ?? '').trim();
+    const rest = (colonMatch[2] ?? '').trim();
     parts.push({ type: isSecondaryLabel ? 'em' : 'strong', value: `${label}:` });
     if (rest) {
       parts.push(...toParts(` ${applyClinicalBolding(rest)}`));
@@ -121,7 +121,7 @@ function toParts(text: string): TextPart[] {
     if (match.index > lastIndex) {
       parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
     }
-    parts.push({ type: 'strong', value: match[1] });
+    parts.push({ type: 'strong', value: match[1] ?? '' });
     lastIndex = match.index + match[0].length;
   }
 

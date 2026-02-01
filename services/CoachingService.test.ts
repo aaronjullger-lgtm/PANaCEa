@@ -5,7 +5,7 @@ import {
   analyzeSearchHistory,
   type UserMetrics,
   type SearchHistoryEntry,
-} from './CoachingService';
+} from './core/CoachingService';
 import type { PerformanceRecord } from '@/types';
 
 describe('CoachingService', () => {
@@ -251,7 +251,7 @@ describe('CoachingService', () => {
       expect(prescription.prescription).toContain('longer vignettes');
       expect(
         prescription.focusAreas.some(
-          (area) => area.toLowerCase().includes('stamina') || area.toLowerCase().includes('reading')
+          (area: string) => area.toLowerCase().includes('stamina') || area.toLowerCase().includes('reading')
         )
       ).toBe(true);
     });

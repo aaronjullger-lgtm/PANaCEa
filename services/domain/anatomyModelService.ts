@@ -108,7 +108,7 @@ const FALLBACK_MODELS: Partial<Record<AnatomySystem, AnatomyModel[]>> = {
         institution: 'National Institutes of Health',
         license: 'Public Domain',
         url: 'https://3d.nih.gov/entries/3DPX-001234',
-        dateAccessed: new Date().toISOString().split('T')[0],
+        dateAccessed: new Date().toISOString().split('T')[0] || '',
         citationText:
           'NIH 3D Print Exchange. Human Heart Model. https://3d.nih.gov/entries/3DPX-001234.',
       },
@@ -249,13 +249,13 @@ class AnatomyModelService {
           | 'NIH 3D Print Exchange'
           | 'NLM Visible Human'
           | 'Custom',
-        modelId: dbModel.sourceId,
+        modelId: dbModel.sourceId ?? '',
         title: dbModel.displayName || dbModel.name,
         author: dbModel.author,
         institution: dbModel.institution || 'National Institutes of Health',
         license: dbModel.license || 'Public Domain',
-        url: dbModel.sourceUrl || 'https://3d.nih.gov',
-        dateAccessed: new Date().toISOString().split('T')[0],
+        url: dbModel.sourceUrl ?? 'https://3d.nih.gov',
+        dateAccessed: new Date().toISOString().split('T')[0] || '',
         citationText: `${dbModel.sourceName || 'NIH 3D Print Exchange'}. ${dbModel.displayName || dbModel.name}. ${dbModel.sourceUrl || 'https://3d.nih.gov'}.`,
       },
       clinicalRelevance: dbModel.clinicalRelevance || [],

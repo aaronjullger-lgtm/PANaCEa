@@ -98,7 +98,7 @@ async function consolidateHierarchy() {
     totalFamilies++;
 
     // Find or create parent condition
-    let parent = await findConditionByName(family.parent);
+    const parent = await findConditionByName(family.parent);
 
     if (!parent) {
       console.log(`⚠️  Parent condition "${family.parent}" not found, skipping family`);

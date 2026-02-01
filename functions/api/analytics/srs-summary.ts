@@ -10,6 +10,7 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../_shared/middleware';
+import { resolveUserId } from '../_shared/user-resolver';
 import { srsSummaryQuerySchema } from '../_shared/zodSchemas';
 import type { AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
 

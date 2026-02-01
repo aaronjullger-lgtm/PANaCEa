@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { PerformanceRecord, SystemCode } from '../types';
+import type { PerformanceRecord, SystemCode } from '@/types';
 
 export type SystemDrilldownSelection = {
   system: SystemCode;

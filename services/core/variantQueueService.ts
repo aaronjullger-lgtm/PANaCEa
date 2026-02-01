@@ -23,8 +23,9 @@ export class VariantQueueService {
       },
     });
 
-    if (existingVariants.length > 0) {
-      return existingVariants[0].id;
+    const first = existingVariants[0];
+    if (first) {
+      return first.id;
     }
 
     // 2. Fetch original question and condition info

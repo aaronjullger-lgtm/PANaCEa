@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { selectByPanceDistribution } from '../../../lib/poolSelection';
+import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -53,6 +53,7 @@ interface PoolQuestionOutput {
   id: string;
   vignette?: string;
   question?: string;
+  imageUrl?: string;
   options: string[];
   correctAnswer?: string;
   explanation?: string;

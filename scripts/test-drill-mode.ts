@@ -87,7 +87,7 @@ async function testRolling360Isolation() {
     if (!testUser) throw new Error('Test user not found');
 
     // Get current Rolling360 stats
-    let rolling360Before = await prisma.userRolling360Stats.findUnique({
+    const rolling360Before = await prisma.userRolling360Stats.findUnique({
       where: { userId: testUser.id },
     });
 
@@ -104,7 +104,7 @@ async function testRolling360Isolation() {
     }
 
     // Get Rolling360 stats after
-    let rolling360After = await prisma.userRolling360Stats.findUnique({
+    const rolling360After = await prisma.userRolling360Stats.findUnique({
       where: { userId: testUser.id },
     });
 

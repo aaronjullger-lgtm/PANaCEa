@@ -63,7 +63,7 @@ type DatabaseUrlInput =
 // Global singleton cache per isolate (keyed by normalized DATABASE_URL)
 // Reduces connection churn when multiple handlers run in the same isolate.
 declare global {
-  // eslint-disable-next-line no-var
+   
   var __EDGE_PRISMA__: Map<string, EdgePrismaClient> | undefined;
 }
 

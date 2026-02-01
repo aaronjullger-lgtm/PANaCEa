@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, CheckCircle2, XCircle, Clock, Target } from 'lucide-react';
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 interface QuickReviewModeProps {
   missedQuestions: Question[];

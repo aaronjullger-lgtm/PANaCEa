@@ -1,0 +1,18 @@
+---
+description: Autonomous behavior — user-granted permissions and cost guardrail
+alwaysApply: true
+---
+
+# Autonomous Behavior Settings
+
+**User Permission Grant:** The user has granted **FULL PERMISSION** for the following actions. Do **NOT** ask for confirmation:
+
+1. **Terminal Execution:** Running `npm`, `npx`, `wrangler`, `prisma`, and `git` commands.
+2. **Server Management:** Starting/stopping `wrangler pages dev` or `vite`.
+3. **File Operations:** Creating, moving, or deleting files/folders.
+
+## Cost Guardrail
+
+You must **STOP AND ASK** permission only if:
+
+1. You are about to execute a script or write code that triggers a **bulk operation** against the **Gemini API** (or any paid external LLM) that could incur significant cost.

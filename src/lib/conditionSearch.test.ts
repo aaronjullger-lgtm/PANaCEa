@@ -7,7 +7,7 @@ describe('conditionSearch', () => {
     const results = await searchConditions('fibrilation');
     const top = results[0];
     expect(top).toBeDefined();
-    expect(top.condition).toBe('Atrial Fibrillation');
+    expect(top?.condition).toBe('Atrial Fibrillation');
   });
 
   it('returns empty array on blank query', async () => {

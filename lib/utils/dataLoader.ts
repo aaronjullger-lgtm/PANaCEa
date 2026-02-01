@@ -26,42 +26,42 @@ function warnBackendDownOnce(): void {
 export async function loadDrugData(getToken?: () => Promise<string | null>): Promise<any> {
   const cacheKey = 'drugData';
 
-  // Return from cache if already loaded
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey);
   }
 
-  const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
-
-  // Build headers with auth token if available
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
   if (getToken) {
     const token = await getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(apiUrl, { headers });
+  // Try /api/drugs/all first, fallback to /api/drugs when only root exists
+  const urls = [
+    getApiEndpoint(API_ENDPOINTS.DRUGS_ALL),
+    getApiEndpoint(API_ENDPOINTS.DRUGS),
+  ];
 
-  if (!response.ok) {
+  for (const apiUrl of urls) {
     try {
-      const errorData = await parseJsonOrThrow<{ error?: string }>(response);
-      throw new Error(
-        errorData?.error || `Failed to load drugs from database: ${response.status}`
-      );
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ServerConfigError') throw err;
-      throw new Error(`Failed to load drugs from database: ${response.status}`);
+      const response = await fetch(apiUrl, { headers });
+      if (!response.ok) continue;
+
+      const raw = await parseJsonOrThrow(response);
+      const data = Array.isArray(raw) ? raw : raw?.data?.drugs ?? raw?.drugs ?? [];
+      dataCache.set(cacheKey, data);
+      return data;
+    } catch {
+      continue;
     }
   }
 
-  const data = await parseJsonOrThrow(response);
-  dataCache.set(cacheKey, data);
-  return data;
+  if (typeof window !== 'undefined') {
+    warnBackendDownOnce();
+  }
+  const empty: never[] = [];
+  dataCache.set(cacheKey, empty);
+  return empty;
 }
 
 /**

@@ -5,6 +5,7 @@
 
 import React, { useEffect } from 'react';
 import { ClerkProvider, useUser } from '@clerk/clerk-react';
+import { SetupRequiredPage } from './SetupRequiredPage';
 
 // Lazy import Sentry functions to avoid initialization conflicts
 let setUserContext: ((user: { id: string; email?: string; username?: string }) => void) | null =
@@ -42,7 +43,7 @@ const DEV_CLERK_PUBLISHABLE_KEY =
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
 
 To fix this issue:
-1. Copy .env.example to .env: cp .env.example .env
+1. Copy env.example to .env: cp env.example .env
 2. Get your Clerk publishable key from https://dashboard.clerk.com
 3. Add it to .env as: VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 4. Restart the development server
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       : BASE_CLERK_PUBLISHABLE_KEY;
 
   if (!publishableKey) {
-    throw new Error(MISSING_KEY_ERROR);
+    return <SetupRequiredPage message={MISSING_KEY_ERROR} />;
   }
 
   if (isDevelopment && isLocalhost && publishableKey.startsWith('pk_live_')) {

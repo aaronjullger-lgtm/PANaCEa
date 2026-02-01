@@ -46,7 +46,9 @@ export function calculateTimeToMastery(
   if (practiceHistory.length >= 3) {
     let forgotCount = 0;
     for (let i = 1; i < practiceHistory.length; i++) {
-      if (practiceHistory[i - 1] && practiceHistory[i] && practiceHistory[i - 1].wasCorrect && !practiceHistory[i].wasCorrect) forgotCount++;
+      const prev = practiceHistory[i - 1];
+      const curr = practiceHistory[i];
+      if (prev && curr && prev.wasCorrect && !curr.wasCorrect) forgotCount++;
     }
     decayRate = Math.min(0.5, forgotCount / practiceHistory.length + 0.2);
   }
@@ -106,7 +108,9 @@ export function predictProgressVelocity(
   let velocityTrend: ProgressVelocity['velocityTrend'] = 'steady';
   if (weeklyProgress.length >= 3) {
     const recent = weeklyProgress.slice(-3).map((w) => w.newConceptsMastered / 7);
-    const slope = (recent[2] - recent[0]) / 2;
+    const last = recent[2];
+    const first = recent[0];
+    const slope = (last != null && first != null ? last - first : 0) / 2;
     velocityTrend = slope > 0.1 ? 'accelerating' : slope < -0.1 ? 'decelerating' : 'steady';
   }
 

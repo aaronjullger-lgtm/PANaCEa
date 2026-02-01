@@ -1,0 +1,20 @@
+{
+  "mainWorktree": "/Users/aaronullger/GitHub/StudyPANaCEa",
+  "setup-worktree": [
+    "npm install",
+    "ln -sf /Users/aaronullger/GitHub/StudyPANaCEa/.env .env",
+    "echo '✅ Worktree setup complete. Run npm run dev to start.'"
+  ],
+  "setup-worktree-with-e2e": [
+    "npm install",
+    "ln -sf /Users/aaronullger/GitHub/StudyPANaCEa/.env .env",
+    "npx playwright install chromium",
+    "echo '✅ Worktree setup complete with Playwright. Run npm run dev to start.'"
+  ],
+  "notes": {
+    "env": "Symlinked from main repo - changes to main .env propagate to all worktrees",
+    "prisma": "prisma generate runs automatically via npm postinstall",
+    "db": "All worktrees share the same DATABASE_URL from .env",
+    "dev": "Run 'npm run dev:all' to start both Vite and Express server"
+  }
+}

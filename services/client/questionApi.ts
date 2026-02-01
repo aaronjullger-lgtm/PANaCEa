@@ -75,7 +75,6 @@ export async function getQuestionClient(
         condition: q.condition,
         conditionId: q.conditionId,
         difficulty: q.difficulty,
-        type: q.questionType || 'multiple-choice',
         pearls: [],
       };
       

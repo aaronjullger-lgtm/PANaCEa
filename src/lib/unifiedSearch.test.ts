@@ -66,7 +66,8 @@ describe('unifiedSearch', () => {
     expect(results.length).toBeGreaterThan(0);
 
     const result = results[0];
-    expect(result.subtitle).toBeDefined();
-    expect(result.subtitle.length).toBeGreaterThan(0);
+    expect(result).toBeDefined();
+    expect(result?.subtitle).toBeDefined();
+    expect((result?.subtitle ?? '').length).toBeGreaterThan(0);
   });
 });

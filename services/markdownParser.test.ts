@@ -51,10 +51,12 @@ describe('parseArrayToBullets', () => {
 
     // The header should have children (the sub-items)
     expect(result.length).toBeGreaterThan(0);
-    expect(result[0].children.length).toBeGreaterThan(0);
+    const first = result[0];
+    expect(first).toBeDefined();
+    expect(first?.children.length).toBeGreaterThan(0);
 
     // Sub-items should not have stray asterisks
-    for (const child of result[0].children) {
+    for (const child of first?.children ?? []) {
       const text = child.parts.map((p: TextPart) => p.value).join('');
       expect(text.startsWith('*')).toBe(false);
     }

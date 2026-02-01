@@ -395,7 +395,8 @@ export function getConditionsByCategory(category: string): string[] {
  * Get random condition from the database
  */
 export function getRandomCondition(): string {
-  return LAB_DRIVEN_CONDITIONS[Math.floor(Math.random() * LAB_DRIVEN_CONDITIONS.length)];
+  const idx = Math.floor(Math.random() * LAB_DRIVEN_CONDITIONS.length);
+  return LAB_DRIVEN_CONDITIONS[idx] ?? '';
 }
 
 /**

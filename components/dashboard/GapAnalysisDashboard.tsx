@@ -263,7 +263,7 @@ export const GapAnalysisDashboard: React.FC = () => {
     );
   }
 
-  // Error state
+  // Error state (no data to show)
   if (error && !data) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center p-6">
@@ -292,6 +292,11 @@ export const GapAnalysisDashboard: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // No data to render chart (satisfies type narrowing)
+  if (!data) {
+    return null;
   }
 
   // Prepare chart data

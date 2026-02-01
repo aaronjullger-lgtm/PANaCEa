@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { SessionSettings } from '../types';
-import { STUDY_PRESETS, StudyPreset } from '../config/training-modes';
+import type { SessionSettings } from '@/types';
+import { STUDY_PRESETS, type StudyPreset } from '@/config/training-modes';
 import { getAllSystems } from '@/lib/constants/blueprint';
 import { Zap, HeartPulse, TrendingDown, Sparkles, Stethoscope } from 'lucide-react';
 

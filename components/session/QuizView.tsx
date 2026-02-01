@@ -1,7 +1,7 @@
 // components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useShortcut } from '@src/context/ShortcutContext';
+import { useShortcut } from '@/src/context/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 
 // Core services - using client-safe API wrappers

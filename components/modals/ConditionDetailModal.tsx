@@ -1,7 +1,7 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import type { ConditionMeta } from '@src/types/conditions';
+import type { ConditionMeta } from '@/src/types/conditions';
 import {
   getConditionById,
   getConditionByIdSync,

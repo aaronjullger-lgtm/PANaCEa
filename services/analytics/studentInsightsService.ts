@@ -103,6 +103,7 @@ export function getPriorityAction(insights: StudentInsights): string | null {
   }
 
   const weakest = insights.weakAreas[0];
+  if (!weakest) return null;
   return `Focus on ${weakest.system} (${weakest.accuracy}% accuracy) - ${weakest.recommendation}`;
 }
 

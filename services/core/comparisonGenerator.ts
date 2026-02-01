@@ -150,6 +150,10 @@ export async function batchGenerateComparisons(
 
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i];
+    if (!pair) {
+      results.push({ pairIndex: i, comparison: null });
+      continue;
+    }
     const opts: GenerateComparisonOptions = {
       correctConditionId: pair.correctConditionId,
       selectedConditionId: pair.selectedConditionId,

@@ -52,7 +52,7 @@ import {
   saveToggleSettings,
   DEFAULT_TOGGLE_SETTINGS,
 } from '@/types/toggleSettings';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';

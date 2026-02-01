@@ -99,6 +99,8 @@ export interface SessionSettings {
   topic?: string;
   count?: number;
   systems?: string[];
+  /** Optional difficulty filter for pool/API (e.g. 'easy', 'medium', 'hard') */
+  difficulty?: string;
 
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;

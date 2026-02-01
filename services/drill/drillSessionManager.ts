@@ -439,7 +439,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     let tempStreak = 0;
 
     const today = new Date().toISOString().split('T')[0];
-    let checkDate = new Date();
+    const checkDate = new Date();
 
     // Calculate current streak
     for (let i = 0; i < uniqueDates.length; i++) {

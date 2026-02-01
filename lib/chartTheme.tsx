@@ -123,10 +123,12 @@ export const chartTheme = {
  * Returns React.ReactElement that should be placed inside a <defs> tag in your chart
  */
 export const createGradient = (id: string, colors: string[]): React.ReactElement => {
+  const startColor = colors[0] ?? 'var(--color-accent)';
+  const endColor = colors[1] ?? startColor;
   return (
     <linearGradient id={id} x1="0" y1="0" x2="0" y2="1" key={id}>
-      <stop offset="0%" stopColor={colors[0]} stopOpacity={0.8} />
-      <stop offset="100%" stopColor={colors[1]} stopOpacity={0.2} />
+      <stop offset="0%" stopColor={startColor} stopOpacity={0.8} />
+      <stop offset="100%" stopColor={endColor} stopOpacity={0.2} />
     </linearGradient>
   );
 };

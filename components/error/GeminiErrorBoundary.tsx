@@ -323,6 +323,13 @@ export class GeminiErrorBoundary extends Component<
 
         <p className="mt-2 text-sm text-[var(--color-text-secondary)] max-w-md">
           {errorInfo?.message}
+          {errorInfo?.type === 'network' &&
+            typeof window !== 'undefined' &&
+            (import.meta.env?.DEV || window.location.hostname === 'localhost') && (
+              <span className="mt-2 block text-xs text-amber-600 dark:text-amber-400">
+                Dev tip: Ensure the API backend is running (npm run dev:all).
+              </span>
+            )}
         </p>
 
         {canRetry && (

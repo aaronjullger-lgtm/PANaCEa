@@ -393,6 +393,105 @@ router.get('/flags', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ============================================================================
+// Question Pool (parity with CF /api/questions/pool)
+// ============================================================================
+
+router.get('/pool', async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    const count = Math.min(Number(req.query.count) || 10, 50);
+    const system = (req.query.system as string) || undefined;
+    const difficulty = (req.query.difficulty as string) || undefined;
+
+    const where: Record<string, unknown> = {};
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+
+    // Try PreGeneratedQuestion first (seeded by seed:question-pool)
+    const preGenRecords = await prisma.preGeneratedQuestion.findMany({
+      where,
+      take: count * 3, // fetch extra for filtering
+      orderBy: { generatedAt: 'asc' },
+    });
+
+    const poolRemaining = await prisma.preGeneratedQuestion.count({ where });
+    const letters = ['A', 'B', 'C', 'D'];
+
+    const poolQuestions = preGenRecords.slice(0, count).map((r) => {
+      const data = (r.questionData as Record<string, unknown>) || {};
+      const optsRaw = data.options ?? data.answers ?? data.choices;
+      const opts: string[] = Array.isArray(optsRaw) ? optsRaw : [];
+      let correct = (data.correctAnswer as string) || 'A';
+      if (!correct && typeof data.correctAnswerIndex === 'number') {
+        correct = letters[data.correctAnswerIndex] ?? 'A';
+      }
+      if (!correct && typeof data.correctIndex === 'number') {
+        correct = letters[data.correctIndex] ?? 'A';
+      }
+      return {
+        id: r.id,
+        vignette: (data.vignette as string) || undefined,
+        question: (data.question as string) || 'Question text missing',
+        options: opts,
+        correctAnswer: correct,
+        explanation: (data.explanation as string) || '',
+        system: r.system || 'General',
+        difficulty: r.difficulty || 'medium',
+        tags: (data.tags as string[]) || [],
+        conditionId: r.conditionId ?? undefined,
+        source: 'pool',
+      };
+    });
+
+    // Fallback to Question table if PreGeneratedQuestion is empty
+    let questions = poolQuestions;
+    let available = poolRemaining;
+    if (questions.length === 0) {
+      const { getQuestionsWithFallback } = await import('../lib/services/questionBankService');
+      const { questions: fallbackQs, total } = await getQuestionsWithFallback({
+        system,
+        difficulty,
+        limit: count,
+      });
+      questions = fallbackQs.map((q) => {
+        const opts = q.options || [];
+        const correctIdx = opts.findIndex((o) => o === q.correctAnswer || o.includes(q.correctAnswer));
+        const letter = correctIdx >= 0 ? letters[correctIdx] : 'A';
+        return {
+          id: q.id,
+          vignette: q.vignette || undefined,
+          question: q.question,
+          options: opts,
+          correctAnswer: letter,
+          explanation: q.explanation,
+          system: q.system || 'General',
+          difficulty: q.difficulty || 'medium',
+          tags: q.tags || [],
+          source: 'pool',
+        };
+      });
+      available = total;
+    }
+
+    const POOL_LOW_THRESHOLD = 20;
+    return res.json({
+      questions,
+      poolStatus: {
+        available,
+        needsGeneration: available < POOL_LOW_THRESHOLD,
+        threshold: POOL_LOW_THRESHOLD,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching pool questions:', error);
+    res.status(500).json({ error: 'Failed to fetch questions from pool' });
+  }
+});
+
+// ============================================================================
 // Question Query & AI Generation
 // ============================================================================
 

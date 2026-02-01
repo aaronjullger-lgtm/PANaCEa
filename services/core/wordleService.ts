@@ -17,7 +17,7 @@ type NormalizedWordleDate = {
   dateOnly: Date;
 };
 
-// Type with included Buzzword relation
+// Type with included Buzzword relation (explanation nullable per Prisma schema)
 type DailyWordleWithWord = {
   id: string;
   date: Date;
@@ -28,9 +28,9 @@ type DailyWordleWithWord = {
     id: string;
     buzzword: string;
     condition: string;
-    explanation: string;
+    explanation: string | null;
     system: string;
-    subcategory: string;
+    subcategory: string | null;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -42,7 +42,7 @@ const normalizeWordleDate = (date?: string | Date): NormalizedWordleDate => {
     throw new WordleServiceError('Invalid Wordle date');
   }
 
-  const isoDate = base.toISOString().split('T')[0];
+  const isoDate = base.toISOString().split('T')[0] ?? '';
   const dateOnly = new Date(`${isoDate}T00:00:00.000Z`);
   return { isoDate, dateOnly };
 };
@@ -153,7 +153,7 @@ const buildPayload = (
   daily: DailyWordleWithWord,
   state: UserWordleStateRecord
 ): WordleDailyPayload => {
-  const normalizedDate = daily.date.toISOString().split('T')[0];
+  const normalizedDate = daily.date.toISOString().split('T')[0] ?? '';
   const attemptsLeft = Math.max(0, WORDLE_MAX_ATTEMPTS - state.guesses.length);
 
   return {

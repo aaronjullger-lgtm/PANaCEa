@@ -122,26 +122,47 @@ const FALLBACK_DRUG_ENTRIES: DrugEntry[] = [
 // ============================================================================
 
 /**
- * Map Prisma Drug to DrugEntry format
- * Transforms database schema to internal search format
+ * Minimal drug shape from API (drugService.getAll returns this)
  */
-function mapDrugToEntry(drug: DrugData): DrugEntry {
+type ApiDrug = {
+  id: string;
+  genericName?: string | null;
+  name?: string;
+  drugClass?: string | string[] | null;
+  mechanism?: string | null;
+  sideEffects?: string[];
+  contraindications?: string[];
+  interactions?: string[];
+  metabolism?: string | null;
+  elimination?: string | null;
+  clinicalNotes?: string | null;
+  antidote?: string | null;
+  brandNames?: string[];
+};
+
+/**
+ * Map API Drug to DrugEntry format
+ */
+function mapDrugToEntry(drug: ApiDrug): DrugEntry {
+  const drugClassArr = Array.isArray(drug.drugClass) ? drug.drugClass : drug.drugClass ? [drug.drugClass] : [];
+  const mainClass = drugClassArr[0];
+  const subClass = drugClassArr[1];
   return {
-    term: drug.genericName,
-    type: 'Small Molecule', // Default
-    class: drug.drugClass[0] || '',
-    subclass: drug.drugClass[1] || '',
-    MOA: drug.mechanismOfAction || '',
-    ADEs: drug.sideEffects,
-    contraindications: drug.contraindications,
-    interactions: drug.interactions,
+    term: drug.genericName ?? drug.name ?? '',
+    type: 'Small Molecule',
+    class: mainClass ?? '',
+    subclass: subClass ?? '',
+    MOA: drug.mechanism ?? '',
+    ADEs: drug.sideEffects ?? [],
+    contraindications: drug.contraindications ?? [],
+    interactions: drug.interactions ?? [],
     pharmacokinetics: {
-      metabolism: drug.metabolism || '',
-      elimination: drug.elimination || '',
+      metabolism: drug.metabolism ?? '',
+      elimination: drug.elimination ?? '',
     },
-    clinicalNotes: drug.clinicalNotes || '',
-    antidote: drug.antidote || '',
-    ingredients: [],
+    clinicalNotes: drug.clinicalNotes ?? '',
+    antidote: drug.antidote ?? '',
+    ingredients: drug.brandNames ?? [],
   };
 }
 
@@ -428,7 +449,9 @@ export async function findDrugById(id: string): Promise<DrugEntry | undefined> {
 
   const match = id.match(/^DRUG__(.+)$/);
   if (match) {
-    const normalizedName = match[1].replace(/_/g, ' ');
+    const captured = match[1];
+    if (!captured) return undefined;
+    const normalizedName = captured.replace(/_/g, ' ');
     for (const [key, entry] of drugRegistry.entries()) {
       if (
         key === normalizedName ||

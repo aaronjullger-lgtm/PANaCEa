@@ -64,7 +64,7 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
   }
 
   // Derive condition name from tags or system
-  const condition = poolQ.tags?.[0] || poolQ.system;
+  const condition = poolQ.tags?.[0] ?? poolQ.system ?? '';
   // Use conditionId if available, otherwise generate from condition name
   const conditionId = poolQ.conditionId || condition.toLowerCase().replace(/\s+/g, '-');
 
@@ -83,9 +83,8 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
     topic: poolQ.system,
     conditionId,
     condition,
-    pearls: undefined, // Will be loaded on-demand from medicalContent
+    pearls: [], // Will be loaded on-demand from medicalContent
     source: poolQ.source === 'pool' ? 'database-pool' : 'database-main',
-    fromStaging: poolQ.fromStaging,
   } as Question;
 }
 

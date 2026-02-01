@@ -2,6 +2,10 @@
 
 Project conventions for AI-assisted editing. Follow these when generating or modifying code.
 
+## Autonomous behavior
+
+Full permission for terminal (`npm`, `npx`, `wrangler`, `prisma`, `git`), server (wrangler/vite), and file ops. **Stop and ask** only before bulk paid-LLM operations (e.g. Gemini) that could incur significant cost. Details in `.cursor/rules/autonomous-behavior.mdc`.
+
 ## Project Roles
 
 Start a prompt with **"ACT AS [ROLE]"** to adopt a persona. Roles and guidelines are in `.cursor/rules/project-roles.mdc`. Roles: **optimizer**, **api**, **dba**, **ui/ux**, **qa**, **debug**, **ask**. Agents may commit, push, migrate, and deploy; they must not wipe the DB or undermine the site’s main intentions.

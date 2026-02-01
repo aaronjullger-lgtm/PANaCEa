@@ -17,7 +17,6 @@ import {
   RapidRecallDrill,
   DDxCompareDrill,
   MiniLabDrillSession,
-  PharmDrillSession,
   FirstLineDrillSession,
   ConditionDrillSession,
   GuidelineDrillSession,
@@ -51,7 +50,6 @@ import {
   CommandCenterPage,
   ClinicalReferenceLibrary,
   CustomStudyMode,
-  QuestionCurationPanel,
   ClinicalProfileDashboard,
   AdminDashboard,
   MyPearlsPanel,
@@ -74,7 +72,6 @@ import type {
   Question,
   PerformanceRecord,
   SessionSettings,
-  SystemCode,
   ErrorTag,
   UserProfile,
 } from './types';
@@ -110,7 +107,7 @@ const DRILL_MODE_ANATOMY = DRILL_MODE_IDS.ANATOMY;
 const INITIAL_QUEUE_SIZE = 10;
 
 // ---- helpers: localStorage ----
-function safeParse<T>(raw: string | null, fallback: T): T {
+function _safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
   try {
     return JSON.parse(raw) as T;
@@ -285,7 +282,7 @@ const App: React.FC = () => {
   // ---- performance record hook passed into QuizView (memoized to avoid child re-renders) ----
   const addPerformanceRecord = useCallback((record: PerformanceRecord) => {
     setPerformanceData((prev) => [...prev, record]);
-  }, []);
+  }, [setPerformanceData]);
 
   const updateLastPerformanceErrorTag = useCallback((tag: ErrorTag) => {
     setPerformanceData((prev) => {
@@ -299,7 +296,7 @@ const App: React.FC = () => {
       };
       return updated;
     });
-  }, []);
+  }, [setPerformanceData]);
 
   const addMissedQuestion = useCallback((question: Question) => {
     const now = new Date().toISOString().split('T')[0];
@@ -309,7 +306,7 @@ const App: React.FC = () => {
       nextReviewDate: question.nextReviewDate ?? now,
     };
     setMissedQuestions((prev) => [...prev, base]);
-  }, []);
+  }, [setMissedQuestions]);
 
   const updateReviewQuestion = useCallback((question: Question, wasCorrect: boolean) => {
     setMissedQuestions((prev) =>
@@ -331,18 +328,18 @@ const App: React.FC = () => {
         };
       })
     );
-  }, []);
+  }, [setMissedQuestions]);
 
   const addFlaggedQuestion = useCallback((question: Question) => {
     setFlaggedQuestions((prev) => {
       if (prev.some((q) => q.question === question.question)) return prev;
       return [...prev, question];
     });
-  }, []);
+  }, [setFlaggedQuestions]);
 
   const removeFlaggedQuestion = useCallback((question: Question) => {
     setFlaggedQuestions((prev) => prev.filter((q) => q.question !== question.question));
-  }, []);
+  }, [setFlaggedQuestions]);
 
   const updateQuestionNote = useCallback((question: Question, note: string) => {
     const updater = (q: Question) =>
@@ -350,11 +347,11 @@ const App: React.FC = () => {
     setQuestionQueue((prev) => prev.map(updater));
     setMissedQuestions((prev) => prev.map(updater));
     setFlaggedQuestions((prev) => prev.map(updater));
-  }, []);
+  }, [setQuestionQueue, setMissedQuestions, setFlaggedQuestions]);
 
-  const clearPerformanceData = useCallback(() => setPerformanceData([]), []);
-  const clearMissedQuestionsData = useCallback(() => setMissedQuestions([]), []);
-  const clearFlaggedQuestionsData = useCallback(() => setFlaggedQuestions([]), []);
+  const clearPerformanceData = useCallback(() => setPerformanceData([]), [setPerformanceData]);
+  const clearMissedQuestionsData = useCallback(() => setMissedQuestions([]), [setMissedQuestions]);
+  const clearFlaggedQuestionsData = useCallback(() => setFlaggedQuestions([]), [setFlaggedQuestions]);
 
   const handleConfirmSession = useCallback(
     async (settings: SessionSettings) => {
@@ -474,7 +471,7 @@ const App: React.FC = () => {
     if (targetView) setView(targetView);
   }, []);
 
-  const handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
+  const _handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
     setInitialDrillSystem(system);
     const modeViewMap: Record<string, View> = {
       [DRILL_MODE_SYSTEM]: 'system_drill',
@@ -497,7 +494,7 @@ const App: React.FC = () => {
   }, []);
 
   // Navigate to command center page - memoized
-  const handleNavigateToCommandCenter = useCallback(() => {
+  const _handleNavigateToCommandCenter = useCallback(() => {
     setView('command_center_page');
   }, []);
 
@@ -509,7 +506,7 @@ const App: React.FC = () => {
   const pageTransition = useAccessibleTransition({
     duration: 0.2, // Reduced from 0.35 for snappier navigation
     ease: [0.4, 0, 0.2, 1],
-  }) as any;
+  });
 
   // Show loading state while checking auth
   if (!authLoaded) {

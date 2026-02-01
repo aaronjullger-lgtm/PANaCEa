@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Printer, Download, CheckSquare, XSquare, Settings } from 'lucide-react';
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 interface StudyGuideGeneratorProps {
   questions: Question[];

@@ -10,7 +10,7 @@
 | Check | Result | Count / Notes |
 |-------|--------|----------------|
 | **ESLint** | ❌ Fail | 9,911 problems (15 errors, 9,896 warnings). `--max-warnings 0` causes exit 1. |
-| **TypeScript** | ❌ Fail | ~200+ unique TS errors across app, components, functions, lib. |
+| **TypeScript** | ❌ Fail | ~1,061 TS errors (down from ~1,087 after second-pass fixes). |
 | **Unit tests** | ✅ Pass | 406 tests, 31 files. |
 | **Build** | ✅ Pass | Vite build succeeds; chunk size warning for 700KB+ chunks. |
 
@@ -108,7 +108,7 @@
 
 ---
 
-## 6. Fixes applied (this pass)
+## 6. Fixes applied (pass 3 – 2026-02-01)
 
 - **App.tsx:** Added `MyPearlsPanel` to `config/lazyComponents.tsx` and imported it in App so the pearl deck view resolves.
 - **components/error/index.ts:** Fixed GeminiErrorBoundary import path from `../GeminiErrorBoundary` to `./GeminiErrorBoundary`.
@@ -120,7 +120,56 @@
 - **components/analytics/TopicMasteryBreakdown.tsx:** Introduced `DEFAULT_MASTERY_COLORS` and use it as fallback so `colors` is never undefined in the topic row.
 - **components/analytics/UserFriendlyStatsDisplay.tsx:** Cast `sys.trend` to `'improving' | 'declining' | 'neutral'` at all four `SystemStrengthBar` call sites.
 
-**Still to fix (for a future pass):** Remaining TS errors (path aliases `@src/`, `../types`, missing modules, GapAnalysisDashboard `data` null, dashboard TopicMasteryBreakdown CLINICAL_PEARL, QuizView/getMetrics/nextReview, EnhancedSettingsTab profile type, functions/api and lib strict null/typing). Lint: 9,911 issues (run `npm run lint:fix` for 5 auto-fixable; then address remaining incrementally).
+### Additional fixes (second pass – 2026-01-31)
+
+- **services/core/conditionDataLoader.ts:** Added local `import type { ConditionData }` so `ConditionData` is in scope for the return type (re-export kept).
+- **services/core/questionService.ts (core):** `pearls: undefined` → `pearls: []`; optional chaining for `match[1]` in `extractPearlsFromRationale`; imported `calcAdaptiveStateFn` / `selectOptimalQuestionsFn` from adaptive engine and used them in the default export for correct `Parameters<typeof …>`.
+- **services/core/comparisonGenerator.ts:** Built explicit `GenerateComparisonOptions` and skipped pairs with missing required fields before calling `generateComparison`.
+- **services/core/drillService.ts:** `focus: null` → `focus: 'all'` to satisfy `PerformanceRecord.focus: string`.
+- **services/core/customSessionService.ts:** `return state.currentQuestions[state.currentQuestionIndex] ?? null` for possibly undefined index.
+- **services/core/questionSeedService.ts:** Guard `if (!seed) continue` in seed loop.
+- **services/core/variantQueueService.ts:** Use `existingVariants[0]` in a variable and return its `id` only when defined.
+- **services/core/wordleService.ts:** `isoDate` / `normalizedDate` with `?? ''`; `DailyWordleWithWord.Buzzword.explanation` typed as `string | null`.
+- **services/domain/index.ts:** Removed duplicate `export type { StudySessionPlan }` (already exported from adaptiveFSRSService).
+- **lib/apiClient.ts:** New file – re-exports `API_ENDPOINTS` (with `SYSTEM_PERFORMANCE`), provides `fetchWithAuth` for bearer requests. **services/domain/panaceScorePredictor.ts:** Import from `@/lib/apiClient`.
+- **src/components/dashboard/NeuralLinkLog.tsx:** Typewriter effect: use `line ?? ''` for `SetStateAction<string[]>`; `return undefined` in `useEffect` so all code paths return.
+- **types/telemetry.ts:** `median_duration_ms` / `p90_duration_ms` use `durations[idx] ?? 0` to satisfy `number`.
+- **services/questionService.ts (root):** `condition` with `?? ''`; `pearls: []`; removed `fromStaging` from cast (not on PoolQuestion).
+- **src/types.ts & src/types/index.ts:** Added `difficulty?: string` to `SessionSettings`.
+
+### Third pass (2026-02-01 – main repo)
+
+- **App.tsx:** Removed unused imports (PharmDrillSession, QuestionCurationPanel), removed SystemCode from type import, renamed safeParse→_safeParse, prefixed unused handlers (_handleNavigateToDrillWithSystem, _handleNavigateToCommandCenter), fixed pageTransition `as any` → `as { duration: number; ease: number[] }`.
+- **AuthProvider + SetupRequiredPage:** New SetupRequiredPage component; AuthProvider renders it when Clerk key is missing instead of throwing. Users see setup instructions, Clerk Dashboard link, and copy button.
+- **services/core/comparisonGenerator.ts:** Added guard for `pair` possibly undefined; push `{ pairIndex: i, comparison: null }` and continue when pair is missing.
+- **services/core/wordleService.ts:** `DailyWordleWithWord.Buzzword.subcategory` typed as `string | null` to match Prisma schema.
+
+### Fourth pass (2026-02-01 – continued)
+
+- **services/CoachingService.test.ts:** Import from `./core/CoachingService`; typed `(area: string)`.
+- **services/core/comparisonGenerator.ts:** `if (!pair) continue` before using pair.
+- **services/core/wordleService.ts:** `Buzzword.subcategory: string | null`.
+- **services/client/questionApi.ts:** Removed `type` from returned Question object.
+- **services/domain/buzzwordService.ts:** Guard `b.buzzword != null`; filter `b.condition` for string[].
+- **services/markdownParser.ts:** `match[1] ?? ''`, `colonMatch[1] ?? ''`, `colonMatch[2] ?? ''`, `match[1] ?? ''` in toParts.
+- **src/lib/drugSearch.ts:** `ApiDrug` type and `mapDrugToEntry` accept API shape; guard `match[1]` in findDrugById.
+- **src/lib/conditionSearch.test.ts:** `top?.condition` optional chaining.
+- **src/lib/unifiedSearch.test.ts:** Guard and optional chaining for `result`.
+- **services/analytics/studentInsightsService.ts:** Guard `if (!weakest) return null`.
+- **services/analytics/masteryVelocityPredictor.ts:** `prev`/`curr` vars; slope with null checks for `recent[2]`/`recent[0]`.
+- **services/domain/anatomyModelService.ts:** `dateAccessed` with `?? ''`; `modelId`/`url` with `??`.
+- **services/markdownParser.test.ts:** Guard `first` and `first?.children ?? []`.
+- **src/archived/pharm-old/pharmRegistry.ts:** `if (!drugs) continue` in loop.
+- **src/data/labDrivenConditions.ts:** `LAB_DRIVEN_CONDITIONS[idx] ?? ''` for getRandomCondition.
+
+### Fifth pass (2026-01-31 – taskTypes, GapAnalysis, API)
+
+- **lib/taskTypes.ts:** Added `CLINICAL_PEARL: 'clinical_pearl'`; extended `getTaskTypeLabel`, `getTaskTypeDescription`, and `inferTaskType` for clinical pearls.
+- **components/dashboard/GapAnalysisDashboard.tsx:** Added `if (!data) return null` after error UI branch for type narrowing before `chartData`/`topSystems`.
+- **functions/api/analytics/srs-summary.ts:** Added missing `import { resolveUserId } from '../_shared/user-resolver';`.
+- **functions/api/questions/pool.ts:** Import `fisherYatesShuffle` from `lib/poolSelection`; added `imageUrl?: string` to `PoolQuestionOutput`.
+
+**Still to fix:** ~1,0xx TS errors (possibly undefined in services/domain, conceptDependencyService, examService, etc.). Lint: ~9,8xx issues.
 
 ---
 
