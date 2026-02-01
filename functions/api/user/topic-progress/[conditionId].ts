@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
-import { ALL_TASK_TYPES, getTaskTypeLabel } from '../../../lib/taskTypes';
+import { ALL_TASK_TYPES, getTaskTypeLabel } from '../../../../lib/taskTypes';
 
 const TopicProgressSchema = z.object({
   params: z.object({

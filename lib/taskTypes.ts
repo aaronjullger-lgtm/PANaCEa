@@ -134,3 +134,6 @@ export function inferTaskType(questionText: string): TaskType {
   // Default to diagnosis if unclear
   return TASK_TYPES.DIAGNOSIS;
 }
+
+/** Alias for inferTaskType (used by SRS API) */
+export const getTaskTypeFromContent = inferTaskType;

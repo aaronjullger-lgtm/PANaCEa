@@ -5,7 +5,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   applyAttemptToUserStatistics,
   updateTimingAggregates,
-} from '../../lib/services/userStatisticsService';
+} from '../../../lib/services/userStatisticsService';
 
 const StatisticsUpdateSchema = z.object({
   body: z.object({
