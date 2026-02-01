@@ -35,19 +35,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
-        id: deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=panacea
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify build output
+        run: ls -la dist/ && ls dist/assets/ 2>/dev/null | head -5
 
-      - name: Deployment URL
-        run: |
-          echo "✅ Deployed successfully"
-          echo "URL: ${{ steps.deploy.outputs.deployment-url }}"
-          if [ -n "${{ steps.deploy.outputs.pages-deployment-alias-url }}" ]; then
-            echo "Alias: ${{ steps.deploy.outputs.pages-deployment-alias-url }}"
-          fi
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist --project-name=panacea
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
